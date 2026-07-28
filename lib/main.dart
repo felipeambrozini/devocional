@@ -1,122 +1,116 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'data/estado.dart';
+import 'telas/biblia.dart';
+import 'telas/devocional.dart';
+import 'telas/hoje.dart';
+import 'telas/notas.dart';
+import 'telas/plano.dart';
+import 'theme.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final estado = await Estado.abrir();
+  runApp(AppDevocional(estado: estado));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class AppDevocional extends StatelessWidget {
+  const AppDevocional({super.key, required this.estado});
 
-  // This widget is the root of your application.
+  final Estado estado;
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+    return EscopoDoEstado(
+      estado: estado,
+      child: MaterialApp(
+        title: 'Devocional',
+        debugShowCheckedModeBanner: false,
+        theme: construirTema(),
+        home: const Moldura(),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class _Destino {
+  const _Destino(this.rotulo, this.icone, this.iconeAtivo, this.tela);
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  final String rotulo;
+  final IconData icone;
+  final IconData iconeAtivo;
+  final Widget tela;
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+const _destinos = <_Destino>[
+  _Destino('Hoje', Icons.wb_twilight_outlined, Icons.wb_twilight, TelaHoje()),
+  _Destino('Bíblia', Icons.menu_book_outlined, Icons.menu_book, TelaBiblia()),
+  _Destino('Devocional', Icons.auto_stories_outlined, Icons.auto_stories, TelaDevocional()),
+  _Destino('Plano', Icons.event_note_outlined, Icons.event_note, TelaPlano()),
+  _Destino('Notas', Icons.bookmark_outline, Icons.bookmark, TelaNotas()),
+];
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+/// Casca de navegação. Barra inferior no celular, trilho lateral em tela larga.
+/// O corte em 720 px é onde cinco rótulos deixam de caber com folga na horizontal.
+class Moldura extends StatefulWidget {
+  const Moldura({super.key});
+
+  @override
+  State<Moldura> createState() => _MolduraState();
+}
+
+class _MolduraState extends State<Moldura> {
+  int _indice = 0;
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
+    final largo = MediaQuery.sizeOf(context).width >= 720;
+
+    // IndexedStack preserva a posição de rolagem e o capítulo aberto ao alternar
+    // de aba, que é o que se espera de um app de leitura.
+    final corpo = IndexedStack(
+      index: _indice,
+      children: [for (final d in _destinos) d.tela],
+    );
+
+    if (!largo) {
+      return Scaffold(
+        body: corpo,
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: _indice,
+          onDestinationSelected: (i) => setState(() => _indice = i),
+          destinations: [
+            for (final d in _destinos)
+              NavigationDestination(
+                icon: Icon(d.icone),
+                selectedIcon: Icon(d.iconeAtivo),
+                label: d.rotulo,
+              ),
           ],
         ),
+      );
+    }
+
+    return Scaffold(
+      body: Row(
+        children: [
+          NavigationRail(
+            selectedIndex: _indice,
+            onDestinationSelected: (i) => setState(() => _indice = i),
+            labelType: NavigationRailLabelType.all,
+            destinations: [
+              for (final d in _destinos)
+                NavigationRailDestination(
+                  icon: Icon(d.icone),
+                  selectedIcon: Icon(d.iconeAtivo),
+                  label: Text(d.rotulo),
+                ),
+            ],
+          ),
+          const VerticalDivider(width: 1),
+          Expanded(child: corpo),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

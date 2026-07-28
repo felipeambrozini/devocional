@@ -46,3 +46,9 @@ app.*.map.json
 
 # FVM Version Cache
 .fvm/
+
+# graphify knowledge-graph output (generated, machine-specific interpreter path)
+graphify-out/
+
+# Claude Code local debug config (hardcoded machine path)
+.claude/launch.json

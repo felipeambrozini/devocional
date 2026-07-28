@@ -1,0 +1,28 @@
+{
+  "_leia_me": [
+    "Frases de Spurgeon sobre cada livro, com fonte. Só entra aqui o que foi conferido",
+    "na fonte primária, com a URL registrada. O original em inglês fica ao lado da",
+    "tradução para que qualquer pessoa possa auditar. Livro sem entrada aqui fica com a",
+    "frase vazia na introdução, e o app omite o bloco: melhor faltar do que inventar",
+    "citação atribuída a uma pessoa real.",
+    "Aplicar com: python tools/aplicar_frases.py"
+  ],
+  "salmos": {
+    "frase": "O Livro dos Salmos tem sido um banquete real para mim, e ao me alimentar do seu conteúdo tive a impressão de comer o alimento dos anjos.",
+    "original": "The Book of Psalms has been a royal banquet to me, and in feasting upon its contents I have seemed to eat angels' food.",
+    "fonte": "O Tesouro de Davi, prefácio do volume 5 (tradução do original)",
+    "url": "https://www.spurgeon.org/blog/the-significance-of-the-psalms-for-spurgeon"
+  },
+  "cantares": {
+    "frase": "Este é um versículo do Cântico dos Cânticos, e não hesito em dizer que é a alma e o coração dessa composição divina.",
+    "original": "THIS is a versicle from the Song of Songs, and I do not hesitate to say that it is the soul and heart of that divine composition.",
+    "fonte": "sermão O Meu Amado é Meu, Metropolitan Tabernacle Pulpit, volume 41, 11 de setembro de 1887 (tradução do original)",
+    "url": "https://www.spurgeon.org/resource-library/sermons/my-beloved-is-mine/"
+  },
+  "romanos": {
+    "frase": "Agradeço a Deus de todo o meu coração que, desde a minha conversão, nunca soube o que é estar fora do sétimo de Romanos, nem fora do oitavo de Romanos.",
+    "original": "I thank God with all my heart that since my conversion I have never known what it is to be out of the seventh of Romans, nor out of the eighth of Romans either",
+    "fonte": "sermão Em Cristo Não Há Condenação, Metropolitan Tabernacle Pulpit, volume 32, 29 de agosto de 1886 (tradução do original)",
+    "url": "https://www.spurgeon.org/resource-library/sermons/in-christ-not-condemnation/"
+  }
+}

@@ -1,5 +1,5 @@
 name: felipe_ambrozini
-description: "A new Flutter project."
+description: "Aplicativo devocional pessoal: Bíblias BKJ 1611 e NVT, devocionais de Spurgeon, plano de leitura anual."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -35,6 +35,16 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
+  # Cinzel (títulos) e Montserrat (texto). Baixadas em tempo de execução e cacheadas,
+  # o que evita versionar TTFs. Sem internet no primeiro uso cai na fonte padrão;
+  # para tornar 100% offline, basta embutir os .ttf e trocar GoogleFonts.cinzel()
+  # por TextStyle(fontFamily: 'Cinzel') em lib/theme.dart.
+  google_fonts: ^6.2.1
+
+  # Progresso de leitura, favoritos, notas e preferências. Único armazenamento que
+  # funciona igual em Android, iOS, web e desktop sem ramificação de plataforma.
+  shared_preferences: ^2.3.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -57,10 +67,15 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  # Diretórios inteiros: os 66 arquivos por versão são carregados sob demanda pelo
+  # slug do livro, então listar um a um não traria nada além de ruído.
+  assets:
+    - assets/bible/bkj/
+    - assets/bible/nvt/
+    - assets/devotional/
+    - assets/intro/
+    - assets/images/
+    - assets/reading_plan.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
