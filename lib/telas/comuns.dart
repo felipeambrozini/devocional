@@ -31,7 +31,7 @@ class Cartao extends StatelessWidget {
                   Expanded(
                     child: Text(titulo!, style: Theme.of(context).textTheme.titleLarge),
                   ),
-                  if (acessorio != null) acessorio!,
+                  ?acessorio,
                 ],
               ),
               const SizedBox(height: 12),

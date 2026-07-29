@@ -119,7 +119,7 @@ class _TelaBuscaState extends State<TelaBusca> {
                     : ListView.separated(
                         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
                         itemCount: _achados.length,
-                        separatorBuilder: (_, __) => const Divider(height: 18),
+                        separatorBuilder: (_, _) => const Divider(height: 18),
                         itemBuilder: (context, i) => _ItemDeAchado(
                           achado: _achados[i],
                           termo: _termoBuscado,

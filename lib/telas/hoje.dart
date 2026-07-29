@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
+import '../data/localizacao.dart';
 import '../data/modelos.dart';
 import '../theme.dart';
 import 'biblia.dart';
@@ -11,14 +12,29 @@ import 'devocional.dart';
 import 'faixa.dart';
 
 /// Tela de abertura: quem sou, o devocional da hora, a leitura do dia e o progresso.
-class TelaHoje extends StatelessWidget {
+class TelaHoje extends StatefulWidget {
   const TelaHoje({super.key});
+
+  @override
+  State<TelaHoje> createState() => _TelaHojeState();
+}
+
+class _TelaHojeState extends State<TelaHoje> {
+  @override
+  void initState() {
+    super.initState();
+    // Sem await: a tela abre com o último lugar conhecido, ou com o horário
+    // fixo, e se redesenha sozinha se o GPS trouxer algo diferente.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) atualizarLugar(EscopoDoEstado.de(context));
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final agora = DateTime.now();
-    final periodo = Periodo.pelaHora(agora.hour);
     final estado = EscopoDoEstado.de(context);
+    final periodo = Periodo.peloSol(agora, estado.lugar);
 
     return Scaffold(
       body: SafeArea(
@@ -27,7 +43,12 @@ class TelaHoje extends StatelessWidget {
           children: [
             _Cabecalho(periodo: periodo, data: agora),
             const SizedBox(height: 20),
-            _DevocionalDaHora(data: agora, periodo: periodo),
+            _CartaoDaLeitura(
+              data: agora,
+              leitura: periodo == Periodo.manha ? Leitura.manha : Leitura.noite,
+            ),
+            const SizedBox(height: 16),
+            _CartaoDaLeitura(data: agora, leitura: Leitura.promessas),
             const SizedBox(height: 16),
             _LeituraDeHoje(data: agora),
             const SizedBox(height: 16),
@@ -87,40 +108,71 @@ class _Cabecalho extends StatelessWidget {
   }
 }
 
-class _DevocionalDaHora extends StatelessWidget {
-  const _DevocionalDaHora({required this.data, required this.periodo});
+/// Prévia de uma das três leituras do dia, com atalho para a tela inteira.
+///
+/// Serve às três porque só o que muda é de onde o texto vem e se há título e
+/// versículo em destaque: Promessas de Deus tem os dois, Manhã e Noite não.
+class _CartaoDaLeitura extends StatelessWidget {
+  const _CartaoDaLeitura({required this.data, required this.leitura});
 
   final DateTime data;
-  final Periodo periodo;
+  final Leitura leitura;
+
+  String get _titulo => leitura == Leitura.promessas
+      ? leitura.rotulo
+      : 'Devocional da ${leitura.rotulo.toLowerCase()}';
+
+  IconData get _icone => switch (leitura) {
+        Leitura.manha => Icons.wb_sunny_outlined,
+        Leitura.noite => Icons.nightlight_outlined,
+        Leitura.promessas => Icons.auto_awesome_outlined,
+      };
+
+  Future<Devocional?> get _futuro {
+    final periodo = leitura.periodo;
+    return periodo == null
+        ? Conteudo.instancia.promessa(data)
+        : Conteudo.instancia.devocional(data, periodo);
+  }
 
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context).textTheme;
     return FutureBuilder<Devocional?>(
-      future: Conteudo.instancia.devocional(data, periodo),
+      future: _futuro,
       builder: (context, snap) {
         final dev = snap.data;
         return Cartao(
-          titulo: 'Devocional da ${periodo == Periodo.manha ? 'manhã' : 'noite'}',
-          acessorio: Icon(
-            periodo == Periodo.manha
-                ? Icons.wb_sunny_outlined
-                : Icons.nightlight_outlined,
-            color: Cores.dourado,
-            size: 20,
-          ),
+          titulo: _titulo,
+          acessorio: Icon(_icone, color: Cores.dourado, size: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (dev == null)
                 const Text('Carregando...')
               else ...[
+                if (dev.titulo.isNotEmpty)
+                  Text(
+                    dev.titulo,
+                    style: tema.titleMedium?.copyWith(color: Cores.dourado),
+                  ),
                 if (dev.referencia.isNotEmpty)
                   Text(
                     dev.referencia,
                     style: tema.titleSmall?.copyWith(color: Cores.douradoClaro),
                   ),
                 const SizedBox(height: 8),
+                if (dev.versiculo.isNotEmpty) ...[
+                  Text(
+                    dev.versiculo,
+                    style: tema.bodyMedium?.copyWith(
+                      height: 1.6,
+                      fontStyle: FontStyle.italic,
+                      color: Cores.douradoClaro,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 Text(
                   dev.texto,
                   maxLines: 5,
@@ -136,7 +188,7 @@ class _DevocionalDaHora extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (_) => TelaDevocional(
                           dataInicial: data,
-                          periodoInicial: periodo,
+                          leituraInicial: leitura,
                         ),
                       ),
                     ),

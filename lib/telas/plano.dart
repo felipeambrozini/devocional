@@ -59,7 +59,7 @@ class _TelaPlanoState extends State<TelaPlano> {
           return ListView.separated(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
             itemCount: dias.length + 1,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (context, i) {
               if (i == 0) {
                 return Padding(

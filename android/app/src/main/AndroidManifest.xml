@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Só localização aproximada, e só para saber a que horas o sol nasce e se
+         põe aqui, o que decide entre o devocional da manhã e o da noite. A
+         precisão fina não acrescenta nada a esse cálculo. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <application
         android:label="felipe_ambrozini"
         android:name="${applicationName}"

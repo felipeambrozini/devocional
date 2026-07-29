@@ -4,6 +4,7 @@ import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:felipe_ambrozini/main.dart';
 import 'package:felipe_ambrozini/telas/biblia.dart';
+import 'package:felipe_ambrozini/telas/devocional.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -34,7 +35,11 @@ void main() {
       final conteudo = Conteudo.instancia;
       await conteudo.plano();
       final agora = DateTime.now();
-      await conteudo.devocional(agora, Periodo.pelaHora(agora.hour));
+      // Os dois períodos, porque a aba de abertura depende do sol do lugar e
+      // não se sabe de antemão qual delas a tela vai pedir.
+      for (final periodo in Periodo.values) {
+        await conteudo.devocional(agora, periodo);
+      }
       await conteudo.promessa(agora);
       for (final versao in Versao.values) {
         await conteudo.capitulo(versao, 'genesis', 1);
@@ -61,6 +66,17 @@ void main() {
           w is Text && (w.data?.startsWith('Bom dia, Felipe') == true ||
               w.data?.startsWith('Boa noite, Felipe') == true)),
       findsOneWidget,
+    );
+    expect(find.text('Promessas de Deus'), findsWidgets);
+    // Com o cartão de Promessas a tela ficou mais alta que a viewport do teste,
+    // então o progresso só é construído depois da rolagem.
+    await tester.scrollUntilVisible(
+      find.text('Progresso do ano'),
+      200,
+      scrollable: find.descendant(
+        of: find.byType(ListView),
+        matching: find.byType(Scrollable),
+      ),
     );
     expect(find.text('Progresso do ano'), findsOneWidget);
     expect(find.text('de 365 dias'), findsOneWidget);
@@ -155,6 +171,55 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(estado.ehFavorito(Versao.bkj, 'genesis', 1, 1), isTrue);
+  });
+
+  testWidgets('o devocional tem as três abas e Promessas traz o versículo da BKJ',
+      (tester) async {
+    await aquecerAssets(tester);
+    // 1 de janeiro tem tradução pronta, então serve de caso concreto.
+    await tester.runAsync(
+        () => Conteudo.instancia.promessa(DateTime(2026, 1, 1)));
+    await tester.pumpWidget(MaterialApp(
+      home: EscopoDoEstado(
+        estado: await estadoLimpo(),
+        child: const TelaDevocional(
+          dataInicial: null,
+          leituraInicial: Leitura.promessas,
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    for (final rotulo in ['Manhã', 'Promessas de Deus', 'Noite']) {
+      expect(find.text(rotulo), findsWidgets, reason: rotulo);
+    }
+  });
+
+  testWidgets('Promessas de Deus mostra título, referência e versículo da BKJ',
+      (tester) async {
+    await aquecerAssets(tester);
+    final data = DateTime(2026, 1, 1);
+    await tester.runAsync(() => Conteudo.instancia.promessa(data));
+    await tester.pumpWidget(MaterialApp(
+      home: EscopoDoEstado(
+        estado: await estadoLimpo(),
+        child: TelaDevocional(
+          dataInicial: data,
+          leituraInicial: Leitura.promessas,
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('A PRIMEIRA PROMESSA DA BÍBLIA'), findsOneWidget);
+    expect(find.text('Gênesis 3:15'), findsOneWidget);
+    // O versículo não é tradução minha: sai do asset da BKJ.
+    expect(
+      find.byWidgetPredicate((w) =>
+          w is Text &&
+          w.data?.contains('E eu colocarei inimizade entre ti e a mulher') == true),
+      findsOneWidget,
+    );
   });
 
   testWidgets('o seletor de livro lista os 66 livros nos dois testamentos',

@@ -19,6 +19,16 @@ class Conteudo {
   List<DiaDoPlano>? _plano;
   final Map<String, Introducao?> _introducoes = {};
 
+  /// Chave 'MM-DD' de uma data. Os devocionais e o cronograma são anuais e se
+  /// repetem, então nenhum deles guarda ano.
+  ///
+  /// 29 de fevereiro se resolve sozinho: em ano comum essa data não existe, e o
+  /// próprio DateTime a normaliza para 1 de março. Não há caminho no app que
+  /// produza a chave '02-29' fora de um ano bissexto.
+  static String chaveDoDia(DateTime data) =>
+      '${data.month.toString().padLeft(2, '0')}-'
+      '${data.day.toString().padLeft(2, '0')}';
+
   Future<Map<String, dynamic>> _carregarLivro(Versao versao, String slug) async {
     final chave = '${versao.pasta}/$slug';
     final cacheado = _livros[chave];
@@ -77,8 +87,7 @@ class Conteudo {
   /// esse dia fica sem leitura nova, funcionando como dia de recuperação, e a tela
   /// avisa em vez de aparecer vazia.
   Future<DiaDoPlano?> diaDoPlano(DateTime data) async {
-    final chave = '${data.month.toString().padLeft(2, '0')}-'
-        '${data.day.toString().padLeft(2, '0')}';
+    final chave = chaveDoDia(data);
     final dias = await plano();
     for (final dia in dias) {
       if (dia.data == chave) return dia;
@@ -101,8 +110,7 @@ class Conteudo {
   /// fevereiro, então não há fallback a fazer aqui.
   Future<Devocional?> devocional(DateTime data, Periodo periodo) async {
     final dados = await _carregarDevocionais();
-    final chave = '${data.month.toString().padLeft(2, '0')}-'
-        '${data.day.toString().padLeft(2, '0')}';
+    final chave = chaveDoDia(data);
     final dia = dados[chave];
     if (dia == null) return null;
     final entrada = dia[periodo.chave] as Map<String, dynamic>?;
@@ -131,8 +139,7 @@ class Conteudo {
     }
     final dados = _promessas;
     if (dados == null) return null;
-    final chave = '${data.month.toString().padLeft(2, '0')}-'
-        '${data.day.toString().padLeft(2, '0')}';
+    final chave = chaveDoDia(data);
     final dia = dados[chave];
     return dia == null ? null : Devocional.doJson(dia);
   }
