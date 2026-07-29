@@ -77,6 +77,30 @@ próprio `promises.json`; os arquivos mensais intermediários de
   precisão de sobra. `lib/data/localizacao.dart` falha em silêncio de propósito, e
   o último lugar conhecido fica em `SharedPreferences` para a tela abrir sem
   esperar o GPS. Sem permissão, o app funciona igual, pelo horário fixo.
+- **O ícone sai da foto, recortado no rosto.** As fontes ficam em `assets/icone/`
+  e os arquivos por plataforma são gerados por `dart run flutter_launcher_icons`,
+  nunca editados à mão. Três fontes, e cada uma existe por um motivo:
+  `icone.png` (rosto ocupando 88%, fundo `#2E1B10`) para iOS, macOS, Windows,
+  Android legado e favicon; `icone_adaptativo.png` (60%, fundo transparente)
+  para a camada de frente do ícone adaptativo do Android, que o sistema recorta
+  em círculo, folha ou pílula; `icone_mascaravel.png` (60%, fundo chapado) para
+  os `Icon-maskable-*` da web, porque o Chrome recorta em círculo e descarta os
+  20% de fora. O gerador copia o ícone normal nos maskable, o que cortaria o
+  topo da cabeça, e gera o favicon em 16, embaçado em tela de retina; por isso
+  `tools/icones.py --corrigir` reescreve esses três depois dele. A ordem
+  completa, se precisar refazer:
+
+```bash
+python tools/icones.py --fontes
+```
+
+```bash
+dart run flutter_launcher_icons
+```
+
+```bash
+python tools/icones.py --corrigir
+```
 - **O alternador das três leituras usa chips, não `SegmentedButton`.** O
   `SegmentedButton` iguala a largura de todos os segmentos à do maior, então três
   vezes "Promessas de Deus" nunca cabe num celular e o rótulo aparecia cortado.

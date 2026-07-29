@@ -30,6 +30,31 @@ dev_dependencies:
     sdk: flutter
 
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+# Ícone do app e favicon, gerados da foto do Felipe recortada no rosto sobre o
+# marrom do tema. As fontes ficam em assets/icone/; os arquivos por plataforma
+# são gerados, não editados à mão:
+#   dart run flutter_launcher_icons
+flutter_launcher_icons:
+  image_path: assets/icone/icone.png
+  android: true
+  # O Android recorta o ícone em círculo, folha ou pílula conforme o aparelho,
+  # então a camada de frente tem folga de sobra e o fundo é chapado.
+  adaptive_icon_background: "#2E1B10"
+  adaptive_icon_foreground: assets/icone/icone_adaptativo.png
+  ios: true
+  # A App Store recusa ícone com canal alfa.
+  remove_alpha_ios: true
+  web:
+    generate: true
+    background_color: "#2E1B10"
+    theme_color: "#C9A227"
+  macos:
+    generate: true
+  windows:
+    generate: true
+    icon_size: 256
 
 flutter:
 
