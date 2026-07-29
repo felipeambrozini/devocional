@@ -29,10 +29,12 @@ def main() -> int:
         print(f"ERRO: slugs fora do canon em frases_verificadas.json: {desconhecidos}")
         return 1
 
+    # Toda frase precisa de frase e de referencia. A url e opcional: as frases
+    # trazidas pelo Felipe vieram com referencia de sermao, sem link.
     incompletas = [k for k, v in frases.items()
-                   if not (v.get("frase") and v.get("fonte") and v.get("url"))]
+                   if not (v.get("frase") and v.get("fonte"))]
     if incompletas:
-        print(f"ERRO: frase sem fonte ou sem url: {incompletas}")
+        print(f"ERRO: frase sem referencia: {incompletas}")
         return 1
 
     com, sem = [], []
@@ -48,7 +50,7 @@ def main() -> int:
             dados["quoteSource"] = entrada["fonte"]
             # Guardados para auditoria; o app nao os usa.
             dados["quoteOriginal"] = entrada.get("original", "")
-            dados["quoteUrl"] = entrada["url"]
+            dados["quoteUrl"] = entrada.get("url", "")
             com.append(slug)
         else:
             dados["quote"] = ""

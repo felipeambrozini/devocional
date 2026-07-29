@@ -17,8 +17,14 @@ void main() {
       .toList()
     ..sort((a, b) => a.path.compareTo(b.path));
 
-  test('existe ao menos uma introdução para validar', () {
-    expect(arquivos, isNotEmpty);
+  test('existe exatamente uma introdução para cada um dos 66 livros', () {
+    final slugs = arquivos
+        .map((f) => f.uri.pathSegments.last.replaceAll('.json', ''))
+        .toSet();
+    expect(slugs.length, 66);
+    for (final livro in canon) {
+      expect(slugs, contains(livro.slug), reason: 'falta ${livro.nome}');
+    }
   });
 
   for (final arquivo in arquivos) {
