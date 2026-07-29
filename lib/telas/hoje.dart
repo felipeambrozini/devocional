@@ -83,13 +83,27 @@ class _Cabecalho extends StatelessWidget {
             border: Border.all(color: Cores.dourado, width: 2),
           ),
           padding: const EdgeInsets.all(3),
-          child: const CircleAvatar(
-            radius: 30,
-            backgroundColor: Cores.superficieAlta,
-            // A foto entra em assets/images/felipe.png. Sem o arquivo, cai na inicial,
-            // e o app abre normalmente em vez de estourar por asset ausente.
-            foregroundImage: AssetImage('assets/images/felipe.png'),
-            child: Text('F', style: TextStyle(color: Cores.dourado, fontSize: 24)),
+          child: ClipOval(
+            child: SizedBox(
+              width: 60,
+              height: 60,
+              child: Image.asset(
+                'assets/images/felipe.png',
+                fit: BoxFit.cover,
+                // A foto é mais alta que larga; o corte automático centralizado do
+                // BoxFit.cover cortava o topo da cabeça. Alinhando quase ao topo, o
+                // corte sobra todo embaixo, no peito, em vez do cabelo.
+                alignment: const Alignment(0, -0.85),
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: Cores.superficieAlta,
+                  alignment: Alignment.center,
+                  child: const Text(
+                    'F',
+                    style: TextStyle(color: Cores.dourado, fontSize: 24),
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
         const SizedBox(width: 14),
