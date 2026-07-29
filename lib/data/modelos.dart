@@ -165,6 +165,19 @@ class Introducao {
   /// fonte. Sem isso, uma linha composta na voz dele passaria por citação real.
   final bool fraseComprovada;
   final String fonteDaFrase;
+
+  /// A linha de crédito embaixo da frase.
+  ///
+  /// Fica no modelo, e não nas telas, porque é regra de correção e não de layout:
+  /// rotular como citação de Spurgeon uma frase sem fonte comprovada seria atribuir
+  /// a uma pessoa real palavras que ela não escreveu. Estava duplicada palavra por
+  /// palavra em duas telas, onde uma correção num lugar não chegava ao outro.
+  /// O `trim` importa: fonte só com espaços não é fonte, e sem ele a linha sairia
+  /// como "Charles H. Spurgeon," com a vírgula solta e obra nenhuma. É a mesma
+  /// checagem que a validação dos assets já faz.
+  String get atribuicao => fraseComprovada && fonteDaFrase.trim().isNotEmpty
+      ? 'Charles H. Spurgeon, ${fonteDaFrase.trim()}'
+      : 'Escrito na voz de Spurgeon; sem citação comprovada';
 }
 
 /// Um versículo marcado como favorito, com nota opcional.

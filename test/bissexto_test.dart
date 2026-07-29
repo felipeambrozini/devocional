@@ -54,9 +54,11 @@ void main() {
       }
     });
 
-    test('os assets acompanham a regra: devocionais têm 02-29, o plano não', () {
+    test('os assets acompanham a regra: devocionais têm 02-29, o plano comum não',
+        () {
       // Manhã e Noite e Promessas de Deus são obras de 366 dias e trazem o dia
-      // extra; o cronograma de leitura tem 365 entradas e não o prevê.
+      // extra; o cronograma de leitura em ano comum tem 365 entradas e não o
+      // prevê. O ano bissexto usa a variante própria, testada abaixo.
       expect(ler('assets/devotional/morning_evening.json').containsKey('02-29'),
           isTrue);
       expect(ler('assets/devotional/promises.json').containsKey('02-29'), isTrue);
@@ -67,6 +69,37 @@ void main() {
       final datas = plano.map((d) => (d as Map<String, dynamic>)['date']).toList();
       expect(datas, isNot(contains('02-29')));
       expect(datas.length, 365);
+    });
+
+    test('o cronograma bissexto tem 366 dias, incluindo 02-29', () {
+      final plano = json.decode(
+        File('assets/reading_plan_bissexto.json').readAsStringSync(),
+      ) as List;
+      final datas = plano.map((d) => (d as Map<String, dynamic>)['date']).toList();
+      expect(datas.toSet().length, 366);
+      expect(datas, contains('02-29'));
+    });
+
+    test('diasDoAno casa com o tamanho do cronograma de cada ano', () {
+      expect(Conteudo.diasDoAno(2027), 365);
+      expect(Conteudo.diasDoAno(2028), 366);
+      // O número não é solto: é o divisor do progresso e o rótulo da tela Hoje,
+      // então tem de bater com a contagem do asset correspondente.
+      for (final (ano, arquivo) in [
+        (2027, 'assets/reading_plan.json'),
+        (2028, 'assets/reading_plan_bissexto.json'),
+      ]) {
+        final plano = json.decode(File(arquivo).readAsStringSync()) as List;
+        expect(plano.length, Conteudo.diasDoAno(ano), reason: '$ano em $arquivo');
+      }
+    });
+
+    test('Conteudo.ehBissexto segue a regra gregoriana', () {
+      expect(Conteudo.ehBissexto(2024), isTrue);
+      expect(Conteudo.ehBissexto(2028), isTrue);
+      expect(Conteudo.ehBissexto(2025), isFalse);
+      expect(Conteudo.ehBissexto(1900), isFalse);
+      expect(Conteudo.ehBissexto(2000), isTrue);
     });
   });
 }

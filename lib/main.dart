@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'data/estado.dart';
 import 'telas/biblia.dart';
@@ -28,6 +29,12 @@ class AppDevocional extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: construirTema(),
         home: const Moldura(),
+        localizationsDelegates: [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: [const Locale('pt', 'BR')],
       ),
     );
   }
@@ -45,7 +52,12 @@ class _Destino {
 const _destinos = <_Destino>[
   _Destino('Hoje', Icons.wb_twilight_outlined, Icons.wb_twilight, TelaHoje()),
   _Destino('Bíblia', Icons.menu_book_outlined, Icons.menu_book, TelaBiblia()),
-  _Destino('Devocional', Icons.auto_stories_outlined, Icons.auto_stories, TelaDevocional()),
+  _Destino(
+    'Devocional',
+    Icons.auto_stories_outlined,
+    Icons.auto_stories,
+    TelaDevocional(),
+  ),
   _Destino('Plano', Icons.event_note_outlined, Icons.event_note, TelaPlano()),
   _Destino('Notas', Icons.bookmark_outline, Icons.bookmark, TelaNotas()),
 ];

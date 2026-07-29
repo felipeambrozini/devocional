@@ -43,16 +43,16 @@ class _TelaHojeState extends State<TelaHoje> {
           children: [
             _Cabecalho(periodo: periodo, data: agora),
             const SizedBox(height: 20),
-            _CartaoDaLeitura(
+            _PreviaDaLeitura(
               data: agora,
               leitura: periodo == Periodo.manha ? Leitura.manha : Leitura.noite,
             ),
             const SizedBox(height: 16),
-            _CartaoDaLeitura(data: agora, leitura: Leitura.promessas),
+            _PreviaDaLeitura(data: agora, leitura: Leitura.promessas),
             const SizedBox(height: 16),
             _LeituraDeHoje(data: agora),
             const SizedBox(height: 16),
-            _Progresso(estado: estado),
+            _Progresso(estado: estado, ano: agora.year),
             if (estado.ultimaLeitura != null) ...[
               const SizedBox(height: 16),
               _Continuar(ultima: estado.ultimaLeitura!),
@@ -112,8 +112,8 @@ class _Cabecalho extends StatelessWidget {
 ///
 /// Serve às três porque só o que muda é de onde o texto vem e se há título e
 /// versículo em destaque: Promessas de Deus tem os dois, Manhã e Noite não.
-class _CartaoDaLeitura extends StatelessWidget {
-  const _CartaoDaLeitura({required this.data, required this.leitura});
+class _PreviaDaLeitura extends StatelessWidget {
+  const _PreviaDaLeitura({required this.data, required this.leitura});
 
   final DateTime data;
   final Leitura leitura;
@@ -138,9 +138,10 @@ class _CartaoDaLeitura extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context).textTheme;
-    return FutureBuilder<Devocional?>(
-      future: _futuro,
-      builder: (context, snap) {
+    return CarregaUmaVez<Devocional?>(
+      chave: '${leitura.name}/${Conteudo.chaveDoDia(data)}',
+      carregar: () => _futuro,
+      construir: (context, snap) {
         final dev = snap.data;
         return Cartao(
           titulo: _titulo,
@@ -212,9 +213,16 @@ class _LeituraDeHoje extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final estado = EscopoDoEstado.de(context);
-    return FutureBuilder<DiaDoPlano?>(
-      future: Conteudo.instancia.diaDoPlano(data),
-      builder: (context, snap) {
+    return CarregaUmaVez<DiaDoPlano?>(
+      chave: Conteudo.chaveDoDia(data),
+      carregar: () => Conteudo.instancia.diaDoPlano(data),
+      construir: (context, snap) {
+        // Sem este guard o primeiro frame, que sempre chega sem dado porque a
+        // leitura é assíncrona, cairia no aviso de 29 de fevereiro abaixo e o
+        // mostraria em qualquer dia comum até o cronograma carregar.
+        if (snap.connectionState != ConnectionState.done) {
+          return const Cartao(titulo: 'Leitura de hoje', child: Text('Carregando...'));
+        }
         final dia = snap.data;
         if (dia == null) {
           return const Cartao(
@@ -252,14 +260,19 @@ class _LeituraDeHoje extends StatelessWidget {
 }
 
 class _Progresso extends StatelessWidget {
-  const _Progresso({required this.estado});
+  const _Progresso({required this.estado, required this.ano});
 
   final Estado estado;
+
+  /// O ano decide o total: 366 dias em ano bissexto.
+  final int ano;
 
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context).textTheme;
-    final porcento = (estado.progressoDoAno * 100).round();
+    final total = Conteudo.diasDoAno(ano);
+    final progresso = estado.progressoDoAno(total);
+    final porcento = (progresso * 100).round();
     return Cartao(
       titulo: 'Progresso do ano',
       child: Column(
@@ -271,7 +284,7 @@ class _Progresso extends StatelessWidget {
             children: [
               Text('${estado.diasLidos}', style: tema.displayLarge),
               const SizedBox(width: 6),
-              Text('de 365 dias', style: tema.bodySmall),
+              Text('de $total dias', style: tema.bodySmall),
               const Spacer(),
               Text('$porcento%', style: tema.headlineSmall),
             ],
@@ -280,7 +293,7 @@ class _Progresso extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-              value: estado.progressoDoAno.clamp(0.0, 1.0),
+              value: progresso.clamp(0.0, 1.0),
               minHeight: 7,
               backgroundColor: Cores.superficieAlta,
               valueColor: const AlwaysStoppedAnimation(Cores.dourado),

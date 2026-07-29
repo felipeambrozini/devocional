@@ -16,8 +16,20 @@ class Conteudo {
 
   final Map<String, Map<String, dynamic>> _livros = {};
   Map<String, Map<String, dynamic>>? _devocionais;
-  List<DiaDoPlano>? _plano;
+  List<DiaDoPlano>? _planoComum;
+  List<DiaDoPlano>? _planoBissexto;
   final Map<String, Introducao?> _introducoes = {};
+
+  /// Regra gregoriana padrão: bissexto a cada 4 anos, exceto séculos não
+  /// divisíveis por 400.
+  static bool ehBissexto(int ano) =>
+      (ano % 4 == 0 && ano % 100 != 0) || ano % 400 == 0;
+
+  /// Quantos dias o cronograma tem no ano, que é o total contra o qual o
+  /// progresso é medido. Um dono só para esse número: ele estava escrito como 365
+  /// à mão na fração do progresso, no rótulo da tela e na escolha do asset, e em
+  /// ano bissexto os três discordavam do cronograma de 366 dias.
+  static int diasDoAno(int ano) => ehBissexto(ano) ? 366 : 365;
 
   /// Chave 'MM-DD' de uma data. Os devocionais e o cronograma são anuais e se
   /// repetem, então nenhum deles guarda ano.
@@ -69,26 +81,29 @@ class Conteudo {
     return '';
   }
 
-  Future<List<DiaDoPlano>> plano() async {
-    final cacheado = _plano;
+  /// O cronograma anual. Em ano bissexto usa a variante de 366 dias, com 29 de
+  /// fevereiro como dia próprio em vez de dobrar a leitura de 28/2.
+  Future<List<DiaDoPlano>> plano({bool bissexto = false}) async {
+    final cacheado = bissexto ? _planoBissexto : _planoComum;
     if (cacheado != null) return cacheado;
-    final cru = await rootBundle.loadString('assets/reading_plan.json');
+    final arquivo = bissexto ? 'reading_plan_bissexto.json' : 'reading_plan.json';
+    final cru = await rootBundle.loadString('assets/$arquivo');
     final dias = [
       for (final d in json.decode(cru) as List)
         DiaDoPlano.doJson(d as Map<String, dynamic>),
     ];
-    _plano = dias;
+    if (bissexto) {
+      _planoBissexto = dias;
+    } else {
+      _planoComum = dias;
+    }
     return dias;
   }
 
   /// O dia do cronograma para uma data.
-  ///
-  /// 29 de fevereiro não existe no cronograma, que tem 365 entradas. Em ano bissexto
-  /// esse dia fica sem leitura nova, funcionando como dia de recuperação, e a tela
-  /// avisa em vez de aparecer vazia.
   Future<DiaDoPlano?> diaDoPlano(DateTime data) async {
     final chave = chaveDoDia(data);
-    final dias = await plano();
+    final dias = await plano(bissexto: ehBissexto(data.year));
     for (final dia in dias) {
       if (dia.data == chave) return dia;
     }

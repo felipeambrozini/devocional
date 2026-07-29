@@ -110,15 +110,7 @@ class _Frase extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          // Sem fonte comprovada a linha não é apresentada como citação de Spurgeon.
-          // Uma frase composta na voz dele, rotulada como citação, seria atribuição
-          // falsa a uma pessoa real.
-          Text(
-            intro.fraseComprovada && intro.fonteDaFrase.isNotEmpty
-                ? 'Charles H. Spurgeon, ${intro.fonteDaFrase}'
-                : 'Escrito na voz de Spurgeon; sem citação comprovada',
-            style: tema.labelMedium,
-          ),
+          Text(intro.atribuicao, style: tema.labelMedium),
         ],
       ),
     );

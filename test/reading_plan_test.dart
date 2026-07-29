@@ -7,8 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Lê o asset direto do disco. Um teste de dados não precisa subir um app inteiro
 /// só para validar o conteúdo de um JSON.
-List<DiaDoPlano> carregarPlano() {
-  final cru = File('assets/reading_plan.json').readAsStringSync();
+List<DiaDoPlano> carregarPlano([String caminho = 'assets/reading_plan.json']) {
+  final cru = File(caminho).readAsStringSync();
   return [
     for (final d in json.decode(cru) as List) DiaDoPlano.doJson(d as Map<String, dynamic>),
   ];
@@ -97,6 +97,39 @@ void main() {
       expect(umCapitulo.rotulo, 'João 3');
       expect(varios.rotulo, 'Marcos 1-3');
       expect(varios.capitulos, [1, 2, 3]);
+    });
+  });
+
+  group('cronograma bissexto', () {
+    final planoBissexto = carregarPlano('assets/reading_plan_bissexto.json');
+
+    test('tem exatamente 366 dias, um por data do ano incluindo 02-29', () {
+      expect(planoBissexto.length, 366);
+      final datas = planoBissexto.map((d) => d.data).toList();
+      expect(datas.toSet().length, 366);
+      expect(datas, contains('02-29'));
+    });
+
+    test('so difere do cronograma comum na divisao de 28/2 e 29/2', () {
+      final comum = {for (final d in plano) d.data: d.rotulo};
+      final bissexto = {for (final d in planoBissexto) d.data: d.rotulo};
+      for (final data in bissexto.keys) {
+        if (data == '02-28' || data == '02-29') continue;
+        expect(bissexto[data], comum[data], reason: 'divergiu em $data');
+      }
+      expect(bissexto['02-28'], '2 Pedro 1 a 3');
+      expect(bissexto['02-29'], 'Judas 1');
+    });
+
+    test('todo livro citado existe no canon e as faixas cabem nele', () {
+      for (final dia in planoBissexto) {
+        for (final faixa in dia.faixas) {
+          final livro = livroPorSlug(faixa.livro);
+          expect(livro, isNotNull, reason: '${dia.data}: livro ${faixa.livro}');
+          expect(faixa.ateCapitulo, lessThanOrEqualTo(livro!.capitulos),
+              reason: '${dia.data}: ${livro.nome} ${faixa.ateCapitulo}');
+        }
+      }
     });
   });
 }

@@ -127,8 +127,13 @@ class Estado extends ChangeNotifier {
     await _prefs.setStringList(_kLidos, _lidos.toList()..sort());
   }
 
-  /// Fração do ano concluída, para a barra de progresso. O cronograma tem 365 dias.
-  double get progressoDoAno => _lidos.length / 365;
+  /// Fração do cronograma concluída, para a barra de progresso.
+  ///
+  /// O total entra por parâmetro em vez de ser 365 fixo: em ano bissexto o
+  /// cronograma tem 366 dias, e com o divisor errado marcar o ano inteiro daria
+  /// mais de cem por cento. Quem chama pega o número em [Conteudo.diasDoAno], e
+  /// assim o Estado continua sem saber de assets.
+  double progressoDoAno(int totalDeDias) => _lidos.length / totalDeDias;
 
   // --- última leitura ------------------------------------------------------ //
 

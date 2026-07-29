@@ -1,4 +1,5 @@
 import 'package:felipe_ambrozini/data/canon.dart';
+import 'package:felipe_ambrozini/data/conteudo.dart';
 import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,11 +29,30 @@ void main() {
       expect((await reabrir()).diasLidos, 1);
     });
 
-    test('progresso e fracao de 365 dias', () async {
+    test('progresso e fracao do total de dias do ano', () async {
       final estado = await Estado.abrir();
-      expect(estado.progressoDoAno, 0);
+      expect(estado.progressoDoAno(365), 0);
       await estado.alternarLido('01-01');
-      expect(estado.progressoDoAno, closeTo(1 / 365, 1e-9));
+      expect(estado.progressoDoAno(365), closeTo(1 / 365, 1e-9));
+      // Em ano bissexto o divisor é 366, senão marcar o ano inteiro passaria de 100%.
+      expect(estado.progressoDoAno(366), closeTo(1 / 366, 1e-9));
+    });
+
+    test('o ano inteiro marcado fecha em 100% em ano comum e em bissexto', () async {
+      for (final (ano, total) in [(2027, 365), (2028, 366)]) {
+        // Cada volta começa de armazenamento limpo: sem isto a segunda passagem
+        // desmarcaria os dias já marcados, porque alternarLido alterna.
+        SharedPreferences.setMockInitialValues({});
+        final estado = await Estado.abrir();
+        for (var d = 0; d < total; d++) {
+          final dia = DateTime(ano, 1, 1).add(Duration(days: d));
+          await estado.alternarLido(Conteudo.chaveDoDia(dia));
+        }
+        expect(estado.diasLidos, total,
+            reason: 'ano $ano deve render $total chaves distintas');
+        expect(estado.progressoDoAno(Conteudo.diasDoAno(ano)), closeTo(1.0, 1e-9),
+            reason: 'ano $ano');
+      }
     });
   });
 

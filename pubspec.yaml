@@ -13,6 +13,8 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
+  flutter_localizations:
+    sdk: flutter
 
   # Cinzel (títulos) e Montserrat (texto). Baixadas em tempo de execução e cacheadas,
   # o que evita versionar TTFs. Sem internet no primeiro uso cai na fonte padrão;
@@ -69,4 +71,5 @@ flutter:
     - assets/intro/
     - assets/images/
     - assets/reading_plan.json
+    - assets/reading_plan_bissexto.json
 

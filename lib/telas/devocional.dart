@@ -5,7 +5,6 @@ import '../data/estado.dart';
 import '../data/modelos.dart';
 import '../theme.dart';
 import 'comuns.dart';
-import 'faixa.dart';
 
 /// As três leituras diárias, na ordem em que aparecem no alternador do topo.
 ///
@@ -122,10 +121,10 @@ class _TelaDevocionalState extends State<TelaDevocional> {
             ao: (l) => setState(() => _leitura = l),
           ),
           const SizedBox(height: 16),
-          FutureBuilder<Devocional?>(
-            key: ValueKey('${_leitura.name}/${_data.month}/${_data.day}'),
-            future: _carregar(),
-            builder: (context, snap) {
+          CarregaUmaVez<Devocional?>(
+            chave: '${_leitura.name}/${_data.month}/${_data.day}',
+            carregar: _carregar,
+            construir: (context, snap) {
               if (snap.connectionState != ConnectionState.done) {
                 return const Padding(
                   padding: EdgeInsets.all(32),
@@ -160,8 +159,6 @@ class _TelaDevocionalState extends State<TelaDevocional> {
               );
             },
           ),
-          const SizedBox(height: 16),
-          _LeituraDoDia(data: _data),
         ],
       ),
     );
@@ -283,48 +280,4 @@ class _CartaoDeLeitura extends StatelessWidget {
   }
 }
 
-/// Atalho para a leitura do cronograma na data escolhida.
-class _LeituraDoDia extends StatelessWidget {
-  const _LeituraDoDia({required this.data});
 
-  final DateTime data;
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<DiaDoPlano?>(
-      key: ValueKey('plano/${data.month}/${data.day}'),
-      future: Conteudo.instancia.diaDoPlano(data),
-      builder: (context, snap) {
-        if (snap.connectionState != ConnectionState.done) {
-          return const SizedBox.shrink();
-        }
-        final dia = snap.data;
-        if (dia == null) {
-          return const Cartao(
-            titulo: 'Leitura do dia',
-            child: Text(
-              'O cronograma tem 365 dias e não prevê 29 de fevereiro. '
-              'Hoje é dia de recuperação: aproveite para colocar em dia alguma '
-              'leitura atrasada.',
-            ),
-          );
-        }
-        return Cartao(
-          titulo: 'Leitura do dia',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(dia.rotulo, style: Theme.of(context).textTheme.bodyLarge),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [for (final faixa in dia.faixas) BotaoDeFaixa(faixa: faixa)],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}

@@ -125,12 +125,13 @@ class _TelaBibliaState extends State<TelaBiblia> {
             ao: (v) => estado.definirVersao(v),
           ),
           Expanded(
-            child: FutureBuilder<Capitulo>(
+            child: CarregaUmaVez<Capitulo>(
               // A chave inclui a versão para que alternar BKJ e NVT recarregue o
               // mesmo capítulo, mantendo livro e número.
-              key: ValueKey('${estado.versao.pasta}/$_livro/$_capitulo'),
-              future: Conteudo.instancia.capitulo(estado.versao, _livro, _capitulo),
-              builder: (context, snap) {
+              chave: '${estado.versao.pasta}/$_livro/$_capitulo',
+              carregar: () =>
+                  Conteudo.instancia.capitulo(estado.versao, _livro, _capitulo),
+              construir: (context, snap) {
                 if (!snap.hasData) {
                   return const Center(child: CircularProgressIndicator());
                 }
@@ -407,9 +408,10 @@ class _AberturaDoLivroState extends State<_AberturaDoLivro> {
   Widget build(BuildContext context) {
     final tema = Theme.of(context).textTheme;
 
-    return FutureBuilder<Introducao?>(
-      future: Conteudo.instancia.introducao(widget.slug),
-      builder: (context, snap) {
+    return CarregaUmaVez<Introducao?>(
+      chave: widget.slug,
+      carregar: () => Conteudo.instancia.introducao(widget.slug),
+      construir: (context, snap) {
         final intro = snap.data;
         // Sem introdução escrita, nada é mostrado: o livro começa no capítulo 1.
         if (intro == null) return const SizedBox.shrink();
@@ -500,12 +502,7 @@ class _AberturaDoLivroState extends State<_AberturaDoLivro> {
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                Text(
-                                  intro.fraseComprovada && intro.fonteDaFrase.isNotEmpty
-                                      ? 'Charles H. Spurgeon, ${intro.fonteDaFrase}'
-                                      : 'Escrito na voz de Spurgeon; sem citação comprovada',
-                                  style: tema.labelMedium,
-                                ),
+                                Text(intro.atribuicao, style: tema.labelMedium),
                               ],
                             ),
                           ),

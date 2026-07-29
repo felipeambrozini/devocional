@@ -5,6 +5,7 @@ import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:felipe_ambrozini/main.dart';
 import 'package:felipe_ambrozini/telas/biblia.dart';
 import 'package:felipe_ambrozini/telas/devocional.dart';
+import 'package:felipe_ambrozini/telas/plano.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -52,6 +53,49 @@ void main() {
     });
   }
 
+  testWidgets('o cronograma de 29 de fevereiro só existe em ano bissexto',
+      (tester) async {
+    // A suíte roda em ano comum, então este é o único lugar que exercita a
+    // variante de 366 dias de verdade, carregando o asset. Sem ele, alguém pode
+    // desfazer a escolha do arquivo e nada acusa antes de 2028.
+    await tester.runAsync(() async {
+      final conteudo = Conteudo.instancia;
+
+      final bissexto = await conteudo.diaDoPlano(DateTime(2028, 2, 29));
+      expect(bissexto, isNotNull, reason: '2028 é bissexto e tem 29 de fevereiro');
+      expect(bissexto!.data, '02-29');
+
+      // Em ano comum o cronograma não prevê a data, e é isso que faz a tela mostrar
+      // o aviso de dia de recuperação em vez de um cartão vazio.
+      final comum = await conteudo.plano(bissexto: false);
+      expect(comum.any((d) => d.data == '02-29'), isFalse);
+      expect(comum.length, Conteudo.diasDoAno(2027));
+
+      final doisMil28 = await conteudo.plano(bissexto: true);
+      expect(doisMil28.length, Conteudo.diasDoAno(2028));
+    });
+  });
+
+  testWidgets('a tela Plano mostra o dia 29 em fevereiro de ano bissexto',
+      (tester) async {
+    // Guarda a escolha que a TELA faz, não só a do Conteudo: ela chamava plano()
+    // sem bissexto e mostrava sempre o cronograma de 365 dias, discordando de Hoje
+    // e do Devocional a partir de março de um ano bissexto.
+    await tester.runAsync(() => Conteudo.instancia.plano(bissexto: true));
+    await tester.pumpWidget(MaterialApp(
+      home: EscopoDoEstado(
+        estado: await estadoLimpo(),
+        child: TelaPlano(hoje: DateTime(2028, 2, 15)),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    // O cabeçalho do mês, que fica acima da dobra, já conta os dias do mês. Os
+    // cartões em si são construídos por demanda e o dia 29 fica fora da viewport.
+    expect(find.text('0 de 29 dias concluídos em Fevereiro'), findsOneWidget,
+        reason: '2028 é bissexto: fevereiro tem 29 dias no cronograma');
+  });
+
   testWidgets('a moldura abre em Hoje e mostra as cinco seções', (tester) async {
     await aquecerAssets(tester);
     await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
@@ -79,7 +123,15 @@ void main() {
       ),
     );
     expect(find.text('Progresso do ano'), findsOneWidget);
-    expect(find.text('de 365 dias'), findsOneWidget);
+    // Não fixa 365: em ano bissexto o cronograma tem 366 dias, e o rótulo segue o
+    // total do ano corrente. Escrito assim o teste continua valendo em 2028.
+    final total = Conteudo.diasDoAno(DateTime.now().year);
+    expect(find.text('de $total dias'), findsOneWidget);
+    // O aviso de 29 de fevereiro é só para ano bissexto. Ele aparecia em qualquer
+    // dia enquanto o cronograma carregava, porque o primeiro frame chega sem dado e
+    // caía no ramo de recuperação. Isto fixa o estado final; o flash de um frame
+    // fica fora do alcance de pumpAndSettle.
+    expect(find.textContaining('29 de fevereiro'), findsNothing);
   });
 
   testWidgets('o leitor abre Gênesis 1 e mostra o texto da BKJ', (tester) async {

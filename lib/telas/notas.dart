@@ -147,14 +147,15 @@ class _CartaoDeMarcacao extends StatelessWidget {
               const SizedBox(height: 4),
               // O texto do versículo não é guardado junto da marcação: fica sempre
               // na versão salva, e assim uma correção no asset se reflete aqui.
-              FutureBuilder<String>(
-                future: Conteudo.instancia.versiculo(
+              CarregaUmaVez<String>(
+                chave: marcacao.chave,
+                carregar: () => Conteudo.instancia.versiculo(
                   marcacao.versao,
                   marcacao.livro,
                   marcacao.capitulo,
                   marcacao.versiculo,
                 ),
-                builder: (context, snap) => Text(
+                construir: (context, snap) => Text(
                   snap.data ?? '',
                   style: tema.bodyMedium?.copyWith(height: 1.55),
                 ),

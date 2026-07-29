@@ -92,6 +92,48 @@ void main() {
     });
   }
 
+  group('a linha de crédito da frase', () {
+    // Os 66 assets todos têm fonte comprovada, e o teste acima exige que continue
+    // assim, então o ramo sem fonte é inalcançável pelos arquivos. Construir a
+    // Introducao na mão é o único jeito de exercitá-lo: sem isto, uma regressão
+    // nesse ramo não apareceria em teste nem na tela.
+    test('sem fonte comprovada não se apresenta como citação de Spurgeon', () {
+      const semFonte = Introducao(
+        livro: 'Gênesis',
+        secoes: [],
+        frase: 'uma linha na voz dele',
+        fraseComprovada: false,
+        fonteDaFrase: '',
+      );
+      expect(semFonte.atribuicao,
+          'Escrito na voz de Spurgeon; sem citação comprovada');
+    });
+
+    test('comprovada e sem fonte também não vira citação', () {
+      const semObra = Introducao(
+        livro: 'Gênesis',
+        secoes: [],
+        frase: 'x',
+        fraseComprovada: true,
+        fonteDaFrase: '   ',
+      );
+      expect(semObra.atribuicao,
+          'Escrito na voz de Spurgeon; sem citação comprovada',
+          reason: 'fonte só com espaços não é fonte, e a vírgula ficaria solta');
+    });
+
+    test('com fonte comprovada credita Spurgeon e a obra', () {
+      const comFonte = Introducao(
+        livro: 'Salmos',
+        secoes: [],
+        frase: 'x',
+        fraseComprovada: true,
+        fonteDaFrase: 'O Tesouro de Davi',
+      );
+      expect(comFonte.atribuicao, 'Charles H. Spurgeon, O Tesouro de Davi');
+    });
+  });
+
   test('progresso: quantas das 66 já estão escritas', () {
     final escritas = arquivos.length;
     // Não falha por estar incompleto: só registra o andamento no relatório.

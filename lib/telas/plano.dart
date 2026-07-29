@@ -7,21 +7,27 @@ import '../theme.dart';
 import 'comuns.dart';
 import 'faixa.dart';
 
-/// Cronograma anual: os 365 dias, agrupados por mês, com marcação de lido.
+/// Cronograma anual agrupado por mês, com marcação de lido. São 365 dias, ou 366
+/// em ano bissexto, e a tela segue o ano corrente.
 class TelaPlano extends StatefulWidget {
-  const TelaPlano({super.key});
+  const TelaPlano({super.key, this.hoje});
+
+  /// Só o teste passa data: é o que permite verificar o cronograma bissexto sem
+  /// esperar 2028. Em produção fica nulo e vale o relógio.
+  final DateTime? hoje;
 
   @override
   State<TelaPlano> createState() => _TelaPlanoState();
 }
 
 class _TelaPlanoState extends State<TelaPlano> {
-  int _mes = DateTime.now().month;
+  late final DateTime _hoje = widget.hoje ?? DateTime.now();
+  late int _mes = _hoje.month;
 
   @override
   Widget build(BuildContext context) {
     final estado = EscopoDoEstado.de(context);
-    final hoje = DateTime.now();
+    final hoje = _hoje;
 
     return Scaffold(
       appBar: AppBar(
@@ -47,9 +53,18 @@ class _TelaPlanoState extends State<TelaPlano> {
           ),
         ),
       ),
-      body: FutureBuilder<List<DiaDoPlano>>(
-        future: Conteudo.instancia.plano(),
-        builder: (context, snap) {
+      body: CarregaUmaVez<List<DiaDoPlano>>(
+        // A tela mostra o cronograma do ano corrente, então segue a mesma variante
+        // que o resto do app: em ano bissexto, a de 366 dias, com 29 de fevereiro
+        // como dia próprio. Sem isto, esta tela mostrava sempre a de 365 e
+        // discordava de Hoje e do Devocional a partir de março de um ano bissexto.
+        //
+        // A chave leva o ano porque é ele que escolhe o arquivo; o mês não, porque a
+        // filtragem por mês é feita sobre a lista já carregada.
+        chave: 'plano/${hoje.year}',
+        carregar: () =>
+            Conteudo.instancia.plano(bissexto: Conteudo.ehBissexto(hoje.year)),
+        construir: (context, snap) {
           if (!snap.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
