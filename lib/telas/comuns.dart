@@ -320,6 +320,24 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
   }
 }
 
+/// Limita a largura de leitura e centraliza, para o Windows não esticar texto
+/// de ponta a ponta numa janela larga. No celular a tela já é mais estreita
+/// que o limite, então nada muda.
+class LarguraDeLeitura extends StatelessWidget {
+  const LarguraDeLeitura({super.key, required this.child, this.maxWidth = 720});
+
+  final Widget child;
+  final double maxWidth;
+
+  @override
+  Widget build(BuildContext context) => Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: child,
+        ),
+      );
+}
+
 /// Nomes dos meses, usados no cronograma e no calendário.
 const meses = <String>[
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',

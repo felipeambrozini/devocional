@@ -16,68 +16,74 @@ class TelaIntroducao extends StatelessWidget {
   Widget build(BuildContext context) {
     final tema = Theme.of(context).textTheme;
 
-    return Scaffold(
-      appBar: AppBar(title: Text(nomeDoLivro(slug))),
-      body: FutureBuilder<Introducao?>(
-        future: Conteudo.instancia.introducao(slug),
-        builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final intro = snap.data;
-          if (intro == null) {
-            return AvisoVazio(
-              icone: Icons.article_outlined,
-              titulo: 'Introdução ainda não escrita',
-              detalhe: 'A introdução de ${nomeDoLivro(slug)} entra em '
-                  'assets/intro/$slug.json.',
-            );
-          }
+    return LarguraDeLeitura(
+      child: Scaffold(
+        appBar: AppBar(title: Text(nomeDoLivro(slug))),
+        body: FutureBuilder<Introducao?>(
+          future: Conteudo.instancia.introducao(slug),
+          builder: (context, snap) {
+            if (snap.connectionState != ConnectionState.done) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final intro = snap.data;
+            if (intro == null) {
+              return AvisoVazio(
+                icone: Icons.article_outlined,
+                titulo: 'Introdução ainda não escrita',
+                detalhe:
+                    'A introdução de ${nomeDoLivro(slug)} entra em '
+                    'assets/intro/$slug.json.',
+              );
+            }
 
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: Image.asset(
-                      'assets/images/capa_biblia_spurgeon.png',
-                      height: 84,
-                      fit: BoxFit.cover,
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: Image.asset(
+                        'assets/images/capa_biblia_spurgeon.png',
+                        height: 84,
+                        fit: BoxFit.cover,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(intro.livro, style: tema.displayMedium),
-                        const SizedBox(height: 8),
-                        Text('Introdução', style: tema.titleSmall),
-                      ],
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(intro.livro, style: tema.displayMedium),
+                          const SizedBox(height: 8),
+                          Text('Introdução', style: tema.titleSmall),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Filete(largura: 64),
-              const SizedBox(height: 24),
-              for (final (titulo, corpo) in intro.secoes) ...[
-                Text(titulo, style: tema.headlineSmall),
-                const SizedBox(height: 10),
-                // Os parágrafos vêm separados por linha em branco no JSON.
-                for (final paragrafo in corpo.split('\n\n')) ...[
-                  Text(paragrafo, style: tema.bodyLarge?.copyWith(height: 1.7)),
-                  const SizedBox(height: 12),
-                ],
+                  ],
+                ),
                 const SizedBox(height: 16),
+                const Filete(largura: 64),
+                const SizedBox(height: 24),
+                for (final (titulo, corpo) in intro.secoes) ...[
+                  Text(titulo, style: tema.headlineSmall),
+                  const SizedBox(height: 10),
+                  // Os parágrafos vêm separados por linha em branco no JSON.
+                  for (final paragrafo in corpo.split('\n\n')) ...[
+                    Text(
+                      paragrafo,
+                      style: tema.bodyLarge?.copyWith(height: 1.7),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  const SizedBox(height: 16),
+                ],
+                if (intro.frase.isNotEmpty) _Frase(intro: intro),
               ],
-              if (intro.frase.isNotEmpty) _Frase(intro: intro),
-            ],
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

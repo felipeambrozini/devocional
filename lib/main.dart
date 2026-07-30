@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'data/estado.dart';
 import 'telas/biblia.dart';
+import 'telas/comuns.dart';
 import 'telas/devocional.dart';
 import 'telas/hoje.dart';
 import 'telas/notas.dart';
@@ -79,10 +80,14 @@ class _MolduraState extends State<Moldura> {
     final largo = MediaQuery.sizeOf(context).width >= 720;
 
     // IndexedStack preserva a posição de rolagem e o capítulo aberto ao alternar
-    // de aba, que é o que se espera de um app de leitura.
-    final corpo = IndexedStack(
-      index: _indice,
-      children: [for (final d in _destinos) d.tela],
+    // de aba, que é o que se espera de um app de leitura. A largura limitada é
+    // para o Windows: sem ela, o texto esticaria de ponta a ponta numa janela
+    // larga em vez de ficar numa coluna confortável de ler.
+    final corpo = LarguraDeLeitura(
+      child: IndexedStack(
+        index: _indice,
+        children: [for (final d in _destinos) d.tela],
+      ),
     );
 
     if (!largo) {
@@ -126,4 +131,3 @@ class _MolduraState extends State<Moldura> {
     );
   }
 }
-

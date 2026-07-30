@@ -63,70 +63,72 @@ class _TelaBuscaState extends State<TelaBusca> {
   Widget build(BuildContext context) {
     final versao = EscopoDoEstado.de(context).versao;
 
-    return Scaffold(
-      appBar: AppBar(title: Text('Buscar em ${versao.sigla}')),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _controle,
-              autofocus: true,
-              textInputAction: TextInputAction.search,
-              onSubmitted: (_) => _buscar(versao),
-              decoration: InputDecoration(
-                hintText: 'Palavra ou expressão',
-                prefixIcon: const Icon(Icons.search, color: Cores.begeSuave),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.arrow_forward),
-                  onPressed: () => _buscar(versao),
+    return LarguraDeLeitura(
+      child: Scaffold(
+        appBar: AppBar(title: Text('Buscar em ${versao.sigla}')),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: TextField(
+                controller: _controle,
+                autofocus: true,
+                textInputAction: TextInputAction.search,
+                onSubmitted: (_) => _buscar(versao),
+                decoration: InputDecoration(
+                  hintText: 'Palavra ou expressão',
+                  prefixIcon: const Icon(Icons.search, color: Cores.begeSuave),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.arrow_forward),
+                    onPressed: () => _buscar(versao),
+                  ),
                 ),
               ),
             ),
-          ),
-          if (_termoBuscado.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Text(
-                    '${_achados.length} ${_achados.length == 1 ? 'resultado' : 'resultados'}',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(width: 10),
-                  if (_buscando)
-                    const SizedBox(
-                      width: 13,
-                      height: 13,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+            if (_termoBuscado.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Text(
+                      '${_achados.length} ${_achados.length == 1 ? 'resultado' : 'resultados'}',
+                      style: Theme.of(context).textTheme.titleSmall,
                     ),
-                ],
-              ),
-            ),
-          Expanded(
-            child: _termoBuscado.isEmpty
-                ? const AvisoVazio(
-                    icone: Icons.search,
-                    titulo: 'Busque um versículo',
-                    detalhe: 'A busca ignora acentos e maiúsculas.',
-                  )
-                : _achados.isEmpty && !_buscando
-                    ? AvisoVazio(
-                        icone: Icons.search_off,
-                        titulo: 'Nada encontrado',
-                        detalhe: 'Nenhum versículo com "$_termoBuscado".',
-                      )
-                    : ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-                        itemCount: _achados.length,
-                        separatorBuilder: (_, _) => const Divider(height: 18),
-                        itemBuilder: (context, i) => _ItemDeAchado(
-                          achado: _achados[i],
-                          termo: _termoBuscado,
-                        ),
+                    const SizedBox(width: 10),
+                    if (_buscando)
+                      const SizedBox(
+                        width: 13,
+                        height: 13,
+                        child: CircularProgressIndicator(strokeWidth: 2),
                       ),
-          ),
-        ],
+                  ],
+                ),
+              ),
+            Expanded(
+              child: _termoBuscado.isEmpty
+                  ? const AvisoVazio(
+                      icone: Icons.search,
+                      titulo: 'Busque um versículo',
+                      detalhe: 'A busca ignora acentos e maiúsculas.',
+                    )
+                  : _achados.isEmpty && !_buscando
+                  ? AvisoVazio(
+                      icone: Icons.search_off,
+                      titulo: 'Nada encontrado',
+                      detalhe: 'Nenhum versículo com "$_termoBuscado".',
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                      itemCount: _achados.length,
+                      separatorBuilder: (_, _) => const Divider(height: 18),
+                      itemBuilder: (context, i) => _ItemDeAchado(
+                        achado: _achados[i],
+                        termo: _termoBuscado,
+                      ),
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

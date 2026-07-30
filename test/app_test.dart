@@ -4,6 +4,7 @@ import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:felipe_ambrozini/main.dart';
 import 'package:felipe_ambrozini/telas/biblia.dart';
+import 'package:felipe_ambrozini/telas/comuns.dart';
 import 'package:felipe_ambrozini/telas/devocional.dart';
 import 'package:felipe_ambrozini/telas/plano.dart';
 import 'package:flutter/material.dart';
@@ -125,6 +126,46 @@ void main() {
     // caía no ramo de recuperação. Isto fixa o estado final; o flash de um frame
     // fica fora do alcance de pumpAndSettle.
     expect(find.textContaining('29 de fevereiro'), findsNothing);
+  });
+
+  testWidgets(
+      'numa janela larga de desktop, a coluna de leitura fica centralizada '
+      'ao lado do trilho de navegação', (tester) async {
+    // Simula uma janela do Windows bem mais larga que o limite de leitura,
+    // bem além do corte de 720 que já liga o NavigationRail.
+    tester.view.physicalSize = const Size(1600, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await aquecerAssets(tester);
+    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(NavigationRail), findsOneWidget);
+
+    // Mede a caixa real que a LarguraDeLeitura produz na árvore de verdade, não
+    // uma versão isolada: o Center sozinho preenche todo o Expanded, quem tem a
+    // largura de 720 é o ConstrainedBox logo dentro dele.
+    final caixa = find
+        .descendant(
+          of: find.byType(LarguraDeLeitura),
+          matching: find.byType(ConstrainedBox),
+        )
+        .first;
+    final retanguloCaixa = tester.getRect(caixa);
+    final retanguloTrilho = tester.getRect(find.byType(NavigationRail));
+
+    expect(retanguloCaixa.width, 720);
+
+    final folgaEsquerda = retanguloCaixa.left - retanguloTrilho.right;
+    final folgaDireita = 1600 - retanguloCaixa.right;
+    expect(
+      folgaEsquerda,
+      closeTo(folgaDireita, 2),
+      reason: 'a coluna de 720px deve ficar centralizada no espaço ao lado '
+          'do trilho, com folga igual dos dois lados',
+    );
   });
 
   testWidgets('o leitor abre Gênesis 1 e mostra o texto da BKJ', (tester) async {
