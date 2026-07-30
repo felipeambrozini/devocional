@@ -4,7 +4,7 @@
          precisão fina não acrescenta nada a esse cálculo. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <application
-        android:label="felipe_ambrozini"
+        android:label="Felipe Ambrozini"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
