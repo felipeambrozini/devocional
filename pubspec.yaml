@@ -16,12 +16,6 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
-  # Cinzel (títulos) e Montserrat (texto). Baixadas em tempo de execução e cacheadas,
-  # o que evita versionar TTFs. Sem internet no primeiro uso cai na fonte padrão;
-  # para tornar 100% offline, basta embutir os .ttf e trocar GoogleFonts.cinzel()
-  # por TextStyle(fontFamily: 'Cinzel') em lib/theme.dart.
-  google_fonts: ^8.2.0
-
   # Progresso de leitura, favoritos, notas e preferências. Único armazenamento que
   # funciona igual em Android, iOS, web e desktop sem ramificação de plataforma.
   shared_preferences: ^2.5.5
@@ -72,4 +66,21 @@ flutter:
     - assets/images/
     - assets/reading_plan.json
     - assets/reading_plan_bissexto.json
+
+  # Cinzel e Montserrat empacotadas localmente: o google_fonts baixa a fonte na
+  # primeira execução, e um aparelho sem internet (ou sem DNS, comum em emulador)
+  # travava o app com uma exceção não tratada só para desenhar texto.
+  fonts:
+    - family: Cinzel
+      fonts:
+        - asset: assets/fonts/Cinzel-Variable.ttf
+          weight: 600
+        - asset: assets/fonts/Cinzel-Variable.ttf
+          weight: 700
+    - family: Montserrat
+      fonts:
+        - asset: assets/fonts/Montserrat-Variable.ttf
+          weight: 400
+        - asset: assets/fonts/Montserrat-Variable.ttf
+          weight: 600
 

@@ -8,18 +8,11 @@ import 'package:felipe_ambrozini/telas/devocional.dart';
 import 'package:felipe_ambrozini/telas/plano.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Sobe o app de verdade e confere o que aparece na tela, lendo os assets reais.
 /// É o substituto verificável de olhar o app rodando.
 void main() {
-  setUpAll(() {
-    // Sem isto o google_fonts tenta baixar a fonte durante o teste. A ausência da
-    // fonte não muda o texto renderizado, que é o que estes testes verificam.
-    GoogleFonts.config.allowRuntimeFetching = false;
-  });
-
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   Future<Estado> estadoLimpo() async =>
@@ -263,7 +256,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.text('A PRIMEIRA PROMESSA DA BÍBLIA'), findsOneWidget);
+    expect(find.text('A primeira promessa da Bíblia'), findsOneWidget);
     expect(find.text('Gênesis 3:15'), findsOneWidget);
     // O versículo não é tradução minha: sai do asset da BKJ.
     expect(

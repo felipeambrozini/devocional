@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Paleta marrom e dourada.
 ///
@@ -31,10 +30,18 @@ ThemeData construirTema() {
     error: Color(0xFFE57373),
   );
 
-  TextStyle titulo(double tamanho, FontWeight peso) =>
-      GoogleFonts.cinzel(fontSize: tamanho, fontWeight: peso, color: Cores.dourado);
-  TextStyle corpo(double tamanho, {Color cor = Cores.bege, FontWeight? peso}) =>
-      GoogleFonts.montserrat(fontSize: tamanho, color: cor, fontWeight: peso);
+  TextStyle titulo(double tamanho, FontWeight peso) => TextStyle(
+        fontFamily: 'Cinzel',
+        fontSize: tamanho,
+        fontWeight: peso,
+        color: Cores.dourado,
+      );
+  TextStyle corpo(double tamanho, {Color cor = Cores.bege, FontWeight? peso}) => TextStyle(
+        fontFamily: 'Montserrat',
+        fontSize: tamanho,
+        color: cor,
+        fontWeight: peso,
+      );
 
   return ThemeData(
     useMaterial3: true,
