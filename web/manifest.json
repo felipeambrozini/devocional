@@ -5,7 +5,7 @@
     "display": "standalone",
     "background_color": "#2E1B10",
     "theme_color": "#C9A227",
-    "description": "A new Flutter project.",
+    "description": "Aplicativo devocional pessoal: Bíblias BKJ 1611 e NVT, devocionais de Spurgeon, plano de leitura anual.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
