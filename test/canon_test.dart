@@ -30,6 +30,14 @@ void main() {
       expect(nomeDoLivro('inexistente'), 'inexistente');
     });
 
+    test('resolve livro a partir da referencia do devocional', () {
+      expect(livroDaReferencia('Js 5:12')?.slug, 'josue');
+      expect(livroDaReferencia('2Pe 3:18')?.slug, '2pedro');
+      expect(livroDaReferencia('Gênesis 3:15')?.slug, 'genesis');
+      expect(livroDaReferencia('1 Samuel 2:9')?.slug, '1samuel');
+      expect(livroDaReferencia('nada a ver 1:1'), isNull);
+    });
+
     test('contagem de capitulos de casos que costumam sair errados', () {
       expect(livroPorSlug('salmos')!.capitulos, 150);
       expect(livroPorSlug('josue')!.capitulos, 24);

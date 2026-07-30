@@ -95,6 +95,17 @@ Livro? livroPorSlug(String slug) => _porSlug[slug];
 /// que uma referência desconhecida apareça na tela em vez de sumir.
 String nomeDoLivro(String slug) => _porSlug[slug]?.nome ?? slug;
 
+/// Livro a partir de uma referência como "Js 5:12" ou "Gênesis 3:15": os
+/// devocionais citam o livro por nome cheio ou abreviado, conforme a fonte.
+Livro? livroDaReferencia(String referencia) {
+  for (final l in canon) {
+    if (referencia.startsWith('${l.nome} ') || referencia.startsWith('${l.abrev} ')) {
+      return l;
+    }
+  }
+  return null;
+}
+
 /// As duas versões disponíveis. A ordem define a ordem do alternador na tela.
 enum Versao {
   bkj('bkj', 'King James 1611', 'BKJ'),

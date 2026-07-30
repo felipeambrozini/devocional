@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
@@ -145,17 +146,24 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                   ),
                 );
               }
-              return _CartaoDeLeitura(
-                titulo: dev.titulo.isNotEmpty
-                    ? dev.titulo
-                    : '${_leitura.rotulo}, ${dataLonga(_data)}',
-                subtitulo: dev.titulo.isNotEmpty
-                    ? '${_leitura.rotulo}, ${dataLonga(_data)}'
-                    : '',
-                referencia: dev.referencia,
-                versiculo: dev.versiculo,
-                texto: dev.texto,
-                capa: _leitura.capa,
+              final livro = livroDaReferencia(dev.referencia);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (livro != null) AberturaDeLivro(slug: livro.slug),
+                  _CartaoDeLeitura(
+                    titulo: dev.titulo.isNotEmpty
+                        ? dev.titulo
+                        : '${_leitura.rotulo}, ${dataLonga(_data)}',
+                    subtitulo: dev.titulo.isNotEmpty
+                        ? '${_leitura.rotulo}, ${dataLonga(_data)}'
+                        : '',
+                    referencia: dev.referencia,
+                    versiculo: dev.versiculo,
+                    texto: dev.texto,
+                    capa: _leitura.capa,
+                  ),
+                ],
               );
             },
           ),

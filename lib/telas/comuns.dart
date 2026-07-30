@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../data/conteudo.dart';
+import '../data/modelos.dart';
 import '../theme.dart';
 
 /// Cartão com título em Cinzel dourado. Repete em quase toda tela.
@@ -185,6 +187,137 @@ Future<String?> editarNota(
       ],
     ),
   );
+}
+
+/// Abertura de um livro: a introdução de Spurgeon, recolhida por padrão.
+///
+/// Recolhida porque o texto é longo e quem já leu a introdução quer chegar ao
+/// texto sem rolar páginas. Expandida, lê inteira ali mesmo. Aparece tanto no
+/// leitor da Bíblia quanto no devocional, por isso vive aqui e não numa tela só.
+class AberturaDeLivro extends StatefulWidget {
+  const AberturaDeLivro({super.key, required this.slug});
+
+  final String slug;
+
+  @override
+  State<AberturaDeLivro> createState() => _AberturaDeLivroState();
+}
+
+class _AberturaDeLivroState extends State<AberturaDeLivro> {
+  bool _aberta = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context).textTheme;
+
+    return CarregaUmaVez<Introducao?>(
+      chave: widget.slug,
+      carregar: () => Conteudo.instancia.introducao(widget.slug),
+      construir: (context, snap) {
+        final intro = snap.data;
+        // Sem introdução escrita, nada é mostrado: o texto começa direto.
+        if (intro == null) return const SizedBox.shrink();
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 24),
+          child: Card(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                InkWell(
+                  borderRadius: BorderRadius.circular(14),
+                  onTap: () => setState(() => _aberta = !_aberta),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(3),
+                          child: Image.asset(
+                            'assets/images/capa_biblia_spurgeon.png',
+                            height: 52,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Introdução', style: tema.titleLarge),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Bíblia de Estudo Spurgeon',
+                                style: tema.labelMedium,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          _aberta ? Icons.expand_less : Icons.expand_more,
+                          color: Cores.dourado,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (_aberta)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Filete(),
+                        const SizedBox(height: 16),
+                        for (final (titulo, corpo) in intro.secoes) ...[
+                          Text(titulo, style: tema.headlineSmall),
+                          const SizedBox(height: 8),
+                          for (final paragrafo in corpo.split('\n\n')) ...[
+                            Text(
+                              paragrafo,
+                              style: tema.bodyMedium?.copyWith(height: 1.7),
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+                          const SizedBox(height: 12),
+                        ],
+                        if (intro.frase.isNotEmpty)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: Cores.superficieAlta,
+                              borderRadius: BorderRadius.circular(10),
+                              border: const Border(
+                                left: BorderSide(color: Cores.dourado, width: 3),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '"${intro.frase}"',
+                                  style: tema.bodyMedium?.copyWith(
+                                    fontStyle: FontStyle.italic,
+                                    color: Cores.douradoClaro,
+                                    height: 1.6,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(intro.atribuicao, style: tema.labelMedium),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 /// Nomes dos meses, usados no cronograma e no calendário.
