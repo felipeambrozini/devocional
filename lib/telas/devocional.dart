@@ -146,11 +146,11 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                   ),
                 );
               }
-              final livro = livroDaReferencia(dev.referencia);
+              final livros = livrosDaReferencia(dev.referencia);
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (livro != null) AberturaDeLivro(slug: livro.slug),
+                  for (final livro in livros) AberturaDeLivro(slug: livro.slug),
                   _CartaoDeLeitura(
                     titulo: dev.titulo.isNotEmpty
                         ? dev.titulo

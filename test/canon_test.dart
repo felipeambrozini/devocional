@@ -38,6 +38,20 @@ void main() {
       expect(livroDaReferencia('nada a ver 1:1'), isNull);
     });
 
+    test('resolve todos os livros quando a referencia cita mais de um', () {
+      expect(livrosDaReferencia('Js 5:12').map((l) => l.slug), ['josue']);
+      expect(
+        livrosDaReferencia('Js 5:12 e Hb 4:9').map((l) => l.slug),
+        ['josue', 'hebreus'],
+      );
+      expect(
+        livrosDaReferencia('Gênesis 3:15, Romanos 16:20').map((l) => l.slug),
+        ['genesis', 'romanos'],
+      );
+      // Livro repetido aparece uma unica vez.
+      expect(livrosDaReferencia('Js 5:12 e Js 1:9').map((l) => l.slug), ['josue']);
+    });
+
     test('contagem de capitulos de casos que costumam sair errados', () {
       expect(livroPorSlug('salmos')!.capitulos, 150);
       expect(livroPorSlug('josue')!.capitulos, 24);

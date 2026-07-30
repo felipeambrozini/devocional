@@ -106,6 +106,20 @@ Livro? livroDaReferencia(String referencia) {
   return null;
 }
 
+/// Todos os livros citados numa referência, na ordem em que aparecem.
+///
+/// Cobre o dia comum, de um só livro, e o raro dia que cita mais de um, como
+/// "Js 5:12 e Hb 4:9": a referência vem separada por vírgula, ponto e vírgula
+/// ou "e" quando cita mais de uma passagem.
+List<Livro> livrosDaReferencia(String referencia) {
+  final encontrados = <Livro>[];
+  for (final trecho in referencia.split(RegExp(r'[,;]\s*|\s+e\s+'))) {
+    final livro = livroDaReferencia(trecho.trim());
+    if (livro != null && !encontrados.contains(livro)) encontrados.add(livro);
+  }
+  return encontrados;
+}
+
 /// As duas versões disponíveis. A ordem define a ordem do alternador na tela.
 enum Versao {
   bkj('bkj', 'King James 1611', 'BKJ'),
