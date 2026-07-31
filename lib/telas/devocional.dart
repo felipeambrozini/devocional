@@ -146,17 +146,24 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                   ),
                 );
               }
-              final livros = livrosDaReferencia(dev.referencia);
+              final referencias = [
+                dev.referencia,
+                for (final (referencia, _) in dev.outrosVersiculos) referencia,
+              ].join(', ');
+              final livros = livrosDaReferencia(referencias);
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  for (final livro in livros) AberturaDeLivro(slug: livro.slug),
+                  for (final livro in livros)
+                    AberturaDeLivro(
+                      slug: livro.slug,
+                      mostrarNomeDoLivro: livros.length > 1,
+                    ),
                   _CartaoDeLeitura(
                     titulo: dev.titulo.isNotEmpty
                         ? dev.titulo
                         : '${_leitura.rotulo}, ${dataLonga(_data)}',
-                    referencia: dev.referencia,
-                    versiculo: dev.versiculo,
+                    dev: dev,
                     texto: dev.texto,
                     capa: _leitura.capa,
                   ),
@@ -206,17 +213,15 @@ class _AlternadorDeLeitura extends StatelessWidget {
 class _CartaoDeLeitura extends StatelessWidget {
   const _CartaoDeLeitura({
     required this.titulo,
-    required this.referencia,
+    required this.dev,
     required this.texto,
-    this.versiculo = '',
     this.capa,
   });
 
   final String titulo;
-  final String referencia;
 
-  /// A promessa em destaque, quando a leitura a traz separada do comentário.
-  final String versiculo;
+  /// De onde vêm o(s) versículo(s)-base em destaque.
+  final Devocional dev;
   final String texto;
 
   /// Capa do livro de onde a leitura vem, para dar identidade ao cartão.
@@ -225,6 +230,15 @@ class _CartaoDeLeitura extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context).textTheme;
+    final spans = spansDeCitacao(
+      dev,
+      estiloCitacao: tema.bodyLarge?.copyWith(
+        height: 1.7,
+        fontStyle: FontStyle.italic,
+        color: Cores.douradoClaro,
+      ),
+      estiloReferencia: tema.titleSmall?.copyWith(color: Cores.douradoClaro),
+    );
     return Cartao(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -248,29 +262,11 @@ class _CartaoDeLeitura extends StatelessWidget {
                     // A citação vem alinhada embaixo do título, não embaixo da
                     // capa, e o nome do livro fica ao lado do fim da citação
                     // (não numa linha própria embaixo), como uma epígrafe
-                    // seguida da atribuição.
-                    if (versiculo.isNotEmpty || referencia.isNotEmpty) ...[
+                    // seguida da atribuição. Mais de uma linha no raro dia com
+                    // mais de um versículo-base.
+                    if (spans.isNotEmpty) ...[
                       const SizedBox(height: 10),
-                      Text.rich(
-                        TextSpan(
-                          children: [
-                            if (versiculo.isNotEmpty)
-                              TextSpan(
-                                text: '"$versiculo" ',
-                                style: tema.bodyLarge?.copyWith(
-                                  height: 1.7,
-                                  fontStyle: FontStyle.italic,
-                                  color: Cores.douradoClaro,
-                                ),
-                              ),
-                            if (referencia.isNotEmpty)
-                              TextSpan(
-                                text: referencia.toUpperCase(),
-                                style: tema.titleSmall?.copyWith(color: Cores.douradoClaro),
-                              ),
-                          ],
-                        ),
-                      ),
+                      Text.rich(TextSpan(children: spans)),
                     ],
                   ],
                 ),

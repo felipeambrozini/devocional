@@ -215,15 +215,46 @@ Future<bool> confirmarRemocao(BuildContext context, {required String referencia,
   return confirmou ?? false;
 }
 
+/// Uma linha por versículo-base de um devocional: a citação entre aspas seguida
+/// da referência em caixa alta.
+///
+/// A maioria dos dias tem um só versículo-base. O raro dia cuja epígrafe
+/// encadeia mais de um, como o de 12 de julho (Judas 1:1, 1 Coríntios 1:2, 1
+/// Pedro 1:2), mostra uma linha para cada, na mesma ordem em que aparecem no
+/// devocional original.
+List<InlineSpan> spansDeCitacao(
+  Devocional dev, {
+  required TextStyle? estiloCitacao,
+  required TextStyle? estiloReferencia,
+}) {
+  final pares = [(dev.referencia, dev.versiculo), ...dev.outrosVersiculos];
+  final spans = <InlineSpan>[];
+  for (final (referencia, versiculo) in pares) {
+    if (referencia.isEmpty && versiculo.isEmpty) continue;
+    if (spans.isNotEmpty) spans.add(const TextSpan(text: '\n'));
+    if (versiculo.isNotEmpty) {
+      spans.add(TextSpan(text: '"$versiculo" ', style: estiloCitacao));
+    }
+    if (referencia.isNotEmpty) {
+      spans.add(TextSpan(text: referencia.toUpperCase(), style: estiloReferencia));
+    }
+  }
+  return spans;
+}
+
 /// Abertura de um livro: a introdução de Spurgeon, recolhida por padrão.
 ///
 /// Recolhida porque o texto é longo e quem já leu a introdução quer chegar ao
 /// texto sem rolar páginas. Expandida, lê inteira ali mesmo. Aparece tanto no
 /// leitor da Bíblia quanto no devocional, por isso vive aqui e não numa tela só.
 class AberturaDeLivro extends StatefulWidget {
-  const AberturaDeLivro({super.key, required this.slug});
+  const AberturaDeLivro({super.key, required this.slug, this.mostrarNomeDoLivro = false});
 
   final String slug;
+
+  /// Mostra o nome do livro ao lado de "Introdução", para diferenciar quando
+  /// mais de uma abertura aparece junto, como no dia que cita três livros.
+  final bool mostrarNomeDoLivro;
 
   @override
   State<AberturaDeLivro> createState() => _AberturaDeLivroState();
@@ -270,7 +301,12 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Introdução', style: tema.titleLarge),
+                              Text(
+                                widget.mostrarNomeDoLivro
+                                    ? 'Introdução — ${intro.livro}'
+                                    : 'Introdução',
+                                style: tema.titleLarge,
+                              ),
                               const SizedBox(height: 4),
                               Text(
                                 'Bíblia de Estudo Spurgeon',

@@ -130,6 +130,10 @@ class Conteudo {
   /// cartão mostrar o mesmo formato de Promessas de Deus: versículo em
   /// destaque, depois o livro, depois o comentário. A caixa alta de exibição
   /// fica por conta da tela, que aplica o mesmo tratamento às duas leituras.
+  ///
+  /// No raro dia cuja epígrafe encadeia mais de uma passagem, a referência do
+  /// JSON traz todas separadas por vírgula ou "e"; cada uma é resolvida, e as
+  /// que sobram do principal vão para [Devocional.outrosVersiculos].
   Future<Devocional?> devocional(DateTime data, Periodo periodo) async {
     final dados = await _carregarDevocionais();
     final chave = chaveDoDia(data);
@@ -139,17 +143,24 @@ class Conteudo {
     if (entrada == null) return null;
     final dev = Devocional.doJson(entrada);
 
-    final resolvida = capituloEVersiculoDaReferencia(dev.referencia);
-    if (resolvida == null) return dev;
-    final (livro, capitulo, numero) = resolvida;
-    final texto = await versiculo(Versao.bkj, livro.slug, capitulo, numero);
-    if (texto.isEmpty) return dev;
+    final resolvidos = versiculosDaReferencia(dev.referencia);
+    if (resolvidos.isEmpty) return dev;
 
+    final pares = <(String, String)>[];
+    for (final (livro, capitulo, numero) in resolvidos) {
+      final texto = await versiculo(Versao.bkj, livro.slug, capitulo, numero);
+      if (texto.isEmpty) continue;
+      pares.add(('${livro.nome} $capitulo:$numero', texto));
+    }
+    if (pares.isEmpty) return dev;
+
+    final (referenciaPrincipal, versiculoPrincipal) = pares.first;
     return Devocional(
-      referencia: '${livro.nome} $capitulo:$numero',
+      referencia: referenciaPrincipal,
       texto: dev.texto,
       titulo: dev.titulo,
-      versiculo: texto,
+      versiculo: versiculoPrincipal,
+      outrosVersiculos: pares.skip(1).toList(),
     );
   }
 

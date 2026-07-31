@@ -150,6 +150,11 @@ void main() {
       // A tela troca a referencia abreviada do asset pelo nome do livro por
       // extenso mais o versiculo completo da BKJ; se uma referencia não
       // resolvesse, o dia cairia de volta na abreviação crua em silêncio.
+      //
+      // O raro dia cita mais de uma passagem, separadas por vírgula ou "e"
+      // (12 de julho pela manhã cita três); por isso a contagem de resolvidos
+      // precisa bater com a contagem de trechos, não só ser maior que zero, ou
+      // um dia com uma passagem faltando passaria em silêncio.
       final dados = json.decode(
         File('assets/devotional/morning_evening.json').readAsStringSync(),
       ) as Map<String, dynamic>;
@@ -159,7 +164,8 @@ void main() {
         final dia = entrada.value as Map<String, dynamic>;
         for (final periodo in ['manha', 'noite']) {
           final referencia = (dia[periodo] as Map<String, dynamic>)['reference'] as String;
-          if (capituloEVersiculoDaReferencia(referencia) == null) {
+          final trechos = referencia.split(RegExp(r'[,;]\s*|\s+e\s+'));
+          if (versiculosDaReferencia(referencia).length != trechos.length) {
             naoResolvidas.add('${entrada.key} $periodo: "$referencia"');
           }
         }

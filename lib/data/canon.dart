@@ -139,18 +139,35 @@ Livro? livroDaReferencia(String referencia) => _livroEPrefixo(referencia)?.$1;
   return (livro, capitulo, versiculo);
 }
 
+/// Separador de trechos numa referência que cita mais de uma passagem, como
+/// "Js 5:12 e Hb 4:9": vírgula, ponto e vírgula ou "e".
+final _separadorDeReferencias = RegExp(r'[,;]\s*|\s+e\s+');
+
 /// Todos os livros citados numa referência, na ordem em que aparecem.
 ///
-/// Cobre o dia comum, de um só livro, e o raro dia que cita mais de um, como
-/// "Js 5:12 e Hb 4:9": a referência vem separada por vírgula, ponto e vírgula
-/// ou "e" quando cita mais de uma passagem.
+/// Cobre o dia comum, de um só livro, e o raro dia que cita mais de um.
 List<Livro> livrosDaReferencia(String referencia) {
   final encontrados = <Livro>[];
-  for (final trecho in referencia.split(RegExp(r'[,;]\s*|\s+e\s+'))) {
+  for (final trecho in referencia.split(_separadorDeReferencias)) {
     final livro = livroDaReferencia(trecho.trim());
     if (livro != null && !encontrados.contains(livro)) encontrados.add(livro);
   }
   return encontrados;
+}
+
+/// Livro, capítulo e versículo de cada trecho de uma referência que cita mais de
+/// uma passagem, na ordem em que aparecem.
+///
+/// Cobre o dia comum, de um só versículo base, e o raro dia cuja epígrafe
+/// encadeia mais de um, como o de 12 de julho de Manhã e Noite ("Jd 1:1, 1Co
+/// 1:2, 1Pe 1:2"), que abre citando Judas, 1 Coríntios e 1 Pedro em sequência.
+List<(Livro, int, int)> versiculosDaReferencia(String referencia) {
+  final resolvidos = <(Livro, int, int)>[];
+  for (final trecho in referencia.split(_separadorDeReferencias)) {
+    final resolvido = capituloEVersiculoDaReferencia(trecho.trim());
+    if (resolvido != null) resolvidos.add(resolvido);
+  }
+  return resolvidos;
 }
 
 /// As duas versões disponíveis. A ordem define a ordem do alternador na tela.

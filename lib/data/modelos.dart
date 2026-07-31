@@ -93,6 +93,7 @@ class Devocional {
     required this.texto,
     this.titulo = '',
     this.versiculo = '',
+    this.outrosVersiculos = const [],
   });
 
   factory Devocional.doJson(Map<String, dynamic> json) => Devocional(
@@ -111,6 +112,11 @@ class Devocional {
   /// A promessa bíblica em destaque, separada do comentário. Vazio em
   /// Manhã e Noite, onde o versículo vem embutido no próprio texto.
   final String versiculo;
+
+  /// Versículos-base além do principal, para o raro dia cuja epígrafe encadeia
+  /// mais de uma passagem, como o de 12 de julho de Manhã e Noite, que abre
+  /// citando Judas 1:1, 1 Coríntios 1:2 e 1 Pedro 1:2 em sequência.
+  final List<(String referencia, String versiculo)> outrosVersiculos;
 }
 
 enum Periodo {

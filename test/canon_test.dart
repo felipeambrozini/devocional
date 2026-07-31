@@ -61,6 +61,24 @@ void main() {
       expect(livrosDaReferencia('Js 5:12 e Js 1:9').map((l) => l.slug), ['josue']);
     });
 
+    test('resolve todos os versiculos quando a referencia cita mais de um', () {
+      expect(versiculosDaReferencia('Js 5:12'), [(livroPorSlug('josue'), 5, 12)]);
+      expect(
+        // O dia de 12 de julho de Manha e Noite encadeia tres passagens.
+        versiculosDaReferencia('Jd 1:1, 1Co 1:2, 1Pe 1:2'),
+        [
+          (livroPorSlug('judas'), 1, 1),
+          (livroPorSlug('1corintios'), 1, 2),
+          (livroPorSlug('1pedro'), 1, 2),
+        ],
+      );
+      // Trecho que nao resolve e' descartado, nao derruba os outros.
+      expect(
+        versiculosDaReferencia('Js 5:12 e nada a ver 1:1'),
+        [(livroPorSlug('josue'), 5, 12)],
+      );
+    });
+
     test('contagem de capitulos de casos que costumam sair errados', () {
       expect(livroPorSlug('salmos')!.capitulos, 150);
       expect(livroPorSlug('josue')!.capitulos, 24);

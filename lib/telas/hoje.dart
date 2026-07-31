@@ -161,6 +161,17 @@ class _PreviaDaLeitura extends StatelessWidget {
       carregar: () => _futuro,
       construir: (context, snap) {
         final dev = snap.data;
+        final spans = dev == null
+            ? const <InlineSpan>[]
+            : spansDeCitacao(
+                dev,
+                estiloCitacao: tema.bodyMedium?.copyWith(
+                  height: 1.6,
+                  fontStyle: FontStyle.italic,
+                  color: Cores.douradoClaro,
+                ),
+                estiloReferencia: tema.titleSmall?.copyWith(color: Cores.douradoClaro),
+              );
         return Cartao(
           titulo: _titulo,
           acessorio: Icon(_icone, color: Cores.dourado, size: 20),
@@ -178,27 +189,9 @@ class _PreviaDaLeitura extends StatelessWidget {
                 const SizedBox(height: 8),
                 // A citação vem antes do nome do livro, e o nome do livro fica
                 // ao lado do fim da citação, não numa linha própria embaixo.
-                if (dev.versiculo.isNotEmpty || dev.referencia.isNotEmpty) ...[
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        if (dev.versiculo.isNotEmpty)
-                          TextSpan(
-                            text: '"${dev.versiculo}" ',
-                            style: tema.bodyMedium?.copyWith(
-                              height: 1.6,
-                              fontStyle: FontStyle.italic,
-                              color: Cores.douradoClaro,
-                            ),
-                          ),
-                        if (dev.referencia.isNotEmpty)
-                          TextSpan(
-                            text: dev.referencia.toUpperCase(),
-                            style: tema.titleSmall?.copyWith(color: Cores.douradoClaro),
-                          ),
-                      ],
-                    ),
-                  ),
+                // Mais de uma linha no raro dia com mais de um versículo-base.
+                if (spans.isNotEmpty) ...[
+                  Text.rich(TextSpan(children: spans)),
                   const SizedBox(height: 8),
                 ],
                 Text(
