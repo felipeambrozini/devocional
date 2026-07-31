@@ -155,9 +155,6 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                     titulo: dev.titulo.isNotEmpty
                         ? dev.titulo
                         : '${_leitura.rotulo}, ${dataLonga(_data)}',
-                    subtitulo: dev.titulo.isNotEmpty
-                        ? '${_leitura.rotulo}, ${dataLonga(_data)}'
-                        : '',
                     referencia: dev.referencia,
                     versiculo: dev.versiculo,
                     texto: dev.texto,
@@ -211,13 +208,11 @@ class _CartaoDeLeitura extends StatelessWidget {
     required this.titulo,
     required this.referencia,
     required this.texto,
-    this.subtitulo = '',
     this.versiculo = '',
     this.capa,
   });
 
   final String titulo;
-  final String subtitulo;
   final String referencia;
 
   /// A promessa em destaque, quando a leitura a traz separada do comentário.
@@ -250,10 +245,6 @@ class _CartaoDeLeitura extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(titulo, style: tema.headlineMedium),
-                    if (subtitulo.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(subtitulo, style: tema.bodySmall),
-                    ],
                   ],
                 ),
               ),
@@ -262,23 +253,29 @@ class _CartaoDeLeitura extends StatelessWidget {
           const SizedBox(height: 14),
           const Filete(),
           const SizedBox(height: 14),
-          // A citação vem antes do nome do livro, como uma epígrafe seguida da
-          // atribuição, e só depois entra o comentário.
-          if (versiculo.isNotEmpty) ...[
-            Text(
-              '"$versiculo"',
-              style: tema.bodyLarge?.copyWith(
-                height: 1.7,
-                fontStyle: FontStyle.italic,
-                color: Cores.douradoClaro,
+          // A citação vem antes do nome do livro, e o nome do livro fica ao
+          // lado do fim da citação (não numa linha própria embaixo), como uma
+          // epígrafe seguida da atribuição. Só depois entra o comentário.
+          if (versiculo.isNotEmpty || referencia.isNotEmpty) ...[
+            Text.rich(
+              TextSpan(
+                children: [
+                  if (versiculo.isNotEmpty)
+                    TextSpan(
+                      text: '"$versiculo" ',
+                      style: tema.bodyLarge?.copyWith(
+                        height: 1.7,
+                        fontStyle: FontStyle.italic,
+                        color: Cores.douradoClaro,
+                      ),
+                    ),
+                  if (referencia.isNotEmpty)
+                    TextSpan(
+                      text: referencia.toUpperCase(),
+                      style: tema.titleSmall?.copyWith(color: Cores.douradoClaro),
+                    ),
+                ],
               ),
-            ),
-            const SizedBox(height: 8),
-          ],
-          if (referencia.isNotEmpty) ...[
-            Text(
-              referencia,
-              style: tema.titleSmall?.copyWith(color: Cores.douradoClaro),
             ),
             const SizedBox(height: 14),
           ],

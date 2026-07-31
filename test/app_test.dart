@@ -299,16 +299,15 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    // A referência crua no asset é a abreviação "Js 5:12".
-    expect(find.text('Js 5:12'), findsNothing);
-    expect(find.text('JOSUÉ 5:12'), findsOneWidget);
+    // O nome do livro por extenso fica ao lado do fim da citação, dentro do
+    // mesmo Text.rich, no lugar da abreviação crua do asset ("Js 5:12").
+    expect(find.textContaining('JOSUÉ 5:12', findRichText: true), findsOneWidget);
     // O versículo é o texto de verdade da BKJ, não a citação embutida no comentário.
     expect(
-      find.byWidgetPredicate((w) =>
-          w is Text &&
-          w.data?.contains('mas naquele ano eles comeram do fruto da terra '
-                  'de Canaã') ==
-              true),
+      find.textContaining(
+        'mas naquele ano eles comeram do fruto da terra de Canaã',
+        findRichText: true,
+      ),
       findsOneWidget,
     );
     // Regressão: a referência em maiúsculas não pode impedir a introdução do
@@ -333,12 +332,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('A primeira promessa da Bíblia'), findsOneWidget);
-    expect(find.text('Gênesis 3:15'), findsOneWidget);
+    // O nome do livro também aparece em maiúsculas aqui, igual ao Manhã e
+    // Noite, ao lado do fim da citação.
+    expect(find.textContaining('GÊNESIS 3:15', findRichText: true), findsOneWidget);
     // O versículo não é tradução minha: sai do asset da BKJ.
     expect(
-      find.byWidgetPredicate((w) =>
-          w is Text &&
-          w.data?.contains('E eu colocarei inimizade entre ti e a mulher') == true),
+      find.textContaining(
+        'E eu colocarei inimizade entre ti e a mulher',
+        findRichText: true,
+      ),
       findsOneWidget,
     );
   });

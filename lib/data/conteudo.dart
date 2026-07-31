@@ -126,9 +126,10 @@ class Conteudo {
   ///
   /// A referência do JSON vem abreviada ("Jo 6:37") e o versículo vem embutido
   /// no próprio texto do comentário. Aqui ela é trocada pelo nome do livro por
-  /// extenso em maiúsculas ("JOÃO 6:37") e o versículo completo é buscado na
-  /// BKJ, para o cartão mostrar o mesmo formato de Promessas de Deus: livro em
-  /// destaque, depois o versículo, depois o comentário.
+  /// extenso ("João 6:37") e o versículo completo é buscado na BKJ, para o
+  /// cartão mostrar o mesmo formato de Promessas de Deus: versículo em
+  /// destaque, depois o livro, depois o comentário. A caixa alta de exibição
+  /// fica por conta da tela, que aplica o mesmo tratamento às duas leituras.
   Future<Devocional?> devocional(DateTime data, Periodo periodo) async {
     final dados = await _carregarDevocionais();
     final chave = chaveDoDia(data);
@@ -145,7 +146,7 @@ class Conteudo {
     if (texto.isEmpty) return dev;
 
     return Devocional(
-      referencia: '${livro.nome.toUpperCase()} $capitulo:$numero',
+      referencia: '${livro.nome} $capitulo:$numero',
       texto: dev.texto,
       titulo: dev.titulo,
       versiculo: texto,
