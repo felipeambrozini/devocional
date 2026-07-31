@@ -50,8 +50,10 @@ app.*.map.json
 # graphify knowledge-graph output (generated, machine-specific interpreter path)
 graphify-out/
 
-# Claude Code local debug config (hardcoded machine path)
-.claude/launch.json
+# Configuração local de agentes de IA (Claude Code, Copilot): skills, hooks e
+# debug config de máquina, não faz parte do app.
+.claude/
+.github/
 # Fonte em ingles de Promessas de Deus: insumo de traducao, ja consumido.
 # Regeneravel pelo comando em CONTINUAR.md; o app le assets/devotional/promises.json.
 tools/promessas_en.json

@@ -140,7 +140,14 @@ class _CartaoDeMarcacao extends StatelessWidget {
                   IconButton(
                     tooltip: 'Remover',
                     icon: const Icon(Icons.delete_outline, size: 20),
-                    onPressed: () => estado.removerMarcacao(marcacao),
+                    onPressed: () async {
+                      final confirmou = await confirmarRemocao(
+                        context,
+                        referencia: marcacao.referencia,
+                        comNota: marcacao.nota.isNotEmpty,
+                      );
+                      if (confirmou) estado.removerMarcacao(marcacao);
+                    },
                   ),
                 ],
               ),

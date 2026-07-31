@@ -44,4 +44,49 @@ void main() {
       expect(tester.getTopLeft(find.byKey(chave)).dx, 0);
     });
   });
+
+  group('confirmarRemocao', () {
+    Widget appComBotao(void Function(bool) aoConfirmar, {bool comNota = false}) {
+      return MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () async {
+              aoConfirmar(await confirmarRemocao(
+                context,
+                referencia: 'Gênesis 1:1',
+                comNota: comNota,
+              ));
+            },
+            child: const Text('abrir'),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('cancelar não remove', (tester) async {
+      bool? resultado;
+      await tester.pumpWidget(appComBotao((r) => resultado = r));
+      await tester.tap(find.text('abrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Remover marcação?'), findsOneWidget);
+      await tester.tap(find.text('Cancelar'));
+      await tester.pumpAndSettle();
+
+      expect(resultado, isFalse);
+    });
+
+    testWidgets('confirmar remove, e o aviso muda quando há anotação', (tester) async {
+      bool? resultado;
+      await tester.pumpWidget(appComBotao((r) => resultado = r, comNota: true));
+      await tester.tap(find.text('abrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('a anotação serão removidos'), findsOneWidget);
+      await tester.tap(find.text('Remover'));
+      await tester.pumpAndSettle();
+
+      expect(resultado, isTrue);
+    });
+  });
 }

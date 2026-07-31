@@ -254,13 +254,6 @@ class _CartaoDeLeitura extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(subtitulo, style: tema.bodySmall),
                     ],
-                    if (referencia.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        referencia,
-                        style: tema.titleSmall?.copyWith(color: Cores.douradoClaro),
-                      ),
-                    ],
                   ],
                 ),
               ),
@@ -269,7 +262,8 @@ class _CartaoDeLeitura extends StatelessWidget {
           const SizedBox(height: 14),
           const Filete(),
           const SizedBox(height: 14),
-          // A promessa vem antes do comentário e em itálico, como no livro.
+          // A citação vem antes do nome do livro, como uma epígrafe seguida da
+          // atribuição, e só depois entra o comentário.
           if (versiculo.isNotEmpty) ...[
             Text(
               '"$versiculo"',
@@ -278,6 +272,13 @@ class _CartaoDeLeitura extends StatelessWidget {
                 fontStyle: FontStyle.italic,
                 color: Cores.douradoClaro,
               ),
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (referencia.isNotEmpty) ...[
+            Text(
+              referencia,
+              style: tema.titleSmall?.copyWith(color: Cores.douradoClaro),
             ),
             const SizedBox(height: 14),
           ],

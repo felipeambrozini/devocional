@@ -171,12 +171,9 @@ class _PreviaDaLeitura extends StatelessWidget {
                     dev.titulo,
                     style: tema.titleMedium?.copyWith(color: Cores.dourado),
                   ),
-                if (dev.referencia.isNotEmpty)
-                  Text(
-                    dev.referencia,
-                    style: tema.titleSmall?.copyWith(color: Cores.douradoClaro),
-                  ),
                 const SizedBox(height: 8),
+                // A citação vem antes do nome do livro, como uma epígrafe
+                // seguida da atribuição, e só depois entra o comentário.
                 if (dev.versiculo.isNotEmpty) ...[
                   Text(
                     dev.versiculo,
@@ -185,6 +182,13 @@ class _PreviaDaLeitura extends StatelessWidget {
                       fontStyle: FontStyle.italic,
                       color: Cores.douradoClaro,
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                if (dev.referencia.isNotEmpty) ...[
+                  Text(
+                    dev.referencia,
+                    style: tema.titleSmall?.copyWith(color: Cores.douradoClaro),
                   ),
                   const SizedBox(height: 8),
                 ],

@@ -95,15 +95,48 @@ Livro? livroPorSlug(String slug) => _porSlug[slug];
 /// que uma referência desconhecida apareça na tela em vez de sumir.
 String nomeDoLivro(String slug) => _porSlug[slug]?.nome ?? slug;
 
-/// Livro a partir de uma referência como "Js 5:12" ou "Gênesis 3:15": os
-/// devocionais citam o livro por nome cheio ou abreviado, conforme a fonte.
-Livro? livroDaReferencia(String referencia) {
+/// Abreviações alternativas vistas nas fontes originais dos devocionais, que não
+/// batem com a abreviação oficial do canon: "Ex" sem acento para Êxodo, e "Isa"
+/// de três letras para Isaías.
+const _apelidosDeLivro = <String, String>{
+  'Ex': 'exodo',
+  'Isa': 'isaias',
+};
+
+/// Sem diferenciar maiúsculas: o Devocional reescreve a referência do dia com o
+/// nome do livro todo em caixa alta ("JOSUÉ 5:12"), e essa comparação precisa
+/// reconhecer esse formato tanto quanto o abreviado original ("Js 5:12").
+(Livro, String)? _livroEPrefixo(String referencia) {
+  final minuscula = referencia.toLowerCase();
   for (final l in canon) {
-    if (referencia.startsWith('${l.nome} ') || referencia.startsWith('${l.abrev} ')) {
-      return l;
-    }
+    if (minuscula.startsWith('${l.nome.toLowerCase()} ')) return (l, l.nome);
+    if (minuscula.startsWith('${l.abrev.toLowerCase()} ')) return (l, l.abrev);
+  }
+  for (final MapEntry(key: apelido, value: slug) in _apelidosDeLivro.entries) {
+    if (minuscula.startsWith('${apelido.toLowerCase()} ')) return (livroPorSlug(slug)!, apelido);
   }
   return null;
+}
+
+/// Livro a partir de uma referência como "Js 5:12" ou "Gênesis 3:15": os
+/// devocionais citam o livro por nome cheio ou abreviado, conforme a fonte.
+Livro? livroDaReferencia(String referencia) => _livroEPrefixo(referencia)?.$1;
+
+/// Livro, capítulo e versículo a partir de uma referência como "Jo 6:37".
+///
+/// Numa faixa de versículos, como "Ex 15:22-27", ou com marca de edição atrás,
+/// como "1Tm 3:16 ACF", usa só o primeiro número: é o que serve para buscar o
+/// texto de um único versículo em destaque.
+(Livro, int, int)? capituloEVersiculoDaReferencia(String referencia) {
+  final encontrado = _livroEPrefixo(referencia);
+  if (encontrado == null) return null;
+  final (livro, prefixo) = encontrado;
+  final partes = referencia.substring(prefixo.length + 1).split(':');
+  if (partes.length != 2) return null;
+  final capitulo = int.tryParse(RegExp(r'^\d+').stringMatch(partes[0]) ?? '');
+  final versiculo = int.tryParse(RegExp(r'^\d+').stringMatch(partes[1]) ?? '');
+  if (capitulo == null || versiculo == null) return null;
+  return (livro, capitulo, versiculo);
 }
 
 /// Todos os livros citados numa referência, na ordem em que aparecem.

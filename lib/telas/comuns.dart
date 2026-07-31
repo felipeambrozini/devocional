@@ -189,6 +189,32 @@ Future<String?> editarNota(
   );
 }
 
+/// Confirmação antes de remover uma marcação. Devolve true só se o usuário confirmar.
+Future<bool> confirmarRemocao(BuildContext context, {required String referencia, required bool comNota}) async {
+  final confirmou = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Remover marcação?'),
+      content: Text(
+        comNota
+            ? '$referencia e a anotação serão removidos. Essa ação não pode ser desfeita.'
+            : '$referencia será removido dos favoritos. Essa ação não pode ser desfeita.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Remover'),
+        ),
+      ],
+    ),
+  );
+  return confirmou ?? false;
+}
+
 /// Abertura de um livro: a introdução de Spurgeon, recolhida por padrão.
 ///
 /// Recolhida porque o texto é longo e quem já leu a introdução quer chegar ao

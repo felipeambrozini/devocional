@@ -281,6 +281,41 @@ void main() {
     }
   });
 
+  testWidgets(
+      'Manhã e Noite mostra o nome do livro por extenso em maiúsculas e o '
+      'versículo completo da BKJ, não só a referência abreviada', (tester) async {
+    await aquecerAssets(tester);
+    final data = DateTime(2026, 1, 1);
+    await tester.runAsync(
+        () => Conteudo.instancia.devocional(data, Periodo.manha));
+    // Pré-aquece a introdução de Josué: sem isso a Future do CarregaUmaVez
+    // nunca completa dentro do tempo falso do teste.
+    await tester.runAsync(() => Conteudo.instancia.introducao('josue'));
+    await tester.pumpWidget(MaterialApp(
+      home: EscopoDoEstado(
+        estado: await estadoLimpo(),
+        child: TelaDevocional(dataInicial: data, leituraInicial: Leitura.manha),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    // A referência crua no asset é a abreviação "Js 5:12".
+    expect(find.text('Js 5:12'), findsNothing);
+    expect(find.text('JOSUÉ 5:12'), findsOneWidget);
+    // O versículo é o texto de verdade da BKJ, não a citação embutida no comentário.
+    expect(
+      find.byWidgetPredicate((w) =>
+          w is Text &&
+          w.data?.contains('mas naquele ano eles comeram do fruto da terra '
+                  'de Canaã') ==
+              true),
+      findsOneWidget,
+    );
+    // Regressão: a referência em maiúsculas não pode impedir a introdução do
+    // livro de aparecer entre o seletor e o texto do devocional.
+    expect(find.text('Introdução'), findsOneWidget);
+  });
+
   testWidgets('Promessas de Deus mostra título, referência e versículo da BKJ',
       (tester) async {
     await aquecerAssets(tester);

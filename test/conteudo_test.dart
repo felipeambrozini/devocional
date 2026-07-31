@@ -145,5 +145,26 @@ void main() {
         }
       }
     });
+
+    test('a referencia de todo dia resolve livro, capitulo e versiculo', () {
+      // A tela troca a referencia abreviada do asset pelo nome do livro por
+      // extenso mais o versiculo completo da BKJ; se uma referencia não
+      // resolvesse, o dia cairia de volta na abreviação crua em silêncio.
+      final dados = json.decode(
+        File('assets/devotional/morning_evening.json').readAsStringSync(),
+      ) as Map<String, dynamic>;
+
+      final naoResolvidas = <String>[];
+      for (final entrada in dados.entries) {
+        final dia = entrada.value as Map<String, dynamic>;
+        for (final periodo in ['manha', 'noite']) {
+          final referencia = (dia[periodo] as Map<String, dynamic>)['reference'] as String;
+          if (capituloEVersiculoDaReferencia(referencia) == null) {
+            naoResolvidas.add('${entrada.key} $periodo: "$referencia"');
+          }
+        }
+      }
+      expect(naoResolvidas, isEmpty);
+    });
   });
 }

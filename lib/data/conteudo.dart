@@ -123,13 +123,33 @@ class Conteudo {
 
   /// Manhã e Noite para uma data. Manhã e Noite tem 366 dias, inclusive 29 de
   /// fevereiro, então não há fallback a fazer aqui.
+  ///
+  /// A referência do JSON vem abreviada ("Jo 6:37") e o versículo vem embutido
+  /// no próprio texto do comentário. Aqui ela é trocada pelo nome do livro por
+  /// extenso em maiúsculas ("JOÃO 6:37") e o versículo completo é buscado na
+  /// BKJ, para o cartão mostrar o mesmo formato de Promessas de Deus: livro em
+  /// destaque, depois o versículo, depois o comentário.
   Future<Devocional?> devocional(DateTime data, Periodo periodo) async {
     final dados = await _carregarDevocionais();
     final chave = chaveDoDia(data);
     final dia = dados[chave];
     if (dia == null) return null;
     final entrada = dia[periodo.chave] as Map<String, dynamic>?;
-    return entrada == null ? null : Devocional.doJson(entrada);
+    if (entrada == null) return null;
+    final dev = Devocional.doJson(entrada);
+
+    final resolvida = capituloEVersiculoDaReferencia(dev.referencia);
+    if (resolvida == null) return dev;
+    final (livro, capitulo, numero) = resolvida;
+    final texto = await versiculo(Versao.bkj, livro.slug, capitulo, numero);
+    if (texto.isEmpty) return dev;
+
+    return Devocional(
+      referencia: '${livro.nome.toUpperCase()} $capitulo:$numero',
+      texto: dev.texto,
+      titulo: dev.titulo,
+      versiculo: texto,
+    );
   }
 
   /// Promessas de Deus. Ainda sem texto: o arquivo pode não existir, e nesse caso a

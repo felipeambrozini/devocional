@@ -38,6 +38,15 @@ void main() {
       expect(livroDaReferencia('nada a ver 1:1'), isNull);
     });
 
+    test('resolve mesmo com o nome do livro todo em maiusculas', () {
+      // O Devocional reescreve a referencia de Manha e Noite assim ("JOSUÉ
+      // 5:12"), para exibir como cabecalho; a introducao do livro depende de
+      // livrosDaReferencia continuar reconhecendo esse formato.
+      expect(livroDaReferencia('JOSUÉ 5:12')?.slug, 'josue');
+      expect(livroDaReferencia('JOÃO 6:37')?.slug, 'joao');
+      expect(capituloEVersiculoDaReferencia('JOSUÉ 5:12'), (livroPorSlug('josue'), 5, 12));
+    });
+
     test('resolve todos os livros quando a referencia cita mais de um', () {
       expect(livrosDaReferencia('Js 5:12').map((l) => l.slug), ['josue']);
       expect(
