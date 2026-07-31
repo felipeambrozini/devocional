@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../data/canon.dart';
@@ -77,41 +78,44 @@ class _Cabecalho extends StatelessWidget {
 
     return Row(
       children: [
-        Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: Cores.dourado, width: 2),
-          ),
-          padding: const EdgeInsets.all(3),
-          child: ClipOval(
-            child: SizedBox(
-              width: 60,
-              height: 60,
-              child: Image.asset(
-                'assets/images/felipe.png',
-                fit: BoxFit.cover,
-                // A foto é mais alta que larga; o corte automático centralizado do
-                // BoxFit.cover cortava o topo da cabeça. Alinhando quase ao topo, o
-                // corte sobra todo embaixo, no peito, em vez do cabelo.
-                alignment: const Alignment(0, -0.85),
-                errorBuilder: (context, error, stackTrace) => Container(
-                  color: Cores.superficieAlta,
-                  alignment: Alignment.center,
-                  child: const Text(
-                    'F',
-                    style: TextStyle(color: Cores.dourado, fontSize: 24),
+        // Na web o app fica público; sem foto nem nome, só a saudação.
+        if (!kIsWeb) ...[
+          Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Cores.dourado, width: 2),
+            ),
+            padding: const EdgeInsets.all(3),
+            child: ClipOval(
+              child: SizedBox(
+                width: 60,
+                height: 60,
+                child: Image.asset(
+                  'assets/images/felipe.png',
+                  fit: BoxFit.cover,
+                  // A foto é mais alta que larga; o corte automático centralizado do
+                  // BoxFit.cover cortava o topo da cabeça. Alinhando quase ao topo, o
+                  // corte sobra todo embaixo, no peito, em vez do cabelo.
+                  alignment: const Alignment(0, -0.85),
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    color: Cores.superficieAlta,
+                    alignment: Alignment.center,
+                    child: const Text(
+                      'F',
+                      style: TextStyle(color: Cores.dourado, fontSize: 24),
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-        const SizedBox(width: 14),
+          const SizedBox(width: 14),
+        ],
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('$saudacao, Felipe', style: tema.headlineMedium),
+              Text(kIsWeb ? saudacao : '$saudacao, Felipe', style: tema.headlineMedium),
               const SizedBox(height: 4),
               Text(dataLonga(data), style: tema.bodySmall),
             ],
