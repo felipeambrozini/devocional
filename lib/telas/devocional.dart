@@ -245,41 +245,48 @@ class _CartaoDeLeitura extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(titulo, style: tema.headlineMedium),
+                    // A citação vem alinhada embaixo do título, não embaixo da
+                    // capa, e o nome do livro fica ao lado do fim da citação
+                    // (não numa linha própria embaixo), como uma epígrafe
+                    // seguida da atribuição.
+                    if (versiculo.isNotEmpty || referencia.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            if (versiculo.isNotEmpty)
+                              TextSpan(
+                                text: '"$versiculo" ',
+                                style: tema.bodyLarge?.copyWith(
+                                  height: 1.7,
+                                  fontStyle: FontStyle.italic,
+                                  color: Cores.douradoClaro,
+                                ),
+                              ),
+                            if (referencia.isNotEmpty)
+                              TextSpan(
+                                text: referencia.toUpperCase(),
+                                style: tema.titleSmall?.copyWith(color: Cores.douradoClaro),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 14),
+          // A linha dourada só separa a citação do comentário, por isso vem
+          // depois dela, não antes.
           const Filete(),
           const SizedBox(height: 14),
-          // A citação vem antes do nome do livro, e o nome do livro fica ao
-          // lado do fim da citação (não numa linha própria embaixo), como uma
-          // epígrafe seguida da atribuição. Só depois entra o comentário.
-          if (versiculo.isNotEmpty || referencia.isNotEmpty) ...[
-            Text.rich(
-              TextSpan(
-                children: [
-                  if (versiculo.isNotEmpty)
-                    TextSpan(
-                      text: '"$versiculo" ',
-                      style: tema.bodyLarge?.copyWith(
-                        height: 1.7,
-                        fontStyle: FontStyle.italic,
-                        color: Cores.douradoClaro,
-                      ),
-                    ),
-                  if (referencia.isNotEmpty)
-                    TextSpan(
-                      text: referencia.toUpperCase(),
-                      style: tema.titleSmall?.copyWith(color: Cores.douradoClaro),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 14),
-          ],
           Text(texto, style: tema.bodyLarge?.copyWith(height: 1.7)),
+          const SizedBox(height: 8),
+          Center(
+            child: Image.asset('assets/images/assinatura_spurgeon.png', height: 40),
+          ),
         ],
       ),
     );

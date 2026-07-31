@@ -184,7 +184,7 @@ class _PreviaDaLeitura extends StatelessWidget {
                       children: [
                         if (dev.versiculo.isNotEmpty)
                           TextSpan(
-                            text: '${dev.versiculo} ',
+                            text: '"${dev.versiculo}" ',
                             style: tema.bodyMedium?.copyWith(
                               height: 1.6,
                               fontStyle: FontStyle.italic,
