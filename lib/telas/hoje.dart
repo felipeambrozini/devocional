@@ -146,19 +146,22 @@ class _PreviaDaLeitura extends StatelessWidget {
         Leitura.promessas => Icons.auto_awesome_outlined,
       };
 
-  Future<Devocional?> get _futuro {
+  Future<Devocional?> _futuro(Versao versao) {
     final periodo = leitura.periodo;
     return periodo == null
-        ? Conteudo.instancia.promessa(data)
-        : Conteudo.instancia.devocional(data, periodo);
+        ? Conteudo.instancia.promessa(data, versao: versao)
+        : Conteudo.instancia.devocional(data, periodo, versao: versao);
   }
 
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context).textTheme;
+    final versao = EscopoDoEstado.de(context).versao;
     return CarregaUmaVez<Devocional?>(
-      chave: '${leitura.name}/${Conteudo.chaveDoDia(data)}',
-      carregar: () => _futuro,
+      // A versão entra na chave para a prévia recarregar ao alternar BKJ/NVT
+      // no Devocional, do mesmo jeito que o leitor da Bíblia já faz.
+      chave: '${leitura.name}/${versao.pasta}/${Conteudo.chaveDoDia(data)}',
+      carregar: () => _futuro(versao),
       construir: (context, snap) {
         final dev = snap.data;
         final spans = dev == null

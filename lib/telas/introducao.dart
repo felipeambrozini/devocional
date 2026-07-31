@@ -56,6 +56,14 @@ class TelaIntroducao extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(intro.livro, style: tema.displayMedium),
+                          const SizedBox(height: 4),
+                          Text(
+                            livroPorSlug(slug)!.tituloFormal,
+                            style: tema.bodySmall?.copyWith(
+                              fontStyle: FontStyle.italic,
+                              color: Cores.begeSuave,
+                            ),
+                          ),
                           const SizedBox(height: 8),
                           Text('Introdução', style: tema.titleSmall),
                         ],

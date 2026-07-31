@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/modelos.dart';
 import '../theme.dart';
@@ -215,6 +216,31 @@ Future<bool> confirmarRemocao(BuildContext context, {required String referencia,
   return confirmou ?? false;
 }
 
+/// Alternador entre BKJ e NVT. Usado no leitor da Bíblia e no Devocional, por
+/// isso vive aqui e não numa tela só.
+class AlternadorDeVersao extends StatelessWidget {
+  const AlternadorDeVersao({super.key, required this.atual, required this.ao});
+
+  final Versao atual;
+  final ValueChanged<Versao> ao;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: SegmentedButton<Versao>(
+        segments: [
+          for (final v in Versao.values)
+            ButtonSegment(value: v, label: Text(v.sigla), tooltip: v.nome),
+        ],
+        selected: {atual},
+        onSelectionChanged: (s) => ao(s.first),
+        showSelectedIcon: false,
+      ),
+    );
+  }
+}
+
 /// Uma linha por versículo-base de um devocional: a citação entre aspas seguida
 /// da referência em caixa alta.
 ///
@@ -248,13 +274,9 @@ List<InlineSpan> spansDeCitacao(
 /// texto sem rolar páginas. Expandida, lê inteira ali mesmo. Aparece tanto no
 /// leitor da Bíblia quanto no devocional, por isso vive aqui e não numa tela só.
 class AberturaDeLivro extends StatefulWidget {
-  const AberturaDeLivro({super.key, required this.slug, this.mostrarNomeDoLivro = false});
+  const AberturaDeLivro({super.key, required this.slug});
 
   final String slug;
-
-  /// Mostra o nome do livro ao lado de "Introdução", para diferenciar quando
-  /// mais de uma abertura aparece junto, como no dia que cita três livros.
-  final bool mostrarNomeDoLivro;
 
   @override
   State<AberturaDeLivro> createState() => _AberturaDeLivroState();
@@ -302,9 +324,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                widget.mostrarNomeDoLivro
-                                    ? 'Introdução — ${intro.livro}'
-                                    : 'Introdução',
+                                'Introdução — ${livroPorSlug(widget.slug)!.tituloFormal}',
                                 style: tema.titleLarge,
                               ),
                               const SizedBox(height: 4),

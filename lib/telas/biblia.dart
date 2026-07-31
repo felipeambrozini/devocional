@@ -120,7 +120,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
       ),
       body: Column(
         children: [
-          _AlternadorDeVersao(
+          AlternadorDeVersao(
             atual: estado.versao,
             ao: (v) => estado.definirVersao(v),
           ),
@@ -172,29 +172,6 @@ class _TelaBibliaState extends State<TelaBiblia> {
   }
 }
 
-class _AlternadorDeVersao extends StatelessWidget {
-  const _AlternadorDeVersao({required this.atual, required this.ao});
-
-  final Versao atual;
-  final ValueChanged<Versao> ao;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: SegmentedButton<Versao>(
-        segments: [
-          for (final v in Versao.values)
-            ButtonSegment(value: v, label: Text(v.sigla), tooltip: v.nome),
-        ],
-        selected: {atual},
-        onSelectionChanged: (s) => ao(s.first),
-        showSelectedIcon: false,
-      ),
-    );
-  }
-}
-
 class _Leitor extends StatelessWidget {
   const _Leitor({required this.capitulo, required this.rolagem, this.destacar});
 
@@ -219,6 +196,18 @@ class _Leitor extends StatelessWidget {
               // A introdução do livro fica disponível em todo capítulo, não só
               // antes do primeiro, para não depender de abrir a tela pela AppBar.
               AberturaDeLivro(slug: capitulo.livro),
+              // O título completo do livro só aparece no capítulo 1: é a
+              // abertura do livro, não algo para repetir a cada capítulo.
+              if (capitulo.numero == 1) ...[
+                Text(
+                  livroPorSlug(capitulo.livro)!.tituloFormal,
+                  style: tema.bodySmall?.copyWith(
+                    fontStyle: FontStyle.italic,
+                    color: Cores.begeSuave,
+                  ),
+                ),
+                const SizedBox(height: 4),
+              ],
               Text(capitulo.referencia, style: tema.displayMedium),
               const SizedBox(height: 8),
               const Filete(),

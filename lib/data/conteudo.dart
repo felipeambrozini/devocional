@@ -81,6 +81,24 @@ class Conteudo {
     return '';
   }
 
+  /// Um versículo, ou uma faixa de versículos do mesmo capítulo unidos por
+  /// espaço. Promessas de Deus às vezes cita dois versículos como uma só
+  /// promessa ("Salmos 102:13-14"); buscar só o primeiro perderia metade dela.
+  Future<String> versiculoOuFaixa(
+    Versao versao,
+    String slug,
+    int capitulo,
+    int deVersiculo,
+    int ateVersiculo,
+  ) async {
+    final cap = await this.capitulo(versao, slug, capitulo);
+    final textos = [
+      for (final (n, texto) in cap.versiculos)
+        if (n >= deVersiculo && n <= ateVersiculo) texto,
+    ];
+    return textos.join(' ');
+  }
+
   /// O cronograma anual. Em ano bissexto usa a variante de 366 dias, com 29 de
   /// fevereiro como dia próprio em vez de dobrar a leitura de 28/2.
   Future<List<DiaDoPlano>> plano({bool bissexto = false}) async {
@@ -134,23 +152,39 @@ class Conteudo {
   /// No raro dia cuja epígrafe encadeia mais de uma passagem, a referência do
   /// JSON traz todas separadas por vírgula ou "e"; cada uma é resolvida, e as
   /// que sobram do principal vão para [Devocional.outrosVersiculos].
-  Future<Devocional?> devocional(DateTime data, Periodo periodo) async {
+  ///
+  /// [versao] escolhe de qual tradução o texto completo do versículo vem; a
+  /// pessoa alterna entre BKJ e NVT no Devocional como já faz no leitor da
+  /// Bíblia.
+  Future<Devocional?> devocional(
+    DateTime data,
+    Periodo periodo, {
+    Versao versao = Versao.bkj,
+  }) async {
     final dados = await _carregarDevocionais();
     final chave = chaveDoDia(data);
     final dia = dados[chave];
     if (dia == null) return null;
     final entrada = dia[periodo.chave] as Map<String, dynamic>?;
     if (entrada == null) return null;
-    final dev = Devocional.doJson(entrada);
+    return _comVersiculosResolvidos(Devocional.doJson(entrada), versao);
+  }
 
-    final resolvidos = versiculosDaReferencia(dev.referencia);
+  /// Busca o(s) versículo(s)-base de [dev] na tradução [versao] e devolve uma
+  /// cópia com [Devocional.referencia]/[Devocional.versiculo] atualizados. Sem
+  /// referência que resolva, devolve [dev] como veio do asset.
+  Future<Devocional> _comVersiculosResolvidos(Devocional dev, Versao versao) async {
+    final resolvidos = faixasDaReferencia(dev.referencia);
     if (resolvidos.isEmpty) return dev;
 
     final pares = <(String, String)>[];
-    for (final (livro, capitulo, numero) in resolvidos) {
-      final texto = await versiculo(Versao.bkj, livro.slug, capitulo, numero);
+    for (final (livro, capitulo, deVersiculo, ateVersiculo) in resolvidos) {
+      final texto = await versiculoOuFaixa(versao, livro.slug, capitulo, deVersiculo, ateVersiculo);
       if (texto.isEmpty) continue;
-      pares.add(('${livro.nome} $capitulo:$numero', texto));
+      final referencia = deVersiculo == ateVersiculo
+          ? '${livro.nome} $capitulo:$deVersiculo'
+          : '${livro.nome} $capitulo:$deVersiculo-$ateVersiculo';
+      pares.add((referencia, texto));
     }
     if (pares.isEmpty) return dev;
 
@@ -172,7 +206,10 @@ class Conteudo {
   Map<String, Map<String, dynamic>>? _promessas;
   bool _tentouPromessas = false;
 
-  Future<Devocional?> promessa(DateTime data) async {
+  /// [versao] escolhe de qual tradução o versículo em destaque vem, do mesmo
+  /// jeito que em [devocional]; o texto da promessa em si é sempre o mesmo,
+  /// escrito na voz de Spurgeon, independente da tradução do versículo.
+  Future<Devocional?> promessa(DateTime data, {Versao versao = Versao.bkj}) async {
     if (!_tentouPromessas) {
       _tentouPromessas = true;
       try {
@@ -188,7 +225,8 @@ class Conteudo {
     if (dados == null) return null;
     final chave = chaveDoDia(data);
     final dia = dados[chave];
-    return dia == null ? null : Devocional.doJson(dia);
+    if (dia == null) return null;
+    return _comVersiculosResolvidos(Devocional.doJson(dia), versao);
   }
 
   /// Introdução de um livro. Devolve nulo quando ainda não foi escrita.

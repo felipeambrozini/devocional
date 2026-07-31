@@ -311,8 +311,12 @@ void main() {
       findsOneWidget,
     );
     // Regressão: a referência em maiúsculas não pode impedir a introdução do
-    // livro de aparecer entre o seletor e o texto do devocional.
-    expect(find.text('Introdução'), findsOneWidget);
+    // livro de aparecer entre o seletor e o texto do devocional, com o título
+    // formal do livro ao lado.
+    expect(
+      find.text('Introdução — ${livroPorSlug('josue')!.tituloFormal}'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('Promessas de Deus mostra título, referência e versículo da BKJ',

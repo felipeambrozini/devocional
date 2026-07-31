@@ -173,4 +173,24 @@ void main() {
       expect(naoResolvidas, isEmpty);
     });
   });
+
+  group('devocional Promessas de Deus', () {
+    test('a referencia de todo dia resolve livro, capitulo e versiculo(s)', () {
+      // Promessas de Deus agora também busca o versículo ao vivo, para a pessoa
+      // poder trocar entre BKJ e NVT; e a referência às vezes é uma faixa de
+      // dois versículos ("Salmos 102:13-14"), não só um único versículo.
+      final arquivo = File('assets/devotional/promises.json');
+      if (!arquivo.existsSync()) return;
+      final dados = json.decode(arquivo.readAsStringSync()) as Map<String, dynamic>;
+
+      final naoResolvidas = <String>[];
+      for (final entrada in dados.entries) {
+        final referencia = (entrada.value as Map<String, dynamic>)['reference'] as String;
+        if (faixaDeVersiculoDaReferencia(referencia) == null) {
+          naoResolvidas.add('${entrada.key}: "$referencia"');
+        }
+      }
+      expect(naoResolvidas, isEmpty);
+    });
+  });
 }

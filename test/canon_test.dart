@@ -79,6 +79,23 @@ void main() {
       );
     });
 
+    test('resolve faixa de versiculos, como as promessas de dois versiculos', () {
+      // Sem faixa, e' um so versiculo (inicio e fim iguais).
+      expect(faixaDeVersiculoDaReferencia('Jo 6:37'), (livroPorSlug('joao'), 6, 37, 37));
+      // Promessas de Deus as vezes cita dois versiculos como uma so promessa.
+      expect(
+        faixaDeVersiculoDaReferencia('Salmos 102:13-14'),
+        (livroPorSlug('salmos'), 102, 13, 14),
+      );
+      expect(
+        faixasDaReferencia('Jo 6:37, Sl 102:13-14'),
+        [
+          (livroPorSlug('joao'), 6, 37, 37),
+          (livroPorSlug('salmos'), 102, 13, 14),
+        ],
+      );
+    });
+
     test('contagem de capitulos de casos que costumam sair errados', () {
       expect(livroPorSlug('salmos')!.capitulos, 150);
       expect(livroPorSlug('josue')!.capitulos, 24);

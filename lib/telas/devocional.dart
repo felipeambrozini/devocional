@@ -85,17 +85,18 @@ class _TelaDevocionalState extends State<TelaDevocional> {
     if (escolhida != null) setState(() => _data = escolhida);
   }
 
-  Future<Devocional?> _carregar() {
+  Future<Devocional?> _carregar(Versao versao) {
     final periodo = _leitura.periodo;
     return periodo == null
-        ? Conteudo.instancia.promessa(_data)
-        : Conteudo.instancia.devocional(_data, periodo);
+        ? Conteudo.instancia.promessa(_data, versao: versao)
+        : Conteudo.instancia.devocional(_data, periodo, versao: versao);
   }
 
   @override
   Widget build(BuildContext context) {
     final hoje = DateTime.now();
     final ehHoje = _data.month == hoje.month && _data.day == hoje.day;
+    final estado = EscopoDoEstado.de(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -121,10 +122,14 @@ class _TelaDevocionalState extends State<TelaDevocional> {
             atual: _leitura,
             ao: (l) => setState(() => _leitura = l),
           ),
+          AlternadorDeVersao(
+            atual: estado.versao,
+            ao: (v) => estado.definirVersao(v),
+          ),
           const SizedBox(height: 16),
           CarregaUmaVez<Devocional?>(
-            chave: '${_leitura.name}/${_data.month}/${_data.day}',
-            carregar: _carregar,
+            chave: '${_leitura.name}/${estado.versao.pasta}/${_data.month}/${_data.day}',
+            carregar: () => _carregar(estado.versao),
             construir: (context, snap) {
               if (snap.connectionState != ConnectionState.done) {
                 return const Padding(
@@ -154,11 +159,7 @@ class _TelaDevocionalState extends State<TelaDevocional> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  for (final livro in livros)
-                    AberturaDeLivro(
-                      slug: livro.slug,
-                      mostrarNomeDoLivro: livros.length > 1,
-                    ),
+                  for (final livro in livros) AberturaDeLivro(slug: livro.slug),
                   _CartaoDeLeitura(
                     titulo: dev.titulo.isNotEmpty
                         ? dev.titulo

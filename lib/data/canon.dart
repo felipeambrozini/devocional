@@ -4,13 +4,27 @@
 /// sempre disponível, o que evita um `await` só para desenhar o seletor de livros ou
 /// resolver o nome de um livro vindo do cronograma de leitura.
 class Livro {
-  const Livro(this.slug, this.nome, this.abrev, this.capitulos, this.testamento);
+  const Livro(
+    this.slug,
+    this.nome,
+    this.abrev,
+    this.capitulos,
+    this.testamento,
+    this.tituloFormal,
+  );
 
   final String slug;
   final String nome;
   final String abrev;
   final int capitulos;
   final Testamento testamento;
+
+  /// O título completo do livro, como está na Bíblia King James 1611 em
+  /// português ("O Primeiro Livro de Moisés, chamado Gênesis"). Aparece só no
+  /// topo do livro na Bíblia e na tela de Introdução; em todo outro lugar
+  /// (botão do cronograma, referência do devocional, seletor) continua valendo
+  /// [nome], o nome curto.
+  final String tituloFormal;
 }
 
 enum Testamento { antigo, novo }
@@ -19,72 +33,72 @@ const _at = Testamento.antigo;
 const _nt = Testamento.novo;
 
 const canon = <Livro>[
-  Livro('genesis', 'Gênesis', 'Gn', 50, _at),
-  Livro('exodo', 'Êxodo', 'Êx', 40, _at),
-  Livro('levitico', 'Levítico', 'Lv', 27, _at),
-  Livro('numeros', 'Números', 'Nm', 36, _at),
-  Livro('deuteronomio', 'Deuteronômio', 'Dt', 34, _at),
-  Livro('josue', 'Josué', 'Js', 24, _at),
-  Livro('juizes', 'Juízes', 'Jz', 21, _at),
-  Livro('rute', 'Rute', 'Rt', 4, _at),
-  Livro('1samuel', '1 Samuel', '1Sm', 31, _at),
-  Livro('2samuel', '2 Samuel', '2Sm', 24, _at),
-  Livro('1reis', '1 Reis', '1Rs', 22, _at),
-  Livro('2reis', '2 Reis', '2Rs', 25, _at),
-  Livro('1cronicas', '1 Crônicas', '1Cr', 29, _at),
-  Livro('2cronicas', '2 Crônicas', '2Cr', 36, _at),
-  Livro('esdras', 'Esdras', 'Ed', 10, _at),
-  Livro('neemias', 'Neemias', 'Ne', 13, _at),
-  Livro('ester', 'Ester', 'Et', 10, _at),
-  Livro('jo', 'Jó', 'Jó', 42, _at),
-  Livro('salmos', 'Salmos', 'Sl', 150, _at),
-  Livro('proverbios', 'Provérbios', 'Pv', 31, _at),
-  Livro('eclesiastes', 'Eclesiastes', 'Ec', 12, _at),
-  Livro('cantares', 'Cantares', 'Ct', 8, _at),
-  Livro('isaias', 'Isaías', 'Is', 66, _at),
-  Livro('jeremias', 'Jeremias', 'Jr', 52, _at),
-  Livro('lamentacoes', 'Lamentações', 'Lm', 5, _at),
-  Livro('ezequiel', 'Ezequiel', 'Ez', 48, _at),
-  Livro('daniel', 'Daniel', 'Dn', 12, _at),
-  Livro('oseias', 'Oseias', 'Os', 14, _at),
-  Livro('joel', 'Joel', 'Jl', 3, _at),
-  Livro('amos', 'Amós', 'Am', 9, _at),
-  Livro('obadias', 'Obadias', 'Ob', 1, _at),
-  Livro('jonas', 'Jonas', 'Jn', 4, _at),
-  Livro('miqueias', 'Miqueias', 'Mq', 7, _at),
-  Livro('naum', 'Naum', 'Na', 3, _at),
-  Livro('habacuque', 'Habacuque', 'Hc', 3, _at),
-  Livro('sofonias', 'Sofonias', 'Sf', 3, _at),
-  Livro('ageu', 'Ageu', 'Ag', 2, _at),
-  Livro('zacarias', 'Zacarias', 'Zc', 14, _at),
-  Livro('malaquias', 'Malaquias', 'Ml', 4, _at),
-  Livro('mateus', 'Mateus', 'Mt', 28, _nt),
-  Livro('marcos', 'Marcos', 'Mc', 16, _nt),
-  Livro('lucas', 'Lucas', 'Lc', 24, _nt),
-  Livro('joao', 'João', 'Jo', 21, _nt),
-  Livro('atos', 'Atos', 'At', 28, _nt),
-  Livro('romanos', 'Romanos', 'Rm', 16, _nt),
-  Livro('1corintios', '1 Coríntios', '1Co', 16, _nt),
-  Livro('2corintios', '2 Coríntios', '2Co', 13, _nt),
-  Livro('galatas', 'Gálatas', 'Gl', 6, _nt),
-  Livro('efesios', 'Efésios', 'Ef', 6, _nt),
-  Livro('filipenses', 'Filipenses', 'Fp', 4, _nt),
-  Livro('colossenses', 'Colossenses', 'Cl', 4, _nt),
-  Livro('1tessalonicenses', '1 Tessalonicenses', '1Ts', 5, _nt),
-  Livro('2tessalonicenses', '2 Tessalonicenses', '2Ts', 3, _nt),
-  Livro('1timoteo', '1 Timóteo', '1Tm', 6, _nt),
-  Livro('2timoteo', '2 Timóteo', '2Tm', 4, _nt),
-  Livro('tito', 'Tito', 'Tt', 3, _nt),
-  Livro('filemom', 'Filemom', 'Fm', 1, _nt),
-  Livro('hebreus', 'Hebreus', 'Hb', 13, _nt),
-  Livro('tiago', 'Tiago', 'Tg', 5, _nt),
-  Livro('1pedro', '1 Pedro', '1Pe', 5, _nt),
-  Livro('2pedro', '2 Pedro', '2Pe', 3, _nt),
-  Livro('1joao', '1 João', '1Jo', 5, _nt),
-  Livro('2joao', '2 João', '2Jo', 1, _nt),
-  Livro('3joao', '3 João', '3Jo', 1, _nt),
-  Livro('judas', 'Judas', 'Jd', 1, _nt),
-  Livro('apocalipse', 'Apocalipse', 'Ap', 22, _nt),
+  Livro('genesis', 'Gênesis', 'Gn', 50, _at, 'O Primeiro Livro de Moisés, chamado Gênesis'),
+  Livro('exodo', 'Êxodo', 'Êx', 40, _at, 'O Segundo Livro de Moisés, chamado Êxodo'),
+  Livro('levitico', 'Levítico', 'Lv', 27, _at, 'O Terceiro Livro de Moisés, chamado Levítico'),
+  Livro('numeros', 'Números', 'Nm', 36, _at, 'O Quarto Livro de Moisés, chamado Números'),
+  Livro('deuteronomio', 'Deuteronômio', 'Dt', 34, _at, 'O Quinto Livro de Moisés, chamado Deuteronômio'),
+  Livro('josue', 'Josué', 'Js', 24, _at, 'O Livro de Josué'),
+  Livro('juizes', 'Juízes', 'Jz', 21, _at, 'O Livro de Juízes'),
+  Livro('rute', 'Rute', 'Rt', 4, _at, 'O Livro de Rute'),
+  Livro('1samuel', '1 Samuel', '1Sm', 31, _at, 'O Primeiro Livro de Samuel'),
+  Livro('2samuel', '2 Samuel', '2Sm', 24, _at, 'O Segundo Livro de Samuel'),
+  Livro('1reis', '1 Reis', '1Rs', 22, _at, 'O Primeiro Livro de Reis'),
+  Livro('2reis', '2 Reis', '2Rs', 25, _at, 'O Segundo Livro de Reis'),
+  Livro('1cronicas', '1 Crônicas', '1Cr', 29, _at, 'O Primeiro Livro das Crônicas'),
+  Livro('2cronicas', '2 Crônicas', '2Cr', 36, _at, 'O Segundo Livro das Crônicas'),
+  Livro('esdras', 'Esdras', 'Ed', 10, _at, 'O Livro de Esdras'),
+  Livro('neemias', 'Neemias', 'Ne', 13, _at, 'O Livro de Neemias'),
+  Livro('ester', 'Ester', 'Et', 10, _at, 'O Livro de Ester'),
+  Livro('jo', 'Jó', 'Jó', 42, _at, 'O Livro de Jó'),
+  Livro('salmos', 'Salmos', 'Sl', 150, _at, 'O Livro de Salmos'),
+  Livro('proverbios', 'Provérbios', 'Pv', 31, _at, 'O Livro de Provérbios'),
+  Livro('eclesiastes', 'Eclesiastes', 'Ec', 12, _at, 'O Livro de Eclesiastes'),
+  Livro('cantares', 'Cantares de Salomão', 'Ct', 8, _at, 'Cantares de Salomão'),
+  Livro('isaias', 'Isaías', 'Is', 66, _at, 'O Livro de Isaías'),
+  Livro('jeremias', 'Jeremias', 'Jr', 52, _at, 'O Livro de Jeremias'),
+  Livro('lamentacoes', 'Lamentações', 'Lm', 5, _at, 'As Lamentações de Jeremias'),
+  Livro('ezequiel', 'Ezequiel', 'Ez', 48, _at, 'O Livro de Ezequiel'),
+  Livro('daniel', 'Daniel', 'Dn', 12, _at, 'O Livro de Daniel'),
+  Livro('oseias', 'Oseias', 'Os', 14, _at, 'O Livro de Oseias'),
+  Livro('joel', 'Joel', 'Jl', 3, _at, 'O Livro de Joel'),
+  Livro('amos', 'Amós', 'Am', 9, _at, 'O Livro de Amós'),
+  Livro('obadias', 'Obadias', 'Ob', 1, _at, 'O Livro de Obadias'),
+  Livro('jonas', 'Jonas', 'Jn', 4, _at, 'O Livro de Jonas'),
+  Livro('miqueias', 'Miquéias', 'Mq', 7, _at, 'O Livro de Miquéias'),
+  Livro('naum', 'Naum', 'Na', 3, _at, 'O Livro de Naum'),
+  Livro('habacuque', 'Habacuque', 'Hc', 3, _at, 'O Livro de Habacuque'),
+  Livro('sofonias', 'Sofonias', 'Sf', 3, _at, 'O Livro de Sofonias'),
+  Livro('ageu', 'Ageu', 'Ag', 2, _at, 'O Livro de Ageu'),
+  Livro('zacarias', 'Zacarias', 'Zc', 14, _at, 'O Livro de Zacarias'),
+  Livro('malaquias', 'Malaquias', 'Ml', 4, _at, 'O Livro de Malaquias'),
+  Livro('mateus', 'Mateus', 'Mt', 28, _nt, 'O Evangelho Segundo Mateus'),
+  Livro('marcos', 'Marcos', 'Mc', 16, _nt, 'O Evangelho Segundo Marcos'),
+  Livro('lucas', 'Lucas', 'Lc', 24, _nt, 'O Evangelho Segundo Lucas'),
+  Livro('joao', 'João', 'Jo', 21, _nt, 'O Evangelho Segundo João'),
+  Livro('atos', 'Atos', 'At', 28, _nt, 'Os Atos dos Apóstolos'),
+  Livro('romanos', 'Romanos', 'Rm', 16, _nt, 'A Carta do Apóstolo Paulo aos Romanos'),
+  Livro('1corintios', '1 Coríntios', '1Co', 16, _nt, 'Primeira Carta do Apóstolo Paulo aos Coríntios'),
+  Livro('2corintios', '2 Coríntios', '2Co', 13, _nt, 'A Segunda Carta do Apóstolo Paulo aos Coríntios'),
+  Livro('galatas', 'Gálatas', 'Gl', 6, _nt, 'A Carta do Apóstolo Paulo aos Gálatas'),
+  Livro('efesios', 'Efésios', 'Ef', 6, _nt, 'A Carta do Apóstolo Paulo aos Efésios'),
+  Livro('filipenses', 'Filipenses', 'Fp', 4, _nt, 'A Carta do Apóstolo Paulo aos Filipenses'),
+  Livro('colossenses', 'Colossenses', 'Cl', 4, _nt, 'A Carta do Apóstolo Paulo aos Colossenses'),
+  Livro('1tessalonicenses', '1 Tessalonicenses', '1Ts', 5, _nt, 'A Primeira Carta do Apóstolo Paulo aos Tessalonicenses'),
+  Livro('2tessalonicenses', '2 Tessalonicenses', '2Ts', 3, _nt, 'A Segunda Carta do Apóstolo Paulo aos Tessalonicenses'),
+  Livro('1timoteo', '1 Timóteo', '1Tm', 6, _nt, 'A Primeira Carta do Apóstolo Paulo a Timóteo'),
+  Livro('2timoteo', '2 Timóteo', '2Tm', 4, _nt, 'A Segunda Carta do Apóstolo Paulo a Timóteo'),
+  Livro('tito', 'Tito', 'Tt', 3, _nt, 'A Carta de Paulo a Tito'),
+  Livro('filemom', 'Filemom', 'Fm', 1, _nt, 'A Carta de Paulo a Filemom'),
+  Livro('hebreus', 'Hebreus', 'Hb', 13, _nt, 'A Carta aos Hebreus'),
+  Livro('tiago', 'Tiago', 'Tg', 5, _nt, 'A Carta de Tiago'),
+  Livro('1pedro', '1 Pedro', '1Pe', 5, _nt, 'A Primeira Carta de Pedro'),
+  Livro('2pedro', '2 Pedro', '2Pe', 3, _nt, 'A Segunda Carta de Pedro'),
+  Livro('1joao', '1 João', '1Jo', 5, _nt, 'A Primeira Carta de João'),
+  Livro('2joao', '2 João', '2Jo', 1, _nt, 'A Segunda Carta de João'),
+  Livro('3joao', '3 João', '3Jo', 1, _nt, 'A Terceira Carta de João'),
+  Livro('judas', 'Judas', 'Jd', 1, _nt, 'A Carta de Judas'),
+  Livro('apocalipse', 'Apocalipse', 'Ap', 22, _nt, 'O Apocalipse de João'),
 ];
 
 final Map<String, Livro> _porSlug = {for (final l in canon) l.slug: l};
@@ -139,6 +153,24 @@ Livro? livroDaReferencia(String referencia) => _livroEPrefixo(referencia)?.$1;
   return (livro, capitulo, versiculo);
 }
 
+/// Livro, capítulo e faixa de versículos a partir de uma referência como "Jo
+/// 6:37" ou "Sl 102:13-14". Igual a [capituloEVersiculoDaReferencia], mas sem
+/// descartar o segundo número de uma faixa: Promessas de Deus cita faixas de
+/// dois versículos, e cortar no primeiro perderia metade da promessa.
+(Livro, int, int, int)? faixaDeVersiculoDaReferencia(String referencia) {
+  final encontrado = _livroEPrefixo(referencia);
+  if (encontrado == null) return null;
+  final (livro, prefixo) = encontrado;
+  final partes = referencia.substring(prefixo.length + 1).split(':');
+  if (partes.length != 2) return null;
+  final capitulo = int.tryParse(RegExp(r'^\d+').stringMatch(partes[0]) ?? '');
+  final match = RegExp(r'^(\d+)(?:-(\d+))?').firstMatch(partes[1]);
+  if (capitulo == null || match == null) return null;
+  final deVersiculo = int.parse(match.group(1)!);
+  final ateVersiculo = int.tryParse(match.group(2) ?? '') ?? deVersiculo;
+  return (livro, capitulo, deVersiculo, ateVersiculo);
+}
+
 /// Separador de trechos numa referência que cita mais de uma passagem, como
 /// "Js 5:12 e Hb 4:9": vírgula, ponto e vírgula ou "e".
 final _separadorDeReferencias = RegExp(r'[,;]\s*|\s+e\s+');
@@ -165,6 +197,17 @@ List<(Livro, int, int)> versiculosDaReferencia(String referencia) {
   final resolvidos = <(Livro, int, int)>[];
   for (final trecho in referencia.split(_separadorDeReferencias)) {
     final resolvido = capituloEVersiculoDaReferencia(trecho.trim());
+    if (resolvido != null) resolvidos.add(resolvido);
+  }
+  return resolvidos;
+}
+
+/// Livro, capítulo e faixa de versículos de cada trecho de uma referência que
+/// cita mais de uma passagem. Ver [faixaDeVersiculoDaReferencia].
+List<(Livro, int, int, int)> faixasDaReferencia(String referencia) {
+  final resolvidos = <(Livro, int, int, int)>[];
+  for (final trecho in referencia.split(_separadorDeReferencias)) {
+    final resolvido = faixaDeVersiculoDaReferencia(trecho.trim());
     if (resolvido != null) resolvidos.add(resolvido);
   }
   return resolvidos;
