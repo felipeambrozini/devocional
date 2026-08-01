@@ -1,5 +1,4 @@
 import 'canon.dart';
-import 'sol.dart';
 
 /// Um capítulo carregado: o sobrescrito (existe nos Salmos) e os versículos em ordem.
 class Capitulo {
@@ -128,18 +127,8 @@ enum Periodo {
   final String chave;
   final String nome;
 
-  /// Recurso para quando não se sabe onde o aparelho está: a virada às 18h.
+  /// A virada segue o horário do aparelho: manhã até 17h59, noite a partir das 18h.
   static Periodo pelaHora(int hora) => hora < 18 ? Periodo.manha : Periodo.noite;
-
-  /// O período segue o sol do lugar: manhã enquanto o sol está no céu, noite
-  /// depois que ele se põe. Sem lugar conhecido, ou nos círculos polares, onde
-  /// pode não haver nascer nem pôr do sol, cai em [pelaHora].
-  static Periodo peloSol(DateTime momento, (double, double)? lugar) {
-    if (lugar == null) return pelaHora(momento.hour);
-    final sol = solDoDia(momento, lugar.$1, lugar.$2);
-    if (sol == null) return pelaHora(momento.hour);
-    return sol.ehDia(momento) ? Periodo.manha : Periodo.noite;
-  }
 }
 
 /// Introdução de um livro, na voz de Spurgeon.

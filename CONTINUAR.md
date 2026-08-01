@@ -65,18 +65,12 @@ próprio `promises.json`; os arquivos mensais intermediários de
   com a referência de cada uma em `tools/frases_verificadas.json`. Só a de Salmos foi
   conferida por mim na fonte primária; isso está anotado no arquivo. Decisão do
   usuário, já discutida, não reabrir.
-- **A virada manhã/noite segue o sol do lugar, não um horário fixo.** `lib/data/sol.dart`
-  calcula nascer e pôr do sol pelo algoritmo do NOAA, sem rede e sem chave de API,
-  com erro menor que dois minutos (`test/sol_test.dart` confere contra tabelas
-  publicadas em três cidades). `Periodo.peloSol` usa isso; sem localização
-  conhecida, ou nos círculos polares onde pode não haver nascer nem pôr do sol,
-  cai no recurso das 18h (`Periodo.pelaHora`). Antes do nascer do sol ainda é
-  noite, de propósito.
-- **A localização é aproximada e opcional.** `geolocator` com `LocationAccuracy.low`,
-  só `ACCESS_COARSE_LOCATION` no Android: a cidade já dá o horário do sol com
-  precisão de sobra. `lib/data/localizacao.dart` falha em silêncio de propósito, e
-  o último lugar conhecido fica em `SharedPreferences` para a tela abrir sem
-  esperar o GPS. Sem permissão, o app funciona igual, pelo horário fixo.
+- **A virada manhã/noite é por horário fixo do aparelho, não pelo sol do lugar.**
+  0h-17h59 é devocional da manhã, 18h-23h59 é da noite (`Periodo.pelaHora` em
+  `lib/data/modelos.dart`, `test/periodo_test.dart`). A versão anterior calculava
+  nascer e pôr do sol por geolocalização (`lib/data/sol.dart`,
+  `lib/data/localizacao.dart`, pacote `geolocator`); tudo isso foi removido, junto
+  das permissões de localização em Android, iOS e macOS.
 - **O ícone sai da foto, recortado no rosto.** As fontes ficam em `assets/icone/`
   e os arquivos por plataforma são gerados por `dart run flutter_launcher_icons`,
   nunca editados à mão. Três fontes, e cada uma existe por um motivo:

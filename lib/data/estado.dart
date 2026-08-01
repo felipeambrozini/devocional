@@ -21,8 +21,6 @@ class Estado extends ChangeNotifier {
   static const _kMarcacoes = 'marcacoes';
   static const _kVersao = 'versao_preferida';
   static const _kUltima = 'ultima_leitura';
-  static const _kLatitude = 'latitude';
-  static const _kLongitude = 'longitude';
 
   final SharedPreferences _prefs;
 
@@ -36,10 +34,6 @@ class Estado extends ChangeNotifier {
 
   /// Onde a leitura parou, para o botão "continuar".
   (String, int)? _ultimaLeitura;
-
-  /// Último lugar conhecido, para calcular nascer e pôr do sol. Fica guardado
-  /// porque o devocional precisa dele já na abertura, antes de o GPS responder.
-  (double, double)? _lugar;
 
   static Future<Estado> abrir() async =>
       Estado(await SharedPreferences.getInstance());
@@ -68,10 +62,6 @@ class Estado extends ChangeNotifier {
       orElse: () => Versao.bkj,
     );
 
-    final lat = _prefs.getDouble(_kLatitude);
-    final lon = _prefs.getDouble(_kLongitude);
-    if (lat != null && lon != null) _lugar = (lat, lon);
-
     final ultima = _prefs.getString(_kUltima);
     if (ultima != null) {
       final partes = ultima.split('/');
@@ -82,26 +72,6 @@ class Estado extends ChangeNotifier {
         }
       }
     }
-  }
-
-  // --- lugar, para o nascer e o pôr do sol --------------------------------- //
-
-  (double, double)? get lugar => _lugar;
-
-  /// Guarda o lugar só quando ele muda o bastante para mexer no horário do sol.
-  /// Um décimo de grau é cerca de onze quilômetros, o que desloca o pôr do sol
-  /// em menos de um minuto: abaixo disso, gravar e redesenhar não muda nada.
-  Future<void> definirLugar(double latitude, double longitude) async {
-    final antes = _lugar;
-    if (antes != null &&
-        (antes.$1 - latitude).abs() < 0.1 &&
-        (antes.$2 - longitude).abs() < 0.1) {
-      return;
-    }
-    _lugar = (latitude, longitude);
-    notifyListeners();
-    await _prefs.setDouble(_kLatitude, latitude);
-    await _prefs.setDouble(_kLongitude, longitude);
   }
 
   // --- versão preferida ---------------------------------------------------- //

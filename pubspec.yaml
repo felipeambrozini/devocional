@@ -19,7 +19,6 @@ dependencies:
   # Progresso de leitura, favoritos, notas e preferências. Único armazenamento que
   # funciona igual em Android, iOS, web e desktop sem ramificação de plataforma.
   shared_preferences: ^2.5.5
-  geolocator: ^14.0.3
 
 dev_dependencies:
   flutter_test:

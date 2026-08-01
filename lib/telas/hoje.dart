@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
-import '../data/localizacao.dart';
 import '../data/modelos.dart';
 import '../theme.dart';
 import 'biblia.dart';
@@ -22,20 +21,10 @@ class TelaHoje extends StatefulWidget {
 
 class _TelaHojeState extends State<TelaHoje> {
   @override
-  void initState() {
-    super.initState();
-    // Sem await: a tela abre com o último lugar conhecido, ou com o horário
-    // fixo, e se redesenha sozinha se o GPS trouxer algo diferente.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) atualizarLugar(EscopoDoEstado.de(context));
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final agora = DateTime.now();
     final estado = EscopoDoEstado.de(context);
-    final periodo = Periodo.peloSol(agora, estado.lugar);
+    final periodo = Periodo.pelaHora(agora.hour);
 
     return Scaffold(
       body: SafeArea(

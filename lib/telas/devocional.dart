@@ -31,12 +31,9 @@ enum Leitura {
       ? 'assets/images/capa_promessas_de_deus.png'
       : 'assets/images/capa_manha_e_noite.png';
 
-  /// A aba inicial segue o sol do lugar, com o horário fixo como recurso.
-  /// Ver [Periodo.peloSol].
-  static Leitura peloSol(DateTime momento, (double, double)? lugar) =>
-      Periodo.peloSol(momento, lugar) == Periodo.manha
-          ? Leitura.manha
-          : Leitura.noite;
+  /// A aba inicial segue o horário do aparelho. Ver [Periodo.pelaHora].
+  static Leitura pelaHora(int hora) =>
+      Periodo.pelaHora(hora) == Periodo.manha ? Leitura.manha : Leitura.noite;
 }
 
 /// Manhã e Noite e Promessas de Deus, com calendário para escolher a data.
@@ -53,23 +50,12 @@ class TelaDevocional extends StatefulWidget {
 class _TelaDevocionalState extends State<TelaDevocional> {
   late DateTime _data;
   late Leitura _leitura;
-  bool _abaEscolhida = false;
 
   @override
   void initState() {
     super.initState();
     _data = widget.dataInicial ?? DateTime.now();
-  }
-
-  /// A aba de abertura depende do lugar guardado no estado, que só está
-  /// acessível daqui. Roda uma vez: depois disso quem manda é o toque do leitor.
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_abaEscolhida) return;
-    _abaEscolhida = true;
-    _leitura = widget.leituraInicial ??
-        Leitura.peloSol(DateTime.now(), EscopoDoEstado.de(context).lugar);
+    _leitura = widget.leituraInicial ?? Leitura.pelaHora(DateTime.now().hour);
   }
 
   Future<void> _escolherData() async {
