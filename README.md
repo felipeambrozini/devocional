@@ -1,16 +1,96 @@
-# felipe_ambrozini
+# Devocional
 
-A new Flutter project.
+Aplicativo devocional pessoal do Felipe, em Flutter (Android, iOS, web, macOS,
+Windows e Linux a partir do mesmo código).
 
-## Getting Started
+## O que o app faz
 
-This project is a starting point for a Flutter application.
+- **Bíblia completa**, em duas versões: **BKJ 1611** (King James em português,
+  31.102 versículos) e **NVT** (31.104 versículos). Leitor por capítulo, com
+  seletor dos 66 livros nos dois testamentos e alternância de versão sem perder
+  o lugar.
+- **Devocional diário**, três leituras por dia, na voz de Charles Spurgeon:
+  - **Manhã** e **Noite** (*Morning and Evening*), uma virada automática entre
+    as duas: 0h-17h59 mostra o devocional da manhã, 18h-23h59 o da noite,
+    pelo horário do próprio aparelho.
+  - **Promessas de Deus** (*Faith's Checkbook*), uma promessa bíblica por dia,
+    com título, referência e comentário.
+  - Calendário para ver o devocional de qualquer data, passada ou futura.
+- **Cronograma de leitura anual**, 365 dias (366 em ano bissexto), agrupado por
+  mês, com marcação de lido e barra de progresso do ano.
+- **Introduções aos 66 livros**, na voz de Spurgeon, com título formal do livro
+  vindo da BKJ 1611.
+- **Favoritos e notas**: qualquer versículo pode ser marcado e anotado; tela
+  própria lista os favoritos e os que têm anotação.
+- **Busca** no texto da Bíblia.
+- Layout responsivo: barra de navegação embaixo no celular, trilho lateral em
+  janela larga (a partir de 720px), coluna de leitura com largura confortável
+  no desktop.
 
-A few resources to get you started if this is your first Flutter project:
+## Telas
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+| Aba | Conteúdo |
+|---|---|
+| Hoje | Saudação, prévia das três leituras do dia, leitura do cronograma, progresso do ano, atalho para continuar de onde parou |
+| Bíblia | Leitor por capítulo, os 66 livros, introdução de cada um |
+| Devocional | Manhã, Noite e Promessas de Deus, com calendário |
+| Plano | Cronograma anual por mês, com marcação de lido |
+| Notas | Favoritos e anotações |
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Stack
+
+- Flutter (Dart), `flutter_localizations` para `pt_BR`.
+- `shared_preferences` é o único armazenamento (progresso, favoritos, notas,
+  versão preferida), igual em todas as plataformas, sem banco.
+- Fontes empacotadas localmente (Cinzel e Montserrat), sem depender de rede na
+  primeira execução.
+- Conteúdo (Bíblia, devocionais, introduções, cronograma) vem de arquivos JSON
+  em `assets/`, um arquivo por livro por versão, carregado sob demanda.
+
+## Estrutura
+
+```
+lib/
+  data/        modelos, canon (os 66 livros), leitura de conteúdo, estado persistido
+  telas/       uma tela por arquivo (hoje, bíblia, devocional, plano, notas, busca...)
+  theme.dart   paleta marrom e dourada
+  main.dart    navegação (barra/trilho) e ponto de entrada
+assets/        Bíblias (BKJ e NVT), devocionais, introduções, cronograma, imagens, fontes
+tools/         scripts Python para gerar/validar o conteúdo a partir dos PDFs de origem
+test/          testes de unidade e de widget
+```
+
+## Rodando
+
+```bash
+flutter pub get
+flutter run
+```
+
+## Testes e análise
+
+```bash
+flutter test
+flutter analyze
+```
+
+## Gerando o app
+
+```bash
+flutter build apk       # Android
+flutter build ios       # iOS
+flutter build web       # Web
+flutter build windows   # Windows
+flutter build macos     # macOS
+```
+
+Ícone do app e favicon são gerados por `dart run flutter_launcher_icons` a
+partir das fontes em `assets/icone/`; nunca editados à mão (ver `CONTINUAR.md`).
+
+## Conteúdo
+
+Todo o conteúdo (as duas Bíblias, os 366 dias de Manhã e Noite, as 366
+Promessas de Deus, as 66 introduções e o cronograma anual) já está carregado e
+verificado. `CONTINUAR.md` documenta como regenerar cada parte, as fontes
+usadas e as decisões de conteúdo já tomadas, para quem for revisar ou
+regenerar algo no futuro.
