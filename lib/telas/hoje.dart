@@ -33,6 +33,13 @@ class _TelaHojeState extends State<TelaHoje> {
           children: [
             _Cabecalho(periodo: periodo, data: agora),
             const SizedBox(height: 20),
+            if (estado.ultimaLeitura != null) ...[
+              // Retomar uma leitura interrompida é a ação de maior intenção
+              // de quem abre o app, por isso vem antes das prévias do dia,
+              // não depois das estatísticas de progresso.
+              _Continuar(ultima: estado.ultimaLeitura!),
+              const SizedBox(height: 16),
+            ],
             _PreviaDaLeitura(
               data: agora,
               leitura: periodo == Periodo.manha ? Leitura.manha : Leitura.noite,
@@ -43,10 +50,6 @@ class _TelaHojeState extends State<TelaHoje> {
             _LeituraDeHoje(data: agora),
             const SizedBox(height: 16),
             _Progresso(estado: estado, ano: agora.year),
-            if (estado.ultimaLeitura != null) ...[
-              const SizedBox(height: 16),
-              _Continuar(ultima: estado.ultimaLeitura!),
-            ],
           ],
         ),
       ),

@@ -129,10 +129,7 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                   titulo: _leitura.rotulo,
                   child: Text(
                     _leitura == Leitura.promessas
-                        ? 'O texto de Promessas de Deus ainda não foi carregado. '
-                            'Assim que o arquivo entrar em '
-                            'assets/devotional/promises.json, a promessa do dia '
-                            'aparece aqui.'
+                        ? 'Ainda não há uma promessa cadastrada para esta data.'
                         : 'Sem devocional para esta data.',
                   ),
                 );
