@@ -313,7 +313,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(3),
                           child: Image.asset(
-                            'assets/images/capa_biblia_spurgeon.png',
+                            'assets/images/capa_biblia_spurgeon.webp',
                             height: 52,
                             fit: BoxFit.cover,
                           ),

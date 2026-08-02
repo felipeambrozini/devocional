@@ -83,7 +83,7 @@ class _Cabecalho extends StatelessWidget {
                 width: 60,
                 height: 60,
                 child: Image.asset(
-                  'assets/images/felipe.png',
+                  'assets/images/felipe.webp',
                   fit: BoxFit.cover,
                   // A foto é mais alta que larga; o corte automático centralizado do
                   // BoxFit.cover cortava o topo da cabeça. Alinhando quase ao topo, o

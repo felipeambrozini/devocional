@@ -19,7 +19,9 @@ import pathlib
 from PIL import Image
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
-FOTO = RAIZ / 'assets/images/felipe.png'
+# Fonte em resolucao plena, fora de assets/images/: o app usa uma copia
+# redimensionada e em WebP, pequena demais para recortar o icone com qualidade.
+FOTO = RAIZ / 'tools/fontes/felipe.png'
 FONTES = RAIZ / 'assets/icone'
 FUNDO = (0x2E, 0x1B, 0x10, 255)  # Cores.fundo, em lib/theme.dart
 LADO = 1024

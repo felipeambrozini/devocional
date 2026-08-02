@@ -28,8 +28,8 @@ enum Leitura {
       };
 
   String get capa => this == Leitura.promessas
-      ? 'assets/images/capa_promessas_de_deus.png'
-      : 'assets/images/capa_manha_e_noite.png';
+      ? 'assets/images/capa_promessas_de_deus.webp'
+      : 'assets/images/capa_manha_e_noite.webp';
 
   /// A aba inicial segue o horário do aparelho. Ver [Periodo.pelaHora].
   static Leitura pelaHora(int hora) =>
