@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'data/estado.dart';
+import 'data/modelos.dart';
 import 'telas/biblia.dart';
-import 'telas/comuns.dart';
 import 'telas/devocional.dart';
 import 'telas/hoje.dart';
 import 'telas/notas.dart';
@@ -16,19 +16,67 @@ Future<void> main() async {
   runApp(AppDevocional(estado: estado));
 }
 
-class AppDevocional extends StatelessWidget {
+class AppDevocional extends StatefulWidget {
   const AppDevocional({super.key, required this.estado});
 
   final Estado estado;
 
   @override
+  State<AppDevocional> createState() => _AppDevocionalState();
+}
+
+class _AppDevocionalState extends State<AppDevocional> {
+  late double _escala = widget.estado.escalaDeLeitura;
+  late ModoDoTema _modo = widget.estado.modoDoTema;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.estado.addListener(_conferirTema);
+  }
+
+  @override
+  void dispose() {
+    widget.estado.removeListener(_conferirTema);
+    super.dispose();
+  }
+
+  /// O tema precisa ser refeito quando o tamanho do texto ou o modo mudam, mas o
+  /// [Estado] avisa a árvore inteira a cada favorito. Sem esta comparação, marcar
+  /// um versículo reconstruiria os dois ThemeData e, com eles, toda tela que
+  /// depende do tema. Aqui só se redesenha quando algo do tema muda de fato.
+  void _conferirTema() {
+    final estado = widget.estado;
+    if (estado.escalaDeLeitura == _escala && estado.modoDoTema == _modo) return;
+    setState(() {
+      _escala = estado.escalaDeLeitura;
+      _modo = estado.modoDoTema;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return EscopoDoEstado(
-      estado: estado,
+      estado: widget.estado,
       child: MaterialApp(
         title: 'Devocional',
         debugShowCheckedModeBanner: false,
-        theme: construirTema(),
+        // Os dois temas vão sempre montados, e o `themeMode` escolhe. Assim
+        // "Automático" funciona de verdade: o sistema pode virar o modo com o
+        // app aberto, e o MaterialApp troca sozinho, sem passar pelo Estado.
+        theme: construirTema(
+          brilho: Brightness.light,
+          escalaDeLeitura: _escala,
+        ),
+        darkTheme: construirTema(
+          brilho: Brightness.dark,
+          escalaDeLeitura: _escala,
+        ),
+        themeMode: switch (_modo) {
+          ModoDoTema.sistema => ThemeMode.system,
+          ModoDoTema.claro => ThemeMode.light,
+          ModoDoTema.escuro => ThemeMode.dark,
+        },
         home: const Moldura(),
         localizationsDelegates: [
           GlobalMaterialLocalizations.delegate,
@@ -75,19 +123,62 @@ class Moldura extends StatefulWidget {
 class _MolduraState extends State<Moldura> {
   int _indice = 0;
 
+  /// Um escopo de foco por aba.
+  ///
+  /// O IndexedStack mantém as cinco telas vivas e interativas, então o teclado
+  /// não sabe sozinho a quem obedecer: os atalhos do leitor não chegavam nem
+  /// depois de abrir a aba Bíblia, porque o foco ficava no botão da barra de
+  /// navegação, e a única forma de levar o foco ao texto seria clicar nele, o
+  /// que abre a folha de ações do versículo. Com um escopo por aba, o
+  /// `autofocus` de cada tela só vale quando o escopo dela recebe o foco, e
+  /// trocar de aba entrega o foco a quem está na frente.
+  late final List<FocusScopeNode> _escopos = [
+    for (final d in _destinos) FocusScopeNode(debugLabel: d.rotulo),
+  ];
+
+  @override
+  void dispose() {
+    for (final escopo in _escopos) {
+      escopo.dispose();
+    }
+    super.dispose();
+  }
+
+  void _irParaAba(int i) {
+    setState(() => _indice = i);
+    // Depois do frame: antes dele a aba de destino ainda não está na frente.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final escopo = _escopos[i];
+      // Pedir foco ao escopo deixava o foco no nó do próprio escopo, que fica
+      // acima da tela: a tecla subia por fora dos atalhos dela e nada acontecia.
+      // O foco precisa cair num nó de dentro.
+      final dentro = escopo.traversalDescendants
+          .where((n) => n.canRequestFocus)
+          .firstOrNull;
+      (dentro ?? escopo).requestFocus();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final largo = MediaQuery.sizeOf(context).width >= 720;
 
     // IndexedStack preserva a posição de rolagem e o capítulo aberto ao alternar
-    // de aba, que é o que se espera de um app de leitura. A largura limitada é
-    // para o Windows: sem ela, o texto esticaria de ponta a ponta numa janela
-    // larga em vez de ficar numa coluna confortável de ler.
-    final corpo = LarguraDeLeitura(
-      child: IndexedStack(
-        index: _indice,
-        children: [for (final d in _destinos) d.tela],
-      ),
+    // de aba, que é o que se espera de um app de leitura.
+    //
+    // A LarguraDeLeitura não fica aqui. Envolvendo o stack inteiro, ela prendia
+    // também a AppBar e a régua de meses do Plano numa faixa de 720 px no meio da
+    // janela, e deixava de fora as telas abertas por MaterialPageRoute, que nascem
+    // no Navigator raiz: o mesmo leitor ficava com 720 px pela aba e com a janela
+    // inteira quando aberto pelo "Continuar leitura". Agora cada tela limita o
+    // próprio corpo, e a moldura ocupa a janela como um app de desktop deve.
+    final corpo = IndexedStack(
+      index: _indice,
+      children: [
+        for (final (i, d) in _destinos.indexed)
+          FocusScope(node: _escopos[i], child: d.tela),
+      ],
     );
 
     if (!largo) {
@@ -95,7 +186,7 @@ class _MolduraState extends State<Moldura> {
         body: corpo,
         bottomNavigationBar: NavigationBar(
           selectedIndex: _indice,
-          onDestinationSelected: (i) => setState(() => _indice = i),
+          onDestinationSelected: _irParaAba,
           destinations: [
             for (final d in _destinos)
               NavigationDestination(
@@ -113,7 +204,7 @@ class _MolduraState extends State<Moldura> {
         children: [
           NavigationRail(
             selectedIndex: _indice,
-            onDestinationSelected: (i) => setState(() => _indice = i),
+            onDestinationSelected: _irParaAba,
             labelType: NavigationRailLabelType.all,
             destinations: [
               for (final d in _destinos)

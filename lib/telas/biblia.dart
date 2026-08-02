@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
-import '../theme.dart';
 import 'busca.dart';
 import 'comuns.dart';
 import 'introducao.dart';
 
 /// Leitor da Bíblia. Abre em Gênesis 1 ou onde a leitura parou.
 class TelaBiblia extends StatefulWidget {
-  const TelaBiblia({super.key, this.livroInicial, this.capituloInicial, this.destacar});
+  const TelaBiblia({
+    super.key,
+    this.livroInicial,
+    this.capituloInicial,
+    this.destacar,
+  });
 
   final String? livroInicial;
   final int? capituloInicial;
@@ -81,83 +86,131 @@ class _TelaBibliaState extends State<TelaBiblia> {
     _irPara(livro.slug, passo > 0 ? 1 : livro.capitulos);
   }
 
+  void _abrirBusca() => Navigator.push(
+    context,
+    MaterialPageRoute(builder: (_) => const TelaBusca()),
+  );
+
   @override
   Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
     final estado = EscopoDoEstado.de(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: TextButton(
-          onPressed: _abrirSeletor,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '${_livroAtual.nome} $_capitulo',
-                style: Theme.of(context).appBarTheme.titleTextStyle,
+    // Teclado no Windows e na web: as setas passam de capítulo e Ctrl+F abre a
+    // busca, que antes só existiam como dois chevrons pequenos no rodapé e um
+    // ícone na barra. Setas horizontais não rolam uma lista vertical, então não
+    // há conflito com a rolagem do capítulo.
+    //
+    // Envolve a tela inteira, e não só o corpo: o evento de tecla sobe a partir
+    // de quem tem o foco, e dentro da moldura o foco costuma cair num botão da
+    // AppBar. Com o atalho só no corpo, a tecla passava por fora dele e nada
+    // acontecia.
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.arrowRight): () =>
+            _passarCapitulo(1),
+        const SingleActivator(LogicalKeyboardKey.arrowLeft): () =>
+            _passarCapitulo(-1),
+        const SingleActivator(LogicalKeyboardKey.keyF, control: true):
+            _abrirBusca,
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: TextButton(
+            onPressed: _abrirSeletor,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Flexible com reticências porque a barra ganhou três ações e um
+                // livro de nome longo em celular estreito estouraria a linha.
+                Flexible(
+                  child: Text(
+                    '${_livroAtual.nome} $_capitulo',
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).appBarTheme.titleTextStyle,
+                  ),
+                ),
+                Icon(Icons.expand_more, color: cor.primary, size: 20),
+              ],
+            ),
+          ),
+          actions: [
+            BotaoDeVersao(atual: estado.versao, ao: estado.definirVersao),
+            IconButton(
+              tooltip: 'Tamanho do texto e aparência',
+              icon: const Icon(Icons.tune),
+              onPressed: () => ajustesDeLeitura(context, estado),
+            ),
+            IconButton(
+              tooltip: 'Introdução de Spurgeon',
+              icon: const Icon(Icons.article_outlined),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => TelaIntroducao(slug: _livro)),
               ),
-              const Icon(Icons.expand_more, color: Cores.dourado, size: 20),
-            ],
+            ),
+            IconButton(
+              tooltip: 'Buscar',
+              icon: const Icon(Icons.search),
+              onPressed: _abrirBusca,
+            ),
+          ],
+        ),
+        body: Focus(
+          autofocus: true,
+          child: LarguraDeLeitura(
+            child: Column(
+              children: [
+                Expanded(
+                  child: CarregaUmaVez<Capitulo>(
+                    // A chave inclui a versão para que alternar BKJ e NVT recarregue o
+                    // mesmo capítulo, mantendo livro e número.
+                    chave: '${estado.versao.pasta}/$_livro/$_capitulo',
+                    carregar: () => Conteudo.instancia.capitulo(
+                      estado.versao,
+                      _livro,
+                      _capitulo,
+                    ),
+                    construir: (context, snap) {
+                      if (snap.hasError) return const AvisoDeErro();
+                      if (snap.connectionState != ConnectionState.done) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      final capitulo = snap.data!;
+                      if (capitulo.versiculos.isEmpty) {
+                        return const AvisoVazio(
+                          icone: Icons.menu_book_outlined,
+                          titulo: 'Capítulo não encontrado',
+                        );
+                      }
+                      // Deslizar é o gesto esperado num leitor de celular; os
+                      // chevrons do rodapé continuam, para quem usa mouse.
+                      return GestureDetector(
+                        onHorizontalDragEnd: (detalhe) {
+                          final velocidade = detalhe.primaryVelocity ?? 0;
+                          if (velocidade < -250) _passarCapitulo(1);
+                          if (velocidade > 250) _passarCapitulo(-1);
+                        },
+                        child: _Leitor(
+                          capitulo: capitulo,
+                          rolagem: _rolagem,
+                          destacar: widget.destacar,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                _BarraDeCapitulo(
+                  podeVoltar: !(_livro == canon.first.slug && _capitulo == 1),
+                  podeAvancar:
+                      !(_livro == canon.last.slug &&
+                          _capitulo == canon.last.capitulos),
+                  aoVoltar: () => _passarCapitulo(-1),
+                  aoAvancar: () => _passarCapitulo(1),
+                ),
+              ],
+            ),
           ),
         ),
-        actions: [
-          IconButton(
-            tooltip: 'Introdução de Spurgeon',
-            icon: const Icon(Icons.article_outlined),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => TelaIntroducao(slug: _livro)),
-            ),
-          ),
-          IconButton(
-            tooltip: 'Buscar',
-            icon: const Icon(Icons.search),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const TelaBusca()),
-            ),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          AlternadorDeVersao(
-            atual: estado.versao,
-            ao: (v) => estado.definirVersao(v),
-          ),
-          Expanded(
-            child: CarregaUmaVez<Capitulo>(
-              // A chave inclui a versão para que alternar BKJ e NVT recarregue o
-              // mesmo capítulo, mantendo livro e número.
-              chave: '${estado.versao.pasta}/$_livro/$_capitulo',
-              carregar: () =>
-                  Conteudo.instancia.capitulo(estado.versao, _livro, _capitulo),
-              construir: (context, snap) {
-                if (!snap.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final capitulo = snap.data!;
-                if (capitulo.versiculos.isEmpty) {
-                  return const AvisoVazio(
-                    icone: Icons.menu_book_outlined,
-                    titulo: 'Capítulo não encontrado',
-                  );
-                }
-                return _Leitor(
-                  capitulo: capitulo,
-                  rolagem: _rolagem,
-                  destacar: widget.destacar,
-                );
-              },
-            ),
-          ),
-          _BarraDeCapitulo(
-            podeVoltar: !(_livro == canon.first.slug && _capitulo == 1),
-            podeAvancar: !(_livro == canon.last.slug &&
-                _capitulo == canon.last.capitulos),
-            aoVoltar: () => _passarCapitulo(-1),
-            aoAvancar: () => _passarCapitulo(1),
-          ),
-        ],
       ),
     );
   }
@@ -181,6 +234,7 @@ class _Leitor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
     final estado = EscopoDoEstado.de(context);
     final tema = Theme.of(context).textTheme;
 
@@ -203,7 +257,7 @@ class _Leitor extends StatelessWidget {
                   livroPorSlug(capitulo.livro)!.tituloFormal,
                   style: tema.bodySmall?.copyWith(
                     fontStyle: FontStyle.italic,
-                    color: Cores.begeSuave,
+                    color: cor.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -217,7 +271,7 @@ class _Leitor extends StatelessWidget {
                   capitulo.titulo,
                   style: tema.bodyMedium?.copyWith(
                     fontStyle: FontStyle.italic,
-                    color: Cores.begeSuave,
+                    color: cor.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -233,64 +287,80 @@ class _Leitor extends StatelessWidget {
           capitulo.numero,
           numero,
         );
-        final noRecorte = destacar == null ||
+        final noRecorte =
+            destacar == null ||
             (numero >= destacar!.$1 && numero <= destacar!.$2);
 
-        return InkWell(
-          onTap: () => _abrirAcoes(context, estado, numero, texto),
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 6),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              color: marcacao != null
-                  ? Cores.douradoEscuro.withValues(alpha: 0.18)
-                  : null,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: '$numero ',
-                        style: tema.labelMedium?.copyWith(
-                          color: Cores.dourado,
-                          fontWeight: FontWeight.w700,
+        return Semantics(
+          hint: 'Toque para favoritar, anotar ou copiar',
+          child: InkWell(
+            onTap: () => _abrirAcoes(context, estado, numero, texto),
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              // 12 e não 7: com bodyLarge em 17 e altura 1.6, um versículo de uma
+              // linha ficava em cerca de 41 dp de alvo, abaixo dos 48 dp mínimos.
+              // Os curtos são justamente os mais marcados.
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: marcacao != null
+                    ? cor.outline.withValues(alpha: 0.18)
+                    : null,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '$numero ',
+                          style: tema.labelMedium?.copyWith(
+                            color: cor.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
-                      ),
-                      TextSpan(
-                        text: texto,
-                        // Fora da faixa pedida pelo cronograma o texto continua
-                        // legível, apenas recuado, para o contexto não se perder.
-                        style: noRecorte
-                            ? tema.bodyLarge?.copyWith(height: 1.6)
-                            : tema.bodyLarge?.copyWith(
-                                height: 1.6,
-                                color: Cores.begeSuave.withValues(alpha: 0.55),
-                              ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (marcacao != null && marcacao.nota.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.edit_note, size: 15, color: Cores.dourado),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          marcacao.nota,
-                          style: tema.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+                        TextSpan(
+                          text: texto,
+                          // Fora da faixa pedida pelo cronograma o texto continua
+                          // legível, apenas recuado, para o contexto não se perder.
+                          //
+                          // 0.7 e não 0.55: sobre o fundo, 0.55 dava 3,5:1 de
+                          // contraste, abaixo do 4,5:1 que a WCAG AA pede para
+                          // texto corrido, e isto aqui é Escritura, não legenda.
+                          // 0.7 chega a 4,9:1 e ainda se distingue do texto pedido.
+                          style: noRecorte
+                              ? tema.bodyLarge?.copyWith(height: 1.6)
+                              : tema.bodyLarge?.copyWith(
+                                  height: 1.6,
+                                  color: cor.onSurfaceVariant.withValues(
+                                    alpha: 0.7,
+                                  ),
+                                ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  if (marcacao != null && marcacao.nota.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.edit_note, size: 15, color: cor.primary),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            marcacao.nota,
+                            style: tema.bodySmall?.copyWith(
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         );
@@ -312,67 +382,95 @@ class _Leitor extends StatelessWidget {
     );
     await showModalBottomSheet<void>(
       context: context,
-      builder: (folha) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${capitulo.referencia}:$numero',
-                    style: Theme.of(folha).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(texto, style: Theme.of(folha).textTheme.bodyMedium),
-                ],
+      builder: (folha) {
+        final cor = Theme.of(folha).colorScheme;
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${capitulo.referencia}:$numero',
+                      style: Theme.of(folha).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(texto, style: Theme.of(folha).textTheme.bodyMedium),
+                  ],
+                ),
               ),
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: Icon(
-                marcacao != null ? Icons.bookmark : Icons.bookmark_outline,
-                color: Cores.dourado,
-              ),
-              title: Text(marcacao != null ? 'Remover dos favoritos' : 'Favoritar'),
-              onTap: () {
-                estado.alternarFavorito(
-                  estado.versao,
-                  capitulo.livro,
-                  capitulo.numero,
-                  numero,
-                );
-                Navigator.pop(folha);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.edit_note, color: Cores.dourado),
-              title: Text(
-                marcacao?.nota.isNotEmpty == true ? 'Editar anotação' : 'Anotar',
-              ),
-              onTap: () async {
-                final nota = await editarNota(
-                  folha,
-                  referencia: '${capitulo.referencia}:$numero',
-                  notaAtual: marcacao?.nota ?? '',
-                );
-                if (nota != null) {
-                  await estado.definirNota(
+              const Divider(height: 1),
+              ListTile(
+                leading: Icon(
+                  marcacao != null ? Icons.bookmark : Icons.bookmark_outline,
+                  color: cor.primary,
+                ),
+                title: Text(
+                  marcacao != null ? 'Remover dos favoritos' : 'Favoritar',
+                ),
+                onTap: () {
+                  estado.alternarFavorito(
                     estado.versao,
                     capitulo.livro,
                     capitulo.numero,
                     numero,
-                    nota,
                   );
-                }
-                if (folha.mounted) Navigator.pop(folha);
-              },
-            ),
-          ],
-        ),
-      ),
+                  Navigator.pop(folha);
+                },
+              ),
+              // Copiar é o que mais se faz com um versículo, e não existia. Vem
+              // antes de anotar porque é a ação sem consequência das três.
+              ListTile(
+                leading: Icon(Icons.content_copy_outlined, color: cor.primary),
+                title: const Text('Copiar'),
+                onTap: () async {
+                  final mensageiro = ScaffoldMessenger.of(folha);
+                  final navegador = Navigator.of(folha);
+                  await Clipboard.setData(
+                    ClipboardData(
+                      text:
+                          '"$texto"\n'
+                          '${capitulo.referencia}:$numero (${estado.versao.sigla})',
+                    ),
+                  );
+                  navegador.pop();
+                  mensageiro.showSnackBar(
+                    const SnackBar(content: Text('Versículo copiado.')),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.edit_note, color: cor.primary),
+                title: Text(
+                  marcacao?.nota.isNotEmpty == true
+                      ? 'Editar anotação'
+                      : 'Anotar',
+                ),
+                onTap: () async {
+                  final nota = await editarNota(
+                    folha,
+                    referencia: '${capitulo.referencia}:$numero',
+                    notaAtual: marcacao?.nota ?? '',
+                  );
+                  if (nota != null) {
+                    await estado.definirNota(
+                      estado.versao,
+                      capitulo.livro,
+                      capitulo.numero,
+                      numero,
+                      nota,
+                    );
+                  }
+                  if (folha.mounted) Navigator.pop(folha);
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -482,7 +580,9 @@ class _ListaDeLivros extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final antigo = canon.where((l) => l.testamento == Testamento.antigo).toList();
+    final antigo = canon
+        .where((l) => l.testamento == Testamento.antigo)
+        .toList();
     final novo = canon.where((l) => l.testamento == Testamento.novo).toList();
 
     return ListView(
@@ -498,22 +598,22 @@ class _ListaDeLivros extends StatelessWidget {
   }
 
   Widget _tituloDeSecao(BuildContext context, String texto) => Padding(
-        padding: const EdgeInsets.fromLTRB(4, 12, 4, 8),
-        child: Text(texto, style: Theme.of(context).textTheme.titleSmall),
-      );
+    padding: const EdgeInsets.fromLTRB(4, 12, 4, 8),
+    child: Text(texto, style: Theme.of(context).textTheme.titleSmall),
+  );
 
   Widget _grade(List<Livro> livros) => Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          for (final l in livros)
-            ChoiceChip(
-              label: Text(l.nome),
-              selected: l.slug == atual,
-              onSelected: (_) => ao(l),
-            ),
-        ],
-      );
+    spacing: 8,
+    runSpacing: 8,
+    children: [
+      for (final l in livros)
+        ChoiceChip(
+          label: Text(l.nome),
+          selected: l.slug == atual,
+          onSelected: (_) => ao(l),
+        ),
+    ],
+  );
 }
 
 class _GradeDeCapitulos extends StatelessWidget {
@@ -524,6 +624,7 @@ class _GradeDeCapitulos extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
@@ -537,7 +638,7 @@ class _GradeDeCapitulos extends StatelessWidget {
         onPressed: () => ao(i + 1),
         style: OutlinedButton.styleFrom(
           padding: EdgeInsets.zero,
-          side: BorderSide(color: Cores.douradoEscuro.withValues(alpha: 0.6)),
+          side: BorderSide(color: cor.outline.withValues(alpha: 0.6)),
         ),
         child: Text('${i + 1}', style: Theme.of(context).textTheme.bodyMedium),
       ),

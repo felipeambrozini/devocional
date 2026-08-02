@@ -10,7 +10,8 @@ import 'package:flutter_test/flutter_test.dart';
 List<DiaDoPlano> carregarPlano([String caminho = 'assets/reading_plan.json']) {
   final cru = File(caminho).readAsStringSync();
   return [
-    for (final d in json.decode(cru) as List) DiaDoPlano.doJson(d as Map<String, dynamic>),
+    for (final d in json.decode(cru) as List)
+      DiaDoPlano.doJson(d as Map<String, dynamic>),
   ];
 }
 
@@ -28,7 +29,8 @@ void main() {
       expect(datas.toSet().length, 365, reason: 'ha data repetida');
       for (var mes = 1; mes <= 12; mes++) {
         for (var dia = 1; dia <= diasPorMes[mes - 1]; dia++) {
-          final chave = '${mes.toString().padLeft(2, '0')}-'
+          final chave =
+              '${mes.toString().padLeft(2, '0')}-'
               '${dia.toString().padLeft(2, '0')}';
           expect(datas, contains(chave), reason: 'falta $chave');
         }
@@ -45,27 +47,35 @@ void main() {
           expect(livro, isNotNull, reason: '${dia.data}: livro ${faixa.livro}');
           expect(faixa.deCapitulo, greaterThanOrEqualTo(1));
           expect(faixa.deCapitulo, lessThanOrEqualTo(faixa.ateCapitulo));
-          expect(faixa.ateCapitulo, lessThanOrEqualTo(livro!.capitulos),
-              reason: '${dia.data}: ${livro.nome} ${faixa.ateCapitulo}');
+          expect(
+            faixa.ateCapitulo,
+            lessThanOrEqualTo(livro!.capitulos),
+            reason: '${dia.data}: ${livro.nome} ${faixa.ateCapitulo}',
+          );
         }
       }
     });
 
-    test('faixa por versiculo fica num unico capitulo e nao vira faixa de capitulos', () {
-      final porVersiculo = plano.where((d) => d.faixas.any((f) => f.porVersiculo));
-      // Os tres dias de Salmos 119 no fim de outubro.
-      expect(porVersiculo.map((d) => d.data), ['10-29', '10-30', '10-31']);
+    test(
+      'faixa por versiculo fica num unico capitulo e nao vira faixa de capitulos',
+      () {
+        final porVersiculo = plano.where(
+          (d) => d.faixas.any((f) => f.porVersiculo),
+        );
+        // Os tres dias de Salmos 119 no fim de outubro.
+        expect(porVersiculo.map((d) => d.data), ['10-29', '10-30', '10-31']);
 
-      final primeiro = porVersiculo.first.faixas.single;
-      expect(primeiro.livro, 'salmos');
-      expect(primeiro.deCapitulo, 119);
-      expect(primeiro.ateCapitulo, 119);
-      expect(primeiro.deVersiculo, 1);
-      expect(primeiro.ateVersiculo, 56);
-      expect(primeiro.rotulo, 'Salmos 119:1-56');
-      // O capitulo inteiro seria 176 versiculos; a faixa nao pode virar isso.
-      expect(primeiro.capitulos.length, 1);
-    });
+        final primeiro = porVersiculo.first.faixas.single;
+        expect(primeiro.livro, 'salmos');
+        expect(primeiro.deCapitulo, 119);
+        expect(primeiro.ateCapitulo, 119);
+        expect(primeiro.deVersiculo, 1);
+        expect(primeiro.ateVersiculo, 56);
+        expect(primeiro.rotulo, 'Salmos 119:1-56');
+        // O capitulo inteiro seria 176 versiculos; a faixa nao pode virar isso.
+        expect(primeiro.capitulos.length, 1);
+      },
+    );
 
     test('dia com varios livros gera uma faixa por livro, na ordem escrita', () {
       final dia = plano.firstWhere((d) => d.data == '07-28');
@@ -126,8 +136,11 @@ void main() {
         for (final faixa in dia.faixas) {
           final livro = livroPorSlug(faixa.livro);
           expect(livro, isNotNull, reason: '${dia.data}: livro ${faixa.livro}');
-          expect(faixa.ateCapitulo, lessThanOrEqualTo(livro!.capitulos),
-              reason: '${dia.data}: ${livro.nome} ${faixa.ateCapitulo}');
+          expect(
+            faixa.ateCapitulo,
+            lessThanOrEqualTo(livro!.capitulos),
+            reason: '${dia.data}: ${livro.nome} ${faixa.ateCapitulo}',
+          );
         }
       }
     });

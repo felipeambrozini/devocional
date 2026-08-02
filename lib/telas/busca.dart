@@ -6,7 +6,6 @@ import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
-import '../theme.dart';
 import 'biblia.dart';
 import 'comuns.dart';
 
@@ -48,25 +47,30 @@ class _TelaBuscaState extends State<TelaBusca> {
       _termoBuscado = termo;
     });
 
-    _assinatura = Conteudo.instancia.buscar(versao, termo).listen(
-      (achado) {
-        if (!mounted) return;
-        setState(() => _achados.add(achado));
-      },
-      onDone: () {
-        if (mounted) setState(() => _buscando = false);
-      },
-    );
+    _assinatura = Conteudo.instancia
+        .buscar(versao, termo)
+        .listen(
+          (achado) {
+            if (!mounted) return;
+            setState(() => _achados.add(achado));
+          },
+          onDone: () {
+            if (mounted) setState(() => _buscando = false);
+          },
+        );
   }
 
   @override
   Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
     final versao = EscopoDoEstado.de(context).versao;
 
-    return LarguraDeLeitura(
-      child: Scaffold(
-        appBar: AppBar(title: Text('Buscar em ${versao.sigla}')),
-        body: Column(
+    // A LarguraDeLeitura fica no corpo, não em volta do Scaffold: envolvendo o
+    // Scaffold, a própria AppBar ficava numa faixa de 720 px no meio da janela.
+    return Scaffold(
+      appBar: AppBar(title: Text('Buscar em ${versao.sigla}')),
+      body: LarguraDeLeitura(
+        child: Column(
           children: [
             Padding(
               padding: const EdgeInsets.all(16),
@@ -77,7 +81,7 @@ class _TelaBuscaState extends State<TelaBusca> {
                 onSubmitted: (_) => _buscar(versao),
                 decoration: InputDecoration(
                   hintText: 'Palavra ou expressão',
-                  prefixIcon: const Icon(Icons.search, color: Cores.begeSuave),
+                  prefixIcon: Icon(Icons.search, color: cor.onSurfaceVariant),
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.arrow_forward),
                     onPressed: () => _buscar(versao),
@@ -90,9 +94,16 @@ class _TelaBuscaState extends State<TelaBusca> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    Text(
-                      '${_achados.length} ${_achados.length == 1 ? 'resultado' : 'resultados'}',
-                      style: Theme.of(context).textTheme.titleSmall,
+                    // A busca para no teto e a lista fica cortada. Dizer só
+                    // "300 resultados" faria parecer que são exatamente 300 na
+                    // Bíblia inteira, quando na verdade a contagem parou ali.
+                    Expanded(
+                      child: Text(
+                        _achados.length >= Conteudo.limiteDeBusca
+                            ? 'Primeiros ${Conteudo.limiteDeBusca} resultados; há mais'
+                            : '${_achados.length} ${_achados.length == 1 ? 'resultado' : 'resultados'}',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     if (_buscando)
@@ -142,6 +153,7 @@ class _ItemDeAchado extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     return InkWell(
       onTap: () => Navigator.push(
@@ -162,11 +174,11 @@ class _ItemDeAchado extends StatelessWidget {
           children: [
             Text(
               achado.referencia,
-              style: tema.titleSmall?.copyWith(color: Cores.douradoClaro),
+              style: tema.titleSmall?.copyWith(color: cor.secondary),
             ),
             const SizedBox(height: 5),
             Text.rich(
-              _destacar(achado.texto, termo, tema),
+              _destacar(achado.texto, termo, tema, cor),
               maxLines: 4,
               overflow: TextOverflow.ellipsis,
             ),
@@ -178,10 +190,15 @@ class _ItemDeAchado extends StatelessWidget {
 
   /// Realça as ocorrências do termo, comparando sem acento para que buscar
   /// "coracao" destaque "coração" no texto original.
-  TextSpan _destacar(String texto, String termo, TextTheme tema) {
+  TextSpan _destacar(
+    String texto,
+    String termo,
+    TextTheme tema,
+    ColorScheme cor,
+  ) {
     final base = tema.bodyMedium?.copyWith(height: 1.5);
     final forte = base?.copyWith(
-      color: Cores.douradoClaro,
+      color: cor.secondary,
       fontWeight: FontWeight.w700,
     );
     final textoSemAcento = Conteudo.normalizar(texto);
@@ -193,7 +210,9 @@ class _ItemDeAchado extends StatelessWidget {
       final achou = textoSemAcento.indexOf(termoSemAcento, cursor);
       if (achou < 0) break;
       if (achou > cursor) {
-        pedacos.add(TextSpan(text: texto.substring(cursor, achou), style: base));
+        pedacos.add(
+          TextSpan(text: texto.substring(cursor, achou), style: base),
+        );
       }
       final fim = achou + termoSemAcento.length;
       pedacos.add(TextSpan(text: texto.substring(achou, fim), style: forte));

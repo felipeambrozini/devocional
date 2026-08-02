@@ -34,8 +34,11 @@ void main() {
         var dia = DateTime(ano, 1, 1);
         final fim = DateTime(ano, 12, 31);
         while (!dia.isAfter(fim)) {
-          expect(Conteudo.chaveDoDia(dia), isNot('02-29'),
-              reason: 'ano $ano não é bissexto');
+          expect(
+            Conteudo.chaveDoDia(dia),
+            isNot('02-29'),
+            reason: 'ano $ano não é bissexto',
+          );
           dia = dia.add(const Duration(days: 1));
         }
       }
@@ -54,28 +57,41 @@ void main() {
       }
     });
 
-    test('os assets acompanham a regra: devocionais têm 02-29, o plano comum não',
-        () {
-      // Manhã e Noite e Promessas de Deus são obras de 366 dias e trazem o dia
-      // extra; o cronograma de leitura em ano comum tem 365 entradas e não o
-      // prevê. O ano bissexto usa a variante própria, testada abaixo.
-      expect(ler('assets/devotional/morning_evening.json').containsKey('02-29'),
-          isTrue);
-      expect(ler('assets/devotional/promises.json').containsKey('02-29'), isTrue);
+    test(
+      'os assets acompanham a regra: devocionais têm 02-29, o plano comum não',
+      () {
+        // Manhã e Noite e Promessas de Deus são obras de 366 dias e trazem o dia
+        // extra; o cronograma de leitura em ano comum tem 365 entradas e não o
+        // prevê. O ano bissexto usa a variante própria, testada abaixo.
+        expect(
+          ler('assets/devotional/morning_evening.json').containsKey('02-29'),
+          isTrue,
+        );
+        expect(
+          ler('assets/devotional/promises.json').containsKey('02-29'),
+          isTrue,
+        );
 
-      final plano = json.decode(
-        File('assets/reading_plan.json').readAsStringSync(),
-      ) as List;
-      final datas = plano.map((d) => (d as Map<String, dynamic>)['date']).toList();
-      expect(datas, isNot(contains('02-29')));
-      expect(datas.length, 365);
-    });
+        final plano =
+            json.decode(File('assets/reading_plan.json').readAsStringSync())
+                as List;
+        final datas = plano
+            .map((d) => (d as Map<String, dynamic>)['date'])
+            .toList();
+        expect(datas, isNot(contains('02-29')));
+        expect(datas.length, 365);
+      },
+    );
 
     test('o cronograma bissexto tem 366 dias, incluindo 02-29', () {
-      final plano = json.decode(
-        File('assets/reading_plan_bissexto.json').readAsStringSync(),
-      ) as List;
-      final datas = plano.map((d) => (d as Map<String, dynamic>)['date']).toList();
+      final plano =
+          json.decode(
+                File('assets/reading_plan_bissexto.json').readAsStringSync(),
+              )
+              as List;
+      final datas = plano
+          .map((d) => (d as Map<String, dynamic>)['date'])
+          .toList();
       expect(datas.toSet().length, 366);
       expect(datas, contains('02-29'));
     });
@@ -90,7 +106,11 @@ void main() {
         (2028, 'assets/reading_plan_bissexto.json'),
       ]) {
         final plano = json.decode(File(arquivo).readAsStringSync()) as List;
-        expect(plano.length, Conteudo.diasDoAno(ano), reason: '$ano em $arquivo');
+        expect(
+          plano.length,
+          Conteudo.diasDoAno(ano),
+          reason: '$ano em $arquivo',
+        );
       }
     });
 

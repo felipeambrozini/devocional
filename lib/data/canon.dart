@@ -33,11 +33,46 @@ const _at = Testamento.antigo;
 const _nt = Testamento.novo;
 
 const canon = <Livro>[
-  Livro('genesis', 'Gênesis', 'Gn', 50, _at, 'O Primeiro Livro de Moisés, chamado Gênesis'),
-  Livro('exodo', 'Êxodo', 'Êx', 40, _at, 'O Segundo Livro de Moisés, chamado Êxodo'),
-  Livro('levitico', 'Levítico', 'Lv', 27, _at, 'O Terceiro Livro de Moisés, chamado Levítico'),
-  Livro('numeros', 'Números', 'Nm', 36, _at, 'O Quarto Livro de Moisés, chamado Números'),
-  Livro('deuteronomio', 'Deuteronômio', 'Dt', 34, _at, 'O Quinto Livro de Moisés, chamado Deuteronômio'),
+  Livro(
+    'genesis',
+    'Gênesis',
+    'Gn',
+    50,
+    _at,
+    'O Primeiro Livro de Moisés, chamado Gênesis',
+  ),
+  Livro(
+    'exodo',
+    'Êxodo',
+    'Êx',
+    40,
+    _at,
+    'O Segundo Livro de Moisés, chamado Êxodo',
+  ),
+  Livro(
+    'levitico',
+    'Levítico',
+    'Lv',
+    27,
+    _at,
+    'O Terceiro Livro de Moisés, chamado Levítico',
+  ),
+  Livro(
+    'numeros',
+    'Números',
+    'Nm',
+    36,
+    _at,
+    'O Quarto Livro de Moisés, chamado Números',
+  ),
+  Livro(
+    'deuteronomio',
+    'Deuteronômio',
+    'Dt',
+    34,
+    _at,
+    'O Quinto Livro de Moisés, chamado Deuteronômio',
+  ),
   Livro('josue', 'Josué', 'Js', 24, _at, 'O Livro de Josué'),
   Livro('juizes', 'Juízes', 'Jz', 21, _at, 'O Livro de Juízes'),
   Livro('rute', 'Rute', 'Rt', 4, _at, 'O Livro de Rute'),
@@ -45,8 +80,22 @@ const canon = <Livro>[
   Livro('2samuel', '2 Samuel', '2Sm', 24, _at, 'O Segundo Livro de Samuel'),
   Livro('1reis', '1 Reis', '1Rs', 22, _at, 'O Primeiro Livro de Reis'),
   Livro('2reis', '2 Reis', '2Rs', 25, _at, 'O Segundo Livro de Reis'),
-  Livro('1cronicas', '1 Crônicas', '1Cr', 29, _at, 'O Primeiro Livro das Crônicas'),
-  Livro('2cronicas', '2 Crônicas', '2Cr', 36, _at, 'O Segundo Livro das Crônicas'),
+  Livro(
+    '1cronicas',
+    '1 Crônicas',
+    '1Cr',
+    29,
+    _at,
+    'O Primeiro Livro das Crônicas',
+  ),
+  Livro(
+    '2cronicas',
+    '2 Crônicas',
+    '2Cr',
+    36,
+    _at,
+    'O Segundo Livro das Crônicas',
+  ),
   Livro('esdras', 'Esdras', 'Ed', 10, _at, 'O Livro de Esdras'),
   Livro('neemias', 'Neemias', 'Ne', 13, _at, 'O Livro de Neemias'),
   Livro('ester', 'Ester', 'Et', 10, _at, 'O Livro de Ester'),
@@ -57,7 +106,14 @@ const canon = <Livro>[
   Livro('cantares', 'Cantares de Salomão', 'Ct', 8, _at, 'Cantares de Salomão'),
   Livro('isaias', 'Isaías', 'Is', 66, _at, 'O Livro de Isaías'),
   Livro('jeremias', 'Jeremias', 'Jr', 52, _at, 'O Livro de Jeremias'),
-  Livro('lamentacoes', 'Lamentações', 'Lm', 5, _at, 'As Lamentações de Jeremias'),
+  Livro(
+    'lamentacoes',
+    'Lamentações',
+    'Lm',
+    5,
+    _at,
+    'As Lamentações de Jeremias',
+  ),
   Livro('ezequiel', 'Ezequiel', 'Ez', 48, _at, 'O Livro de Ezequiel'),
   Livro('daniel', 'Daniel', 'Dn', 12, _at, 'O Livro de Daniel'),
   Livro('oseias', 'Oseias', 'Os', 14, _at, 'O Livro de Oseias'),
@@ -77,17 +133,94 @@ const canon = <Livro>[
   Livro('lucas', 'Lucas', 'Lc', 24, _nt, 'O Evangelho Segundo Lucas'),
   Livro('joao', 'João', 'Jo', 21, _nt, 'O Evangelho Segundo João'),
   Livro('atos', 'Atos', 'At', 28, _nt, 'Os Atos dos Apóstolos'),
-  Livro('romanos', 'Romanos', 'Rm', 16, _nt, 'A Carta do Apóstolo Paulo aos Romanos'),
-  Livro('1corintios', '1 Coríntios', '1Co', 16, _nt, 'Primeira Carta do Apóstolo Paulo aos Coríntios'),
-  Livro('2corintios', '2 Coríntios', '2Co', 13, _nt, 'A Segunda Carta do Apóstolo Paulo aos Coríntios'),
-  Livro('galatas', 'Gálatas', 'Gl', 6, _nt, 'A Carta do Apóstolo Paulo aos Gálatas'),
-  Livro('efesios', 'Efésios', 'Ef', 6, _nt, 'A Carta do Apóstolo Paulo aos Efésios'),
-  Livro('filipenses', 'Filipenses', 'Fp', 4, _nt, 'A Carta do Apóstolo Paulo aos Filipenses'),
-  Livro('colossenses', 'Colossenses', 'Cl', 4, _nt, 'A Carta do Apóstolo Paulo aos Colossenses'),
-  Livro('1tessalonicenses', '1 Tessalonicenses', '1Ts', 5, _nt, 'A Primeira Carta do Apóstolo Paulo aos Tessalonicenses'),
-  Livro('2tessalonicenses', '2 Tessalonicenses', '2Ts', 3, _nt, 'A Segunda Carta do Apóstolo Paulo aos Tessalonicenses'),
-  Livro('1timoteo', '1 Timóteo', '1Tm', 6, _nt, 'A Primeira Carta do Apóstolo Paulo a Timóteo'),
-  Livro('2timoteo', '2 Timóteo', '2Tm', 4, _nt, 'A Segunda Carta do Apóstolo Paulo a Timóteo'),
+  Livro(
+    'romanos',
+    'Romanos',
+    'Rm',
+    16,
+    _nt,
+    'A Carta do Apóstolo Paulo aos Romanos',
+  ),
+  Livro(
+    '1corintios',
+    '1 Coríntios',
+    '1Co',
+    16,
+    _nt,
+    'Primeira Carta do Apóstolo Paulo aos Coríntios',
+  ),
+  Livro(
+    '2corintios',
+    '2 Coríntios',
+    '2Co',
+    13,
+    _nt,
+    'A Segunda Carta do Apóstolo Paulo aos Coríntios',
+  ),
+  Livro(
+    'galatas',
+    'Gálatas',
+    'Gl',
+    6,
+    _nt,
+    'A Carta do Apóstolo Paulo aos Gálatas',
+  ),
+  Livro(
+    'efesios',
+    'Efésios',
+    'Ef',
+    6,
+    _nt,
+    'A Carta do Apóstolo Paulo aos Efésios',
+  ),
+  Livro(
+    'filipenses',
+    'Filipenses',
+    'Fp',
+    4,
+    _nt,
+    'A Carta do Apóstolo Paulo aos Filipenses',
+  ),
+  Livro(
+    'colossenses',
+    'Colossenses',
+    'Cl',
+    4,
+    _nt,
+    'A Carta do Apóstolo Paulo aos Colossenses',
+  ),
+  Livro(
+    '1tessalonicenses',
+    '1 Tessalonicenses',
+    '1Ts',
+    5,
+    _nt,
+    'A Primeira Carta do Apóstolo Paulo aos Tessalonicenses',
+  ),
+  Livro(
+    '2tessalonicenses',
+    '2 Tessalonicenses',
+    '2Ts',
+    3,
+    _nt,
+    'A Segunda Carta do Apóstolo Paulo aos Tessalonicenses',
+  ),
+  Livro(
+    '1timoteo',
+    '1 Timóteo',
+    '1Tm',
+    6,
+    _nt,
+    'A Primeira Carta do Apóstolo Paulo a Timóteo',
+  ),
+  Livro(
+    '2timoteo',
+    '2 Timóteo',
+    '2Tm',
+    4,
+    _nt,
+    'A Segunda Carta do Apóstolo Paulo a Timóteo',
+  ),
   Livro('tito', 'Tito', 'Tt', 3, _nt, 'A Carta de Paulo a Tito'),
   Livro('filemom', 'Filemom', 'Fm', 1, _nt, 'A Carta de Paulo a Filemom'),
   Livro('hebreus', 'Hebreus', 'Hb', 13, _nt, 'A Carta aos Hebreus'),
@@ -112,10 +245,7 @@ String nomeDoLivro(String slug) => _porSlug[slug]?.nome ?? slug;
 /// Abreviações alternativas vistas nas fontes originais dos devocionais, que não
 /// batem com a abreviação oficial do canon: "Ex" sem acento para Êxodo, e "Isa"
 /// de três letras para Isaías.
-const _apelidosDeLivro = <String, String>{
-  'Ex': 'exodo',
-  'Isa': 'isaias',
-};
+const _apelidosDeLivro = <String, String>{'Ex': 'exodo', 'Isa': 'isaias'};
 
 /// Sem diferenciar maiúsculas: o Devocional reescreve a referência do dia com o
 /// nome do livro todo em caixa alta ("JOSUÉ 5:12"), e essa comparação precisa
@@ -127,7 +257,9 @@ const _apelidosDeLivro = <String, String>{
     if (minuscula.startsWith('${l.abrev.toLowerCase()} ')) return (l, l.abrev);
   }
   for (final MapEntry(key: apelido, value: slug) in _apelidosDeLivro.entries) {
-    if (minuscula.startsWith('${apelido.toLowerCase()} ')) return (livroPorSlug(slug)!, apelido);
+    if (minuscula.startsWith('${apelido.toLowerCase()} ')) {
+      return (livroPorSlug(slug)!, apelido);
+    }
   }
   return null;
 }

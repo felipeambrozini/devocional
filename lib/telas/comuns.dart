@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../data/canon.dart';
 import '../data/conteudo.dart';
+import '../data/estado.dart';
 import '../data/modelos.dart';
-import '../theme.dart';
 
-/// Cartão com título em Cinzel dourado. Repete em quase toda tela.
+/// Cartão com título em Cinzel na cor do tema. Repete em quase toda tela.
 class Cartao extends StatelessWidget {
   const Cartao({
     super.key,
@@ -32,7 +32,10 @@ class Cartao extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: Text(titulo!, style: Theme.of(context).textTheme.titleLarge),
+                    child: Text(
+                      titulo!,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
                   ),
                   ?acessorio,
                 ],
@@ -101,28 +104,35 @@ class _CarregaUmaVezState<T> extends State<CarregaUmaVez<T>> {
       FutureBuilder<T>(future: _futuro, builder: widget.construir);
 }
 
-/// Filete dourado usado para separar seções sem o peso de um Divider comum.
+/// Filete do metal do tema, usado para separar seções sem o peso de um Divider
+/// comum. Dourado no escuro, bronze no claro.
 class Filete extends StatelessWidget {
   const Filete({super.key, this.largura = 48});
 
   final double largura;
 
   @override
-  Widget build(BuildContext context) => Container(
-        width: largura,
-        height: 2,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Cores.dourado, Cores.douradoEscuro],
-          ),
-          borderRadius: BorderRadius.circular(1),
-        ),
-      );
+  Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
+    return Container(
+      width: largura,
+      height: 2,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [cor.primary, cor.outline]),
+        borderRadius: BorderRadius.circular(1),
+      ),
+    );
+  }
 }
 
 /// Estado de "ainda não há texto para isto", em vez de uma tela em branco.
 class AvisoVazio extends StatelessWidget {
-  const AvisoVazio({super.key, required this.icone, required this.titulo, this.detalhe});
+  const AvisoVazio({
+    super.key,
+    required this.icone,
+    required this.titulo,
+    this.detalhe,
+  });
 
   final IconData icone;
   final String titulo;
@@ -130,13 +140,14 @@ class AvisoVazio extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icone, size: 44, color: Cores.douradoEscuro),
+            Icon(icone, size: 44, color: cor.outline),
             const SizedBox(height: 16),
             Text(
               titulo,
@@ -156,6 +167,27 @@ class AvisoVazio extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Falha ao ler um asset.
+///
+/// Existe porque nenhuma tela olhava `snapshot.hasError`: um JSON corrompido ou
+/// ausente deixava o CircularProgressIndicator girando para sempre, sem saída e
+/// sem dizer o que houve. Girar é promessa de que algo vai chegar; quando não
+/// vai, a tela precisa dizer isso.
+class AvisoDeErro extends StatelessWidget {
+  const AvisoDeErro({super.key, this.detalhe});
+
+  final String? detalhe;
+
+  @override
+  Widget build(BuildContext context) => AvisoVazio(
+    icone: Icons.error_outline,
+    titulo: 'Não foi possível carregar',
+    detalhe:
+        detalhe ??
+        'Feche e abra o aplicativo. Se continuar, pode faltar um arquivo de conteúdo.',
+  );
 }
 
 /// Editor de nota de um versículo. Devolve o texto salvo, ou nulo se cancelado.
@@ -191,7 +223,11 @@ Future<String?> editarNota(
 }
 
 /// Confirmação antes de remover uma marcação. Devolve true só se o usuário confirmar.
-Future<bool> confirmarRemocao(BuildContext context, {required String referencia, required bool comNota}) async {
+Future<bool> confirmarRemocao(
+  BuildContext context, {
+  required String referencia,
+  required bool comNota,
+}) async {
   final confirmou = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
@@ -216,29 +252,120 @@ Future<bool> confirmarRemocao(BuildContext context, {required String referencia,
   return confirmou ?? false;
 }
 
-/// Alternador entre BKJ e NVT. Usado no leitor da Bíblia e no Devocional, por
-/// isso vive aqui e não numa tela só.
-class AlternadorDeVersao extends StatelessWidget {
-  const AlternadorDeVersao({super.key, required this.atual, required this.ao});
+/// Alternador entre BKJ e NVT, para a AppBar do leitor e do Devocional.
+///
+/// Era um SegmentedButton ocupando uma linha inteira em cada uma das duas telas,
+/// e no Devocional ele vinha empilhado sob os chips das três leituras: dois
+/// terços da primeira dobra do celular gastos em controle antes de qualquer
+/// texto. Como são só duas versões e a escolha é persistida, um botão que mostra
+/// a sigla atual e troca pela outra diz a mesma coisa em um canto da barra. O
+/// tooltip nomeia o destino, que é o que um alternador de dois estados esconde.
+class BotaoDeVersao extends StatelessWidget {
+  const BotaoDeVersao({super.key, required this.atual, required this.ao});
 
   final Versao atual;
   final ValueChanged<Versao> ao;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: SegmentedButton<Versao>(
-        segments: [
-          for (final v in Versao.values)
-            ButtonSegment(value: v, label: Text(v.sigla), tooltip: v.nome),
-        ],
-        selected: {atual},
-        onSelectionChanged: (s) => ao(s.first),
-        showSelectedIcon: false,
+    final cor = Theme.of(context).colorScheme;
+    final outra = Versao.values.firstWhere((v) => v != atual);
+    return TextButton(
+      onPressed: () => ao(outra),
+      child: Tooltip(
+        message: 'Lendo em ${atual.nome}. Trocar para ${outra.nome}.',
+        child: Text(
+          atual.sigla,
+          style: Theme.of(
+            context,
+          ).textTheme.labelLarge?.copyWith(color: cor.secondary),
+        ),
       ),
     );
   }
+}
+
+/// Abre os ajustes de leitura. Usado onde não há AppBar para pendurar a ação,
+/// que hoje é só a tela Hoje.
+class BotaoDeAjustes extends StatelessWidget {
+  const BotaoDeAjustes({super.key, required this.estado});
+
+  final Estado estado;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: 'Tamanho do texto e aparência',
+    icon: Icon(Icons.tune, color: Theme.of(context).colorScheme.primary),
+    onPressed: () => ajustesDeLeitura(context, estado),
+  );
+}
+
+/// Ajustes de leitura: tamanho do texto e claro ou escuro.
+///
+/// Fica numa folha acionada pela AppBar do leitor, e não numa tela de Ajustes,
+/// porque é onde o efeito se vê: muda o passo e o versículo atrás muda junto,
+/// muda o tema e a página inteira vira embaixo da folha. Uma tela separada
+/// obrigaria a sair da leitura para escolher e voltar para conferir.
+Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
+  return showModalBottomSheet<void>(
+    context: context,
+    builder: (folha) => SafeArea(
+      child: ListenableBuilder(
+        listenable: estado,
+        builder: (context, _) {
+          final tema = Theme.of(context).textTheme;
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                child: Text('Tamanho do texto', style: tema.headlineSmall),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final (i, escala) in escalasDeLeitura.indexed)
+                      ChoiceChip(
+                        label: Text(rotulosDeEscala[i]),
+                        selected: escala == estado.escalaDeLeitura,
+                        showCheckmark: false,
+                        onSelected: (_) =>
+                            estado.definirEscalaDeLeitura(escala),
+                      ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                child: Text('Aparência', style: tema.headlineSmall),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final modo in ModoDoTema.values)
+                      ChoiceChip(
+                        label: Text(modo.rotulo),
+                        selected: modo == estado.modoDoTema,
+                        showCheckmark: false,
+                        onSelected: (_) => estado.definirModoDoTema(modo),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          );
+        },
+      ),
+    ),
+  );
 }
 
 /// Uma linha por versículo-base de um devocional: a citação entre aspas seguida
@@ -262,7 +389,9 @@ List<InlineSpan> spansDeCitacao(
       spans.add(TextSpan(text: '"$versiculo" ', style: estiloCitacao));
     }
     if (referencia.isNotEmpty) {
-      spans.add(TextSpan(text: referencia.toUpperCase(), style: estiloReferencia));
+      spans.add(
+        TextSpan(text: referencia.toUpperCase(), style: estiloReferencia),
+      );
     }
   }
   return spans;
@@ -287,6 +416,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
 
   @override
   Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
 
     return CarregaUmaVez<Introducao?>(
@@ -316,6 +446,8 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                             'assets/images/capa_biblia_spurgeon.webp',
                             height: 52,
                             fit: BoxFit.cover,
+                            // Decorativa: o título ao lado já nomeia a obra.
+                            excludeFromSemantics: true,
                           ),
                         ),
                         const SizedBox(width: 14),
@@ -337,7 +469,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                         ),
                         Icon(
                           _aberta ? Icons.expand_less : Icons.expand_more,
-                          color: Cores.dourado,
+                          color: cor.primary,
                         ),
                       ],
                     ),
@@ -368,10 +500,10 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                             width: double.infinity,
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: Cores.superficieAlta,
+                              color: cor.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(10),
-                              border: const Border(
-                                left: BorderSide(color: Cores.dourado, width: 3),
+                              border: Border(
+                                left: BorderSide(color: cor.primary, width: 3),
                               ),
                             ),
                             child: Column(
@@ -381,7 +513,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                                   '"${intro.frase}"',
                                   style: tema.bodyMedium?.copyWith(
                                     fontStyle: FontStyle.italic,
-                                    color: Cores.douradoClaro,
+                                    color: cor.secondary,
                                     height: 1.6,
                                   ),
                                 ),
@@ -413,17 +545,28 @@ class LarguraDeLeitura extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: maxWidth),
-          child: child,
-        ),
-      );
+    child: ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxWidth),
+      child: child,
+    ),
+  );
 }
 
 /// Nomes dos meses, usados no cronograma e no calendário.
 const meses = <String>[
-  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+  'Janeiro',
+  'Fevereiro',
+  'Março',
+  'Abril',
+  'Maio',
+  'Junho',
+  'Julho',
+  'Agosto',
+  'Setembro',
+  'Outubro',
+  'Novembro',
+  'Dezembro',
 ];
 
-String dataLonga(DateTime data) => '${data.day} de ${meses[data.month - 1].toLowerCase()}';
+String dataLonga(DateTime data) =>
+    '${data.day} de ${meses[data.month - 1].toLowerCase()}';

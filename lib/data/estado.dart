@@ -21,6 +21,8 @@ class Estado extends ChangeNotifier {
   static const _kMarcacoes = 'marcacoes';
   static const _kVersao = 'versao_preferida';
   static const _kUltima = 'ultima_leitura';
+  static const _kEscala = 'escala_de_leitura';
+  static const _kModoDoTema = 'modo_do_tema';
 
   final SharedPreferences _prefs;
 
@@ -34,6 +36,12 @@ class Estado extends ChangeNotifier {
 
   /// Onde a leitura parou, para o botão "continuar".
   (String, int)? _ultimaLeitura;
+
+  /// Multiplicador do tamanho do texto de leitura. Ver [escalasDeLeitura].
+  double _escalaDeLeitura = 1.0;
+
+  /// Claro, escuro ou o do aparelho. Padrão: o do aparelho.
+  ModoDoTema _modoDoTema = ModoDoTema.sistema;
 
   static Future<Estado> abrir() async =>
       Estado(await SharedPreferences.getInstance());
@@ -72,6 +80,41 @@ class Estado extends ChangeNotifier {
         }
       }
     }
+
+    // Um valor gravado por uma versão futura, ou corrompido, não deve deixar o
+    // app com texto ilegível: só passa o que está na lista de passos conhecidos.
+    final escala = _prefs.getDouble(_kEscala);
+    if (escala != null && escalasDeLeitura.contains(escala)) {
+      _escalaDeLeitura = escala;
+    }
+
+    final modo = _prefs.getString(_kModoDoTema);
+    _modoDoTema = ModoDoTema.values.firstWhere(
+      (m) => m.chave == modo,
+      orElse: () => ModoDoTema.sistema,
+    );
+  }
+
+  // --- claro ou escuro ------------------------------------------------------ //
+
+  ModoDoTema get modoDoTema => _modoDoTema;
+
+  Future<void> definirModoDoTema(ModoDoTema novo) async {
+    if (novo == _modoDoTema) return;
+    _modoDoTema = novo;
+    notifyListeners();
+    await _prefs.setString(_kModoDoTema, novo.chave);
+  }
+
+  // --- tamanho do texto de leitura ----------------------------------------- //
+
+  double get escalaDeLeitura => _escalaDeLeitura;
+
+  Future<void> definirEscalaDeLeitura(double nova) async {
+    if (nova == _escalaDeLeitura || !escalasDeLeitura.contains(nova)) return;
+    _escalaDeLeitura = nova;
+    notifyListeners();
+    await _prefs.setDouble(_kEscala, nova);
   }
 
   // --- versão preferida ---------------------------------------------------- //
@@ -134,8 +177,12 @@ class Estado extends ChangeNotifier {
   List<Marcacao> get comNota =>
       marcacoes.where((m) => m.nota.trim().isNotEmpty).toList();
 
-  Marcacao? marcacaoDe(Versao versao, String livro, int capitulo, int versiculo) =>
-      _marcacoes['${versao.pasta}/$livro/$capitulo/$versiculo'];
+  Marcacao? marcacaoDe(
+    Versao versao,
+    String livro,
+    int capitulo,
+    int versiculo,
+  ) => _marcacoes['${versao.pasta}/$livro/$capitulo/$versiculo'];
 
   bool ehFavorito(Versao versao, String livro, int capitulo, int versiculo) =>
       _marcacoes.containsKey('${versao.pasta}/$livro/$capitulo/$versiculo');
@@ -200,17 +247,93 @@ class Estado extends ChangeNotifier {
     final lista = [for (final m in _marcacoes.values) m.paraJson()];
     await _prefs.setString(_kMarcacoes, json.encode(lista));
   }
+
+  // --- cópia de segurança --------------------------------------------------- //
+
+  /// Versão do formato da cópia. Existe para que uma cópia velha ainda possa ser
+  /// lida se o formato mudar, em vez de ser recusada sem explicação.
+  static const versaoDaCopia = 1;
+
+  /// Tudo que o usuário escreveu ou marcou, num JSON legível.
+  ///
+  /// Só favoritos, notas e dias lidos. A versão preferida e o tamanho da fonte
+  /// ficam de fora de propósito: são preferências do aparelho, e restaurar uma
+  /// cópia do celular no computador não deve mudar o tamanho da letra de lá.
+  String exportar() => const JsonEncoder.withIndent('  ').convert({
+    'versao': versaoDaCopia,
+    'marcacoes': [for (final m in _marcacoes.values) m.paraJson()],
+    'dias_lidos': _lidos.toList()..sort(),
+  });
+
+  /// Funde uma cópia com o que já existe. Devolve quantas marcações e quantos
+  /// dias entraram, ou lança [FormatException] se o texto não for uma cópia.
+  ///
+  /// Funde, não substitui: importar no aparelho errado, ou importar duas vezes,
+  /// nunca apaga uma nota que só existe aqui. Em conflito de mesma referência,
+  /// vence quem tem nota, pela mesma razão de [alternarFavorito]: a nota é
+  /// trabalho do usuário e some sem ter como voltar.
+  Future<(int marcacoes, int dias)> importar(String texto) async {
+    final Object? cru;
+    try {
+      cru = json.decode(texto);
+    } on FormatException {
+      throw const FormatException('O texto não é um JSON válido.');
+    }
+    if (cru is! Map<String, dynamic>) {
+      throw const FormatException(
+        'A cópia deveria começar com um objeto JSON.',
+      );
+    }
+    if (cru['versao'] != versaoDaCopia) {
+      throw FormatException(
+        'Cópia na versão ${cru['versao']}; este app lê a versão $versaoDaCopia.',
+      );
+    }
+
+    var novasMarcacoes = 0;
+    for (final item in (cru['marcacoes'] as List? ?? const [])) {
+      final Marcacao chegando;
+      try {
+        chegando = Marcacao.doJson(item as Map<String, dynamic>);
+      } catch (_) {
+        // Uma entrada quebrada não deve derrubar a importação inteira.
+        continue;
+      }
+      final existente = _marcacoes[chegando.chave];
+      if (existente != null && chegando.nota.trim().isEmpty) continue;
+      if (existente == null || existente.nota != chegando.nota) {
+        novasMarcacoes++;
+      }
+      _marcacoes[chegando.chave] = chegando;
+    }
+
+    var novosDias = 0;
+    for (final dia in (cru['dias_lidos'] as List? ?? const [])) {
+      if (dia is String && _lidos.add(dia)) novosDias++;
+    }
+
+    notifyListeners();
+    await _gravarMarcacoes();
+    await _prefs.setStringList(_kLidos, _lidos.toList()..sort());
+    return (novasMarcacoes, novosDias);
+  }
 }
 
 /// Acesso ao [Estado] pela árvore de widgets, sem pacote de gerenciamento de estado.
 /// Seis telas não têm o problema que Riverpod ou bloc resolvem.
 class EscopoDoEstado extends InheritedNotifier<Estado> {
-  const EscopoDoEstado({super.key, required Estado estado, required super.child})
-      : super(notifier: estado);
+  const EscopoDoEstado({
+    super.key,
+    required Estado estado,
+    required super.child,
+  }) : super(notifier: estado);
 
   static Estado de(BuildContext context) {
     final escopo = context.dependOnInheritedWidgetOfExactType<EscopoDoEstado>();
-    assert(escopo?.notifier != null, 'EscopoDoEstado ausente acima deste widget');
+    assert(
+      escopo?.notifier != null,
+      'EscopoDoEstado ausente acima deste widget',
+    );
     return escopo!.notifier!;
   }
 }

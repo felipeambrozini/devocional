@@ -5,7 +5,6 @@ import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
-import '../theme.dart';
 import 'biblia.dart';
 import 'comuns.dart';
 import 'devocional.dart';
@@ -28,29 +27,33 @@ class _TelaHojeState extends State<TelaHoje> {
 
     return Scaffold(
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-          children: [
-            _Cabecalho(periodo: periodo, data: agora),
-            const SizedBox(height: 20),
-            if (estado.ultimaLeitura != null) ...[
-              // Retomar uma leitura interrompida é a ação de maior intenção
-              // de quem abre o app, por isso vem antes das prévias do dia,
-              // não depois das estatísticas de progresso.
-              _Continuar(ultima: estado.ultimaLeitura!),
+        child: LarguraDeLeitura(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+            children: [
+              _Cabecalho(periodo: periodo, data: agora),
+              const SizedBox(height: 20),
+              if (estado.ultimaLeitura != null) ...[
+                // Retomar uma leitura interrompida é a ação de maior intenção
+                // de quem abre o app, por isso vem antes das prévias do dia,
+                // não depois das estatísticas de progresso.
+                _Continuar(ultima: estado.ultimaLeitura!),
+                const SizedBox(height: 16),
+              ],
+              _PreviaDaLeitura(
+                data: agora,
+                leitura: periodo == Periodo.manha
+                    ? Leitura.manha
+                    : Leitura.noite,
+              ),
               const SizedBox(height: 16),
+              _PreviaDaLeitura(data: agora, leitura: Leitura.promessas),
+              const SizedBox(height: 16),
+              _LeituraDeHoje(data: agora),
+              const SizedBox(height: 16),
+              _Progresso(estado: estado, ano: agora.year),
             ],
-            _PreviaDaLeitura(
-              data: agora,
-              leitura: periodo == Periodo.manha ? Leitura.manha : Leitura.noite,
-            ),
-            const SizedBox(height: 16),
-            _PreviaDaLeitura(data: agora, leitura: Leitura.promessas),
-            const SizedBox(height: 16),
-            _LeituraDeHoje(data: agora),
-            const SizedBox(height: 16),
-            _Progresso(estado: estado, ano: agora.year),
-          ],
+          ),
         ),
       ),
     );
@@ -65,6 +68,7 @@ class _Cabecalho extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     final saudacao = periodo == Periodo.manha ? 'Bom dia' : 'Boa noite';
 
@@ -75,7 +79,7 @@ class _Cabecalho extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: Cores.dourado, width: 2),
+              border: Border.all(color: cor.primary, width: 2),
             ),
             padding: const EdgeInsets.all(3),
             child: ClipOval(
@@ -85,16 +89,17 @@ class _Cabecalho extends StatelessWidget {
                 child: Image.asset(
                   'assets/images/felipe.webp',
                   fit: BoxFit.cover,
+                  semanticLabel: 'Foto de Felipe',
                   // A foto é mais alta que larga; o corte automático centralizado do
                   // BoxFit.cover cortava o topo da cabeça. Alinhando quase ao topo, o
                   // corte sobra todo embaixo, no peito, em vez do cabelo.
                   alignment: const Alignment(0, -0.85),
                   errorBuilder: (context, error, stackTrace) => Container(
-                    color: Cores.superficieAlta,
+                    color: cor.surfaceContainerHighest,
                     alignment: Alignment.center,
-                    child: const Text(
+                    child: Text(
                       'F',
-                      style: TextStyle(color: Cores.dourado, fontSize: 24),
+                      style: TextStyle(color: cor.primary, fontSize: 24),
                     ),
                   ),
                 ),
@@ -107,12 +112,18 @@ class _Cabecalho extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(kIsWeb ? saudacao : '$saudacao, Felipe', style: tema.headlineMedium),
+              Text(
+                kIsWeb ? saudacao : '$saudacao, Felipe',
+                style: tema.headlineMedium,
+              ),
               const SizedBox(height: 4),
               Text(dataLonga(data), style: tema.bodySmall),
             ],
           ),
         ),
+        // Hoje não tem AppBar onde pendurar a ação, e sem isto os ajustes só
+        // seriam alcançáveis de duas das cinco abas.
+        BotaoDeAjustes(estado: EscopoDoEstado.de(context)),
       ],
     );
   }
@@ -133,10 +144,10 @@ class _PreviaDaLeitura extends StatelessWidget {
       : 'Devocional da ${leitura.rotulo.toLowerCase()}';
 
   IconData get _icone => switch (leitura) {
-        Leitura.manha => Icons.wb_sunny_outlined,
-        Leitura.noite => Icons.nightlight_outlined,
-        Leitura.promessas => Icons.auto_awesome_outlined,
-      };
+    Leitura.manha => Icons.wb_sunny_outlined,
+    Leitura.noite => Icons.nightlight_outlined,
+    Leitura.promessas => Icons.auto_awesome_outlined,
+  };
 
   Future<Devocional?> _futuro(Versao versao) {
     final periodo = leitura.periodo;
@@ -145,8 +156,20 @@ class _PreviaDaLeitura extends StatelessWidget {
         : Conteudo.instancia.devocional(data, periodo, versao: versao);
   }
 
+  /// Cartão de uma linha só, para quando ainda não há texto para mostrar.
+  Widget _aviso(BuildContext context, String texto) => Cartao(
+    titulo: _titulo,
+    acessorio: Icon(
+      _icone,
+      color: Theme.of(context).colorScheme.primary,
+      size: 20,
+    ),
+    child: Text(texto),
+  );
+
   @override
   Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     final versao = EscopoDoEstado.de(context).versao;
     return CarregaUmaVez<Devocional?>(
@@ -155,63 +178,69 @@ class _PreviaDaLeitura extends StatelessWidget {
       chave: '${leitura.name}/${versao.pasta}/${Conteudo.chaveDoDia(data)}',
       carregar: () => _futuro(versao),
       construir: (context, snap) {
+        // Os três casos precisam ser separados. `snap.data` é nulo tanto enquanto
+        // carrega quanto quando não existe leitura para a data, e tratar os dois
+        // como um só deixava o cartão dizendo "Carregando..." para sempre num dia
+        // sem devocional. É o mesmo guard que _LeituraDeHoje já usa logo abaixo.
+        if (snap.hasError) {
+          return _aviso(context, 'Não foi possível carregar esta leitura.');
+        }
+        if (snap.connectionState != ConnectionState.done) {
+          return _aviso(context, 'Carregando...');
+        }
         final dev = snap.data;
-        final spans = dev == null
-            ? const <InlineSpan>[]
-            : spansDeCitacao(
-                dev,
-                estiloCitacao: tema.bodyMedium?.copyWith(
-                  height: 1.6,
-                  fontStyle: FontStyle.italic,
-                  color: Cores.douradoClaro,
-                ),
-                estiloReferencia: tema.titleSmall?.copyWith(color: Cores.douradoClaro),
-              );
+        if (dev == null) return _aviso(context, 'Sem leitura para esta data.');
+
+        final spans = spansDeCitacao(
+          dev,
+          estiloCitacao: tema.bodyMedium?.copyWith(
+            height: 1.6,
+            fontStyle: FontStyle.italic,
+            color: cor.secondary,
+          ),
+          estiloReferencia: tema.titleSmall?.copyWith(color: cor.secondary),
+        );
         return Cartao(
           titulo: _titulo,
-          acessorio: Icon(_icone, color: Cores.dourado, size: 20),
+          acessorio: Icon(_icone, color: cor.primary, size: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (dev == null)
-                const Text('Carregando...')
-              else ...[
-                if (dev.titulo.isNotEmpty)
-                  Text(
-                    dev.titulo,
-                    style: tema.titleMedium?.copyWith(color: Cores.dourado),
-                  ),
-                const SizedBox(height: 8),
-                // A citação vem antes do nome do livro, e o nome do livro fica
-                // ao lado do fim da citação, não numa linha própria embaixo.
-                // Mais de uma linha no raro dia com mais de um versículo-base.
-                if (spans.isNotEmpty) ...[
-                  Text.rich(TextSpan(children: spans)),
-                  const SizedBox(height: 8),
-                ],
+              if (dev.titulo.isNotEmpty)
                 Text(
-                  dev.texto,
-                  maxLines: 5,
-                  overflow: TextOverflow.ellipsis,
-                  style: tema.bodyMedium?.copyWith(height: 1.6),
+                  dev.titulo,
+                  style: tema.titleMedium?.copyWith(color: cor.primary),
                 ),
-                const SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => TelaDevocional(
-                          dataInicial: data,
-                          leituraInicial: leitura,
-                        ),
+              const SizedBox(height: 8),
+              // A citação vem antes do nome do livro, e o nome do livro fica
+              // ao lado do fim da citação, não numa linha própria embaixo.
+              // Mais de uma linha no raro dia com mais de um versículo-base.
+              if (spans.isNotEmpty) ...[
+                Text.rich(TextSpan(children: spans)),
+                const SizedBox(height: 8),
+              ],
+              Text(
+                dev.texto,
+                maxLines: 5,
+                overflow: TextOverflow.ellipsis,
+                style: tema.bodyMedium?.copyWith(height: 1.6),
+              ),
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => TelaDevocional(
+                        dataInicial: data,
+                        leituraInicial: leitura,
                       ),
                     ),
-                    child: const Text('Ler tudo'),
                   ),
+                  child: const Text('Ler tudo'),
                 ),
-              ],
+              ),
             ],
           ),
         );
@@ -227,6 +256,7 @@ class _LeituraDeHoje extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
     final estado = EscopoDoEstado.de(context);
     return CarregaUmaVez<DiaDoPlano?>(
       chave: Conteudo.chaveDoDia(data),
@@ -236,13 +266,18 @@ class _LeituraDeHoje extends StatelessWidget {
         // leitura é assíncrona, cairia no aviso de 29 de fevereiro abaixo e o
         // mostraria em qualquer dia comum até o cronograma carregar.
         if (snap.connectionState != ConnectionState.done) {
-          return const Cartao(titulo: 'Leitura de hoje', child: Text('Carregando...'));
+          return const Cartao(
+            titulo: 'Leitura de hoje',
+            child: Text('Carregando...'),
+          );
         }
         final dia = snap.data;
         if (dia == null) {
           return const Cartao(
             titulo: 'Leitura de hoje',
-            child: Text('Dia de recuperação: o cronograma não prevê 29 de fevereiro.'),
+            child: Text(
+              'Dia de recuperação: o cronograma não prevê 29 de fevereiro.',
+            ),
           );
         }
         final lido = estado.foiLido(dia.data);
@@ -252,7 +287,7 @@ class _LeituraDeHoje extends StatelessWidget {
             tooltip: lido ? 'Desmarcar' : 'Marcar como lido',
             icon: Icon(
               lido ? Icons.check_circle : Icons.radio_button_unchecked,
-              color: lido ? Cores.douradoClaro : Cores.begeSuave,
+              color: lido ? cor.secondary : cor.onSurfaceVariant,
             ),
             onPressed: () => estado.alternarLido(dia.data),
           ),
@@ -284,6 +319,7 @@ class _Progresso extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     final total = Conteudo.diasDoAno(ano);
     final progresso = estado.progressoDoAno(total);
@@ -310,8 +346,8 @@ class _Progresso extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progresso.clamp(0.0, 1.0),
               minHeight: 7,
-              backgroundColor: Cores.superficieAlta,
-              valueColor: const AlwaysStoppedAnimation(Cores.dourado),
+              backgroundColor: cor.surfaceContainerHighest,
+              valueColor: AlwaysStoppedAnimation(cor.primary),
             ),
           ),
         ],
@@ -338,10 +374,8 @@ class _Continuar extends StatelessWidget {
           onPressed: () => Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => TelaBiblia(
-                livroInicial: livro,
-                capituloInicial: capitulo,
-              ),
+              builder: (_) =>
+                  TelaBiblia(livroInicial: livro, capituloInicial: capitulo),
             ),
           ),
         ),

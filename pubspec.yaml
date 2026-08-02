@@ -69,17 +69,17 @@ flutter:
   # Cinzel e Montserrat empacotadas localmente: o google_fonts baixa a fonte na
   # primeira execução, e um aparelho sem internet (ou sem DNS, comum em emulador)
   # travava o app com uma exceção não tratada só para desenhar texto.
+  #
+  # Uma entrada por família, sem `weight`. As duas são fontes variáveis, e repetir
+  # o mesmo arquivo em vários pesos aqui não instancia o eixo `wght`: só rotula o
+  # arquivo, e o motor acaba desenhando a instância padrão (Regular no Cinzel,
+  # Thin no Montserrat) em todo peso pedido. Quem pesa a letra é o `fontVariations`
+  # de lib/theme.dart.
   fonts:
     - family: Cinzel
       fonts:
         - asset: assets/fonts/Cinzel-Variable.ttf
-          weight: 600
-        - asset: assets/fonts/Cinzel-Variable.ttf
-          weight: 700
     - family: Montserrat
       fonts:
         - asset: assets/fonts/Montserrat-Variable.ttf
-          weight: 400
-        - asset: assets/fonts/Montserrat-Variable.ttf
-          weight: 600
 

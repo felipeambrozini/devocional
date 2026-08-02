@@ -44,25 +44,33 @@ void main() {
       // livrosDaReferencia continuar reconhecendo esse formato.
       expect(livroDaReferencia('JOSUÉ 5:12')?.slug, 'josue');
       expect(livroDaReferencia('JOÃO 6:37')?.slug, 'joao');
-      expect(capituloEVersiculoDaReferencia('JOSUÉ 5:12'), (livroPorSlug('josue'), 5, 12));
+      expect(capituloEVersiculoDaReferencia('JOSUÉ 5:12'), (
+        livroPorSlug('josue'),
+        5,
+        12,
+      ));
     });
 
     test('resolve todos os livros quando a referencia cita mais de um', () {
       expect(livrosDaReferencia('Js 5:12').map((l) => l.slug), ['josue']);
-      expect(
-        livrosDaReferencia('Js 5:12 e Hb 4:9').map((l) => l.slug),
-        ['josue', 'hebreus'],
-      );
+      expect(livrosDaReferencia('Js 5:12 e Hb 4:9').map((l) => l.slug), [
+        'josue',
+        'hebreus',
+      ]);
       expect(
         livrosDaReferencia('Gênesis 3:15, Romanos 16:20').map((l) => l.slug),
         ['genesis', 'romanos'],
       );
       // Livro repetido aparece uma unica vez.
-      expect(livrosDaReferencia('Js 5:12 e Js 1:9').map((l) => l.slug), ['josue']);
+      expect(livrosDaReferencia('Js 5:12 e Js 1:9').map((l) => l.slug), [
+        'josue',
+      ]);
     });
 
     test('resolve todos os versiculos quando a referencia cita mais de um', () {
-      expect(versiculosDaReferencia('Js 5:12'), [(livroPorSlug('josue'), 5, 12)]);
+      expect(versiculosDaReferencia('Js 5:12'), [
+        (livroPorSlug('josue'), 5, 12),
+      ]);
       expect(
         // O dia de 12 de julho de Manha e Noite encadeia tres passagens.
         versiculosDaReferencia('Jd 1:1, 1Co 1:2, 1Pe 1:2'),
@@ -73,28 +81,34 @@ void main() {
         ],
       );
       // Trecho que nao resolve e' descartado, nao derruba os outros.
-      expect(
-        versiculosDaReferencia('Js 5:12 e nada a ver 1:1'),
-        [(livroPorSlug('josue'), 5, 12)],
-      );
+      expect(versiculosDaReferencia('Js 5:12 e nada a ver 1:1'), [
+        (livroPorSlug('josue'), 5, 12),
+      ]);
     });
 
-    test('resolve faixa de versiculos, como as promessas de dois versiculos', () {
-      // Sem faixa, e' um so versiculo (inicio e fim iguais).
-      expect(faixaDeVersiculoDaReferencia('Jo 6:37'), (livroPorSlug('joao'), 6, 37, 37));
-      // Promessas de Deus as vezes cita dois versiculos como uma so promessa.
-      expect(
-        faixaDeVersiculoDaReferencia('Salmos 102:13-14'),
-        (livroPorSlug('salmos'), 102, 13, 14),
-      );
-      expect(
-        faixasDaReferencia('Jo 6:37, Sl 102:13-14'),
-        [
+    test(
+      'resolve faixa de versiculos, como as promessas de dois versiculos',
+      () {
+        // Sem faixa, e' um so versiculo (inicio e fim iguais).
+        expect(faixaDeVersiculoDaReferencia('Jo 6:37'), (
+          livroPorSlug('joao'),
+          6,
+          37,
+          37,
+        ));
+        // Promessas de Deus as vezes cita dois versiculos como uma so promessa.
+        expect(faixaDeVersiculoDaReferencia('Salmos 102:13-14'), (
+          livroPorSlug('salmos'),
+          102,
+          13,
+          14,
+        ));
+        expect(faixasDaReferencia('Jo 6:37, Sl 102:13-14'), [
           (livroPorSlug('joao'), 6, 37, 37),
           (livroPorSlug('salmos'), 102, 13, 14),
-        ],
-      );
-    });
+        ]);
+      },
+    );
 
     test('contagem de capitulos de casos que costumam sair errados', () {
       expect(livroPorSlug('salmos')!.capitulos, 150);

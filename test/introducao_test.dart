@@ -10,12 +10,13 @@ import 'package:flutter_test/flutter_test.dart';
 /// São muitos arquivos escritos à mão; sem esta rede, um cabeçalho trocado ou um
 /// travessão esquecido só apareceria na tela, depois de tudo pronto.
 void main() {
-  final arquivos = Directory('assets/intro')
-      .listSync()
-      .whereType<File>()
-      .where((f) => f.path.endsWith('.json'))
-      .toList()
-    ..sort((a, b) => a.path.compareTo(b.path));
+  final arquivos =
+      Directory('assets/intro')
+          .listSync()
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.json'))
+          .toList()
+        ..sort((a, b) => a.path.compareTo(b.path));
 
   test('existe exatamente uma introdução para cada um dos 66 livros', () {
     final slugs = arquivos
@@ -59,8 +60,11 @@ void main() {
       test('nenhuma seção está vazia ou raquítica', () {
         for (final (titulo, corpo) in intro.secoes) {
           expect(corpo.trim(), isNotEmpty, reason: titulo);
-          expect(corpo.split(RegExp(r'\s+')).length, greaterThan(60),
-              reason: '$titulo tem texto curto demais');
+          expect(
+            corpo.split(RegExp(r'\s+')).length,
+            greaterThan(60),
+            reason: '$titulo tem texto curto demais',
+          );
         }
       });
 
@@ -68,26 +72,47 @@ void main() {
         // Restrição explícita do formato: só vírgula, ponto e vírgula e ponto.
         for (final (titulo, corpo) in intro.secoes) {
           for (final proibido in ['—', '–', '--']) {
-            expect(corpo, isNot(contains(proibido)), reason: '$titulo usa $proibido');
+            expect(
+              corpo,
+              isNot(contains(proibido)),
+              reason: '$titulo usa $proibido',
+            );
           }
         }
       });
 
       test('a seção de Spurgeon fala em primeira pessoa', () {
         final corpo = intro.secoes.last.$2;
-        final marcas = ['eu ', 'me ', 'minha', 'meu ', 'preguei', 'confesso', 'tenho '];
-        expect(marcas.any((m) => corpo.toLowerCase().contains(m)), isTrue,
-            reason: 'a quarta seção precisa ser em primeira pessoa');
+        final marcas = [
+          'eu ',
+          'me ',
+          'minha',
+          'meu ',
+          'preguei',
+          'confesso',
+          'tenho ',
+        ];
+        expect(
+          marcas.any((m) => corpo.toLowerCase().contains(m)),
+          isTrue,
+          reason: 'a quarta seção precisa ser em primeira pessoa',
+        );
       });
 
       test('frase só aparece como citação de Spurgeon se for comprovada', () {
         // Uma linha composta na voz dele, rotulada como citação, seria atribuir a
         // uma pessoa real palavras que ela não escreveu.
         if (intro.frase.trim().isEmpty) return;
-        expect(intro.fraseComprovada, isTrue,
-            reason: 'frase presente exige quoteAttributed: true');
-        expect(intro.fonteDaFrase.trim(), isNotEmpty,
-            reason: 'frase comprovada exige quoteSource com a obra');
+        expect(
+          intro.fraseComprovada,
+          isTrue,
+          reason: 'frase presente exige quoteAttributed: true',
+        );
+        expect(
+          intro.fonteDaFrase.trim(),
+          isNotEmpty,
+          reason: 'frase comprovada exige quoteSource com a obra',
+        );
       });
     });
   }
@@ -105,8 +130,10 @@ void main() {
         fraseComprovada: false,
         fonteDaFrase: '',
       );
-      expect(semFonte.atribuicao,
-          'Escrito na voz de Spurgeon; sem citação comprovada');
+      expect(
+        semFonte.atribuicao,
+        'Escrito na voz de Spurgeon; sem citação comprovada',
+      );
     });
 
     test('comprovada e sem fonte também não vira citação', () {
@@ -117,9 +144,11 @@ void main() {
         fraseComprovada: true,
         fonteDaFrase: '   ',
       );
-      expect(semObra.atribuicao,
-          'Escrito na voz de Spurgeon; sem citação comprovada',
-          reason: 'fonte só com espaços não é fonte, e a vírgula ficaria solta');
+      expect(
+        semObra.atribuicao,
+        'Escrito na voz de Spurgeon; sem citação comprovada',
+        reason: 'fonte só com espaços não é fonte, e a vírgula ficaria solta',
+      );
     });
 
     test('com fonte comprovada credita Spurgeon e a obra', () {

@@ -4,7 +4,6 @@ import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
-import '../theme.dart';
 import 'comuns.dart';
 
 /// As três leituras diárias, na ordem em que aparecem no alternador do topo.
@@ -22,10 +21,10 @@ enum Leitura {
 
   /// Manhã e Noite têm período; Promessas não, por ser leitura única do dia.
   Periodo? get periodo => switch (this) {
-        Leitura.manha => Periodo.manha,
-        Leitura.noite => Periodo.noite,
-        Leitura.promessas => null,
-      };
+    Leitura.manha => Periodo.manha,
+    Leitura.noite => Periodo.noite,
+    Leitura.promessas => null,
+  };
 
   String get capa => this == Leitura.promessas
       ? 'assets/images/capa_promessas_de_deus.webp'
@@ -86,8 +85,17 @@ class _TelaDevocionalState extends State<TelaDevocional> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(ehHoje ? 'Hoje, ${dataLonga(_data)}' : dataLonga(_data)),
+        title: Text(
+          ehHoje ? 'Hoje, ${dataLonga(_data)}' : dataLonga(_data),
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: [
+          BotaoDeVersao(atual: estado.versao, ao: estado.definirVersao),
+          IconButton(
+            tooltip: 'Tamanho do texto e aparência',
+            icon: const Icon(Icons.tune),
+            onPressed: () => ajustesDeLeitura(context, estado),
+          ),
           IconButton(
             tooltip: 'Escolher data',
             icon: const Icon(Icons.calendar_month_outlined),
@@ -101,61 +109,68 @@ class _TelaDevocionalState extends State<TelaDevocional> {
             ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-        children: [
-          _AlternadorDeLeitura(
-            atual: _leitura,
-            ao: (l) => setState(() => _leitura = l),
-          ),
-          AlternadorDeVersao(
-            atual: estado.versao,
-            ao: (v) => estado.definirVersao(v),
-          ),
-          const SizedBox(height: 16),
-          CarregaUmaVez<Devocional?>(
-            chave: '${_leitura.name}/${estado.versao.pasta}/${_data.month}/${_data.day}',
-            carregar: () => _carregar(estado.versao),
-            construir: (context, snap) {
-              if (snap.connectionState != ConnectionState.done) {
-                return const Padding(
-                  padding: EdgeInsets.all(32),
-                  child: Center(child: CircularProgressIndicator()),
+      body: LarguraDeLeitura(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+          children: [
+            _AlternadorDeLeitura(
+              atual: _leitura,
+              ao: (l) => setState(() => _leitura = l),
+            ),
+            const SizedBox(height: 16),
+            CarregaUmaVez<Devocional?>(
+              chave:
+                  '${_leitura.name}/${estado.versao.pasta}/${_data.month}/${_data.day}',
+              carregar: () => _carregar(estado.versao),
+              construir: (context, snap) {
+                if (snap.hasError) {
+                  return const Padding(
+                    padding: EdgeInsets.all(32),
+                    child: AvisoDeErro(),
+                  );
+                }
+                if (snap.connectionState != ConnectionState.done) {
+                  return const Padding(
+                    padding: EdgeInsets.all(32),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                final dev = snap.data;
+                if (dev == null) {
+                  return Cartao(
+                    titulo: _leitura.rotulo,
+                    child: Text(
+                      _leitura == Leitura.promessas
+                          ? 'Ainda não há uma promessa cadastrada para esta data.'
+                          : 'Sem devocional para esta data.',
+                    ),
+                  );
+                }
+                final referencias = [
+                  dev.referencia,
+                  for (final (referencia, _) in dev.outrosVersiculos)
+                    referencia,
+                ].join(', ');
+                final livros = livrosDaReferencia(referencias);
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (final livro in livros)
+                      AberturaDeLivro(slug: livro.slug),
+                    _CartaoDeLeitura(
+                      titulo: dev.titulo.isNotEmpty
+                          ? dev.titulo
+                          : '${_leitura.rotulo}, ${dataLonga(_data)}',
+                      dev: dev,
+                      texto: dev.texto,
+                      capa: _leitura.capa,
+                    ),
+                  ],
                 );
-              }
-              final dev = snap.data;
-              if (dev == null) {
-                return Cartao(
-                  titulo: _leitura.rotulo,
-                  child: Text(
-                    _leitura == Leitura.promessas
-                        ? 'Ainda não há uma promessa cadastrada para esta data.'
-                        : 'Sem devocional para esta data.',
-                  ),
-                );
-              }
-              final referencias = [
-                dev.referencia,
-                for (final (referencia, _) in dev.outrosVersiculos) referencia,
-              ].join(', ');
-              final livros = livrosDaReferencia(referencias);
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (final livro in livros) AberturaDeLivro(slug: livro.slug),
-                  _CartaoDeLeitura(
-                    titulo: dev.titulo.isNotEmpty
-                        ? dev.titulo
-                        : '${_leitura.rotulo}, ${dataLonga(_data)}',
-                    dev: dev,
-                    texto: dev.texto,
-                    capa: _leitura.capa,
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -213,15 +228,16 @@ class _CartaoDeLeitura extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     final spans = spansDeCitacao(
       dev,
       estiloCitacao: tema.bodyLarge?.copyWith(
         height: 1.7,
         fontStyle: FontStyle.italic,
-        color: Cores.douradoClaro,
+        color: cor.secondary,
       ),
-      estiloReferencia: tema.titleSmall?.copyWith(color: Cores.douradoClaro),
+      estiloReferencia: tema.titleSmall?.copyWith(color: cor.secondary),
     );
     return Cartao(
       padding: const EdgeInsets.all(20),
@@ -265,12 +281,20 @@ class _CartaoDeLeitura extends StatelessWidget {
           Text(texto, style: tema.bodyLarge?.copyWith(height: 1.7)),
           const SizedBox(height: 8),
           Center(
-            child: Image.asset('assets/images/assinatura_spurgeon.png', height: 40),
+            child: Image.asset(
+              'assets/images/assinatura_spurgeon.webp',
+              height: 40,
+              semanticLabel: 'Assinatura de Charles Spurgeon',
+              // A imagem é tinta chapada num tom só, o próprio dourado claro do
+              // tema escuro, e sobre pergaminho ela sumiria. Como é de uma cor
+              // só, tingir o mesmo arquivo pelo tema resolve, e evita ter duas
+              // versões do asset para manter em sincronia.
+              color: cor.secondary,
+              colorBlendMode: BlendMode.srcIn,
+            ),
           ),
         ],
       ),
     );
   }
 }
-
-

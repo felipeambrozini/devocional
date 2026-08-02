@@ -1,5 +1,43 @@
 import 'canon.dart';
 
+/// Passos do controle de tamanho do texto de leitura, e o rótulo de cada um.
+///
+/// Fatores e não pixels: o tema é quem sabe o tamanho base de cada estilo, e
+/// assim o versículo, o comentário do devocional e a introdução crescem juntos,
+/// na mesma proporção. O menor passo existe porque quem lê numa janela grande
+/// às vezes quer caber mais texto na tela, não menos.
+///
+/// Vivem aqui, e não no tema, porque o [Estado] precisa deles para recusar um
+/// valor gravado fora da lista, e o `data` não importa `theme.dart`.
+const escalasDeLeitura = <double>[0.9, 1.0, 1.15, 1.3, 1.5];
+const rotulosDeEscala = <String>[
+  'Pequeno',
+  'Padrão',
+  'Médio',
+  'Grande',
+  'Maior',
+];
+
+/// Claro, escuro ou o que o aparelho estiver usando.
+///
+/// Seguir o aparelho é o padrão, mas não pode ser a única opção: às nove da
+/// noite o celular pode ainda estar no claro, e quem lê na cama quer o escuro
+/// independente disso.
+///
+/// Vive aqui pelo mesmo motivo das escalas: o [Estado] precisa dele para ler e
+/// gravar a preferência, e o `data` não importa `theme.dart` nem `material.dart`.
+/// Quem traduz para `ThemeMode` é o `main.dart`.
+enum ModoDoTema {
+  sistema('sistema', 'Automático'),
+  claro('claro', 'Claro'),
+  escuro('escuro', 'Escuro');
+
+  const ModoDoTema(this.chave, this.rotulo);
+
+  final String chave;
+  final String rotulo;
+}
+
 /// Um capítulo carregado: o sobrescrito (existe nos Salmos) e os versículos em ordem.
 class Capitulo {
   const Capitulo({
@@ -34,12 +72,12 @@ class Faixa {
   });
 
   factory Faixa.doJson(Map<String, dynamic> json) => Faixa(
-        livro: json['book'] as String,
-        deCapitulo: json['fromChapter'] as int,
-        ateCapitulo: json['toChapter'] as int,
-        deVersiculo: json['fromVerse'] as int?,
-        ateVersiculo: json['toVerse'] as int?,
-      );
+    livro: json['book'] as String,
+    deCapitulo: json['fromChapter'] as int,
+    ateCapitulo: json['toChapter'] as int,
+    deVersiculo: json['fromVerse'] as int?,
+    ateVersiculo: json['toVerse'] as int?,
+  );
 
   final String livro;
   final int deCapitulo;
@@ -63,15 +101,20 @@ class Faixa {
 
 /// Um dia do cronograma anual.
 class DiaDoPlano {
-  const DiaDoPlano({required this.data, required this.rotulo, required this.faixas});
+  const DiaDoPlano({
+    required this.data,
+    required this.rotulo,
+    required this.faixas,
+  });
 
   factory DiaDoPlano.doJson(Map<String, dynamic> json) => DiaDoPlano(
-        data: json['date'] as String,
-        rotulo: json['label'] as String,
-        faixas: [
-          for (final f in json['ranges'] as List) Faixa.doJson(f as Map<String, dynamic>),
-        ],
-      );
+    data: json['date'] as String,
+    rotulo: json['label'] as String,
+    faixas: [
+      for (final f in json['ranges'] as List)
+        Faixa.doJson(f as Map<String, dynamic>),
+    ],
+  );
 
   /// Chave 'MM-DD'. O plano é anual e se repete, então não guarda ano.
   final String data;
@@ -96,11 +139,11 @@ class Devocional {
   });
 
   factory Devocional.doJson(Map<String, dynamic> json) => Devocional(
-        referencia: json['reference'] as String? ?? '',
-        texto: json['text'] as String? ?? '',
-        titulo: json['title'] as String? ?? '',
-        versiculo: json['verse'] as String? ?? '',
-      );
+    referencia: json['reference'] as String? ?? '',
+    texto: json['text'] as String? ?? '',
+    titulo: json['title'] as String? ?? '',
+    versiculo: json['verse'] as String? ?? '',
+  );
 
   final String referencia;
   final String texto;
@@ -128,7 +171,8 @@ enum Periodo {
   final String nome;
 
   /// A virada segue o horário do aparelho: manhã até 17h59, noite a partir das 18h.
-  static Periodo pelaHora(int hora) => hora < 18 ? Periodo.manha : Periodo.noite;
+  static Periodo pelaHora(int hora) =>
+      hora < 18 ? Periodo.manha : Periodo.noite;
 }
 
 /// Introdução de um livro, na voz de Spurgeon.
@@ -142,15 +186,15 @@ class Introducao {
   });
 
   factory Introducao.doJson(Map<String, dynamic> json) => Introducao(
-        livro: json['book'] as String,
-        secoes: [
-          for (final s in json['sections'] as List)
-            (s['heading'] as String, s['body'] as String),
-        ],
-        frase: json['quote'] as String? ?? '',
-        fraseComprovada: json['quoteAttributed'] as bool? ?? false,
-        fonteDaFrase: json['quoteSource'] as String? ?? '',
-      );
+    livro: json['book'] as String,
+    secoes: [
+      for (final s in json['sections'] as List)
+        (s['heading'] as String, s['body'] as String),
+    ],
+    frase: json['quote'] as String? ?? '',
+    fraseComprovada: json['quoteAttributed'] as bool? ?? false,
+    fonteDaFrase: json['quoteSource'] as String? ?? '',
+  );
 
   final String livro;
   final List<(String, String)> secoes;
@@ -186,15 +230,15 @@ class Marcacao {
   });
 
   factory Marcacao.doJson(Map<String, dynamic> json) => Marcacao(
-        versao: Versao.values.firstWhere(
-          (v) => v.pasta == json['versao'],
-          orElse: () => Versao.bkj,
-        ),
-        livro: json['livro'] as String,
-        capitulo: json['capitulo'] as int,
-        versiculo: json['versiculo'] as int,
-        nota: json['nota'] as String? ?? '',
-      );
+    versao: Versao.values.firstWhere(
+      (v) => v.pasta == json['versao'],
+      orElse: () => Versao.bkj,
+    ),
+    livro: json['livro'] as String,
+    capitulo: json['capitulo'] as int,
+    versiculo: json['versiculo'] as int,
+    nota: json['nota'] as String? ?? '',
+  );
 
   final Versao versao;
   final String livro;
@@ -208,20 +252,20 @@ class Marcacao {
   String get referencia => '${nomeDoLivro(livro)} $capitulo:$versiculo';
 
   Map<String, dynamic> paraJson() => {
-        'versao': versao.pasta,
-        'livro': livro,
-        'capitulo': capitulo,
-        'versiculo': versiculo,
-        'nota': nota,
-      };
+    'versao': versao.pasta,
+    'livro': livro,
+    'capitulo': capitulo,
+    'versiculo': versiculo,
+    'nota': nota,
+  };
 
   Marcacao comNota(String novaNota) => Marcacao(
-        versao: versao,
-        livro: livro,
-        capitulo: capitulo,
-        versiculo: versiculo,
-        nota: novaNota,
-      );
+    versao: versao,
+    livro: livro,
+    capitulo: capitulo,
+    versiculo: versiculo,
+    nota: novaNota,
+  );
 }
 
 /// Um resultado de busca.

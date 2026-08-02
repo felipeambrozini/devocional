@@ -41,11 +41,16 @@ class Conteudo {
       '${data.month.toString().padLeft(2, '0')}-'
       '${data.day.toString().padLeft(2, '0')}';
 
-  Future<Map<String, dynamic>> _carregarLivro(Versao versao, String slug) async {
+  Future<Map<String, dynamic>> _carregarLivro(
+    Versao versao,
+    String slug,
+  ) async {
     final chave = '${versao.pasta}/$slug';
     final cacheado = _livros[chave];
     if (cacheado != null) return cacheado;
-    final cru = await rootBundle.loadString('assets/bible/${versao.pasta}/$slug.json');
+    final cru = await rootBundle.loadString(
+      'assets/bible/${versao.pasta}/$slug.json',
+    );
     final dados = json.decode(cru) as Map<String, dynamic>;
     _livros[chave] = dados;
     return dados;
@@ -56,13 +61,18 @@ class Conteudo {
     final capitulos = livro['chapters'] as Map<String, dynamic>;
     final cap = capitulos['$numero'] as Map<String, dynamic>?;
     if (cap == null) {
-      return Capitulo(livro: slug, numero: numero, titulo: '', versiculos: const []);
+      return Capitulo(
+        livro: slug,
+        numero: numero,
+        titulo: '',
+        versiculos: const [],
+      );
     }
-    final versiculos = (cap['verses'] as Map<String, dynamic>)
-        .entries
-        .map((e) => (int.parse(e.key), e.value as String))
-        .toList()
-      ..sort((a, b) => a.$1.compareTo(b.$1));
+    final versiculos =
+        (cap['verses'] as Map<String, dynamic>).entries
+            .map((e) => (int.parse(e.key), e.value as String))
+            .toList()
+          ..sort((a, b) => a.$1.compareTo(b.$1));
     return Capitulo(
       livro: slug,
       numero: numero,
@@ -73,7 +83,12 @@ class Conteudo {
 
   /// Um único versículo, para mostrar o texto de um favorito ou de uma nota sem
   /// abrir o capítulo inteiro na tela.
-  Future<String> versiculo(Versao versao, String slug, int capitulo, int numero) async {
+  Future<String> versiculo(
+    Versao versao,
+    String slug,
+    int capitulo,
+    int numero,
+  ) async {
     final cap = await this.capitulo(versao, slug, capitulo);
     for (final (n, texto) in cap.versiculos) {
       if (n == numero) return texto;
@@ -104,7 +119,9 @@ class Conteudo {
   Future<List<DiaDoPlano>> plano({bool bissexto = false}) async {
     final cacheado = bissexto ? _planoBissexto : _planoComum;
     if (cacheado != null) return cacheado;
-    final arquivo = bissexto ? 'reading_plan_bissexto.json' : 'reading_plan.json';
+    final arquivo = bissexto
+        ? 'reading_plan_bissexto.json'
+        : 'reading_plan.json';
     final cru = await rootBundle.loadString('assets/$arquivo');
     final dias = [
       for (final d in json.decode(cru) as List)
@@ -131,7 +148,9 @@ class Conteudo {
   Future<Map<String, Map<String, dynamic>>> _carregarDevocionais() async {
     final cacheado = _devocionais;
     if (cacheado != null) return cacheado;
-    final cru = await rootBundle.loadString('assets/devotional/morning_evening.json');
+    final cru = await rootBundle.loadString(
+      'assets/devotional/morning_evening.json',
+    );
     final dados = (json.decode(cru) as Map<String, dynamic>).map(
       (chave, valor) => MapEntry(chave, valor as Map<String, dynamic>),
     );
@@ -173,13 +192,22 @@ class Conteudo {
   /// Busca o(s) versículo(s)-base de [dev] na tradução [versao] e devolve uma
   /// cópia com [Devocional.referencia]/[Devocional.versiculo] atualizados. Sem
   /// referência que resolva, devolve [dev] como veio do asset.
-  Future<Devocional> _comVersiculosResolvidos(Devocional dev, Versao versao) async {
+  Future<Devocional> _comVersiculosResolvidos(
+    Devocional dev,
+    Versao versao,
+  ) async {
     final resolvidos = faixasDaReferencia(dev.referencia);
     if (resolvidos.isEmpty) return dev;
 
     final pares = <(String, String)>[];
     for (final (livro, capitulo, deVersiculo, ateVersiculo) in resolvidos) {
-      final texto = await versiculoOuFaixa(versao, livro.slug, capitulo, deVersiculo, ateVersiculo);
+      final texto = await versiculoOuFaixa(
+        versao,
+        livro.slug,
+        capitulo,
+        deVersiculo,
+        ateVersiculo,
+      );
       if (texto.isEmpty) continue;
       final referencia = deVersiculo == ateVersiculo
           ? '${livro.nome} $capitulo:$deVersiculo'
@@ -209,11 +237,16 @@ class Conteudo {
   /// [versao] escolhe de qual tradução o versículo em destaque vem, do mesmo
   /// jeito que em [devocional]; o texto da promessa em si é sempre o mesmo,
   /// escrito na voz de Spurgeon, independente da tradução do versículo.
-  Future<Devocional?> promessa(DateTime data, {Versao versao = Versao.bkj}) async {
+  Future<Devocional?> promessa(
+    DateTime data, {
+    Versao versao = Versao.bkj,
+  }) async {
     if (!_tentouPromessas) {
       _tentouPromessas = true;
       try {
-        final cru = await rootBundle.loadString('assets/devotional/promises.json');
+        final cru = await rootBundle.loadString(
+          'assets/devotional/promises.json',
+        );
         _promessas = (json.decode(cru) as Map<String, dynamic>).map(
           (chave, valor) => MapEntry(chave, valor as Map<String, dynamic>),
         );
@@ -249,7 +282,16 @@ class Conteudo {
   /// inteira lê cerca de 4 MB e leva uns segundos; depois tudo está em cache. Como é
   /// um stream, a tela já mostra Gênesis enquanto o resto carrega, e cancelar a busca
   /// interrompe a leitura. Se incomodar, o caminho é SQLite com FTS5.
-  Stream<Achado> buscar(Versao versao, String termo, {int limite = 300}) async* {
+  /// Teto de achados de uma busca. Público porque a tela precisa dizer que a
+  /// lista foi cortada: sem isso, buscar "Deus" parecia dar exatamente 300
+  /// ocorrências na Bíblia inteira, e a pessoa não tinha como saber que faltava.
+  static const limiteDeBusca = 300;
+
+  Stream<Achado> buscar(
+    Versao versao,
+    String termo, {
+    int limite = limiteDeBusca,
+  }) async* {
     final alvo = _normalizar(termo);
     if (alvo.length < 3) return;
     var total = 0;

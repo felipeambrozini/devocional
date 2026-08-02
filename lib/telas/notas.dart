@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
-import '../theme.dart';
 import 'biblia.dart';
 import 'comuns.dart';
 
@@ -13,6 +13,7 @@ class TelaNotas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
     final estado = EscopoDoEstado.de(context);
     final favoritos = estado.marcacoes;
     final notas = estado.comNota;
@@ -22,44 +23,151 @@ class TelaNotas extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Marcações'),
+          actions: [
+            PopupMenuButton<void Function()>(
+              tooltip: 'Cópia de segurança',
+              icon: const Icon(Icons.more_vert),
+              onSelected: (acao) => acao(),
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: () => _exportar(context, estado),
+                  child: const ListTile(
+                    leading: Icon(Icons.upload_outlined),
+                    title: Text('Exportar cópia'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: () => _importar(context, estado),
+                  child: const ListTile(
+                    leading: Icon(Icons.download_outlined),
+                    title: Text('Importar cópia'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
+            ),
+          ],
           bottom: TabBar(
-            labelColor: Cores.douradoClaro,
-            unselectedLabelColor: Cores.begeSuave,
-            indicatorColor: Cores.dourado,
+            labelColor: cor.secondary,
+            unselectedLabelColor: cor.onSurfaceVariant,
+            indicatorColor: cor.primary,
             tabs: [
               Tab(text: 'Favoritos (${favoritos.length})'),
               Tab(text: 'Anotações (${notas.length})'),
             ],
           ),
         ),
-        body: TabBarView(
-          children: [
-            _Lista(
-              itens: favoritos,
-              vazio: const AvisoVazio(
-                icone: Icons.bookmark_outline,
-                titulo: 'Nenhum favorito',
-                detalhe: 'Toque num versículo na Bíblia para favoritá-lo.',
+        body: LarguraDeLeitura(
+          child: TabBarView(
+            children: [
+              _Lista(
+                itens: favoritos,
+                vazio: const AvisoVazio(
+                  icone: Icons.bookmark_outline,
+                  titulo: 'Nenhum favorito',
+                  detalhe: 'Toque num versículo na Bíblia para favoritá-lo.',
+                ),
               ),
-            ),
-            _Lista(
-              itens: notas,
-              mostrarNota: true,
-              vazio: const AvisoVazio(
-                icone: Icons.edit_note,
-                titulo: 'Nenhuma anotação',
-                detalhe: 'Toque num versículo na Bíblia para anotar.',
+              _Lista(
+                itens: notas,
+                mostrarNota: true,
+                vazio: const AvisoVazio(
+                  icone: Icons.edit_note,
+                  titulo: 'Nenhuma anotação',
+                  detalhe: 'Toque num versículo na Bíblia para anotar.',
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
+/// Joga a cópia na área de transferência.
+///
+/// ponytail: área de transferência, não arquivo. Favoritos, notas e progresso
+/// vivem no SharedPreferences, que na web é o localStorage e o navegador limpa
+/// sozinho sob pressão de espaço; texto escrito à mão não pode existir num lugar
+/// só. Salvar arquivo de verdade exigiria ramificar por plataforma, que é
+/// justamente o que este app evitou até aqui. Se um dia precisar, o caminho é
+/// `share_plus`, que resolve mobile, desktop e download na web de uma vez.
+Future<void> _exportar(BuildContext context, Estado estado) async {
+  final mensageiro = ScaffoldMessenger.of(context);
+  await Clipboard.setData(ClipboardData(text: estado.exportar()));
+  mensageiro.showSnackBar(
+    const SnackBar(
+      content: Text('Cópia copiada. Cole num arquivo de texto e guarde.'),
+    ),
+  );
+}
+
+/// Pede a cópia colada e funde com o que já existe.
+Future<void> _importar(BuildContext context, Estado estado) async {
+  final controle = TextEditingController();
+  final texto = await showDialog<String>(
+    context: context,
+    builder: (dialogo) => AlertDialog(
+      title: const Text('Importar cópia'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Cole aqui o texto exportado. Nada é apagado: a cópia se junta ao '
+            'que já está no aparelho.',
+            style: Theme.of(dialogo).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: controle,
+            autofocus: true,
+            maxLines: 6,
+            minLines: 4,
+            decoration: const InputDecoration(hintText: '{ "versao": 1, ... }'),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogo),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(dialogo, controle.text),
+          child: const Text('Importar'),
+        ),
+      ],
+    ),
+  );
+  if (texto == null || texto.trim().isEmpty || !context.mounted) return;
+
+  final mensageiro = ScaffoldMessenger.of(context);
+  try {
+    final (marcacoes, dias) = await estado.importar(texto);
+    mensageiro.showSnackBar(
+      SnackBar(
+        content: Text(
+          marcacoes == 0 && dias == 0
+              ? 'Nada de novo na cópia; tudo já estava aqui.'
+              : 'Importado: $marcacoes marcações, $dias dias de leitura.',
+        ),
+      ),
+    );
+  } on FormatException catch (erro) {
+    mensageiro.showSnackBar(
+      SnackBar(content: Text('Cópia não reconhecida. ${erro.message}')),
+    );
+  }
+}
+
 class _Lista extends StatelessWidget {
-  const _Lista({required this.itens, required this.vazio, this.mostrarNota = false});
+  const _Lista({
+    required this.itens,
+    required this.vazio,
+    this.mostrarNota = false,
+  });
 
   final List<Marcacao> itens;
   final Widget vazio;
@@ -72,10 +180,8 @@ class _Lista extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       itemCount: itens.length,
       separatorBuilder: (_, _) => const SizedBox(height: 10),
-      itemBuilder: (context, i) => _CartaoDeMarcacao(
-        marcacao: itens[i],
-        mostrarNota: mostrarNota,
-      ),
+      itemBuilder: (context, i) =>
+          _CartaoDeMarcacao(marcacao: itens[i], mostrarNota: mostrarNota),
     );
   }
 }
@@ -88,6 +194,7 @@ class _CartaoDeMarcacao extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
     final estado = EscopoDoEstado.de(context);
     final tema = Theme.of(context).textTheme;
 
@@ -114,7 +221,7 @@ class _CartaoDeMarcacao extends StatelessWidget {
                   Expanded(
                     child: Text(
                       '${marcacao.referencia}  ·  ${marcacao.versao.sigla}',
-                      style: tema.titleSmall?.copyWith(color: Cores.douradoClaro),
+                      style: tema.titleSmall?.copyWith(color: cor.secondary),
                     ),
                   ),
                   IconButton(
@@ -162,9 +269,18 @@ class _CartaoDeMarcacao extends StatelessWidget {
                   marcacao.capitulo,
                   marcacao.versiculo,
                 ),
+                // Falhar aqui deixava o cartão com o texto do versículo em branco,
+                // sem dizer nada. A referência e a nota continuam visíveis, então
+                // basta uma linha no lugar do versículo.
                 construir: (context, snap) => Text(
-                  snap.data ?? '',
-                  style: tema.bodyMedium?.copyWith(height: 1.55),
+                  snap.hasError
+                      ? 'Não foi possível carregar o texto deste versículo.'
+                      : snap.data ?? '',
+                  style: tema.bodyMedium?.copyWith(
+                    height: 1.55,
+                    fontStyle: snap.hasError ? FontStyle.italic : null,
+                    color: snap.hasError ? cor.onSurfaceVariant : null,
+                  ),
                 ),
               ),
               if (mostrarNota && marcacao.nota.isNotEmpty) ...[
@@ -173,15 +289,17 @@ class _CartaoDeMarcacao extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Cores.superficieAlta,
+                    color: cor.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(10),
                     border: Border(
-                      left: BorderSide(color: Cores.dourado, width: 3),
+                      left: BorderSide(color: cor.primary, width: 3),
                     ),
                   ),
                   child: Text(
                     marcacao.nota,
-                    style: tema.bodyMedium?.copyWith(fontStyle: FontStyle.italic),
+                    style: tema.bodyMedium?.copyWith(
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ),
               ],

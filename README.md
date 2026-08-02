@@ -20,12 +20,18 @@ Windows e Linux a partir do mesmo código).
   mês, com marcação de lido e barra de progresso do ano.
 - **Introduções aos 66 livros**, na voz de Spurgeon, com título formal do livro
   vindo da BKJ 1611.
-- **Favoritos e notas**: qualquer versículo pode ser marcado e anotado; tela
-  própria lista os favoritos e os que têm anotação.
+- **Favoritos e notas**: qualquer versículo pode ser marcado, anotado ou copiado;
+  tela própria lista os favoritos e os que têm anotação, e exporta uma cópia de
+  segurança de tudo (favoritos, notas e progresso) para reimportar em outro
+  aparelho.
 - **Busca** no texto da Bíblia.
+- **Tamanho do texto** ajustável e **tema claro ou escuro**, pela barra do leitor
+  ou do devocional. O padrão segue o aparelho, e dá para fixar um dos dois.
 - Layout responsivo: barra de navegação embaixo no celular, trilho lateral em
   janela larga (a partir de 720px), coluna de leitura com largura confortável
   no desktop.
+- Navegação por gesto e por teclado: deslizar troca de capítulo no celular; no
+  Windows e na web as setas passam de capítulo e `Ctrl+F` abre a busca.
 
 ## Telas
 
@@ -53,7 +59,7 @@ Windows e Linux a partir do mesmo código).
 lib/
   data/        modelos, canon (os 66 livros), leitura de conteúdo, estado persistido
   telas/       uma tela por arquivo (hoje, bíblia, devocional, plano, notas, busca...)
-  theme.dart   paleta marrom e dourada
+  theme.dart   as duas paletas: marrom e dourada, pergaminho e bronze
   main.dart    navegação (barra/trilho) e ponto de entrada
 assets/        Bíblias (BKJ e NVT), devocionais, introduções, cronograma, imagens, fontes
 tools/         scripts Python para gerar/validar o conteúdo a partir dos PDFs de origem

@@ -31,8 +31,55 @@
 
   <title>Felipe Ambrozini</title>
   <link rel="manifest" href="manifest.json">
+
+  <!--
+    O app é marrom escuro, e sem isto o navegador pinta branco puro até o Flutter
+    desenhar o primeiro frame: um flash claro na cara de quem abre no escuro. São
+    cerca de 870 KB só de fonte antes do primeiro texto, então a espera é visível.
+    A marca precisa ser retirada à mão: o Flutter acrescenta a flutter-view ao
+    body em vez de limpá-lo, então ela ficaria por cima do app. O evento
+    flutter-first-frame é o gancho de quando há o que mostrar embaixo.
+  -->
+  <style>
+    /* Claro por padrão e escuro por consulta de mídia, para o primeiro frame já
+       sair na cor que o app vai assumir. Com uma cor fixa, metade das pessoas
+       via um flash do tema contrário antes do Flutter desenhar. */
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #F7F1E3;
+    }
+    #carregando {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #7A5C12;
+      font: 600 15px/1.4 system-ui, sans-serif;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      /* Só aparece se a espera passar de meio segundo: numa conexão rápida um
+         texto piscando por 200 ms incomoda mais do que a espera. */
+      opacity: 0;
+      animation: surgir .3s ease-out .5s forwards;
+      /* Enquanto existe, não pode interceptar toque nenhum do app embaixo. */
+      pointer-events: none;
+    }
+    @keyframes surgir { to { opacity: 1; } }
+    @media (prefers-color-scheme: dark) {
+      html, body { background: #2E1B10; }
+      #carregando { color: #C9A227; }
+    }
+  </style>
 </head>
 <body>
+  <div id="carregando">Devocional</div>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      document.getElementById('carregando')?.remove();
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
