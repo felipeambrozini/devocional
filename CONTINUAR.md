@@ -71,18 +71,48 @@ próprio `promises.json`; os arquivos mensais intermediários de
   nascer e pôr do sol por geolocalização (`lib/data/sol.dart`,
   `lib/data/localizacao.dart`, pacote `geolocator`); tudo isso foi removido, junto
   das permissões de localização em Android, iOS e macOS.
+- **O ícone acompanha o tema só no iOS 18 e no favicon da web.** A foto vai sobre
+  pergaminho no claro e sobre marrom no escuro, e as duas artes saem do mesmo
+  recorte. Onde não dá, não dá por limitação do sistema, não da arte:
+
+  | Plataforma | Troca por tema? |
+  |---|---|
+  | iOS 18+ | Sim, três aparências: clara, escura e tingida |
+  | Web, favicon | Sim, por `prefers-color-scheme` no `index.html` |
+  | Web, ícone do PWA | Não, o manifesto não tem variante |
+  | Android | Não |
+  | Windows, macOS, Linux | Não, um `.ico`/`.icns` só |
+
+  No **Android** o único mecanismo reativo ao tema é a camada monocromática do
+  ícone adaptativo (`adaptive_icon_monochrome`), que é uma **silhueta de uma cor
+  chapada**, tingida pelo lançador. Uma foto de rosto vira exatamente a forma do
+  avatar de "sem foto", e o ícone parece quebrado em vez de temático. Foi testado
+  e descartado; não reabrir sem trocar a marca por um monograma ou símbolo.
+
+  Qualificador `-night` em recurso do Android **não** resolve: o lançador resolve
+  e guarda o ícone com a configuração dele, não com a do app.
+
+  Nas plataformas de um arquivo só, o ícone é o de **fundo escuro**, porque ele é
+  autossuficiente e se lê nos dois temas.
+
+  No iOS as artes clara e escura vão **opacas** de propósito. O gerador grava a
+  imagem como ela é, e o sistema só desenha fundo próprio quando a arte é
+  transparente, que não é o que se quer aqui. A tingida é a exceção: cinza e sem
+  fundo, porque nela quem pinta é o sistema.
 - **O ícone sai da foto, recortado no rosto.** As fontes ficam em `assets/icone/`
   e os arquivos por plataforma são gerados por `dart run flutter_launcher_icons`,
-  nunca editados à mão. Três fontes, e cada uma existe por um motivo:
-  `icone.png` (rosto ocupando 88%, fundo `#2E1B10`) para iOS, macOS, Windows,
-  Android legado e favicon; `icone_adaptativo.png` (60%, fundo transparente)
-  para a camada de frente do ícone adaptativo do Android, que o sistema recorta
-  em círculo, folha ou pílula; `icone_mascaravel.png` (60%, fundo chapado) para
-  os `Icon-maskable-*` da web, porque o Chrome recorta em círculo e descarta os
-  20% de fora. O gerador copia o ícone normal nos maskable, o que cortaria o
-  topo da cabeça, e gera o favicon em 16, embaçado em tela de retina; por isso
-  `tools/icones.py --corrigir` reescreve esses três depois dele. A ordem
-  completa, se precisar refazer:
+  nunca editados à mão. Cinco fontes, e cada uma existe por um motivo:
+  `icone.png` (rosto ocupando 88%, fundo `#2E1B10`) para Android, macOS, Windows,
+  iOS antigo e o modo escuro do iOS 18; `icone_claro.png` (88%, fundo `#F7F1E3`)
+  para a aparência "Any" do iOS 18, que é a do tema claro; `icone_tingido.png`
+  (88%, cinza, sem fundo) para a aparência tingida; `icone_adaptativo.png` (60%,
+  fundo transparente) para a camada de frente do ícone adaptativo do Android, que
+  o sistema recorta em círculo, folha ou pílula; `icone_mascaravel.png` (60%,
+  fundo chapado) para os `Icon-maskable-*` da web, porque o Chrome recorta em
+  círculo e descarta os 20% de fora. O gerador copia o ícone normal nos maskable,
+  o que cortaria o topo da cabeça, e gera o favicon em 16, embaçado em tela de
+  retina; por isso `tools/icones.py --corrigir` reescreve os maskable e os três
+  favicons depois dele. A ordem completa, se precisar refazer:
 
 ```bash
 python tools/icones.py --fontes

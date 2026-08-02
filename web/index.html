@@ -26,8 +26,14 @@
   <meta name="apple-mobile-web-app-title" content="Felipe Ambrozini">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
-  <!-- Favicon -->
+  <!--
+    Favicon por tema. O sem `media` vem primeiro e serve de reserva para quem
+    ignora o atributo; quem entende escolhe um dos dois de baixo. Os três saem
+    de tools/icones.py, nunca editados à mão.
+  -->
   <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" href="favicon-claro.png" media="(prefers-color-scheme: light)"/>
+  <link rel="icon" type="image/png" href="favicon-escuro.png" media="(prefers-color-scheme: dark)"/>
 
   <title>Felipe Ambrozini</title>
   <link rel="manifest" href="manifest.json">

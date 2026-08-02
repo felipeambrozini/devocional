@@ -32,6 +32,11 @@ dev_dependencies:
 # são gerados, não editados à mão:
 #   dart run flutter_launcher_icons
 flutter_launcher_icons:
+  # O icone universal e o de fundo escuro: Android, Windows, macOS e o iOS antigo
+  # leem um arquivo so, e nenhum desses tem variante por tema. O marrom se vira
+  # nos dois, que e' mais do que a alternativa: no Android o unico mecanismo
+  # reativo ao tema e' a camada monocromatica, uma silhueta de uma cor chapada,
+  # e uma foto de rosto vira o avatar de "sem foto".
   image_path: assets/icone/icone.png
   android: true
   # O Android recorta o ícone em círculo, folha ou pílula conforme o aparelho,
@@ -39,6 +44,14 @@ flutter_launcher_icons:
   adaptive_icon_background: "#2E1B10"
   adaptive_icon_foreground: assets/icone/icone_adaptativo.png
   ios: true
+  # As três aparências do iOS 18. A "Any" é a que vale no tema claro e nos iOS
+  # anteriores, então ela é a de pergaminho; a escura é a de marrom. As duas vão
+  # opacas de propósito: o gerador grava a imagem como ela é, e o sistema só
+  # desenha fundo próprio quando a arte é transparente, que não é o que se quer
+  # aqui. A tingida vai em cinza e sem fundo, porque nela quem pinta é o sistema.
+  image_path_ios: assets/icone/icone_claro.png
+  image_path_ios_dark_transparent: assets/icone/icone.png
+  image_path_ios_tinted_grayscale: assets/icone/icone_tingido.png
   # A App Store recusa ícone com canal alfa.
   remove_alpha_ios: true
   web:
