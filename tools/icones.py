@@ -87,8 +87,60 @@ def fontes() -> None:
     tingido.save(FONTES / 'icone_tingido.png')
     print(f'icone_tingido.png: {LADO}x{LADO}, cinza e sem fundo')
 
+    # Telas de abertura, para o flutter_native_splash. Sao sem fundo: quem poe a
+    # cor e' a configuracao, e por isso a mesma arte serve ao tema claro e ao
+    # escuro. Duas medidas porque o Android 12 mudou o mecanismo.
+    #
+    # A classica e' centralizada pelo sistema numa lona da cor escolhida.
+    _montar(rosto, 0.90, None).resize((640, 640), Image.LANCZOS) \
+        .save(FONTES / 'splash.png')
+    print('splash.png: 640x640, sem fundo')
+
+    # No Android 12+ quem desenha e' a SplashScreen do sistema, e ela recorta em
+    # circulo: sem fundo de icone, a arte vai numa lona de 1152 e precisa caber
+    # num circulo de 768 no meio. Os 55% deixam ombro e cabelo dentro do corte
+    # com folga; mais que isso e o sistema come as pontas.
+    lona12 = Image.new('RGBA', (1152, 1152), (0, 0, 0, 0))
+    d = round(1152 * 0.55)
+    lona12.alpha_composite(rosto.resize((d, d), Image.LANCZOS),
+                           ((1152 - d) // 2, round((1152 - d) * 0.60)))
+    lona12.save(FONTES / 'splash_android12.png')
+    print('splash_android12.png: 1152x1152, arte dentro do circulo de 768')
+
+
+def _fundo_do_icone_no_escuro() -> None:
+    """Variante escura do fundo do icone adaptativo do Android.
+
+    O `mipmap-anydpi-v26/ic_launcher.xml` aponta o fundo para
+    `@color/ic_launcher_background`, e recurso de cor aceita o qualificador
+    `-night`. O gerador so escreve `values/colors.xml`, com o valor do pubspec,
+    entao a variante escura tem que ser acrescentada depois dele, ou ele a
+    apagaria na proxima rodada.
+
+    Nao e' mecanismo documentado, e depende de o lancador resolver o icone com a
+    configuracao dele, que segue o modo escuro do sistema. Lancadores guardam
+    icone em cache, entao pode nao virar sem reinstalar. Se um dia parar de
+    funcionar, o icone fica no claro, que e' o valor do pubspec.
+    """
+    destino = RAIZ / 'android/app/src/main/res/values-night/colors.xml'
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    cor = '#%02X%02X%02X' % FUNDO_ESCURO[:3]
+    destino.write_text(
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        # Sem hifen duplo no comentario: XML nao permite "--" dentro dele, e o
+        # merge de recursos do Gradle falha com erro de parser.
+        '<!-- Gerado por tools/icones.py, passo corrigir. Nao editar a mao. -->\n'
+        '<resources>\n'
+        f'    <color name="ic_launcher_background">{cor}</color>\n'
+        '</resources>\n',
+        encoding='utf-8',
+    )
+    print(f'values-night/colors.xml: fundo do icone {cor} no tema escuro')
+
 
 def corrigir() -> None:
+    _fundo_do_icone_no_escuro()
+
     mascaravel = Image.open(FONTES / 'icone_mascaravel.png').convert('RGBA')
     for lado in (192, 512):
         destino = RAIZ / f'web/icons/Icon-maskable-{lado}.png'

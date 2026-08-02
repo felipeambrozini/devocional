@@ -5,6 +5,7 @@ import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:felipe_ambrozini/main.dart';
 import 'package:felipe_ambrozini/telas/biblia.dart';
 import 'package:felipe_ambrozini/telas/busca.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -54,6 +55,83 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
     await tester.pumpAndSettle();
     expect(estado.ultimaLeitura, ('genesis', 1));
+  });
+
+  group('chevrons de capítulo no rodapé', () {
+    // No celular deslizar já passa a página, e a barra custava uma faixa do fim
+    // de toda tela logo acima da barra de navegação. No Windows e na web ela
+    // fica: arrastar com o mouse funciona, mas ninguém descobre sem um dedo na
+    // tela, e as setas do teclado também não se anunciam.
+    Future<void> abrirLeitor(WidgetTester tester) async {
+      await aquecer(tester);
+      await tester.pumpWidget(
+        EscopoDoEstado(
+          estado: Estado(await SharedPreferences.getInstance()),
+          child: const MaterialApp(home: TelaBiblia()),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    /// Roda o corpo fingindo outra plataforma, e desfaz antes de sair.
+    ///
+    /// O `addTearDown` nao serve: o framework confere que as variaveis de
+    /// depuracao voltaram ao normal **antes** de rodar os tear downs, e acusa
+    /// "a foundation debug variable was changed by the test". O `finally`
+    /// garante que desfaz mesmo se a expectativa falhar.
+    Future<void> comoSe(
+      TargetPlatform plataforma,
+      Future<void> Function() corpo,
+    ) async {
+      debugDefaultTargetPlatformOverride = plataforma;
+      try {
+        await corpo();
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    }
+
+    for (final plataforma in [TargetPlatform.android, TargetPlatform.iOS]) {
+      testWidgets('não aparecem no $plataforma', (tester) async {
+        await comoSe(plataforma, () async {
+          await abrirLeitor(tester);
+          expect(find.byIcon(Icons.chevron_right), findsNothing);
+          expect(find.byIcon(Icons.chevron_left), findsNothing);
+        });
+      });
+    }
+
+    for (final plataforma in [
+      TargetPlatform.windows,
+      TargetPlatform.macOS,
+      TargetPlatform.linux,
+    ]) {
+      testWidgets('aparecem e funcionam no $plataforma', (tester) async {
+        await comoSe(plataforma, () async {
+          await abrirLeitor(tester);
+          expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+
+          await tester.tap(find.byIcon(Icons.chevron_right));
+          await tester.pumpAndSettle();
+          expect(find.text('Gênesis 2'), findsWidgets);
+        });
+      });
+    }
+
+    testWidgets('em Gênesis 1 o chevron de voltar fica desligado', (
+      tester,
+    ) async {
+      await comoSe(TargetPlatform.windows, () async {
+        await abrirLeitor(tester);
+        final voltar = tester.widget<IconButton>(
+          find.ancestor(
+            of: find.byIcon(Icons.chevron_left),
+            matching: find.byType(IconButton),
+          ),
+        );
+        expect(voltar.onPressed, isNull, reason: 'não há capítulo antes deste');
+      });
+    });
   });
 
   testWidgets('Ctrl+F abre a busca', (tester) async {

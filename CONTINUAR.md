@@ -71,7 +71,49 @@ próprio `promises.json`; os arquivos mensais intermediários de
   nascer e pôr do sol por geolocalização (`lib/data/sol.dart`,
   `lib/data/localizacao.dart`, pacote `geolocator`); tudo isso foi removido, junto
   das permissões de localização em Android, iOS e macOS.
-- **O ícone acompanha o tema só no iOS 18 e no favicon da web.** A foto vai sobre
+- **Os chevrons de capítulo só existem onde não há gesto de toque.** No celular
+  deslizar já passa a página, e a barra custava uma faixa do fim de toda tela,
+  logo acima da barra de navegação, para repetir o que o dedo faz. No Windows, no
+  macOS, no Linux e na web ela fica: arrastar com o botão do mouse apertado
+  dispara o mesmo reconhecedor, mas ninguém descobre isso sem um dedo na tela, e
+  as setas do teclado também não se anunciam.
+
+  É a **única ramificação por plataforma do app**, e existe porque a forma de
+  apontar muda de verdade entre elas, ao contrário do armazenamento. A web entra
+  pelo pior caso: pode estar num desktop sem toque.
+
+  O `_semGestoDeToque` de `lib/telas/biblia.dart` é getter e não `static final`:
+  guardado numa constante, o valor seria fixado na primeira leitura e o teste que
+  troca a plataforma passaria a medir a anterior. E no teste, desfazer
+  `debugDefaultTargetPlatformOverride` tem que ser dentro do corpo, num
+  `finally`, porque o framework confere as variáveis de depuração **antes** de
+  rodar os `addTearDown`.
+- **Tela de abertura e ícone do lançador são coisas diferentes, e só uma delas
+  acompanha o tema em todo lugar.** É fácil confundir: no Android 12+ o sistema
+  desenha o **ícone do lançador no meio da splash**, então um ícone escuro sobre
+  uma splash branca parece "o ícone errado para o tema", quando o que está errado
+  é a splash.
+
+  A **splash** troca por tema em todas as plataformas, porque é desenhada com os
+  recursos do próprio app. Vem do `flutter_native_splash`, configurado no
+  `pubspec.yaml`: uma arte só, sem fundo, e duas cores. Regerar com:
+
+```bash
+dart run flutter_native_splash:create
+```
+
+  Antes disso o projeto tinha o modelo padrão do Flutter, que abre em **branco**
+  no tema claro e em preto no escuro; nenhum dos dois é cor deste app.
+
+  `web: false` de propósito: a abertura da web já está resolvida à mão em
+  `web/index.html`, com a cor por `prefers-color-scheme` e o marcador retirado no
+  `flutter-first-frame`. Deixar o gerador mexer ali sobrescreveria isso.
+
+  O que ele gera, para conferir se algum dia parar de funcionar: `values-v31/` e
+  `values-night-v31/` com `windowSplashScreenBackground` (Android 12+),
+  `drawable/` e `drawable-night/` com `background.png` de 1x1 na cor, e
+  `LaunchBackground.imageset` com as aparências `any` e `dark` no iOS.
+- **O ícone do lançador acompanha o tema só no iOS 18 e no favicon da web.** A foto vai sobre
   pergaminho no claro e sobre marrom no escuro, e as duas artes saem do mesmo
   recorte. Onde não dá, não dá por limitação do sistema, não da arte:
 

@@ -26,6 +26,7 @@ dev_dependencies:
 
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
 
 # Ícone do app e favicon, gerados da foto do Felipe recortada no rosto sobre o
 # marrom do tema. As fontes ficam em assets/icone/; os arquivos por plataforma
@@ -41,7 +42,12 @@ flutter_launcher_icons:
   android: true
   # O Android recorta o ícone em círculo, folha ou pílula conforme o aparelho,
   # então a camada de frente tem folga de sobra e o fundo é chapado.
-  adaptive_icon_background: "#2E1B10"
+  #
+  # Claro aqui, e não marrom: este valor vira `@color/ic_launcher_background` em
+  # values/colors.xml, e `tools/icones.py --corrigir` acrescenta a variante
+  # values-night/ com o marrom. É a única forma de o ícone do lançador seguir o
+  # tema no Android, e não é mecanismo documentado. Ver CONTINUAR.md.
+  adaptive_icon_background: "#F7F1E3"
   adaptive_icon_foreground: assets/icone/icone_adaptativo.png
   ios: true
   # As três aparências do iOS 18. A "Any" é a que vale no tema claro e nos iOS
@@ -63,6 +69,31 @@ flutter_launcher_icons:
   windows:
     generate: true
     icon_size: 256
+
+# Tela de abertura nativa, gerada por:
+#   dart run flutter_native_splash:create
+#
+# Sem isto o Android usa o modelo padrão do Flutter e abre em branco no tema
+# claro e em preto no escuro, e nenhum dos dois é a cor do app. No Android 12+ o
+# sistema ainda desenha o ícone do lançador no meio dessa lona, o que fazia o
+# ícone marrom aparecer sobre branco e parecer o ícone errado para o tema.
+#
+# Aqui, ao contrário do ícone do lançador, a troca por tema funciona em todas as
+# plataformas: a splash é desenhada com os recursos do próprio app.
+flutter_native_splash:
+  # Uma arte só, sem fundo, e duas cores. O rosto é o mesmo nos dois temas; quem
+  # muda é a lona atrás, Cores.pergaminho e Cores.fundo de lib/theme.dart.
+  color: "#F7F1E3"
+  color_dark: "#2E1B10"
+  image: assets/icone/splash.png
+  android_12:
+    color: "#F7F1E3"
+    color_dark: "#2E1B10"
+    image: assets/icone/splash_android12.png
+  # A web já tem a própria abertura em web/index.html, com a cor por
+  # prefers-color-scheme e um marcador retirado no flutter-first-frame. Deixar o
+  # gerador mexer ali sobrescreveria isso.
+  web: false
 
 flutter:
 

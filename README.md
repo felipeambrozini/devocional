@@ -90,8 +90,19 @@ flutter build windows   # Windows
 flutter build macos     # macOS
 ```
 
-Ícone do app e favicon são gerados por `dart run flutter_launcher_icons` a
-partir das fontes em `assets/icone/`; nunca editados à mão (ver `CONTINUAR.md`).
+Ícone do app, favicon e tela de abertura são gerados a partir das fontes em
+`assets/icone/`; nunca editados à mão (ver `CONTINUAR.md`).
+
+```bash
+python tools/icones.py --fontes
+dart run flutter_launcher_icons
+dart run flutter_native_splash:create
+python tools/icones.py --corrigir
+```
+
+A **tela de abertura** acompanha o tema do aparelho em todas as plataformas. O
+**ícone do lançador** só no iOS 18 e no favicon da web: Android, Windows, macOS e
+Linux leem um arquivo só e não têm variante por tema.
 
 ## Conteúdo
 

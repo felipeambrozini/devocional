@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -91,6 +93,27 @@ class _TelaBibliaState extends State<TelaBiblia> {
     MaterialPageRoute(builder: (_) => const TelaBusca()),
   );
 
+  /// Se vale a pena gastar uma faixa do rodapé com os chevrons de capítulo.
+  ///
+  /// No celular não vale: deslizar já passa a página, e a barra ficava logo
+  /// acima da barra de navegação repetindo o que o dedo faz. No Windows e na web
+  /// vale, porque ali quem usa só o mouse não tem gesto: arrastar com o botão
+  /// apertado funciona, mas ninguém descobre isso, e as setas do teclado também
+  /// não se anunciam.
+  ///
+  /// É a única ramificação por plataforma do app, e existe porque a forma de
+  /// apontar muda de verdade entre elas. A web entra pelo pior caso: pode estar
+  /// num desktop sem toque.
+  ///
+  /// Getter, e não `static final`: guardado numa constante, o valor seria fixado
+  /// na primeira leitura e o teste que troca a plataforma passaria a medir a
+  /// anterior.
+  bool get _semGestoDeToque =>
+      kIsWeb ||
+      defaultTargetPlatform == TargetPlatform.windows ||
+      defaultTargetPlatform == TargetPlatform.macOS ||
+      defaultTargetPlatform == TargetPlatform.linux;
+
   @override
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
@@ -182,8 +205,11 @@ class _TelaBibliaState extends State<TelaBiblia> {
                           titulo: 'Capítulo não encontrado',
                         );
                       }
-                      // Deslizar é o gesto esperado num leitor de celular; os
-                      // chevrons do rodapé continuam, para quem usa mouse.
+                      // Arrastar na horizontal passa de capítulo. Vale no desktop
+                      // também: arrasto com o botão do mouse apertado dispara o mesmo
+                      // reconhecedor. Só que ninguém descobre isso sem um dedo na
+                      // tela, e é por isso que os chevrons continuam lá embaixo em
+                      // quem não tem toque. Ver [_semGestoDeToque].
                       return GestureDetector(
                         onHorizontalDragEnd: (detalhe) {
                           final velocidade = detalhe.primaryVelocity ?? 0;
@@ -199,14 +225,15 @@ class _TelaBibliaState extends State<TelaBiblia> {
                     },
                   ),
                 ),
-                _BarraDeCapitulo(
-                  podeVoltar: !(_livro == canon.first.slug && _capitulo == 1),
-                  podeAvancar:
-                      !(_livro == canon.last.slug &&
-                          _capitulo == canon.last.capitulos),
-                  aoVoltar: () => _passarCapitulo(-1),
-                  aoAvancar: () => _passarCapitulo(1),
-                ),
+                if (_semGestoDeToque)
+                  _BarraDeCapitulo(
+                    podeVoltar: !(_livro == canon.first.slug && _capitulo == 1),
+                    podeAvancar:
+                        !(_livro == canon.last.slug &&
+                            _capitulo == canon.last.capitulos),
+                    aoVoltar: () => _passarCapitulo(-1),
+                    aoAvancar: () => _passarCapitulo(1),
+                  ),
               ],
             ),
           ),
@@ -475,45 +502,6 @@ class _Leitor extends StatelessWidget {
   }
 }
 
-class _BarraDeCapitulo extends StatelessWidget {
-  const _BarraDeCapitulo({
-    required this.podeVoltar,
-    required this.podeAvancar,
-    required this.aoVoltar,
-    required this.aoAvancar,
-  });
-
-  final bool podeVoltar;
-  final bool podeAvancar;
-  final VoidCallback aoVoltar;
-  final VoidCallback aoAvancar;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            IconButton(
-              tooltip: 'Capítulo anterior',
-              onPressed: podeVoltar ? aoVoltar : null,
-              icon: const Icon(Icons.chevron_left),
-            ),
-            IconButton(
-              tooltip: 'Próximo capítulo',
-              onPressed: podeAvancar ? aoAvancar : null,
-              icon: const Icon(Icons.chevron_right),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// Seletor em duas etapas: escolhe o livro, depois o capítulo numa grade.
 class _SeletorDeLivro extends StatefulWidget {
   const _SeletorDeLivro({required this.livroAtual});
@@ -641,6 +629,50 @@ class _GradeDeCapitulos extends StatelessWidget {
           side: BorderSide(color: cor.outline.withValues(alpha: 0.6)),
         ),
         child: Text('${i + 1}', style: Theme.of(context).textTheme.bodyMedium),
+      ),
+    );
+  }
+}
+
+/// Rodapé com os dois chevrons de capítulo.
+///
+/// Só é montado onde não há gesto de toque; ver `_semGestoDeToque` em
+/// [_TelaBibliaState]. No celular deslizar já faz isso, e a barra custava uma
+/// faixa do fim de toda tela, logo acima da barra de navegação.
+class _BarraDeCapitulo extends StatelessWidget {
+  const _BarraDeCapitulo({
+    required this.podeVoltar,
+    required this.podeAvancar,
+    required this.aoVoltar,
+    required this.aoAvancar,
+  });
+
+  final bool podeVoltar;
+  final bool podeAvancar;
+  final VoidCallback aoVoltar;
+  final VoidCallback aoAvancar;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            IconButton(
+              tooltip: 'Capítulo anterior',
+              onPressed: podeVoltar ? aoVoltar : null,
+              icon: const Icon(Icons.chevron_left),
+            ),
+            IconButton(
+              tooltip: 'Próximo capítulo',
+              onPressed: podeAvancar ? aoAvancar : null,
+              icon: const Icon(Icons.chevron_right),
+            ),
+          ],
+        ),
       ),
     );
   }
