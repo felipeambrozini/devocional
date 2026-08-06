@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'data/estado.dart';
+import 'data/lembretes.dart';
 import 'data/modelos.dart';
 import 'telas/biblia.dart';
 import 'telas/devocional.dart';
@@ -10,10 +11,53 @@ import 'telas/notas.dart';
 import 'telas/plano.dart';
 import 'theme.dart';
 
+/// De módulo, e não de um State: o toque numa notificação chega por um
+/// callback do plugin que não tem `BuildContext` de tela nenhuma, e pode
+/// acontecer com o app em qualquer lugar da árvore.
+final navigatorKey = GlobalKey<NavigatorState>();
+
+TimeOfDay _horaDe(int minutos) =>
+    TimeOfDay(hour: minutos ~/ 60, minute: minutos % 60);
+
+/// Abre a leitura da notificação por cima do que estiver na tela, igual ao
+/// "Continuar leitura" da tela Hoje. `chave` é "manha", "promessas" ou
+/// "noite" — ver o contrato em `lib/data/lembretes.dart`.
+void _abrirLeituraDoLembrete(String chave) {
+  final leitura = Leitura.values.where((l) => l.name == chave).firstOrNull;
+  if (leitura == null) return;
+  navigatorKey.currentState?.push(
+    MaterialPageRoute(builder: (_) => TelaDevocional(leituraInicial: leitura)),
+  );
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final estado = await Estado.abrir();
+
+  await Lembretes.instancia.inicializar(
+    aoTocarNotificacao: _abrirLeituraDoLembrete,
+  );
+  // Cobre o reboot do aparelho: notificação agendada é apagada pelo sistema
+  // quando ele reinicia, e só volta quando o app abre de novo. Ver
+  // CONTINUAR.md.
+  if (estado.lembretesAtivos) {
+    await Lembretes.instancia.agendar(
+      manhaEPromessas: _horaDe(estado.minutosLembreteManha),
+      noite: _horaDe(estado.minutosLembreteNoite),
+    );
+  }
+  // Precisa vir antes do runApp: depois dele o plugin já não sabe dizer que
+  // toque abriu o app, só qual chegou com o app já aberto.
+  final chaveDeAbertura = await Lembretes.instancia.chaveQueAbriuOApp();
+
   runApp(AppDevocional(estado: estado));
+
+  if (chaveDeAbertura != null) {
+    // O Navigator só existe depois do primeiro quadro.
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _abrirLeituraDoLembrete(chaveDeAbertura),
+    );
+  }
 }
 
 class AppDevocional extends StatefulWidget {
@@ -59,6 +103,7 @@ class _AppDevocionalState extends State<AppDevocional> {
     return EscopoDoEstado(
       estado: widget.estado,
       child: MaterialApp(
+        navigatorKey: navigatorKey,
         title: 'Devocional',
         debugShowCheckedModeBanner: false,
         // Os dois temas vão sempre montados, e o `themeMode` escolhe. Assim

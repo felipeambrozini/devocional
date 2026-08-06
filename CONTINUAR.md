@@ -7,7 +7,7 @@ precisar reconstruir nenhuma decisão.
 
 | Item | Situação |
 |---|---|
-| App Flutter (mobile + web) | Completo. `flutter analyze` limpo, 458 testes passando |
+| App Flutter (mobile + web) | Completo. `flutter analyze` limpo, 541 testes passando |
 | BKJ 1611 | 66 livros, 1189 capítulos, **31.102 versículos, bate exatamente com o canon** |
 | NVT | 31.104 versículos; os 2 desvios são `3 João 1:15` e `Ap 12:18`, versificação da NLT |
 | Manhã e Noite | 366 dias, todos com manhã e noite |
@@ -247,7 +247,68 @@ python tools/icones.py --corrigir
 - **A cópia de segurança das notas vai pela área de transferência**, não por
   arquivo, porque salvar arquivo exigiria ramificar por plataforma, que é o que o
   app evitou desde o começo. Importar **funde**, nunca substitui, e em conflito
-  vence quem tem nota, pela mesma razão de `alternarFavorito`.
+  vence quem tem nota, pela mesma razão de `alternarFavorito`. `share_plus` já é
+  dependência do app desde que o versículo ganhou "Compartilhar", mas a cópia
+  continua pela área de transferência de propósito: exportar por arquivo trocaria
+  o "importar" por escolher um arquivo em vez de colar, e colar é o caminho
+  simétrico, a mesma caixa de texto serve para os dois lados.
+- **A busca das Marcações filtra referência e nota, não o corpo do versículo.**
+  O texto do versículo é carregado sob demanda, um por cartão
+  (`Conteudo.instancia.versiculo`), e trazer todos para caber numa busca em
+  memória derrubaria exatamente o carregamento tardio que o app inteiro foi
+  desenhado para ter. Limitação deliberada, documentada em
+  `lib/telas/notas.dart`, não um esquecimento.
+- **Compartilhar e Copiar usam o mesmo texto formatado**, uma função só
+  (`_textoDoVersiculo` em `lib/telas/biblia.dart`) para não duplicar o formato
+  entre as duas ações. Em teste, `Clipboard.getData` **trava para sempre** no
+  ambiente de widget test (responde `setData`, nunca responde `getData`); a
+  forma de verificar o texto copiado é um `setMockMethodCallHandler` próprio no
+  canal `SystemChannels.platform`, capturando o argumento de `Clipboard.setData`
+  em vez de tentar ler de volta.
+- **Os lembretes diários só existem em Android e iOS**
+  (`lembretesSuportados` em `lib/data/lembretes.dart`). Não é falta de
+  tentativa: notificação com o app fechado exige um agendador de sistema que o
+  `flutter_local_notifications` de fato controla, e nem web nem desktop têm
+  isso de forma confiável — o mesmo raciocínio que já tirou a camada
+  monocromática do ícone do Android.
+
+  **Notificação inexata (`AndroidScheduleMode.inexactAllowWhileIdle`), não
+  exata.** Exata exige `SCHEDULE_EXACT_ALARM`, que no Android 14 o usuário
+  precisa conceder à mão em Configurações — fluxo pesado para "leia seu
+  devocional de manhã", onde uma janela de alguns minutos não importa. Só a
+  permissão comum de notificação é pedida (`pedirPermissao`).
+
+  **`data/` continua sem importar `telas/`.** `Leitura` vive em
+  `lib/telas/devocional.dart`, não em `lib/data/`; `lembretes.dart` fala em
+  `chave` (string: "manha", "promessas", "noite"), e é `main.dart` — que já
+  importa os dois lados — quem faz `Leitura.values.byName(chave)`. Se um dia o
+  nome do enum mudar, esse é o ponto de quebra.
+
+  **`Lembretes` é interface, não classe** (`Lembretes.instancia`, mutável), com
+  uma implementação real e uma falsa (`_LembretesFalsas` em
+  `test/lembretes_test.dart`): testar horário e payload contra o plugin de
+  verdade exigiria canal de plataforma que o ambiente de teste não tem.
+
+  **`tz.local` é UTC por padrão** no pacote `timezone` — `initializeTimeZones()`
+  só carrega o banco, não escolhe o fuso do aparelho. Sem
+  `flutter_timezone` + `tz.setLocalLocation(...)`, 6h escolhido pelo usuário
+  viraria 6h UTC, 3h no Brasil. Se a detecção falhar, cai em UTC em vez de
+  travar o app: horário errado é recuperável no ajuste, app que não abre não é.
+
+  **`android/app/build.gradle.kts` precisa de `isCoreLibraryDesugaringEnabled`
+  e `coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")`.** Sem
+  isso o Gradle recusa o build com "requires core library desugaring", porque o
+  plugin usa `java.time` por baixo.
+
+  **A folha de ajustes ficou alta o bastante para rolar** com a seção
+  Lembretes (interruptor mais dois horários) somada a Tamanho e Aparência —
+  `ajustesDeLeitura` usa `isScrollControlled: true` e `SingleChildScrollView`
+  desde então.
+
+  **Sem receptor de `BOOT_COMPLETED`.** Notificação agendada é apagada pelo
+  Android num reboot do aparelho; só volta quando o app abre de novo, porque
+  `main()` reagenda se `lembretesAtivos`. Ponytail: se isso incomodar na
+  prática, o caminho é um `BroadcastReceiver` escutando o boot.
 - **A assinatura de Spurgeon é tinta dourada chapada (`#E3C567`).** Num tema
   claro ela sumiria; o caminho é tingir o mesmo asset pelo tema, não ter duas
   imagens.

@@ -322,4 +322,40 @@ void main() {
       expect(estado.ehFavorito(Versao.bkj, 'joao', 3, 16), isTrue);
     });
   });
+
+  group('lembretes diarios', () {
+    test(
+      'comeca desligado, em 6h e 18h, e persiste o que for mudado',
+      () async {
+        final estado = await Estado.abrir();
+        expect(estado.lembretesAtivos, isFalse);
+        expect(estado.minutosLembreteManha, 6 * 60);
+        expect(estado.minutosLembreteNoite, 18 * 60);
+
+        await estado.definirLembretesAtivos(true);
+        await estado.definirHorariosDeLembrete(
+          minutosManha: 7 * 60,
+          minutosNoite: 21 * 60 + 30,
+        );
+
+        final relido = await reabrir();
+        expect(relido.lembretesAtivos, isTrue);
+        expect(relido.minutosLembreteManha, 7 * 60);
+        expect(relido.minutosLembreteNoite, 21 * 60 + 30);
+      },
+    );
+
+    test(
+      'minutos fora de 0..1439 gravados por fora voltam ao padrao',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          'minutos_lembrete_manha': -1,
+          'minutos_lembrete_noite': 24 * 60,
+        });
+        final estado = await Estado.abrir();
+        expect(estado.minutosLembreteManha, 6 * 60);
+        expect(estado.minutosLembreteNoite, 18 * 60);
+      },
+    );
+  });
 }

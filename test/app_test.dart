@@ -8,6 +8,7 @@ import 'package:felipe_ambrozini/telas/comuns.dart';
 import 'package:felipe_ambrozini/telas/devocional.dart';
 import 'package:felipe_ambrozini/telas/plano.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -408,6 +409,59 @@ void main() {
 
     expect(estado.ehFavorito(Versao.bkj, 'genesis', 1, 1), isTrue);
   });
+
+  testWidgets(
+    'a folha do versículo tem Compartilhar, e Copiar usa o mesmo texto formatado',
+    (tester) async {
+      await aquecerAssets(tester);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EscopoDoEstado(
+            estado: await estadoLimpo(),
+            child: const TelaBiblia(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) =>
+              w is RichText &&
+              w.text.toPlainText().contains('No princípio criou Deus'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Compartilhar existe na folha. Não é tocado: share_plus fala com um
+      // canal de plataforma que o ambiente de teste não tem handler para, e
+      // tocar de verdade lançaria MissingPluginException. O texto que ele
+      // manda é o mesmo de Copiar, testado abaixo.
+      expect(find.text('Compartilhar'), findsOneWidget);
+
+      // Handler próprio no canal de plataforma, e não Clipboard.getData: o
+      // ambiente de teste responde Clipboard.setData mas nunca responde
+      // Clipboard.getData, e a chamada trava para sempre em vez de lançar.
+      // Capturando o argumento aqui, o teste nem depende desse comportamento.
+      String? copiado;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (chamada) async {
+          if (chamada.method == 'Clipboard.setData') {
+            copiado = (chamada.arguments as Map)['text'] as String?;
+          }
+          return null;
+        },
+      );
+
+      await tester.tap(find.text('Copiar'));
+      await tester.pumpAndSettle();
+      expect(
+        copiado,
+        '"No princípio criou Deus o céu e a terra."\nGênesis 1:1 (BKJ)',
+      );
+    },
+  );
 
   testWidgets(
     'o devocional tem as três abas e Promessas traz o versículo da BKJ',

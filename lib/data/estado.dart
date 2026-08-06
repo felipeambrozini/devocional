@@ -23,6 +23,15 @@ class Estado extends ChangeNotifier {
   static const _kUltima = 'ultima_leitura';
   static const _kEscala = 'escala_de_leitura';
   static const _kModoDoTema = 'modo_do_tema';
+  static const _kLembretesAtivos = 'lembretes_ativos';
+  static const _kMinutosLembreteManha = 'minutos_lembrete_manha';
+  static const _kMinutosLembreteNoite = 'minutos_lembrete_noite';
+
+  /// 6h e 18h, os horários padrão do lembrete. Minutos desde meia-noite, não
+  /// `TimeOfDay`: `estado.dart` não importa `material.dart`, e um `int` grava
+  /// direto no `SharedPreferences` sem serialização própria.
+  static const minutosPadraoManha = 6 * 60;
+  static const minutosPadraoNoite = 18 * 60;
 
   final SharedPreferences _prefs;
 
@@ -42,6 +51,13 @@ class Estado extends ChangeNotifier {
 
   /// Claro, escuro ou o do aparelho. Padrão: o do aparelho.
   ModoDoTema _modoDoTema = ModoDoTema.sistema;
+
+  /// Se os três lembretes diários estão ligados. Padrão false: notificação é
+  /// opt-in, nunca ligada sem o usuário pedir.
+  bool _lembretesAtivos = false;
+
+  int _minutosLembreteManha = minutosPadraoManha;
+  int _minutosLembreteNoite = minutosPadraoNoite;
 
   static Future<Estado> abrir() async =>
       Estado(await SharedPreferences.getInstance());
@@ -93,7 +109,22 @@ class Estado extends ChangeNotifier {
       (m) => m.chave == modo,
       orElse: () => ModoDoTema.sistema,
     );
+
+    _lembretesAtivos = _prefs.getBool(_kLembretesAtivos) ?? false;
+    _minutosLembreteManha = _minutosValidos(
+      _prefs.getInt(_kMinutosLembreteManha),
+      minutosPadraoManha,
+    );
+    _minutosLembreteNoite = _minutosValidos(
+      _prefs.getInt(_kMinutosLembreteNoite),
+      minutosPadraoNoite,
+    );
   }
+
+  /// Um valor fora de 0..1439 não é um horário do dia; volta ao padrão em vez
+  /// de deixar o lembrete agendado para uma hora que não existe.
+  int _minutosValidos(int? gravado, int padrao) =>
+      (gravado != null && gravado >= 0 && gravado < 24 * 60) ? gravado : padrao;
 
   // --- claro ou escuro ------------------------------------------------------ //
 
@@ -104,6 +135,40 @@ class Estado extends ChangeNotifier {
     _modoDoTema = novo;
     notifyListeners();
     await _prefs.setString(_kModoDoTema, novo.chave);
+  }
+
+  // --- lembretes diários ---------------------------------------------------- //
+
+  bool get lembretesAtivos => _lembretesAtivos;
+
+  /// Minutos desde meia-noite. Some ao aparelho quem lê a UI; o `Estado` só
+  /// guarda o número.
+  int get minutosLembreteManha => _minutosLembreteManha;
+  int get minutosLembreteNoite => _minutosLembreteNoite;
+
+  /// Só liga/desliga e persiste; quem agenda de verdade no plugin é a tela que
+  /// chama isto, com `Lembretes.instancia` (`estado.dart` não fala com
+  /// plataforma nenhuma, só com `SharedPreferences`).
+  Future<void> definirLembretesAtivos(bool novo) async {
+    if (novo == _lembretesAtivos) return;
+    _lembretesAtivos = novo;
+    notifyListeners();
+    await _prefs.setBool(_kLembretesAtivos, novo);
+  }
+
+  Future<void> definirHorariosDeLembrete({
+    required int minutosManha,
+    required int minutosNoite,
+  }) async {
+    if (minutosManha == _minutosLembreteManha &&
+        minutosNoite == _minutosLembreteNoite) {
+      return;
+    }
+    _minutosLembreteManha = minutosManha;
+    _minutosLembreteNoite = minutosNoite;
+    notifyListeners();
+    await _prefs.setInt(_kMinutosLembreteManha, minutosManha);
+    await _prefs.setInt(_kMinutosLembreteNoite, minutosNoite);
   }
 
   // --- tamanho do texto de leitura ----------------------------------------- //

@@ -7,16 +7,48 @@ import '../data/modelos.dart';
 import 'biblia.dart';
 import 'comuns.dart';
 
-/// Favoritos e anotações, em duas abas.
-class TelaNotas extends StatelessWidget {
+/// Favoritos e anotações, em duas abas, com busca.
+class TelaNotas extends StatefulWidget {
   const TelaNotas({super.key});
+
+  @override
+  State<TelaNotas> createState() => _TelaNotasState();
+}
+
+class _TelaNotasState extends State<TelaNotas> {
+  final _controle = TextEditingController();
+  String _busca = '';
+
+  @override
+  void dispose() {
+    _controle.dispose();
+    super.dispose();
+  }
+
+  /// Filtra por referência (ex. "João 3:16") e pelo texto da própria nota.
+  ///
+  /// Não pelo corpo do versículo: ele é carregado sob demanda, um por cartão
+  /// (ver `Conteudo.instancia.versiculo` abaixo), e trazer todos para buscar
+  /// no corpo derrubaria exatamente o carregamento tardio que o app inteiro
+  /// foi desenhado para ter.
+  List<Marcacao> _filtrar(List<Marcacao> itens) {
+    if (_busca.isEmpty) return itens;
+    final alvo = Conteudo.normalizar(_busca);
+    return itens
+        .where(
+          (m) =>
+              Conteudo.normalizar(m.referencia).contains(alvo) ||
+              Conteudo.normalizar(m.nota).contains(alvo),
+        )
+        .toList();
+  }
 
   @override
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     final estado = EscopoDoEstado.de(context);
-    final favoritos = estado.marcacoes;
-    final notas = estado.comNota;
+    final favoritos = _filtrar(estado.marcacoes);
+    final notas = _filtrar(estado.comNota);
 
     return DefaultTabController(
       length: 2,
@@ -59,23 +91,61 @@ class TelaNotas extends StatelessWidget {
           ),
         ),
         body: LarguraDeLeitura(
-          child: TabBarView(
+          child: Column(
             children: [
-              _Lista(
-                itens: favoritos,
-                vazio: const AvisoVazio(
-                  icone: Icons.bookmark_outline,
-                  titulo: 'Nenhum favorito',
-                  detalhe: 'Toque num versículo na Bíblia para favoritá-lo.',
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: TextField(
+                  controller: _controle,
+                  onChanged: (v) => setState(() => _busca = v),
+                  decoration: InputDecoration(
+                    hintText: 'Buscar por referência ou anotação',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _busca.isEmpty
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () => setState(() {
+                              _controle.clear();
+                              _busca = '';
+                            }),
+                          ),
+                  ),
                 ),
               ),
-              _Lista(
-                itens: notas,
-                mostrarNota: true,
-                vazio: const AvisoVazio(
-                  icone: Icons.edit_note,
-                  titulo: 'Nenhuma anotação',
-                  detalhe: 'Toque num versículo na Bíblia para anotar.',
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    _Lista(
+                      itens: favoritos,
+                      vazio: _busca.isEmpty
+                          ? const AvisoVazio(
+                              icone: Icons.bookmark_outline,
+                              titulo: 'Nenhum favorito',
+                              detalhe:
+                                  'Toque num versículo na Bíblia para favoritá-lo.',
+                            )
+                          : const AvisoVazio(
+                              icone: Icons.search_off,
+                              titulo: 'Nada encontrado',
+                            ),
+                    ),
+                    _Lista(
+                      itens: notas,
+                      mostrarNota: true,
+                      vazio: _busca.isEmpty
+                          ? const AvisoVazio(
+                              icone: Icons.edit_note,
+                              titulo: 'Nenhuma anotação',
+                              detalhe:
+                                  'Toque num versículo na Bíblia para anotar.',
+                            )
+                          : const AvisoVazio(
+                              icone: Icons.search_off,
+                              titulo: 'Nada encontrado',
+                            ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -91,9 +161,12 @@ class TelaNotas extends StatelessWidget {
 /// ponytail: área de transferência, não arquivo. Favoritos, notas e progresso
 /// vivem no SharedPreferences, que na web é o localStorage e o navegador limpa
 /// sozinho sob pressão de espaço; texto escrito à mão não pode existir num lugar
-/// só. Salvar arquivo de verdade exigiria ramificar por plataforma, que é
-/// justamente o que este app evitou até aqui. Se um dia precisar, o caminho é
-/// `share_plus`, que resolve mobile, desktop e download na web de uma vez.
+/// só. `share_plus` já é dependência do app (usado para compartilhar um
+/// versículo, em `biblia.dart`), mas exportar por arquivo trocaria o
+/// "importar" por escolher um arquivo em vez de colar, e o de colar continua
+/// sendo o caminho simétrico: mesma caixa de texto serve para exportar e para
+/// importar. Se um dia precisar de arquivo de verdade, o caminho é
+/// `SharePlus.instance.share(ShareParams(files: [...]))`.
 Future<void> _exportar(BuildContext context, Estado estado) async {
   final mensageiro = ScaffoldMessenger.of(context);
   await Clipboard.setData(ClipboardData(text: estado.exportar()));

@@ -20,13 +20,16 @@ Windows e Linux a partir do mesmo código).
   mês, com marcação de lido e barra de progresso do ano.
 - **Introduções aos 66 livros**, na voz de Spurgeon, com título formal do livro
   vindo da BKJ 1611.
-- **Favoritos e notas**: qualquer versículo pode ser marcado, anotado ou copiado;
-  tela própria lista os favoritos e os que têm anotação, e exporta uma cópia de
-  segurança de tudo (favoritos, notas e progresso) para reimportar em outro
-  aparelho.
+- **Favoritos e notas**: qualquer versículo pode ser marcado, anotado, copiado ou
+  compartilhado; tela própria lista os favoritos e os que têm anotação, com
+  busca por referência ou por texto da nota, e exporta uma cópia de segurança
+  de tudo (favoritos, notas e progresso) para reimportar em outro aparelho.
 - **Busca** no texto da Bíblia.
 - **Tamanho do texto** ajustável e **tema claro ou escuro**, pela barra do leitor
   ou do devocional. O padrão segue o aparelho, e dá para fixar um dos dois.
+- **Lembrete diário**, opcional, em Android e iOS: notificação de Manhã e
+  Promessas de Deus e outra de Noite, cada uma num horário ajustável, abrindo a
+  leitura certa ao ser tocada.
 - Layout responsivo: barra de navegação embaixo no celular, trilho lateral em
   janela larga (a partir de 720px), coluna de leitura com largura confortável
   no desktop.
@@ -48,6 +51,10 @@ Windows e Linux a partir do mesmo código).
 - Flutter (Dart), `flutter_localizations` para `pt_BR`.
 - `shared_preferences` é o único armazenamento (progresso, favoritos, notas,
   versão preferida), igual em todas as plataformas, sem banco.
+- `share_plus` para compartilhar um versículo. `flutter_local_notifications` +
+  `timezone` + `flutter_timezone` para o lembrete diário, só em Android e iOS
+  (ver `lembretesSuportados` em `lib/data/lembretes.dart` e a seção de
+  lembretes em `CONTINUAR.md`).
 - Fontes empacotadas localmente (Cinzel e Montserrat), sem depender de rede na
   primeira execução.
 - Conteúdo (Bíblia, devocionais, introduções, cronograma) vem de arquivos JSON

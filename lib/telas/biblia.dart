@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../data/canon.dart';
 import '../data/conteudo.dart';
@@ -458,15 +459,26 @@ class _Leitor extends StatelessWidget {
                   final navegador = Navigator.of(folha);
                   await Clipboard.setData(
                     ClipboardData(
-                      text:
-                          '"$texto"\n'
-                          '${capitulo.referencia}:$numero (${estado.versao.sigla})',
+                      text: _textoDoVersiculo(numero, texto, estado.versao),
                     ),
                   );
                   navegador.pop();
                   mensageiro.showSnackBar(
                     const SnackBar(content: Text('Versículo copiado.')),
                   );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.ios_share_outlined, color: cor.primary),
+                title: const Text('Compartilhar'),
+                onTap: () async {
+                  final navegador = Navigator.of(folha);
+                  await SharePlus.instance.share(
+                    ShareParams(
+                      text: _textoDoVersiculo(numero, texto, estado.versao),
+                    ),
+                  );
+                  navegador.pop();
                 },
               ),
               ListTile(
@@ -500,6 +512,10 @@ class _Leitor extends StatelessWidget {
       },
     );
   }
+
+  /// O mesmo texto para Copiar e Compartilhar, num lugar só.
+  String _textoDoVersiculo(int numero, String texto, Versao versao) =>
+      '"$texto"\n${capitulo.referencia}:$numero (${versao.sigla})';
 }
 
 /// Seletor em duas etapas: escolhe o livro, depois o capítulo numa grade.

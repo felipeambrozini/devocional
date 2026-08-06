@@ -19,6 +19,14 @@ dependencies:
   # Progresso de leitura, favoritos, notas e preferências. Único armazenamento que
   # funciona igual em Android, iOS, web e desktop sem ramificação de plataforma.
   shared_preferences: ^2.5.5
+  # Folha de compartilhar nativa. Mobile, desktop e web de uma vez, sem
+  # ramificação de plataforma — mesma razão do shared_preferences acima.
+  share_plus: ^13.3.0
+  # Lembrete diário. Só usadas em Android e iOS (ver Lembretes em
+  # lib/data/lembretes.dart); nas demais plataformas o app nem chama o plugin.
+  flutter_local_notifications: ^22.2.0
+  timezone: ^0.11.1
+  flutter_timezone: ^5.1.0
 
 dev_dependencies:
   flutter_test:

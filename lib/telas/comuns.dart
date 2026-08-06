@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
+import '../data/lembretes.dart';
 import '../data/modelos.dart';
 
 /// Cartão com título em Cinzel na cor do tema. Repete em quase toda tela.
@@ -309,63 +310,205 @@ class BotaoDeAjustes extends StatelessWidget {
 Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
   return showModalBottomSheet<void>(
     context: context,
+    // Com a seção Lembretes (interruptor mais dois horários), o conteúdo passou
+    // a ultrapassar a altura de telas baixas ou em paisagem. isScrollControlled
+    // deixa a folha crescer até quase a tela inteira, e o SingleChildScrollView
+    // rola o que não couber em vez de estourar o layout.
+    isScrollControlled: true,
     builder: (folha) => SafeArea(
       child: ListenableBuilder(
         listenable: estado,
         builder: (context, _) {
           final tema = Theme.of(context).textTheme;
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-                child: Text('Tamanho do texto', style: tema.headlineSmall),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final (i, escala) in escalasDeLeitura.indexed)
-                      ChoiceChip(
-                        label: Text(rotulosDeEscala[i]),
-                        selected: escala == estado.escalaDeLeitura,
-                        showCheckmark: false,
-                        onSelected: (_) =>
-                            estado.definirEscalaDeLeitura(escala),
-                      ),
-                  ],
+          return SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                  child: Text('Tamanho do texto', style: tema.headlineSmall),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-                child: Text('Aparência', style: tema.headlineSmall),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final modo in ModoDoTema.values)
-                      ChoiceChip(
-                        label: Text(modo.rotulo),
-                        selected: modo == estado.modoDoTema,
-                        showCheckmark: false,
-                        onSelected: (_) => estado.definirModoDoTema(modo),
-                      ),
-                  ],
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final (i, escala) in escalasDeLeitura.indexed)
+                        ChoiceChip(
+                          label: Text(rotulosDeEscala[i]),
+                          selected: escala == estado.escalaDeLeitura,
+                          showCheckmark: false,
+                          onSelected: (_) =>
+                              estado.definirEscalaDeLeitura(escala),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
-            ],
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                  child: Text('Aparência', style: tema.headlineSmall),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final modo in ModoDoTema.values)
+                        ChoiceChip(
+                          label: Text(modo.rotulo),
+                          selected: modo == estado.modoDoTema,
+                          showCheckmark: false,
+                          onSelected: (_) => estado.definirModoDoTema(modo),
+                        ),
+                    ],
+                  ),
+                ),
+                // Só em Android e iOS: são as duas plataformas com um agendador
+                // de sistema que o plugin de fato controla. Ver lembretes.dart.
+                if (lembretesSuportados)
+                  ..._SecaoDeLembretes(estado: estado).montar(context),
+                const SizedBox(height: 20),
+              ],
+            ),
           );
         },
       ),
     ),
   );
+}
+
+TimeOfDay _horaDe(int minutos) =>
+    TimeOfDay(hour: minutos ~/ 60, minute: minutos % 60);
+
+/// Liga ou desliga os três lembretes diários. Pede permissão antes de ligar;
+/// devolve false sem mudar nada se ela for negada.
+///
+/// Pública, e não escondida na folha de ajustes: é a mesma regra que
+/// `test/lembretes_test.dart` verifica com uma `Lembretes` falsa, sem precisar
+/// desmontar a UI para chegar nela.
+Future<bool> alternarLembretes(Estado estado, bool ligar) async {
+  if (!ligar) {
+    await estado.definirLembretesAtivos(false);
+    await Lembretes.instancia.cancelar();
+    return true;
+  }
+  final concedida = await Lembretes.instancia.pedirPermissao();
+  if (!concedida) return false;
+  await estado.definirLembretesAtivos(true);
+  await Lembretes.instancia.agendar(
+    manhaEPromessas: _horaDe(estado.minutosLembreteManha),
+    noite: _horaDe(estado.minutosLembreteNoite),
+  );
+  return true;
+}
+
+/// Grava o novo horário e reagenda de verdade — só se os lembretes estiverem
+/// ligados. O guard fica aqui, e não em quem chama: a folha de ajustes só
+/// mostra os campos de hora com o interruptor já ligado, mas essa função não
+/// deveria depender de a UI garantir isso por fora.
+Future<void> aplicarHorarioDeLembrete(
+  Estado estado, {
+  int? minutosManha,
+  int? minutosNoite,
+}) async {
+  await estado.definirHorariosDeLembrete(
+    minutosManha: minutosManha ?? estado.minutosLembreteManha,
+    minutosNoite: minutosNoite ?? estado.minutosLembreteNoite,
+  );
+  if (!estado.lembretesAtivos) return;
+  await Lembretes.instancia.agendar(
+    manhaEPromessas: _horaDe(estado.minutosLembreteManha),
+    noite: _horaDe(estado.minutosLembreteNoite),
+  );
+}
+
+/// A seção "Lembretes" da folha de ajustes: um interruptor para os três
+/// lembretes diários, e um horário para Manhã+Promessas e outro para Noite.
+///
+/// Classe e não função solta, porque as ações precisam do `BuildContext` da
+/// folha para `showTimePicker`/`SnackBar`, e `montar` devolve a lista de
+/// widgets para entrar direto no `Column` de `ajustesDeLeitura` — não é uma
+/// tela nem um widget próprio, só organização.
+class _SecaoDeLembretes {
+  const _SecaoDeLembretes({required this.estado});
+
+  final Estado estado;
+
+  List<Widget> montar(BuildContext context) {
+    final tema = Theme.of(context).textTheme;
+    return [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 4),
+        child: Text('Lembretes', style: tema.headlineSmall),
+      ),
+      SwitchListTile(
+        title: const Text('Avisar no horário do devocional'),
+        subtitle: const Text(
+          'Manhã e Promessas de Deus num horário, Noite noutro.',
+        ),
+        value: estado.lembretesAtivos,
+        onChanged: (novo) => _alternar(context, novo),
+      ),
+      if (estado.lembretesAtivos) ...[
+        _linhaDeHorario(
+          context,
+          titulo: 'Manhã e Promessas',
+          minutos: estado.minutosLembreteManha,
+          aoEscolher: (minutos) =>
+              aplicarHorarioDeLembrete(estado, minutosManha: minutos),
+        ),
+        _linhaDeHorario(
+          context,
+          titulo: 'Noite',
+          minutos: estado.minutosLembreteNoite,
+          aoEscolher: (minutos) =>
+              aplicarHorarioDeLembrete(estado, minutosNoite: minutos),
+        ),
+      ],
+    ];
+  }
+
+  Widget _linhaDeHorario(
+    BuildContext context, {
+    required String titulo,
+    required int minutos,
+    required ValueChanged<int> aoEscolher,
+  }) {
+    final hora = _horaDe(minutos);
+    return ListTile(
+      title: Text(titulo),
+      trailing: TextButton(
+        onPressed: () async {
+          final escolhida = await showTimePicker(
+            context: context,
+            initialTime: hora,
+            helpText: 'Horário de $titulo',
+          );
+          if (escolhida != null) {
+            aoEscolher(escolhida.hour * 60 + escolhida.minute);
+          }
+        },
+        child: Text(MaterialLocalizations.of(context).formatTimeOfDay(hora)),
+      ),
+    );
+  }
+
+  Future<void> _alternar(BuildContext context, bool novo) async {
+    final concedida = await alternarLembretes(estado, novo);
+    if (!concedida && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Permissão de notificação negada. Ative em Configurações do '
+            'aparelho para usar os lembretes.',
+          ),
+        ),
+      );
+    }
+  }
 }
 
 /// Uma linha por versículo-base de um devocional: a citação entre aspas seguida
