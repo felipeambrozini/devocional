@@ -26,6 +26,7 @@ class Estado extends ChangeNotifier {
   static const _kLembretesAtivos = 'lembretes_ativos';
   static const _kMinutosLembreteManha = 'minutos_lembrete_manha';
   static const _kMinutosLembreteNoite = 'minutos_lembrete_noite';
+  static const _kColunaDupla = 'coluna_dupla_ativa';
 
   /// 6h e 18h, os horários padrão do lembrete. Minutos desde meia-noite, não
   /// `TimeOfDay`: `estado.dart` não importa `material.dart`, e um `int` grava
@@ -58,6 +59,11 @@ class Estado extends ChangeNotifier {
 
   int _minutosLembreteManha = minutosPadraoManha;
   int _minutosLembreteNoite = minutosPadraoNoite;
+
+  /// Se o leitor mostra BKJ e NVT lado a lado. Só tem efeito em janela larga
+  /// (ver `_TelaBibliaState` em `lib/telas/biblia.dart`); a preferência em si
+  /// vale para qualquer plataforma, do mesmo jeito que a versão preferida.
+  bool _colunaDuplaAtiva = false;
 
   static Future<Estado> abrir() async =>
       Estado(await SharedPreferences.getInstance());
@@ -119,6 +125,8 @@ class Estado extends ChangeNotifier {
       _prefs.getInt(_kMinutosLembreteNoite),
       minutosPadraoNoite,
     );
+
+    _colunaDuplaAtiva = _prefs.getBool(_kColunaDupla) ?? false;
   }
 
   /// Um valor fora de 0..1439 não é um horário do dia; volta ao padrão em vez
@@ -180,6 +188,17 @@ class Estado extends ChangeNotifier {
     _escalaDeLeitura = nova;
     notifyListeners();
     await _prefs.setDouble(_kEscala, nova);
+  }
+
+  // --- BKJ e NVT lado a lado ------------------------------------------------ //
+
+  bool get colunaDuplaAtiva => _colunaDuplaAtiva;
+
+  Future<void> definirColunaDupla(bool novo) async {
+    if (novo == _colunaDuplaAtiva) return;
+    _colunaDuplaAtiva = novo;
+    notifyListeners();
+    await _prefs.setBool(_kColunaDupla, novo);
   }
 
   // --- versão preferida ---------------------------------------------------- //

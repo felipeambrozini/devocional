@@ -315,6 +315,111 @@ python tools/icones.py --corrigir
 - **O `index.html` tem fundo marrom e um marcador de carregamento**, retirado no
   evento `flutter-first-frame`. O Flutter **acrescenta** a `flutter-view` ao body
   em vez de limpá-lo, então sem essa remoção o marcador ficaria por cima do app.
+- **BKJ e NVT lado a lado é uma linha por versículo, não duas listas.** Um só
+  `ListView` (`_LeitorDuplo` em `lib/telas/biblia.dart`); cada item da lista é
+  a `Row` de um versículo, com as duas traduções dentro. Foi a alternativa
+  descartada no próprio item do backlog: duas `ListView` com um
+  `ScrollController` compartilhado desalinham assim que um lado tem um
+  versículo mais longo, porque a altura de cada uma depende do próprio texto.
+  Aqui não há como desalinhar, porque o alinhamento é geométrico, não de
+  rolagem.
+
+  A união dos números de versículo das duas traduções vem de
+  `versiculosMesclados` (pública, para o teste não montar widget nenhum);
+  onde só uma tradução tem o número — só acontece em 3 João 1:15 e Apocalipse
+  12:18, versificação própria da NVT — o outro lado da linha fica em branco
+  em vez de inventar texto.
+
+  **Só entra em janela larga**: o corte é 1100 px, acima dos 720 px que já
+  ligam o `NavigationRail`. Abaixo do corte o botão nem aparece, e a
+  preferência (`Estado.colunaDuplaAtiva`) fica sem efeito mesmo que tenha
+  ficado ligada numa janela larga antes — reabrir numa janela estreita volta
+  a uma coluna sozinho, sem precisar desligar à mão.
+
+  Com a coluna dupla ligada, o `BotaoDeVersao` (o alternador BKJ/NVT de uma
+  coluna só) some da AppBar: não existe "versão atual" para trocar quando as
+  duas já aparecem juntas. No lugar entra só o botão de voltar a uma coluna.
+
+  A ação de tocar um versículo (favoritar, copiar, compartilhar, anotar)
+  precisou de `versao` explícito em vez de `estado.versao`: nas duas colunas,
+  cada lado grava favorito e nota na sua própria versão
+  (`_abrirAcoesDoVersiculo`, extraída de dentro de `_Leitor` para ser
+  compartilhada pelas duas).
+
+  Verificado por `flutter analyze` e pela suíte de testes
+  (`test/biblia_coluna_dupla_test.dart`), não a olho num Windows de verdade:
+  a sessão que implementou isto não tinha um navegador com renderização
+  visível disponível. Antes de considerar fechado, abrir numa janela larga de
+  verdade e conferir o espaçamento entre as colunas e o cabeçalho de cada uma.
+
+## Próximas implementações
+
+Em ordem de prioridade. O item 1 não é funcionalidade, é dívida de verificação,
+e vem antes de qualquer coisa nova.
+
+### 1. Verificar os lembretes num aparelho de verdade
+
+**Nada do caminho real foi exercitado.** Os 9 testes de `test/lembretes_test.dart`
+usam `_LembretesFalsas`; o que roda em produção (`LembretesReais`) nunca disparou
+uma notificação. Sem plugin real, sem canal de plataforma, sem relógio de sistema.
+
+O que precisa ser confirmado num Android e num iOS físicos:
+
+- O diálogo de permissão aparece ao ligar o interruptor, e negar de fato mantém
+  o interruptor desligado (o `SnackBar` de aviso é testado; o diálogo do sistema
+  não).
+- A notificação **dispara** no horário. Truque de teste: ajustar o horário para
+  dois ou três minutos à frente e esperar. Lembrar que é `inexactAllowWhileIdle`,
+  então uma janela de alguns minutos é o comportamento esperado, não um defeito.
+- Tocar a notificação abre **a leitura certa** (Manhã, Promessas ou Noite), nos
+  dois casos: app aberto em segundo plano, e app completamente fechado. O segundo
+  usa `chaveQueAbriuOApp()`, caminho diferente do callback.
+- O fuso está certo. `tz.local` é UTC por padrão no pacote `timezone`; se o
+  `flutter_timezone` falhar, o `catch` deixa em UTC e 6h vira 3h no Brasil, em
+  silêncio. **Este é o defeito mais provável de todos e o mais difícil de
+  perceber.** Conferir agendando para daqui a poucos minutos e vendo se dispara
+  na hora certa, não três horas depois.
+- Reboot: reiniciar o aparelho, não abrir o app, e confirmar que a notificação
+  **não** dispara (comportamento documentado e aceito). Depois abrir o app uma
+  vez e confirmar que volta a funcionar.
+
+Se o fuso estiver errado, o conserto é em `LembretesReais.inicializar()`
+(`lib/data/lembretes.dart`). Considerar trocar o `catch` silencioso por um aviso
+visível, já que "horário errado sem explicação" é pior que "lembretes indisponíveis".
+
+### 2. Offline de verdade na web
+
+`flutter build web` gera `flutter_service_worker.js` automaticamente, mas **nunca
+foi verificado** se os assets de conteúdo (as duas Bíblias, os devocionais, as
+introduções — cerca de 12 MB) são cacheados para uso sem rede. Um app devocional
+que funciona no avião é um ganho real, e pode ser que já funcione.
+
+Verificar antes de implementar: abrir o app publicado, desligar a rede nas
+ferramentas de desenvolvedor, e tentar ler um capítulo de um livro ainda não
+aberto naquela sessão.
+
+### 3. Receptor de BOOT_COMPLETED
+
+Só se o item 1 mostrar que incomoda na prática. Notificação agendada é apagada
+pelo Android num reboot, e hoje só volta quando o app abre de novo. O caminho é
+um `BroadcastReceiver` escutando `BOOT_COMPLETED` mais a permissão
+`RECEIVE_BOOT_COMPLETED`. Custo real: código nativo Android que o resto do app
+não tem.
+
+## O que foi decidido NÃO fazer
+
+Registrado para não ser reaberto sem motivo novo:
+
+- **Sequência de dias (streak).** Recusada de propósito pelo usuário: transformar
+  um dia perdido em perda visível corta contra o espírito de um app devocional.
+- **Áudio.** Exige gravação ou síntese de voz; voz sintética lendo Escritura mal
+  é pior que não ter.
+- **Sincronização entre aparelhos.** Exige servidor e conta. O exportar/importar
+  das Marcações já cobre o risco real, que era perder as notas.
+- **Cores de marcação.** Mais taxonomia do que um leitor só precisa.
+- **Widget na tela inicial.** Código nativo nas duas plataformas para pouco retorno.
+- **Lembretes em web e desktop.** Ver a seção de lembretes acima: falta
+  infraestrutura confiável para o app fechado disparar algo.
 
 ## Comandos de regeneração de conteúdo
 

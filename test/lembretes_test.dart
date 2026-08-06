@@ -42,6 +42,9 @@ class _LembretesFalsas implements Lembretes {
   @override
   Future<void> cancelar() async => vezesCancelado++;
 
+  @override
+  String fusoAtual = 'America/Sao_Paulo';
+
   /// Simula o toque numa notificação com o app já aberto.
   void simularToque(String chave) => _callback?.call(chave);
 }

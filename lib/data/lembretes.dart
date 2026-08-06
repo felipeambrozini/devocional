@@ -72,6 +72,12 @@ abstract class Lembretes {
   });
 
   Future<void> cancelar();
+
+  /// O fuso horário resolvido para agendar (ex.: "America/Sao_Paulo"). Só
+  /// para depurar na tela de ajustes: se aparecer "UTC" num aparelho fora
+  /// desse fuso, a detecção falhou e caiu no padrão silencioso do pacote
+  /// `timezone` (ver Item 1 do CONTINUAR.md, o defeito mais difícil de notar).
+  String get fusoAtual;
 }
 
 /// Implementação real: `flutter_local_notifications` + `timezone`.
@@ -204,4 +210,7 @@ class LembretesReais implements Lembretes {
       await _plugin.cancel(id: lembrete.id);
     }
   }
+
+  @override
+  String get fusoAtual => _fusoPronto ? tz.local.name : 'ainda não detectado';
 }

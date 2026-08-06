@@ -94,6 +94,12 @@ class _TelaBibliaState extends State<TelaBiblia> {
     MaterialPageRoute(builder: (_) => const TelaBusca()),
   );
 
+  void _aoArrastarCapitulo(DragEndDetails detalhe) {
+    final velocidade = detalhe.primaryVelocity ?? 0;
+    if (velocidade < -250) _passarCapitulo(1);
+    if (velocidade > 250) _passarCapitulo(-1);
+  }
+
   /// Se vale a pena gastar uma faixa do rodapé com os chevrons de capítulo.
   ///
   /// No celular não vale: deslizar já passa a página, e a barra ficava logo
@@ -119,6 +125,13 @@ class _TelaBibliaState extends State<TelaBiblia> {
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     final estado = EscopoDoEstado.de(context);
+    // Corte de tela larga para BKJ e NVT lado a lado: acima dos 720 px que já
+    // ligam o NavigationRail (ver main.dart), porque abaixo disso duas colunas
+    // de texto bíblico não cabem lado a lado com conforto de leitura. Abaixo
+    // do corte, nada muda: nem o botão, nem a coluna dupla, mesmo que a
+    // preferência tenha ficado ligada de uma janela larga anterior.
+    final larguraDupla = MediaQuery.sizeOf(context).width >= 1100;
+    final colunaDupla = larguraDupla && estado.colunaDuplaAtiva;
     // Teclado no Windows e na web: as setas passam de capítulo e Ctrl+F abre a
     // busca, que antes só existiam como dois chevrons pequenos no rodapé e um
     // ícone na barra. Setas horizontais não rolam uma lista vertical, então não
@@ -158,7 +171,21 @@ class _TelaBibliaState extends State<TelaBiblia> {
             ),
           ),
           actions: [
-            BotaoDeVersao(atual: estado.versao, ao: estado.definirVersao),
+            // Sem "versão atual" para trocar enquanto as duas aparecem juntas.
+            if (!colunaDupla)
+              BotaoDeVersao(atual: estado.versao, ao: estado.definirVersao),
+            if (larguraDupla)
+              IconButton(
+                tooltip: colunaDupla
+                    ? 'Voltar a uma coluna'
+                    : 'Comparar BKJ e NVT lado a lado',
+                icon: Icon(
+                  colunaDupla
+                      ? Icons.view_agenda_outlined
+                      : Icons.view_column_outlined,
+                ),
+                onPressed: () => estado.definirColunaDupla(!colunaDupla),
+              ),
             IconButton(
               tooltip: 'Tamanho do texto e aparência',
               icon: const Icon(Icons.tune),
@@ -182,49 +209,94 @@ class _TelaBibliaState extends State<TelaBiblia> {
         body: Focus(
           autofocus: true,
           child: LarguraDeLeitura(
+            // 1400 e não 720: a comparação é exatamente o que se quer com o
+            // espaço que sobra numa janela larga (ver Item 2 do CONTINUAR.md).
+            // Ainda limitado, para uma linha de texto não esticar até a borda
+            // de um monitor ultrawide.
+            maxWidth: colunaDupla ? 1400 : 720,
             child: Column(
               children: [
                 Expanded(
-                  child: CarregaUmaVez<Capitulo>(
-                    // A chave inclui a versão para que alternar BKJ e NVT recarregue o
-                    // mesmo capítulo, mantendo livro e número.
-                    chave: '${estado.versao.pasta}/$_livro/$_capitulo',
-                    carregar: () => Conteudo.instancia.capitulo(
-                      estado.versao,
-                      _livro,
-                      _capitulo,
-                    ),
-                    construir: (context, snap) {
-                      if (snap.hasError) return const AvisoDeErro();
-                      if (snap.connectionState != ConnectionState.done) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      final capitulo = snap.data!;
-                      if (capitulo.versiculos.isEmpty) {
-                        return const AvisoVazio(
-                          icone: Icons.menu_book_outlined,
-                          titulo: 'Capítulo não encontrado',
-                        );
-                      }
-                      // Arrastar na horizontal passa de capítulo. Vale no desktop
-                      // também: arrasto com o botão do mouse apertado dispara o mesmo
-                      // reconhecedor. Só que ninguém descobre isso sem um dedo na
-                      // tela, e é por isso que os chevrons continuam lá embaixo em
-                      // quem não tem toque. Ver [_semGestoDeToque].
-                      return GestureDetector(
-                        onHorizontalDragEnd: (detalhe) {
-                          final velocidade = detalhe.primaryVelocity ?? 0;
-                          if (velocidade < -250) _passarCapitulo(1);
-                          if (velocidade > 250) _passarCapitulo(-1);
-                        },
-                        child: _Leitor(
-                          capitulo: capitulo,
-                          rolagem: _rolagem,
-                          destacar: widget.destacar,
+                  child: colunaDupla
+                      ? CarregaUmaVez<(Capitulo, Capitulo)>(
+                          chave: '$_livro/$_capitulo/dupla',
+                          carregar: () async {
+                            final bkj = await Conteudo.instancia.capitulo(
+                              Versao.bkj,
+                              _livro,
+                              _capitulo,
+                            );
+                            final nvt = await Conteudo.instancia.capitulo(
+                              Versao.nvt,
+                              _livro,
+                              _capitulo,
+                            );
+                            return (bkj, nvt);
+                          },
+                          construir: (context, snap) {
+                            if (snap.hasError) return const AvisoDeErro();
+                            if (snap.connectionState != ConnectionState.done) {
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            }
+                            final (bkj, nvt) = snap.data!;
+                            if (bkj.versiculos.isEmpty) {
+                              return const AvisoVazio(
+                                icone: Icons.menu_book_outlined,
+                                titulo: 'Capítulo não encontrado',
+                              );
+                            }
+                            return GestureDetector(
+                              onHorizontalDragEnd: _aoArrastarCapitulo,
+                              child: _LeitorDuplo(
+                                bkj: bkj,
+                                nvt: nvt,
+                                rolagem: _rolagem,
+                                destacar: widget.destacar,
+                              ),
+                            );
+                          },
+                        )
+                      : CarregaUmaVez<Capitulo>(
+                          // A chave inclui a versão para que alternar BKJ e NVT
+                          // recarregue o mesmo capítulo, mantendo livro e número.
+                          chave: '${estado.versao.pasta}/$_livro/$_capitulo',
+                          carregar: () => Conteudo.instancia.capitulo(
+                            estado.versao,
+                            _livro,
+                            _capitulo,
+                          ),
+                          construir: (context, snap) {
+                            if (snap.hasError) return const AvisoDeErro();
+                            if (snap.connectionState != ConnectionState.done) {
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            }
+                            final capitulo = snap.data!;
+                            if (capitulo.versiculos.isEmpty) {
+                              return const AvisoVazio(
+                                icone: Icons.menu_book_outlined,
+                                titulo: 'Capítulo não encontrado',
+                              );
+                            }
+                            // Arrastar na horizontal passa de capítulo. Vale no
+                            // desktop também: arrasto com o botão do mouse apertado
+                            // dispara o mesmo reconhecedor. Só que ninguém descobre
+                            // isso sem um dedo na tela, e é por isso que os chevrons
+                            // continuam lá embaixo em quem não tem toque. Ver
+                            // [_semGestoDeToque].
+                            return GestureDetector(
+                              onHorizontalDragEnd: _aoArrastarCapitulo,
+                              child: _Leitor(
+                                capitulo: capitulo,
+                                rolagem: _rolagem,
+                                destacar: widget.destacar,
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
                 ),
                 if (_semGestoDeToque)
                   _BarraDeCapitulo(
@@ -309,214 +381,418 @@ class _Leitor extends StatelessWidget {
         }
 
         final (numero, texto) = capitulo.versiculos[i - 1];
-        final marcacao = estado.marcacaoDe(
-          estado.versao,
-          capitulo.livro,
-          capitulo.numero,
-          numero,
-        );
         final noRecorte =
             destacar == null ||
             (numero >= destacar!.$1 && numero <= destacar!.$2);
 
-        return Semantics(
-          hint: 'Toque para favoritar, anotar ou copiar',
-          child: InkWell(
-            onTap: () => _abrirAcoes(context, estado, numero, texto),
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              // 12 e não 7: com bodyLarge em 17 e altura 1.6, um versículo de uma
-              // linha ficava em cerca de 41 dp de alvo, abaixo dos 48 dp mínimos.
-              // Os curtos são justamente os mais marcados.
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: marcacao != null
-                    ? cor.outline.withValues(alpha: 0.18)
-                    : null,
+        return _LinhaDeVersiculo(
+          versao: estado.versao,
+          livro: capitulo.livro,
+          capituloNumero: capitulo.numero,
+          referencia: capitulo.referencia,
+          numero: numero,
+          texto: texto,
+          noRecorte: noRecorte,
+        );
+      },
+    );
+  }
+}
+
+/// BKJ e NVT lado a lado, uma linha por versículo.
+///
+/// Só entra na árvore em janela larga (ver `_TelaBibliaState.build`); os dois
+/// livros já ficam em cache por [Conteudo], então abrir os dois não custa uma
+/// segunda leitura de asset.
+///
+/// Uma linha por versículo, e não duas listas paralelas com rolagem
+/// sincronizada: os textos têm comprimentos diferentes entre traduções, e duas
+/// `ListView` com um `ScrollController` compartilhado desalinham assim que um
+/// lado tem um versículo mais longo que o outro. Aqui o alinhamento é
+/// geométrico — cada linha da lista É o versículo, nos dois idiomas — então
+/// não há como desalinhar.
+class _LeitorDuplo extends StatelessWidget {
+  const _LeitorDuplo({
+    required this.bkj,
+    required this.nvt,
+    required this.rolagem,
+    this.destacar,
+  });
+
+  final Capitulo bkj;
+  final Capitulo nvt;
+  final ScrollController rolagem;
+  final (int, int)? destacar;
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
+    final tema = Theme.of(context).textTheme;
+    final numeros = versiculosMesclados(bkj, nvt);
+    final textoBkj = {for (final (n, t) in bkj.versiculos) n: t};
+    final textoNvt = {for (final (n, t) in nvt.versiculos) n: t};
+
+    return ListView.builder(
+      controller: rolagem,
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+      itemCount: numeros.length + 1,
+      itemBuilder: (context, i) {
+        if (i == 0) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AberturaDeLivro(slug: bkj.livro),
+              if (bkj.numero == 1) ...[
+                Text(
+                  livroPorSlug(bkj.livro)!.tituloFormal,
+                  style: tema.bodySmall?.copyWith(
+                    fontStyle: FontStyle.italic,
+                    color: cor.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 4),
+              ],
+              Text(bkj.referencia, style: tema.displayMedium),
+              const SizedBox(height: 8),
+              const Filete(),
+              const SizedBox(height: 16),
+              // O cabeçalho do sobrescrito (Salmos) e de cada versão vive por
+              // coluna: a palavra pode diferir entre traduções, e é aqui que a
+              // pessoa lê qual coluna é qual.
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _cabecalhoDaColuna(context, Versao.bkj, bkj.titulo),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _cabecalhoDaColuna(context, Versao.nvt, nvt.titulo),
+                  ),
+                ],
               ),
+              const SizedBox(height: 8),
+            ],
+          );
+        }
+
+        final numero = numeros[i - 1];
+        final noRecorte =
+            destacar == null ||
+            (numero >= destacar!.$1 && numero <= destacar!.$2);
+        final textoDaBkj = textoBkj[numero];
+        final textoDaNvt = textoNvt[numero];
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              // null só em 3 João 1:15 e Apocalipse 12:18 (ver CONTINUAR.md):
+              // a coluna sem o versículo fica em branco, não inventa texto.
+              child: textoDaBkj == null
+                  ? const SizedBox.shrink()
+                  : _LinhaDeVersiculo(
+                      versao: Versao.bkj,
+                      livro: bkj.livro,
+                      capituloNumero: bkj.numero,
+                      referencia: bkj.referencia,
+                      numero: numero,
+                      texto: textoDaBkj,
+                      noRecorte: noRecorte,
+                    ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: textoDaNvt == null
+                  ? const SizedBox.shrink()
+                  : _LinhaDeVersiculo(
+                      versao: Versao.nvt,
+                      livro: nvt.livro,
+                      capituloNumero: nvt.numero,
+                      referencia: nvt.referencia,
+                      numero: numero,
+                      texto: textoDaNvt,
+                      noRecorte: noRecorte,
+                    ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _cabecalhoDaColuna(BuildContext context, Versao versao, String titulo) {
+    final tema = Theme.of(context).textTheme;
+    final cor = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          versao.sigla,
+          style: tema.titleSmall?.copyWith(
+            color: cor.primary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        if (titulo.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            titulo,
+            style: tema.bodySmall?.copyWith(
+              fontStyle: FontStyle.italic,
+              color: cor.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// União dos números de versículo de duas traduções do mesmo capítulo, em
+/// ordem. Quase sempre idênticos; os únicos dois pontos de toda a Bíblia onde
+/// divergem são 3 João 1:15 e Apocalipse 12:18, versificação própria da NVT
+/// (ver CONTINUAR.md). Pública para que o teste desta lógica não precise
+/// montar nenhum widget.
+List<int> versiculosMesclados(Capitulo a, Capitulo b) {
+  final numeros = <int>{
+    for (final (n, _) in a.versiculos) n,
+    for (final (n, _) in b.versiculos) n,
+  };
+  return numeros.toList()..sort();
+}
+
+/// Um versículo: número, texto e, se houver, a nota. Usado tanto pelo leitor
+/// de uma coluna quanto por cada lado do leitor duplo — [versao] é sempre
+/// explícito porque no leitor duplo as duas colunas aparecem juntas, sem uma
+/// "versão atual" só.
+class _LinhaDeVersiculo extends StatelessWidget {
+  const _LinhaDeVersiculo({
+    required this.versao,
+    required this.livro,
+    required this.capituloNumero,
+    required this.referencia,
+    required this.numero,
+    required this.texto,
+    required this.noRecorte,
+  });
+
+  final Versao versao;
+  final String livro;
+  final int capituloNumero;
+  final String referencia;
+  final int numero;
+  final String texto;
+  final bool noRecorte;
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
+    final tema = Theme.of(context).textTheme;
+    final estado = EscopoDoEstado.de(context);
+    final marcacao = estado.marcacaoDe(versao, livro, capituloNumero, numero);
+
+    return Semantics(
+      hint: 'Toque para favoritar, anotar ou copiar',
+      child: InkWell(
+        onTap: () => _abrirAcoesDoVersiculo(
+          context,
+          estado,
+          versao: versao,
+          livro: livro,
+          capituloNumero: capituloNumero,
+          referencia: referencia,
+          numero: numero,
+          texto: texto,
+        ),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          // 12 e não 7: com bodyLarge em 17 e altura 1.6, um versículo de uma
+          // linha ficava em cerca de 41 dp de alvo, abaixo dos 48 dp mínimos.
+          // Os curtos são justamente os mais marcados.
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: marcacao != null
+                ? cor.outline.withValues(alpha: 0.18)
+                : null,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '$numero ',
+                      style: tema.labelMedium?.copyWith(
+                        color: cor.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    TextSpan(
+                      text: texto,
+                      // Fora da faixa pedida pelo cronograma o texto continua
+                      // legível, apenas recuado, para o contexto não se perder.
+                      //
+                      // 0.7 e não 0.55: sobre o fundo, 0.55 dava 3,5:1 de
+                      // contraste, abaixo do 4,5:1 que a WCAG AA pede para
+                      // texto corrido, e isto aqui é Escritura, não legenda.
+                      // 0.7 chega a 4,9:1 e ainda se distingue do texto pedido.
+                      style: noRecorte
+                          ? tema.bodyLarge?.copyWith(height: 1.6)
+                          : tema.bodyLarge?.copyWith(
+                              height: 1.6,
+                              color: cor.onSurfaceVariant.withValues(
+                                alpha: 0.7,
+                              ),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+              if (marcacao != null && marcacao.nota.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.edit_note, size: 15, color: cor.primary),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        marcacao.nota,
+                        style: tema.bodySmall?.copyWith(
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+Future<void> _abrirAcoesDoVersiculo(
+  BuildContext context,
+  Estado estado, {
+  required Versao versao,
+  required String livro,
+  required int capituloNumero,
+  required String referencia,
+  required int numero,
+  required String texto,
+}) async {
+  final marcacao = estado.marcacaoDe(versao, livro, capituloNumero, numero);
+  await showModalBottomSheet<void>(
+    context: context,
+    builder: (folha) {
+      final cor = Theme.of(folha).colorScheme;
+      return SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: '$numero ',
-                          style: tema.labelMedium?.copyWith(
-                            color: cor.primary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        TextSpan(
-                          text: texto,
-                          // Fora da faixa pedida pelo cronograma o texto continua
-                          // legível, apenas recuado, para o contexto não se perder.
-                          //
-                          // 0.7 e não 0.55: sobre o fundo, 0.55 dava 3,5:1 de
-                          // contraste, abaixo do 4,5:1 que a WCAG AA pede para
-                          // texto corrido, e isto aqui é Escritura, não legenda.
-                          // 0.7 chega a 4,9:1 e ainda se distingue do texto pedido.
-                          style: noRecorte
-                              ? tema.bodyLarge?.copyWith(height: 1.6)
-                              : tema.bodyLarge?.copyWith(
-                                  height: 1.6,
-                                  color: cor.onSurfaceVariant.withValues(
-                                    alpha: 0.7,
-                                  ),
-                                ),
-                        ),
-                      ],
-                    ),
+                  Text(
+                    '$referencia:$numero',
+                    style: Theme.of(folha).textTheme.headlineSmall,
                   ),
-                  if (marcacao != null && marcacao.nota.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.edit_note, size: 15, color: cor.primary),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            marcacao.nota,
-                            style: tema.bodySmall?.copyWith(
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  const SizedBox(height: 8),
+                  Text(texto, style: Theme.of(folha).textTheme.bodyMedium),
                 ],
               ),
             ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _abrirAcoes(
-    BuildContext context,
-    Estado estado,
-    int numero,
-    String texto,
-  ) async {
-    final marcacao = estado.marcacaoDe(
-      estado.versao,
-      capitulo.livro,
-      capitulo.numero,
-      numero,
-    );
-    await showModalBottomSheet<void>(
-      context: context,
-      builder: (folha) {
-        final cor = Theme.of(folha).colorScheme;
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${capitulo.referencia}:$numero',
-                      style: Theme.of(folha).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(texto, style: Theme.of(folha).textTheme.bodyMedium),
-                  ],
-                ),
+            const Divider(height: 1),
+            ListTile(
+              leading: Icon(
+                marcacao != null ? Icons.bookmark : Icons.bookmark_outline,
+                color: cor.primary,
               ),
-              const Divider(height: 1),
-              ListTile(
-                leading: Icon(
-                  marcacao != null ? Icons.bookmark : Icons.bookmark_outline,
-                  color: cor.primary,
-                ),
-                title: Text(
-                  marcacao != null ? 'Remover dos favoritos' : 'Favoritar',
-                ),
-                onTap: () {
-                  estado.alternarFavorito(
-                    estado.versao,
-                    capitulo.livro,
-                    capitulo.numero,
+              title: Text(
+                marcacao != null ? 'Remover dos favoritos' : 'Favoritar',
+              ),
+              onTap: () {
+                estado.alternarFavorito(versao, livro, capituloNumero, numero);
+                Navigator.pop(folha);
+              },
+            ),
+            // Copiar é o que mais se faz com um versículo, e não existia. Vem
+            // antes de anotar porque é a ação sem consequência das três.
+            ListTile(
+              leading: Icon(Icons.content_copy_outlined, color: cor.primary),
+              title: const Text('Copiar'),
+              onTap: () async {
+                final mensageiro = ScaffoldMessenger.of(folha);
+                final navegador = Navigator.of(folha);
+                await Clipboard.setData(
+                  ClipboardData(
+                    text: _textoDoVersiculo(referencia, numero, texto, versao),
+                  ),
+                );
+                navegador.pop();
+                mensageiro.showSnackBar(
+                  const SnackBar(content: Text('Versículo copiado.')),
+                );
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.ios_share_outlined, color: cor.primary),
+              title: const Text('Compartilhar'),
+              onTap: () async {
+                final navegador = Navigator.of(folha);
+                await SharePlus.instance.share(
+                  ShareParams(
+                    text: _textoDoVersiculo(referencia, numero, texto, versao),
+                  ),
+                );
+                navegador.pop();
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.edit_note, color: cor.primary),
+              title: Text(
+                marcacao?.nota.isNotEmpty == true ? 'Editar anotação' : 'Anotar',
+              ),
+              onTap: () async {
+                final nota = await editarNota(
+                  folha,
+                  referencia: '$referencia:$numero',
+                  notaAtual: marcacao?.nota ?? '',
+                );
+                if (nota != null) {
+                  await estado.definirNota(
+                    versao,
+                    livro,
+                    capituloNumero,
                     numero,
+                    nota,
                   );
-                  Navigator.pop(folha);
-                },
-              ),
-              // Copiar é o que mais se faz com um versículo, e não existia. Vem
-              // antes de anotar porque é a ação sem consequência das três.
-              ListTile(
-                leading: Icon(Icons.content_copy_outlined, color: cor.primary),
-                title: const Text('Copiar'),
-                onTap: () async {
-                  final mensageiro = ScaffoldMessenger.of(folha);
-                  final navegador = Navigator.of(folha);
-                  await Clipboard.setData(
-                    ClipboardData(
-                      text: _textoDoVersiculo(numero, texto, estado.versao),
-                    ),
-                  );
-                  navegador.pop();
-                  mensageiro.showSnackBar(
-                    const SnackBar(content: Text('Versículo copiado.')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.ios_share_outlined, color: cor.primary),
-                title: const Text('Compartilhar'),
-                onTap: () async {
-                  final navegador = Navigator.of(folha);
-                  await SharePlus.instance.share(
-                    ShareParams(
-                      text: _textoDoVersiculo(numero, texto, estado.versao),
-                    ),
-                  );
-                  navegador.pop();
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.edit_note, color: cor.primary),
-                title: Text(
-                  marcacao?.nota.isNotEmpty == true
-                      ? 'Editar anotação'
-                      : 'Anotar',
-                ),
-                onTap: () async {
-                  final nota = await editarNota(
-                    folha,
-                    referencia: '${capitulo.referencia}:$numero',
-                    notaAtual: marcacao?.nota ?? '',
-                  );
-                  if (nota != null) {
-                    await estado.definirNota(
-                      estado.versao,
-                      capitulo.livro,
-                      capitulo.numero,
-                      numero,
-                      nota,
-                    );
-                  }
-                  if (folha.mounted) Navigator.pop(folha);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  /// O mesmo texto para Copiar e Compartilhar, num lugar só.
-  String _textoDoVersiculo(int numero, String texto, Versao versao) =>
-      '"$texto"\n${capitulo.referencia}:$numero (${versao.sigla})';
+                }
+                if (folha.mounted) Navigator.pop(folha);
+              },
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }
+
+/// O mesmo texto para Copiar e Compartilhar, num lugar só.
+String _textoDoVersiculo(
+  String referencia,
+  int numero,
+  String texto,
+  Versao versao,
+) => '"$texto"\n$referencia:$numero (${versao.sigla})';
 
 /// Seletor em duas etapas: escolhe o livro, depois o capítulo numa grade.
 class _SeletorDeLivro extends StatefulWidget {

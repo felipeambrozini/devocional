@@ -452,6 +452,16 @@ class _SecaoDeLembretes {
         value: estado.lembretesAtivos,
         onChanged: (novo) => _alternar(context, novo),
       ),
+      // Só para depurar: se aparecer "UTC" num aparelho fora desse fuso, a
+      // detecção falhou em silêncio e os horários vão disparar errados. Ver
+      // Item 1 do CONTINUAR.md.
+      Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+        child: Text(
+          'Fuso detectado: ${Lembretes.instancia.fusoAtual}',
+          style: tema.bodySmall,
+        ),
+      ),
       if (estado.lembretesAtivos) ...[
         _linhaDeHorario(
           context,
