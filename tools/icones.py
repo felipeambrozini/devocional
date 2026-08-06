@@ -12,11 +12,14 @@ Icon-maskable-*, e o Chrome recorta o maskable em circulo, descartando os 20% de
 fora, o que cortaria o topo da cabeca. Ele tambem gera o favicon em 16, que fica
 embaracado em tela de retina.
 
-Sobre o icone que acompanha o tema: so o iOS 18 e o favicon da web trocam de
-verdade. Android, Windows, macOS e Linux leem um arquivo so, e nenhum deles tem
-variante por tema; no Android o unico mecanismo e' a camada monocromatica, que e'
-uma silhueta chapada, e uma foto de rosto vira exatamente o avatar de "sem foto".
-Por isso nesses o icone continua sendo o de fundo escuro, que se vira nos dois.
+Sobre o icone que acompanha o tema: Android, iOS 18 e o favicon da web trocam.
+Windows, macOS e Linux leem um arquivo so e nao tem variante; neles o icone
+continua sendo o de fundo escuro, que se vira nos dois temas.
+
+No Android quem faz a troca e' o qualificador -night no fundo do icone
+adaptativo, escrito pelo passo --corrigir. Nao confundir com a camada
+monocromatica, que e' outra coisa: silhueta chapada, e uma foto de rosto vira o
+avatar de "sem foto".
 """
 
 import argparse
@@ -66,8 +69,10 @@ def fontes() -> None:
     FONTES.mkdir(parents=True, exist_ok=True)
     rosto = _rosto()
     for nome, ocupacao, fundo in (
-        # Escuro e' o icone universal: Android, Windows, macOS e o iOS antigo
-        # leem um arquivo so, e nesses o fundo marrom se vira nos dois temas.
+        # Escuro e' o icone de quem le um arquivo so: Windows, macOS, o iOS
+        # antigo e o Android anterior ao icone adaptativo. Nesses o fundo marrom
+        # se vira nos dois temas. No Android moderno quem manda sao as duas
+        # camadas: `icone_adaptativo.png` na frente e a cor por tema atras.
         ('icone.png', 0.88, FUNDO_ESCURO),
         # A variante clara existe so para a aparencia "Any" do iOS 18, que e' a
         # usada quando o aparelho esta no tema claro.
@@ -117,10 +122,13 @@ def _fundo_do_icone_no_escuro() -> None:
     entao a variante escura tem que ser acrescentada depois dele, ou ele a
     apagaria na proxima rodada.
 
-    Nao e' mecanismo documentado, e depende de o lancador resolver o icone com a
-    configuracao dele, que segue o modo escuro do sistema. Lancadores guardam
-    icone em cache, entao pode nao virar sem reinstalar. Se um dia parar de
-    funcionar, o icone fica no claro, que e' o valor do pubspec.
+    Funciona porque o lancador resolve o icone com a configuracao dele, que segue
+    o modo escuro do sistema. **Verificado num Galaxy, One UI.** Nao e' mecanismo
+    documentado pelo Android e pode variar por fabricante; se um dia parar, o
+    icone fica no claro, que e' o valor do pubspec.
+
+    Lancadores guardam icone em cache: instalar por cima nao basta para ver a
+    mudanca, e o teste pede desinstalar antes.
     """
     destino = RAIZ / 'android/app/src/main/res/values-night/colors.xml'
     destino.parent.mkdir(parents=True, exist_ok=True)

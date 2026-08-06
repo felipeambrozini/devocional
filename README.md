@@ -101,8 +101,11 @@ python tools/icones.py --corrigir
 ```
 
 A **tela de abertura** acompanha o tema do aparelho em todas as plataformas. O
-**ícone do lançador** só no iOS 18 e no favicon da web: Android, Windows, macOS e
-Linux leem um arquivo só e não têm variante por tema.
+**ícone do lançador** acompanha no Android, no iOS 18 e no favicon da web; no
+Windows, no macOS e no Linux não, porque leem um arquivo só e não têm variante.
+
+No Android, lançadores guardam o ícone em cache: para ver a mudança é preciso
+desinstalar antes de instalar de novo, não basta atualizar por cima.
 
 ## Conteúdo
 

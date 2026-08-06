@@ -33,11 +33,9 @@ dev_dependencies:
 # são gerados, não editados à mão:
 #   dart run flutter_launcher_icons
 flutter_launcher_icons:
-  # O icone universal e o de fundo escuro: Android, Windows, macOS e o iOS antigo
-  # leem um arquivo so, e nenhum desses tem variante por tema. O marrom se vira
-  # nos dois, que e' mais do que a alternativa: no Android o unico mecanismo
-  # reativo ao tema e' a camada monocromatica, uma silhueta de uma cor chapada,
-  # e uma foto de rosto vira o avatar de "sem foto".
+  # Fundo escuro para quem lê um arquivo só: Windows, macOS, o iOS antigo e o
+  # Android anterior ao ícone adaptativo. O marrom se vira nos dois temas. No
+  # Android moderno quem manda são as duas camadas do adaptativo, logo abaixo.
   image_path: assets/icone/icone.png
   android: true
   # O Android recorta o ícone em círculo, folha ou pílula conforme o aparelho,
@@ -45,8 +43,9 @@ flutter_launcher_icons:
   #
   # Claro aqui, e não marrom: este valor vira `@color/ic_launcher_background` em
   # values/colors.xml, e `tools/icones.py --corrigir` acrescenta a variante
-  # values-night/ com o marrom. É a única forma de o ícone do lançador seguir o
-  # tema no Android, e não é mecanismo documentado. Ver CONTINUAR.md.
+  # values-night/ com o marrom. É assim que o ícone do lançador segue o tema no
+  # Android, verificado num Galaxy. Não é mecanismo documentado pelo Android;
+  # se um dia parar, o ícone fica neste valor. Ver CONTINUAR.md.
   adaptive_icon_background: "#F7F1E3"
   adaptive_icon_foreground: assets/icone/icone_adaptativo.png
   ios: true

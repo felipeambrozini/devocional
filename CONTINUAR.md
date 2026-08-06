@@ -113,26 +113,34 @@ dart run flutter_native_splash:create
   `values-night-v31/` com `windowSplashScreenBackground` (Android 12+),
   `drawable/` e `drawable-night/` com `background.png` de 1x1 na cor, e
   `LaunchBackground.imageset` com as aparências `any` e `dark` no iOS.
-- **O ícone do lançador acompanha o tema só no iOS 18 e no favicon da web.** A foto vai sobre
-  pergaminho no claro e sobre marrom no escuro, e as duas artes saem do mesmo
-  recorte. Onde não dá, não dá por limitação do sistema, não da arte:
+- **O ícone do lançador acompanha o tema no Android, no iOS 18 e no favicon da
+  web.** A foto vai sobre pergaminho no claro e sobre marrom no escuro, e as
+  artes saem todas do mesmo recorte. Onde não dá, não dá por limitação do
+  sistema, não da arte:
 
   | Plataforma | Troca por tema? |
   |---|---|
+  | Android 8+ | Sim, `-night` no fundo do ícone adaptativo. Ver ressalvas |
   | iOS 18+ | Sim, três aparências: clara, escura e tingida |
   | Web, favicon | Sim, por `prefers-color-scheme` no `index.html` |
   | Web, ícone do PWA | Não, o manifesto não tem variante |
-  | Android | Não |
   | Windows, macOS, Linux | Não, um `.ico`/`.icns` só |
 
-  No **Android** o único mecanismo reativo ao tema é a camada monocromática do
-  ícone adaptativo (`adaptive_icon_monochrome`), que é uma **silhueta de uma cor
-  chapada**, tingida pelo lançador. Uma foto de rosto vira exatamente a forma do
-  avatar de "sem foto", e o ícone parece quebrado em vez de temático. Foi testado
-  e descartado; não reabrir sem trocar a marca por um monograma ou símbolo.
+  No **Android** funciona porque o `mipmap-anydpi-v26/ic_launcher.xml` aponta o
+  fundo para `@color/ic_launcher_background`, e recurso de cor aceita o
+  qualificador `-night`. O lançador resolve o ícone com a configuração dele, que
+  segue o modo escuro do sistema, e por isso a cor troca. **Verificado num
+  Galaxy, One UI.** Duas ressalvas: não é mecanismo documentado pelo Android, e
+  pode variar por fabricante; e lançadores **guardam o ícone em cache**, então
+  instalar por cima não basta para ver a mudança. Para testar, desinstalar antes.
 
-  Qualificador `-night` em recurso do Android **não** resolve: o lançador resolve
-  e guarda o ícone com a configuração dele, não com a do app.
+  O que muda é o **fundo**; a camada de frente, o rosto recortado, é a mesma nos
+  dois temas.
+
+  Não confundir com a **camada monocromática** (`adaptive_icon_monochrome`), que
+  é outra coisa: uma silhueta de uma cor chapada, tingida pelo lançador. Uma foto
+  de rosto vira a forma do avatar de "sem foto". Foi testada e descartada; não
+  reabrir sem trocar a marca por um monograma ou símbolo.
 
   Nas plataformas de um arquivo só, o ícone é o de **fundo escuro**, porque ele é
   autossuficiente e se lê nos dois temas.
