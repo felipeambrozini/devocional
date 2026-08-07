@@ -7,7 +7,7 @@ precisar reconstruir nenhuma decisão.
 
 | Item | Situação |
 |---|---|
-| App Flutter (mobile + web) | Completo. `flutter analyze` limpo, 556 testes passando |
+| App Flutter (mobile + web) | Completo. `flutter analyze` limpo, 559 testes passando |
 | BKJ 1611 | 66 livros, 1189 capítulos, **31.102 versículos, bate exatamente com o canon** |
 | NVT | 31.104 versículos; os 2 desvios são `3 João 1:15` e `Ap 12:18`, versificação da NLT |
 | Manhã e Noite | 366 dias, todos com manhã e noite |
@@ -59,6 +59,40 @@ próprio `promises.json`; os arquivos mensais intermediários de
 - **Sem travessões** em nenhum texto do app, por pedido do usuário. Vírgula, ponto e
   vírgula ou ponto.
 - **Voz vitoriana de Spurgeon**, em português, tratando o leitor por tu.
+
+  **Isto não era verdade até 07/08/2026.** Uma auditoria mediu que as 66
+  introduções tratavam o leitor por "vós" predominantemente (28,7 ocorrências
+  por 10 mil palavras contra 16,3 de "tu"), o inverso do Spurgeon real já
+  traduzido no app (`morning_evening.json` + `promises.json`: "tu" a 69-87 por
+  10 mil, "vós" a 6-7). Corrigido com 17 agentes em duas rodadas (a primeira
+  caiu no meio por limite de sessão de API; a segunda retomou o que faltava),
+  um lote de 3 a 6 livros por agente. Depois da correção: "tu" subiu para 32,2
+  por 10 mil palavras, "vós" caiu para 10,7.
+
+  **O que continua "vós" de propósito, e por quê:** texto bíblico citado entre
+  aspas com referência (`"Texto." (Livro C:V)`) nunca foi tocado — é a BKJ
+  1611, que usa "vós" por ser tradução de estilo antigo, e precisa continuar
+  byte a byte igual ao asset (`assets/bible/bkj/`). Endereçamento histórico
+  legítimo também ficou: Paulo falando a uma igreja específica, as sete cartas
+  do Apocalipse às sete igrejas, Deus falando ao povo de Israel pelo profeta,
+  ou Spurgeon relatando um discurso próprio a uma audiência nomeada e
+  genuinamente plural ("uma congregação de homens de negócio", "meus alunos").
+  A régua foi: só corrigir o endereçamento direto ao leitor individual de
+  hoje, nunca um plural de fundo histórico ou uma citação.
+
+  Verificado de três formas depois da correção: `flutter test
+  test/introducao_test.dart` (559 testes no total do projeto, todos verdes);
+  um script à parte que resolve toda citação bíblica citada no corpo das
+  introduções e compara contra `assets/bible/bkj/` (nenhuma das 124 citações
+  foi alterada pela correção; as 38 pequenas diferenças que o script acha já
+  existiam antes, são aparas editoriais de pontuação/trecho, não erro de
+  pessoa gramatical); e a distribuição do imperativo em tu não concentrou num
+  verbo só (o mais comum, "Pesa", aparece em 14/66 livros, abaixo do teto de
+  22/66 que a correção anterior do tique retórico já tinha fixado).
+
+  A procedência das 66 citações finais (`quote`/`quoteSource`) é assunto
+  separado deste conserto, e não foi tocada aqui: nenhum agente teve permissão
+  para alterar os campos `quote*`.
 - **29 de fevereiro** não precisa de tratamento especial: `DateTime` do Dart já o
   impede em ano comum. Provado em `test/bissexto_test.dart`.
 - **As 66 frases das introduções** vieram de uma lista do usuário e estão registradas
