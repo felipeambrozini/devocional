@@ -5,6 +5,7 @@ import 'data/estado.dart';
 import 'data/lembretes.dart';
 import 'data/modelos.dart';
 import 'telas/biblia.dart';
+import 'telas/comuns.dart';
 import 'telas/devocional.dart';
 import 'telas/hoje.dart';
 import 'telas/notas.dart';
@@ -15,9 +16,6 @@ import 'theme.dart';
 /// callback do plugin que não tem `BuildContext` de tela nenhuma, e pode
 /// acontecer com o app em qualquer lugar da árvore.
 final navigatorKey = GlobalKey<NavigatorState>();
-
-TimeOfDay _horaDe(int minutos) =>
-    TimeOfDay(hour: minutos ~/ 60, minute: minutos % 60);
 
 /// Abre a leitura da notificação por cima do que estiver na tela, igual ao
 /// "Continuar leitura" da tela Hoje. `chave` é "manha", "promessas" ou
@@ -37,15 +35,7 @@ Future<void> main() async {
   await Lembretes.instancia.inicializar(
     aoTocarNotificacao: _abrirLeituraDoLembrete,
   );
-  // Cobre o reboot do aparelho: notificação agendada é apagada pelo sistema
-  // quando ele reinicia, e só volta quando o app abre de novo. Ver
-  // CONTINUAR.md.
-  if (estado.lembretesAtivos) {
-    await Lembretes.instancia.agendar(
-      manhaEPromessas: _horaDe(estado.minutosLembreteManha),
-      noite: _horaDe(estado.minutosLembreteNoite),
-    );
-  }
+  await reagendarLembretesSeNecessario(estado);
   // Precisa vir antes do runApp: depois dele o plugin já não sabe dizer que
   // toque abriu o app, só qual chegou com o app já aberto.
   final chaveDeAbertura = await Lembretes.instancia.chaveQueAbriuOApp();

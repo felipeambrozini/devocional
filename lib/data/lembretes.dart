@@ -73,6 +73,15 @@ abstract class Lembretes {
 
   Future<void> cancelar();
 
+  /// Se já existe algum lembrete agendado no sistema. Serve só para decidir
+  /// se `main()` precisa reagendar no início do app: reagendar sempre, sem
+  /// checar isto, cancela um lembrete do dia que ainda não disparou sempre
+  /// que o app abre entre o horário marcado e a entrega de verdade — que com
+  /// `inexactAllowWhileIdle` pode levar a janela toda. Abrir o app pertinho
+  /// do horário do lembrete, o uso mais óbvio de um app devocional de manhã,
+  /// apagava o próprio lembrete daquele dia.
+  Future<bool> agendados();
+
   /// O fuso horário resolvido para agendar (ex.: "America/Sao_Paulo"). Só
   /// para depurar: se aparecer "UTC" num aparelho fora desse fuso, a detecção
   /// falhou e caiu no padrão silencioso do pacote `timezone`, o defeito mais
@@ -215,6 +224,13 @@ class LembretesReais implements Lembretes {
     for (final lembrete in _Lembrete.values) {
       await _plugin.cancel(id: lembrete.id);
     }
+  }
+
+  @override
+  Future<bool> agendados() async {
+    if (!lembretesSuportados) return false;
+    final pendentes = await _plugin.pendingNotificationRequests();
+    return pendentes.isNotEmpty;
   }
 
   @override

@@ -425,6 +425,23 @@ Future<void> aplicarHorarioDeLembrete(
   );
 }
 
+/// Reagenda os lembretes no início do app, só se não houver nenhum agendado.
+///
+/// Cobre o reboot do aparelho, que apaga os alarmes do sistema — mas só
+/// nesse caso. Chamar isto incondicionalmente a cada abertura do app faria
+/// `agendar` cancelar um lembrete do dia que ainda não disparou (a entrega é
+/// inexata, pode levar a janela toda) sempre que o app abrisse entre o
+/// horário marcado e a entrega de verdade — bem o que acontece ao abrir o
+/// app de manhã para ver se a notificação chegou.
+Future<void> reagendarLembretesSeNecessario(Estado estado) async {
+  if (!estado.lembretesAtivos) return;
+  if (await Lembretes.instancia.agendados()) return;
+  await Lembretes.instancia.agendar(
+    manhaEPromessas: _horaDe(estado.minutosLembreteManha),
+    noite: _horaDe(estado.minutosLembreteNoite),
+  );
+}
+
 /// A seção "Lembretes" da folha de ajustes: um interruptor para os três
 /// lembretes diários, e um horário para Manhã+Promessas e outro para Noite.
 ///

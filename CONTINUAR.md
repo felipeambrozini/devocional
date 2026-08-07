@@ -318,8 +318,24 @@ python tools/icones.py --corrigir
   Corrigido declarando `ScheduledNotificationReceiver` e
   `ScheduledNotificationBootReceiver` (mais `RECEIVE_BOOT_COMPLETED`) em
   `android/app/src/main/AndroidManifest.xml`. Com o receptor de boot presente,
-  a notificação agendada sobrevive a um reboot — o reagendamento em `main()`
-  ao abrir o app continua como rede de segurança, não como único caminho.
+  a notificação agendada sobrevive a um reboot.
+
+  **Segundo defeito, achado só depois do primeiro estar corrigido: abrir o
+  app perto do horário do lembrete cancelava o lembrete daquele dia.**
+  `main()` reagendava incondicionalmente a cada abertura do app (pensado só
+  para cobrir reboot). `_proximaOcorrencia` compara o horário salvo com a
+  hora atual; se o horário já tiver passado, agenda para o dia seguinte. Como
+  a entrega é `inexactAllowWhileIdle` — pode levar minutos, ou a janela toda,
+  para disparar de verdade — abrir o app nesse intervalo (por exemplo, para
+  ver se a notificação chegou) fazia `main()` reagendar e, com o horário já
+  "passado" por alguns segundos, empurrar o lembrete de hoje para amanhã,
+  cancelando o alarme que ainda não tinha tocado. Confirmado num aparelho
+  real via `dumpsys usagestats` (app aberto 17s depois do horário do
+  lembrete) e `dumpsys alarm` (os três alarmes cancelados no mesmo segundo).
+  Corrigido com `Lembretes.agendados()` (`lib/data/lembretes.dart`, usa
+  `pendingNotificationRequests()`) e `reagendarLembretesSeNecessario`
+  (`lib/telas/comuns.dart`), que só reagenda se não houver nada pendente —
+  `main()` chama só essa função agora.
 
   **Canal `lembretes_diarios` com importância alta.** Ficava em
   `Importance.defaultImportance` (padrão), que só aparece na gaveta sem pop-up.

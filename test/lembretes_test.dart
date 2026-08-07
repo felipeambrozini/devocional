@@ -17,6 +17,7 @@ class _LembretesFalsas implements Lembretes {
 
   final agendamentos = <(TimeOfDay manha, TimeOfDay noite)>[];
   int vezesCancelado = 0;
+  bool _agendado = false;
 
   @override
   Future<void> inicializar({
@@ -37,10 +38,17 @@ class _LembretesFalsas implements Lembretes {
     required TimeOfDay noite,
   }) async {
     agendamentos.add((manhaEPromessas, noite));
+    _agendado = true;
   }
 
   @override
-  Future<void> cancelar() async => vezesCancelado++;
+  Future<void> cancelar() async {
+    vezesCancelado++;
+    _agendado = false;
+  }
+
+  @override
+  Future<bool> agendados() async => _agendado;
 
   @override
   String fusoAtual = 'America/Sao_Paulo';
@@ -126,6 +134,35 @@ void main() {
       expect(manha, const TimeOfDay(hour: 6, minute: 0));
       expect(noite, const TimeOfDay(hour: 21, minute: 0));
     });
+  });
+
+  group('reagendarLembretesSeNecessario', () {
+    test('com os lembretes desligados, não agenda', () async {
+      await reagendarLembretesSeNecessario(estado);
+
+      expect(falsas.agendamentos, isEmpty);
+    });
+
+    test('ligado e sem nada agendado (ex.: reboot), agenda', () async {
+      await estado.definirLembretesAtivos(true);
+
+      await reagendarLembretesSeNecessario(estado);
+
+      expect(falsas.agendamentos, hasLength(1));
+    });
+
+    test(
+      'ligado e já agendado, não reagenda — abrir o app não cancela o '
+      'lembrete do dia que ainda não disparou',
+      () async {
+        await alternarLembretes(estado, true);
+        falsas.agendamentos.clear();
+
+        await reagendarLembretesSeNecessario(estado);
+
+        expect(falsas.agendamentos, isEmpty);
+      },
+    );
   });
 
   group('toque na notificação', () {
