@@ -7,7 +7,7 @@ precisar reconstruir nenhuma decisão.
 
 | Item | Situação |
 |---|---|
-| App Flutter (mobile + web) | Completo. `flutter analyze` limpo, 541 testes passando |
+| App Flutter (mobile + web) | Completo. `flutter analyze` limpo, 556 testes passando |
 | BKJ 1611 | 66 livros, 1189 capítulos, **31.102 versículos, bate exatamente com o canon** |
 | NVT | 31.104 versículos; os 2 desvios são `3 João 1:15` e `Ap 12:18`, versificação da NLT |
 | Manhã e Noite | 366 dias, todos com manhã e noite |
@@ -305,10 +305,29 @@ python tools/icones.py --corrigir
   `ajustesDeLeitura` usa `isScrollControlled: true` e `SingleChildScrollView`
   desde então.
 
-  **Sem receptor de `BOOT_COMPLETED`.** Notificação agendada é apagada pelo
-  Android num reboot do aparelho; só volta quando o app abre de novo, porque
-  `main()` reagenda se `lembretesAtivos`. Ponytail: se isso incomodar na
-  prática, o caminho é um `BroadcastReceiver` escutando o boot.
+  **`ScheduledNotificationReceiver` faltava no manifesto — nenhum lembrete
+  disparava.** Desde a v16 do `flutter_local_notifications` o plugin parou de
+  declarar os próprios receptores no `AndroidManifest.xml` do app; o AAR só
+  traz `VIBRATE` + `POST_NOTIFICATIONS`, o suficiente para o diálogo de
+  permissão funcionar e esconder o problema. Sem o receptor declarado à mão,
+  o `AlarmManager` guardava um `PendingIntent` para um componente inexistente
+  e, na hora marcada, não havia nada para acordar — sem exceção, sem log.
+  Descoberto só ao testar num aparelho de verdade; os testes de
+  `test/lembretes_test.dart` não pegam isso porque rodam contra
+  `_LembretesFalsas`, nunca contra `LembretesReais` nem contra o manifesto.
+  Corrigido declarando `ScheduledNotificationReceiver` e
+  `ScheduledNotificationBootReceiver` (mais `RECEIVE_BOOT_COMPLETED`) em
+  `android/app/src/main/AndroidManifest.xml`. Com o receptor de boot presente,
+  a notificação agendada sobrevive a um reboot — o reagendamento em `main()`
+  ao abrir o app continua como rede de segurança, não como único caminho.
+
+  **Canal `lembretes_diarios` com importância alta.** Ficava em
+  `Importance.defaultImportance` (padrão), que só aparece na gaveta sem pop-up.
+  Ajustado para `Importance.high`/`Priority.high` em
+  `LembretesReais._agendarUm` (`lib/data/lembretes.dart`). A importância de um
+  canal Android trava na primeira notificação exibida — se o canal já tiver
+  sido criado num aparelho de teste antes deste ajuste, é preciso desinstalar
+  o app para o valor novo valer.
 - **A assinatura de Spurgeon é tinta dourada chapada (`#E3C567`).** Num tema
   claro ela sumiria; o caminho é tingir o mesmo asset pelo tema, não ter duas
   imagens.
@@ -346,65 +365,62 @@ python tools/icones.py --corrigir
   (`_abrirAcoesDoVersiculo`, extraída de dentro de `_Leitor` para ser
   compartilhada pelas duas).
 
-  Verificado por `flutter analyze` e pela suíte de testes
-  (`test/biblia_coluna_dupla_test.dart`), não a olho num Windows de verdade:
-  a sessão que implementou isto não tinha um navegador com renderização
-  visível disponível. Antes de considerar fechado, abrir numa janela larga de
-  verdade e conferir o espaçamento entre as colunas e o cabeçalho de cada uma.
+  Verificado por `flutter analyze`, pela suíte de testes
+  (`test/biblia_coluna_dupla_test.dart`) e a olho num Windows de verdade pelo
+  usuário.
+- **`TelaBiblia.versaoInicial` é sobreposição local, não preferência global.**
+  Uma marcação salva na NVT abre na NVT sem mudar a versão preferida do resto
+  do app: `_TelaBibliaState._versao` existe separado de `Estado.versao`
+  justamente para isso, fixado uma vez em `didChangeDependencies` e só
+  persistido globalmente se a pessoa trocar pelo próprio botão da AppBar
+  depois de já estar na tela.
+
+  `_Leitor` recebe `versao` explícito do pai (`required this.versao`), do
+  mesmo jeito que `_LeitorDuplo` já fazia para as duas colunas — ler
+  `estado.versao` direto de dentro de `_Leitor` continuaria mostrando o texto
+  certo, mas favoritar ou anotar um versículo aberto por uma marcação
+  gravaria na versão global errada, em silêncio.
+- **A busca ganhou duas abas: Bíblia e Devocionais.** `TelaBusca`
+  (`lib/telas/busca.dart`) virou `DefaultTabController`, mesmo padrão de abas
+  que `TelaNotas` já usa para Favoritos/Anotações. Digitar uma referência
+  ("João 3:16") mostra um cartão de ir direto no topo da aba Bíblia, via
+  `faixaDeVersiculoDaReferencia` (`lib/data/canon.dart`) — a busca de texto
+  nunca acharia isso, porque o versículo não contém a própria referência.
+
+  A aba Devocionais busca em Manhã e Noite e Promessas de Deus
+  (`Conteudo.buscarDevocionais`), síncrona e sem teto de resultados: os dois
+  corpora somam 366+366 registros já cacheados por completo depois da
+  primeira leitura, bem mais barato que a varredura de 66 arquivos por versão
+  que a busca da Bíblia precisa. `AchadoDevocional.leitura` é uma string
+  ("manha"/"noite"/"promessas"), não o enum `Leitura` de
+  `lib/telas/devocional.dart` — mesma ponte que `Lembretes` já usa
+  (`lib/data/lembretes.dart`), porque `data/` não importa `telas/`.
+
+  A busca da Bíblia também parou de girar para sempre num erro de asset: o
+  `.listen()` do stream ganhou `onError`, mostrando `AvisoDeErro` em vez de um
+  spinner eterno com lista parcial.
 
 ## Próximas implementações
 
-Em ordem de prioridade. O item 1 não é funcionalidade, é dívida de verificação,
-e vem antes de qualquer coisa nova.
+### 1. Confirmar os lembretes num aparelho Android de verdade, com o manifesto corrigido
 
-### 1. Verificar os lembretes num aparelho de verdade
+O item anterior ("verificar num aparelho de verdade") foi fechado sem o teste ter
+acontecido, e por isso a falta do `ScheduledNotificationReceiver` (ver seção de
+lembretes acima) passou despercebida até o usuário relatar que nenhuma notificação
+chegava. Desta vez o teste em aparelho físico precisa mesmo acontecer antes de
+fechar o item:
 
-**Nada do caminho real foi exercitado.** Os 9 testes de `test/lembretes_test.dart`
-usam `_LembretesFalsas`; o que roda em produção (`LembretesReais`) nunca disparou
-uma notificação. Sem plugin real, sem canal de plataforma, sem relógio de sistema.
-
-O que precisa ser confirmado num Android e num iOS físicos:
-
-- O diálogo de permissão aparece ao ligar o interruptor, e negar de fato mantém
-  o interruptor desligado (o `SnackBar` de aviso é testado; o diálogo do sistema
-  não).
-- A notificação **dispara** no horário. Truque de teste: ajustar o horário para
-  dois ou três minutos à frente e esperar. Lembrar que é `inexactAllowWhileIdle`,
-  então uma janela de alguns minutos é o comportamento esperado, não um defeito.
-- Tocar a notificação abre **a leitura certa** (Manhã, Promessas ou Noite), nos
-  dois casos: app aberto em segundo plano, e app completamente fechado. O segundo
-  usa `chaveQueAbriuOApp()`, caminho diferente do callback.
-- O fuso está certo. `tz.local` é UTC por padrão no pacote `timezone`; se o
-  `flutter_timezone` falhar, o `catch` deixa em UTC e 6h vira 3h no Brasil, em
-  silêncio. **Este é o defeito mais provável de todos e o mais difícil de
-  perceber.** Conferir agendando para daqui a poucos minutos e vendo se dispara
-  na hora certa, não três horas depois.
-- Reboot: reiniciar o aparelho, não abrir o app, e confirmar que a notificação
-  **não** dispara (comportamento documentado e aceito). Depois abrir o app uma
-  vez e confirmar que volta a funcionar.
-
-Se o fuso estiver errado, o conserto é em `LembretesReais.inicializar()`
-(`lib/data/lembretes.dart`). Considerar trocar o `catch` silencioso por um aviso
-visível, já que "horário errado sem explicação" é pior que "lembretes indisponíveis".
-
-### 2. Offline de verdade na web
-
-`flutter build web` gera `flutter_service_worker.js` automaticamente, mas **nunca
-foi verificado** se os assets de conteúdo (as duas Bíblias, os devocionais, as
-introduções — cerca de 12 MB) são cacheados para uso sem rede. Um app devocional
-que funciona no avião é um ganho real, e pode ser que já funcione.
-
-Verificar antes de implementar: abrir o app publicado, desligar a rede nas
-ferramentas de desenvolvedor, e tentar ler um capítulo de um livro ainda não
-aberto naquela sessão.
-
-### 3. Receptor de BOOT_COMPLETED
-
-Só se o item 1 mostrar que incomoda na prática. Notificação agendada é apagada
-pelo Android num reboot, e hoje só volta quando o app abre de novo. O caminho é
-um `BroadcastReceiver` escutando `BOOT_COMPLETED` mais a permissão
-`RECEIVE_BOOT_COMPLETED`. Custo real: código nativo Android que o resto do app
-não tem.
+- Desinstalar o app antes de instalar o novo build (o canal `lembretes_diarios`
+  trava a importância na primeira notificação exibida).
+- Conferir que o build mesclado tem os dois receptores
+  (`build/app/intermediates/merged_manifest/debug/AndroidManifest.xml`).
+- As notificações chegam no horário (janela de minutos é esperada,
+  `inexactAllowWhileIdle`), com pop-up (`Importance.high`).
+- Tocar abre a leitura certa, com o app aberto e com o app fechado.
+- Reboot sem abrir o app: os alarmes sobrevivem (`adb shell dumpsys alarm`),
+  graças ao `ScheduledNotificationBootReceiver` novo.
+- iOS continua sem verificação em aparelho físico — só Android foi testado até
+  aqui.
 
 ## O que foi decidido NÃO fazer
 
@@ -420,6 +436,48 @@ Registrado para não ser reaberto sem motivo novo:
 - **Widget na tela inicial.** Código nativo nas duas plataformas para pouco retorno.
 - **Lembretes em web e desktop.** Ver a seção de lembretes acima: falta
   infraestrutura confiável para o app fechado disparar algo.
+- **Offline de verdade na web.** Investigado e recusado pelo usuário, não só
+  adiado. O Flutter 3.44 **removeu** o cache automático que o
+  `flutter_service_worker.js` gerado costumava ter: hoje o arquivo só se
+  autodesregistra, sem cachear nada (confirmado lendo o gerador do próprio
+  SDK, `flutter_tools/lib/src/web/file_generators/js/flutter_service_worker.js`;
+  o próprio `--pwa-strategy` está marcado como descontinuado). Segundo
+  problema, independente do primeiro: por padrão o CanvasKit (o motor de
+  desenho) carrega de `gstatic.com`, não do build local — `--no-web-resources-cdn`
+  resolveria isso, mas embutindo o CanvasKit local no download de todo mundo
+  (uns 2 a 8 MB a mais), mesmo em quem nunca fica sem rede.
+
+  Fazer direito exigiria escrever um service worker próprio contra um
+  mecanismo de registro que o próprio Flutter avisa que vai deixar de
+  funcionar numa versão futura. Android e iOS já guardam tudo localmente por
+  conta própria; a web é a única plataforma sem isso, e o app não foi pensado
+  para "ler no avião" pelo navegador. Não reabrir sem o Flutter trazer de
+  volta um jeito suportado de fazer isso.
+
+## Dívida técnica menor, sem prioridade
+
+Achados de uma auditoria, registrados para não precisar redescobrir; nenhum
+bloqueia nada:
+
+- `cupertino_icons` no `pubspec.yaml` nunca é referenciado em `lib/`; é
+  dependência do template padrão do Flutter.
+- `assets/images/felipe_alt.webp` está na lista de assets do `pubspec.yaml`
+  mas não é lido por nada em `lib/`.
+- `assets/bible/{bkj,nvt}/index.json` nunca são lidos em tempo de execução —
+  `canon.dart` já documenta que a lista embutida no código é usada no lugar
+  deles.
+- `pubspec.yaml` declara `sdk: ^3.9.2` em `environment`, mas o `pubspec.lock`
+  já resolveu para `dart: ">=3.12.0 <4.0.0"` — a declaração está defasada em
+  relação ao que o projeto de fato usa.
+- **Existe uma terceira ramificação por plataforma, não contada na frase "a
+  única" acima.** `lib/telas/hoje.dart` (o cabeçalho da tela Hoje) também
+  ramifica por `kIsWeb`, escondendo foto e nome na web ("Na web o app fica
+  público; sem foto nem nome, só a saudação"). O comportamento é deliberado;
+  só a contagem de "única ramificação" na seção dos chevrons está errada.
+- `busca.dart` não tinha teste de verdade até a rodada de busca em duas abas,
+  além de uma linha que confere que Ctrl+F abre a tela. `test/busca_test.dart`
+  cobre o que foi adicionado; não fecha a lacuna mais ampla — por exemplo, o
+  tokenizador de destaque de termo (`_destacar`) continua sem teste dedicado.
 
 ## Comandos de regeneração de conteúdo
 

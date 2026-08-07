@@ -1,6 +1,7 @@
 import 'package:felipe_ambrozini/data/canon.dart';
 import 'package:felipe_ambrozini/data/conteudo.dart';
 import 'package:felipe_ambrozini/data/estado.dart';
+import 'package:felipe_ambrozini/telas/biblia.dart';
 import 'package:felipe_ambrozini/telas/notas.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -99,6 +100,33 @@ void main() {
     expect(find.text('Favoritos (0)'), findsOneWidget);
     expect(find.text('Nada encontrado'), findsOneWidget);
   });
+
+  testWidgets(
+    'marcação salva na NVT abre na NVT, sem mudar a versão preferida do app',
+    (tester) async {
+      final estado = Estado(await SharedPreferences.getInstance());
+      // A preferida do app fica na BKJ (padrão do Estado); a marcação é da NVT.
+      expect(estado.versao, Versao.bkj);
+      await estado.alternarFavorito(Versao.nvt, 'joao', 3, 16);
+      await tester.runAsync(
+        () => Conteudo.instancia.capitulo(Versao.nvt, 'joao', 3),
+      );
+      await montar(tester, estado);
+
+      await tester.tap(find.textContaining('João 3:16'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TelaBiblia), findsOneWidget);
+      // O sigla na AppBar do leitor prova que abriu na versão da marcação,
+      // não na preferida.
+      expect(find.text('NVT'), findsOneWidget);
+      expect(
+        estado.versao,
+        Versao.bkj,
+        reason: 'só a abertura foi local; a preferência global não mudou',
+      );
+    },
+  );
 
   testWidgets('limpar a busca devolve a lista inteira', (tester) async {
     final estado = Estado(await SharedPreferences.getInstance());

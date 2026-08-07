@@ -133,6 +133,34 @@ void main() {
     expect(cartao.bottom, lessThanOrEqualTo(tela.bottom));
   });
 
+  testWidgets('o Plano não trava no ano em que foi aberto', (tester) async {
+    await tester.runAsync(() async {
+      await Conteudo.instancia.plano(bissexto: false);
+      await Conteudo.instancia.plano(bissexto: true);
+    });
+    final estado = await estadoLimpo();
+    Widget tela(DateTime hoje) => MaterialApp(
+      home: EscopoDoEstado(estado: estado, child: TelaPlano(hoje: hoje)),
+    );
+
+    await tester.pumpWidget(tela(DateTime(2027, 12, 31)));
+    await tester.pumpAndSettle();
+
+    // Redesenha o MESMO widget com uma data nova, simulando o relógio andando
+    // enquanto a tela ficou viva no IndexedStack da moldura (didUpdateWidget,
+    // não um novo State). Antes do conserto, "_hoje" ficava presa em 2027.
+    await tester.pumpWidget(tela(DateTime(2028, 1, 1)));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Fevereiro'));
+    await tester.pumpAndSettle();
+
+    // 29 dias e não 28: prova que carregou o cronograma bissexto de 2028, não
+    // o de 2027 que a tela tinha aberto com. Presa em 2027, a contagem diria
+    // 28 (fevereiro comum) mesmo com o chip de fevereiro selecionado.
+    expect(find.textContaining('de 29 dias concluídos em Fevereiro'), findsOneWidget);
+  });
+
   testWidgets('a moldura abre em Hoje e mostra as cinco seções', (
     tester,
   ) async {

@@ -19,6 +19,7 @@ class TelaBiblia extends StatefulWidget {
     this.livroInicial,
     this.capituloInicial,
     this.destacar,
+    this.versaoInicial,
   });
 
   final String? livroInicial;
@@ -27,6 +28,11 @@ class TelaBiblia extends StatefulWidget {
   /// Faixa de versículos a destacar, para quando o cronograma pede
   /// "Salmos 119:1 a 56" e não o capítulo inteiro.
   final (int, int)? destacar;
+
+  /// Versão em que abrir, para quando o destino vem de uma marcação salva
+  /// numa versão diferente da preferida. `null` usa a preferida
+  /// (`Estado.versao`), como sempre foi.
+  final Versao? versaoInicial;
 
   @override
   State<TelaBiblia> createState() => _TelaBibliaState();
@@ -37,6 +43,13 @@ class _TelaBibliaState extends State<TelaBiblia> {
   late int _capitulo;
   final _rolagem = ScrollController();
   bool _restaurou = false;
+
+  /// Sobreposição local à versão preferida, para abrir uma marcação salva
+  /// numa versão diferente sem mudar a preferência do resto do app. Igual à
+  /// versão do `Estado` até que [widget.versaoInicial] diga o contrário, ou
+  /// até a pessoa trocar pelo próprio botão da AppBar, que grava as duas.
+  late Versao _versao;
+  bool _versaoPronta = false;
 
   @override
   void initState() {
@@ -54,6 +67,10 @@ class _TelaBibliaState extends State<TelaBiblia> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (!_versaoPronta) {
+      _versaoPronta = true;
+      _versao = widget.versaoInicial ?? EscopoDoEstado.de(context).versao;
+    }
     // Só retoma a última leitura quando a tela abriu sem destino explícito.
     if (_restaurou || widget.livroInicial != null) return;
     _restaurou = true;
@@ -62,6 +79,13 @@ class _TelaBibliaState extends State<TelaBiblia> {
       _livro = ultima.$1;
       _capitulo = ultima.$2;
     }
+  }
+
+  /// Troca a versão em uso nesta tela e, como o botão da AppBar sempre fez,
+  /// também grava como a preferida do app — só a abertura inicial é local.
+  void _definirVersao(Versao nova) {
+    setState(() => _versao = nova);
+    EscopoDoEstado.de(context).definirVersao(nova);
   }
 
   Livro get _livroAtual => livroPorSlug(_livro) ?? canon.first;
@@ -173,7 +197,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
           actions: [
             // Sem "versão atual" para trocar enquanto as duas aparecem juntas.
             if (!colunaDupla)
-              BotaoDeVersao(atual: estado.versao, ao: estado.definirVersao),
+              BotaoDeVersao(atual: _versao, ao: _definirVersao),
             if (larguraDupla)
               IconButton(
                 tooltip: colunaDupla
@@ -261,9 +285,9 @@ class _TelaBibliaState extends State<TelaBiblia> {
                       : CarregaUmaVez<Capitulo>(
                           // A chave inclui a versão para que alternar BKJ e NVT
                           // recarregue o mesmo capítulo, mantendo livro e número.
-                          chave: '${estado.versao.pasta}/$_livro/$_capitulo',
+                          chave: '${_versao.pasta}/$_livro/$_capitulo',
                           carregar: () => Conteudo.instancia.capitulo(
-                            estado.versao,
+                            _versao,
                             _livro,
                             _capitulo,
                           ),
@@ -291,6 +315,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
                               onHorizontalDragEnd: _aoArrastarCapitulo,
                               child: _Leitor(
                                 capitulo: capitulo,
+                                versao: _versao,
                                 rolagem: _rolagem,
                                 destacar: widget.destacar,
                               ),
@@ -326,16 +351,26 @@ class _TelaBibliaState extends State<TelaBiblia> {
 }
 
 class _Leitor extends StatelessWidget {
-  const _Leitor({required this.capitulo, required this.rolagem, this.destacar});
+  const _Leitor({
+    required this.capitulo,
+    required this.versao,
+    required this.rolagem,
+    this.destacar,
+  });
 
   final Capitulo capitulo;
+
+  /// Explícito, e não lido de `Estado`: `_LeitorDuplo` já faz assim para as
+  /// suas duas colunas, e uma marcação aberta numa versão diferente da
+  /// preferida (ver `TelaBiblia.versaoInicial`) precisa que favoritar,
+  /// anotar e copiar gravem na versão que está na tela, não na global.
+  final Versao versao;
   final ScrollController rolagem;
   final (int, int)? destacar;
 
   @override
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
-    final estado = EscopoDoEstado.de(context);
     final tema = Theme.of(context).textTheme;
 
     return ListView.builder(
@@ -386,7 +421,7 @@ class _Leitor extends StatelessWidget {
             (numero >= destacar!.$1 && numero <= destacar!.$2);
 
         return _LinhaDeVersiculo(
-          versao: estado.versao,
+          versao: versao,
           livro: capitulo.livro,
           capituloNumero: capitulo.numero,
           referencia: capitulo.referencia,

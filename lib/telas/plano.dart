@@ -22,7 +22,11 @@ class TelaPlano extends StatefulWidget {
 }
 
 class _TelaPlanoState extends State<TelaPlano> {
-  late final DateTime _hoje = widget.hoje ?? DateTime.now();
+  // Getter, não `late final`: o IndexedStack da moldura mantém esta tela viva
+  // indefinidamente (ver main.dart), e um valor fixado na primeira leitura
+  // travaria "hoje" no dia em que a tela foi aberta, inclusive na virada do
+  // ano. Mesmo raciocínio de `_semGestoDeToque` em `lib/telas/biblia.dart`.
+  DateTime get _hoje => widget.hoje ?? DateTime.now();
   late int _mes = _hoje.month;
 
   final _rolagem = ScrollController();

@@ -30,7 +30,23 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Sem este receptor o AlarmManager acorda um componente que não existe e a
+             notificação agendada nunca aparece. Desde a v16 o plugin não declara mais
+             os próprios receptores; o app precisa declarar. -->
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
     </application>
+    <!-- O plugin reagenda os lembretes depois de um reboot: o Android apaga os
+         alarmes ao reiniciar, e sem isto o lembrete da manhã morre numa noite em
+         que o celular reiniciou sozinho. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.

@@ -74,9 +74,9 @@ abstract class Lembretes {
   Future<void> cancelar();
 
   /// O fuso horário resolvido para agendar (ex.: "America/Sao_Paulo"). Só
-  /// para depurar na tela de ajustes: se aparecer "UTC" num aparelho fora
-  /// desse fuso, a detecção falhou e caiu no padrão silencioso do pacote
-  /// `timezone` (ver Item 1 do CONTINUAR.md, o defeito mais difícil de notar).
+  /// para depurar: se aparecer "UTC" num aparelho fora desse fuso, a detecção
+  /// falhou e caiu no padrão silencioso do pacote `timezone`, o defeito mais
+  /// difícil de notar nos lembretes.
   String get fusoAtual;
 }
 
@@ -174,6 +174,12 @@ class LembretesReais implements Lembretes {
         android: AndroidNotificationDetails(
           'lembretes_diarios',
           'Lembretes diários',
+          // Alta: um lembrete de 6h que só aparece na gaveta é um lembrete
+          // perdido. Só vale enquanto o canal não existe no aparelho — o
+          // Android congela a importância na primeira exibição e ignora
+          // mudanças depois.
+          importance: Importance.high,
+          priority: Priority.high,
         ),
         iOS: DarwinNotificationDetails(),
       ),

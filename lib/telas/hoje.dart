@@ -265,6 +265,16 @@ class _LeituraDeHoje extends StatelessWidget {
         // Sem este guard o primeiro frame, que sempre chega sem dado porque a
         // leitura é assíncrona, cairia no aviso de 29 de fevereiro abaixo e o
         // mostraria em qualquer dia comum até o cronograma carregar.
+        // Erro (asset corrompido ou ausente) e "não há dia para esta data"
+        // pareciam a mesma coisa antes: os dois chegam com snap.data == null,
+        // e sem separar isso a tela sempre culpava 29 de fevereiro, mesmo
+        // num erro de verdade em qualquer outro dia do ano.
+        if (snap.hasError) {
+          return const Cartao(
+            titulo: 'Leitura de hoje',
+            child: Text('Não foi possível carregar o cronograma.'),
+          );
+        }
         if (snap.connectionState != ConnectionState.done) {
           return const Cartao(
             titulo: 'Leitura de hoje',

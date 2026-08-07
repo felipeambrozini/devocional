@@ -9,6 +9,12 @@ import 'package:flutter_test/flutter_test.dart';
 /// de que o texto extraído dos PDFs continua íntegro depois de qualquer mexida no
 /// extrator, que é onde os erros silenciosos aparecem.
 void main() {
+  // Só para os testes de buscarDevocionais, que passam por `rootBundle`
+  // (Conteudo lê os dois JSONs de devocional do bundle, não do disco direto
+  // como o resto deste arquivo). Sem isto, `rootBundle.loadString` não tem
+  // canal de plataforma para responder. Mesmo padrão de `fontes_test.dart`.
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('normalizacao da busca', () {
     test('ignora acento e caixa', () {
       expect(Conteudo.normalizar('CORAÇÃO'), 'coracao');
@@ -221,6 +227,45 @@ void main() {
         }
       }
       expect(naoResolvidas, isEmpty);
+    });
+  });
+
+  group('buscarDevocionais', () {
+    test('acha um termo de Manhã com a leitura e a data certas', () async {
+      final achados = await Conteudo.instancia.buscarDevocionais(
+        'cansativa peregrinação',
+      );
+      expect(achados, hasLength(1));
+      expect(achados.single.leitura, 'manha');
+      expect(achados.single.data, '01-01');
+    });
+
+    test('acha um termo de Promessas com a leitura "promessas"', () async {
+      final achados = await Conteudo.instancia.buscarDevocionais(
+        'primeira promessa dada',
+      );
+      expect(achados, hasLength(1));
+      expect(achados.single.leitura, 'promessas');
+      expect(achados.single.data, '01-01');
+    });
+
+    test('ignora acento e caixa, igual à busca da Bíblia', () async {
+      final achados = await Conteudo.instancia.buscarDevocionais(
+        'CANSATIVA PEREGRINACAO',
+      );
+      expect(achados, hasLength(1));
+    });
+
+    test('termo sem nenhum achado devolve lista vazia', () async {
+      final achados = await Conteudo.instancia.buscarDevocionais(
+        'xilofone inexistente',
+      );
+      expect(achados, isEmpty);
+    });
+
+    test('menos de três letras devolve lista vazia, sem varrer nada', () async {
+      final achados = await Conteudo.instancia.buscarDevocionais('jo');
+      expect(achados, isEmpty);
     });
   });
 

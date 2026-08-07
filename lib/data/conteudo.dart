@@ -234,13 +234,7 @@ class Conteudo {
   Map<String, Map<String, dynamic>>? _promessas;
   bool _tentouPromessas = false;
 
-  /// [versao] escolhe de qual tradução o versículo em destaque vem, do mesmo
-  /// jeito que em [devocional]; o texto da promessa em si é sempre o mesmo,
-  /// escrito na voz de Spurgeon, independente da tradução do versículo.
-  Future<Devocional?> promessa(
-    DateTime data, {
-    Versao versao = Versao.bkj,
-  }) async {
+  Future<Map<String, Map<String, dynamic>>?> _carregarPromessas() async {
     if (!_tentouPromessas) {
       _tentouPromessas = true;
       try {
@@ -254,12 +248,61 @@ class Conteudo {
         _promessas = null;
       }
     }
-    final dados = _promessas;
+    return _promessas;
+  }
+
+  /// [versao] escolhe de qual tradução o versículo em destaque vem, do mesmo
+  /// jeito que em [devocional]; o texto da promessa em si é sempre o mesmo,
+  /// escrito na voz de Spurgeon, independente da tradução do versículo.
+  Future<Devocional?> promessa(
+    DateTime data, {
+    Versao versao = Versao.bkj,
+  }) async {
+    final dados = await _carregarPromessas();
     if (dados == null) return null;
     final chave = chaveDoDia(data);
     final dia = dados[chave];
     if (dia == null) return null;
     return _comVersiculosResolvidos(Devocional.doJson(dia), versao);
+  }
+
+  /// Busca nos devocionais de Spurgeon (Manhã, Noite e Promessas de Deus).
+  ///
+  /// Diferente de [buscar]: síncrona e sem teto. Os dois corpora somam 366 +
+  /// 366 registros já cacheados por completo depois da primeira leitura —
+  /// 2 MB, não os 4,7 MB por versão da Bíblia — então uma varredura completa
+  /// não pesa o bastante para precisar de stream nem de limite de resultados.
+  /// ponytail: sem paginação; adicionar se um dia ficar lento de ver na tela.
+  Future<List<AchadoDevocional>> buscarDevocionais(String termo) async {
+    final alvo = _normalizar(termo);
+    if (alvo.length < 3) return const [];
+
+    final devocionais = await _carregarDevocionais();
+    final promessas = await _carregarPromessas();
+    final achados = <AchadoDevocional>[];
+
+    void conferir(String leitura, String data, Map<String, dynamic> entrada) {
+      final titulo = entrada['title'] as String? ?? '';
+      final texto = entrada['text'] as String? ?? '';
+      if (_normalizar(titulo).contains(alvo) || _normalizar(texto).contains(alvo)) {
+        achados.add(
+          AchadoDevocional(leitura: leitura, data: data, titulo: titulo, texto: texto),
+        );
+      }
+    }
+
+    for (final MapEntry(key: data, value: dia) in devocionais.entries) {
+      for (final periodo in Periodo.values) {
+        final entrada = dia[periodo.chave] as Map<String, dynamic>?;
+        if (entrada != null) conferir(periodo.chave, data, entrada);
+      }
+    }
+    if (promessas != null) {
+      for (final MapEntry(key: data, value: entrada) in promessas.entries) {
+        conferir('promessas', data, entrada);
+      }
+    }
+    return achados;
   }
 
   /// Introdução de um livro. Devolve nulo quando ainda não foi escrita.

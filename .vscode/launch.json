@@ -18,14 +18,22 @@
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
-      "args": ["-d", "chrome"]
+      "args": [
+        "-d",
+        "chrome"
+      ],
+      "flutterMode": "release"
     },
     {
       "name": "Windows",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
-      "args": ["-d", "windows"]
+      "args": [
+        "-d",
+        "windows"
+      ],
+      "flutterMode": "release"
     }
   ]
 }

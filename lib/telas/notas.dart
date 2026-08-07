@@ -281,6 +281,7 @@ class _CartaoDeMarcacao extends StatelessWidget {
               livroInicial: marcacao.livro,
               capituloInicial: marcacao.capitulo,
               destacar: (marcacao.versiculo, marcacao.versiculo),
+              versaoInicial: marcacao.versao,
             ),
           ),
         ),
