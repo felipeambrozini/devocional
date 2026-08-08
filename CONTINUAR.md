@@ -598,6 +598,21 @@ python tools/icones.py --corrigir
   pediria um test runner de web que o projeto não usa. Mesma lacuna que já
   existia para o `kIsWeb` de `hoje.dart` (esconder foto e nome na web), não
   é esquecimento novo.
+- **A versão do Flutter é fixa (`3.44.8`), não `stable`, desde 08/08/2026.**
+  Decisão do usuário depois que a versão web foi publicada: com `channel:
+  stable`, uma release nova do Flutter podia quebrar o `deploy-web.yml` sem
+  nenhuma mudança no repositório, e o sintoma seria um build vermelho sem
+  causa aparente. Fixado nos dois lugares que liam "stable": `.fvmrc` (SDK
+  local, `fvm use 3.44.8`, que também atualizou `.vscode/settings.json` para
+  apontar `.fvm/versions/3.44.8`) e `subosito/flutter-action@v2` no
+  workflow, trocando `channel: stable` por `flutter-version: 3.44.8`.
+  Verificado com `flutter analyze` limpo e **564 testes**, já com o SDK
+  pinado rodando localmente.
+
+  **Atualizar de propósito, mais adiante:** trocar o número nos dois lugares
+  ao mesmo tempo (`.fvmrc` e o workflow), rodar a suíte local antes de
+  comitar. Nunca só um dos dois, senão o CI testa numa versão e o
+  desenvolvimento local noutra.
 - **A busca ganhou duas abas: Bíblia e Devocionais.** `TelaBusca`
   (`lib/telas/busca.dart`) virou `DefaultTabController`, mesmo padrão de abas
   que `TelaNotas` já usa para Favoritos/Anotações. Digitar uma referência

@@ -19,9 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Versão exata, não "stable": uma release nova do Flutter podia quebrar
+      # o deploy sem nenhuma mudança no repositório. Mesma versão do .fvmrc,
+      # que já fixa o SDK local — aqui é o mesmo cuidado para o CI.
       - uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          flutter-version: 3.44.8
       - run: flutter pub get
       - run: flutter test
       - run: flutter build web --release --base-href /felipe_ambrozini/
