@@ -1,12 +1,12 @@
 {
-    "name": "Felipe Ambrozini",
-    "short_name": "Felipe Ambrozini",
+    "name": "Devocional",
+    "short_name": "Devocional",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#2E1B10",
     "theme_color": "#C9A227",
-    "description": "Aplicativo devocional pessoal: Bíblias BKJ 1611 e NVT, devocionais de Spurgeon, plano de leitura anual.",
-    "orientation": "portrait-primary",
+    "description": "Bíblia em duas versões (BKJ 1611 e NVT), devocionais de Spurgeon e plano de leitura anual.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

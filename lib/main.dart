@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'data/canon.dart';
 import 'data/estado.dart';
 import 'data/lembretes.dart';
 import 'data/modelos.dart';
@@ -28,6 +29,32 @@ void _abrirLeituraDoLembrete(String chave) {
   );
 }
 
+/// Abre o versículo ou capítulo do parâmetro `ler` da URL (`?ler=joao.3.16`),
+/// para quem chega por um link compartilhado. Fora da web `Uri.base` é o
+/// diretório de trabalho, sem esse parâmetro, então não precisa de `kIsWeb`
+/// para não fazer nada nas outras plataformas.
+void _abrirLeituraDoLink() {
+  final parametro = Uri.base.queryParameters['ler'];
+  if (parametro == null) return;
+  final alvo = alvoDoLink(parametro);
+  if (alvo == null) return;
+  final (slug, capitulo, versiculo) = alvo;
+  final versaoParametro = Uri.base.queryParameters['versao'];
+  final versao = Versao.values
+      .where((v) => v.pasta == versaoParametro)
+      .firstOrNull;
+  navigatorKey.currentState?.push(
+    MaterialPageRoute(
+      builder: (_) => TelaBiblia(
+        livroInicial: slug,
+        capituloInicial: capitulo,
+        destacar: versiculo == null ? null : (versiculo, versiculo),
+        versaoInicial: versao,
+      ),
+    ),
+  );
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final estado = await Estado.abrir();
@@ -47,6 +74,11 @@ Future<void> main() async {
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _abrirLeituraDoLembrete(chaveDeAbertura),
     );
+  } else {
+    // Um link e um toque de notificação nunca chegam juntos: o link só existe
+    // na web, e lembrete só em Android e iOS. O `else` é só para não empurrar
+    // duas telas por cima uma da outra se algum dia os dois coincidirem.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _abrirLeituraDoLink());
   }
 }
 

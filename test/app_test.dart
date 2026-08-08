@@ -486,7 +486,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         copiado,
-        '"No princípio criou Deus o céu e a terra."\nGênesis 1:1 (BKJ)',
+        '"No princípio criou Deus o céu e a terra."\nGênesis 1:1 (BKJ)\n'
+        'https://felipeambrozini.github.io/felipe_ambrozini/?ler=genesis.1.1',
       );
     },
   );

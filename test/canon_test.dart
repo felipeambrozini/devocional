@@ -117,5 +117,27 @@ void main() {
       expect(livroPorSlug('obadias')!.capitulos, 1);
       expect(livroPorSlug('3joao')!.capitulos, 1);
     });
+
+    test('resolve o alvo de um link, capitulo com ou sem versiculo', () {
+      expect(alvoDoLink('joao.3.16'), ('joao', 3, 16));
+      expect(alvoDoLink('joao.3'), ('joao', 3, null));
+    });
+
+    test('rejeita link com slug, numero ou capitulo invalido', () {
+      expect(alvoDoLink('inexistente.3.16'), isNull);
+      expect(alvoDoLink('joao.abc'), isNull);
+      expect(alvoDoLink('joao.3.abc'), isNull);
+      // João só tem 21 capítulos.
+      expect(alvoDoLink('joao.99'), isNull);
+      expect(alvoDoLink('joao'), isNull);
+      expect(alvoDoLink('joao.3.16.extra'), isNull);
+    });
+
+    test('link de um versiculo eh o inverso de alvoDoLink', () {
+      final link = linkDoVersiculo('joao', 3, 16);
+      expect(link, '$enderecoDoSite?ler=joao.3.16');
+      final parametro = link.split('?ler=').last;
+      expect(alvoDoLink(parametro), ('joao', 3, 16));
+    });
   });
 }

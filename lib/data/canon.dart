@@ -356,3 +356,31 @@ enum Versao {
   final String nome;
   final String sigla;
 }
+
+/// Onde o build web fica publicado. Usado para montar o link absoluto de um
+/// versículo (o rastreador de prévia do WhatsApp não resolve caminho relativo)
+/// e para reconhecer, em `main.dart`, se `Uri.base` é o próprio site ou o
+/// diretório de trabalho de uma plataforma que não é web.
+const enderecoDoSite = 'https://felipeambrozini.github.io/felipe_ambrozini/';
+
+/// Livro, capítulo e versículo (opcional) a partir do parâmetro `ler` de um
+/// link, como `joao.3.16` ou `joao.3`. Serve para main.dart abrir a leitura
+/// que veio por URL, sem duplicar a validação de slug que `livroPorSlug` já
+/// faz. `null` para slug inexistente ou número que não faz sentido — melhor
+/// cair na tela Hoje do que abrir uma leitura errada.
+(String, int, int?)? alvoDoLink(String parametro) {
+  final partes = parametro.split('.');
+  if (partes.length < 2 || partes.length > 3) return null;
+  final livro = livroPorSlug(partes[0]);
+  final capitulo = int.tryParse(partes[1]);
+  if (livro == null || capitulo == null) return null;
+  if (capitulo < 1 || capitulo > livro.capitulos) return null;
+  final versiculo = partes.length == 3 ? int.tryParse(partes[2]) : null;
+  if (partes.length == 3 && versiculo == null) return null;
+  return (livro.slug, capitulo, versiculo);
+}
+
+/// Link direto para um versículo, o inverso de [alvoDoLink]. Vai junto do
+/// texto de Copiar e Compartilhar em `biblia.dart`.
+String linkDoVersiculo(String slug, int capitulo, int versiculo) =>
+    '$enderecoDoSite?ler=$slug.$capitulo.$versiculo';

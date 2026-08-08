@@ -769,7 +769,14 @@ Future<void> _abrirAcoesDoVersiculo(
                 final navegador = Navigator.of(folha);
                 await Clipboard.setData(
                   ClipboardData(
-                    text: _textoDoVersiculo(referencia, numero, texto, versao),
+                    text: _textoDoVersiculo(
+                      referencia,
+                      numero,
+                      texto,
+                      versao,
+                      livro,
+                      capituloNumero,
+                    ),
                   ),
                 );
                 navegador.pop();
@@ -785,7 +792,14 @@ Future<void> _abrirAcoesDoVersiculo(
                 final navegador = Navigator.of(folha);
                 await SharePlus.instance.share(
                   ShareParams(
-                    text: _textoDoVersiculo(referencia, numero, texto, versao),
+                    text: _textoDoVersiculo(
+                      referencia,
+                      numero,
+                      texto,
+                      versao,
+                      livro,
+                      capituloNumero,
+                    ),
                   ),
                 );
                 navegador.pop();
@@ -821,13 +835,19 @@ Future<void> _abrirAcoesDoVersiculo(
   );
 }
 
-/// O mesmo texto para Copiar e Compartilhar, num lugar só.
+/// O mesmo texto para Copiar e Compartilhar, num lugar só. O link vale em
+/// qualquer plataforma, não só na web: é assim que quem recebe chega direto
+/// ao versículo, mesmo copiado ou compartilhado do celular numa live.
 String _textoDoVersiculo(
   String referencia,
   int numero,
   String texto,
   Versao versao,
-) => '"$texto"\n$referencia:$numero (${versao.sigla})';
+  String livro,
+  int capituloNumero,
+) =>
+    '"$texto"\n$referencia:$numero (${versao.sigla})\n'
+    '${linkDoVersiculo(livro, capituloNumero, numero)}';
 
 /// Seletor em duas etapas: escolhe o livro, depois o capítulo numa grade.
 class _SeletorDeLivro extends StatefulWidget {

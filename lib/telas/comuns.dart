@@ -370,7 +370,16 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 // de sistema que o plugin de fato controla. Ver lembretes.dart.
                 if (lembretesSuportados)
                   ..._SecaoDeLembretes(estado: estado).montar(context),
-                const SizedBox(height: 20),
+                const Divider(height: 1),
+                ListTile(
+                  leading: Icon(
+                    Icons.info_outline,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: const Text('Sobre'),
+                  onTap: () => _mostrarSobre(context),
+                ),
+                const SizedBox(height: 8),
               ],
             ),
           );
@@ -379,6 +388,19 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
     ),
   );
 }
+
+/// Créditos das traduções e da fonte dos devocionais, na caixa de diálogo
+/// padrão do Flutter: não é conteúdo que precise de tela própria.
+void _mostrarSobre(BuildContext context) => showAboutDialog(
+  context: context,
+  applicationName: 'Devocional',
+  applicationLegalese:
+      'Texto bíblico: Bíblia King James 1611 em português e Nova Versão '
+      'Transformadora (NVT), Editora Mundo Cristão. Devocionais na voz de '
+      'Charles Spurgeon (Morning and Evening, Faith\'s Checkbook), domínio '
+      'público, com título, comentário e Promessas de Deus traduzidos para '
+      'este app.',
+);
 
 TimeOfDay _horaDe(int minutos) =>
     TimeOfDay(hour: minutos ~/ 60, minute: minutos % 60);

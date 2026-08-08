@@ -1,16 +1,22 @@
-"""Monta as fontes do icone do app a partir da foto e corrige o que o
-flutter_launcher_icons deixa errado.
+"""Monta as fontes do icone do app a partir da foto, corrige o que o
+flutter_launcher_icons deixa errado e gera a previa de link da web.
 
 Rodar da raiz do repositorio, nesta ordem:
 
     python tools/icones.py --fontes
     dart run flutter_launcher_icons
     python tools/icones.py --corrigir
+    python tools/icones.py --og
 
 O passo --corrigir e' obrigatorio: o gerador copia o icone normal nos
 Icon-maskable-*, e o Chrome recorta o maskable em circulo, descartando os 20% de
 fora, o que cortaria o topo da cabeca. Ele tambem gera o favicon em 16, que fica
 embaracado em tela de retina.
+
+O passo --og monta web/og.png, a imagem de previa quando o link do site e'
+colado no WhatsApp, no Instagram ou numa descricao de live (ver og:image em
+web/index.html). Nao depende de nada que --corrigir gere; a ordem e' so
+para regenerar tudo de uma vez com um comando por linha.
 
 Sobre o icone que acompanha o tema: Android, iOS 18 e o favicon da web trocam.
 Windows, macOS e Linux leem um arquivo so e nao tem variante; neles o icone
@@ -25,7 +31,7 @@ avatar de "sem foto".
 import argparse
 import pathlib
 
-from PIL import Image, ImageOps
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
 # Fonte em resolucao plena, fora de assets/images/: o app usa uma copia
@@ -35,6 +41,8 @@ FONTES = RAIZ / 'assets/icone'
 # Os dois fundos do app, em lib/theme.dart: Cores.fundo e Cores.pergaminho.
 FUNDO_ESCURO = (0x2E, 0x1B, 0x10, 255)
 FUNDO_CLARO = (0xF7, 0xF1, 0xE3, 255)
+# O destaque dourado do tema escuro, em lib/theme.dart.
+DOURADO = (0xC9, 0xA2, 0x27, 255)
 LADO = 1024
 
 # Na foto de 535x640 a cabeca ocupa x 159..366 (centro 262) e y 20..320. O
@@ -169,16 +177,47 @@ def corrigir() -> None:
         print(f'{alvo.name}: 32x32')
 
 
+def og() -> None:
+    """Previa de link (Open Graph/Twitter card), 1200x630.
+
+    So existe uma, para o site inteiro: um link direto para um versiculo
+    (ver lib/data/canon.dart, alvoDoLink) mostra a mesma imagem generica,
+    porque previa por rota exigiria render no servidor, e o GitHub Pages e'
+    estatico. Roda depois de --corrigir, e nao antes: usa o rosto ja
+    recortado por _rosto(), nao depende de nenhum arquivo que --corrigir gere.
+    """
+    rosto = _rosto()
+    lona = Image.new('RGBA', (1200, 630), FUNDO_ESCURO)
+    d = 480
+    lona.alpha_composite(rosto.resize((d, d), Image.LANCZOS),
+                         (90, (630 - d) // 2))
+
+    # 72px: em 100px a palavra passava dos 1200 de largura e cortava o "L".
+    fonte = ImageFont.truetype(
+        str(RAIZ / 'assets/fonts/Cinzel-Variable.ttf'), 72)
+    desenho = ImageDraw.Draw(lona)
+    desenho.text((640, 315), 'Devocional', font=fonte, fill=DOURADO,
+                 anchor='lm')
+
+    destino = RAIZ / 'web/og.png'
+    lona.convert('RGB').save(destino)
+    print(f'{destino.name}: 1200x630')
+
+
 if __name__ == '__main__':
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--fontes', action='store_true',
                    help='monta assets/icone/ a partir da foto')
     p.add_argument('--corrigir', action='store_true',
                    help='reescreve os maskable e o favicon depois do gerador')
+    p.add_argument('--og', action='store_true',
+                   help='monta web/og.png, a previa de link')
     args = p.parse_args()
-    if not (args.fontes or args.corrigir):
-        p.error('escolha --fontes ou --corrigir')
+    if not (args.fontes or args.corrigir or args.og):
+        p.error('escolha --fontes, --corrigir ou --og')
     if args.fontes:
         fontes()
     if args.corrigir:
         corrigir()
+    if args.og:
+        og()

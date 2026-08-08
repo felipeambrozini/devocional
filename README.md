@@ -105,7 +105,11 @@ python tools/icones.py --fontes
 dart run flutter_launcher_icons
 dart run flutter_native_splash:create
 python tools/icones.py --corrigir
+python tools/icones.py --og
 ```
+
+O último passo gera `web/og.png`, a imagem que aparece quando o link do site é
+colado no WhatsApp, no Instagram ou numa descrição de live.
 
 A **tela de abertura** acompanha o tema do aparelho em todas as plataformas. O
 **ícone do lançador** acompanha no Android, no iOS 18 e no favicon da web; no

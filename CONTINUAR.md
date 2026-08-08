@@ -469,6 +469,65 @@ python tools/icones.py --corrigir
   `estado.versao` direto de dentro de `_Leitor` continuaria mostrando o texto
   certo, mas favoritar ou anotar um versículo aberto por uma marcação
   gravaria na versão global errada, em silêncio.
+- **A web ganhou prévia de link, link direto para versículo e identidade neutra,
+  em 08/08/2026, para poder circular com amigos e seguidores.** Antes disso a
+  identidade da web se contradizia: o cabeçalho de `hoje.dart` já escondia foto
+  e nome (decisão anterior, "na web o app fica público"), mas a aba do
+  navegador e o nome do PWA continuavam "Felipe Ambrozini". Decisão do
+  usuário: as duas traduções (BKJ 1611 e NVT) continuam publicadas por
+  completo na web, como já estavam; a identidade web ficou neutra em vez de
+  reforçar o nome.
+
+  **Prévia de link (Open Graph)** em `web/index.html`: `og:title`,
+  `og:description`, `og:url` e `og:image` apontando para `web/og.png`, mais
+  `twitter:card`. `og:image` **precisa ser absoluta** (o rastreador do
+  WhatsApp não resolve caminho relativo), por isso o endereço do GitHub Pages
+  entra literal ali, e não via `$FLUTTER_BASE_HREF`. A imagem é gerada, nunca
+  editada à mão, por `python tools/icones.py --og` — mesma regra dos ícones,
+  acrescentada a `tools/icones.py`. **Teto conhecido:** é uma prévia só para
+  o site inteiro; um link direto para um versículo mostra a mesma imagem
+  genérica, porque prévia por rota exigiria render no servidor e o GitHub
+  Pages é estático. Só vale reabrir se o app sair do Pages.
+
+  **Link direto**, formato `?ler=joao.3.16` (capítulo sem versículo:
+  `?ler=joao.3`; versão opcional: `&versao=nvt`). Parâmetro de consulta, e não
+  caminho (`/joao/3/16`), porque o Pages devolveria 404 sem uma regra de
+  reescrita que ele não tem. `alvoDoLink` e `linkDoVersiculo`
+  (`lib/data/canon.dart`) fazem a ida e volta; `main.dart` lê
+  `Uri.base.queryParameters` e empurra `TelaBiblia` num
+  `addPostFrameCallback`, reusando o mesmo mecanismo que já existia para abrir
+  a leitura de uma notificação tocada (guardar a intenção antes do `runApp`,
+  empurrar depois do primeiro quadro). Fora da web `Uri.base` é o diretório de
+  trabalho, sem esse parâmetro, então não precisou de `kIsWeb`. O link entra
+  como terceira linha em `_textoDoVersiculo` (`lib/telas/biblia.dart`), a
+  função única de Copiar e Compartilhar — vale em **todas as plataformas**,
+  não só na web, porque é assim que o link chega a quem recebe um versículo
+  compartilhado do celular numa live.
+
+  **Identidade neutra**: `<title>`, `apple-mobile-web-app-title` (em
+  `web/index.html`) e `name`/`short_name` (em `web/manifest.json`) viraram
+  "Devocional". `orientation` do manifesto passou de `portrait-primary` para
+  `any`: a trava em retrato contradizia o trilho lateral (720px) e a coluna
+  dupla (1100px) do próprio app num tablet ou desktop com o PWA instalado.
+  **Cuidado ao regenerar ícones**: `dart run flutter_launcher_icons`
+  reescreve `manifest.json` por completo (é o `web: generate: true` do
+  `pubspec.yaml`); depois de rodar, conferir se `name` e `orientation`
+  sobreviveram, e se não, reaplicar em `tools/icones.py --corrigir`, que já é
+  o passo que conserta o que o gerador estraga.
+
+  **Créditos**: item "Sobre" no fim da folha de ajustes
+  (`lib/telas/comuns.dart`), abrindo o `showAboutDialog` do próprio Flutter —
+  sem tela nova. Cita BKJ 1611 e NVT (Mundo Cristão) e Spurgeon em domínio
+  público.
+
+  Verificado com `flutter analyze` e `flutter test` (562 testes, 3 novos em
+  `test/canon_test.dart` para `alvoDoLink`/`linkDoVersiculo`); e num build
+  release de verdade (`flutter build web --release` servido localmente): o
+  console confirmou o parâmetro sendo lido e resolvido
+  (`alvo=(joao, 3, 16)`), e a rede confirmou a busca de
+  `assets/bible/bkj/joao.json` e `assets/intro/joao.json` só depois do link
+  entrar, nunca no boot sem parâmetro; um slug inexistente (`?ler=nada.9.9`)
+  ficou em Hoje sem erro nenhum no console.
 - **A busca ganhou duas abas: Bíblia e Devocionais.** `TelaBusca`
   (`lib/telas/busca.dart`) virou `DefaultTabController`, mesmo padrão de abas
   que `TelaNotas` já usa para Favoritos/Anotações. Digitar uma referência
