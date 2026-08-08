@@ -528,6 +528,76 @@ python tools/icones.py --corrigir
   `assets/bible/bkj/joao.json` e `assets/intro/joao.json` só depois do link
   entrar, nunca no boot sem parâmetro; um slug inexistente (`?ler=nada.9.9`)
   ficou em Hoje sem erro nenhum no console.
+- **Segunda rodada da preparação para a web, no mesmo dia (08/08/2026): card
+  de prévia sem rosto, modo apresentação, aviso de perda de notas e tela
+  Sobre completa.** A primeira rodada tinha posto a foto do usuário no
+  `og.png`; revendo o resultado, a identidade neutra da web (título, PWA)
+  ficaria contradita pela peça mais visível de tudo, o card que aparece
+  primeiro num link do WhatsApp. `tools/icones.py --og` foi reescrito sem
+  `_rosto()`: só "Devocional" centralizado, medindo a largura da fonte com
+  `ImageFont.getbbox` antes de fixar o tamanho (deu 148px no canvas de
+  1200×630) em vez de chutar um valor que corta nas bordas, do mesmo jeito
+  que a primeira rodada já tinha corrigido o corte com a foto.
+
+  **Modo apresentação**: `TelaApresentacao` em `lib/telas/biblia.dart`, tela
+  cheia sem AppBar, o versículo dentro de um `FittedBox(fit:
+  BoxFit.scaleDown)` que ocupa o espaço disponível sozinho — de propósito não
+  usa `Estado.escalaDeLeitura` nem `escalasDeLeitura` (teto de 1,5×, pensado
+  para ler no próprio aparelho, pequeno numa tela compartilhada na live).
+  Fecha ao tocar em qualquer lugar (`GestureDetector` + `Navigator.pop`).
+  Entra pela folha de ações do versículo, entre Compartilhar e Anotar, mesmo
+  grupo de "ação sem consequência" que já vale para Copiar e Compartilhar.
+
+  Acrescentar essa quinta ação **estourou a altura da folha em tela baixa**
+  (`RenderFlex overflowed by 44 pixels`, achado pelos dois testes que tocam a
+  folha do versículo, que passaram a falhar). Mesmo diagnóstico e mesmo
+  remédio que `ajustesDeLeitura` já usava: `isScrollControlled: true` no
+  `showModalBottomSheet` e um `SingleChildScrollView` por dentro do `Column`.
+  Sem isso, a folha continuaria sujeita ao mesmo estouro em qualquer celular
+  baixo ou em paisagem, não é um problema exclusivo do ambiente de teste.
+
+  **Aviso de perda de notas na web**: faixa fixa no topo de `TelaNotas`
+  (`_AvisoDePerda` em `lib/telas/notas.dart`), só quando `kIsWeb`, com um
+  botão que chama a mesma `_exportar` do menu "Cópia de segurança" — não
+  duplica a ação, só muda a visibilidade dela. Sem `Dismissible` de
+  propósito: o risco do `localStorage` ser limpo pelo navegador não
+  desaparece porque a pessoa fechou o aviso uma vez.
+
+  **Tela Sobre completa**: `lib/telas/sobre.dart`, substituindo o
+  `showAboutDialog` da primeira rodada. Mesmos créditos, mais dois links
+  (YouTube e Instagram) abertos com `launchUrl` do pacote `url_launcher`,
+  nova dependência (mesma família do `share_plus`: mantida pela equipe do
+  Flutter, resolve sozinha para todas as plataformas — `android`, `ios`,
+  `linux`, `macos`, `web` e `windows` apareceram no `pubspec.lock` sem
+  nenhuma entrada extra, sem ramificação de plataforma no código do app).
+
+  **`comuns.dart` e `sobre.dart` se importam um ao outro.** `sobre.dart` usa
+  `LarguraDeLeitura` e `Filete` de `comuns.dart`; `comuns.dart` precisa de
+  `TelaSobre` para o item "Sobre" da folha de ajustes. Import circular entre
+  dois arquivos é permitido em Dart (confirmado com `flutter analyze` limpo),
+  ao contrário de Python; não é um erro a corrigir.
+
+  **O builder de dentro de `ajustesDeLeitura` sombreia o `context` de
+  fora.** `showModalBottomSheet(builder: (folha) => ... ListenableBuilder(
+  builder: (context, _) => ...))` tem dois `context`: o de fora (a tela por
+  trás da folha) e o de dentro (descendente da folha), com o mesmo nome. Um
+  `Navigator.push` dentro do `ListenableBuilder` usando `context` sem
+  cuidado pegaria o de dentro, que fica inválido assim que a folha fecha. A
+  correção guarda o de fora em `contextoDaTela` antes do builder interno
+  redefinir o nome, e o "Sobre" primeiro faz `Navigator.pop(folha)` (fecha a
+  folha) e só depois `Navigator.push(contextoDaTela, ...)` (abre a tela).
+
+  Verificado com `flutter analyze` limpo e **564 testes** (2 novos: o modo
+  apresentação abrindo e fechando em `test/app_test.dart`, e "Sobre" abrindo
+  `TelaSobre` em vez do diálogo antigo em `test/tema_widget_test.dart`); e
+  visualmente com `python tools/icones.py --og`, olhando o `web/og.png`
+  gerado (texto centralizado, sem cortar, sem rosto).
+
+  **O aviso de perda de notas não tem teste de widget.** `flutter test` roda
+  na VM, onde `kIsWeb` é sempre falso; testar o ramo `kIsWeb` de verdade
+  pediria um test runner de web que o projeto não usa. Mesma lacuna que já
+  existia para o `kIsWeb` de `hoje.dart` (esconder foto e nome na web), não
+  é esquecimento novo.
 - **A busca ganhou duas abas: Bíblia e Devocionais.** `TelaBusca`
   (`lib/telas/busca.dart`) virou `DefaultTabController`, mesmo padrão de abas
   que `TelaNotas` já usa para Favoritos/Anotações. Digitar uma referência

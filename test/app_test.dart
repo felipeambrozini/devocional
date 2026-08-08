@@ -492,6 +492,53 @@ void main() {
     },
   );
 
+  testWidgets('Apresentar abre o versículo em tela cheia e fecha ao tocar', (
+    tester,
+  ) async {
+    await aquecerAssets(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: EscopoDoEstado(
+          estado: await estadoLimpo(),
+          child: const TelaBiblia(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byWidgetPredicate(
+        (w) =>
+            w is RichText &&
+            w.text.toPlainText().contains('No princípio criou Deus'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Apresentar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No princípio criou Deus o céu e a terra.'), findsOneWidget);
+    expect(find.text('Gênesis 1:1'), findsOneWidget);
+
+    // Fecha ao tocar em qualquer lugar da tela, sem precisar do botão de voltar.
+    await tester.tap(find.text('No princípio criou Deus o céu e a terra.'));
+    await tester.pumpAndSettle();
+
+    // De volta ao leitor: lá o versículo é RichText, não Text (ver o find
+    // acima, no início do teste), então a apresentação já não está na tela.
+    expect(find.text('Apresentar'), findsNothing);
+    expect(find.text('No princípio criou Deus o céu e a terra.'), findsNothing);
+    expect(
+      find.byWidgetPredicate(
+        (w) =>
+            w is RichText &&
+            w.text.toPlainText().contains('No princípio criou Deus'),
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets(
     'o devocional tem as três abas e Promessas traz o versículo da BKJ',
     (tester) async {

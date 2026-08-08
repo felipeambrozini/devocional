@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -93,6 +94,11 @@ class _TelaNotasState extends State<TelaNotas> {
         body: LarguraDeLeitura(
           child: Column(
             children: [
+              // Só na web: o navegador pode limpar o localStorage sem aviso,
+              // e ninguém além de quem já leu CONTINUAR.md sabe disso. Sem
+              // Dismissible de propósito — o risco não desaparece porque a
+              // pessoa fechou o aviso uma vez.
+              if (kIsWeb) _AvisoDePerda(onExportar: () => _exportar(context, estado)),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                 child: TextField(
@@ -151,6 +157,37 @@ class _TelaNotasState extends State<TelaNotas> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Faixa fixa, só na web: quem usa o app pelo navegador não tem como saber
+/// que o localStorage pode ser limpo sem aviso (ver `_exportar` abaixo).
+class _AvisoDePerda extends StatelessWidget {
+  const _AvisoDePerda({required this.onExportar});
+
+  final VoidCallback onExportar;
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      color: cor.surfaceContainerHighest,
+      padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline, color: cor.onSurfaceVariant, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Na web, o navegador pode apagar suas notas sem aviso.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+          TextButton(onPressed: onExportar, child: const Text('Exportar')),
+        ],
       ),
     );
   }

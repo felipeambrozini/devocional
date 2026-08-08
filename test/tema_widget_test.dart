@@ -105,6 +105,35 @@ void main() {
     expect(estado.escalaDeLeitura, 1.3);
   });
 
+  testWidgets('Sobre na folha de ajustes abre a tela de créditos', (
+    tester,
+  ) async {
+    final estado = Estado(await SharedPreferences.getInstance());
+    await tester.pumpWidget(
+      EscopoDoEstado(
+        estado: estado,
+        child: MaterialApp(
+          home: Scaffold(
+            body: Center(child: BotaoDeAjustes(estado: estado)),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byType(BotaoDeAjustes));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Sobre'));
+    await tester.pumpAndSettle();
+
+    // A folha fechou e a tela de créditos abriu por cima, não a caixa de
+    // diálogo padrão do Flutter que existia antes desta tela própria.
+    expect(find.text('Tamanho do texto'), findsNothing);
+    expect(find.text('Fontes do texto'), findsOneWidget);
+    expect(find.text('YouTube'), findsOneWidget);
+    expect(find.text('Instagram'), findsOneWidget);
+  });
+
   testWidgets('escolher escuro ignora o aparelho no claro', (tester) async {
     tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
     addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);

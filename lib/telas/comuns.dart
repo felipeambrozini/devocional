@@ -5,6 +5,7 @@ import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/lembretes.dart';
 import '../data/modelos.dart';
+import 'sobre.dart';
 
 /// Cartão com título em Cinzel na cor do tema. Repete em quase toda tela.
 class Cartao extends StatelessWidget {
@@ -308,6 +309,9 @@ class BotaoDeAjustes extends StatelessWidget {
 /// muda o tema e a página inteira vira embaixo da folha. Uma tela separada
 /// obrigaria a sair da leitura para escolher e voltar para conferir.
 Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
+  // O builder de dentro sombreia `context` com o dele; guardado aqui antes,
+  // continua apontando para a tela por trás da folha, não para a folha.
+  final contextoDaTela = context;
   return showModalBottomSheet<void>(
     context: context,
     // Com a seção Lembretes (interruptor mais dois horários), o conteúdo passou
@@ -377,7 +381,13 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                     color: Theme.of(context).colorScheme.primary,
                   ),
                   title: const Text('Sobre'),
-                  onTap: () => _mostrarSobre(context),
+                  onTap: () {
+                    Navigator.pop(folha);
+                    Navigator.push(
+                      contextoDaTela,
+                      MaterialPageRoute(builder: (_) => const TelaSobre()),
+                    );
+                  },
                 ),
                 const SizedBox(height: 8),
               ],
@@ -388,19 +398,6 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
     ),
   );
 }
-
-/// Créditos das traduções e da fonte dos devocionais, na caixa de diálogo
-/// padrão do Flutter: não é conteúdo que precise de tela própria.
-void _mostrarSobre(BuildContext context) => showAboutDialog(
-  context: context,
-  applicationName: 'Devocional',
-  applicationLegalese:
-      'Texto bíblico: Bíblia King James 1611 em português e Nova Versão '
-      'Transformadora (NVT), Editora Mundo Cristão. Devocionais na voz de '
-      'Charles Spurgeon (Morning and Evening, Faith\'s Checkbook), domínio '
-      'público, com título, comentário e Promessas de Deus traduzidos para '
-      'este app.',
-);
 
 TimeOfDay _horaDe(int minutos) =>
     TimeOfDay(hour: minutos ~/ 60, minute: minutos % 60);

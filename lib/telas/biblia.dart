@@ -196,8 +196,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
           ),
           actions: [
             // Sem "versão atual" para trocar enquanto as duas aparecem juntas.
-            if (!colunaDupla)
-              BotaoDeVersao(atual: _versao, ao: _definirVersao),
+            if (!colunaDupla) BotaoDeVersao(atual: _versao, ao: _definirVersao),
             if (larguraDupla)
               IconButton(
                 tooltip: colunaDupla
@@ -556,7 +555,11 @@ class _LeitorDuplo extends StatelessWidget {
     );
   }
 
-  Widget _cabecalhoDaColuna(BuildContext context, Versao versao, String titulo) {
+  Widget _cabecalhoDaColuna(
+    BuildContext context,
+    Versao versao,
+    String titulo,
+  ) {
     final tema = Theme.of(context).textTheme;
     final cor = Theme.of(context).colorScheme;
     return Column(
@@ -725,110 +728,142 @@ Future<void> _abrirAcoesDoVersiculo(
   final marcacao = estado.marcacaoDe(versao, livro, capituloNumero, numero);
   await showModalBottomSheet<void>(
     context: context,
+    // Cinco ações mais o cabeçalho passam da altura em telas baixas ou em
+    // paisagem — mesmo motivo e mesma solução de ajustesDeLeitura, em
+    // comuns.dart: isScrollControlled deixa a folha crescer, e o
+    // SingleChildScrollView rola o que não couber em vez de estourar.
+    isScrollControlled: true,
     builder: (folha) {
       final cor = Theme.of(folha).colorScheme;
       return SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '$referencia:$numero',
-                    style: Theme.of(folha).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(texto, style: Theme.of(folha).textTheme.bodyMedium),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: Icon(
-                marcacao != null ? Icons.bookmark : Icons.bookmark_outline,
-                color: cor.primary,
-              ),
-              title: Text(
-                marcacao != null ? 'Remover dos favoritos' : 'Favoritar',
-              ),
-              onTap: () {
-                estado.alternarFavorito(versao, livro, capituloNumero, numero);
-                Navigator.pop(folha);
-              },
-            ),
-            // Copiar é o que mais se faz com um versículo, e não existia. Vem
-            // antes de anotar porque é a ação sem consequência das três.
-            ListTile(
-              leading: Icon(Icons.content_copy_outlined, color: cor.primary),
-              title: const Text('Copiar'),
-              onTap: () async {
-                final mensageiro = ScaffoldMessenger.of(folha);
-                final navegador = Navigator.of(folha);
-                await Clipboard.setData(
-                  ClipboardData(
-                    text: _textoDoVersiculo(
-                      referencia,
-                      numero,
-                      texto,
-                      versao,
-                      livro,
-                      capituloNumero,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$referencia:$numero',
+                      style: Theme.of(folha).textTheme.headlineSmall,
                     ),
-                  ),
-                );
-                navegador.pop();
-                mensageiro.showSnackBar(
-                  const SnackBar(content: Text('Versículo copiado.')),
-                );
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.ios_share_outlined, color: cor.primary),
-              title: const Text('Compartilhar'),
-              onTap: () async {
-                final navegador = Navigator.of(folha);
-                await SharePlus.instance.share(
-                  ShareParams(
-                    text: _textoDoVersiculo(
-                      referencia,
-                      numero,
-                      texto,
-                      versao,
-                      livro,
-                      capituloNumero,
-                    ),
-                  ),
-                );
-                navegador.pop();
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.edit_note, color: cor.primary),
-              title: Text(
-                marcacao?.nota.isNotEmpty == true ? 'Editar anotação' : 'Anotar',
+                    const SizedBox(height: 8),
+                    Text(texto, style: Theme.of(folha).textTheme.bodyMedium),
+                  ],
+                ),
               ),
-              onTap: () async {
-                final nota = await editarNota(
-                  folha,
-                  referencia: '$referencia:$numero',
-                  notaAtual: marcacao?.nota ?? '',
-                );
-                if (nota != null) {
-                  await estado.definirNota(
+              const Divider(height: 1),
+              ListTile(
+                leading: Icon(
+                  marcacao != null ? Icons.bookmark : Icons.bookmark_outline,
+                  color: cor.primary,
+                ),
+                title: Text(
+                  marcacao != null ? 'Remover dos favoritos' : 'Favoritar',
+                ),
+                onTap: () {
+                  estado.alternarFavorito(
                     versao,
                     livro,
                     capituloNumero,
                     numero,
-                    nota,
                   );
-                }
-                if (folha.mounted) Navigator.pop(folha);
-              },
-            ),
-          ],
+                  Navigator.pop(folha);
+                },
+              ),
+              // Copiar é o que mais se faz com um versículo, e não existia. Vem
+              // antes de anotar porque é a ação sem consequência das três.
+              ListTile(
+                leading: Icon(Icons.content_copy_outlined, color: cor.primary),
+                title: const Text('Copiar'),
+                onTap: () async {
+                  final mensageiro = ScaffoldMessenger.of(folha);
+                  final navegador = Navigator.of(folha);
+                  await Clipboard.setData(
+                    ClipboardData(
+                      text: _textoDoVersiculo(
+                        referencia,
+                        numero,
+                        texto,
+                        versao,
+                        livro,
+                        capituloNumero,
+                      ),
+                    ),
+                  );
+                  navegador.pop();
+                  mensageiro.showSnackBar(
+                    const SnackBar(content: Text('Versículo copiado.')),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.ios_share_outlined, color: cor.primary),
+                title: const Text('Compartilhar'),
+                onTap: () async {
+                  final navegador = Navigator.of(folha);
+                  await SharePlus.instance.share(
+                    ShareParams(
+                      text: _textoDoVersiculo(
+                        referencia,
+                        numero,
+                        texto,
+                        versao,
+                        livro,
+                        capituloNumero,
+                      ),
+                    ),
+                  );
+                  navegador.pop();
+                },
+              ),
+              // Ação sem consequência, como Copiar e Compartilhar: só mostra o
+              // versículo em tela cheia, não muda nada no estado do app.
+              ListTile(
+                leading: Icon(Icons.fullscreen, color: cor.primary),
+                title: const Text('Apresentar'),
+                onTap: () {
+                  Navigator.pop(folha);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => TelaApresentacao(
+                        texto: texto,
+                        referencia: '$referencia:$numero',
+                      ),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.edit_note, color: cor.primary),
+                title: Text(
+                  marcacao?.nota.isNotEmpty == true
+                      ? 'Editar anotação'
+                      : 'Anotar',
+                ),
+                onTap: () async {
+                  final nota = await editarNota(
+                    folha,
+                    referencia: '$referencia:$numero',
+                    notaAtual: marcacao?.nota ?? '',
+                  );
+                  if (nota != null) {
+                    await estado.definirNota(
+                      versao,
+                      livro,
+                      capituloNumero,
+                      numero,
+                      nota,
+                    );
+                  }
+                  if (folha.mounted) Navigator.pop(folha);
+                },
+              ),
+            ],
+          ),
         ),
       );
     },
@@ -848,6 +883,59 @@ String _textoDoVersiculo(
 ) =>
     '"$texto"\n$referencia:$numero (${versao.sigla})\n'
     '${linkDoVersiculo(livro, capituloNumero, numero)}';
+
+/// Tela cheia para compartilhar a tela numa live: o teto de 1,5x de
+/// [escalasDeLeitura] é pensado para ler no próprio aparelho, pequeno demais
+/// numa transmissão. Por isso não usa `Estado.escalaDeLeitura`: o
+/// `FittedBox` ocupa o espaço disponível sozinho, sem precisar de um
+/// controle de tamanho novo.
+class TelaApresentacao extends StatelessWidget {
+  const TelaApresentacao({
+    super.key,
+    required this.texto,
+    required this.referencia,
+  });
+
+  final String texto;
+  final String referencia;
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
+    final tema = Theme.of(context).textTheme;
+    return GestureDetector(
+      onTap: () => Navigator.pop(context),
+      child: Scaffold(
+        backgroundColor: cor.surface,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      texto,
+                      textAlign: TextAlign.center,
+                      style: tema.displayLarge?.copyWith(color: cor.onSurface),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  referencia,
+                  style: tema.headlineSmall?.copyWith(color: cor.secondary),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 /// Seletor em duas etapas: escolhe o livro, depois o capítulo numa grade.
 class _SeletorDeLivro extends StatefulWidget {

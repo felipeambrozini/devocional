@@ -183,25 +183,33 @@ def og() -> None:
     So existe uma, para o site inteiro: um link direto para um versiculo
     (ver lib/data/canon.dart, alvoDoLink) mostra a mesma imagem generica,
     porque previa por rota exigiria render no servidor, e o GitHub Pages e'
-    estatico. Roda depois de --corrigir, e nao antes: usa o rosto ja
-    recortado por _rosto(), nao depende de nenhum arquivo que --corrigir gere.
-    """
-    rosto = _rosto()
-    lona = Image.new('RGBA', (1200, 630), FUNDO_ESCURO)
-    d = 480
-    lona.alpha_composite(rosto.resize((d, d), Image.LANCZOS),
-                         (90, (630 - d) // 2))
+    estatico. Roda depois de --corrigir, mas nao depende dele.
 
-    # 72px: em 100px a palavra passava dos 1200 de largura e cortava o "L".
-    fonte = ImageFont.truetype(
-        str(RAIZ / 'assets/fonts/Cinzel-Variable.ttf'), 72)
+    Sem rosto de proposito: a identidade da web e' neutra (ver CONTINUAR.md),
+    e o card de previa e' a peca mais visivel de tudo, a primeira coisa que
+    aparece quando o link circula num link do WhatsApp ou do Instagram.
+    """
+    lona = Image.new('RGBA', (1200, 630), FUNDO_ESCURO)
     desenho = ImageDraw.Draw(lona)
-    desenho.text((640, 315), 'Devocional', font=fonte, fill=DOURADO,
-                 anchor='lm')
+
+    # Sem rosto disputando espaco, o texto usa o canvas inteiro: mede a
+    # largura antes de fixar o tamanho, em vez de chutar um valor que pode
+    # cortar nas bordas (foi o que aconteceu com 100px na versao com rosto).
+    texto = 'Devocional'
+    tamanho = 160
+    fonte_ttf = RAIZ / 'assets/fonts/Cinzel-Variable.ttf'
+    while True:
+        fonte = ImageFont.truetype(str(fonte_ttf), tamanho)
+        largura = fonte.getbbox(texto)[2]
+        if largura <= 1000:  # 100px de margem de cada lado.
+            break
+        tamanho -= 4
+
+    desenho.text((600, 315), texto, font=fonte, fill=DOURADO, anchor='mm')
 
     destino = RAIZ / 'web/og.png'
     lona.convert('RGB').save(destino)
-    print(f'{destino.name}: 1200x630')
+    print(f'{destino.name}: 1200x630, "{texto}" em {tamanho}px, sem rosto')
 
 
 if __name__ == '__main__':

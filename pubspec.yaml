@@ -27,6 +27,10 @@ dependencies:
   flutter_local_notifications: ^22.2.0
   timezone: ^0.11.1
   flutter_timezone: ^5.1.0
+  # Abre o link do canal (YouTube, Instagram) na tela Sobre no navegador do
+  # sistema. Mesma família de pacotes do share_plus: mantido pela equipe do
+  # Flutter, funciona igual em todas as plataformas sem ramificação.
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
