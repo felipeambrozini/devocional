@@ -12,7 +12,7 @@ precisar reconstruir nenhuma decisão.
 | NVT | 31.104 versículos; os 2 desvios são `3 João 1:15` e `Ap 12:18`, versificação da NLT |
 | Manhã e Noite | 366 dias, todos com manhã e noite |
 | Cronograma anual | 365 dias, 449 faixas |
-| 66 introduções | Completas, com as frases aplicadas |
+| 66 introduções | Completas, com as frases aplicadas e o tom calibrado (56,3 "!" por 10 mil palavras) |
 | **Promessas de Deus** | **366 de 366 traduzidos. Concluído.** |
 
 ## Não há tarefa de conteúdo pendente
@@ -93,6 +93,45 @@ próprio `promises.json`; os arquivos mensais intermediários de
   A procedência das 66 citações finais (`quote`/`quoteSource`) é assunto
   separado deste conserto, e não foi tocada aqui: nenhum agente teve permissão
   para alterar os campos `quote*`.
+- **Tom das 66 introduções ajustado para soar mais como o próprio
+  Spurgeon, em 07/08/2026.** Antes, as 66 introduções tinham só 2 pontos de
+  exclamação em 63 mil palavras (0,3 por 10 mil), contra 42,5 por 10 mil no
+  Spurgeon real já traduzido no app (`morning_evening.json` + `promises.json`).
+  Não foi reescrita: foram 3 a 6 ajustes pontuais por arquivo (ponto final
+  trocado por exclamação em frase de clímax já existente, raramente uma
+  interjeição/vocativo curto ou uma pergunta retórica com resposta curta),
+  quase todos em "Contribuição para a Bíblia" e "Spurgeon em [Livro]";
+  "Estrutura" ficou sem nenhum toque (é narrativa/expositiva até no corpus
+  real) e "Circunstâncias da escrita" recebeu no máximo 1 toque leve por
+  livro.
+
+  Piloto em `rute.json` e `apocalipse.json` primeiro, revisado e aprovado,
+  só depois escalado para os outros 64 livros em 13 lotes de agente (4 a 5
+  livros cada), o mesmo formato da correção vós→tu. Resultado final: 355
+  pontos de exclamação em 63.042 palavras, 56,3 por 10 mil no total (79,1 em
+  "Contribuição", ~80 em "Spurgeon em X", 54,1 em "Circunstâncias", 0 em
+  "Estrutura"). Ficou acima do 42,5 do corpus agregado, mas em linha com os
+  dois arquivos-piloto já revistos à mão (rute em 68,9, apocalipse em 47,7);
+  a densidade do corpus real é uma média diluída ao longo de centenas de
+  entradas diárias, enquanto cada introdução concentra a ênfase nos poucos
+  parágrafos de clímax, então uma densidade por-livro mais alta que a média
+  do corpus foi considerada aceitável, não um erro de calibração.
+
+  Nenhuma construção retórica se tornou o tique novo: as palavras-tique já
+  conhecidas de antes (ver `introducoes-antimolde.md`) continuaram bem
+  abaixo do teto de 22/66 mesmo depois do ajuste ("Aqui está" no maior, com
+  19/66; "Notai" e "Amado" em 0/66). Nenhum agente reutilizou a mesma frase
+  de abertura entre os arquivos do próprio lote, conferido lote a lote no
+  relatório de cada um.
+
+  Verificado ao final: `flutter test` (559 testes, todos verdes) e `flutter
+  analyze` (limpo); nenhuma seção abaixo de 60 palavras; nenhum travessão
+  introduzido; nenhum campo `quote*` tocado; e as 94 citações bíblicas entre
+  aspas com referência no corpo das introduções resolvidas contra
+  `assets/bible/bkj/` e comparadas ao texto citado — 68 idênticas, 26 com
+  pequenas aparas editoriais (início ou fim de versículo cortado), todas do
+  tipo já registrado como pré-existente na correção de 07/08 anterior,
+  nenhuma delas tocada por este ajuste de tom.
 - **29 de fevereiro** não precisa de tratamento especial: `DateTime` do Dart já o
   impede em ano comum. Provado em `test/bissexto_test.dart`.
 - **As 66 frases das introduções** vieram de uma lista do usuário e estão registradas
@@ -449,28 +488,6 @@ python tools/icones.py --corrigir
   A busca da Bíblia também parou de girar para sempre num erro de asset: o
   `.listen()` do stream ganhou `onError`, mostrando `AvisoDeErro` em vez de um
   spinner eterno com lista parcial.
-
-## Próximas implementações
-
-### 1. Confirmar os lembretes num aparelho Android de verdade, com o manifesto corrigido
-
-O item anterior ("verificar num aparelho de verdade") foi fechado sem o teste ter
-acontecido, e por isso a falta do `ScheduledNotificationReceiver` (ver seção de
-lembretes acima) passou despercebida até o usuário relatar que nenhuma notificação
-chegava. Desta vez o teste em aparelho físico precisa mesmo acontecer antes de
-fechar o item:
-
-- Desinstalar o app antes de instalar o novo build (o canal `lembretes_diarios`
-  trava a importância na primeira notificação exibida).
-- Conferir que o build mesclado tem os dois receptores
-  (`build/app/intermediates/merged_manifest/debug/AndroidManifest.xml`).
-- As notificações chegam no horário (janela de minutos é esperada,
-  `inexactAllowWhileIdle`), com pop-up (`Importance.high`).
-- Tocar abre a leitura certa, com o app aberto e com o app fechado.
-- Reboot sem abrir o app: os alarmes sobrevivem (`adb shell dumpsys alarm`),
-  graças ao `ScheduledNotificationBootReceiver` novo.
-- iOS continua sem verificação em aparelho físico — só Android foi testado até
-  aqui.
 
 ## O que foi decidido NÃO fazer
 
