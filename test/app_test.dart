@@ -171,12 +171,13 @@ void main() {
     for (final rotulo in ['Hoje', 'Bíblia', 'Devocional', 'Plano', 'Notas']) {
       expect(find.text(rotulo), findsWidgets, reason: rotulo);
     }
-    // A saudação depende do relógio, então aceita as duas formas.
+    // A saudação depende do relógio, então aceita as três formas.
     expect(
       find.byWidgetPredicate(
         (w) =>
             w is Text &&
             (w.data?.startsWith('Bom dia, Felipe') == true ||
+                w.data?.startsWith('Boa tarde, Felipe') == true ||
                 w.data?.startsWith('Boa noite, Felipe') == true),
       ),
       findsOneWidget,

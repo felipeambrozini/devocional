@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuthException;
 import 'package:flutter/material.dart';
 
 import '../data/canon.dart';
@@ -5,6 +6,7 @@ import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/lembretes.dart';
 import '../data/modelos.dart';
+import '../data/nuvem.dart';
 import 'sobre.dart';
 
 /// Cartão com título em Cinzel na cor do tema. Repete em quase toda tela.
@@ -374,6 +376,9 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 // de sistema que o plugin de fato controla. Ver lembretes.dart.
                 if (lembretesSuportados)
                   ..._SecaoDeLembretes(estado: estado).montar(context),
+                // Só na web: Android e iOS já guardam tudo no aparelho. Ver
+                // nuvem.dart, mesma regra do lembretesSuportados acima.
+                if (nuvemSuportada) ..._secaoDaConta(context),
                 const Divider(height: 1),
                 ListTile(
                   leading: Icon(
@@ -459,6 +464,87 @@ Future<void> reagendarLembretesSeNecessario(Estado estado) async {
     manhaEPromessas: _horaDe(estado.minutosLembreteManha),
     noite: _horaDe(estado.minutosLembreteNoite),
   );
+}
+
+/// A seção "Conta" da folha de ajustes. Duas linhas possíveis, nunca as duas:
+/// convite para entrar, ou o e-mail de quem já entrou com o botão "Sair".
+List<Widget> _secaoDaConta(BuildContext context) {
+  final nuvem = Nuvem.instancia;
+  return [
+    Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 4),
+      child: Text('Conta', style: Theme.of(context).textTheme.headlineSmall),
+    ),
+    ListenableBuilder(
+      listenable: nuvem,
+      builder: (context, _) => nuvem.logado
+          ? ListTile(
+              leading: const Icon(Icons.cloud_done_outlined),
+              title: Text(nuvem.email ?? 'Conectado'),
+              subtitle: Text(
+                nuvem.falhouAoEnviar
+                    ? 'Não foi possível salvar na conta agora. A próxima '
+                          'anotação tenta de novo.'
+                    : 'Favoritos, anotações e progresso sobem sozinhos.',
+              ),
+              trailing: TextButton(
+                onPressed: nuvem.sair,
+                child: const Text('Sair'),
+              ),
+            )
+          : Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Guarda favoritos, anotações e progresso na sua conta.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 10),
+                  // O "G" é o asset oficial do Google
+                  // (developers.google.com/identity/images/g-logo.png), do
+                  // jeito que as diretrizes de marca pedem: não redesenhado à
+                  // mão. `flutter_signin_button` foi tentado antes e
+                  // descartado — quebra em Flutter 3.44 porque `IconData`
+                  // virou uma classe `final`, e nenhuma versão do
+                  // `font_awesome_flutter` que ele usa por baixo resolve isso.
+                  OutlinedButton.icon(
+                    onPressed: () => _entrarNaConta(context, nuvem),
+                    icon: Image.asset(
+                      'assets/images/google_g.png',
+                      width: 18,
+                      height: 18,
+                    ),
+                    label: const Text('Entrar com Google'),
+                  ),
+                ],
+              ),
+            ),
+    ),
+  ];
+}
+
+/// Tenta o login e mostra o motivo quando não completa. `onTap` chama isto
+/// direto (sem `await` antes): o navegador só deixa abrir a janela do login
+/// dentro do gesto do usuário, e qualquer espera antes do `signInWithPopup`
+/// consome esse gesto e a janela sai bloqueada.
+Future<void> _entrarNaConta(BuildContext context, Nuvem nuvem) async {
+  try {
+    await nuvem.entrar();
+  } on FirebaseAuthException catch (erro) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          erro.code == 'popup-closed-by-user'
+              ? 'Login cancelado.'
+              : 'Não foi possível entrar. Verifique se o navegador permite '
+                    'janelas deste site.',
+        ),
+      ),
+    );
+  }
 }
 
 /// A seção "Lembretes" da folha de ajustes: um interruptor para os três

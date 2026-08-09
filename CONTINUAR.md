@@ -7,7 +7,7 @@ precisar reconstruir nenhuma decisão.
 
 | Item | Situação |
 |---|---|
-| App Flutter (mobile + web) | Completo. `flutter analyze` limpo, 559 testes passando |
+| App Flutter (mobile + web) | Completo. `flutter analyze` limpo, 570 testes passando |
 | BKJ 1611 | 66 livros, 1189 capítulos, **31.102 versículos, bate exatamente com o canon** |
 | NVT | 31.104 versículos; os 2 desvios são `3 João 1:15` e `Ap 12:18`, versificação da NLT |
 | Manhã e Noite | 366 dias, todos com manhã e noite |
@@ -632,6 +632,63 @@ python tools/icones.py --corrigir
   A busca da Bíblia também parou de girar para sempre num erro de asset: o
   `.listen()` do stream ganhou `onError`, mostrando `AvisoDeErro` em vez de um
   spinner eterno com lista parcial.
+- **Conta Google e cópia na nuvem, só na web** (09/08/2026), depois que o app
+  passou a ser compartilhado com amigos e seguidores. Reabre a decisão de
+  09/08 abaixo ("Sincronização entre aparelhos"), que fica reescrita, não
+  apagada.
+
+  `lib/data/estado.dart` **não mudou nenhuma linha**: a sincronização é um
+  ouvinte de fora (`Sincronia` em `lib/data/nuvem.dart`) sobre o
+  `ChangeNotifier` que já existia, reaproveitando `exportar()`/`importar()`
+  que já faziam a cópia por clipboard. Por isso os testes existentes
+  continuam abrindo `Estado` sem Firebase nenhum — `flutter test` roda antes
+  do build no CI, e uma dependência nova em `estado.dart` teria quebrado os
+  564 testes de uma vez.
+
+  O filtro contra ruído e contra loop é uma linha: comparar a string de
+  `exportar()` com a última enviada. Resolve dois problemas de uma vez —
+  tema/escala/versão preferida não sobem porque não entram em `exportar()`
+  (decisão de propósito, ver o comentário lá), e o `notifyListeners` de
+  dentro do próprio `importar()` só gera envio se a fusão trouxe algo
+  realmente novo, nunca em ciclo.
+
+  `nuvemSuportada => kIsWeb` (`lib/data/nuvem.dart`), mesmo formato de
+  `lembretesSuportados`. Android, iOS e desktop não chamam nada disto e
+  continuam só com o exportar/importar por clipboard. Documento único por
+  usuário no Firestore (`usuarios/{uid}`), com o mesmo mapa de `exportar()` —
+  **remoção não sincroniza**, porque `importar()` funde e nunca apaga
+  (`ponytail:` registrado em `nuvem.dart`; caminho de subida é uma
+  `versao: 2` da cópia com lápides, se um favorito apagado "ressuscitar" na
+  prática).
+
+  Login por `signInWithPopup`, nunca `signInWithRedirect`: o redirect
+  depende de um iframe em `<projeto>.firebaseapp.com`, e a partição de
+  armazenamento de terceiros do Chrome e do Safari derruba isso num domínio
+  de terceiros como o GitHub Pages. `onTap: () => _entrarNaConta(...)` sem
+  `await` antes do `signInWithPopup`: o navegador só deixa abrir a janela do
+  login dentro do gesto do usuário.
+
+  `lib/firebase_options.dart` é gerado (não editado à mão) por
+  `flutterfire configure` e **precisa ficar versionado** — o CI faz o build
+  web e não tem como regerá-lo. A chave de API ali é pública por desenho: é
+  um identificador de projeto, não um segredo; quem protege os dados são as
+  regras do Firestore (`firestore.rules`, publicadas à mão no console) e a
+  lista de domínios autorizados do Firebase Auth.
+
+  Verificado com `flutter analyze` limpo e **570 testes** (564 + 6 novos em
+  `test/nuvem_test.dart`, testando `Sincronia` com duas closures falsas, sem
+  mock de Firebase nenhum). **Fica sem teste**, mesma lacuna do
+  `_AvisoDePerda`: tudo atrás de `kIsWeb` — `Nuvem.iniciar`,
+  `signInWithPopup`, o caminho Firestore de verdade — porque `flutter test`
+  roda na VM onde `kIsWeb` é sempre falso.
+
+  **Pendente de configuração no console**, fora do código (checar antes de
+  confiar que o login funciona em produção): provedor Google ativado em
+  Authentication; `felipeambrozini.github.io` na lista de domínios
+  autorizados (sem isso, `auth/unauthorized-domain` só aparece em produção);
+  tela de consentimento OAuth publicada no Google Cloud (sem isso, só 100
+  contas de uma lista conseguem entrar); banco Firestore criado; e
+  `firestore.rules` publicado.
 
 ## O que foi decidido NÃO fazer
 
@@ -641,8 +698,13 @@ Registrado para não ser reaberto sem motivo novo:
   um dia perdido em perda visível corta contra o espírito de um app devocional.
 - **Áudio.** Exige gravação ou síntese de voz; voz sintética lendo Escritura mal
   é pior que não ter.
-- **Sincronização entre aparelhos.** Exige servidor e conta. O exportar/importar
-  das Marcações já cobre o risco real, que era perder as notas.
+- **Sincronização entre aparelhos.** Recusada em 07/08/2026: exigia servidor e
+  conta, e o exportar/importar das Marcações já cobria o risco real, que era
+  perder as notas. Reaberta em 09/08/2026 quando o motivo mudou — o app
+  passou a ser compartilhado com dezenas de pessoas que só recebem um link,
+  não com quem lê CONTINUAR.md e sabe que precisa exportar. Implementada só
+  na web (ver "Conta Google e cópia na nuvem" acima); o exportar/importar
+  continua sendo o único caminho em Android, iOS e desktop.
 - **Cores de marcação.** Mais taxonomia do que um leitor só precisa.
 - **Widget na tela inicial.** Código nativo nas duas plataformas para pouco retorno.
 - **Lembretes em web e desktop.** Ver a seção de lembretes acima: falta

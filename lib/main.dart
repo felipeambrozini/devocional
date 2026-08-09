@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -5,6 +7,7 @@ import 'data/canon.dart';
 import 'data/estado.dart';
 import 'data/lembretes.dart';
 import 'data/modelos.dart';
+import 'data/nuvem.dart';
 import 'telas/biblia.dart';
 import 'telas/comuns.dart';
 import 'telas/devocional.dart';
@@ -58,6 +61,11 @@ void _abrirLeituraDoLink() {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final estado = await Estado.abrir();
+
+  // Sem await: o firebase_core_web busca o SDK JS do gstatic, e esperar isso
+  // antes do runApp poria uma ida à rede na frente do primeiro quadro, num
+  // app que hoje abre sem depender de rede nenhuma. Fora da web não chama.
+  if (nuvemSuportada) unawaited(Nuvem.instancia.iniciar(estado));
 
   await Lembretes.instancia.inicializar(
     aoTocarNotificacao: _abrirLeituraDoLembrete,

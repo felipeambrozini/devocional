@@ -5,6 +5,7 @@ import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
+import '../data/nuvem.dart';
 import 'biblia.dart';
 import 'comuns.dart';
 import 'devocional.dart';
@@ -31,7 +32,7 @@ class _TelaHojeState extends State<TelaHoje> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             children: [
-              _Cabecalho(periodo: periodo, data: agora),
+              _Cabecalho(data: agora),
               const SizedBox(height: 20),
               if (estado.ultimaLeitura != null) ...[
                 // Retomar uma leitura interrompida é a ação de maior intenção
@@ -60,17 +61,27 @@ class _TelaHojeState extends State<TelaHoje> {
   }
 }
 
-class _Cabecalho extends StatelessWidget {
-  const _Cabecalho({required this.periodo, required this.data});
+/// Bom dia, boa tarde ou boa noite, só para a saudação — separado de
+/// [Periodo], que decide qual devocional (Manhã ou Noite) aparece na
+/// prévia. O conteúdo é binário porque Spurgeon só escreveu duas partes por
+/// dia; a saudação não precisa seguir a mesma régua.
+String _saudacaoPelaHora(int hora) {
+  if (hora < 6) return 'Boa noite';
+  if (hora < 12) return 'Bom dia';
+  if (hora < 18) return 'Boa tarde';
+  return 'Boa noite';
+}
 
-  final Periodo periodo;
+class _Cabecalho extends StatelessWidget {
+  const _Cabecalho({required this.data});
+
   final DateTime data;
 
   @override
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
-    final saudacao = periodo == Periodo.manha ? 'Bom dia' : 'Boa noite';
+    final saudacao = _saudacaoPelaHora(data.hour);
 
     return Row(
       children: [
@@ -112,10 +123,21 @@ class _Cabecalho extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                kIsWeb ? saudacao : '$saudacao, Felipe',
-                style: tema.headlineMedium,
-              ),
+              // Na web, quem entrou com a conta Google ganha o próprio nome
+              // na saudação; sem conta, fica só a saudação neutra de sempre
+              // (ver nuvemSuportada em nuvem.dart). Fora da web é sempre
+              // "Felipe" — é o app pessoal dele, sem conta nenhuma.
+              kIsWeb
+                  ? ListenableBuilder(
+                      listenable: Nuvem.instancia,
+                      builder: (context, _) => Text(
+                        Nuvem.instancia.primeiroNome == null
+                            ? saudacao
+                            : '$saudacao, ${Nuvem.instancia.primeiroNome}',
+                        style: tema.headlineMedium,
+                      ),
+                    )
+                  : Text('$saudacao, Felipe', style: tema.headlineMedium),
               const SizedBox(height: 4),
               Text(dataLonga(data), style: tema.bodySmall),
             ],

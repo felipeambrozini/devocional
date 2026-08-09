@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../data/nuvem.dart';
 import 'comuns.dart';
 
 /// Créditos das traduções, da fonte dos devocionais e o link dos canais.
@@ -10,6 +11,7 @@ class TelaSobre extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context).textTheme;
+    final cor = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text('Sobre')),
       body: LarguraDeLeitura(
@@ -43,8 +45,81 @@ class TelaSobre extends StatelessWidget {
               rotulo: 'Instagram',
               url: 'https://www.instagram.com/felipe_ambrozini/',
             ),
+            // Só na web: é onde existe conta na nuvem (ver nuvem.dart).
+            if (nuvemSuportada) ...[
+              const SizedBox(height: 32),
+              Text('Conta e privacidade', style: tema.headlineSmall),
+              const SizedBox(height: 10),
+              Text(
+                'Quem entra com a conta Google salva favoritos, anotações e '
+                'dias de leitura marcados numa conta na nuvem, para não '
+                'perdê-los se o navegador limpar o armazenamento. Sobem só '
+                'esses três itens, mais o e-mail e o identificador da conta '
+                '— nunca o que você lê, nem quando lê; o tamanho da letra e '
+                'o tema continuam só no aparelho. Quem não entra usa o app '
+                'do mesmo jeito de sempre, sem nada saindo daqui.',
+                style: tema.bodyLarge?.copyWith(height: 1.7),
+              ),
+              const SizedBox(height: 8),
+              ListenableBuilder(
+                listenable: Nuvem.instancia,
+                builder: (context, _) => Nuvem.instancia.logado
+                    ? ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(Icons.delete_outline, color: cor.error),
+                        title: const Text('Apagar meus dados da nuvem'),
+                        subtitle: const Text(
+                          'Remove a cópia salva na conta. O que está neste '
+                          'navegador não é tocado.',
+                        ),
+                        onTap: () => _apagarDaNuvem(context),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Confirma e apaga a cópia da conta. O "não pode ser desfeita" é literal:
+/// `Nuvem.apagarDados` remove o documento no Firestore e a conta em si.
+Future<void> _apagarDaNuvem(BuildContext context) async {
+  final confirmou = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Apagar dados da nuvem?'),
+      content: const Text(
+        'Favoritos, anotações e progresso salvos na sua conta serão '
+        'apagados. O que está neste navegador continua intacto. Essa ação '
+        'não pode ser desfeita.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Apagar'),
+        ),
+      ],
+    ),
+  );
+  if (confirmou != true || !context.mounted) return;
+
+  final mensageiro = ScaffoldMessenger.of(context);
+  try {
+    await Nuvem.instancia.apagarDados();
+    mensageiro.showSnackBar(
+      const SnackBar(content: Text('Dados apagados da nuvem.')),
+    );
+  } catch (_) {
+    mensageiro.showSnackBar(
+      const SnackBar(
+        content: Text('Não foi possível apagar agora. Tente de novo.'),
       ),
     );
   }

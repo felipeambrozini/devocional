@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
+import '../data/nuvem.dart';
 import 'biblia.dart';
 import 'comuns.dart';
 
@@ -164,6 +165,11 @@ class _TelaNotasState extends State<TelaNotas> {
 
 /// Faixa fixa, só na web: quem usa o app pelo navegador não tem como saber
 /// que o localStorage pode ser limpo sem aviso (ver `_exportar` abaixo).
+///
+/// Logado, o risco de perder continua existindo — o navegador ainda pode
+/// limpar — mas deixa de ser uma perda de verdade, porque agora tem de onde
+/// voltar. Por isso só o texto muda com `Nuvem.instancia.logado`; o botão
+/// "Exportar" fica, porque é a saída que não depende de conta nem de servidor.
 class _AvisoDePerda extends StatelessWidget {
   const _AvisoDePerda({required this.onExportar});
 
@@ -181,9 +187,14 @@ class _AvisoDePerda extends StatelessWidget {
           Icon(Icons.info_outline, color: cor.onSurfaceVariant, size: 20),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              'Na web, o navegador pode apagar suas notas sem aviso.',
-              style: Theme.of(context).textTheme.bodySmall,
+            child: ListenableBuilder(
+              listenable: Nuvem.instancia,
+              builder: (context, _) => Text(
+                Nuvem.instancia.logado
+                    ? 'Suas notas também estão salvas na sua conta Google.'
+                    : 'Na web, o navegador pode apagar suas notas sem aviso.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ),
           ),
           TextButton(onPressed: onExportar, child: const Text('Exportar')),
