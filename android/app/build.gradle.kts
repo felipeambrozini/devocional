@@ -1,15 +1,19 @@
+// Sem o plugin "com.google.gms.google-services" de propósito: a conta na
+// nuvem (lib/data/nuvem.dart) só existe na web, `nuvemSuportada => kIsWeb`.
+// `flutterfire configure` tinha registrado um app Android e gerado
+// google-services.json, mas o Android nunca chama Firebase.initializeApp — e
+// deixar o plugin exigiria manter esse arquivo em sincronia com o
+// applicationId (ele falha o build se o "package_name" não bater). Removido
+// junto com google-services.json.
 plugins {
     id("com.android.application")
-    // START: FlutterFire Configuration
-    id("com.google.gms.google-services")
-    // END: FlutterFire Configuration
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
 android {
-    namespace = "com.example.felipe_ambrozini"
+    namespace = "com.felipeambrozini.devocional"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -27,8 +31,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.felipe_ambrozini"
+        applicationId = "com.felipeambrozini.devocional"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

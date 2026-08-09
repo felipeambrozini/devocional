@@ -27,7 +27,7 @@ jobs:
           flutter-version: 3.44.8
       - run: flutter pub get
       - run: flutter test
-      - run: flutter build web --release --base-href /felipe_ambrozini/
+      - run: flutter build web --release --base-href /devocional/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: build/web

@@ -15,6 +15,11 @@ dependencies:
   cupertino_icons: ^1.0.9
   flutter_localizations:
     sdk: flutter
+  # usePathUrlStrategy(), para caminho limpo na web ("/biblia") em vez do "/#/"
+  # padrão do Flutter. Do SDK, não do pub.dev — implementação real só na web,
+  # nas demais plataformas é um no-op.
+  flutter_web_plugins:
+    sdk: flutter
 
   # Progresso de leitura, favoritos, notas e preferências. Único armazenamento que
   # funciona igual em Android, iOS, web e desktop sem ramificação de plataforma.
@@ -37,6 +42,9 @@ dependencies:
   firebase_core: ^4.1.1
   firebase_auth: ^6.1.0
   cloud_firestore: ^6.1.0
+  # Cada aba e a tela Sobre com o próprio caminho na URL (ver lib/main.dart).
+  # Pacote da própria equipe do Flutter, não um clone de terceiro.
+  go_router: ^16.0.0
 
 dev_dependencies:
   flutter_test:

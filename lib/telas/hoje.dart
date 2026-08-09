@@ -124,18 +124,30 @@ class _Cabecalho extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Na web, quem entrou com a conta Google ganha o próprio nome
-              // na saudação; sem conta, fica só a saudação neutra de sempre
-              // (ver nuvemSuportada em nuvem.dart). Fora da web é sempre
-              // "Felipe" — é o app pessoal dele, sem conta nenhuma.
+              // na saudação; sem conta, um convite compacto ao lado dela —
+              // login escondido na folha de ajustes não se acha numa versão
+              // pública. Fora da web é sempre "Felipe", sem conta nenhuma.
               kIsWeb
                   ? ListenableBuilder(
                       listenable: Nuvem.instancia,
-                      builder: (context, _) => Text(
-                        Nuvem.instancia.primeiroNome == null
-                            ? saudacao
-                            : '$saudacao, ${Nuvem.instancia.primeiroNome}',
-                        style: tema.headlineMedium,
-                      ),
+                      builder: (context, _) {
+                        final nome = Nuvem.instancia.primeiroNome;
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                nome == null ? saudacao : '$saudacao, $nome',
+                                style: tema.headlineMedium,
+                              ),
+                            ),
+                            if (nome == null) ...[
+                              const SizedBox(width: 8),
+                              const _BotaoDeEntrarCompacto(),
+                            ],
+                          ],
+                        );
+                      },
                     )
                   : Text('$saudacao, Felipe', style: tema.headlineMedium),
               const SizedBox(height: 4),
@@ -147,6 +159,27 @@ class _Cabecalho extends StatelessWidget {
         // seriam alcançáveis de duas das cinco abas.
         BotaoDeAjustes(estado: EscopoDoEstado.de(context)),
       ],
+    );
+  }
+}
+
+/// Convite de login compacto, ao lado da saudação. `entrarNaConta` é de
+/// `comuns.dart` — a mesma função por trás do botão da seção "Conta" na
+/// folha de ajustes, que continua lá para quem já entrou (e-mail, Sair).
+class _BotaoDeEntrarCompacto extends StatelessWidget {
+  const _BotaoDeEntrarCompacto();
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        minimumSize: Size.zero,
+        visualDensity: VisualDensity.compact,
+      ),
+      onPressed: () => entrarNaConta(context, Nuvem.instancia),
+      icon: Image.asset('assets/images/google_g.png', width: 16, height: 16),
+      label: const Text('Entrar'),
     );
   }
 }

@@ -42,14 +42,13 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyDuLYKynL0U91HS9PJaftu7NqtOzJHhN2A',
-    appId: '1:169480227109:web:ae562c9e7ccb3e063c72cc',
+    appId: '1:169480227109:web:5115ed3308487da23c72cc',
     messagingSenderId: '169480227109',
     projectId: 'devocional-15815',
     authDomain: 'devocional-15815.firebaseapp.com',
     storageBucket: 'devocional-15815.firebasestorage.app',
-    measurementId: 'G-J56RCPR52F',
+    measurementId: 'G-2WLQXEVJ5S',
   );
-
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyC3rPNtSPtEwS0vU4-8eX9IK7rrJN-gvNY',
     appId: '1:169480227109:android:50c3490b471efaa93c72cc',
@@ -64,7 +63,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '169480227109',
     projectId: 'devocional-15815',
     storageBucket: 'devocional-15815.firebasestorage.app',
-    iosBundleId: 'com.example.felipeAmbrozini',
+    iosBundleId: 'com.felipeambrozini.devocional',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -73,7 +72,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '169480227109',
     projectId: 'devocional-15815',
     storageBucket: 'devocional-15815.firebasestorage.app',
-    iosBundleId: 'com.example.felipeAmbrozini',
+    iosBundleId: 'com.felipeambrozini.devocional',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

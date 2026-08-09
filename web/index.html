@@ -16,6 +16,24 @@
   -->
   <base href="$FLUTTER_BASE_HREF">
 
+  <script>
+    // Desfaz o redirecionamento de web/404.html: se a URL tem "?/algo",
+    // restaura o caminho limpo com history.replaceState antes do Flutter ler
+    // a URL — quem abriu "/biblia" direto nunca vê o 404 nem o "?/" passar
+    // pela barra de endereço. Mesma técnica de web/404.html, tem que rodar
+    // antes do flutter_bootstrap.js no fim do body.
+    (function (l) {
+      if (l.search[1] === '/') {
+        var decodificado = l.search.slice(1).split('&').map(function (s) {
+          return s.replace(/~and~/g, '&');
+        }).join('?');
+        window.history.replaceState(
+          null, null, l.pathname.slice(0, -1) + decodificado + l.hash
+        );
+      }
+    }(window.location));
+  </script>
+
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Bíblia em duas versões (BKJ 1611 e NVT), devocionais de Spurgeon e plano de leitura anual.">
@@ -28,8 +46,8 @@
   <meta property="og:type" content="website">
   <meta property="og:title" content="Devocional">
   <meta property="og:description" content="Bíblia em duas versões, devocionais de Spurgeon e plano de leitura anual.">
-  <meta property="og:image" content="https://felipeambrozini.github.io/felipe_ambrozini/og.png">
-  <meta property="og:url" content="https://felipeambrozini.github.io/felipe_ambrozini/">
+  <meta property="og:image" content="https://felipeambrozini.github.io/devocional/og.png">
+  <meta property="og:url" content="https://felipeambrozini.github.io/devocional/">
   <meta name="twitter:card" content="summary_large_image">
 
   <!-- iOS meta tags & icons -->

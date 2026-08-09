@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuthException;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../data/canon.dart';
 import '../data/conteudo.dart';
@@ -388,10 +389,21 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                   title: const Text('Sobre'),
                   onTap: () {
                     Navigator.pop(folha);
-                    Navigator.push(
-                      contextoDaTela,
-                      MaterialPageRoute(builder: (_) => const TelaSobre()),
-                    );
+                    // `push` de verdade, não `MaterialPageRoute`: assim
+                    // "/sobre" aparece na barra de endereço, e um link direto
+                    // pra lá abre certo (ver lib/main.dart). `maybeOf` porque
+                    // `tema_widget_test.dart` monta este botão sozinho, sem
+                    // GoRouter nenhum por cima — sem a checagem, o teste
+                    // quebraria procurando um router que não está lá.
+                    final router = GoRouter.maybeOf(contextoDaTela);
+                    if (router != null) {
+                      router.push('/sobre');
+                    } else {
+                      Navigator.push(
+                        contextoDaTela,
+                        MaterialPageRoute(builder: (_) => const TelaSobre()),
+                      );
+                    }
                   },
                 ),
                 const SizedBox(height: 8),
@@ -510,7 +522,7 @@ List<Widget> _secaoDaConta(BuildContext context) {
                   // virou uma classe `final`, e nenhuma versão do
                   // `font_awesome_flutter` que ele usa por baixo resolve isso.
                   OutlinedButton.icon(
-                    onPressed: () => _entrarNaConta(context, nuvem),
+                    onPressed: () => entrarNaConta(context, nuvem),
                     icon: Image.asset(
                       'assets/images/google_g.png',
                       width: 18,
@@ -525,11 +537,13 @@ List<Widget> _secaoDaConta(BuildContext context) {
   ];
 }
 
-/// Tenta o login e mostra o motivo quando não completa. `onTap` chama isto
-/// direto (sem `await` antes): o navegador só deixa abrir a janela do login
-/// dentro do gesto do usuário, e qualquer espera antes do `signInWithPopup`
-/// consome esse gesto e a janela sai bloqueada.
-Future<void> _entrarNaConta(BuildContext context, Nuvem nuvem) async {
+/// Tenta o login e mostra o motivo quando não completa. Público porque dois
+/// botões chamam isto: o da seção "Conta" aqui e o convite compacto ao lado
+/// da saudação em `hoje.dart`. Quem chama precisa fazê-lo direto do `onTap`/
+/// `onPressed` (sem `await` antes): o navegador só deixa abrir a janela do
+/// login dentro do gesto do usuário, e qualquer espera antes do
+/// `signInWithPopup` consome esse gesto e a janela sai bloqueada.
+Future<void> entrarNaConta(BuildContext context, Nuvem nuvem) async {
   try {
     await nuvem.entrar();
   } on FirebaseAuthException catch (erro) {

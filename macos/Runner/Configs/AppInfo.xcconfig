@@ -8,7 +8,7 @@
 PRODUCT_NAME = Felipe Ambrozini
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.felipeAmbrozini
+PRODUCT_BUNDLE_IDENTIFIER = com.felipeambrozini.devocional
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 Felipe Ambrozini. All rights reserved.

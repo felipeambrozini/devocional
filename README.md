@@ -24,6 +24,10 @@ Windows e Linux a partir do mesmo código).
   compartilhado; tela própria lista os favoritos e os que têm anotação, com
   busca por referência ou por texto da nota, e exporta uma cópia de segurança
   de tudo (favoritos, notas e progresso) para reimportar em outro aparelho.
+- **Conta Google, só na web**: opcional — favoritos, notas e progresso sobem
+  sozinhos para a conta de quem entrar, para não perder nada se o navegador
+  limpar o armazenamento. Android, iOS e desktop continuam só com o
+  exportar/importar acima; ver `nuvemSuportada` em `lib/data/nuvem.dart`.
 - **Busca** no texto da Bíblia.
 - **Tamanho do texto** ajustável e **tema claro ou escuro**, pela barra do leitor
   ou do devocional. O padrão segue o aparelho, e dá para fixar um dos dois.
@@ -46,15 +50,26 @@ Windows e Linux a partir do mesmo código).
 | Plano | Cronograma anual por mês, com marcação de lido |
 | Notas | Favoritos e anotações |
 
+Na web, cada aba tem a própria URL (`/hoje`, `/biblia`, `/devocional`, `/plano`,
+`/notas`), mais `/sobre` — dá para abrir, atualizar ou compartilhar qualquer
+uma direto. `?ler=joao.3.16` na URL abre esse versículo por cima da aba, para
+links de um versículo específico.
+
 ## Stack
 
 - Flutter (Dart), `flutter_localizations` para `pt_BR`.
-- `shared_preferences` é o único armazenamento (progresso, favoritos, notas,
-  versão preferida), igual em todas as plataformas, sem banco.
+- `shared_preferences` é o armazenamento local (progresso, favoritos, notas,
+  versão preferida), igual em todas as plataformas, sem banco. Na web, quem
+  entra com a conta Google também espelha favoritos, notas e progresso num
+  documento do Firestore — ver a conta na nuvem, acima.
 - `share_plus` para compartilhar um versículo. `flutter_local_notifications` +
   `timezone` + `flutter_timezone` para o lembrete diário, só em Android e iOS
   (ver `lembretesSuportados` em `lib/data/lembretes.dart` e a seção de
   lembretes em `CONTINUAR.md`).
+- `go_router` para as rotas por aba, só na web de fato (ver acima); nas
+  demais plataformas as mesmas rotas existem mas ninguém compartilha link.
+- `firebase_core` + `firebase_auth` + `cloud_firestore` para a conta na
+  nuvem, só chamados quando `nuvemSuportada` (`lib/data/nuvem.dart`).
 - Fontes empacotadas localmente (Cinzel e Montserrat), sem depender de rede na
   primeira execução.
 - Conteúdo (Bíblia, devocionais, introduções, cronograma) vem de arquivos JSON

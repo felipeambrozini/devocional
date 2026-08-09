@@ -689,6 +689,85 @@ python tools/icones.py --corrigir
   tela de consentimento OAuth publicada no Google Cloud (sem isso, só 100
   contas de uma lista conseguem entrar); banco Firestore criado; e
   `firestore.rules` publicado.
+- **Cada aba com a própria URL** (09/08/2026), pedido junto com a conta na
+  nuvem: quem recebe um link deve poder abrir direto em `/biblia` ou
+  `/notas`, não só na tela Hoje.
+
+  `go_router` (`lib/main.dart`), com `StatefulShellRoute.indexedStack` — não
+  rotas soltas. Rota solta por aba reconstruiria a Moldura do zero a cada
+  troca, perdendo a rolagem e o capítulo aberto que o antigo `IndexedStack`
+  cru preservava; o shell preserva isso da mesma forma (por baixo, também é
+  `Offstage` + `IndexedStack`) e ainda dá URL própria a cada aba.
+
+  `Moldura` virou `StatelessWidget`: quem sabe a aba atual é o
+  `StatefulNavigationShell` do GoRouter, não haveria por que duplicar isso
+  num `_indice` local. Os cinco `FocusScopeNode` (o mesmo mecanismo de antes,
+  ver a entrada de atalhos de teclado abaixo) saíram de dentro da Moldura
+  para o nível do módulo (`_escoposDasAbas`): as rotas de cada aba são
+  estáticas no `_router`, e tanto o `builder` de cada uma quanto o toque na
+  barra de navegação precisam do mesmo nó. Confirmado lendo o código do
+  `go_router` que o `Offstage` que ele usa para esconder as abas inativas
+  **não** exclui foco — o problema que o `FocusScopeNode` por aba resolve
+  seria o mesmo com ou sem o shell.
+
+  **O GitHub Pages não tem regra de reescrita**: abrir `/biblia` direto (ou
+  dar F5 nela) bateria num 404 antes do Flutter carregar. Resolvido com o
+  truque clássico de `web/404.html` (redireciona para `/?/biblia`) +
+  resolvedor em `web/index.html` (restaura o caminho limpo com
+  `history.replaceState` antes do Flutter ler a URL) — de
+  https://github.com/rafgraph/spa-github-pages. `pathSegmentsToKeep = 1`
+  porque o site mora um nível abaixo do domínio.
+
+  `usePathUrlStrategy()` (`package:flutter_web_plugins/url_strategy.dart`,
+  não o barril `flutter_web_plugins.dart`): o barril também exporta o
+  registro de plugins, que puxa `dart:ui_web` sem condicional e quebra a
+  compilação para a VM — é o que `flutter test` usa. Achado rodando a
+  suíte e lendo o próprio pacote do SDK, não documentado em lugar óbvio.
+
+  "Sobre" (`comuns.dart`) usa `GoRouter.maybeOf(context)`, com fallback para
+  `Navigator.push` comum: `tema_widget_test.dart` monta o botão de ajustes
+  sozinho, sem GoRouter nenhum por cima, e `GoRouter.of` sem essa checagem
+  quebraria esse teste.
+
+  Verificado com **570 testes** (nenhum teste novo — o que existia já cobria
+  o comportamento: `atalhos_test.dart` continua provando que a seta só vale
+  depois de abrir a aba Bíblia, agora pelo caminho do shell) e
+  `flutter build web --release` limpo. Confirmado ao vivo no dev server que
+  o caminho abre limpo (`window.location.href` mostrou `/hoje` no boot e
+  `/biblia` ao abrir esse caminho direto) — sem screenshot, o painel do
+  navegador não estava visível na sessão que fez isso.
+- **Nome do pacote trocado para `com.felipeambrozini.devocional`**
+  (09/08/2026), no lugar do `com.example.felipe_ambrozini` que o
+  `flutter create` original deixou. Android (`applicationId`/`namespace` em
+  `android/app/build.gradle.kts`, `MainActivity.kt` movido de pacote), iOS e
+  macOS (`PRODUCT_BUNDLE_IDENTIFIER`), Windows e Linux (identificadores
+  cosméticos: `CompanyName`, `LegalCopyright`, `APPLICATION_ID`).
+
+  Removido `android/app/google-services.json` e o plugin
+  `com.google.gms.google-services` do Gradle do Android junto com a troca:
+  como a conta na nuvem só existe na web (`nuvemSuportada => kIsWeb`), manter
+  esse arquivo exigiria mantê-lo em sincronia com o `applicationId` para
+  sempre — o plugin falha o build se o `package_name` não bater — sem
+  nenhum uso real por trás. iOS e macOS nunca tiveram `GoogleService-Info.plist`
+  (o `flutterfire configure` do usuário não gerou um), então não há
+  equivalente a limpar lá.
+
+  `lib/firebase_options.dart` é gerado por `flutterfire configure`, não
+  editado à mão — os campos `iosBundleId` foram ajustados manualmente para
+  não ficar com o identificador antigo, mas são inertes (nunca lidos, só a
+  opção `web` é usada); uma futura `flutterfire configure` os resincroniza.
+- **Pendente: renomear o repositório para `devocional`** — combinado com o
+  usuário em 09/08/2026, ainda **não executado** (exige um clique em
+  *Settings → General → Repository name* no GitHub, que não faço por aqui).
+  O código já está pronto para o dia da troca: `--base-href /devocional/`
+  em `.github/workflows/deploy-web.yml`, e as duas URLs absolutas de
+  `og:image`/`og:url` em `web/index.html` já apontam para
+  `felipeambrozini.github.io/devocional/`. Depois de renomear no GitHub,
+  falta só `git remote set-url origin` local — o Pages **não** redireciona
+  sozinho da URL antiga para a nova (só a página do repositório redireciona),
+  mas como o link antigo nunca foi compartilhado, não há link quebrado.
+  Domínio autorizado no Firebase Auth é só por host (`felipeambrozini.github.io`),
+  então a troca de caminho não exige nada lá.
 
 ## O que foi decidido NÃO fazer
 

@@ -12,11 +12,7 @@
         "lib/firebase_options.dart": {
           "projectId": "devocional-15815",
           "configurations": {
-            "android": "1:169480227109:android:50c3490b471efaa93c72cc",
-            "ios": "1:169480227109:ios:116971ba7fd50b003c72cc",
-            "macos": "1:169480227109:ios:116971ba7fd50b003c72cc",
-            "web": "1:169480227109:web:ae562c9e7ccb3e063c72cc",
-            "windows": "1:169480227109:web:26c36015a8b804f13c72cc"
+            "web": "1:169480227109:web:5115ed3308487da23c72cc"
           }
         }
       }

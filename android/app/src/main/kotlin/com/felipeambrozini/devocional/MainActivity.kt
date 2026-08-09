@@ -1,4 +1,4 @@
-package com.example.felipe_ambrozini
+package com.felipeambrozini.devocional
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Devocional</title>
+  <script>
+    // O GitHub Pages não tem regra de reescrita: abrir "/biblia" direto (ou
+    // atualizar a página nela) bate aqui, no 404, antes até do Flutter
+    // carregar. Este redireciona para "/?/biblia..."; web/index.html lê a
+    // "?/" de volta e restaura o caminho limpo com history.replaceState,
+    // antes do Flutter ler a URL — a pessoa nunca vê o 404 nem o "?/".
+    // Técnica de https://github.com/rafgraph/spa-github-pages.
+    var pathSegmentsToKeep = 1; // mantém "/devocional"
+    var l = window.location;
+    l.replace(
+      l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+      l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+      l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+      (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+      l.hash
+    );
+  </script>
+</head>
+<body></body>
+</html>
