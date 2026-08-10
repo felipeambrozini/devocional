@@ -49,10 +49,11 @@ Windows e Linux a partir do mesmo código).
 | Devocional | Manhã, Noite e Promessas de Deus, com calendário |
 | Plano | Cronograma anual por mês, com marcação de lido |
 | Notas | Favoritos e anotações |
+| Sobre | Créditos, fontes das versões e links dos canais |
 
 Na web, cada aba tem a própria URL (`/hoje`, `/biblia`, `/devocional`, `/plano`,
-`/notas`), mais `/sobre` — dá para abrir, atualizar ou compartilhar qualquer
-uma direto. `?ler=joao.3.16` na URL abre esse versículo por cima da aba, para
+`/notas`, `/sobre`) — dá para abrir, atualizar ou compartilhar qualquer uma
+direto. `?ler=joao.3.16` na URL abre esse versículo por cima da aba, para
 links de um versículo específico.
 
 ## Stack

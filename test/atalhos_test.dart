@@ -13,8 +13,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Atalhos de teclado do leitor, para Windows e web.
 ///
-/// O caso difícil não é o atalho em si: é o foco. O IndexedStack da moldura
-/// mantém as cinco telas vivas, e o evento de tecla sobe a partir de quem tem o
+/// O caso difícil não é o atalho em si: é o foco. O shell da moldura mantém
+/// as seis telas vivas, e o evento de tecla sobe a partir de quem tem o
 /// foco. Duas coisas quebravam isso, e as duas estão cobertas aqui: o atalho
 /// declarado só no corpo da tela, que a tecla contornava quando o foco caía num
 /// botão da AppBar, e o foco parado no nó do escopo da aba, que fica acima da

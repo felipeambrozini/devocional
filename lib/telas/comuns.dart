@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuthException;
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../data/canon.dart';
 import '../data/conteudo.dart';
@@ -8,7 +7,6 @@ import '../data/estado.dart';
 import '../data/lembretes.dart';
 import '../data/modelos.dart';
 import '../data/nuvem.dart';
-import 'sobre.dart';
 
 /// Cartão com título em Cinzel na cor do tema. Repete em quase toda tela.
 class Cartao extends StatelessWidget {
@@ -312,9 +310,6 @@ class BotaoDeAjustes extends StatelessWidget {
 /// muda o tema e a página inteira vira embaixo da folha. Uma tela separada
 /// obrigaria a sair da leitura para escolher e voltar para conferir.
 Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
-  // O builder de dentro sombreia `context` com o dele; guardado aqui antes,
-  // continua apontando para a tela por trás da folha, não para a folha.
-  final contextoDaTela = context;
   return showModalBottomSheet<void>(
     context: context,
     // Com a seção Lembretes (interruptor mais dois horários), o conteúdo passou
@@ -322,7 +317,7 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
     // deixa a folha crescer até quase a tela inteira, e o SingleChildScrollView
     // rola o que não couber em vez de estourar o layout.
     isScrollControlled: true,
-    builder: (folha) => SafeArea(
+    builder: (_) => SafeArea(
       child: ListenableBuilder(
         listenable: estado,
         builder: (context, _) {
@@ -380,32 +375,6 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 // Só na web: Android e iOS já guardam tudo no aparelho. Ver
                 // nuvem.dart, mesma regra do lembretesSuportados acima.
                 if (nuvemSuportada) ..._secaoDaConta(context),
-                const Divider(height: 1),
-                ListTile(
-                  leading: Icon(
-                    Icons.info_outline,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  title: const Text('Sobre'),
-                  onTap: () {
-                    Navigator.pop(folha);
-                    // `push` de verdade, não `MaterialPageRoute`: assim
-                    // "/sobre" aparece na barra de endereço, e um link direto
-                    // pra lá abre certo (ver lib/main.dart). `maybeOf` porque
-                    // `tema_widget_test.dart` monta este botão sozinho, sem
-                    // GoRouter nenhum por cima — sem a checagem, o teste
-                    // quebraria procurando um router que não está lá.
-                    final router = GoRouter.maybeOf(contextoDaTela);
-                    if (router != null) {
-                      router.push('/sobre');
-                    } else {
-                      Navigator.push(
-                        contextoDaTela,
-                        MaterialPageRoute(builder: (_) => const TelaSobre()),
-                      );
-                    }
-                  },
-                ),
                 const SizedBox(height: 8),
               ],
             ),

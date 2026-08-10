@@ -137,6 +137,14 @@ const _destinos = <_Destino>[
   ),
   _Destino('Plano', 'plano', Icons.event_note_outlined, Icons.event_note, TelaPlano()),
   _Destino('Notas', 'notas', Icons.bookmark_outline, Icons.bookmark, TelaNotas()),
+  // Não é uma leitura como as outras cinco, mas ganhar uma URL própria pedia
+  // isso — empurrar por cima com `Navigator.push`/`GoRouter.push` nunca
+  // atualizava a barra de endereço ao sair de dentro de uma aba do shell, só
+  // dentro do próprio GoRouter (confirmado num teste de widget: o estado
+  // interno virava "/sobre" certinho, mas a URL do navegador não seguia).
+  // Como aba, usa o mesmo `goBranch` que já as outras cinco já provam
+  // funcionar. Ver a entrada de 09/08/2026 em CONTINUAR.md.
+  _Destino('Sobre', 'sobre', Icons.info_outline, Icons.info, TelaSobre()),
 ];
 
 /// Um nó de foco por aba, criados uma vez para o app inteiro, não por
@@ -144,7 +152,7 @@ const _destinos = <_Destino>[
 /// tanto o `builder` da rota quanto o toque na barra de navegação (em
 /// `Moldura._irParaAba`) precisam do mesmo nó.
 ///
-/// Existem porque o shell mantém as cinco abas vivas ao mesmo tempo (para
+/// Existem porque o shell mantém as seis abas vivas ao mesmo tempo (para
 /// preservar rolagem e capítulo aberto ao trocar de aba) escondendo as
 /// inativas com `Offstage`, que não exclui foco — o teclado não saberia a
 /// quem obedecer sem um escopo por aba. Mesmo problema, mesma solução de
@@ -153,9 +161,9 @@ final _escoposDasAbas = [
   for (final d in _destinos) FocusScopeNode(debugLabel: d.rotulo),
 ];
 
-/// Cada aba com o próprio caminho (`/hoje`, `/biblia`, ...), mais `/sobre`,
-/// para abrir direto por link e sobreviver a um F5 — o GitHub Pages não tem
-/// regra de reescrita, por isso o truque em web/404.html e web/index.html.
+/// Cada aba com o próprio caminho (`/hoje`, `/biblia`, ..., `/sobre`), para
+/// abrir direto por link e sobreviver a um F5 — o GitHub Pages não tem regra
+/// de reescrita, por isso o truque em web/404.html e web/index.html.
 ///
 /// `StatefulShellRoute.indexedStack`, não rotas soltas: rotas soltas
 /// trocariam de aba reconstruindo a Moldura do zero, perdendo a rolagem e o
@@ -183,7 +191,6 @@ final _router = GoRouter(
           ),
       ],
     ),
-    GoRoute(path: '/sobre', builder: (context, state) => const TelaSobre()),
   ],
 );
 

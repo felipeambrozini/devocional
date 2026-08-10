@@ -724,11 +724,6 @@ python tools/icones.py --corrigir
   compilação para a VM — é o que `flutter test` usa. Achado rodando a
   suíte e lendo o próprio pacote do SDK, não documentado em lugar óbvio.
 
-  "Sobre" (`comuns.dart`) usa `GoRouter.maybeOf(context)`, com fallback para
-  `Navigator.push` comum: `tema_widget_test.dart` monta o botão de ajustes
-  sozinho, sem GoRouter nenhum por cima, e `GoRouter.of` sem essa checagem
-  quebraria esse teste.
-
   Verificado com **570 testes** (nenhum teste novo — o que existia já cobria
   o comportamento: `atalhos_test.dart` continua provando que a seta só vale
   depois de abrir a aba Bíblia, agora pelo caminho do shell) e
@@ -736,6 +731,27 @@ python tools/icones.py --corrigir
   o caminho abre limpo (`window.location.href` mostrou `/hoje` no boot e
   `/biblia` ao abrir esse caminho direto) — sem screenshot, o painel do
   navegador não estava visível na sessão que fez isso.
+- **"Sobre" virou uma sexta aba, ao lado de Notas** (09/08/2026), não mais
+  um item dentro da folha de ajustes. Motivo: `router.push('/sobre')` de
+  dentro de uma aba do shell mudava o estado interno do GoRouter
+  corretamente (`GoRouter.of(context).state.uri` virava `/sobre` num teste
+  de widget) mas **não** atualizava a barra de endereço do navegador — só
+  reproduzível de verdade num navegador, não na VM do `flutter test`, e o
+  usuário confirmou vendo a URL parada na aba anterior. Em vez de perseguir
+  esse gap específico do `push()` saindo de dentro de um `StatefulShellRoute`
+  (a hipótese mais provável, não confirmada: o reporte de rota pro navegador
+  segue o `Navigator` da aba de origem, não o raiz), a saída mais simples:
+  "Sobre" entrou em `_destinos` (`lib/main.dart`) e passou a usar o mesmo
+  `goBranch` das outras cinco, que já estava provado funcionando. Zero rota
+  solta sobrando, zero `GoRouter.maybeOf` de contorno.
+
+  `_secaoDaConta`/`comuns.dart` perdeu o `ListTile` de "Sobre", o `Divider`
+  antes dele, e a variável `contextoDaTela` (só existia por causa dessa
+  navegação). O teste `tema_widget_test.dart: 'Sobre na folha de ajustes
+  abre a tela de créditos'` foi removido — a rota não existe mais lá — e
+  `app_test.dart` ganhou `'tocar em Sobre abre os créditos e atualiza a
+  URL'`, que confere as duas partes que faltavam prova: o conteúdo abre E
+  `GoRouter.of(context).state.uri.path` vira `/sobre`.
 - **Nome do pacote trocado para `com.felipeambrozini.devocional`**
   (09/08/2026), no lugar do `com.example.felipe_ambrozini` que o
   `flutter create` original deixou. Android (`applicationId`/`namespace` em

@@ -10,6 +10,7 @@ import 'package:felipe_ambrozini/telas/plano.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Sobe o app de verdade e confere o que aparece na tela, lendo os assets reais.
@@ -161,14 +162,21 @@ void main() {
     expect(find.textContaining('de 29 dias concluídos em Fevereiro'), findsOneWidget);
   });
 
-  testWidgets('a moldura abre em Hoje e mostra as cinco seções', (
+  testWidgets('a moldura abre em Hoje e mostra as seis seções', (
     tester,
   ) async {
     await aquecerAssets(tester);
     await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
     await tester.pumpAndSettle();
 
-    for (final rotulo in ['Hoje', 'Bíblia', 'Devocional', 'Plano', 'Notas']) {
+    for (final rotulo in [
+      'Hoje',
+      'Bíblia',
+      'Devocional',
+      'Plano',
+      'Notas',
+      'Sobre',
+    ]) {
       expect(find.text(rotulo), findsWidgets, reason: rotulo);
     }
     // A saudação depende do relógio, então aceita as três formas.
@@ -203,6 +211,31 @@ void main() {
     // caía no ramo de recuperação. Isto fixa o estado final; o flash de um frame
     // fica fora do alcance de pumpAndSettle.
     expect(find.textContaining('29 de fevereiro'), findsNothing);
+  });
+
+  testWidgets('tocar em Sobre abre os créditos e atualiza a URL', (
+    tester,
+  ) async {
+    // Sobre já foi acionado por dentro da folha de ajustes, com um
+    // `GoRouter.push`. Por fora do shell, isso nunca atualizava a barra de
+    // endereço (confirmado num teste isolado antes desta versão) — por isso
+    // virou uma aba como as outras cinco, pelo mesmo `goBranch`. Este teste
+    // prova as duas partes: o conteúdo abre e a URL interna do GoRouter
+    // segue, não só o widget.
+    await aquecerAssets(tester);
+    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Sobre').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Fontes do texto'), findsOneWidget);
+    expect(find.text('YouTube'), findsOneWidget);
+    expect(find.text('Instagram'), findsOneWidget);
+    expect(
+      GoRouter.of(tester.element(find.byType(Scaffold).first)).state.uri.path,
+      '/sobre',
+    );
   });
 
   testWidgets('numa janela larga de desktop, a coluna de leitura fica centralizada '
