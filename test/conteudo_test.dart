@@ -90,27 +90,10 @@ void main() {
               totalVersiculos += versiculos.length;
             }
           }
-          // A BKJ fecha no canon; a NVT segue a NLT, que divide dois versiculos
-          // diferente (3 João 1:15 e Apocalipse 12:18).
-          expect(totalVersiculos, versao == Versao.bkj ? 31102 : 31104);
+          expect(totalVersiculos, 31102);
         },
       );
     }
-
-    test('a palavra SENHOR nao se perdeu no versalete da NVT', () {
-      // A NVT grafa SENHOR como 'S' no corpo mais 'ENHOR' em versalete, num span
-      // separado do PDF. Tratar esse span como nota de rodape apagava a palavra da
-      // Biblia inteira, deixando 'o S é meu pastor'.
-      final salmos =
-          json.decode(File('assets/bible/nvt/salmos.json').readAsStringSync())
-              as Map<String, dynamic>;
-      final versiculo =
-          ((salmos['chapters'] as Map<String, dynamic>)['23']
-                  as Map<String, dynamic>)['verses']
-              as Map<String, dynamic>;
-      expect(versiculo['1'], contains('SENHOR'));
-      expect(versiculo['1'], isNot(contains(' S ')));
-    });
 
     test('sobrescrito do salmo fica no titulo, fora do versiculo 1', () {
       for (final versao in Versao.values) {
@@ -272,8 +255,8 @@ void main() {
   group('devocional Promessas de Deus', () {
     test('a referencia de todo dia resolve livro, capitulo e versiculo(s)', () {
       // Promessas de Deus agora também busca o versículo ao vivo, para a pessoa
-      // poder trocar entre BKJ e NVT; e a referência às vezes é uma faixa de
-      // dois versículos ("Salmos 102:13-14"), não só um único versículo.
+      // resolver a referência; e ela às vezes é uma faixa de dois versículos
+      // ("Salmos 102:13-14"), não só um único versículo.
       final arquivo = File('assets/devotional/promises.json');
       if (!arquivo.existsSync()) return;
       final dados =

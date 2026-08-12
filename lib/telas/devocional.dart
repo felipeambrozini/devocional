@@ -90,7 +90,6 @@ class _TelaDevocionalState extends State<TelaDevocional> {
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
-          BotaoDeVersao(atual: estado.versao, ao: estado.definirVersao),
           IconButton(
             tooltip: 'Tamanho do texto e aparência',
             icon: const Icon(Icons.tune),

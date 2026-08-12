@@ -228,8 +228,7 @@ class _PreviaDaLeitura extends StatelessWidget {
     final tema = Theme.of(context).textTheme;
     final versao = EscopoDoEstado.de(context).versao;
     return CarregaUmaVez<Devocional?>(
-      // A versão entra na chave para a prévia recarregar ao alternar BKJ/NVT
-      // no Devocional, do mesmo jeito que o leitor da Bíblia já faz.
+      // A chave inclui a leitura e a data para reaproveitar o resultado certo.
       chave: '${leitura.name}/${versao.pasta}/${Conteudo.chaveDoDia(data)}',
       carregar: () => _futuro(versao),
       construir: (context, snap) {

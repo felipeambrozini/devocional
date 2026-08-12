@@ -381,43 +381,6 @@ void main() {
       ),
       findsOneWidget,
     );
-    // O alternador da barra mostra só a sigla em uso e troca pela outra ao ser
-    // tocado, em vez de exibir as duas lado a lado ocupando uma linha inteira.
-    expect(find.text('BKJ'), findsOneWidget);
-    expect(find.text('NVT'), findsNothing);
-  });
-
-  testWidgets('alternar para NVT troca o texto do mesmo capítulo', (
-    tester,
-  ) async {
-    await aquecerAssets(tester);
-    await tester.pumpWidget(
-      MaterialApp(
-        home: EscopoDoEstado(
-          estado: await estadoLimpo(),
-          child: const TelaBiblia(),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    // O botão mostra a versão em uso e leva para a outra, então quem se toca
-    // para chegar na NVT é o "BKJ".
-    await tester.tap(find.text('BKJ'));
-    await tester.pumpAndSettle();
-
-    // A NVT diz "os céus"; a BKJ diz "o céu". Serve para provar que trocou de fato.
-    expect(
-      find.byWidgetPredicate(
-        (w) =>
-            w is RichText &&
-            w.text.toPlainText().contains('Deus criou os céus e a terra'),
-      ),
-      findsOneWidget,
-    );
-    // E continua no mesmo capítulo, agora com a outra sigla na barra.
-    expect(find.text('Gênesis 1'), findsWidgets);
-    expect(find.text('NVT'), findsOneWidget);
   });
 
   testWidgets('faixa por versículo destaca o recorte e mantém o contexto', (

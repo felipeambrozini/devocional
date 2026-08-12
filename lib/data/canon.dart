@@ -345,10 +345,9 @@ List<(Livro, int, int, int)> faixasDaReferencia(String referencia) {
   return resolvidos;
 }
 
-/// As duas versões disponíveis. A ordem define a ordem do alternador na tela.
+/// A única tradução interna disponível no aplicativo.
 enum Versao {
-  bkj('bkj', 'King James 1611', 'BKJ'),
-  nvt('nvt', 'Nova Versão Transformadora', 'NVT');
+  bkj('bkj', 'King James 1611', 'BKJ');
 
   const Versao(this.pasta, this.nome, this.sigla);
 

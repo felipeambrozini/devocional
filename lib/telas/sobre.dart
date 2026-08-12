@@ -25,11 +25,13 @@ class TelaSobre extends StatelessWidget {
             Text('Fontes do texto', style: tema.headlineSmall),
             const SizedBox(height: 10),
             Text(
-              'Bíblia King James 1611 em português e Nova Versão '
-              'Transformadora (NVT), Editora Mundo Cristão. Devocionais na '
-              'voz de Charles Spurgeon (Morning and Evening, Faith\'s '
-              'Checkbook), domínio público, com título, comentário e '
-              'Promessas de Deus traduzidos para este app.',
+              'Este aplicativo utiliza uma tradução autoral e inédita da '
+              'King James Bible de 1611, elaborada diretamente do texto '
+              'inglês em domínio público. Também reúne traduções próprias '
+              'dos devocionais clássicos de Charles H. Spurgeon, Morning '
+              'and Evening e Faith\'s Checkbook. O texto busca conservar '
+              'fidelidade teológica, reverência literária e rigor no respeito '
+              'aos direitos autorais.',
               style: tema.bodyLarge?.copyWith(height: 1.7),
             ),
             const SizedBox(height: 32),

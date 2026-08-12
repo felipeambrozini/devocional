@@ -255,39 +255,6 @@ Future<bool> confirmarRemocao(
   return confirmou ?? false;
 }
 
-/// Alternador entre BKJ e NVT, para a AppBar do leitor e do Devocional.
-///
-/// Era um SegmentedButton ocupando uma linha inteira em cada uma das duas telas,
-/// e no Devocional ele vinha empilhado sob os chips das três leituras: dois
-/// terços da primeira dobra do celular gastos em controle antes de qualquer
-/// texto. Como são só duas versões e a escolha é persistida, um botão que mostra
-/// a sigla atual e troca pela outra diz a mesma coisa em um canto da barra. O
-/// tooltip nomeia o destino, que é o que um alternador de dois estados esconde.
-class BotaoDeVersao extends StatelessWidget {
-  const BotaoDeVersao({super.key, required this.atual, required this.ao});
-
-  final Versao atual;
-  final ValueChanged<Versao> ao;
-
-  @override
-  Widget build(BuildContext context) {
-    final cor = Theme.of(context).colorScheme;
-    final outra = Versao.values.firstWhere((v) => v != atual);
-    return TextButton(
-      onPressed: () => ao(outra),
-      child: Tooltip(
-        message: 'Lendo em ${atual.nome}. Trocar para ${outra.nome}.',
-        child: Text(
-          atual.sigla,
-          style: Theme.of(
-            context,
-          ).textTheme.labelLarge?.copyWith(color: cor.secondary),
-        ),
-      ),
-    );
-  }
-}
-
 /// Abre os ajustes de leitura. Usado onde não há AppBar para pendurar a ação,
 /// que hoje é só a tela Hoje.
 class BotaoDeAjustes extends StatelessWidget {

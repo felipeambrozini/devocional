@@ -1,5 +1,5 @@
 name: felipe_ambrozini
-description: "Aplicativo devocional pessoal: Bíblias BKJ 1611 e NVT, devocionais de Spurgeon, plano de leitura anual."
+description: "Aplicativo devocional pessoal: tradução autoral da King James 1611 e devocionais de Spurgeon."
 
 publish_to: 'none' 
 
@@ -124,11 +124,9 @@ flutter:
 
   uses-material-design: true
 
-  # Diretórios inteiros: os 66 arquivos por versão são carregados sob demanda pelo
-  # slug do livro, então listar um a um não traria nada além de ruído.
+  # Os 66 livros da tradução interna são carregados sob demanda pelo slug.
   assets:
     - assets/bible/bkj/
-    - assets/bible/nvt/
     - assets/devotional/
     - assets/intro/
     - assets/images/

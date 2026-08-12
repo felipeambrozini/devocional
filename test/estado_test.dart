@@ -81,17 +81,6 @@ void main() {
       expect((await reabrir()).marcacoes, isEmpty);
     });
 
-    test(
-      'as duas versoes do mesmo versiculo sao marcacoes distintas',
-      () async {
-        final estado = await Estado.abrir();
-        await estado.alternarFavorito(Versao.bkj, 'joao', 3, 16);
-        expect(estado.ehFavorito(Versao.nvt, 'joao', 3, 16), isFalse);
-        await estado.alternarFavorito(Versao.nvt, 'joao', 3, 16);
-        expect(estado.marcacoes.length, 2);
-      },
-    );
-
     test('nota sobrevive ao ciclo de gravacao', () async {
       final estado = await Estado.abrir();
       await estado.definirNota(
@@ -159,11 +148,9 @@ void main() {
   });
 
   group('preferencias', () {
-    test('versao preferida persiste e comeca em BKJ', () async {
+    test('a traducao interna e BKJ', () async {
       final estado = await Estado.abrir();
       expect(estado.versao, Versao.bkj);
-      await estado.definirVersao(Versao.nvt);
-      expect((await reabrir()).versao, Versao.nvt);
     });
 
     test('ultima leitura persiste', () async {
@@ -232,7 +219,7 @@ void main() {
     test('exportar e importar leva favoritos, notas e progresso', () async {
       final origem = await Estado.abrir();
       await origem.alternarFavorito(Versao.bkj, 'joao', 3, 16);
-      await origem.definirNota(Versao.nvt, 'romanos', 8, 28, 'para meditar');
+      await origem.definirNota(Versao.bkj, 'romanos', 8, 28, 'para meditar');
       await origem.alternarLido('01-01');
       await origem.alternarLido('03-15');
       final copia = origem.exportar();
@@ -247,7 +234,7 @@ void main() {
       expect(dias, 2);
       expect(destino.ehFavorito(Versao.bkj, 'joao', 3, 16), isTrue);
       expect(
-        destino.marcacaoDe(Versao.nvt, 'romanos', 8, 28)?.nota,
+        destino.marcacaoDe(Versao.bkj, 'romanos', 8, 28)?.nota,
         'para meditar',
       );
       expect(destino.diasLidos, 2);

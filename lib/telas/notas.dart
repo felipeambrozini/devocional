@@ -99,7 +99,8 @@ class _TelaNotasState extends State<TelaNotas> {
               // e ninguém além de quem já leu CONTINUAR.md sabe disso. Sem
               // Dismissible de propósito — o risco não desaparece porque a
               // pessoa fechou o aviso uma vez.
-              if (kIsWeb) _AvisoDePerda(onExportar: () => _exportar(context, estado)),
+              if (kIsWeb)
+                _AvisoDePerda(onExportar: () => _exportar(context, estado)),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                 child: TextField(
@@ -329,7 +330,6 @@ class _CartaoDeMarcacao extends StatelessWidget {
               livroInicial: marcacao.livro,
               capituloInicial: marcacao.capitulo,
               destacar: (marcacao.versiculo, marcacao.versiculo),
-              versaoInicial: marcacao.versao,
             ),
           ),
         ),

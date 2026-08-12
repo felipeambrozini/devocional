@@ -7,8 +7,9 @@ import 'modelos.dart';
 
 /// Leitura dos assets, com cache em memória.
 ///
-/// Um arquivo por livro por versão. Abrir João não custa carregar Gênesis, e na web
-/// o navegador baixa só o livro aberto em vez de 4 MB no primeiro frame.
+/// Um arquivo por livro da tradução interna. Abrir João não custa carregar
+/// Gênesis, e na web o navegador baixa só o livro aberto em vez de 4 MB no
+/// primeiro frame.
 class Conteudo {
   Conteudo._();
 
@@ -41,23 +42,18 @@ class Conteudo {
       '${data.month.toString().padLeft(2, '0')}-'
       '${data.day.toString().padLeft(2, '0')}';
 
-  Future<Map<String, dynamic>> _carregarLivro(
-    Versao versao,
-    String slug,
-  ) async {
-    final chave = '${versao.pasta}/$slug';
+  Future<Map<String, dynamic>> _carregarLivro(String slug) async {
+    final chave = slug;
     final cacheado = _livros[chave];
     if (cacheado != null) return cacheado;
-    final cru = await rootBundle.loadString(
-      'assets/bible/${versao.pasta}/$slug.json',
-    );
+    final cru = await rootBundle.loadString('assets/bible/bkj/$slug.json');
     final dados = json.decode(cru) as Map<String, dynamic>;
     _livros[chave] = dados;
     return dados;
   }
 
   Future<Capitulo> capitulo(Versao versao, String slug, int numero) async {
-    final livro = await _carregarLivro(versao, slug);
+    final livro = await _carregarLivro(slug);
     final capitulos = livro['chapters'] as Map<String, dynamic>;
     final cap = capitulos['$numero'] as Map<String, dynamic>?;
     if (cap == null) {
@@ -172,9 +168,7 @@ class Conteudo {
   /// JSON traz todas separadas por vírgula ou "e"; cada uma é resolvida, e as
   /// que sobram do principal vão para [Devocional.outrosVersiculos].
   ///
-  /// [versao] escolhe de qual tradução o texto completo do versículo vem; a
-  /// pessoa alterna entre BKJ e NVT no Devocional como já faz no leitor da
-  /// Bíblia.
+  /// A tradução interna fornece o texto completo do versículo.
   Future<Devocional?> devocional(
     DateTime data,
     Periodo periodo, {
@@ -284,9 +278,15 @@ class Conteudo {
     void conferir(String leitura, String data, Map<String, dynamic> entrada) {
       final titulo = entrada['title'] as String? ?? '';
       final texto = entrada['text'] as String? ?? '';
-      if (_normalizar(titulo).contains(alvo) || _normalizar(texto).contains(alvo)) {
+      if (_normalizar(titulo).contains(alvo) ||
+          _normalizar(texto).contains(alvo)) {
         achados.add(
-          AchadoDevocional(leitura: leitura, data: data, titulo: titulo, texto: texto),
+          AchadoDevocional(
+            leitura: leitura,
+            data: data,
+            titulo: titulo,
+            texto: texto,
+          ),
         );
       }
     }
@@ -339,7 +339,7 @@ class Conteudo {
     if (alvo.length < 3) return;
     var total = 0;
     for (final livro in canon) {
-      final dados = await _carregarLivro(versao, livro.slug);
+      final dados = await _carregarLivro(livro.slug);
       final capitulos = dados['chapters'] as Map<String, dynamic>;
       for (var n = 1; n <= livro.capitulos; n++) {
         final cap = capitulos['$n'] as Map<String, dynamic>?;

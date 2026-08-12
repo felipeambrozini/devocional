@@ -55,17 +55,12 @@ void _abrirLeituraDoLink() {
   final alvo = alvoDoLink(parametro);
   if (alvo == null) return;
   final (slug, capitulo, versiculo) = alvo;
-  final versaoParametro = Uri.base.queryParameters['versao'];
-  final versao = Versao.values
-      .where((v) => v.pasta == versaoParametro)
-      .firstOrNull;
   navigatorKey.currentState?.push(
     MaterialPageRoute(
       builder: (_) => TelaBiblia(
         livroInicial: slug,
         capituloInicial: capitulo,
         destacar: versiculo == null ? null : (versiculo, versiculo),
-        versaoInicial: versao,
       ),
     ),
   );
@@ -111,7 +106,13 @@ Future<void> main() async {
 }
 
 class _Destino {
-  const _Destino(this.rotulo, this.caminho, this.icone, this.iconeAtivo, this.tela);
+  const _Destino(
+    this.rotulo,
+    this.caminho,
+    this.icone,
+    this.iconeAtivo,
+    this.tela,
+  );
 
   final String rotulo;
 
@@ -126,8 +127,20 @@ class _Destino {
 }
 
 const _destinos = <_Destino>[
-  _Destino('Hoje', 'hoje', Icons.wb_twilight_outlined, Icons.wb_twilight, TelaHoje()),
-  _Destino('Bíblia', 'biblia', Icons.menu_book_outlined, Icons.menu_book, TelaBiblia()),
+  _Destino(
+    'Hoje',
+    'hoje',
+    Icons.wb_twilight_outlined,
+    Icons.wb_twilight,
+    TelaHoje(),
+  ),
+  _Destino(
+    'Bíblia',
+    'biblia',
+    Icons.menu_book_outlined,
+    Icons.menu_book,
+    TelaBiblia(),
+  ),
   _Destino(
     'Devocional',
     'devocional',
@@ -135,8 +148,20 @@ const _destinos = <_Destino>[
     Icons.auto_stories,
     TelaDevocional(),
   ),
-  _Destino('Plano', 'plano', Icons.event_note_outlined, Icons.event_note, TelaPlano()),
-  _Destino('Notas', 'notas', Icons.bookmark_outline, Icons.bookmark, TelaNotas()),
+  _Destino(
+    'Plano',
+    'plano',
+    Icons.event_note_outlined,
+    Icons.event_note,
+    TelaPlano(),
+  ),
+  _Destino(
+    'Notas',
+    'notas',
+    Icons.bookmark_outline,
+    Icons.bookmark,
+    TelaNotas(),
+  ),
   // Não é uma leitura como as outras cinco, mas ganhar uma URL própria pedia
   // isso — empurrar por cima com `Navigator.push`/`GoRouter.push` nunca
   // atualizava a barra de endereço ao sair de dentro de uma aba do shell, só

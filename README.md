@@ -5,10 +5,9 @@ Windows e Linux a partir do mesmo código).
 
 ## O que o app faz
 
-- **Bíblia completa**, em duas versões: **BKJ 1611** (King James em português,
-  31.102 versículos) e **NVT** (31.104 versículos). Leitor por capítulo, com
-  seletor dos 66 livros nos dois testamentos e alternância de versão sem perder
-  o lugar.
+- **Bíblia completa**, em uma tradução interna autoral da **King James 1611**,
+  com 31.102 versículos. Leitor por capítulo e seletor dos 66 livros nos dois
+  testamentos.
 - **Devocional diário**, três leituras por dia, na voz de Charles Spurgeon:
   - **Manhã** e **Noite** (*Morning and Evening*), uma virada automática entre
     as duas: 0h-17h59 mostra o devocional da manhã, 18h-23h59 o da noite,
@@ -59,8 +58,8 @@ links de um versículo específico.
 ## Stack
 
 - Flutter (Dart), `flutter_localizations` para `pt_BR`.
-- `shared_preferences` é o armazenamento local (progresso, favoritos, notas,
-  versão preferida), igual em todas as plataformas, sem banco. Na web, quem
+- `shared_preferences` é o armazenamento local (progresso, favoritos e notas),
+  igual em todas as plataformas, sem banco. Na web, quem
   entra com a conta Google também espelha favoritos, notas e progresso num
   documento do Firestore — ver a conta na nuvem, acima.
 - `share_plus` para compartilhar um versículo. `flutter_local_notifications` +
@@ -74,7 +73,7 @@ links de um versículo específico.
 - Fontes empacotadas localmente (Cinzel e Montserrat), sem depender de rede na
   primeira execução.
 - Conteúdo (Bíblia, devocionais, introduções, cronograma) vem de arquivos JSON
-  em `assets/`, um arquivo por livro por versão, carregado sob demanda.
+  em `assets/`, um arquivo por livro, carregado sob demanda.
 
 ## Estrutura
 
@@ -84,7 +83,7 @@ lib/
   telas/       uma tela por arquivo (hoje, bíblia, devocional, plano, notas, busca...)
   theme.dart   as duas paletas: marrom e dourada, pergaminho e bronze
   main.dart    navegação (barra/trilho) e ponto de entrada
-assets/        Bíblias (BKJ e NVT), devocionais, introduções, cronograma, imagens, fontes
+assets/        Bíblia interna, devocionais, introduções, cronograma, imagens, fontes
 tools/         scripts Python para gerar/validar o conteúdo a partir dos PDFs de origem
 test/          testes de unidade e de widget
 ```
