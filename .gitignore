@@ -54,6 +54,8 @@ graphify-out/
 # debug config de máquina, não faz parte do app.
 .claude/
 .github/
+.agents/
+.codex/
 # Fonte em ingles de Promessas de Deus: insumo de traducao, ja consumido.
 # Regeneravel pelo comando em CONTINUAR.md; o app le assets/devotional/promises.json.
 tools/promessas_en.json
