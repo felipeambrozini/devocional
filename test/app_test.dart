@@ -141,7 +141,10 @@ void main() {
     });
     final estado = await estadoLimpo();
     Widget tela(DateTime hoje) => MaterialApp(
-      home: EscopoDoEstado(estado: estado, child: TelaPlano(hoje: hoje)),
+      home: EscopoDoEstado(
+        estado: estado,
+        child: TelaPlano(hoje: hoje),
+      ),
     );
 
     await tester.pumpWidget(tela(DateTime(2027, 12, 31)));
@@ -159,12 +162,13 @@ void main() {
     // 29 dias e não 28: prova que carregou o cronograma bissexto de 2028, não
     // o de 2027 que a tela tinha aberto com. Presa em 2027, a contagem diria
     // 28 (fevereiro comum) mesmo com o chip de fevereiro selecionado.
-    expect(find.textContaining('de 29 dias concluídos em Fevereiro'), findsOneWidget);
+    expect(
+      find.textContaining('de 29 dias concluídos em Fevereiro'),
+      findsOneWidget,
+    );
   });
 
-  testWidgets('a moldura abre em Hoje e mostra as seis seções', (
-    tester,
-  ) async {
+  testWidgets('a moldura abre em Hoje e mostra as seis seções', (tester) async {
     await aquecerAssets(tester);
     await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
     await tester.pumpAndSettle();
@@ -521,7 +525,7 @@ void main() {
       expect(
         copiado,
         '"No princípio criou Deus o céu e a terra."\nGênesis 1:1 (BKJ)\n'
-        'https://felipeambrozini.github.io/felipe_ambrozini/?ler=genesis.1.1',
+        'https://felipeambrozini.github.io/devocional/?ler=genesis.1.1',
       );
     },
   );
@@ -552,7 +556,10 @@ void main() {
     await tester.tap(find.text('Apresentar'));
     await tester.pumpAndSettle();
 
-    expect(find.text('No princípio criou Deus o céu e a terra.'), findsOneWidget);
+    expect(
+      find.text('No princípio criou Deus o céu e a terra.'),
+      findsOneWidget,
+    );
     expect(find.text('Gênesis 1:1'), findsOneWidget);
 
     // Fecha ao tocar em qualquer lugar da tela, sem precisar do botão de voltar.
