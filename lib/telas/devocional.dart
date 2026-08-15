@@ -249,7 +249,11 @@ class _CartaoDeLeitura extends StatelessWidget {
               if (capa != null) ...[
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
-                  child: Image.asset(capa!, height: 130, fit: BoxFit.cover),
+                  child: Image.asset(
+                    capa!,
+                    height: alturaCapa(context, 130),
+                    fit: BoxFit.cover,
+                  ),
                 ),
                 const SizedBox(width: 14),
               ],

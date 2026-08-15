@@ -16,6 +16,14 @@ String capaBibliaSpurgeon(BuildContext context) {
       : 'assets/images/capa_biblia_spurgeon_light.webp';
 }
 
+/// A mesma altura em pixels lógicos ocupa bem menos da tela num monitor
+/// desktop/web do que num celular, então a capa parece pequena mesmo já
+/// aumentada. Escala para cima quando a largura disponível passa de 600px.
+double alturaCapa(BuildContext context, double base) {
+  final largura = MediaQuery.sizeOf(context).width;
+  return largura >= 600 ? base * 1.4 : base;
+}
+
 /// Cartão com título em Cinzel na cor do tema. Repete em quase toda tela.
 class Cartao extends StatelessWidget {
   const Cartao({
@@ -667,7 +675,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                           borderRadius: BorderRadius.circular(3),
                           child: Image.asset(
                             capaBibliaSpurgeon(context),
-                            height: 104,
+                            height: alturaCapa(context, 104),
                             fit: BoxFit.cover,
                             // Decorativa: o título ao lado já nomeia a obra.
                             excludeFromSemantics: true,

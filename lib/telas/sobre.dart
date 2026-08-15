@@ -26,7 +26,7 @@ class TelaSobre extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               'Este aplicativo utiliza uma tradução autoral e inédita da '
-              'King James biblia de 1611, elaborada diretamente do texto '
+              'King James 1611, elaborada diretamente do texto '
               'inglês em domínio público. Também reúne traduções próprias '
               'dos devocionais clássicos de Charles H. Spurgeon, Morning '
               'and Evening e Faith\'s Checkbook. O texto busca conservar '

@@ -50,7 +50,7 @@ class TelaIntroducao extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4),
                       child: Image.asset(
                         capaBibliaSpurgeon(context),
-                        height: 160,
+                        height: alturaCapa(context, 160),
                         fit: BoxFit.cover,
                         // Decorativa: o título ao lado já diz de onde o texto vem.
                         excludeFromSemantics: true,
