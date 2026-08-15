@@ -654,9 +654,9 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
       chave: widget.slug,
       carregar: () => Conteudo.instancia.introducao(widget.slug),
       construir: (context, snap) {
-        final intro = snap.data;
+        final introducao = snap.data;
         // Sem introdução escrita, nada é mostrado: o texto começa direto.
-        if (intro == null) return const SizedBox.shrink();
+        if (introducao == null) return const SizedBox.shrink();
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 24),
@@ -714,7 +714,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                       children: [
                         const Filete(),
                         const SizedBox(height: 16),
-                        for (final (titulo, corpo) in intro.secoes) ...[
+                        for (final (titulo, corpo) in introducao.secoes) ...[
                           Text(titulo, style: tema.headlineSmall),
                           const SizedBox(height: 8),
                           for (final paragrafo in corpo.split('\n\n')) ...[
@@ -726,7 +726,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                           ],
                           const SizedBox(height: 12),
                         ],
-                        if (intro.frase.isNotEmpty)
+                        if (introducao.frase.isNotEmpty)
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.all(14),
@@ -741,7 +741,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '"${intro.frase}"',
+                                  '"${introducao.frase}"',
                                   style: tema.bodyMedium?.copyWith(
                                     fontStyle: FontStyle.italic,
                                     color: cor.secondary,
@@ -749,7 +749,10 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                Text(intro.atribuicao, style: tema.labelMedium),
+                                Text(
+                                  introducao.atribuicao,
+                                  style: tema.labelMedium,
+                                ),
                               ],
                             ),
                           ),

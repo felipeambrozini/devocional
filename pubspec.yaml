@@ -128,7 +128,7 @@ flutter:
   assets:
     - assets/biblia/
     - assets/devotionals/
-    - assets/intro/
+    - assets/introducao/
     - assets/images/
     - assets/reading_plan.json
     - assets/reading_plan_bissexto.json

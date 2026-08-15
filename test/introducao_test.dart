@@ -11,7 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// travessão esquecido só apareceria na tela, depois de tudo pronto.
 void main() {
   final arquivos =
-      Directory('assets/intro')
+      Directory('assets/introducao')
           .listSync()
           .whereType<File>()
           .where((f) => f.path.endsWith('.json'))
@@ -32,23 +32,23 @@ void main() {
     final slug = arquivo.uri.pathSegments.last.replaceAll('.json', '');
 
     group('introdução de $slug', () {
-      late Introducao intro;
+      late Introducao introducao;
       late Map<String, dynamic> cru;
 
       setUp(() {
         cru = json.decode(arquivo.readAsStringSync()) as Map<String, dynamic>;
-        intro = Introducao.doJson(cru);
+        introducao = Introducao.doJson(cru);
       });
 
       test('o slug é um livro do canon e casa com o nome do arquivo', () {
         expect(cru['slug'], slug);
         final livro = livroPorSlug(slug);
         expect(livro, isNotNull, reason: '$slug não está no canon');
-        expect(intro.livro, livro!.nome);
+        expect(introducao.livro, livro!.nome);
       });
 
       test('tem as quatro seções na ordem exigida', () {
-        final titulos = intro.secoes.map((s) => s.$1).toList();
+        final titulos = introducao.secoes.map((s) => s.$1).toList();
         expect(titulos, [
           'Circunstâncias da escrita',
           'Contribuição para a Bíblia',
@@ -58,7 +58,7 @@ void main() {
       });
 
       test('nenhuma seção está vazia ou raquítica', () {
-        for (final (titulo, corpo) in intro.secoes) {
+        for (final (titulo, corpo) in introducao.secoes) {
           expect(corpo.trim(), isNotEmpty, reason: titulo);
           expect(
             corpo.split(RegExp(r'\s+')).length,
@@ -70,7 +70,7 @@ void main() {
 
       test('não usa travessão em lugar nenhum', () {
         // Restrição explícita do formato: só vírgula, ponto e vírgula e ponto.
-        for (final (titulo, corpo) in intro.secoes) {
+        for (final (titulo, corpo) in introducao.secoes) {
           for (final proibido in ['—', '–', '--']) {
             expect(
               corpo,
@@ -82,7 +82,7 @@ void main() {
       });
 
       test('a seção de Spurgeon fala em primeira pessoa', () {
-        final corpo = intro.secoes.last.$2;
+        final corpo = introducao.secoes.last.$2;
         final marcas = [
           'eu ',
           'me ',
@@ -102,14 +102,14 @@ void main() {
       test('frase só aparece como citação de Spurgeon se for comprovada', () {
         // Uma linha composta na voz dele, rotulada como citação, seria atribuir a
         // uma pessoa real palavras que ela não escreveu.
-        if (intro.frase.trim().isEmpty) return;
+        if (introducao.frase.trim().isEmpty) return;
         expect(
-          intro.fraseComprovada,
+          introducao.fraseComprovada,
           isTrue,
           reason: 'frase presente exige quoteAttributed: true',
         );
         expect(
-          intro.fonteDaFrase.trim(),
+          introducao.fonteDaFrase.trim(),
           isNotEmpty,
           reason: 'frase comprovada exige quoteSource com a obra',
         );

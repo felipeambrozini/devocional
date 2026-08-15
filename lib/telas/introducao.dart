@@ -31,8 +31,8 @@ class TelaIntroducao extends StatelessWidget {
             if (snap.connectionState != ConnectionState.done) {
               return const Center(child: CircularProgressIndicator());
             }
-            final intro = snap.data;
-            if (intro == null) {
+            final introducao = snap.data;
+            if (introducao == null) {
               return AvisoVazio(
                 icone: Icons.article_outlined,
                 titulo: 'Introdução ainda não escrita',
@@ -61,7 +61,7 @@ class TelaIntroducao extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(intro.livro, style: tema.displayMedium),
+                          Text(introducao.livro, style: tema.displayMedium),
                           const SizedBox(height: 4),
                           Text(
                             livroPorSlug(slug)!.tituloFormal,
@@ -80,7 +80,7 @@ class TelaIntroducao extends StatelessWidget {
                 const SizedBox(height: 16),
                 const Filete(largura: 64),
                 const SizedBox(height: 24),
-                for (final (titulo, corpo) in intro.secoes) ...[
+                for (final (titulo, corpo) in introducao.secoes) ...[
                   Text(titulo, style: tema.headlineSmall),
                   const SizedBox(height: 10),
                   // Os parágrafos vêm separados por linha em branco no JSON.
@@ -93,7 +93,7 @@ class TelaIntroducao extends StatelessWidget {
                   ],
                   const SizedBox(height: 16),
                 ],
-                if (intro.frase.isNotEmpty) _Frase(intro: intro),
+                if (introducao.frase.isNotEmpty) _Frase(introducao: introducao),
               ],
             );
           },
@@ -104,9 +104,9 @@ class TelaIntroducao extends StatelessWidget {
 }
 
 class _Frase extends StatelessWidget {
-  const _Frase({required this.intro});
+  const _Frase({required this.introducao});
 
-  final Introducao intro;
+  final Introducao introducao;
 
   @override
   Widget build(BuildContext context) {
@@ -123,7 +123,7 @@ class _Frase extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '"${intro.frase}"',
+            '"${introducao.frase}"',
             style: tema.bodyLarge?.copyWith(
               fontStyle: FontStyle.italic,
               height: 1.65,
@@ -131,7 +131,7 @@ class _Frase extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Text(intro.atribuicao, style: tema.labelMedium),
+          Text(introducao.atribuicao, style: tema.labelMedium),
         ],
       ),
     );

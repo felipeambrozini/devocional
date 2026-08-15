@@ -330,15 +330,15 @@ class Conteudo {
   /// Introdução de um livro. Devolve nulo quando ainda não foi escrita.
   Future<Introducao?> introducao(String slug) async {
     if (_introducoes.containsKey(slug)) return _introducoes[slug];
-    Introducao? intro;
+    Introducao? introducao;
     try {
-      final cru = await rootBundle.loadString('assets/intro/$slug.json');
-      intro = Introducao.doJson(json.decode(cru) as Map<String, dynamic>);
+      final cru = await rootBundle.loadString('assets/introducao/$slug.json');
+      introducao = Introducao.doJson(json.decode(cru) as Map<String, dynamic>);
     } catch (_) {
-      intro = null;
+      introducao = null;
     }
-    _introducoes[slug] = intro;
-    return intro;
+    _introducoes[slug] = introducao;
+    return introducao;
   }
 
   /// Busca no texto de uma versão, emitindo os achados livro por livro.
