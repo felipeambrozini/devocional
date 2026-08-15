@@ -6,13 +6,12 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.9.2
+  sdk: ^3.12.0
 
 dependencies:
   flutter:
     sdk: flutter
 
-  cupertino_icons: ^1.0.9
   flutter_localizations:
     sdk: flutter
   # usePathUrlStrategy(), para caminho limpo na web ("/biblia") em vez do "/#/"
@@ -68,10 +67,10 @@ flutter_launcher_icons:
   # então a camada de frente tem folga de sobra e o fundo é chapado.
   #
   # Claro aqui, e não marrom: este valor vira `@color/ic_launcher_background` em
-  # values/colors.xml, e `tools/icones.py --corrigir` acrescenta a variante
-  # values-night/ com o marrom. É assim que o ícone do lançador segue o tema no
+  # values/colors.xml, e a variante values-night/ com o marrom foi acrescentada
+  # à parte. É assim que o ícone do lançador segue o tema no
   # Android, verificado num Galaxy. Não é mecanismo documentado pelo Android;
-  # se um dia parar, o ícone fica neste valor. Ver CONTINUAR.md.
+  # se um dia parar, o ícone fica neste valor. Ver README.md.
   adaptive_icon_background: "#F7F1E3"
   adaptive_icon_foreground: assets/icone/icone_adaptativo.png
   ios: true
@@ -126,8 +125,8 @@ flutter:
 
   # Os 66 livros da tradução interna são carregados sob demanda pelo slug.
   assets:
-    - assets/bible/bkj/
-    - assets/devotional/
+    - assets/biblia/
+    - assets/devotionals/
     - assets/intro/
     - assets/images/
     - assets/reading_plan.json

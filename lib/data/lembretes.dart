@@ -12,7 +12,7 @@ import 'package:timezone/timezone.dart' as tz;
 /// plugin de fato controla. Web e desktop ficam de fora não por falta de
 /// tentativa, mas porque não há infraestrutura confiável para o app fechado
 /// disparar algo — o mesmo motivo que já tirou a camada monocromática do
-/// ícone do Android (ver CONTINUAR.md).
+/// ícone do Android (ver README.md).
 bool get lembretesSuportados =>
     !kIsWeb &&
     (defaultTargetPlatform == TargetPlatform.android ||
@@ -194,7 +194,7 @@ class LembretesReais implements Lembretes {
       ),
       // Inexata: sem SCHEDULE_EXACT_ALARM, sem o usuário precisar conceder
       // acesso especial em Configurações. Uma janela de alguns minutos não
-      // importa para "leia seu devocional de manhã". Ver CONTINUAR.md.
+      // importa para "leia seu devocional de manhã". Ver README.md.
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
       payload: lembrete.chave,

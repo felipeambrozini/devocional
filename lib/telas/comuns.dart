@@ -8,6 +8,14 @@ import '../data/lembretes.dart';
 import '../data/modelos.dart';
 import '../data/nuvem.dart';
 
+/// Capa da Bíblia de Estudo Spurgeon, trocada conforme o tema claro/escuro.
+String capaBibliaSpurgeon(BuildContext context) {
+  final escuro = Theme.of(context).brightness == Brightness.dark;
+  return escuro
+      ? 'assets/images/capa_biblia_spurgeon_dark.webp'
+      : 'assets/images/capa_biblia_spurgeon_light.webp';
+}
+
 /// Cartão com título em Cinzel na cor do tema. Repete em quase toda tela.
 class Cartao extends StatelessWidget {
   const Cartao({
@@ -658,7 +666,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(3),
                           child: Image.asset(
-                            'assets/images/capa_biblia_spurgeon.webp',
+                            capaBibliaSpurgeon(context),
                             height: 52,
                             fit: BoxFit.cover,
                             // Decorativa: o título ao lado já nomeia a obra.

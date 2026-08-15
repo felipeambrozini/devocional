@@ -49,7 +49,7 @@ class TelaIntroducao extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: Image.asset(
-                        'assets/images/capa_biblia_spurgeon.webp',
+                        capaBibliaSpurgeon(context),
                         height: 84,
                         fit: BoxFit.cover,
                         // Decorativa: o título ao lado já diz de onde o texto vem.

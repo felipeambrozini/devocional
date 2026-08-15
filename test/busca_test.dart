@@ -109,7 +109,10 @@ void main() {
         // Único nos dois corpora: verificado contra os assets antes de
         // escrever o teste, mesmo termo do grupo buscarDevocionais em
         // conteudo_test.dart.
-        await tester.enterText(find.byType(TextField), 'primeira promessa dada');
+        await tester.enterText(
+          find.byType(TextField),
+          'primeira promessa ao homem caído',
+        );
         await tester.tap(find.byIcon(Icons.arrow_forward).first);
         await tester.pumpAndSettle();
 
@@ -121,8 +124,61 @@ void main() {
         await tester.tap(find.textContaining('Promessas de Deus'));
         await tester.pumpAndSettle();
 
-        expect(find.byType(TelaDevocional), findsOneWidget);
+       expect(find.byType(TelaDevocional), findsOneWidget);
       },
     );
+  });
+
+  group('destacar', () {
+    test('destaca o termo ignorando acento e caixa', () {
+      final tema = ThemeData.light().textTheme;
+      final cor = ThemeData.light().colorScheme;
+
+      final resultado = destacar(
+        'Porque Deus amou ao mundo',
+        'DEUS',
+        tema,
+        cor,
+      );
+
+      final children = (resultado).children!;
+      expect(children, isNotEmpty);
+
+      final textos =
+          children.map((span) => (span as TextSpan).text).join();
+      expect(textos, contains('Deus'));
+    });
+
+    test('preserva o resto do texto ao redor do termo', () {
+      final tema = ThemeData.light().textTheme;
+      final cor = ThemeData.light().colorScheme;
+
+      final resultado = destacar(
+        'amor',
+        'amor',
+        tema,
+        cor,
+      );
+
+      final textos =
+          ((resultado).children!).map((span) => (span as TextSpan).text).join();
+      expect(textos, 'amor');
+    });
+
+    test('retorna todos os caracteres quando o termo não aparece', () {
+      final tema = ThemeData.light().textTheme;
+      final cor = ThemeData.light().colorScheme;
+
+      final resultado = destacar(
+        'texto sem o termo buscado',
+        'xyz',
+        tema,
+        cor,
+      );
+
+      final textos =
+          ((resultado).children!).map((span) => (span as TextSpan).text).join();
+      expect(textos, 'texto sem o termo buscado');
+    });
   });
 }

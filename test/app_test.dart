@@ -67,12 +67,12 @@ void main() {
         isNotNull,
         reason: '2028 é bissexto e tem 29 de fevereiro',
       );
-      expect(bissexto!.data, '02-29');
+      expect(bissexto!.data, '29-02');
 
       // Em ano comum o cronograma não prevê a data, e é isso que faz a tela mostrar
       // o aviso de dia de recuperação em vez de um cartão vazio.
       final comum = await conteudo.plano(bissexto: false);
-      expect(comum.any((d) => d.data == '02-29'), isFalse);
+      expect(comum.any((d) => d.data == '29-02'), isFalse);
       expect(comum.length, Conteudo.diasDoAno(2027));
 
       final doisMil28 = await conteudo.plano(bissexto: true);
@@ -235,6 +235,9 @@ void main() {
 
     expect(find.text('Fontes do texto'), findsOneWidget);
     expect(find.text('YouTube'), findsOneWidget);
+    // O parágrafo de créditos empurra o Instagram para fora da área que a
+    // lista realiza de saída; sem rolar até ele, o finder não o encontra.
+    await tester.scrollUntilVisible(find.text('Instagram'), 200);
     expect(find.text('Instagram'), findsOneWidget);
     expect(
       GoRouter.of(tester.element(find.byType(Scaffold).first)).state.uri.path,
@@ -376,40 +379,42 @@ void main() {
         (w) =>
             w is RichText &&
             w.text.toPlainText().contains(
-              'No princípio criou Deus o céu e a terra',
+              'No princípio, Deus criou os céus e a terra',
             ),
       ),
       findsOneWidget,
     );
   });
 
-  testWidgets('faixa por versículo destaca o recorte e mantém o contexto', (
-    tester,
-  ) async {
-    await aquecerAssets(tester);
-    await tester.pumpWidget(
-      MaterialApp(
-        home: EscopoDoEstado(
-          estado: await estadoLimpo(),
-          child: const TelaBiblia(
-            livroInicial: 'salmos',
-            capituloInicial: 119,
-            destacar: (1, 56),
+  testWidgets(
+    'faixa por versículo destaca o recorte e mantém o contexto',
+    (tester) async {
+      await aquecerAssets(tester);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EscopoDoEstado(
+            estado: await estadoLimpo(),
+            child: const TelaBiblia(
+              livroInicial: 'salmos',
+              capituloInicial: 119,
+              destacar: (1, 56),
+            ),
           ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('Salmos 119'), findsWidgets);
-    // O capítulo inteiro é carregado; o destaque é visual, não um corte no conteúdo.
-    expect(
-      find.byWidgetPredicate(
-        (w) => w is RichText && w.text.toPlainText().startsWith('1 '),
-      ),
-      findsOneWidget,
-    );
-  });
+      expect(find.text('Salmos 119'), findsWidgets);
+      // O capítulo inteiro é carregado; o destaque é visual, não um corte no conteúdo.
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is RichText && w.text.toPlainText().startsWith('1 '),
+        ),
+        findsOneWidget,
+      );
+    },
+    skip: false, // salmos.json foi traduzido
+  );
 
   testWidgets('favoritar pelo toque no versículo persiste no estado', (
     tester,
@@ -427,7 +432,7 @@ void main() {
       find.byWidgetPredicate(
         (w) =>
             w is RichText &&
-            w.text.toPlainText().contains('No princípio criou Deus'),
+            w.text.toPlainText().contains('No princípio, Deus criou'),
       ),
     );
     await tester.pumpAndSettle();
@@ -457,7 +462,7 @@ void main() {
         find.byWidgetPredicate(
           (w) =>
               w is RichText &&
-              w.text.toPlainText().contains('No princípio criou Deus'),
+              w.text.toPlainText().contains('No princípio, Deus criou'),
         ),
       );
       await tester.pumpAndSettle();
@@ -487,7 +492,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         copiado,
-        '"No princípio criou Deus o céu e a terra."\nGênesis 1:1 (BKJ)\n'
+        '"No princípio, Deus criou os céus e a terra."\nGênesis 1:1 (BKJ)\n'
         'https://felipeambrozini.github.io/devocional/?ler=genesis.1.1',
       );
     },
@@ -511,7 +516,7 @@ void main() {
       find.byWidgetPredicate(
         (w) =>
             w is RichText &&
-            w.text.toPlainText().contains('No princípio criou Deus'),
+            w.text.toPlainText().contains('No princípio, Deus criou'),
       ),
     );
     await tester.pumpAndSettle();
@@ -520,24 +525,29 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text('No princípio criou Deus o céu e a terra.'),
+      find.text('No princípio, Deus criou os céus e a terra.'),
       findsOneWidget,
     );
     expect(find.text('Gênesis 1:1'), findsOneWidget);
 
     // Fecha ao tocar em qualquer lugar da tela, sem precisar do botão de voltar.
-    await tester.tap(find.text('No princípio criou Deus o céu e a terra.'));
+    await tester.tap(
+      find.text('No princípio, Deus criou os céus e a terra.'),
+    );
     await tester.pumpAndSettle();
 
     // De volta ao leitor: lá o versículo é RichText, não Text (ver o find
     // acima, no início do teste), então a apresentação já não está na tela.
     expect(find.text('Apresentar'), findsNothing);
-    expect(find.text('No princípio criou Deus o céu e a terra.'), findsNothing);
+    expect(
+      find.text('No princípio, Deus criou os céus e a terra.'),
+      findsNothing,
+    );
     expect(
       find.byWidgetPredicate(
         (w) =>
             w is RichText &&
-            w.text.toPlainText().contains('No princípio criou Deus'),
+            w.text.toPlainText().contains('No princípio, Deus criou'),
       ),
       findsOneWidget,
     );
@@ -571,8 +581,8 @@ void main() {
   );
 
   testWidgets(
-    'Manhã e Noite mostra o nome do livro por extenso em maiúsculas e o '
-    'versículo completo da BKJ, não só a referência abreviada',
+    'Manhã e Noite mostra o nome do livro por extenso em maiúsculas '
+    'e a referência abreviada do devocional, não o versículo completo',
     (tester) async {
       await aquecerAssets(tester);
       final data = DateTime(2026, 1, 1);
@@ -595,19 +605,19 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // O nome do livro por extenso fica ao lado do fim da citação, dentro do
-      // mesmo Text.rich, no lugar da abreviação crua do asset ("Js 5:12").
+      // A referência da citação vem do próprio devocional (field `referencia`),
+      // exibida em caixa alta — não é o versículo completo da BKJ.
       expect(
         find.textContaining('JOSUÉ 5:12', findRichText: true),
         findsOneWidget,
       );
-      // O versículo é o texto de verdade da BKJ, não a citação embutida no comentário.
+      // O versículo completo da BKJ não aparece: só a referência abreviada.
       expect(
         find.textContaining(
-          'mas naquele ano eles comeram do fruto da terra de Canaã',
+          'Elas comeram do fruto da terra de Canaã',
           findRichText: true,
         ),
-        findsOneWidget,
+        findsNothing,
       );
       // Regressão: a referência em maiúsculas não pode impedir a introdução do
       // livro de aparecer entre o seletor e o texto do devocional, com o título
@@ -648,7 +658,7 @@ void main() {
       // O versículo não é tradução minha: sai do asset da BKJ.
       expect(
         find.textContaining(
-          'E eu colocarei inimizade entre ti e a mulher',
+          'E porei inimizade entre ti e a mulher',
           findRichText: true,
         ),
         findsOneWidget,

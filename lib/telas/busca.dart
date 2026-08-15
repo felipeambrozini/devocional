@@ -336,7 +336,7 @@ class _ItemDeAchado extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             Text.rich(
-              _destacar(achado.texto, termo, tema, cor),
+              destacar(achado.texto, termo, tema, cor),
               maxLines: 4,
               overflow: TextOverflow.ellipsis,
             ),
@@ -459,7 +459,7 @@ class _ItemDeAchadoDevocional extends StatelessWidget {
             ],
             const SizedBox(height: 5),
             Text.rich(
-              _destacar(achado.texto, termo, tema, cor),
+              destacar(achado.texto, termo, tema, cor),
               maxLines: 4,
               overflow: TextOverflow.ellipsis,
             ),
@@ -471,18 +471,18 @@ class _ItemDeAchadoDevocional extends StatelessWidget {
 }
 
 /// Uma data qualquer, só para navegar até o dia certo do devocional: os
-/// assets são anuais e a chave 'MM-DD' não guarda ano. 2024 é bissexto de
-/// propósito — sem isso, '02-29' normalizaria sozinho para 1º de março (ver
+/// assets são anuais e a chave 'DD-MM' não guarda ano. 2024 é bissexto de
+/// propósito — sem isso, '29-02' normalizaria sozinho para 1º de março (ver
 /// `test/bissexto_test.dart`) e a busca levaria para o dia errado, calada.
 DateTime _dataDoDevocional(String chave) {
   final partes = chave.split('-');
-  return DateTime(2024, int.parse(partes[0]), int.parse(partes[1]));
+  return DateTime(2024, int.parse(partes[1]), int.parse(partes[0]));
 }
 
 /// Realça as ocorrências do termo, comparando sem acento para que buscar
 /// "coracao" destaque "coração" no texto original. Compartilhada pelos dois
 /// tipos de resultado, Bíblia e devocionais.
-TextSpan _destacar(String texto, String termo, TextTheme tema, ColorScheme cor) {
+TextSpan destacar(String texto, String termo, TextTheme tema, ColorScheme cor) {
   final base = tema.bodyMedium?.copyWith(height: 1.5);
   final forte = base?.copyWith(color: cor.secondary, fontWeight: FontWeight.w700);
   final textoSemAcento = Conteudo.normalizar(texto);

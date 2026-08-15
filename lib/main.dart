@@ -168,7 +168,7 @@ const _destinos = <_Destino>[
   // dentro do próprio GoRouter (confirmado num teste de widget: o estado
   // interno virava "/sobre" certinho, mas a URL do navegador não seguia).
   // Como aba, usa o mesmo `goBranch` que já as outras cinco já provam
-  // funcionar. Ver a entrada de 09/08/2026 em CONTINUAR.md.
+  // funcionar. Ver a seção "Web" do README.
   _Destino('Sobre', 'sobre', Icons.info_outline, Icons.info, TelaSobre()),
 ];
 

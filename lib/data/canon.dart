@@ -243,9 +243,15 @@ Livro? livroPorSlug(String slug) => _porSlug[slug];
 String nomeDoLivro(String slug) => _porSlug[slug]?.nome ?? slug;
 
 /// Abreviações alternativas vistas nas fontes originais dos devocionais, que não
-/// batem com a abreviação oficial do canon: "Ex" sem acento para Êxodo, e "Isa"
-/// de três letras para Isaías.
-const _apelidosDeLivro = <String, String>{'Ex': 'exodo', 'Isa': 'isaias'};
+/// batem com a abreviação oficial do canon: "Ex" sem acento para Êxodo, "Isa"
+/// de três letras para Isaías, "Cantares" sem "de Salomão", e "Miqueias" sem
+/// acento.
+const _apelidosDeLivro = <String, String>{
+  'Ex': 'exodo',
+  'Isa': 'isaias',
+  'Cantares': 'cantares',
+  'Miqueias': 'miqueias',
+};
 
 /// Sem diferenciar maiúsculas: o Devocional reescreve a referência do dia com o
 /// nome do livro todo em caixa alta ("JOSUÉ 5:12"), e essa comparação precisa
@@ -296,7 +302,7 @@ Livro? livroDaReferencia(String referencia) => _livroEPrefixo(referencia)?.$1;
   final partes = referencia.substring(prefixo.length + 1).split(':');
   if (partes.length != 2) return null;
   final capitulo = int.tryParse(RegExp(r'^\d+').stringMatch(partes[0]) ?? '');
-  final match = RegExp(r'^(\d+)(?:-(\d+))?').firstMatch(partes[1]);
+  final match = RegExp(r'^(\d+)(?:[-,](\d+))?').firstMatch(partes[1]);
   if (capitulo == null || match == null) return null;
   final deVersiculo = int.parse(match.group(1)!);
   final ateVersiculo = int.tryParse(match.group(2) ?? '') ?? deVersiculo;
@@ -307,13 +313,32 @@ Livro? livroDaReferencia(String referencia) => _livroEPrefixo(referencia)?.$1;
 /// "Js 5:12 e Hb 4:9": vírgula, ponto e vírgula ou "e".
 final _separadorDeReferencias = RegExp(r'[,;]\s*|\s+e\s+');
 
+/// Separa [referencia] em trechos, cada um citando uma única passagem.
+///
+/// A vírgula também aparece dentro de uma única passagem para citar dois
+/// versículos do mesmo capítulo ("Zc 1:12,13" ou "1Jo 3:1,2"): só vira um
+/// trecho novo quando o que segue é uma passagem de verdade, não um número
+/// solto de versículo.
+List<String> trechosDaReferencia(String referencia) {
+  final trechos = <String>[];
+  for (final bruto in referencia.split(_separadorDeReferencias)) {
+    final trecho = bruto.trim();
+    if (trechos.isNotEmpty && RegExp(r'^\d+(-\d+)?$').hasMatch(trecho)) {
+      trechos[trechos.length - 1] = '${trechos.last},$trecho';
+    } else {
+      trechos.add(trecho);
+    }
+  }
+  return trechos;
+}
+
 /// Todos os livros citados numa referência, na ordem em que aparecem.
 ///
 /// Cobre o dia comum, de um só livro, e o raro dia que cita mais de um.
 List<Livro> livrosDaReferencia(String referencia) {
   final encontrados = <Livro>[];
-  for (final trecho in referencia.split(_separadorDeReferencias)) {
-    final livro = livroDaReferencia(trecho.trim());
+  for (final trecho in trechosDaReferencia(referencia)) {
+    final livro = livroDaReferencia(trecho);
     if (livro != null && !encontrados.contains(livro)) encontrados.add(livro);
   }
   return encontrados;
@@ -327,8 +352,8 @@ List<Livro> livrosDaReferencia(String referencia) {
 /// 1:2, 1Pe 1:2"), que abre citando Judas, 1 Coríntios e 1 Pedro em sequência.
 List<(Livro, int, int)> versiculosDaReferencia(String referencia) {
   final resolvidos = <(Livro, int, int)>[];
-  for (final trecho in referencia.split(_separadorDeReferencias)) {
-    final resolvido = capituloEVersiculoDaReferencia(trecho.trim());
+  for (final trecho in trechosDaReferencia(referencia)) {
+    final resolvido = capituloEVersiculoDaReferencia(trecho);
     if (resolvido != null) resolvidos.add(resolvido);
   }
   return resolvidos;
@@ -338,8 +363,8 @@ List<(Livro, int, int)> versiculosDaReferencia(String referencia) {
 /// cita mais de uma passagem. Ver [faixaDeVersiculoDaReferencia].
 List<(Livro, int, int, int)> faixasDaReferencia(String referencia) {
   final resolvidos = <(Livro, int, int, int)>[];
-  for (final trecho in referencia.split(_separadorDeReferencias)) {
-    final resolvido = faixaDeVersiculoDaReferencia(trecho.trim());
+  for (final trecho in trechosDaReferencia(referencia)) {
+    final resolvido = faixaDeVersiculoDaReferencia(trecho);
     if (resolvido != null) resolvidos.add(resolvido);
   }
   return resolvidos;

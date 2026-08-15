@@ -32,31 +32,41 @@ class Conteudo {
   /// ano bissexto os três discordavam do cronograma de 366 dias.
   static int diasDoAno(int ano) => ehBissexto(ano) ? 366 : 365;
 
-  /// Chave 'MM-DD' de uma data. Os devocionais e o cronograma são anuais e se
-  /// repetem, então nenhum deles guarda ano.
+  /// Chave 'DD-MM' de uma data (dia-mês, como se escreve a data em português).
+  /// Os devocionais e o cronograma são anuais e se repetem, então nenhum deles
+  /// guarda ano.
   ///
   /// 29 de fevereiro se resolve sozinho: em ano comum essa data não existe, e o
   /// próprio DateTime a normaliza para 1 de março. Não há caminho no app que
-  /// produza a chave '02-29' fora de um ano bissexto.
+  /// produza a chave '29-02' fora de um ano bissexto.
   static String chaveDoDia(DateTime data) =>
-      '${data.month.toString().padLeft(2, '0')}-'
-      '${data.day.toString().padLeft(2, '0')}';
+      '${data.day.toString().padLeft(2, '0')}-'
+      '${data.month.toString().padLeft(2, '0')}';
 
-  Future<Map<String, dynamic>> _carregarLivro(String slug) async {
-    final chave = slug;
-    final cacheado = _livros[chave];
+  /// `null` quando o livro ainda não foi traduzido: a ausência também é
+  /// cacheada, senão cada chamada tentaria carregar de novo um asset que não
+  /// existe. A tradução está em andamento livro por livro, então isto não é
+  /// caso de erro, e sim o estado esperado até o 66º livro fechar.
+  final Map<String, bool> _tentouLivro = {};
+
+  Future<Map<String, dynamic>?> _carregarLivro(String slug) async {
+    final cacheado = _livros[slug];
     if (cacheado != null) return cacheado;
-    final cru = await rootBundle.loadString('assets/bible/bkj/$slug.json');
-    final dados = json.decode(cru) as Map<String, dynamic>;
-    _livros[chave] = dados;
-    return dados;
+    if (_tentouLivro[slug] == true) return null;
+    _tentouLivro[slug] = true;
+    try {
+      final cru = await rootBundle.loadString('assets/biblia/$slug.json');
+      final dados = json.decode(cru) as Map<String, dynamic>;
+      _livros[slug] = dados;
+      return dados;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<Capitulo> capitulo(Versao versao, String slug, int numero) async {
     final livro = await _carregarLivro(slug);
-    final capitulos = livro['chapters'] as Map<String, dynamic>;
-    final cap = capitulos['$numero'] as Map<String, dynamic>?;
-    if (cap == null) {
+    if (livro == null) {
       return Capitulo(
         livro: slug,
         numero: numero,
@@ -64,16 +74,28 @@ class Conteudo {
         versiculos: const [],
       );
     }
+    final capitulos = livro['capitulos'] as Map<String, dynamic>;
+    final cap = capitulos['$numero'] as Map<String, dynamic>?;
+    if (cap == null) {
+      return Capitulo(
+        livro: slug,
+        numero: numero,
+        titulo: '',
+        versiculos: const [],
+        nome: livro['nome'] as String? ?? '',
+      );
+    }
     final versiculos =
-        (cap['verses'] as Map<String, dynamic>).entries
+        (cap['versiculos'] as Map<String, dynamic>).entries
             .map((e) => (int.parse(e.key), e.value as String))
             .toList()
           ..sort((a, b) => a.$1.compareTo(b.$1));
     return Capitulo(
       livro: slug,
       numero: numero,
-      titulo: cap['title'] as String? ?? '',
+      titulo: cap['titulo'] as String? ?? '',
       versiculos: versiculos,
+      nome: livro['nome'] as String? ?? '',
     );
   }
 
@@ -145,7 +167,7 @@ class Conteudo {
     final cacheado = _devocionais;
     if (cacheado != null) return cacheado;
     final cru = await rootBundle.loadString(
-      'assets/devotional/morning_evening.json',
+      'assets/devotionals/manha_e_noite.json',
     );
     final dados = (json.decode(cru) as Map<String, dynamic>).map(
       (chave, valor) => MapEntry(chave, valor as Map<String, dynamic>),
@@ -233,7 +255,7 @@ class Conteudo {
       _tentouPromessas = true;
       try {
         final cru = await rootBundle.loadString(
-          'assets/devotional/promises.json',
+          'assets/devotionals/promessas_de_deus.json',
         );
         _promessas = (json.decode(cru) as Map<String, dynamic>).map(
           (chave, valor) => MapEntry(chave, valor as Map<String, dynamic>),
@@ -276,8 +298,8 @@ class Conteudo {
     final achados = <AchadoDevocional>[];
 
     void conferir(String leitura, String data, Map<String, dynamic> entrada) {
-      final titulo = entrada['title'] as String? ?? '';
-      final texto = entrada['text'] as String? ?? '';
+      final titulo = entrada['titulo'] as String? ?? '';
+      final texto = entrada['devocional'] as String? ?? '';
       if (_normalizar(titulo).contains(alvo) ||
           _normalizar(texto).contains(alvo)) {
         achados.add(
@@ -340,11 +362,13 @@ class Conteudo {
     var total = 0;
     for (final livro in canon) {
       final dados = await _carregarLivro(livro.slug);
-      final capitulos = dados['chapters'] as Map<String, dynamic>;
+      if (dados == null) continue;
+      final capitulos = dados['capitulos'] as Map<String, dynamic>;
       for (var n = 1; n <= livro.capitulos; n++) {
         final cap = capitulos['$n'] as Map<String, dynamic>?;
         if (cap == null) continue;
-        for (final entrada in (cap['verses'] as Map<String, dynamic>).entries) {
+        for (final entrada
+            in (cap['versiculos'] as Map<String, dynamic>).entries) {
           final texto = entrada.value as String;
           if (_normalizar(texto).contains(alvo)) {
             yield Achado(

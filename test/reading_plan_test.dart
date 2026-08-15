@@ -23,20 +23,20 @@ void main() {
       expect(plano.length, 365);
     });
 
-    test('cobre toda data de 01-01 a 12-31, uma vez cada', () {
+    test('cobre toda data de 01-01 a 31-12, uma vez cada', () {
       const diasPorMes = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
       final datas = plano.map((d) => d.data).toList();
       expect(datas.toSet().length, 365, reason: 'ha data repetida');
       for (var mes = 1; mes <= 12; mes++) {
         for (var dia = 1; dia <= diasPorMes[mes - 1]; dia++) {
           final chave =
-              '${mes.toString().padLeft(2, '0')}-'
-              '${dia.toString().padLeft(2, '0')}';
+              '${dia.toString().padLeft(2, '0')}-'
+              '${mes.toString().padLeft(2, '0')}';
           expect(datas, contains(chave), reason: 'falta $chave');
         }
       }
       // 29 de fevereiro nao existe no cronograma: em ano bissexto e dia de recuperacao.
-      expect(datas, isNot(contains('02-29')));
+      expect(datas, isNot(contains('29-02')));
     });
 
     test('todo livro citado existe no canon e as faixas cabem nele', () {
@@ -63,7 +63,7 @@ void main() {
           (d) => d.faixas.any((f) => f.porVersiculo),
         );
         // Os tres dias de Salmos 119 no fim de outubro.
-        expect(porVersiculo.map((d) => d.data), ['10-29', '10-30', '10-31']);
+        expect(porVersiculo.map((d) => d.data), ['29-10', '30-10', '31-10']);
 
         final primeiro = porVersiculo.first.faixas.single;
         expect(primeiro.livro, 'salmos');
@@ -78,7 +78,7 @@ void main() {
     );
 
     test('dia com varios livros gera uma faixa por livro, na ordem escrita', () {
-      final dia = plano.firstWhere((d) => d.data == '07-28');
+      final dia = plano.firstWhere((d) => d.data == '28-07');
       expect(dia.rotulo, 'Obadias 1, 2 Reis 1 a 4');
       // O '2' de '2 Reis' nao pode ser lido como capitulo de Obadias, que tem so um.
       expect(dia.faixas.map((f) => f.livro), ['obadias', '2reis']);
@@ -87,7 +87,7 @@ void main() {
     });
 
     test('capitulos avulsos do mesmo livro nao viram uma faixa continua', () {
-      final dia = plano.firstWhere((d) => d.data == '06-12');
+      final dia = plano.firstWhere((d) => d.data == '12-06');
       expect(dia.rotulo, 'Salmos 3, 4, 12, 13, 28, 55');
       expect(dia.faixas.length, 6);
       expect(dia.faixas.map((f) => f.deCapitulo), [3, 4, 12, 13, 28, 55]);
@@ -97,7 +97,7 @@ void main() {
     });
 
     test('livros numerados nao sao confundidos com os de nome parecido', () {
-      final dia = plano.firstWhere((d) => d.data == '03-02');
+      final dia = plano.firstWhere((d) => d.data == '02-03');
       expect(dia.faixas.map((f) => f.livro), ['1joao', '2joao', '3joao']);
     });
 
@@ -113,22 +113,22 @@ void main() {
   group('cronograma bissexto', () {
     final planoBissexto = carregarPlano('assets/reading_plan_bissexto.json');
 
-    test('tem exatamente 366 dias, um por data do ano incluindo 02-29', () {
+    test('tem exatamente 366 dias, um por data do ano incluindo 29-02', () {
       expect(planoBissexto.length, 366);
       final datas = planoBissexto.map((d) => d.data).toList();
       expect(datas.toSet().length, 366);
-      expect(datas, contains('02-29'));
+      expect(datas, contains('29-02'));
     });
 
     test('so difere do cronograma comum na divisao de 28/2 e 29/2', () {
       final comum = {for (final d in plano) d.data: d.rotulo};
       final bissexto = {for (final d in planoBissexto) d.data: d.rotulo};
       for (final data in bissexto.keys) {
-        if (data == '02-28' || data == '02-29') continue;
+        if (data == '28-02' || data == '29-02') continue;
         expect(bissexto[data], comum[data], reason: 'divergiu em $data');
       }
-      expect(bissexto['02-28'], '2 Pedro 1 a 3');
-      expect(bissexto['02-29'], 'Judas 1');
+      expect(bissexto['28-02'], '2 Pedro 1 a 3');
+      expect(bissexto['29-02'], 'Judas 1');
     });
 
     test('todo livro citado existe no canon e as faixas cabem nele', () {

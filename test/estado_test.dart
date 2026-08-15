@@ -20,7 +20,7 @@ void main() {
       expect(estado.foiLido('01-01'), isFalse);
 
       await estado.alternarLido('01-01');
-      await estado.alternarLido('12-25');
+      await estado.alternarLido('25-12');
       expect(estado.diasLidos, 2);
       expect(estado.foiLido('01-01'), isTrue);
 
@@ -221,7 +221,7 @@ void main() {
       await origem.alternarFavorito(Versao.bkj, 'joao', 3, 16);
       await origem.definirNota(Versao.bkj, 'romanos', 8, 28, 'para meditar');
       await origem.alternarLido('01-01');
-      await origem.alternarLido('03-15');
+      await origem.alternarLido('15-03');
       final copia = origem.exportar();
 
       // Aparelho novo: nada gravado, so a copia.
@@ -253,7 +253,7 @@ void main() {
         SharedPreferences.setMockInitialValues({});
         final e = await Estado.abrir();
         await e.alternarFavorito(Versao.bkj, 'joao', 3, 16);
-        await e.alternarLido('07-04');
+        await e.alternarLido('04-07');
         return e.exportar();
       }();
 

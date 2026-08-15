@@ -56,6 +56,3 @@ graphify-out/
 .github/
 .agents/
 .codex/
-# Fonte em ingles de Promessas de Deus: insumo de traducao, ja consumido.
-# Regeneravel pelo comando em CONTINUAR.md; o app le assets/devotional/promises.json.
-tools/promessas_en.json

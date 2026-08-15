@@ -35,7 +35,7 @@ class Estado extends ChangeNotifier {
 
   final SharedPreferences _prefs;
 
-  /// Datas 'MM-DD' do cronograma já marcadas como lidas.
+  /// Datas 'DD-MM' do cronograma já marcadas como lidas.
   Set<String> _lidos = {};
 
   /// Favoritos e notas, indexados por [Marcacao.chave].

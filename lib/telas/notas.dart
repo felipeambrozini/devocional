@@ -96,7 +96,7 @@ class _TelaNotasState extends State<TelaNotas> {
           child: Column(
             children: [
               // Só na web: o navegador pode limpar o localStorage sem aviso,
-              // e ninguém além de quem já leu CONTINUAR.md sabe disso. Sem
+              // e ninguém além de quem já leu o README sabe disso. Sem
               // Dismissible de propósito — o risco não desaparece porque a
               // pessoa fechou o aviso uma vez.
               if (kIsWeb)

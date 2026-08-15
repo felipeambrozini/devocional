@@ -72,7 +72,7 @@ void main() {
         SharedPreferences.setMockInitialValues({});
         final outro = await Estado.abrir();
         await outro.alternarFavorito(Versao.bkj, 'joao', 3, 16);
-        await outro.alternarLido('07-04');
+        await outro.alternarLido('04-07');
         return outro.exportar();
       }();
 
@@ -89,7 +89,7 @@ void main() {
         'nota daqui',
         reason: 'a nota local não pode ser apagada por um favorito sem nota',
       );
-      expect(estado.foiLido('07-04'), isTrue);
+      expect(estado.foiLido('04-07'), isTrue);
     });
 
     test(
@@ -123,7 +123,7 @@ void main() {
         final comNovidade = await () async {
           SharedPreferences.setMockInitialValues({});
           final outro = await Estado.abrir();
-          await outro.alternarLido('12-25');
+          await outro.alternarLido('25-12');
           return outro.exportar();
         }();
         final sincronia = Sincronia(

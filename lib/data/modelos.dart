@@ -45,10 +45,15 @@ class Capitulo {
     required this.numero,
     required this.titulo,
     required this.versiculos,
-  });
+    String? nome,
+  }) : nome = nome ?? '';
 
   final String livro;
   final int numero;
+
+  /// O nome do livro como vem no JSON (`nome`). Vazio quando o arquivo não o
+  /// traz; nesse caso a referência cai no nome do canon, que é o mesmo.
+  final String nome;
 
   /// Sobrescrito do salmo, por exemplo "Ao Músico-chefe, Salmo de Davi.".
   /// Vazio na maioria dos capítulos.
@@ -57,7 +62,8 @@ class Capitulo {
   /// Pares (número, texto) na ordem numérica.
   final List<(int, String)> versiculos;
 
-  String get referencia => '${nomeDoLivro(livro)} $numero';
+  String get referencia =>
+      '${nome.isNotEmpty ? nome : nomeDoLivro(livro)} $numero';
 }
 
 /// Uma faixa do cronograma: capítulos, ou versículos dentro de um capítulo quando o
@@ -116,7 +122,7 @@ class DiaDoPlano {
     ],
   );
 
-  /// Chave 'MM-DD'. O plano é anual e se repete, então não guarda ano.
+  /// Chave 'DD-MM'. O plano é anual e se repete, então não guarda ano.
   final String data;
 
   /// O texto original do cronograma, por exemplo "Tiago 4 a 5, Gálatas 1".
@@ -124,8 +130,8 @@ class DiaDoPlano {
 
   final List<Faixa> faixas;
 
-  int get mes => int.parse(data.substring(0, 2));
-  int get dia => int.parse(data.substring(3, 5));
+  int get mes => int.parse(data.substring(3, 5));
+  int get dia => int.parse(data.substring(0, 2));
 }
 
 /// Uma leitura diária: Manhã, Noite ou a promessa do dia.
@@ -139,10 +145,10 @@ class Devocional {
   });
 
   factory Devocional.doJson(Map<String, dynamic> json) => Devocional(
-    referencia: json['reference'] as String? ?? '',
-    texto: json['text'] as String? ?? '',
-    titulo: json['title'] as String? ?? '',
-    versiculo: json['verse'] as String? ?? '',
+    referencia: json['referencia'] as String? ?? '',
+    texto: json['devocional'] as String? ?? '',
+    titulo: json['titulo'] as String? ?? '',
+    versiculo: json['versiculo'] as String? ?? '',
   );
 
   final String referencia;
@@ -301,7 +307,7 @@ class AchadoDevocional {
 
   final String leitura;
 
-  /// Chave 'MM-DD', mesma convenção de [DiaDoPlano.data]: os devocionais são
+  /// Chave 'DD-MM', mesma convenção de [DiaDoPlano.data]: os devocionais são
   /// anuais e não guardam ano.
   final String data;
 
