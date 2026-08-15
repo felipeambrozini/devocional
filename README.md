@@ -6,12 +6,7 @@ Windows e Linux a partir do mesmo código).
 ## O que o app faz
 
 - **Bíblia completa em tradução inédita:**
-  - **BKJ 1611**, uma tradução interna autoral da *King James 1611*, com
-    31.102 versículos (bate exatamente com o canon).
-  - **NVT** (Mundo Cristão), com 31.104 versículos; os 2 desvios são
-    `3 João 1:15` e `Ap 12:18`, versificação própria da NLT.
-  - Leitor por capítulo e seletor dos 66 livros nos dois testamentos; a
-    introdução de cada livro abre junto.
+  - **BKJ 1611**, uma tradução interna autoral, com 31.102 versículos (bate exatamente com o canon).
 - **Devocional diário**, três leituras por dia, na voz de Charles Spurgeon:
   - **Manhã** e **Noite** (*Morning and Evening*), uma virada automática entre
     as duas: 0h-17h59 mostra o devocional da manhã, 18h-23h59 o da noite,

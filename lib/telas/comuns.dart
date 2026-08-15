@@ -667,7 +667,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                           borderRadius: BorderRadius.circular(3),
                           child: Image.asset(
                             capaBibliaSpurgeon(context),
-                            height: 52,
+                            height: 104,
                             fit: BoxFit.cover,
                             // Decorativa: o título ao lado já nomeia a obra.
                             excludeFromSemantics: true,
