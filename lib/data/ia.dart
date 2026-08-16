@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_api_headers/google_api_headers.dart';
 import 'package:http/http.dart' as http;
 
@@ -10,7 +10,7 @@ import 'personas.dart';
 
 /// Cliente da Gemini API gratuita (sem cartão de crédito).
 ///
-/// São três chaves, uma por plataforma, porque cada uma prova a identidade
+/// São duas chaves, uma por plataforma, porque cada uma prova a identidade
 /// de um jeito:
 ///
 /// * _chaveWeb: criada no Google Cloud Console, restrita ao site do app
@@ -23,25 +23,18 @@ import 'personas.dart';
 ///   X-Android-Package/X-Android-Cert, calculados em tempo de execução pelo
 ///   plugin google_api_headers — então debug e release funcionam sem trocar
 ///   nada, desde que os dois SHA-1 estejam registrados na chave.
-/// * _chaveIos: a chave antiga do AI Studio, sem restrição, até o iOS ter
-///   uma própria (a do Android recusaria pedidos de iPhone).
 ///
 /// Não é segredo de servidor: a Google desenha este caminho para apps
 /// client-side, com CORS aberto (conferido em OPTIONS) e limite por projeto.
-/// A chave iOS não fica no repositório (o GitHub bloqueia push com ela);
-/// entra no build com `--dart-define=CHAVE_GEMINI_IOS=...`.
 const _chaveWeb =
     'AIzaSyCA0Od5msmQjlEkyXtMVzJnLy0RTpmlT8g';
 
 const _chaveAndroid =
     'AIzaSyBAD7HPChEKw59751oB2Qlx6b31-_S4knk';
 
-const _chaveIos = String.fromEnvironment('CHAVE_GEMINI_IOS');
-
 String get _chaveGemini {
   if (kIsWeb) return _chaveWeb;
-  if (defaultTargetPlatform == TargetPlatform.android) return _chaveAndroid;
-  return _chaveIos;
+  return _chaveAndroid;
 }
 
 /// Os cabeçalhos do pedido à Gemini.

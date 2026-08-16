@@ -353,16 +353,6 @@ flutter run
 
 O SDK é gerido pelo FVM (ver `.fvmrc`), na versão fixa 3.44.8.
 
-A chave da IA no iOS não fica no repositório (o GitHub bloqueia push com ela).
-Para rodar/buildar para iOS, passar o valor como define:
-
-```bash
-flutter run --dart-define=CHAVE_GEMINI_IOS=<chave>
-flutter build ios --dart-define=CHAVE_GEMINI_IOS=<chave>
-```
-
-Web e Android usam chaves próprias já embutidas no app.
-
 ## Testes e análise
 
 ```bash
