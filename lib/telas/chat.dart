@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/conversador.dart';
 import '../data/estado.dart';
 import '../data/ia.dart';
 import '../data/modelos.dart';
@@ -104,16 +105,13 @@ class _TelaChatState extends State<TelaChat> {
   final _controle = TextEditingController();
   final _rolagem = ScrollController();
 
-  bool _respondendo = false;
-
-  /// Falha da última tentativa, mostrada num balão de erro no rodapé da
-  /// conversa com o botão de tentar de novo. Vive só na tela: um erro não é
-  /// parte do histórico e não deve ser persistido.
-  String? _erro;
-
-  /// A pergunta que está no ar, para o "Tentar de novo" refazê-la sem que o
-  /// usuário precise redigitar.
-  String _ultimaPergunta = '';
+  /// O turno da conversa: registra a pergunta, chama a IA e grava a resposta.
+  ///
+  /// Nasce depois do primeiro frame (precisa do [EscopoDoEstado], que não
+  /// pode ser consultado no initState) e morre com a tela. Vive no lugar do
+  /// `_respondendo`/`_erro`/`_ultimaPergunta` que o widget guardava: a tela
+  /// só desenha, e o fluxo inteiro é testável (ver `test/conversador_test.dart`).
+  Conversador? _conversador;
 
   @override
   void initState() {
@@ -126,17 +124,16 @@ class _TelaChatState extends State<TelaChat> {
     // em debug). Depois do frame o efeito é o mesmo, sem a exceção.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       camadasFlutuantes.value++;
+      _conversador = Conversador(
+        persona: widget.persona,
+        estado: EscopoDoEstado.de(context),
+        chamar: perguntar,
+      );
+      _conversador!.addListener(_aoMudarConversador);
       // Reabrir depois de uma resposta interrompida: a última pergunta ficou
       // pendente, e a tela oferece "Tentar de novo" em vez de deixar a
       // pergunta respondida pelo silêncio.
-      final mensagens = EscopoDoEstado.de(context).mensagensDe(widget.persona.id);
-      final ultima = mensagens.isEmpty ? null : mensagens.last;
-      if (ultima != null && ultima.doUsuario && ultima.pendente) {
-        setState(() {
-          _erro = 'A resposta anterior não chegou.';
-          _ultimaPergunta = ultima.texto;
-        });
-      }
+      _conversador!.retomarInterrompida();
     });
   }
 
@@ -146,68 +143,29 @@ class _TelaChatState extends State<TelaChat> {
     // contagem volta depois do frame, como no initState.
     WidgetsBinding.instance
         .addPostFrameCallback((_) => camadasFlutuantes.value--);
+    _conversador?.removeListener(_aoMudarConversador);
+    _conversador?.dispose();
     _controle.dispose();
     _rolagem.dispose();
     super.dispose();
   }
 
-  Future<void> _enviar() async {
-    final texto = _controle.text.trim();
-    if (texto.isEmpty || _respondendo) return;
-    _controle.clear();
-    final estado = EscopoDoEstado.de(context);
-    // Perguntas antigas que ficaram pendentes ficam para trás: quem envia
-    // uma pergunta nova seguiu a vida, e só a mais nova interessa.
-    await estado.marcarRespondidas(widget.persona.id);
-    await estado.registrarMensagem(
-      widget.persona.id,
-      Mensagem(
-        id: novoIdDeMensagem(),
-        papel: 'user',
-        texto: texto,
-        momento: DateTime.now().millisecondsSinceEpoch,
-        // Pendente até a resposta chegar: sair da tela no meio da geração
-        // deixa a pergunta marcada, e o reabrir oferece "Tentar de novo".
-        pendente: true,
-      ),
-    );
-    await _perguntar(texto);
+  /// O conversador notificou (resposta chegou, erro, interrupção): redesenhar
+  /// o rodapé e rolar para o fim quando uma resposta começa a vir.
+  void _aoMudarConversador() {
+    if (!mounted) return;
+    setState(() {});
+    if (_conversador?.respondendo ?? false) _rolarParaOFim();
   }
 
-  /// Chama a Gemini com a pergunta já registrada no histórico. Quem chama é o
-  /// envio de uma mensagem nova ou o "Tentar de novo" depois de uma falha.
-  Future<void> _perguntar(String pergunta) async {
-    setState(() {
-      _respondendo = true;
-      _erro = null;
-      _ultimaPergunta = pergunta;
-    });
-    _rolarParaOFim();
-
-    final estado = EscopoDoEstado.de(context);
-    try {
-      final resposta = await perguntar(
-        persona: widget.persona,
-        historico: estado.mensagensDe(widget.persona.id),
-        pergunta: pergunta,
-      );
-      if (!mounted) return;
-      await estado.registrarMensagem(
-        widget.persona.id,
-        Mensagem(
-          id: novoIdDeMensagem(),
-          papel: 'assistant',
-          texto: resposta,
-          momento: DateTime.now().millisecondsSinceEpoch,
-        ),
-      );
-      // A resposta chegou: nada fica pendente nesta conversa.
-      await estado.marcarRespondidas(widget.persona.id);
-    } on IaException catch (erro) {
-      if (mounted) setState(() => _erro = erro.mensagem);
-    } finally {
-      if (mounted) setState(() => _respondendo = false);
+  Future<void> _enviar() async {
+    final texto = _controle.text.trim();
+    final conversador = _conversador;
+    if (texto.isEmpty || conversador == null || conversador.respondendo) {
+      return;
     }
+    _controle.clear();
+    await conversador.enviar(texto);
   }
 
   Future<void> _limparConversa() async {
@@ -247,6 +205,8 @@ class _TelaChatState extends State<TelaChat> {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     final estado = EscopoDoEstado.de(context);
+    final conversador = _conversador;
+    final respondendo = conversador?.respondendo ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -326,7 +286,7 @@ class _TelaChatState extends State<TelaChat> {
               },
             ),
           ),
-          if (_respondendo)
+          if (respondendo)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
               child: Align(
@@ -344,12 +304,11 @@ class _TelaChatState extends State<TelaChat> {
                 ),
               ),
             ),
-          if (_erro != null)
+          if (conversador?.erro != null)
             _ErroDeResposta(
               persona: widget.persona,
-              mensagem: _erro!,
-              pergunta: _ultimaPergunta,
-              aoTentarDeNovo: _perguntar,
+              mensagem: conversador!.erro!,
+              aoTentarDeNovo: conversador.repetir,
             ),
           SafeArea(
             top: false,
@@ -372,10 +331,10 @@ class _TelaChatState extends State<TelaChat> {
                     decoration: InputDecoration(
                       // Enquanto a resposta vem, o campo diz o estado em vez de
                       // engolir o envio em silêncio; o rascunho continua lá.
-                      hintText: _respondendo
+                      hintText: respondendo
                           ? 'aguarde a resposta...'
                           : 'Escreva para ${widget.persona.nome}...',
-                      suffixIcon: _respondendo
+                      suffixIcon: respondendo
                           ? const Padding(
                               padding: EdgeInsets.all(12),
                               child: SizedBox(
@@ -578,14 +537,14 @@ class _ErroDeResposta extends StatelessWidget {
   const _ErroDeResposta({
     required this.persona,
     required this.mensagem,
-    required this.pergunta,
     required this.aoTentarDeNovo,
   });
 
   final Persona persona;
   final String mensagem;
-  final String pergunta;
-  final Future<void> Function(String pergunta) aoTentarDeNovo;
+
+  /// Refaz a última pergunta (o `Conversador` guarda o texto dela).
+  final Future<void> Function() aoTentarDeNovo;
 
   @override
   Widget build(BuildContext context) {
@@ -631,7 +590,7 @@ class _ErroDeResposta extends StatelessWidget {
                       ),
                     ),
                     TextButton.icon(
-                      onPressed: () => aoTentarDeNovo(pergunta),
+                      onPressed: () => aoTentarDeNovo(),
                       icon: const Icon(Icons.refresh, size: 18),
                       label: const Text('Tentar de novo'),
                       style: TextButton.styleFrom(

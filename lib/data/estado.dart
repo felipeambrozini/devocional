@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'canon.dart';
+import 'conversas.dart';
 import 'modelos.dart';
 
 /// Estado persistido do app: progresso de leitura, favoritos, notas e preferências.
@@ -14,6 +15,7 @@ import 'modelos.dart';
 /// armazenamento que funciona igual em mobile, web e desktop sem ramificar código.
 class Estado extends ChangeNotifier {
   Estado(this._prefs) {
+    conversas = Conversas.ler(_prefs, notifyListeners);
     _lerTudo();
   }
 
@@ -27,7 +29,6 @@ class Estado extends ChangeNotifier {
   static const _kLembretesAtivos = 'lembretes_ativos';
   static const _kMinutosLembreteManha = 'minutos_lembrete_manha';
   static const _kMinutosLembreteNoite = 'minutos_lembrete_noite';
-  static const _kConversas = 'conversas';
 
   /// 6h e 18h, os horários padrão do lembrete. Minutos desde meia-noite, não
   /// `TimeOfDay`: `estado.dart` não importa `material.dart`, e um `int` grava
@@ -64,18 +65,12 @@ class Estado extends ChangeNotifier {
   int _minutosLembreteManha = minutosPadraoManha;
   int _minutosLembreteNoite = minutosPadraoNoite;
 
-  /// Histórico das conversas do chat, indexado pelo id da persona (ver
-  /// `lib/data/personas.dart`). Vai sempre ao SharedPreferences, e quem entra
-  /// na conta na web também o sincroniza na nuvem (ver `nuvem.dart`).
-  Map<String, List<Mensagem>> _conversas = {};
-
-  /// Lápides das conversas apagadas: persona → momento da exclusão. É o que
-  /// impede a fusão com a nuvem de "ressuscitar" uma conversa que o usuário
-  /// apagou: enquanto a lápide for mais nova que o histórico do outro lado,
-  /// o remoto é descartado. Uma conversa que continuou em outro aparelho
-  /// depois da exclusão volta, porque aí a lápide é mais velha que a
-  /// conversa, e o que o usuário apagou era só a cópia antiga.
-  Map<String, int> _apagadas = {};
+  /// Histórico das conversas do chat, com a fusão e as lápides de exclusão.
+  ///
+  /// Moram em `lib/data/conversas.dart`; o Estado só repassa (ver os métodos
+  /// no fim da classe), para que a notificação e a sincronia com a nuvem
+  /// continuem ouvindo um único ChangeNotifier.
+  late final Conversas conversas;
 
   static Future<Estado> abrir() async =>
       Estado(await SharedPreferences.getInstance());
@@ -139,36 +134,7 @@ class Estado extends ChangeNotifier {
       _prefs.getInt(_kMinutosLembreteNoite),
       minutosPadraoNoite,
     );
-
-    final conversasCruas = _prefs.getString(_kConversas);
-    if (conversasCruas != null && conversasCruas.isNotEmpty) {
-      try {
-        final mapa = json.decode(conversasCruas) as Map<String, dynamic>;
-        _conversas = {};
-        _apagadas = {};
-        for (final entrada in mapa.entries) {
-          if (entrada.key == 'apagadas') {
-            final apagadas = entrada.value;
-            if (apagadas is Map<String, dynamic>) {
-              for (final e in apagadas.entries) {
-                if (e.value is int) _apagadas[e.key] = e.value as int;
-              }
-            }
-            continue;
-          }
-          if (entrada.value is! List) continue;
-          _conversas[entrada.key] = [
-            for (final item in entrada.value as List)
-              if (item is Map<String, dynamic>) Mensagem.doJson(item),
-          ];
-        }
-      } catch (_) {
-        // Histórico corrompido não deve impedir o app de abrir; perde-se a
-        // conversa, não a fé. Mesma regra das marcações acima.
-        _conversas = {};
-        _apagadas = {};
-      }
-    }
+    // As conversas do chat são lidas pelo próprio `conversas`, no construtor.
   }
 
   /// Um valor fora de 0..1439 não é um horário do dia; volta ao padrão em vez
@@ -377,191 +343,28 @@ class Estado extends ChangeNotifier {
 
   // --- conversas do chat --------------------------------------------------- //
 
-  /// Teto de mensagens por conversa. O histórico inteiro volta ao modelo a
-  /// cada pergunta, então a cauda antiga além disto custa contexto sem ganhar
-  /// qualidade; também segura o tamanho do documento no Firestore.
-  static const _maxMensagensPorConversa = 120;
+  // O histórico, a fusão e as lápides vivem em `conversas`
+  // (lib/data/conversas.dart). O Estado só repassa com as mesmas assinaturas:
+  // as telas e a sincronia com a nuvem continuam falando com ele, e toda
+  // mutação notifica os ouvintes do Estado (a nuvem é um deles, e é o que
+  // faz a mudança subir sozinha).
 
-  /// O histórico da persona, na ordem em que foi conversado.
-  List<Mensagem> mensagensDe(String persona) =>
-      List.unmodifiable(_conversas[persona] ?? const []);
+  List<Mensagem> mensagensDe(String persona) => conversas.mensagensDe(persona);
 
-  Future<void> registrarMensagem(String persona, Mensagem mensagem) async {
-    final lista = _conversas[persona] ??= [];
-    lista.add(mensagem);
-    if (lista.length > _maxMensagensPorConversa) {
-      lista.removeRange(0, lista.length - _maxMensagensPorConversa);
-    }
-    notifyListeners();
-    await _gravarConversas();
-  }
+  Future<void> registrarMensagem(String persona, Mensagem mensagem) =>
+      conversas.registrarMensagem(persona, mensagem);
 
-  /// Limpa a resposta interrompida das perguntas da persona.
-  ///
-  /// Uma pergunta é registrada com [Mensagem.pendente] e só deixa de ser
-  /// quando a resposta chega, ou quando o usuário envia outra pergunta e
-  /// segue a vida. Vem da tela do chat; o Estado não sabe o que é uma
-  /// resposta, só sabe marcar e desmarcar.
-  Future<void> marcarRespondidas(String persona) async {
-    final lista = _conversas[persona];
-    if (lista == null) return;
-    var mudou = false;
-    for (var i = 0; i < lista.length; i++) {
-      final mensagem = lista[i];
-      if (!mensagem.pendente) continue;
-      // Mensagem é imutável; troca-se a instância no lugar da antiga.
-      lista[i] = Mensagem(
-        id: mensagem.id,
-        papel: mensagem.papel,
-        texto: mensagem.texto,
-        momento: mensagem.momento,
-      );
-      mudou = true;
-    }
-    if (!mudou) return;
-    notifyListeners();
-    await _gravarConversas();
-  }
+  Future<void> marcarRespondidas(String persona) =>
+      conversas.marcarRespondidas(persona);
 
-  Future<void> limparConversa(String persona) async {
-    // A lápide é registrada sempre, mesmo sem histórico local: apagar no
-    // celular tem de alcançar a cópia da nuvem, que pode ter mensagens que
-    // este aparelho nunca viu. Sem ela, o remoto ressuscitaria a conversa.
-    _apagadas[persona] = DateTime.now().millisecondsSinceEpoch;
-    _conversas.remove(persona);
-    notifyListeners();
-    await _gravarConversas();
-  }
+  Future<void> limparConversa(String persona) => conversas.limparConversa(persona);
 
-  Future<void> _gravarConversas() async {
-    await _prefs.setString(_kConversas, serializarConversas());
-  }
+  /// O que a cópia na nuvem recebe para as conversas. Ver o método homônimo
+  /// em `Conversas`.
+  String serializarConversas() => conversas.serializarConversas();
 
-  /// O que a cópia na nuvem recebe para as conversas, num JSON à parte do
-  /// `exportar()`: o histórico não entra na cópia de segurança manual que se
-  /// exporta e importa, porque aquela é sobre trabalho do usuário (notas,
-  /// favoritos) e esta é só o cache do chat entre aparelhos.
-  ///
-  /// O mesmo texto vai ao SharedPreferences via [_gravarConversas]: uma
-  /// escrita só, e a lápide viaja com o histórico nos dois caminhos.
-  String serializarConversas() => json.encode({
-    for (final e in _conversas.entries)
-      e.key: [for (final m in e.value) m.paraJson()],
-    if (_apagadas.isNotEmpty) 'apagadas': Map<String, dynamic>.from(_apagadas),
-  });
-
-  /// Funde o histórico remoto com o local, por id de mensagem: uma mensagem
-  /// que já existe aqui não é duplicada, e nada que existia só num dos lados
-  /// se perde. Lixo remoto é engolido, como em `importar()`.
-  ///
-  /// As lápides de exclusão (`apagadas`) entram na regra: a exclusão mais
-  /// nova vence, e a conversa mais nova vence a exclusão. Assim apagar numa
-  /// conta não ressuscita no reencontro com a nuvem, e uma conversa que
-  /// continuou em outro aparelho depois da exclusão volta inteira.
-  Future<void> fundirConversas(String remota) async {
-    try {
-      final mapa = json.decode(remota) as Map<String, dynamic>;
-      final lapidesRemotas = <String, int>{};
-      final apagadas = mapa['apagadas'];
-      if (apagadas is Map<String, dynamic>) {
-        for (final e in apagadas.entries) {
-          if (e.value is int) lapidesRemotas[e.key] = e.value as int;
-        }
-      }
-      var mudou = false;
-      // Uma exclusão pode chegar sem mensagem nenhuma: o aparelho que apagou
-      // empurra só a lápide. Sem este passe, o reencontro a ignoraria, a
-      // conversa antiga ficaria aqui e voltaria a subir na próxima mudança.
-      for (final entrada in lapidesRemotas.entries) {
-        final remoto = mapa[entrada.key];
-        if (remoto is List && remoto.isNotEmpty) continue;
-        final persona = entrada.key;
-        final lapideRemota = entrada.value;
-        var localMaisNovo = -1;
-        for (final m in (_conversas[persona] ?? const <Mensagem>[])) {
-          if (m.momento > localMaisNovo) localMaisNovo = m.momento;
-        }
-        if (lapideRemota <= localMaisNovo) {
-          // A conversa local continuou depois da exclusão remota: prevalece.
-          continue;
-        }
-        if (_conversas.remove(persona) != null) mudou = true;
-        final lapideLocal = _apagadas[persona];
-        if (lapideLocal == null || lapideRemota > lapideLocal) {
-          _apagadas[persona] = lapideRemota;
-          mudou = true;
-        }
-      }
-      for (final entrada in mapa.entries) {
-        if (entrada.key == 'apagadas') continue;
-        if (entrada.value is! List) continue;
-        final remotos = [...entrada.value as List];
-        if (remotos.isEmpty) continue;
-        final persona = entrada.key;
-        final local = [...(_conversas[persona] ?? const <Mensagem>[])];
-        final lapideLocal = _apagadas[persona];
-        final lapideRemota = lapidesRemotas[persona];
-
-        var novoMaisNovo = -1;
-        for (final cru in remotos) {
-          if (cru is! Map<String, dynamic>) continue;
-          final momento = cru['momento'];
-          if (momento is int && momento > novoMaisNovo) novoMaisNovo = momento;
-        }
-        var localMaisNovo = -1;
-        for (final m in local) {
-          if (m.momento > localMaisNovo) localMaisNovo = m.momento;
-        }
-
-        if (lapideRemota != null &&
-            lapideRemota >= novoMaisNovo &&
-            lapideRemota > localMaisNovo) {
-          // A exclusão do outro lado é mais nova que todo o histórico local:
-          // apaga aqui também, e a lápide passa a ser a mais nova das duas.
-          if (_conversas.remove(persona) != null) mudou = true;
-          if (lapideLocal == null || lapideRemota > lapideLocal) {
-            _apagadas[persona] = lapideRemota;
-            mudou = true;
-          }
-          continue;
-        }
-        if (lapideLocal != null && novoMaisNovo <= lapideLocal) {
-          // Apaguei aqui e o remoto não traz nada mais novo: fica apagado.
-          continue;
-        }
-        if (lapideLocal != null) {
-          // O outro lado continuou a conversa depois da exclusão: ela volta
-          // inteira, e a lápide deixa de valer para sempre.
-          _apagadas.remove(persona);
-          mudou = true;
-        }
-
-        final ids = local.map((m) => m.id).toSet();
-        var mudouNesta = false;
-        for (final cru in remotos) {
-          if (cru is! Map<String, dynamic>) continue;
-          final mensagem = Mensagem.doJson(cru);
-          if (mensagem.id.isEmpty || !ids.add(mensagem.id)) continue;
-          local.add(mensagem);
-          mudouNesta = true;
-        }
-        if (mudouNesta) {
-          local.sort((a, b) => a.momento.compareTo(b.momento));
-          if (local.length > _maxMensagensPorConversa) {
-            local.removeRange(0, local.length - _maxMensagensPorConversa);
-          }
-          _conversas[persona] = local;
-          mudou = true;
-        }
-      }
-      if (mudou) {
-        notifyListeners();
-        await _gravarConversas();
-      }
-    } catch (_) {
-      // Cópia ilegível: o local continua intacto e vai subir por cima.
-    }
-  }
+  Future<void> fundirConversas(String remota) =>
+      conversas.fundirConversas(remota);
 
   // --- cópia de segurança --------------------------------------------------- //
 
