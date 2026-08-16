@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, kIsWeb, TargetPlatform;
+    show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -201,29 +201,21 @@ class _TelaBibliaState extends State<TelaBiblia> {
   /// Se vale a pena gastar uma faixa do rodapé com os chevrons de capítulo.
   ///
   /// No celular não vale: deslizar já passa a página, e a barra ficava logo
-  /// acima da barra de navegação repetindo o que o dedo faz. No Windows e na web
-  /// vale, porque ali quem usa só o mouse não tem gesto: arrastar com o botão
+  /// acima da barra de navegação repetindo o que o dedo faz. Na web vale,
+  /// porque ali quem usa só o mouse não tem gesto: arrastar com o botão
   /// apertado funciona, mas ninguém descobre isso, e as setas do teclado também
   /// não se anunciam.
   ///
   /// É a única ramificação por plataforma do app, e existe porque a forma de
-  /// apontar muda de verdade entre elas. A web entra pelo pior caso: pode estar
-  /// num desktop sem toque.
-  ///
-  /// Getter, e não `static final`: guardado numa constante, o valor seria fixado
-  /// na primeira leitura e o teste que troca a plataforma passaria a medir a
-  /// anterior.
-  bool get _semGestoDeToque =>
-      kIsWeb ||
-      defaultTargetPlatform == TargetPlatform.windows ||
-      defaultTargetPlatform == TargetPlatform.macOS ||
-      defaultTargetPlatform == TargetPlatform.linux;
+  /// apontar muda de verdade entre elas. A web pode estar num desktop sem
+  /// toque, então entra pelo pior caso.
+  bool get _semGestoDeToque => kIsWeb;
 
   @override
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     final estado = EscopoDoEstado.de(context);
-    // Teclado no Windows e na web: as setas passam de capítulo e Ctrl+F abre a
+    // Teclado na web: as setas passam de capítulo e Ctrl+F abre a
     // busca, que antes só existiam como dois chevrons pequenos no rodapé e um
     // ícone na barra. Setas horizontais não rolam uma lista vertical, então não
     // há conflito com a rolagem do capítulo.
@@ -312,8 +304,8 @@ class _TelaBibliaState extends State<TelaBiblia> {
                       // exato; rolar até ele precisa de um frame depois do
                       // capítulo montado.
                       _rolarAteOAlvoSePreciso();
-                      // Arrastar na horizontal passa de capítulo. Vale no
-                      // desktop também: arrasto com o botão do mouse apertado
+                      // Arrastar na horizontal passa de capítulo. Vale na web
+                      // também: arrasto com o botão do mouse apertado
                       // dispara o mesmo reconhecedor. Só que ninguém descobre
                       // isso sem um dedo na tela, e é por isso que os chevrons
                       // continuam lá embaixo em quem não tem toque. Ver
@@ -334,10 +326,10 @@ class _TelaBibliaState extends State<TelaBiblia> {
                       );
                       // Só no toque o texto vira selecionável: por lá o dedo
                       // escolhe com um toque e seleciona com pressão longa,
-                      // sem brigar com o deslize de capítulo. No mouse (web e
-                      // desktop) a seleção por arrasto disputaria a arena com
-                      // o gesto de capítulo, então lá Copiar pela folha do
-                      // versículo continua sendo o caminho.
+                      // sem brigar com o deslize de capítulo. No mouse (web) a
+                      // seleção por arrasto disputaria a arena com o gesto de
+                      // capítulo, então lá Copiar pela folha do versículo
+                      // continua sendo o caminho.
                       return _semGestoDeToque
                           ? leitor
                           : SelectionArea(child: leitor);
@@ -880,7 +872,7 @@ class _SeletorDeLivroState extends State<_SeletorDeLivro> {
       height: altura,
       child: Column(
         children: [
-          // Cabeçalho rolável: numa janela baixa (paisagem, desktop
+          // Cabeçalho rolável: numa janela baixa (paisagem, navegador
           // redimensionado, escala 2x no campo de busca) o conteúdo fixo
           // sozinho estouraria a folha; aqui ele encolhe e rola, e a lista
           // embaixo fica com o resto.

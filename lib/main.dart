@@ -101,7 +101,7 @@ Future<void> main() async {
     );
   } else {
     // Um link e um toque de notificação nunca chegam juntos: o link só existe
-    // na web, e lembrete só em Android e iOS. O `else` é só para não empurrar
+    // na web, e lembrete só em Android. O `else` é só para não empurrar
     // duas telas por cima uma da outra se algum dia os dois coincidirem.
     WidgetsBinding.instance.addPostFrameCallback((_) => _abrirLeituraDoLink());
   }
@@ -371,7 +371,7 @@ class Moldura extends StatelessWidget {
     // "Continuar leitura"), que nascem no Navigator raiz: o mesmo leitor ficava
     // com 720 px pela aba e com a janela inteira quando aberto por fora. Agora
     // cada tela limita o próprio corpo, e a moldura ocupa a janela como um app
-    // de desktop deve.
+    // da web deve.
     if (!largo) {
       return Scaffold(
         body: navigationShell,

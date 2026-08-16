@@ -22,17 +22,6 @@ class DefaultFirebaseOptions {
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
-      case TargetPlatform.iOS:
-        return ios;
-      case TargetPlatform.macOS:
-        return macos;
-      case TargetPlatform.windows:
-        return windows;
-      case TargetPlatform.linux:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for linux - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
       default:
         throw UnsupportedError(
           'DefaultFirebaseOptions are not supported for this platform.',
@@ -55,33 +44,5 @@ class DefaultFirebaseOptions {
     messagingSenderId: '169480227109',
     projectId: 'devocional-15815',
     storageBucket: 'devocional-15815.firebasestorage.app',
-  );
-
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyD1xMJ8FMbiKFteVjVttOWIhYCVlvhp9IU',
-    appId: '1:169480227109:ios:116971ba7fd50b003c72cc',
-    messagingSenderId: '169480227109',
-    projectId: 'devocional-15815',
-    storageBucket: 'devocional-15815.firebasestorage.app',
-    iosBundleId: 'com.felipeambrozini.devocional',
-  );
-
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyD1xMJ8FMbiKFteVjVttOWIhYCVlvhp9IU',
-    appId: '1:169480227109:ios:116971ba7fd50b003c72cc',
-    messagingSenderId: '169480227109',
-    projectId: 'devocional-15815',
-    storageBucket: 'devocional-15815.firebasestorage.app',
-    iosBundleId: 'com.felipeambrozini.devocional',
-  );
-
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDuLYKynL0U91HS9PJaftu7NqtOzJHhN2A',
-    appId: '1:169480227109:web:26c36015a8b804f13c72cc',
-    messagingSenderId: '169480227109',
-    projectId: 'devocional-15815',
-    authDomain: 'devocional-15815.firebaseapp.com',
-    storageBucket: 'devocional-15815.firebasestorage.app',
-    measurementId: 'G-43ZNRJQVPN',
   );
 }

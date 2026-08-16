@@ -12,8 +12,8 @@ import 'estado.dart';
 /// Se a conta na nuvem é uma opção nesta plataforma.
 ///
 /// Só web: é a única plataforma onde o navegador apaga o armazenamento
-/// sozinho (ver `_AvisoDePerda` em `lib/telas/notas.dart`). Android e iOS já
-/// guardam tudo no aparelho e continuam só com o exportar/importar por
+/// sozinho (ver `_AvisoDePerda` em `lib/telas/notas.dart`). O Android já
+/// guarda tudo no aparelho e continua só com o exportar/importar por
 /// clipboard. Mesmo formato de `lembretesSuportados` em `lib/data/lembretes.dart`.
 bool get nuvemSuportada => kIsWeb;
 

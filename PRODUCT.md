@@ -40,7 +40,7 @@ vitoriana dele, tratando o leitor por "tu".
   com marcação de lido e progresso do ano.
 - Tema claro ou escuro (padrão segue o aparelho, dá para fixar) e escala do
   texto de leitura, pelas barras do leitor e do devocional.
-- Lembrete diário opcional (Android e iOS), com horários ajustáveis.
+- Lembrete diário opcional (Android), com horários ajustáveis.
 - Cópia de segurança de favoritos, notas e progresso por exportar/importar
   (área de transferência); conta Google só na web, para espelhar na nuvem.
 - Navegação: abas Hoje, Bíblia, Devocional, Plano, Notas e Sobre; na web cada
@@ -54,15 +54,15 @@ vitoriana dele, tratando o leitor por "tu".
   (Bíblia e devocionais); a busca das marcações filtra referência e nota, não
   o corpo do versículo (deliberado).
 - Layout responsivo: barra inferior no celular, trilho lateral a partir de
-  720px; gesto de deslizar troca capítulo no celular, setas no desktop.
+  720px; gesto de deslizar troca capítulo no celular, setas na web.
 - Lembretes inexatos (sem permissão de alarme exato), canal com importância
-  alta; só Android e iOS.
+  alta; só Android.
 - Regras de texto do produto: sem travessões em nenhum texto do app e sem
   aspas curvas (só aspas retas); voz vitoriana de Spurgeon tratando o leitor
   por "tu"; citações bíblicas no registro BKJ do app.
 - Decisões recusadas de propósito (não reabrir sem motivo novo): streak de
-  dias, áudio, cores de marcação, widget na tela inicial, lembretes em web e
-  desktop, offline de verdade na web, sincronização fora da conta Google web.
+  dias, áudio, cores de marcação, widget na tela inicial, lembretes em web,
+  offline de verdade na web, sincronização fora da conta Google web.
 - Flutter fixo na versão 3.44.8 (`.fvmrc` e `deploy-web.yml`).
 
 ## Brand Commitments

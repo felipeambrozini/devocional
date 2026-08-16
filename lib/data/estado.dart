@@ -12,7 +12,7 @@ import 'modelos.dart';
 /// ponytail: um blob JSON por domínio em SharedPreferences, sem banco. Escala para
 /// centenas de notas; o teto é o localStorage da web, por volta de 5 MB. Se as notas
 /// crescerem além disso, o caminho é `drift`. Escolhido por ser o único
-/// armazenamento que funciona igual em mobile, web e desktop sem ramificar código.
+/// armazenamento que funciona igual em Android e web sem ramificar código.
 class Estado extends ChangeNotifier {
   Estado(this._prefs) {
     conversas = Conversas.ler(_prefs, notifyListeners);

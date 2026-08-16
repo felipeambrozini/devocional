@@ -22,13 +22,13 @@ dependencies:
     sdk: flutter
 
   # Progresso de leitura, favoritos, notas e preferências. Único armazenamento que
-  # funciona igual em Android, iOS, web e desktop sem ramificação de plataforma.
+  # funciona igual em Android e web sem ramificação de plataforma.
   shared_preferences: ^2.5.5
-  # Folha de compartilhar nativa. Mobile, desktop e web de uma vez, sem
+  # Folha de compartilhar nativa. Android e web de uma vez, sem
   # ramificação de plataforma — mesma razão do shared_preferences acima.
   share_plus: ^13.3.0
-  # Lembrete diário. Só usadas em Android e iOS (ver Lembretes em
-  # lib/data/lembretes.dart); nas demais plataformas o app nem chama o plugin.
+  # Lembrete diário. Só usado em Android (ver Lembretes em
+  # lib/data/lembretes.dart); na web o app nem chama o plugin.
   flutter_local_notifications: ^22.2.0
   timezone: ^0.11.1
   flutter_timezone: ^5.1.0
@@ -38,7 +38,7 @@ dependencies:
   url_launcher: ^6.3.2
   # Conta Google e cópia na nuvem, só na web (ver lib/data/nuvem.dart): o
   # navegador é a única plataforma que apaga o armazenamento sozinho. Android
-  # e iOS não chamam nada disto, mas os plugins entram no build dos dois.
+  # não chama nada disto, mas os plugins entram no build dele.
   firebase_core: ^4.1.1
   firebase_auth: ^6.1.0
   cloud_firestore: ^6.1.0
@@ -46,7 +46,7 @@ dependencies:
   # Pacote da própria equipe do Flutter, não um clone de terceiro.
   go_router: ^16.0.0
   # Chamadas HTTP para a Gemini API gratuita (ver lib/data/ia.dart). Único
-  # cliente HTTP do app; funciona igual em mobile, web e desktop.
+  # cliente HTTP do app; funciona igual em Android e web.
   http: ^1.5.0
   google_api_headers: ^5.3.6
 
@@ -63,9 +63,9 @@ dev_dependencies:
 # são gerados, não editados à mão:
 #   dart run flutter_launcher_icons
 flutter_launcher_icons:
-  # Fundo escuro para quem lê um arquivo só: Windows, macOS, o iOS antigo e o
-  # Android anterior ao ícone adaptativo. O marrom se vira nos dois temas. No
-  # Android moderno quem manda são as duas camadas do adaptativo, logo abaixo.
+  # Fundo escuro para quem lê um arquivo só: o Android anterior ao ícone
+  # adaptativo. O marrom se vira nos dois temas. No Android moderno quem manda
+  # são as duas camadas do adaptativo, logo abaixo.
   image_path: assets/icone/icone.png
   android: true
   # O Android recorta o ícone em círculo, folha ou pílula conforme o aparelho,
@@ -78,26 +78,10 @@ flutter_launcher_icons:
   # se um dia parar, o ícone fica neste valor. Ver README.md.
   adaptive_icon_background: "#F7F1E3"
   adaptive_icon_foreground: assets/icone/icone_adaptativo.png
-  ios: true
-  # As três aparências do iOS 18. A "Any" é a que vale no tema claro e nos iOS
-  # anteriores, então ela é a de pergaminho; a escura é a de marrom. As duas vão
-  # opacas de propósito: o gerador grava a imagem como ela é, e o sistema só
-  # desenha fundo próprio quando a arte é transparente, que não é o que se quer
-  # aqui. A tingida vai em cinza e sem fundo, porque nela quem pinta é o sistema.
-  image_path_ios: assets/icone/icone_claro.png
-  image_path_ios_dark_transparent: assets/icone/icone.png
-  image_path_ios_tinted_grayscale: assets/icone/icone_tingido.png
-  # A App Store recusa ícone com canal alfa.
-  remove_alpha_ios: true
   web:
     generate: true
     background_color: "#2E1B10"
     theme_color: "#C9A227"
-  macos:
-    generate: true
-  windows:
-    generate: true
-    icon_size: 256
 
 # Tela de abertura nativa, gerada por:
 #   dart run flutter_native_splash:create

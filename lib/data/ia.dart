@@ -42,8 +42,8 @@ String get _chaveGemini {
 /// Fora da web, a chave restrita ao app exige a identidade do apk em todo
 /// pedido. O plugin google_api_headers lê o nome do pacote e o SHA-1 da
 /// assinatura em tempo de execução — assim o mesmo código serve para o build
-/// de debug e o de release. No desktop (desenvolvimento) o plugin não existe
-/// e o pedido segue sem a prova, que a própria API recusa se precisar.
+/// de debug e o de release. Se o plugin faltar num aparelho, o pedido segue
+/// sem a prova, que a própria API recusa se precisar.
 Future<Map<String, String>> _cabecalhosDoPedido() async {
   final cabecalhos = <String, String>{'Content-Type': 'application/json'};
   if (!kIsWeb) {

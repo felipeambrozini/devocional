@@ -8,15 +8,13 @@ import 'package:timezone/timezone.dart' as tz;
 
 /// Se o aparelho tem como agendar notificação enquanto o app está fechado.
 ///
-/// Só Android e iOS: são as duas plataformas com um agendador de sistema que o
-/// plugin de fato controla. Web e desktop ficam de fora não por falta de
+/// Só Android: é a única plataforma do projeto com um agendador de sistema que
+/// o plugin de fato controla. A web fica de fora não por falta de
 /// tentativa, mas porque não há infraestrutura confiável para o app fechado
 /// disparar algo — o mesmo motivo que já tirou a camada monocromática do
 /// ícone do Android (ver README.md).
 bool get lembretesSuportados =>
-    !kIsWeb &&
-    (defaultTargetPlatform == TargetPlatform.android ||
-        defaultTargetPlatform == TargetPlatform.iOS);
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
 /// As três leituras que têm lembrete, com um id fixo cada para agendar (e
 /// cancelar) sempre a mesma notificação em vez de acumular uma nova a cada
@@ -119,13 +117,6 @@ class LembretesReais implements Lembretes {
     await _plugin.initialize(
       settings: const InitializationSettings(
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-        // false nos três: pedir aqui prometeria a notificação antes do
-        // usuário tocar o interruptor. pedirPermissao() pede de verdade.
-        iOS: DarwinInitializationSettings(
-          requestAlertPermission: false,
-          requestBadgePermission: false,
-          requestSoundPermission: false,
-        ),
       ),
       onDidReceiveNotificationResponse: (resposta) {
         final chave = resposta.payload;
@@ -145,19 +136,11 @@ class LembretesReais implements Lembretes {
   @override
   Future<bool> pedirPermissao() async {
     if (!lembretesSuportados) return false;
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      final concedida = await _plugin
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >()
-          ?.requestNotificationsPermission();
-      return concedida ?? false;
-    }
     final concedida = await _plugin
         .resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin
+          AndroidFlutterLocalNotificationsPlugin
         >()
-        ?.requestPermissions(alert: true, badge: true, sound: true);
+        ?.requestNotificationsPermission();
     return concedida ?? false;
   }
 
@@ -190,7 +173,6 @@ class LembretesReais implements Lembretes {
           importance: Importance.high,
           priority: Priority.high,
         ),
-        iOS: DarwinNotificationDetails(),
       ),
       // Inexata: sem SCHEDULE_EXACT_ALARM, sem o usuário precisar conceder
       // acesso especial em Configurações. Uma janela de alguns minutos não

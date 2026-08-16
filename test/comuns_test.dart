@@ -7,7 +7,7 @@ void main() {
     testWidgets('numa janela larga, centraliza e limita a largura do conteúdo', (
       tester,
     ) async {
-      // Simula uma janela de desktop bem mais larga que o limite de leitura.
+      // Simula uma janela bem mais larga que o limite de leitura.
       tester.view.physicalSize = const Size(1200, 600);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);

@@ -11,7 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Atalhos de teclado do leitor, para Windows e web.
+/// Atalhos de teclado do leitor, para a web.
 ///
 /// O caso difícil não é o atalho em si: é o foco. O shell da moldura mantém
 /// as seis telas vivas, e o evento de tecla sobe a partir de quem tem o
@@ -59,9 +59,11 @@ void main() {
 
   group('chevrons de capítulo no rodapé', () {
     // No celular deslizar já passa a página, e a barra custava uma faixa do fim
-    // de toda tela logo acima da barra de navegação. No Windows e na web ela
-    // fica: arrastar com o mouse funciona, mas ninguém descobre sem um dedo na
-    // tela, e as setas do teclado também não se anunciam.
+    // de toda tela logo acima da barra de navegação. Na web ela fica:
+    // arrastar com o mouse funciona, mas ninguém descobre sem um dedo na
+    // tela, e as setas do teclado também não se anunciam. Só aparecem lá
+    // (`_semGestoDeToque` é `kIsWeb`); o teste abaixo cobre o Android, único
+    // lugar onde dão para simular a ausência.
     Future<void> abrirLeitor(WidgetTester tester) async {
       await aquecer(tester);
       await tester.pumpWidget(
@@ -91,45 +93,11 @@ void main() {
       }
     }
 
-    for (final plataforma in [TargetPlatform.android, TargetPlatform.iOS]) {
-      testWidgets('não aparecem no $plataforma', (tester) async {
-        await comoSe(plataforma, () async {
-          await abrirLeitor(tester);
-          expect(find.byIcon(Icons.chevron_right), findsNothing);
-          expect(find.byIcon(Icons.chevron_left), findsNothing);
-        });
-      });
-    }
-
-    for (final plataforma in [
-      TargetPlatform.windows,
-      TargetPlatform.macOS,
-      TargetPlatform.linux,
-    ]) {
-      testWidgets('aparecem e funcionam no $plataforma', (tester) async {
-        await comoSe(plataforma, () async {
-          await abrirLeitor(tester);
-          expect(find.byIcon(Icons.chevron_right), findsOneWidget);
-
-          await tester.tap(find.byIcon(Icons.chevron_right));
-          await tester.pumpAndSettle();
-          expect(find.text('Gênesis 2'), findsWidgets);
-        });
-      });
-    }
-
-    testWidgets('em Gênesis 1 o chevron de voltar fica desligado', (
-      tester,
-    ) async {
-      await comoSe(TargetPlatform.windows, () async {
+    testWidgets('não aparecem no Android', (tester) async {
+      await comoSe(TargetPlatform.android, () async {
         await abrirLeitor(tester);
-        final voltar = tester.widget<IconButton>(
-          find.ancestor(
-            of: find.byIcon(Icons.chevron_left),
-            matching: find.byType(IconButton),
-          ),
-        );
-        expect(voltar.onPressed, isNull, reason: 'não há capítulo antes deste');
+        expect(find.byIcon(Icons.chevron_right), findsNothing);
+        expect(find.byIcon(Icons.chevron_left), findsNothing);
       });
     });
   });

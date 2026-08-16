@@ -1,7 +1,7 @@
 # Devocional
 
-Aplicativo devocional pessoal do Felipe, em Flutter (Android, iOS, web, macOS,
-Windows e Linux a partir do mesmo código).
+Aplicativo devocional pessoal do Felipe, em Flutter (Android e web a partir do
+mesmo código).
 
 ## O que o app faz
 
@@ -24,19 +24,19 @@ Windows e Linux a partir do mesmo código).
   de tudo (favoritos, notas e progresso) para reimportar em outro aparelho.
 - **Conta Google, só na web**: opcional — favoritos, notas e progresso sobem
   sozinhos para a conta de quem entrar, para não perder nada se o navegador
-  limpar o armazenamento. Android, iOS e desktop continuam só com o
+  limpar o armazenamento. O Android continua só com o
   exportar/importar acima; ver `nuvemSuportada` em `lib/data/nuvem.dart`.
 - **Busca** no texto da Bíblia e nos devocionais, em duas abas.
 - **Tamanho do texto** ajustável e **tema claro ou escuro**, pela barra do leitor
   ou do devocional. O padrão segue o aparelho, e dá para fixar um dos dois.
-- **Lembrete diário**, opcional, em Android e iOS: notificação de Manhã e
+- **Lembrete diário**, opcional, em Android: notificação de Manhã e
   Promessas de Deus e outra de Noite, cada uma num horário ajustável, abrindo a
   leitura certa ao ser tocada.
 - Layout responsivo: barra de navegação embaixo no celular, trilho lateral em
   janela larga (a partir de 720px), coluna de leitura com largura confortável
   e centralizada no desktop.
-- Navegação por gesto e por teclado: deslizar troca de capítulo no celular; no
-  Windows e na web as setas passam de capítulo e `Ctrl+F` abre a busca.
+- Navegação por gesto e por teclado: deslizar troca de capítulo no celular; na
+  web as setas passam de capítulo e `Ctrl+F` abre a busca.
 
 ## Telas
 
@@ -61,7 +61,7 @@ direto. `?ler=joao.3.16` na URL abre esse versículo por cima da aba.
   entra com a conta Google também espelha favoritos, notas e progresso num
   documento do Firestore — ver a conta na nuvem, acima.
 - `share_plus` para compartilhar um versículo. `flutter_local_notifications` +
-  `timezone` + `flutter_timezone` para o lembrete diário, só em Android e iOS
+  `timezone` + `flutter_timezone` para o lembrete diário, só em Android
   (ver `lembretesSuportados` em `lib/data/lembretes.dart`).
 - `go_router` para as rotas por aba, com `StatefulShellRoute.indexedStack` (a
   `Moldura` continua preservando a rolagem e o capítulo aberto de cada aba,
@@ -161,7 +161,7 @@ motivo novo.
   risco real (perder as notas). Reaberta em 09/08/2026 quando o motivo mudou
   (o app passou a ser compartilhado com dezenas de pessoas): a conta Google
   na web é a forma atual de não perder nada (ver "Conta Google" acima);
-  exportar/importar continua sendo o único caminho em Android, iOS e desktop.
+  exportar/importar continua sendo o único caminho no Android.
 - **Camada monocromática do ícone do Android** — a silhueta de rosto vira o
   avatar de "sem foto"; testada e descartada. Não reabrir sem trocar a marca
   por um monograma ou símbolo.
@@ -175,10 +175,9 @@ motivo novo.
 - **29 de fevereiro** não precisa de tratamento especial: `DateTime` do Dart já
   o impede em ano comum (provado em `test/bissexto_test.dart`).
 - **Os chevrons de capítulo só existem onde não há gesto de toque**: no celular
-  deslizar já passa a página; no Windows, macOS, Linux e web a barra fica. É a
+  deslizar já passa a página; na web a barra fica. É a
   única ramificação por plataforma no app — a web entra pelo pior caso (desktop
-  sem toque). `_semGestoDeToque` em `lib/telas/biblia.dart` é getter e não
-  `static final`, porque o teste troca a plataforma em tempo de execução.
+  sem toque). `_semGestoDeToque` em `lib/telas/biblia.dart`.
 - **O alternador das três leituras usa chips, não `SegmentedButton`** — o
   `SegmentedButton` iguala a largura dos segmentos à do maior, e três vezes
   "Promessas de Deus" nunca cabe num celular.
@@ -233,9 +232,9 @@ motivo novo.
   (`subosito/flutter-action@v2`, `flutter-version: 3.44.8`). **Atualizar nos
   dois lugares ao mesmo tempo** e rodar a suíte local antes de comitar.
 
-### Lembretes diários (Android e iOS)
+### Lembretes diários (Android)
 
-- Só em Android e iOS (`lembretesSuportados` em `lib/data/lembretes.dart`).
+- Só em Android (`lembretesSuportados` em `lib/data/lembretes.dart`).
 - **Notificação inexata** (`AndroidScheduleMode.inexactAllowWhileIdle`), não
   exata: exata exigiria `SCHEDULE_EXACT_ALARM`, que no Android 14 o usuário
   precisa conceder à mão.
@@ -325,30 +324,25 @@ motivo novo.
   Firestore (`firestore.rules`, registrado no `firebase.json` e publicadas à
   mão com `firebase deploy --only firestore:rules` ou coladas no console; não
   há CI para elas) e a lista de domínios autorizados.
-- **Nome do pacote** trocado para `com.felipeambrozini.devocional` (09/08/2026).
-  `lib/firebase_options.dart` tem `iosBundleId` ajustados à mão (inertes, só a
-  opção web é usada).
+- **Nome do pacote** trocado para `com.felipeambrozini.devocional` (09/08/2026),
+  refletido no `android/app/build.gradle.kts`.
 
 ### Ícone, splash e fontes
 
 - **O ícone sai da foto, recortado no rosto.** As fontes ficam em `assets/icone/`
   e os arquivos por plataforma são gerados por `dart run flutter_launcher_icons`,
-  nunca editados à mão. Cinco fontes: `icone.png` (rosto 88%, fundo `#2E1B10`)
-  para Android, macOS, Windows, iOS antigo e o modo escuro do iOS 18;
-  `icone_claro.png` (88%, fundo `#F7F1E3`) para a aparência "Any" do iOS 18;
-  `icone_tingido.png` (88%, cinza, sem fundo) para a tingida;
+  nunca editados à mão. Quatro fontes: `icone.png` (rosto 88%, fundo `#2E1B10`)
+  para o Android anterior ao ícone adaptativo;
   `icone_adaptativo.png` (60%, fundo transparente) para o ícone adaptativo do
   Android; `icone_mascaravel.png` (60%, fundo chapado) para os `Icon-maskable-*`
   da web.
 - **Tela de abertura e ícone do lançador são coisas diferentes, e só uma delas
-  acompanha o tema em todo lugar.** A **splash** troca por tema em todas as
+  acompanha o tema em todo lugar.** A **splash** troca por tema nas duas
   plataformas (`dart run flutter_native_splash:create`, configurado no
   `pubspec.yaml`). O **ícone** acompanha o tema no Android (qualificador
   `-night` no fundo do ícone adaptativo; verificado num Galaxy; lançadores
-  guardam o ícone em cache, desinstalar para ver a mudança), no iOS 18+ (três
-  aparências: clara, escura e tingida, opacas de propósito) e no favicon da web
-  (por `prefers-color-scheme`); no PWA, Windows, macOS e Linux não, porque leem
-  um arquivo só.
+  guardam o ícone em cache, desinstalar para ver a mudança) e no favicon da web
+  (por `prefers-color-scheme`); no PWA não, porque lê um arquivo só.
 - **O alternador das três leituras usa chips, não `SegmentedButton`** (ver
    decisões de arquitetura).
 
@@ -372,10 +366,7 @@ flutter analyze
 
 ```bash
 flutter build apk       # Android
-flutter build ios       # iOS
 flutter build web       # Web
-flutter build windows   # Windows
-flutter build macos     # macOS
 ```
 
 Ícone do app, favicon e tela de abertura são gerados a partir das fontes em
@@ -389,9 +380,9 @@ dart run flutter_native_splash:create
 Depois de rodar `flutter_launcher_icons`, conferir se o `manifest.json` da web
 manteve `name` e `orientation` (o gerador reescreve o arquivo por completo).
 
-A **tela de abertura** acompanha o tema do aparelho em todas as plataformas. O
-**ícone do lançador** acompanha no Android, no iOS 18 e no favicon da web; no
-Windows, no macOS e no Linux não, porque leem um arquivo só e não têm variante.
+A **tela de abertura** acompanha o tema do aparelho em Android e na web. O
+**ícone do lançador** acompanha no Android e no favicon da web; no PWA não,
+porque lê um arquivo só e não tem variante.
 No Android, lançadores guardam o ícone em cache: para ver a mudança é preciso
 desinstalar antes de instalar de novo.
 

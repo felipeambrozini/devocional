@@ -339,9 +339,9 @@ void main() {
     },
   );
 
-  testWidgets('numa janela larga de desktop, a coluna de leitura fica centralizada '
+  testWidgets('numa janela larga, a coluna de leitura fica centralizada '
       'ao lado do trilho de navegação', (tester) async {
-    // Simula uma janela do Windows bem mais larga que o limite de leitura,
+    // Simula uma janela de navegador bem mais larga que o limite de leitura,
     // bem além do corte de 720 que já liga o NavigationRail.
     tester.view.physicalSize = const Size(1600, 900);
     tester.view.devicePixelRatio = 1.0;

@@ -17,7 +17,7 @@ String capaBibliaSpurgeon(BuildContext context) {
 }
 
 /// A mesma altura em pixels lógicos ocupa bem menos da tela num monitor
-/// desktop/web do que num celular, então a capa parece pequena mesmo já
+/// (janela de navegador) do que num celular, então a capa parece pequena mesmo já
 /// aumentada. Escala para cima quando a largura disponível passa de 600px.
 double alturaCapa(BuildContext context, double base) {
   final largura = MediaQuery.sizeOf(context).width;
@@ -351,11 +351,11 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                     ],
                   ),
                 ),
-                // Só em Android e iOS: são as duas plataformas com um agendador
+                // Só em Android: é a única plataforma do projeto com um agendador
                 // de sistema que o plugin de fato controla. Ver lembretes.dart.
                 if (lembretesSuportados)
                   ..._SecaoDeLembretes(estado: estado).montar(context),
-                // Só na web: Android e iOS já guardam tudo no aparelho. Ver
+                // Só na web: Android já guarda tudo no aparelho. Ver
                 // nuvem.dart, mesma regra do lembretesSuportados acima.
                 if (nuvemSuportada) ..._secaoDaConta(context),
                 const SizedBox(height: 8),
@@ -768,7 +768,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
   }
 }
 
-/// Limita a largura de leitura e centraliza, para o Windows não esticar texto
+/// Limita a largura de leitura e centraliza, para a web não esticar texto
 /// de ponta a ponta numa janela larga. No celular a tela já é mais estreita
 /// que o limite, então nada muda.
 class LarguraDeLeitura extends StatelessWidget {
