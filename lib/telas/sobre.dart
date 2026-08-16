@@ -38,12 +38,12 @@ class TelaSobre extends StatelessWidget {
             Text('Onde me encontrar', style: tema.headlineSmall),
             const SizedBox(height: 10),
             _LinkDeCanal(
-              icone: Icons.smart_display_outlined,
+              asset: 'assets/images/youtube.webp',
               rotulo: 'YouTube',
               url: 'https://www.youtube.com/@felipe_ambrozini',
             ),
             _LinkDeCanal(
-              icone: Icons.camera_alt_outlined,
+              asset: 'assets/images/instagram.webp',
               rotulo: 'Instagram',
               url: 'https://www.instagram.com/felipe_ambrozini/',
             ),
@@ -129,21 +129,25 @@ Future<void> _apagarDaNuvem(BuildContext context) async {
 
 class _LinkDeCanal extends StatelessWidget {
   const _LinkDeCanal({
-    required this.icone,
+    required this.asset,
     required this.rotulo,
     required this.url,
   });
 
-  final IconData icone;
+  final String asset;
   final String rotulo;
   final String url;
 
   @override
   Widget build(BuildContext context) {
-    final cor = Theme.of(context).colorScheme;
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: Icon(icone, color: cor.primary),
+      leading: Image.asset(
+        asset,
+        // O logo oficial da marca, como o "G" do Google: não redesenhado.
+        width: 26,
+        height: 26,
+      ),
       title: Text(rotulo),
       onTap: () =>
           launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),

@@ -178,7 +178,7 @@ class _BotaoDeEntrarCompacto extends StatelessWidget {
         visualDensity: VisualDensity.compact,
       ),
       onPressed: () => entrarNaConta(context, Nuvem.instancia),
-      icon: Image.asset('assets/images/google_g.png', width: 16, height: 16),
+      icon: Image.asset('assets/images/google_g.webp', width: 16, height: 16),
       label: const Text('Entrar'),
     );
   }

@@ -476,7 +476,7 @@ List<Widget> _secaoDaConta(BuildContext context) {
                   OutlinedButton.icon(
                     onPressed: () => entrarNaConta(context, nuvem),
                     icon: Image.asset(
-                      'assets/images/google_g.png',
+                      'assets/images/google_g.webp',
                       width: 18,
                       height: 18,
                     ),
