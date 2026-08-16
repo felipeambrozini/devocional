@@ -45,6 +45,10 @@ dependencies:
   # Cada aba e a tela Sobre com o próprio caminho na URL (ver lib/main.dart).
   # Pacote da própria equipe do Flutter, não um clone de terceiro.
   go_router: ^16.0.0
+  # Chamadas HTTP para a Gemini API gratuita (ver lib/data/ia.dart). Único
+  # cliente HTTP do app; funciona igual em mobile, web e desktop.
+  http: ^1.5.0
+  google_api_headers: ^5.3.6
 
 dev_dependencies:
   flutter_test:

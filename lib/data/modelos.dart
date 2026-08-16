@@ -314,3 +314,42 @@ class AchadoDevocional {
   final String titulo;
   final String texto;
 }
+
+/// Uma mensagem do chat com uma persona.
+///
+/// [id] é o que faz a fusão com a cópia da nuvem não duplicar: uma mensagem
+/// que chega com um id já visto é ignorada. [momento] em milissegundos desde
+/// a época, para ordenar depois de uma fusão de dois aparelhos.
+///
+/// [papel] é string de propósito, como a ponte `Leitura` de
+/// `AchadoDevocional`: o chat envia papéis ao Gemini como "user"/"model", e a
+/// UI lê "assistant" com [doUsuario] para saber de que lado desenhar o balão.
+class Mensagem {
+  const Mensagem({
+    required this.id,
+    required this.papel,
+    required this.texto,
+    required this.momento,
+  });
+
+  factory Mensagem.doJson(Map<String, dynamic> json) => Mensagem(
+    id: json['id'] as String? ?? '',
+    papel: json['papel'] as String? ?? 'assistant',
+    texto: json['texto'] as String? ?? '',
+    momento: json['momento'] as int? ?? 0,
+  );
+
+  final String id;
+  final String papel;
+  final String texto;
+  final int momento;
+
+  bool get doUsuario => papel == 'user';
+
+  Map<String, dynamic> paraJson() => {
+    'id': id,
+    'papel': papel,
+    'texto': texto,
+    'momento': momento,
+  };
+}

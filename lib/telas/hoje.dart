@@ -165,10 +165,11 @@ class _Cabecalho extends StatelessWidget {
                   'assets/images/felipe.webp',
                   fit: BoxFit.cover,
                   semanticLabel: 'Foto de Felipe',
-                  // A foto é mais alta que larga; o corte automático centralizado do
-                  // BoxFit.cover cortava o topo da cabeça. Alinhando quase ao topo, o
-                  // corte sobra todo embaixo, no peito, em vez do cabelo.
-                  alignment: const Alignment(0, -0.85),
+                  // A foto é mais alta que larga e o cabelo encosta na borda
+                  // superior; o corte centralizado do BoxFit.cover cortava o
+                  // topo da cabeça. Alinhada ao topo, a sobra cai toda
+                  // embaixo, na blusa.
+                  alignment: Alignment.topCenter,
                   errorBuilder: (context, error, stackTrace) => Container(
                     color: cor.surfaceContainerHighest,
                     alignment: Alignment.center,

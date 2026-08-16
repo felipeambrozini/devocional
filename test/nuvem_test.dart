@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:felipe_ambrozini/data/canon.dart';
 import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/data/modelos.dart';
@@ -187,5 +189,92 @@ void main() {
         expect(sincronia.falhouAoEnviar, isFalse);
       },
     );
+  });
+
+  group('Sincronia de conversas', () {
+    Mensagem mensagem(String id, String papel, String texto, int momento) =>
+        Mensagem(id: id, papel: papel, texto: texto, momento: momento);
+
+    test(
+      'mensagem nova sobe uma vez, com o texto de serializarConversas()',
+      () async {
+        final estado = await Estado.abrir();
+        var envios = 0;
+        String? enviado;
+        final sincronia = Sincronia(
+          estado: estado,
+          serializar: estado.serializarConversas,
+          fundir: estado.fundirConversas,
+          puxar: () async => null,
+          empurrar: (copia) async {
+            envios++;
+            enviado = copia;
+          },
+          atraso: Duration.zero,
+        );
+        await sincronia.comecar();
+
+        await estado.registrarMensagem(
+          'spurgeon',
+          mensagem('a1', 'user', 'Ola', 1),
+        );
+        await assentar();
+
+        expect(envios, 1);
+        expect(enviado, estado.serializarConversas());
+      },
+    );
+
+    test('mudar tema ou escala não sobe conversa nenhuma', () async {
+      final estado = await Estado.abrir();
+      var envios = 0;
+      final sincronia = Sincronia(
+        estado: estado,
+        serializar: estado.serializarConversas,
+        fundir: estado.fundirConversas,
+        puxar: () async => null,
+        empurrar: (_) async => envios++,
+        atraso: Duration.zero,
+      );
+      await sincronia.comecar();
+
+      await estado.definirModoDoTema(ModoDoTema.escuro);
+      await assentar();
+
+      expect(
+        envios,
+        0,
+        reason: 'preferência de aparelho não é conversa',
+      );
+    });
+
+    test('comecar() funde o histórico remoto sem apagar o local', () async {
+      final estado = await Estado.abrir();
+      await estado.registrarMensagem(
+        'spurgeon',
+        mensagem('local', 'user', 'daqui', 1),
+      );
+      final remota = json.encode({
+        'spurgeon': [
+          {'id': 'remota', 'papel': 'assistant', 'texto': 'de la', 'momento': 2},
+        ],
+      });
+
+      final sincronia = Sincronia(
+        estado: estado,
+        serializar: estado.serializarConversas,
+        fundir: estado.fundirConversas,
+        puxar: () async => remota,
+        empurrar: (_) async {},
+        atraso: Duration.zero,
+      );
+      await sincronia.comecar();
+
+      expect(
+        estado.mensagensDe('spurgeon').map((m) => m.id),
+        ['local', 'remota'],
+        reason: 'fundir une por id, na ordem do momento',
+      );
+    });
   });
 }

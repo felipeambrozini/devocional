@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:felipe_ambrozini/data/canon.dart';
 import 'package:felipe_ambrozini/data/conteudo.dart';
 import 'package:felipe_ambrozini/data/modelos.dart';
@@ -344,5 +346,99 @@ void main() {
         expect(estado.minutosLembreteNoite, 18 * 60);
       },
     );
+  });
+
+  group('conversas do chat', () {
+    Mensagem mensagem(String id, String papel, String texto, int momento) =>
+        Mensagem(id: id, papel: papel, texto: texto, momento: momento);
+
+    test('registra por persona, persiste e limpa so a pedida', () async {
+      final estado = await Estado.abrir();
+      await estado.registrarMensagem(
+        'spurgeon',
+        mensagem('1', 'user', 'Ola', 1),
+      );
+      await estado.registrarMensagem(
+        'spurgeon',
+        mensagem('2', 'assistant', 'Paz, meu filho.', 2),
+      );
+      await estado.registrarMensagem(
+        'felipe',
+        mensagem('3', 'user', 'Bom dia', 3),
+      );
+
+      expect(estado.mensagensDe('spurgeon').length, 2);
+      expect(estado.mensagensDe('felipe').single.texto, 'Bom dia');
+      expect(
+        (await reabrir()).mensagensDe('spurgeon').length,
+        2,
+        reason: 'o histórico sobrevive ao reabrir',
+      );
+
+      await estado.limparConversa('spurgeon');
+      expect(estado.mensagensDe('spurgeon'), isEmpty);
+      expect((await reabrir()).mensagensDe('spurgeon'), isEmpty);
+      expect(
+        (await reabrir()).mensagensDe('felipe').length,
+        1,
+        reason: 'limpar uma persona não toca na outra',
+      );
+    });
+
+    test('teto de 120 mensagens por conversa, ficando com a cauda', () async {
+      final estado = await Estado.abrir();
+      for (var i = 0; i < 125; i++) {
+        await estado.registrarMensagem(
+          'spurgeon',
+          mensagem('$i', 'user', 'm$i', i),
+        );
+      }
+      final mensagens = estado.mensagensDe('spurgeon');
+      expect(mensagens.length, 120);
+      expect(mensagens.first.id, '5');
+      expect(mensagens.last.id, '124');
+    });
+
+    test('fundir nao duplica, ordena por momento e persiste', () async {
+      final estado = await Estado.abrir();
+      await estado.registrarMensagem(
+        'spurgeon',
+        mensagem('a', 'user', 'local', 1),
+      );
+      final remota = json.encode({
+        'spurgeon': [
+          {'id': 'a', 'papel': 'user', 'texto': 'local', 'momento': 1},
+          {'id': 'b', 'papel': 'assistant', 'texto': 'remota', 'momento': 3},
+        ],
+        'felipe': [
+          {'id': 'c', 'papel': 'user', 'texto': 'outra', 'momento': 5},
+        ],
+      });
+      await estado.fundirConversas(remota);
+
+      expect(
+        estado.mensagensDe('spurgeon').map((m) => m.id),
+        ['a', 'b'],
+        reason: 'a remota que já existia não duplica',
+      );
+      expect(estado.mensagensDe('felipe').single.id, 'c');
+      expect(
+        (await reabrir()).mensagensDe('spurgeon').length,
+        2,
+        reason: 'a fusão também persiste',
+      );
+    });
+
+    test('lixo remoto e engolido sem derrubar o local', () async {
+      final estado = await Estado.abrir();
+      await estado.registrarMensagem(
+        'spurgeon',
+        mensagem('a', 'user', 'fica', 1),
+      );
+      await estado.fundirConversas('{"versao": 99}');
+      await estado.fundirConversas('isto não é json');
+      await estado.fundirConversas('{"spurgeon": "texto, não lista"}');
+      expect(estado.mensagensDe('spurgeon').single.texto, 'fica');
+    });
   });
 }

@@ -15,7 +15,9 @@ import 'data/estado.dart';
 import 'data/lembretes.dart';
 import 'data/modelos.dart';
 import 'data/nuvem.dart';
+import 'data/personas.dart';
 import 'telas/biblia.dart';
+import 'telas/chat.dart';
 import 'telas/comuns.dart';
 import 'telas/devocional.dart';
 import 'telas/hoje.dart';
@@ -199,7 +201,20 @@ final _router = GoRouter(
   navigatorKey: navigatorKey,
   initialLocation: '/hoje',
   redirect: (context, state) => state.uri.path == '/' ? '/hoje' : null,
+  observers: [_observadorDeCamadas],
   routes: [
+    // Os chats não são abas: abrem por cima de tudo e merecem URL própria,
+    // para sobreviver ao F5 e para um link compartilhado reabrir a conversa.
+    // O balão empurra com `push`, não `go`: `go` trocaria a pilha inteira e
+    // o chat ficaria sem o botão de voltar.
+    GoRoute(
+      path: '/charles-spurgeon',
+      builder: (context, state) => TelaChat(persona: personaSpurgeon),
+    ),
+    GoRoute(
+      path: '/felipe-ambrozini',
+      builder: (context, state) => TelaChat(persona: personaFelipe),
+    ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           Moldura(navigationShell: navigationShell),
@@ -274,7 +289,7 @@ class _AppDevocionalState extends State<AppDevocional> {
         builder: (context, child) => MediaQuery.withClampedTextScaling(
           minScaleFactor: 1.0,
           maxScaleFactor: 2.0,
-          child: child!,
+          child: _ComBaloes(child: child!),
         ),
         // Os dois temas vão sempre montados, e o `themeMode` escolhe. Assim
         // "Automático" funciona de verdade: o sistema pode virar o modo com o
@@ -379,6 +394,101 @@ class Moldura extends StatelessWidget {
           ),
           const VerticalDivider(width: 1),
           Expanded(child: navigationShell),
+        ],
+      ),
+    );
+  }
+}
+
+/// Conta as camadas que flutuam por cima das telas (folha de ajustes, diálogo,
+/// seletor de horário) para [camadasFlutuantes] de `lib/telas/chat.dart`: são
+/// rotas que não tapam a tela, e por cima delas os balões de conversa
+/// atrapalham. Rota opaca (uma tela de verdade, como uma leitura) não mexe no
+/// contador: é exatamente por cima dela que os balões devem aparecer. O
+/// próprio chat cuida do próprio contador, por isso a [TelaChat] não passa
+/// por aqui.
+class _ObservadorDeCamadas extends NavigatorObserver {
+  bool _eTransparente(Route route) => route is ModalRoute && !route.opaque;
+
+  @override
+  void didPush(Route route, Route? previousRoute) {
+    if (_eTransparente(route)) camadasFlutuantes.value++;
+  }
+
+  @override
+  void didPop(Route route, Route? previousRoute) {
+    // O travamento é só defesa: um `didPop` órfão de um push que o observador
+    // não viu (alguma rota criada antes dele) não pode deixar o contador no
+    // negativo e esconder os balões para sempre.
+    if (_eTransparente(route) && camadasFlutuantes.value > 0) {
+      camadasFlutuantes.value--;
+    }
+  }
+}
+
+final _observadorDeCamadas = _ObservadorDeCamadas();
+
+/// Pendura os dois balões de conversa por cima de todas as telas: Spurgeon à
+/// esquerda, Felipe à direita.
+///
+/// Nascem aqui, no builder do MaterialApp, e não dentro de uma tela: assim
+/// aparecem também nas leituras abertas por cima das abas (o "Continuar
+/// leitura", o capítulo do link compartilhado). Somem quando
+/// [camadasFlutuantes] passa de zero, e reaparecem quando a camada fecha.
+class _ComBaloes extends StatelessWidget {
+  const _ComBaloes({required this.child});
+
+  final Widget child;
+
+  void _abrirChat(Persona persona) {
+    _router.push('/${persona.slug}');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final largo = MediaQuery.sizeOf(context).width >= 720;
+    return ListenableBuilder(
+      listenable: camadasFlutuantes,
+      builder: (context, _) => Stack(
+        children: [
+          child,
+          if (camadasFlutuantes.value == 0) ...[
+            // O Tooltip do balão exige um Overlay por cima, e aqui estamos
+            // fora do Navigator (que é quem provê o Overlay do app). Este
+            // Overlay aninhado existe só para os balões e as suas dicas;
+            // nada de rota ou diálogo nasce aqui dentro.
+            Overlay(
+              initialEntries: [
+                OverlayEntry(
+                  builder: (context) => Stack(
+                    children: [
+                      // A folga de baixo é a altura da barra de navegação
+                      // (80) mais o respiro: o balão não pode cobrir o
+                      // destino da esquina. Em tela larga quem ocupa o canto
+                      // esquerdo é o trilho lateral, então o balão dele pula
+                      // para dentro do conteúdo.
+                      Positioned(
+                        left: largo ? 96 : 12,
+                        bottom: largo ? 12 : 88,
+                        child: BalaoDeChat(
+                          persona: personaSpurgeon,
+                          onTap: () => _abrirChat(personaSpurgeon),
+                        ),
+                      ),
+                      Positioned(
+                        right: 12,
+                        bottom: largo ? 12 : 88,
+                        child: BalaoDeChat(
+                          persona: personaFelipe,
+                          onTap: () => _abrirChat(personaFelipe),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

@@ -47,6 +47,10 @@
          alarmes ao reiniciar, e sem isto o lembrete da manhã morre numa noite em
          que o celular reiniciou sozinho. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- O chat com as personas fala com a Gemini API pela rede (lib/data/ia.dart).
+         O debug e o perfil já trazem isto embutido; sem esta linha o release
+         não consegue chamar a API. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.

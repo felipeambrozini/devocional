@@ -27,6 +27,7 @@ class Estado extends ChangeNotifier {
   static const _kLembretesAtivos = 'lembretes_ativos';
   static const _kMinutosLembreteManha = 'minutos_lembrete_manha';
   static const _kMinutosLembreteNoite = 'minutos_lembrete_noite';
+  static const _kConversas = 'conversas';
 
   /// 6h e 18h, os horários padrão do lembrete. Minutos desde meia-noite, não
   /// `TimeOfDay`: `estado.dart` não importa `material.dart`, e um `int` grava
@@ -62,6 +63,11 @@ class Estado extends ChangeNotifier {
 
   int _minutosLembreteManha = minutosPadraoManha;
   int _minutosLembreteNoite = minutosPadraoNoite;
+
+  /// Histórico das conversas do chat, indexado pelo id da persona (ver
+  /// `lib/data/personas.dart`). Vai sempre ao SharedPreferences, e quem entra
+  /// na conta na web também o sincroniza na nuvem (ver `nuvem.dart`).
+  Map<String, List<Mensagem>> _conversas = {};
 
   static Future<Estado> abrir() async =>
       Estado(await SharedPreferences.getInstance());
@@ -125,6 +131,25 @@ class Estado extends ChangeNotifier {
       _prefs.getInt(_kMinutosLembreteNoite),
       minutosPadraoNoite,
     );
+
+    final conversasCruas = _prefs.getString(_kConversas);
+    if (conversasCruas != null && conversasCruas.isNotEmpty) {
+      try {
+        final mapa = json.decode(conversasCruas) as Map<String, dynamic>;
+        _conversas = {};
+        for (final entrada in mapa.entries) {
+          if (entrada.value is! List) continue;
+          _conversas[entrada.key] = [
+            for (final item in entrada.value as List)
+              if (item is Map<String, dynamic>) Mensagem.doJson(item),
+          ];
+        }
+      } catch (_) {
+        // Histórico corrompido não deve impedir o app de abrir; perde-se a
+        // conversa, não a fé. Mesma regra das marcações acima.
+        _conversas = {};
+      }
+    }
   }
 
   /// Um valor fora de 0..1439 não é um horário do dia; volta ao padrão em vez
@@ -329,6 +354,87 @@ class Estado extends ChangeNotifier {
   Future<void> _gravarMarcacoes() async {
     final lista = [for (final m in _marcacoes.values) m.paraJson()];
     await _prefs.setString(_kMarcacoes, json.encode(lista));
+  }
+
+  // --- conversas do chat --------------------------------------------------- //
+
+  /// Teto de mensagens por conversa. O histórico inteiro volta ao modelo a
+  /// cada pergunta, então a cauda antiga além disto custa contexto sem ganhar
+  /// qualidade; também segura o tamanho do documento no Firestore.
+  static const _maxMensagensPorConversa = 120;
+
+  /// O histórico da persona, na ordem em que foi conversado.
+  List<Mensagem> mensagensDe(String persona) =>
+      List.unmodifiable(_conversas[persona] ?? const []);
+
+  Future<void> registrarMensagem(String persona, Mensagem mensagem) async {
+    final lista = _conversas[persona] ??= [];
+    lista.add(mensagem);
+    if (lista.length > _maxMensagensPorConversa) {
+      lista.removeRange(0, lista.length - _maxMensagensPorConversa);
+    }
+    notifyListeners();
+    await _gravarConversas();
+  }
+
+  Future<void> limparConversa(String persona) async {
+    if (_conversas.remove(persona) == null) return;
+    notifyListeners();
+    await _gravarConversas();
+  }
+
+  Future<void> _gravarConversas() async {
+    final objeto = <String, dynamic>{
+      for (final e in _conversas.entries)
+        e.key: [for (final m in e.value) m.paraJson()],
+    };
+    await _prefs.setString(_kConversas, json.encode(objeto));
+  }
+
+  /// O que a cópia na nuvem recebe para as conversas, num JSON à parte do
+  /// `exportar()`: o histórico não entra na cópia de segurança manual que se
+  /// exporta e importa, porque aquela é sobre trabalho do usuário (notas,
+  /// favoritos) e esta é só o cache do chat entre aparelhos.
+  String serializarConversas() => json.encode({
+    for (final e in _conversas.entries)
+      e.key: [for (final m in e.value) m.paraJson()],
+  });
+
+  /// Funde o histórico remoto com o local, por id de mensagem: uma mensagem
+  /// que já existe aqui não é duplicada, e nada que existia só num dos lados
+  /// se perde. Lixo remoto é engolido, como em `importar()`.
+  Future<void> fundirConversas(String remota) async {
+    try {
+      final mapa = json.decode(remota) as Map<String, dynamic>;
+      var mudou = false;
+      for (final entrada in mapa.entries) {
+        if (entrada.value is! List) continue;
+        final lista = [...(_conversas[entrada.key] ?? const <Mensagem>[])];
+        final ids = lista.map((m) => m.id).toSet();
+        var mudouNesta = false;
+        for (final cru in entrada.value as List) {
+          if (cru is! Map<String, dynamic>) continue;
+          final mensagem = Mensagem.doJson(cru);
+          if (mensagem.id.isEmpty || !ids.add(mensagem.id)) continue;
+          lista.add(mensagem);
+          mudouNesta = true;
+        }
+        if (mudouNesta) {
+          lista.sort((a, b) => a.momento.compareTo(b.momento));
+          if (lista.length > _maxMensagensPorConversa) {
+            lista.removeRange(0, lista.length - _maxMensagensPorConversa);
+          }
+          _conversas[entrada.key] = lista;
+          mudou = true;
+        }
+      }
+      if (mudou) {
+        notifyListeners();
+        await _gravarConversas();
+      }
+    } catch (_) {
+      // Cópia ilegível: o local continua intacto e vai subir por cima.
+    }
   }
 
   // --- cópia de segurança --------------------------------------------------- //

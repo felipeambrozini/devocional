@@ -30,6 +30,8 @@ class Sincronia {
     required this.estado,
     required this.puxar,
     required this.empurrar,
+    this.serializar,
+    this.fundir,
     this.aoMudarSituacao,
     this.atraso = const Duration(seconds: 2),
   });
@@ -37,6 +39,16 @@ class Sincronia {
   final Estado estado;
   final Future<String?> Function() puxar;
   final Future<void> Function(String copia) empurrar;
+
+  /// O que sobe para a nuvem. Padrão: a cópia de segurança do [Estado].
+  /// Domínios com vida própria, como o histórico de conversas, passam o
+  /// próprio serializador (ver `serializarConversas` em `estado.dart`).
+  final String Function()? serializar;
+
+  /// O que fazer com o que veio de [puxar]. Padrão: fundir pela cópia com
+  /// `importar()`. As conversas passam `fundirConversas`, que une por id.
+  final Future<void> Function(String remota)? fundir;
+
   final void Function()? aoMudarSituacao;
 
   /// Junta uma rajada num envio só: marcar cinco dias do cronograma seguidos
@@ -47,15 +59,20 @@ class Sincronia {
   String? _ultimaCopia;
   Timer? _pendente;
 
+  String _serializar() => serializar?.call() ?? estado.exportar();
+
+  Future<void> _fundir(String remota) =>
+      fundir?.call(remota) ?? estado.importar(remota);
+
   /// Puxa e funde ANTES de passar a ouvir. Nesta ordem nada se perde nos dois
   /// sentidos: quem entra num navegador novo recebe o que já estava na conta,
   /// e o que só existia neste navegador sobe logo depois, no envio que a
   /// própria fusão dispara.
   Future<void> comecar() async {
-    _ultimaCopia = estado.exportar();
+    _ultimaCopia = _serializar();
     try {
       final remota = await puxar();
-      if (remota != null) await estado.importar(remota);
+      if (remota != null) await _fundir(remota);
     } on FormatException {
       // Cópia da conta ilegível (versão futura, ou gravada torta). O local
       // continua intacto e vai subir por cima; nunca o contrário.
@@ -76,7 +93,7 @@ class Sincronia {
   /// também notifica. Sem isto, o `notifyListeners` de dentro do `importar`
   /// viraria um envio, e o envio viraria outro importar.
   void _aoMudar() {
-    final copia = estado.exportar();
+    final copia = _serializar();
     if (copia == _ultimaCopia) return;
     _pendente?.cancel();
     _pendente = Timer(atraso, () => _enviar(copia));
@@ -113,6 +130,12 @@ class Nuvem extends ChangeNotifier {
   static const _colecao = 'usuarios';
 
   Sincronia? _sincronia;
+
+  /// A segunda sincronia, só das conversas do chat. Vive no mesmo documento
+  /// `usuarios/{uid}` que a cópia, no campo `conversas`, mas com serializador
+  /// próprio (`serializarConversas`): o histórico não entra na cópia de
+  /// segurança que `exportar()` produz. Ver o comentário daquele método.
+  Sincronia? _sincroniaDeConversas;
   StreamSubscription<User?>? _assinatura;
   bool _pronta = false;
 
@@ -146,6 +169,8 @@ class Nuvem extends ChangeNotifier {
     _assinatura = FirebaseAuth.instance.authStateChanges().listen((usuario) {
       _sincronia?.parar();
       _sincronia = null;
+      _sincroniaDeConversas?.parar();
+      _sincroniaDeConversas = null;
       notifyListeners();
       if (usuario == null) return;
 
@@ -157,6 +182,17 @@ class Nuvem extends ChangeNotifier {
       );
       _sincronia = sincronia;
       unawaited(sincronia.comecar());
+
+      final sincroniaDeConversas = Sincronia(
+        estado: estado,
+        serializar: estado.serializarConversas,
+        fundir: estado.fundirConversas,
+        puxar: () => _puxarConversas(usuario.uid),
+        empurrar: (copia) => _empurrarConversas(usuario.uid, copia),
+        aoMudarSituacao: notifyListeners,
+      );
+      _sincroniaDeConversas = sincroniaDeConversas;
+      unawaited(sincroniaDeConversas.comecar());
     });
   }
 
@@ -176,6 +212,7 @@ class Nuvem extends ChangeNotifier {
   void dispose() {
     _assinatura?.cancel();
     _sincronia?.parar();
+    _sincroniaDeConversas?.parar();
     super.dispose();
   }
 
@@ -183,7 +220,26 @@ class Nuvem extends ChangeNotifier {
       FirebaseFirestore.instance.collection(_colecao).doc(uid).set({
         'copia': json.decode(copiaJson),
         'atualizadoEm': FieldValue.serverTimestamp(),
-      });
+        // Sem merge os dois domínios se apagariam um ao outro: a cópia e as
+        // conversas escrevem no mesmo documento, e o `set` sem opções
+        // substituiria o documento inteiro.
+      }, SetOptions(merge: true));
+
+  Future<String?> _puxarConversas(String uid) async {
+    final doc = await FirebaseFirestore.instance
+        .collection(_colecao)
+        .doc(uid)
+        .get();
+    final conversas = doc.data()?['conversas'];
+    if (conversas == null) return null;
+    return json.encode(conversas);
+  }
+
+  Future<void> _empurrarConversas(String uid, String copiaJson) =>
+      FirebaseFirestore.instance.collection(_colecao).doc(uid).set({
+        'conversas': json.decode(copiaJson),
+        'atualizadoEm': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
   /// Chamar como tearoff no `onTap`, nunca dentro de `() async { ... }`: o
   /// navegador só deixa abrir a janela de login dentro do gesto do usuário, e

@@ -260,6 +260,45 @@ void main() {
     );
   });
 
+  testWidgets('o balão do chat abre a conversa e atualiza a URL', (
+    tester,
+  ) async {
+    // O balão empurra a TelaChat pelo GoRouter (não por um Navigator cru):
+    // além de abrir o conteúdo, a barra de endereço precisa acompanhar e
+    // voltar junto quando a conversa fecha.
+    await aquecerAssets(tester);
+    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+    await tester.pumpAndSettle();
+
+    // O router é global e os testes rodam no mesmo processo: a URL de partida
+    // é a que o teste anterior deixou, então se compara com ela, não com uma
+    // aba fixa.
+    final partida = GoRouter.of(
+      tester.element(find.byType(Scaffold).first),
+    ).state.uri.path;
+
+    await tester.tap(find.byTooltip('Conversar com Charles Spurgeon'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Charles Spurgeon'), findsWidgets);
+    expect(find.text('Príncipe dos Pregadores'), findsOneWidget);
+    expect(
+      GoRouter.of(tester.element(find.byType(Scaffold).first)).state.uri.path,
+      '/charles-spurgeon',
+    );
+
+    // O botão de voltar da AppBar desta versão do Flutter é um IconButton
+    // com o BackButtonIcon, não o widget BackButton que o pageBack() procura.
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
+    expect(
+      GoRouter.of(tester.element(find.byType(Scaffold).first)).state.uri.path,
+      partida,
+      reason: 'fechar a conversa devolve a URL à localização de origem',
+    );
+  });
+
   testWidgets('numa janela larga de desktop, a coluna de leitura fica centralizada '
       'ao lado do trilho de navegação', (tester) async {
     // Simula uma janela do Windows bem mais larga que o limite de leitura,
