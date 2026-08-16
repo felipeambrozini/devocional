@@ -189,6 +189,45 @@ void main() {
         expect(sincronia.falhouAoEnviar, isFalse);
       },
     );
+
+    test('despejar() envia agora o que ainda aguardava o debounce', () async {
+      final estado = await Estado.abrir();
+      var envios = 0;
+      String? enviado;
+      final sincronia = Sincronia(
+        estado: estado,
+        puxar: () async => null,
+        empurrar: (copia) async {
+          envios++;
+          enviado = copia;
+        },
+        // Atraso longo de propósito: nada dispara sem o despejo.
+        atraso: const Duration(seconds: 30),
+      );
+      await sincronia.comecar();
+
+      await estado.alternarFavorito(Versao.bkj, 'joao', 3, 16);
+      expect(envios, 0, reason: 'ainda dentro do debounce');
+
+      await sincronia.despejar();
+      expect(envios, 1);
+      expect(enviado, estado.exportar());
+    });
+
+    test('despejar() sem pendência não envia nada', () async {
+      final estado = await Estado.abrir();
+      var envios = 0;
+      final sincronia = Sincronia(
+        estado: estado,
+        puxar: () async => null,
+        empurrar: (_) async => envios++,
+        atraso: const Duration(seconds: 30),
+      );
+      await sincronia.comecar();
+
+      await sincronia.despejar();
+      expect(envios, 0);
+    });
   });
 
   group('Sincronia de conversas', () {

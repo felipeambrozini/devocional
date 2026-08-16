@@ -59,6 +59,10 @@ class Sincronia {
   String? _ultimaCopia;
   Timer? _pendente;
 
+  /// A cópia que o [_pendente] ainda não enviou. Vive fora da closure do
+  /// `Timer` para que [despejar] saiba o que enviar no logout.
+  String? _pendenteCopia;
+
   String _serializar() => serializar?.call() ?? estado.exportar();
 
   Future<void> _fundir(String remota) =>
@@ -89,6 +93,8 @@ class Sincronia {
   void parar() {
     estado.removeListener(_aoMudar);
     _pendente?.cancel();
+    _pendente = null;
+    _pendenteCopia = null;
   }
 
   /// Comparar a cópia inteira é o filtro mais barato daqui (alguns KB de
@@ -101,7 +107,40 @@ class Sincronia {
     final copia = _serializar();
     if (copia == _ultimaCopia) return;
     _pendente?.cancel();
-    _pendente = Timer(atraso, () => _enviar(copia));
+    _pendenteCopia = copia;
+    _pendente = Timer(atraso, _enviarPendente);
+  }
+
+  void _enviarPendente() {
+    _pendente = null;
+    final copia = _pendenteCopia;
+    _pendenteCopia = null;
+    if (copia != null) _enviar(copia);
+  }
+
+  /// Envia agora o que ainda aguardava o debounce, sem esperar o [atraso].
+  ///
+  /// Usado no logout: o signOut a seguir para a sincronia, e uma mudança
+  /// feita segundos antes não pode ficar presa no timer. A espera tem teto —
+  /// sem rede, o Firestore fica com o envio pendente até reconectar, e
+  /// segurar o logout por isso não vale a pena: o dado continua no aparelho
+  /// e a próxima mudança tenta de novo.
+  Future<void> despejar() async {
+    final pendente = _pendente;
+    if (pendente == null) return;
+    pendente.cancel();
+    _pendente = null;
+    final copia = _pendenteCopia;
+    _pendenteCopia = null;
+    if (copia == null) return;
+    try {
+      await empurrar(copia).timeout(const Duration(seconds: 5));
+      _ultimaCopia = copia;
+      falhouAoEnviar = false;
+    } catch (_) {
+      falhouAoEnviar = true;
+    }
+    aoMudarSituacao?.call();
   }
 
   Future<void> _enviar(String copia) async {
@@ -254,7 +293,14 @@ class Nuvem extends ChangeNotifier {
   Future<void> entrar() =>
       FirebaseAuth.instance.signInWithPopup(GoogleAuthProvider());
 
-  Future<void> sair() => FirebaseAuth.instance.signOut();
+  Future<void> sair() async {
+    // Despeja o que ainda aguardava o debounce antes de derrubar a sessão:
+    // o signOut para a sincronia, e a última mudança não pode ficar presa no
+    // timer. [despejar] tem teto de espera, então o logout nunca trava.
+    await _sincronia?.despejar();
+    await _sincroniaDeConversas?.despejar();
+    await FirebaseAuth.instance.signOut();
+  }
 
   /// Apaga o documento da conta e a conta em si. O que está no navegador não
   /// é tocado — só o que subiu para a nuvem.
