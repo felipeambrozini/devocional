@@ -76,6 +76,11 @@ class Sincronia {
     } on FormatException {
       // Cópia da conta ilegível (versão futura, ou gravada torta). O local
       // continua intacto e vai subir por cima; nunca o contrário.
+    } catch (_) {
+      // Sem rede, ou o Firestore recusou o acesso: o local continua intacto,
+      // a sincronia segue viva para os envios e a próxima mudança tenta
+      // puxar de novo. Falhar aqui não pode derrubar nada (mesma regra de
+      // `_enviar`).
     }
     estado.addListener(_aoMudar);
     _aoMudar();

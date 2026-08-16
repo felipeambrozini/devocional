@@ -285,4 +285,67 @@ void main() {
       expect(naoResolvidas, isEmpty);
     });
   });
+
+  group('versículo e faixa', () {
+    test('versiculo devolve o texto pedido e vazio para número ausente',
+        () async {
+      final texto = await Conteudo.instancia.versiculo(
+        Versao.bkj,
+        'joao',
+        3,
+        16,
+      );
+      expect(texto, startsWith('Porque Deus amou o mundo'));
+      expect(
+        await Conteudo.instancia.versiculo(Versao.bkj, 'joao', 3, 999),
+        '',
+      );
+    });
+
+    test('versiculoOuFaixa une os versículos de uma faixa por espaço',
+        () async {
+      final faixa = await Conteudo.instancia.versiculoOuFaixa(
+        Versao.bkj,
+        'salmos',
+        102,
+        13,
+        14,
+      );
+      final soO13 = await Conteudo.instancia.versiculo(
+        Versao.bkj,
+        'salmos',
+        102,
+        13,
+      );
+      // A promessa inteira é o 13 mais o 14, unidos por espaço, não só o
+      // primeiro (o caso comentado em conteudo.dart: "Salmos 102:13-14").
+      expect(faixa, startsWith(soO13));
+      expect(faixa, isNot(equals(soO13)));
+      expect(faixa, contains(' '));
+    });
+
+    test('faixa fora do capítulo devolve texto vazio', () async {
+      expect(
+        await Conteudo.instancia.versiculoOuFaixa(
+          Versao.bkj,
+          'salmos',
+          102,
+          130,
+          140,
+        ),
+        '',
+      );
+    });
+
+    test('capitulo de livro ausente devolve capítulo vazio, sem estourar',
+        () async {
+      final cap = await Conteudo.instancia.capitulo(
+        Versao.bkj,
+        'livro-inexistente',
+        1,
+      );
+      expect(cap.versiculos, isEmpty);
+      expect(cap.numero, 1);
+    });
+  });
 }

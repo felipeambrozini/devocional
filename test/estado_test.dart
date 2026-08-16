@@ -593,4 +593,49 @@ void main() {
       );
     });
   });
+
+  group('conversas corrompidas no armazenamento', () {
+    test('JSON inválido não impede o app de abrir', () async {
+      SharedPreferences.setMockInitialValues({
+        'conversas': 'isto não é json {',
+      });
+      final estado = await Estado.abrir();
+      expect(estado.mensagensDe('spurgeon'), isEmpty);
+      expect(estado.serializarConversas(), '{}');
+    });
+
+    test('mensagem sem forma de mapa é descartada, as boas ficam', () async {
+      SharedPreferences.setMockInitialValues({
+        'conversas': json.encode({
+          'spurgeon': [
+            {'id': '1', 'papel': 'user', 'texto': 'Olá', 'momento': 1},
+            'não sou um mapa',
+            42,
+          ],
+        }),
+      });
+      final estado = await Estado.abrir();
+      final mensagens = estado.mensagensDe('spurgeon');
+      expect(mensagens, hasLength(1));
+      expect(mensagens.single.texto, 'Olá');
+    });
+
+    test('lápide com valor que não é int é descartada', () async {
+      SharedPreferences.setMockInitialValues({
+        'conversas': json.encode({
+          'apagadas': {
+            'spurgeon': 'ontem',
+            'felipe': 3,
+          },
+        }),
+      });
+      final estado = await Estado.abrir();
+      // A lápide torta não entra; a válida continua valendo.
+      final mapa = json.decode(estado.serializarConversas())
+          as Map<String, dynamic>;
+      final apagadas = mapa['apagadas'] as Map;
+      expect(apagadas['spurgeon'], isNull);
+      expect(apagadas['felipe'], 3);
+    });
+  });
 }

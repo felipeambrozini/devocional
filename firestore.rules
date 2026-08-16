@@ -3,9 +3,17 @@ rules_version = '2';
 // Regras do Firestore para a conta na nuvem do app devocional. Ver
 // lib/data/nuvem.dart para o código que lê e grava aqui.
 //
-// Publicadas à mão no console do Firebase (Firestore Database > Regras).
-// Não há deploy automatizado: é um arquivo que muda uma vez por ano, e
-// versionar aqui é só para não perder o que foi publicado.
+// Publicadas à mão no console do Firebase (Firestore Database > Regras), ou
+// com `firebase deploy --only firestore:rules`. Este arquivo é a fonte da
+// verdade; não editar o console e este arquivo em separado.
+//
+// Contrato do documento usuarios/{uid} (ver nuvem.dart):
+//   copia       mapa — a cópia de segurança que exportar() produz
+//   conversas   mapa — o histórico dos chats, serializado à parte
+//   atualizadoEm timestamp do servidor, gravado em toda escrita
+// O documento pode nascer só com copia ou só com conversas (cada sincronia
+// escreve os próprios campos com merge), por isso os campos opcionais são
+// validados apenas quando presentes.
 service cloud.firestore {
   match /databases/{database}/documents {
     // Cada um lê e escreve só o próprio documento, identificado pelo uid da
@@ -13,7 +21,34 @@ service cloud.firestore {
     // — mas ele fica explícito porque é a única linha que impede alguém de
     // ler a cópia de outra pessoa.
     match /usuarios/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      function dono() {
+        return request.auth != null && request.auth.uid == uid;
+      }
+
+      // Forma e tipo do documento, para um cliente torto não gravar lixo no
+      // próprio documento nem inflar o projeto com campos fora do contrato.
+      // O tamanho de um mapa conta as chaves; os valores são limitados pelo
+      // teto de 1 MiB do próprio Firestore.
+      function valido() {
+        let dados = request.resource.data;
+        let soOsCampos = dados.keys().hasOnly(['copia', 'conversas', 'atualizadoEm']);
+        let copiaOk = !('copia' in dados) ||
+            (dados.copia is map && dados.copia.size() < 5000);
+        let conversasOk = !('conversas' in dados) ||
+            (dados.conversas is map && dados.conversas.size() < 5000);
+        return soOsCampos && copiaOk && conversasOk &&
+            dados.atualizadoEm is timestamp;
+      }
+
+      // create e update separados: o update também não pode trocar campos
+      // fora do contrato (diff().affectedKeys().hasOnly). Sem isto, criar um
+      // documento válido e atualizá-lo para um estado inválido seria livre.
+      allow create: if dono() && valido();
+      allow update: if dono() && valido() &&
+          request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['copia', 'conversas', 'atualizadoEm']);
+      allow delete: if dono();
+      allow read: if dono();
     }
   }
 }

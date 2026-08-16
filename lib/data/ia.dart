@@ -147,7 +147,17 @@ Future<String> perguntar({
     throw IaException(_mensagemDeErro(resposta));
   }
 
-  final corpo = json.decode(utf8.decode(resposta.bodyBytes)) as Map;
+  final Map corpo;
+  try {
+    corpo = json.decode(utf8.decode(resposta.bodyBytes)) as Map;
+  } catch (_) {
+    // 200 com corpo ilegível (HTML de proxy, resposta truncada): a mesma
+    // mensagem do serviço fora do ar, não uma exceção sem tratamento.
+    throw const IaException(
+      'A inteligência artificial não respondeu agora. Tente de novo em '
+      'instantes.',
+    );
+  }
   final candidatos = corpo['candidates'];
   final primeiro = candidatos is List && candidatos.isNotEmpty
       ? candidatos.first

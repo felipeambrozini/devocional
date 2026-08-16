@@ -305,8 +305,9 @@ motivo novo.
   pessoa fechou o aviso).
 - **Tela Sobre completa**: `lib/telas/sobre.dart`, com dois links (YouTube e
   Instagram) abertos com `launchUrl` do `url_launcher`.
-  `comuns.dart` e `sobre.dart` se importam um ao outro — import circular entre
-  dois arquivos é permitido em Dart, não é um erro.
+- **`biblia.dart` e `busca.dart` se importam um ao outro** — import circular
+  entre dois arquivos é permitido em Dart, não é um erro: a busca abre o leitor
+  num versículo e o leitor abre a busca com `Ctrl+F`.
 - **Conta Google e cópia na nuvem, só na web** (09/08/2026): `Sincronia` em
   `lib/data/nuvem.dart` é um ouvinte de fora sobre o `ChangeNotifier` do
   `Estado` (que **não mudou nenhuma linha**), reaproveitando `exportar()`/
@@ -321,8 +322,9 @@ motivo novo.
 - **`lib/firebase_options.dart` é gerado** por `flutterfire configure` e
   **precisa ficar versionado** (o CI faz o build web e não tem como regerá-lo).
   A chave de API é pública por desenho; quem protege os dados são as regras do
-  Firestore (`firestore.rules`, publicadas à mão no console) e a lista de
-  domínios autorizados.
+  Firestore (`firestore.rules`, registrado no `firebase.json` e publicadas à
+  mão com `firebase deploy --only firestore:rules` ou coladas no console; não
+  há CI para elas) e a lista de domínios autorizados.
 - **Nome do pacote** trocado para `com.felipeambrozini.devocional` (09/08/2026).
   `lib/firebase_options.dart` tem `iosBundleId` ajustados à mão (inertes, só a
   opção web é usada).

@@ -139,5 +139,38 @@ void main() {
       final parametro = link.split('?ler=').last;
       expect(alvoDoLink(parametro), ('joao', 3, 16));
     });
+
+    test('marca de edicao atras da referencia e ignorada', () {
+      // O devocional citava "1Tm 3:16 ACF" e o parsing precisa parar no
+      // primeiro numero, sem engasgar com a sigla (canon.dart).
+      expect(capituloEVersiculoDaReferencia('1Tm 3:16 ACF'), (
+        livroPorSlug('1timoteo'),
+        3,
+        16,
+      ));
+      expect(faixaDeVersiculoDaReferencia('1Tm 3:16 ACF'), (
+        livroPorSlug('1timoteo'),
+        3,
+        16,
+        16,
+      ));
+    });
+
+    test('dois versiculos do mesmo capitulo seguem um trecho so', () {
+      // "Zc 1:12,13" cita dois versiculos do mesmo capitulo: a virgula
+      // separa versiculos, nao passagens (canon.dart).
+      expect(trechosDaReferencia('Zc 1:12,13'), ['Zc 1:12,13']);
+      expect(faixaDeVersiculoDaReferencia('Zc 1:12,13'), (
+        livroPorSlug('zacarias'),
+        1,
+        12,
+        13,
+      ));
+      // versiculosDaReferencia resolve um versiculo por trecho, o primeiro;
+      // a faixa completa é responsabilidade de faixaDeVersiculoDaReferencia.
+      expect(versiculosDaReferencia('Zc 1:12,13'), [
+        (livroPorSlug('zacarias'), 1, 12),
+      ]);
+    });
   });
 }

@@ -880,28 +880,49 @@ class _SeletorDeLivroState extends State<_SeletorDeLivro> {
       height: altura,
       child: Column(
         children: [
-          const SizedBox(height: 12),
-          Text(
-            escolhido == null ? 'Escolha o livro' : escolhido.nome,
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 8),
-          const Filete(),
-          // Busca só na etapa de livros: na grade de capítulos o texto já é
-          // o que se procura.
-          if (escolhido == null) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
-              child: TextField(
-                controller: _controle,
-                onChanged: (v) => setState(() => _filtro = v.trim()),
-                decoration: const InputDecoration(
-                  hintText: 'Buscar livro',
-                  prefixIcon: Icon(Icons.search),
-                ),
+          // Cabeçalho rolável: numa janela baixa (paisagem, desktop
+          // redimensionado, escala 2x no campo de busca) o conteúdo fixo
+          // sozinho estouraria a folha; aqui ele encolhe e rola, e a lista
+          // embaixo fica com o resto.
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  const SizedBox(height: 12),
+                  Text(
+                    escolhido == null ? 'Escolha o livro' : escolhido.nome,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  const Filete(),
+                  // Busca só na etapa de livros: na grade de capítulos o texto
+                  // já é o que se procura.
+                  if (escolhido == null) ...[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+                      child: TextField(
+                        controller: _controle,
+                        onChanged: (v) => setState(() => _filtro = v.trim()),
+                        decoration: const InputDecoration(
+                          hintText: 'Buscar livro',
+                          prefixIcon: Icon(Icons.search),
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (escolhido != null)
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: TextButton.icon(
+                        onPressed: () => setState(() => _escolhido = null),
+                        icon: const Icon(Icons.arrow_back),
+                        label: const Text('Todos os livros'),
+                      ),
+                    ),
+                ],
               ),
             ),
-          ],
+          ),
           Expanded(
             child: escolhido == null
                 ? _ListaDeLivros(
@@ -916,15 +937,6 @@ class _SeletorDeLivroState extends State<_SeletorDeLivro> {
                     ao: (c) => Navigator.pop(context, (escolhido.slug, c)),
                   ),
           ),
-          if (escolhido != null)
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: TextButton.icon(
-                onPressed: () => setState(() => _escolhido = null),
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('Todos os livros'),
-              ),
-            ),
         ],
       ),
     );

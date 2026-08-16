@@ -141,6 +141,97 @@ void main() {
       );
     });
 
+    test('403 também vira mensagem amigável de limite gratuito', () async {
+      final cliente = MockClient(
+        (requisicao) async => http.Response('{"error": {}}', 403),
+      );
+
+      await expectLater(
+        perguntar(
+          persona: personaSpurgeon,
+          cliente: cliente,
+          pergunta: 'Oi',
+          historico: const [],
+        ),
+        throwsA(
+          isA<IaException>().having(
+            (e) => e.mensagem,
+            'mensagem',
+            contains('limite gratuito'),
+          ),
+        ),
+      );
+    });
+
+    test('500 vira mensagem de serviço fora do ar', () async {
+      final cliente = MockClient(
+        (requisicao) async => http.Response('{"error": {}}', 500),
+      );
+
+      await expectLater(
+        perguntar(
+          persona: personaSpurgeon,
+          cliente: cliente,
+          pergunta: 'Oi',
+          historico: const [],
+        ),
+        throwsA(
+          isA<IaException>().having(
+            (e) => e.mensagem,
+            'mensagem',
+            contains('não respondeu agora'),
+          ),
+        ),
+      );
+    });
+
+    test('200 com corpo ilegível vira IaException, não exceção solta',
+        () async {
+      // Um 200 com HTML de proxy ou resposta truncada não pode vazar como
+      // FormatException: a tela do chat só trata IaException.
+      final cliente = MockClient(
+        (requisicao) async => http.Response('<html>proxy</html>', 200),
+      );
+
+      await expectLater(
+        perguntar(
+          persona: personaSpurgeon,
+          cliente: cliente,
+          pergunta: 'Oi',
+          historico: const [],
+        ),
+        throwsA(
+          isA<IaException>().having(
+            (e) => e.mensagem,
+            'mensagem',
+            contains('não respondeu agora'),
+          ),
+        ),
+      );
+    });
+
+    test('falha de rede vira IaException de conexão', () async {
+      final cliente = MockClient(
+        (requisicao) async => throw http.ClientException('sem rede'),
+      );
+
+      await expectLater(
+        perguntar(
+          persona: personaSpurgeon,
+          cliente: cliente,
+          pergunta: 'Oi',
+          historico: const [],
+        ),
+        throwsA(
+          isA<IaException>().having(
+            (e) => e.mensagem,
+            'mensagem',
+            contains('Não foi possível falar agora'),
+          ),
+        ),
+      );
+    });
+
     test('resposta sem texto vira IaException, não string nula', () async {
       final cliente = MockClient(
         (requisicao) async => http.Response('{"candidates": []}', 200),

@@ -263,12 +263,25 @@ class _TelaChatState extends State<TelaChat> {
               ),
             ),
             const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(widget.persona.nome, style: tema.titleLarge),
-                Text(widget.persona.titulo, style: tema.labelMedium),
-              ],
+            // Flexible com reticências, como na barra do leitor
+            // (biblia.dart): o nome longo de uma persona em celular estreito
+            // com escala 2x estouraria a linha da AppBar.
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.persona.nome,
+                    style: tema.titleLarge,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    widget.persona.titulo,
+                    style: tema.labelMedium,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ],
         ),

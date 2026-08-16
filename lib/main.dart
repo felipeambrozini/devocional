@@ -206,6 +206,12 @@ final _router = GoRouter(
   initialLocation: '/hoje',
   redirect: (context, state) => state.uri.path == '/' ? '/hoje' : null,
   observers: [_observadorDeCamadas],
+  errorBuilder: (context, state) {
+    // Rota desconhecida (link velho, digitado ou com caminho corrompido):
+    // voltar para a primeira aba em vez da tela de erro padrão do go_router.
+    WidgetsBinding.instance.addPostFrameCallback((_) => context.go('/hoje'));
+    return const SizedBox.shrink();
+  },
   routes: [
     // Os chats não são abas: abrem por cima de tudo e merecem URL própria,
     // para sobreviver ao F5 e para um link compartilhado reabrir a conversa.
