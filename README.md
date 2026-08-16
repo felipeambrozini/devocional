@@ -270,6 +270,12 @@ motivo novo.
   o caminho com `history.replaceState`
   (truque de https://github.com/rafgraph/spa-github-pages,
   `pathSegmentsToKeep = 1`).
+- **Chat com URL própria** (16/08/2026): as conversas (`/charles-spurgeon`,
+  `/felipe-ambrozini`) são empurradas por `push` por cima das abas, e a barra
+  de endereço acompanha porque `main.dart` liga
+  `GoRouter.optionURLReflectsImperativeAPIs` (opção estática do go_router, que
+  por padrão não reflete na URL as navegações imperativas — o motivo de a
+  tela Sobre ter virado aba em 09/08/2026).
 - **`usePathUrlStrategy()`** vem de `package:flutter_web_plugins/url_strategy.dart`,
   não do barril `flutter_web_plugins.dart` (o barril puxa `dart:ui_web` sem
   condicional e quebra a compilação para a VM, que é o que o `flutter test`

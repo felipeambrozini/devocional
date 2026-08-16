@@ -164,13 +164,9 @@ const _destinos = <_Destino>[
     Icons.bookmark,
     TelaNotas(),
   ),
-  // Não é uma leitura como as outras cinco, mas ganhar uma URL própria pedia
-  // isso — empurrar por cima com `Navigator.push`/`GoRouter.push` nunca
-  // atualizava a barra de endereço ao sair de dentro de uma aba do shell, só
-  // dentro do próprio GoRouter (confirmado num teste de widget: o estado
-  // interno virava "/sobre" certinho, mas a URL do navegador não seguia).
-  // Como aba, usa o mesmo `goBranch` que já as outras cinco já provam
-  // funcionar. Ver a seção "Web" do README.
+  // Não é uma leitura como as outras cinco, mas ganhou uma URL própria
+  // porque a navegação inferior é o caminho natural dela, como das demais.
+  // Ver a seção "Web" do README.
   _Destino('Sobre', 'sobre', Icons.info_outline, Icons.info, TelaSobre()),
 ];
 
@@ -197,6 +193,14 @@ final _escoposDasAbas = [
 /// capítulo aberto que o antigo `IndexedStack` preservava. O shell preserva
 /// isso da mesma forma (por baixo, também é um `Offstage`+`IndexedStack`),
 /// só que agora cada aba também tem URL própria.
+///
+/// Sem `GoRouter.optionURLReflectsImperativeAPIs` (ligada no initState de
+/// [AppDevocional]), um `push` a partir de dentro do shell abria a tela por
+/// dentro do GoRouter mas deixava a barra de endereço presa na aba — o
+/// go_router só reflete na URL as navegações por `go`/`goBranch`; imperativas
+/// (push, pushReplacement, replace) ficam de fora por padrão, para trás.
+/// Com ela ligada, o push do balão do chat também escreve a URL (e devolve
+/// ao fechar), e as abas continuam no `goBranch` de sempre.
 final _router = GoRouter(
   navigatorKey: navigatorKey,
   initialLocation: '/hoje',
@@ -250,6 +254,10 @@ class _AppDevocionalState extends State<AppDevocional> {
   @override
   void initState() {
     super.initState();
+    // Opção estática do go_router, ligada aqui (e não na inicialização de
+    // [_router], que seria preguiçosa): precisa valer desde o primeiro
+    // reporte de rota, no app e nos testes. Ver o comentário de [_router].
+    GoRouter.optionURLReflectsImperativeAPIs = true;
     widget.estado.addListener(_conferirTema);
   }
 
