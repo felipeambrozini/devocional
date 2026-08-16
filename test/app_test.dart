@@ -2,8 +2,10 @@ import 'package:felipe_ambrozini/data/canon.dart';
 import 'package:felipe_ambrozini/data/conteudo.dart';
 import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/data/modelos.dart';
+import 'package:felipe_ambrozini/data/personas.dart';
 import 'package:felipe_ambrozini/main.dart';
 import 'package:felipe_ambrozini/telas/biblia.dart';
+import 'package:felipe_ambrozini/telas/chat.dart';
 import 'package:felipe_ambrozini/telas/comuns.dart';
 import 'package:felipe_ambrozini/telas/devocional.dart';
 import 'package:felipe_ambrozini/telas/hoje.dart';
@@ -298,6 +300,44 @@ void main() {
       reason: 'fechar a conversa devolve a URL à localização de origem',
     );
   });
+
+  testWidgets(
+    'reabrir o chat com uma resposta interrompida oferece tentar de novo',
+    (tester) async {
+      // Sair da tela no meio da geração deixa a pergunta pendente; o reabrir
+      // tem de oferecer a resposta em vez de deixá-la respondida pelo
+      // silêncio.
+      final estado = await estadoLimpo();
+      await estado.registrarMensagem(
+        'spurgeon',
+        Mensagem(
+          id: '1',
+          papel: 'user',
+          texto: 'Como vencer a ansiedade?',
+          momento: 1,
+          pendente: true,
+        ),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EscopoDoEstado(
+            estado: estado,
+            child: TelaChat(persona: personaSpurgeon),
+          ),
+        ),
+      );
+      // O aviso chega no primeiro frame, depois do postFrameCallback do
+      // initState; um pump a mais renderiza o setState dele.
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('A resposta anterior não chegou.'), findsOneWidget);
+      expect(find.text('Tentar de novo'), findsOneWidget);
+      // A pergunta continua no histórico, esperando a resposta.
+      expect(find.text('Como vencer a ansiedade?'), findsOneWidget);
+    },
+  );
 
   testWidgets('numa janela larga de desktop, a coluna de leitura fica centralizada '
       'ao lado do trilho de navegação', (tester) async {

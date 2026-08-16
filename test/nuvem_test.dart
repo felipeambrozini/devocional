@@ -276,5 +276,50 @@ void main() {
         reason: 'fundir une por id, na ordem do momento',
       );
     });
+
+    test('apagar conversa sobe a lápide para a nuvem', () async {
+      final estado = await Estado.abrir();
+      var envios = 0;
+      String? enviado;
+      final sincronia = Sincronia(
+        estado: estado,
+        serializar: estado.serializarConversas,
+        fundir: estado.fundirConversas,
+        puxar: () async => null,
+        empurrar: (copia) async {
+          envios++;
+          enviado = copia;
+        },
+        atraso: Duration.zero,
+      );
+      await sincronia.comecar();
+
+      await estado.registrarMensagem(
+        'spurgeon',
+        mensagem('a1', 'user', 'Ola', 1),
+      );
+      await assentar();
+      expect(envios, 1);
+
+      await estado.limparConversa('spurgeon');
+      await assentar();
+
+      expect(
+        envios,
+        2,
+        reason: 'a exclusão é uma mudança e precisa subir como tal',
+      );
+      final mapa = json.decode(enviado!) as Map<String, dynamic>;
+      expect(
+        mapa.containsKey('spurgeon'),
+        isFalse,
+        reason: 'o histórico não sobe mais, só a lápide',
+      );
+      expect(
+        (mapa['apagadas'] as Map)['spurgeon'],
+        isA<int>(),
+        reason: 'sem a lápide, o outro aparelho ressuscitaria a conversa',
+      );
+    });
   });
 }

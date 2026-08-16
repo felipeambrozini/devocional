@@ -440,5 +440,157 @@ void main() {
       await estado.fundirConversas('{"spurgeon": "texto, não lista"}');
       expect(estado.mensagensDe('spurgeon').single.texto, 'fica');
     });
+
+    test('pendente persiste e marcarRespondidas limpa', () async {
+      final estado = await Estado.abrir();
+      await estado.registrarMensagem(
+        'spurgeon',
+        Mensagem(
+          id: '1',
+          papel: 'user',
+          texto: 'Fica?',
+          momento: 1,
+          pendente: true,
+        ),
+      );
+      expect(estado.mensagensDe('spurgeon').single.pendente, isTrue);
+
+      final relido = await reabrir();
+      expect(
+        relido.mensagensDe('spurgeon').single.pendente,
+        isTrue,
+        reason: 'a interrupção sobrevive ao reabrir',
+      );
+      await relido.marcarRespondidas('spurgeon');
+      expect(relido.mensagensDe('spurgeon').single.pendente, isFalse);
+      expect((await reabrir()).mensagensDe('spurgeon').single.pendente, isFalse);
+    });
+
+    test('apagar grava lápide e o remoto antigo não ressuscita', () async {
+      final estado = await Estado.abrir();
+      await estado.registrarMensagem('spurgeon', mensagem('1', 'user', 'oi', 1));
+      await estado.limparConversa('spurgeon');
+      expect(estado.mensagensDe('spurgeon'), isEmpty);
+
+      final serializado = estado.serializarConversas();
+      final mapa = json.decode(serializado) as Map<String, dynamic>;
+      expect(
+        mapa['apagadas'],
+        isA<Map<String, dynamic>>(),
+        reason: 'a exclusão viaja com o histórico para alcançar a nuvem',
+      );
+      expect((mapa['apagadas'] as Map)['spurgeon'], isA<int>());
+
+      // O outro aparelho ainda tem a conversa antiga, mas a lápide é mais
+      // nova: o reencontro não a ressuscita.
+      final remota = json.encode({
+        'spurgeon': [
+          {'id': '2', 'papel': 'assistant', 'texto': 'velha', 'momento': 1},
+        ],
+      });
+      await estado.fundirConversas(remota);
+      expect(estado.mensagensDe('spurgeon'), isEmpty);
+      expect((await reabrir()).mensagensDe('spurgeon'), isEmpty);
+    });
+
+    test('lápide remota mais nova apaga a conversa local', () async {
+      final estado = await Estado.abrir();
+      await estado.registrarMensagem('spurgeon', mensagem('1', 'user', 'oi', 1));
+      final remota = json.encode({
+        'spurgeon': [
+          {'id': '2', 'papel': 'assistant', 'texto': 'velha', 'momento': 1},
+        ],
+        'apagadas': {'spurgeon': 5},
+      });
+      await estado.fundirConversas(remota);
+
+      expect(estado.mensagensDe('spurgeon'), isEmpty);
+      final mapa = json.decode(estado.serializarConversas())
+          as Map<String, dynamic>;
+      expect(
+        (mapa['apagadas'] as Map)['spurgeon'],
+        5,
+        reason: 'a lápide mais nova das duas fica, e o reabrir não ressuscita',
+      );
+      expect((await reabrir()).mensagensDe('spurgeon'), isEmpty);
+    });
+
+    test('conversa que continuou em outro aparelho volta e limpa a lápide',
+        () async {
+      final estado = await Estado.abrir();
+      await estado.registrarMensagem('spurgeon', mensagem('1', 'user', 'oi', 1));
+      await estado.limparConversa('spurgeon');
+      expect(estado.mensagensDe('spurgeon'), isEmpty);
+
+      // O outro aparelho continuou a conversa depois da exclusão: as mensagens
+      // dele são mais novas que a lápide, e a conversa volta inteira.
+      final continuacao = DateTime.now().millisecondsSinceEpoch + 1000;
+      final remota = json.encode({
+        'spurgeon': [
+          {
+            'id': '2',
+            'papel': 'user',
+            'texto': 'continuo aqui',
+            'momento': continuacao,
+          },
+        ],
+      });
+      await estado.fundirConversas(remota);
+
+      expect(estado.mensagensDe('spurgeon').single.texto, 'continuo aqui');
+      expect(
+        estado.serializarConversas(),
+        isNot(contains('apagadas')),
+        reason: 'a conversa revivida não carrega mais a lápide',
+      );
+      expect((await reabrir()).mensagensDe('spurgeon').length, 1);
+    });
+
+    test('lápide sem mensagens vira a cópia inteira e persiste', () async {
+      final estado = await Estado.abrir();
+      await estado.limparConversa('spurgeon');
+      final mapa = json.decode(estado.serializarConversas())
+          as Map<String, dynamic>;
+      expect((mapa['apagadas'] as Map)['spurgeon'], isA<int>());
+      expect(
+        (await reabrir()).serializarConversas(),
+        contains('apagadas'),
+        reason: 'apagar sem histórico também tem de alcançar a nuvem',
+      );
+    });
+
+    test('lápide remota sozinha apaga a conversa local', () async {
+      final estado = await Estado.abrir();
+      await estado.registrarMensagem('spurgeon', mensagem('1', 'user', 'oi', 1));
+
+      // O outro aparelho apagou e empurrou só a lápide, sem histórico.
+      final remota = json.encode({'apagadas': {'spurgeon': 5}});
+      await estado.fundirConversas(remota);
+
+      expect(estado.mensagensDe('spurgeon'), isEmpty);
+      final mapa = json.decode(estado.serializarConversas())
+          as Map<String, dynamic>;
+      expect(
+        (mapa['apagadas'] as Map)['spurgeon'],
+        5,
+        reason: 'a exclusão chega de verdade e não volta a subir',
+      );
+      expect((await reabrir()).mensagensDe('spurgeon'), isEmpty);
+    });
+
+    test('lápide remota sozinha e antiga não apaga a conversa que continuou',
+        () async {
+      final estado = await Estado.abrir();
+      await estado.registrarMensagem('spurgeon', mensagem('1', 'user', 'oi', 7));
+
+      final remota = json.encode({'apagadas': {'spurgeon': 5}});
+      await estado.fundirConversas(remota);
+
+      expect(
+        estado.mensagensDe('spurgeon').single.id,
+        '1',
+        reason: 'a conversa local é mais nova que a exclusão remota',
+      );
+    });
   });
 }

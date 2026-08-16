@@ -330,6 +330,7 @@ class Mensagem {
     required this.papel,
     required this.texto,
     required this.momento,
+    this.pendente = false,
   });
 
   factory Mensagem.doJson(Map<String, dynamic> json) => Mensagem(
@@ -337,12 +338,20 @@ class Mensagem {
     papel: json['papel'] as String? ?? 'assistant',
     texto: json['texto'] as String? ?? '',
     momento: json['momento'] as int? ?? 0,
+    pendente: json['pendente'] as bool? ?? false,
   );
 
   final String id;
   final String papel;
   final String texto;
   final int momento;
+
+  /// A pergunta foi enviada e a resposta não chegou (a pessoa saiu da tela no
+  /// meio da geração). O chat reabre oferecendo "Tentar de novo" em vez de
+  /// deixar a pergunta respondida pelo silêncio. Só faz sentido em mensagem
+  /// do usuário; vai junto na serialização para a marca sobreviver ao
+  /// reabrir, ao trocar de aparelho e à nuvem.
+  final bool pendente;
 
   bool get doUsuario => papel == 'user';
 
@@ -351,5 +360,6 @@ class Mensagem {
     'papel': papel,
     'texto': texto,
     'momento': momento,
+    if (pendente) 'pendente': true,
   };
 }

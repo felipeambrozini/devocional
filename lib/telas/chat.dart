@@ -4,6 +4,28 @@ import '../data/estado.dart';
 import '../data/ia.dart';
 import '../data/modelos.dart';
 import '../data/personas.dart';
+import 'comuns.dart';
+
+/// A conversa com uma persona, enquadrada como carta da Estante.
+///
+/// THESIS: a conversa recusa a casca de messenger: sem sombra, sem metal em
+/// área grande, sem ponta de balão. É uma página do livro: abre-se pelo
+/// Filete, a palavra da persona entra como citação das introduções e o texto
+/// do visitante recua em pergaminho.
+/// OWN-WORLD: chapado sobre chapado; fio do metal no lugar da sombra; citação
+/// com fio esquerdo de 3 (a gramática das introduções em `comuns.dart`);
+/// rostos recortados sempre pelo topo; Cinzel nos títulos, Montserrat no
+/// corpo.
+/// STORY: quem chega vê o retrato, o Filete e a primeira palavra da persona
+/// como quem abre uma página; o erro tem o rosto de quem respondeu; uma
+/// resposta interrompida espera com "Tentar de novo".
+/// FIRST VIEWPORT: AppBar com o retrato e o título; a conversa abre com o
+/// Filete de 64; respostas à esquerda na gramática da citação, perguntas à
+/// direita recuadas; rodapé com o campo e a nota da IA.
+/// FORM: redesenho da superfície do chat no mundo estabelecido da Estante,
+/// direção fixada pelo usuário (carta enquadrada pelo Filete); sem sorteio.
+/// FINISH: unreviewed and undocumented is unfinished; this build ends with
+/// the finish review, the verdict, and DESIGN.md.
 
 /// Quantas camadas flutuantes estão abertas (folha de ajustes, diálogo, o
 /// próprio chat). Os balões somem quando o número passa de zero: não faz
@@ -32,8 +54,9 @@ class BalaoDeChat extends StatelessWidget {
         label: 'Abrir conversa com ${persona.nome}',
         child: Material(
           color: cor.surfaceContainer,
-          elevation: 6,
-          shadowColor: Colors.black.withValues(alpha: 0.35),
+          // Chapado, como todo o app: a sombra era a única do sistema inteiro,
+          // e o círculo com sombra flutuava sobre a leitura de Manhã.
+          elevation: 0,
           shape: const CircleBorder(),
           child: InkWell(
             customBorder: const CircleBorder(),
@@ -101,8 +124,20 @@ class _TelaChatState extends State<TelaChat> {
     // notificaria os balões enquanto a árvore ainda monta o chat, e o
     // framework proíbe marcar um widget para reconstruir nessa fase (assert
     // em debug). Depois do frame o efeito é o mesmo, sem a exceção.
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => camadasFlutuantes.value++);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      camadasFlutuantes.value++;
+      // Reabrir depois de uma resposta interrompida: a última pergunta ficou
+      // pendente, e a tela oferece "Tentar de novo" em vez de deixar a
+      // pergunta respondida pelo silêncio.
+      final mensagens = EscopoDoEstado.de(context).mensagensDe(widget.persona.id);
+      final ultima = mensagens.isEmpty ? null : mensagens.last;
+      if (ultima != null && ultima.doUsuario && ultima.pendente) {
+        setState(() {
+          _erro = 'A resposta anterior não chegou.';
+          _ultimaPergunta = ultima.texto;
+        });
+      }
+    });
   }
 
   @override
@@ -121,6 +156,9 @@ class _TelaChatState extends State<TelaChat> {
     if (texto.isEmpty || _respondendo) return;
     _controle.clear();
     final estado = EscopoDoEstado.de(context);
+    // Perguntas antigas que ficaram pendentes ficam para trás: quem envia
+    // uma pergunta nova seguiu a vida, e só a mais nova interessa.
+    await estado.marcarRespondidas(widget.persona.id);
     await estado.registrarMensagem(
       widget.persona.id,
       Mensagem(
@@ -128,6 +166,9 @@ class _TelaChatState extends State<TelaChat> {
         papel: 'user',
         texto: texto,
         momento: DateTime.now().millisecondsSinceEpoch,
+        // Pendente até a resposta chegar: sair da tela no meio da geração
+        // deixa a pergunta marcada, e o reabrir oferece "Tentar de novo".
+        pendente: true,
       ),
     );
     await _perguntar(texto);
@@ -160,6 +201,8 @@ class _TelaChatState extends State<TelaChat> {
           momento: DateTime.now().millisecondsSinceEpoch,
         ),
       );
+      // A resposta chegou: nada fica pendente nesta conversa.
+      await estado.marcarRespondidas(widget.persona.id);
     } on IaException catch (erro) {
       if (mounted) setState(() => _erro = erro.mensagem);
     } finally {
@@ -173,8 +216,8 @@ class _TelaChatState extends State<TelaChat> {
       builder: (context) => AlertDialog(
         title: const Text('Apagar a conversa?'),
         content: const Text(
-          'Todo o histórico com esta pessoa será apagado deste aparelho. '
-          'Essa ação não pode ser desfeita.',
+          'Todo o histórico com esta pessoa será apagado deste aparelho, e '
+          'da cópia na nuvem se houver. Essa ação não pode ser desfeita.',
         ),
         actions: [
           TextButton(
@@ -247,14 +290,25 @@ class _TelaChatState extends State<TelaChat> {
                 if (mensagens.isEmpty) {
                   return _BoasVindas(persona: widget.persona);
                 }
+                // O cabeçalho (o Filete) é o índice 0; as mensagens vêm depois.
                 return ListView.builder(
                   controller: _rolagem,
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  itemCount: mensagens.length,
-                  itemBuilder: (context, i) => _BalcaoDeMensagem(
-                    mensagem: mensagens[i],
-                    persona: widget.persona,
-                  ),
+                  itemCount: mensagens.length + 1,
+                  itemBuilder: (context, i) {
+                    if (i == 0) {
+                      // A conversa abre como página: o Filete que abre cada
+                      // leitura da Estante sinaliza onde o fio começa.
+                      return const Padding(
+                        padding: EdgeInsets.only(bottom: 18),
+                        child: Center(child: Filete(largura: 64)),
+                      );
+                    }
+                    return _BalcaoDeMensagem(
+                      mensagem: mensagens[i - 1],
+                      persona: widget.persona,
+                    );
+                  },
                 );
               },
             ),
@@ -279,6 +333,7 @@ class _TelaChatState extends State<TelaChat> {
             ),
           if (_erro != null)
             _ErroDeResposta(
+              persona: widget.persona,
               mensagem: _erro!,
               pergunta: _ultimaPergunta,
               aoTentarDeNovo: _perguntar,
@@ -291,7 +346,7 @@ class _TelaChatState extends State<TelaChat> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Respostas geradas por inteligência artificial gratuita',
+                    'Respostas geradas por inteligência artificial',
                     style: tema.labelMedium,
                   ),
                   const SizedBox(height: 6),
@@ -302,15 +357,27 @@ class _TelaChatState extends State<TelaChat> {
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _enviar(),
                     decoration: InputDecoration(
-                      hintText: 'Escreva para ${widget.persona.nome}...',
-                      suffixIcon: IconButton(
-                        tooltip: 'Enviar',
-                        icon: Icon(
-                          Icons.send,
-                          color: _respondendo ? cor.outline : cor.primary,
-                        ),
-                        onPressed: _respondendo ? null : _enviar,
-                      ),
+                      // Enquanto a resposta vem, o campo diz o estado em vez de
+                      // engolir o envio em silêncio; o rascunho continua lá.
+                      hintText: _respondendo
+                          ? 'aguarde a resposta...'
+                          : 'Escreva para ${widget.persona.nome}...',
+                      suffixIcon: _respondendo
+                          ? const Padding(
+                              padding: EdgeInsets.all(12),
+                              child: SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            )
+                          : IconButton(
+                              tooltip: 'Enviar',
+                              icon: Icon(Icons.send, color: cor.primary),
+                              onPressed: _enviar,
+                            ),
                     ),
                   ),
                 ],
@@ -340,16 +407,29 @@ class _BoasVindas extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ClipOval(
-              child: Image.asset(
-                persona.foto,
-                width: 96,
-                height: 96,
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
+            DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: cor.primary, width: 2),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(2),
+                child: ClipOval(
+                  child: Image.asset(
+                    persona.foto,
+                    width: 92,
+                    height: 92,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.topCenter,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 18),
+            // A carta de boas-vindas também é página: abre pelo Filete, como
+            // toda leitura da Estante.
+            const Filete(largura: 64),
+            const SizedBox(height: 12),
             Text(persona.nome, style: tema.headlineSmall),
             const SizedBox(height: 10),
             Text(
@@ -367,8 +447,11 @@ class _BoasVindas extends StatelessWidget {
   }
 }
 
-/// Um balão de mensagem: o do usuário à direita no metal do tema, o da
-/// persona à esquerda com o retrato, no mesmo estilo de cartão do app.
+/// Uma mensagem da conversa: a resposta da persona entra como citação das
+/// introduções (fundo chapado e fio do metal à esquerda), e a pergunta do
+/// visitante recua em pergaminho com um fio mais discreto. Nada aqui é
+/// elevado nem usa o metal como fundo: a palavra da persona é o elemento
+/// mais alto da página, não a caixa do visitante.
 class _BalcaoDeMensagem extends StatelessWidget {
   const _BalcaoDeMensagem({required this.mensagem, required this.persona});
 
@@ -406,19 +489,22 @@ class _BalcaoDeMensagem extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 color: usuario
-                    ? cor.primary
+                    ? cor.surfaceContainer
                     : cor.surfaceContainerHighest,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(14),
-                  topRight: const Radius.circular(14),
-                  bottomLeft: Radius.circular(usuario ? 14 : 4),
-                  bottomRight: Radius.circular(usuario ? 4 : 14),
-                ),
+                borderRadius: BorderRadius.circular(10),
+                border: usuario
+                    ? Border.all(
+                        color: cor.primary.withValues(alpha: 0.4),
+                        width: 1,
+                      )
+                    : Border(
+                        left: BorderSide(color: cor.primary, width: 3),
+                      ),
               ),
               child: Text(
                 mensagem.texto,
                 style: tema.bodyMedium?.copyWith(
-                  color: usuario ? cor.onPrimary : cor.onSurface,
+                  color: cor.onSurface,
                   height: 1.5,
                 ),
               ),
@@ -450,7 +536,9 @@ class _Bolha extends StatelessWidget {
             width: 28,
             height: 28,
             fit: BoxFit.cover,
-            alignment: const Alignment(0, -0.85),
+            // Mesmo recorte das mensagens: o cabelo encosta na borda de cima
+            // da foto, e qualquer corte desloca o rosto para fora do centro.
+            alignment: Alignment.topCenter,
           ),
         ),
         const SizedBox(width: 8),
@@ -458,11 +546,9 @@ class _Bolha extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
             color: cor.surfaceContainerHighest,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(14),
-              topRight: Radius.circular(14),
-              bottomLeft: Radius.circular(4),
-              bottomRight: Radius.circular(14),
+            borderRadius: BorderRadius.circular(10),
+            border: Border(
+              left: BorderSide(color: cor.primary, width: 3),
             ),
           ),
           child: child,
@@ -472,15 +558,18 @@ class _Bolha extends StatelessWidget {
   }
 }
 
-/// O balão de erro com o motivo e o botão de tentar de novo. Não é parte do
-/// histórico: some sozinho quando a próxima tentativa começa.
+/// O aviso de resposta que não veio, com o motivo e o botão de tentar de
+/// novo. Não é parte do histórico: some sozinho quando a próxima tentativa
+/// começa.
 class _ErroDeResposta extends StatelessWidget {
   const _ErroDeResposta({
+    required this.persona,
     required this.mensagem,
     required this.pergunta,
     required this.aoTentarDeNovo,
   });
 
+  final Persona persona;
   final String mensagem;
   final String pergunta;
   final Future<void> Function(String pergunta) aoTentarDeNovo;
@@ -498,10 +587,13 @@ class _ErroDeResposta extends StatelessWidget {
           children: [
             ClipOval(
               child: Image.asset(
-                'assets/images/spurgeon.webp',
+                // O rosto de quem não respondeu: no chat do Felipe, o erro não
+                // pode mostrar o Spurgeon.
+                persona.foto,
                 width: 28,
                 height: 28,
                 fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
               ),
             ),
             const SizedBox(width: 8),
@@ -510,11 +602,9 @@ class _ErroDeResposta extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(14, 10, 8, 8),
                 decoration: BoxDecoration(
                   color: cor.surfaceContainerHighest,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(14),
-                    topRight: Radius.circular(14),
-                    bottomLeft: Radius.circular(4),
-                    bottomRight: Radius.circular(14),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border(
+                    left: BorderSide(color: cor.primary, width: 3),
                   ),
                 ),
                 child: Column(
@@ -533,7 +623,6 @@ class _ErroDeResposta extends StatelessWidget {
                       label: const Text('Tentar de novo'),
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
-                        visualDensity: VisualDensity.compact,
                       ),
                     ),
                   ],
