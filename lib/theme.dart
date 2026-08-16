@@ -220,6 +220,13 @@ ThemeData construirTema({
       backgroundColor: esquema.surfaceContainerHighest,
       contentTextStyle: corpo(14),
     ),
+    progressIndicatorTheme: ProgressIndicatorThemeData(
+      // O anel de carregamento é o único elemento que o Material tingia com a
+      // cor padrão dele; o resto do app usa o metal do tema em todo lugar.
+      color: esquema.primary,
+      circularTrackColor: traco.withValues(alpha: 0.4),
+      linearTrackColor: esquema.surfaceContainerHighest,
+    ),
     datePickerTheme: DatePickerThemeData(
       backgroundColor: esquema.surfaceContainer,
       headerBackgroundColor: esquema.surfaceContainerHighest,

@@ -6,6 +6,7 @@ import 'package:felipe_ambrozini/main.dart';
 import 'package:felipe_ambrozini/telas/biblia.dart';
 import 'package:felipe_ambrozini/telas/comuns.dart';
 import 'package:felipe_ambrozini/telas/devocional.dart';
+import 'package:felipe_ambrozini/telas/hoje.dart';
 import 'package:felipe_ambrozini/telas/plano.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -156,6 +157,10 @@ void main() {
     await tester.pumpWidget(tela(DateTime(2028, 1, 1)));
     await tester.pumpAndSettle();
 
+    // O mês aberto fica centralizado na régua (dezembro, no segundo frame);
+    // rolar o chip de volta para a tela antes de tocar, como um dedo faria.
+    await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'Fevereiro'));
+    await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(ChoiceChip, 'Fevereiro'));
     await tester.pumpAndSettle();
 
@@ -193,6 +198,16 @@ void main() {
                 w.data?.startsWith('Boa noite, Felipe') == true),
       ),
       findsOneWidget,
+    );
+    // O cartão de ajuda da primeira visita empurra a prévia de Promessas para
+    // baixo da área que a lista realiza; rolar até ela antes de conferir.
+    await tester.scrollUntilVisible(
+      find.text('Promessas de Deus'),
+      200,
+      scrollable: find.descendant(
+        of: find.byType(ListView),
+        matching: find.byType(Scrollable),
+      ),
     );
     expect(find.text('Promessas de Deus'), findsWidgets);
     // Com o cartão de Promessas a tela ficou mais alta que a viewport do teste,
@@ -498,7 +513,7 @@ void main() {
     },
   );
 
-  testWidgets('Apresentar abre o versículo em tela cheia e fecha ao tocar', (
+  testWidgets('Tela cheia abre o versículo e fecha pelo botão de fechar', (
     tester,
   ) async {
     await aquecerAssets(tester);
@@ -521,7 +536,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Apresentar'));
+    await tester.tap(find.text('Tela cheia'));
     await tester.pumpAndSettle();
 
     expect(
@@ -530,15 +545,20 @@ void main() {
     );
     expect(find.text('Gênesis 1:1'), findsOneWidget);
 
-    // Fecha ao tocar em qualquer lugar da tela, sem precisar do botão de voltar.
+    // Um toque no texto não fecha: durante uma transmissão, um toque
+    // acidental não pode encerrar a apresentação. Fecha só pelo botão.
     await tester.tap(
       find.text('No princípio, Deus criou os céus e a terra.'),
     );
     await tester.pumpAndSettle();
+    expect(find.text('Gênesis 1:1'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Fechar'));
+    await tester.pumpAndSettle();
 
     // De volta ao leitor: lá o versículo é RichText, não Text (ver o find
     // acima, no início do teste), então a apresentação já não está na tela.
-    expect(find.text('Apresentar'), findsNothing);
+    expect(find.text('Gênesis 1:1'), findsNothing);
     expect(
       find.text('No princípio, Deus criou os céus e a terra.'),
       findsNothing,
@@ -623,7 +643,7 @@ void main() {
       // livro de aparecer entre o seletor e o texto do devocional, com o título
       // formal do livro ao lado.
       expect(
-        find.text('Introdução — ${livroPorSlug('josue')!.tituloFormal}'),
+        find.text('Introdução: ${livroPorSlug('josue')!.tituloFormal}'),
         findsOneWidget,
       );
     },
@@ -702,5 +722,220 @@ void main() {
     await tester.tap(find.widgetWithText(OutlinedButton, '3'));
     await tester.pumpAndSettle();
     expect(find.text('Rute 3'), findsWidgets);
+  });
+
+  testWidgets('o seletor de livro busca por nome sem acento nem caixa', (
+    tester,
+  ) async {
+    await aquecerAssets(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: EscopoDoEstado(
+          estado: await estadoLimpo(),
+          child: const TelaBiblia(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Gênesis 1'));
+    await tester.pumpAndSettle();
+
+    // Digitar sem acento nem maiúscula ainda encontra Josué.
+    await tester.enterText(find.byType(TextField), 'josue');
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(ChoiceChip, 'Josué'), findsOneWidget);
+    expect(find.widgetWithText(ChoiceChip, 'Juízes'), findsNothing);
+
+    // Apagar a busca devolve a lista completa de 66 livros.
+    await tester.enterText(find.byType(TextField), '');
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(ChoiceChip, 'Josué'), findsOneWidget);
+    // Apocalipse é o último dos 66: desce a lista até ele, como um dedo
+    // faria, antes de conferir que a lista inteira voltou.
+    await tester.scrollUntilVisible(
+      find.widgetWithText(ChoiceChip, 'Apocalipse'),
+      300,
+      scrollable: find.ancestor(
+        of: find.widgetWithText(ChoiceChip, 'Josué'),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    expect(find.widgetWithText(ChoiceChip, 'Apocalipse'), findsOneWidget);
+  });
+
+  testWidgets('o leitor aberto por link rola até o versículo pedido', (
+    tester,
+  ) async {
+    await aquecerAssets(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: EscopoDoEstado(
+          estado: await estadoLimpo(),
+          // O link ?ler=genesis.1.4 abre o capítulo 1 e pede o versículo 4:
+          // no app, "destacar" é (4, 4) nesse caso (ver main.dart).
+          child: const TelaBiblia(destacar: (4, 4)),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // O versículo pedido fica em cima, visível — e não existe rótulo
+    // "Gênesis 1:4" no leitor: o número vive dentro do próprio RichText.
+    final versiculo4 = find.byWidgetPredicate(
+      (w) =>
+          w is RichText &&
+          w.text.toPlainText().contains('E viu Deus que a luz era boa'),
+    );
+    final posicao = tester.getRect(versiculo4);
+    expect(posicao.top, greaterThanOrEqualTo(0));
+    expect(posicao.bottom, lessThanOrEqualTo(600));
+
+    // E sem o recuo apagado que a faixa aplica aos versículos de fora:
+    // quem veio por link pediu este versículo, não uma leitura de cronograma.
+    // O recuo funciona acrescentando uma cor (0,7 de opacidade); a ausência
+    // dela no alvo é o que prova que ele não veio apagado.
+    List<TextSpan> achatar(TextSpan raiz, List<TextSpan> saida) {
+      if (raiz.text != null) saida.add(raiz);
+      for (final filho in raiz.children ?? const <InlineSpan>[]) {
+        achatar(filho as TextSpan, saida);
+      }
+      return saida;
+    }
+
+    final span = tester.widget<RichText>(versiculo4).text as TextSpan;
+    final doAlvo = achatar(span, []).firstWhere(
+      (s) => s.text!.contains('E viu Deus'),
+    );
+    expect(
+      doAlvo.style?.color?.a,
+      1.0,
+      reason: 'o versículo pedido no link não pode vir com o texto apagado',
+    );
+
+    // E o primeiro versículo do capítulo, que ficou fora da faixa, veio
+    // apagado: é a outra metade da mesma promessa.
+    final versiculo1 = find.byWidgetPredicate(
+      (w) =>
+          w is RichText &&
+          w.text.toPlainText().contains('No princípio, Deus criou'),
+    );
+    final doLadoDeFora = achatar(
+      tester.widget<RichText>(versiculo1).text as TextSpan,
+      [],
+    ).firstWhere((s) => s.text!.contains('No princípio'));
+    expect(doLadoDeFora.style?.color?.a, 0.7);
+  });
+
+  testWidgets(
+    'deslizar com dominância vertical não vira capítulo; o deslize horizontal '
+    'vira e oferece desfazer',
+    (tester) async {
+      await aquecerAssets(tester);
+      final estado = await estadoLimpo();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EscopoDoEstado(estado: estado, child: const TelaBiblia()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Leitura com a mão em diagonal: o arrasto é vertical de verdade, e o
+      // pouco de horizontal não pode trocar de capítulo no meio dela. Numa
+      // leitura recém-aberta ainda não há capítulo anterior, então nada muda.
+      await tester.timedDrag(
+        find.byType(ListView),
+        const Offset(60, 140),
+        const Duration(milliseconds: 200),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        estado.ultimaLeitura,
+        isNull,
+        reason: 'a dominância vertical bloqueia o deslize de capítulo',
+      );
+
+      // O deslize horizontal de verdade vira o capítulo e deixa o desfazer
+      // à mão.
+      await tester.fling(
+        find.byType(ListView),
+        const Offset(-300, 0),
+        800,
+      );
+      await tester.pumpAndSettle();
+      expect(estado.ultimaLeitura, ('genesis', 2));
+      expect(find.text('Desfazer'), findsOneWidget);
+
+      await tester.tap(find.text('Desfazer'));
+      await tester.pumpAndSettle();
+      expect(estado.ultimaLeitura, ('genesis', 1));
+    },
+  );
+
+  testWidgets('o cartão de ajuda da primeira visita some ao tocar Entendi', (
+    tester,
+  ) async {
+    // A tela Hoje direto, e não o AppDevocional inteiro: o GoRouter do app é
+    // um singleton global, e um teste anterior pode deixar a aba ativa longe
+    // da Hoje. O cartão não tem nada a ver com a moldura.
+    await aquecerAssets(tester);
+    final estado = await estadoLimpo();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: EscopoDoEstado(estado: estado, child: const TelaHoje()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Como usar'), findsOneWidget);
+    expect(find.text('Entendi'), findsOneWidget);
+
+    await tester.tap(find.text('Entendi'));
+    await tester.pumpAndSettle();
+    expect(find.text('Como usar'), findsNothing);
+
+    // E não volta: a escolha fica gravada no estado, como em qualquer
+    // primeira visita depois desta.
+    await tester.pumpWidget(
+      MaterialApp(
+        home: EscopoDoEstado(estado: estado, child: const TelaHoje()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Como usar'), findsNothing);
+  });
+
+  testWidgets('o chip do mês escolhido fica à vista na régua do Plano', (
+    tester,
+  ) async {
+    // Em agosto, o chip de agosto começava fora da tela (a régua abria em
+    // janeiro) enquanto a lista já mostrava agosto.
+    await tester.runAsync(() => Conteudo.instancia.plano(bissexto: false));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: EscopoDoEstado(
+          estado: await estadoLimpo(),
+          child: TelaPlano(hoje: DateTime(2027, 8, 15)),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final agosto = tester.getRect(find.widgetWithText(ChoiceChip, 'Agosto'));
+    expect(agosto.left, greaterThanOrEqualTo(0));
+    expect(agosto.right, lessThanOrEqualTo(800));
+
+    // E o mês escolhido à mão também volta para dentro da tela: a régua
+    // centraliza o chip escolhido, e rolar até ele antes do toque é o que um
+    // dedo de verdade faria.
+    await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'Dezembro'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Dezembro'));
+    await tester.pumpAndSettle();
+    final dezembro = tester.getRect(
+      find.widgetWithText(ChoiceChip, 'Dezembro'),
+    );
+    expect(dezembro.left, greaterThanOrEqualTo(0));
+    expect(dezembro.right, lessThanOrEqualTo(800));
   });
 }

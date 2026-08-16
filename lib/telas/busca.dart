@@ -52,7 +52,17 @@ class _TelaBuscaState extends State<TelaBusca> {
   void _buscar(Versao versao) {
     final termo = _controle.text.trim();
     // Menos de três letras devolveria meia Bíblia e não ajudaria ninguém.
-    if (termo.length < 3) return;
+    // Sem este aviso a guarda falhava em silêncio: nada buscava e nada
+    // explicava por quê.
+    if (termo.isEmpty) return;
+    if (termo.length < 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Escreve ao menos três letras para buscar.'),
+        ),
+      );
+      return;
+    }
 
     // Cancelar a busca anterior interrompe a leitura dos livros restantes.
     _assinatura?.cancel();

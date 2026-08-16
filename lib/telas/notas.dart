@@ -56,8 +56,13 @@ class _TelaNotasState extends State<TelaNotas> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Marcações'),
+          title: const Text('Favoritos e notas'),
           actions: [
+            IconButton(
+              tooltip: 'Tamanho do texto e aparência',
+              icon: const Icon(Icons.tune),
+              onPressed: () => ajustesDeLeitura(context, estado),
+            ),
             PopupMenuButton<void Function()>(
               tooltip: 'Cópia de segurança',
               icon: const Icon(Icons.more_vert),
@@ -98,8 +103,11 @@ class _TelaNotasState extends State<TelaNotas> {
               // Só na web: o navegador pode limpar o localStorage sem aviso,
               // e ninguém além de quem já leu o README sabe disso. Sem
               // Dismissible de propósito — o risco não desaparece porque a
-              // pessoa fechou o aviso uma vez.
-              if (kIsWeb)
+              // pessoa fechou o aviso uma vez. E só avisa quando já há o que
+              // perder: quem chega sem favorito nem dia lido ouviria do risco
+              // antes de ter algo para guardar (medo antes do valor).
+              if (kIsWeb &&
+                  (estado.marcacoes.isNotEmpty || estado.diasLidos > 0))
                 _AvisoDePerda(onExportar: () => _exportar(context, estado)),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),

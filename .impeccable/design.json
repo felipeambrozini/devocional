@@ -121,8 +121,7 @@
     ],
     "breakpoints": [
       { "name": "capa-escala", "value": "600px", "purpose": "A partir daqui a capa do livro escala para 1,4x." },
-      { "name": "trilho", "value": "720px", "purpose": "A partir daqui a barra de navegação vira trilho lateral." },
-      { "name": "coluna-dupla", "value": "1100px", "purpose": "A partir daqui o leitor mostra BKJ e NVT lado a lado." }
+      { "name": "trilho", "value": "720px", "purpose": "A partir daqui a barra de navegação vira trilho lateral." }
     ]
   },
   "components": [

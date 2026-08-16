@@ -31,6 +31,10 @@ class _TelaPlanoState extends State<TelaPlano> {
 
   final _rolagem = ScrollController();
 
+  /// Uma chave por mês, para a régua rolar até o chip do mês escolhido
+  /// (espelho do que `_rolarAteHoje` faz com a lista).
+  final _chavesDeMes = List.generate(12, (_) => GlobalKey());
+
   /// Marca o cartão de hoje na lista, para poder rolar até ele.
   final _chaveDeHoje = GlobalKey();
 
@@ -39,9 +43,33 @@ class _TelaPlanoState extends State<TelaPlano> {
   int? _mesJaCentralizado;
 
   @override
+  void initState() {
+    super.initState();
+    // Na abertura, o mês corrente precisa estar à vista na régua: em agosto,
+    // o chip de agosto começava fora da tela enquanto a lista já mostrava
+    // agosto (a régua sempre abria em janeiro).
+    WidgetsBinding.instance.addPostFrameCallback((_) => _centralizarMes());
+  }
+
+  @override
   void dispose() {
     _rolagem.dispose();
     super.dispose();
+  }
+
+  /// Traz o chip do mês selecionado para o centro da régua. A régua é um
+  /// SingleChildScrollView próprio, que não rola junto com a lista: sem isto,
+  /// escolher dezembro deixava o chip de dezembro fora da tela.
+  void _centralizarMes() {
+    if (!mounted) return;
+    final contexto = _chavesDeMes[_mes - 1].currentContext;
+    if (contexto == null) return;
+    Scrollable.ensureVisible(
+      contexto,
+      alignment: 0.5,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   /// A borda dourada acha o dia de hoje de relance, mas no dia 28 ainda são
@@ -69,6 +97,13 @@ class _TelaPlanoState extends State<TelaPlano> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Plano de leitura'),
+        actions: [
+          IconButton(
+            tooltip: 'Tamanho do texto e aparência',
+            icon: const Icon(Icons.tune),
+            onPressed: () => ajustesDeLeitura(context, estado),
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(52),
           child: SingleChildScrollView(
@@ -78,11 +113,15 @@ class _TelaPlanoState extends State<TelaPlano> {
               children: [
                 for (var m = 1; m <= 12; m++)
                   Padding(
+                    key: _chavesDeMes[m - 1],
                     padding: const EdgeInsets.only(right: 8),
                     child: ChoiceChip(
                       label: Text(meses[m - 1]),
                       selected: m == _mes,
-                      onSelected: (_) => setState(() => _mes = m),
+                      onSelected: (_) {
+                        setState(() => _mes = m);
+                        _centralizarMes();
+                      },
                     ),
                   ),
               ],

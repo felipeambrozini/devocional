@@ -23,6 +23,7 @@ class Estado extends ChangeNotifier {
   static const _kUltima = 'ultima_leitura';
   static const _kEscala = 'escala_de_leitura';
   static const _kModoDoTema = 'modo_do_tema';
+  static const _kAjudaDispensada = 'ajuda_dispensada';
   static const _kLembretesAtivos = 'lembretes_ativos';
   static const _kMinutosLembreteManha = 'minutos_lembrete_manha';
   static const _kMinutosLembreteNoite = 'minutos_lembrete_noite';
@@ -51,6 +52,9 @@ class Estado extends ChangeNotifier {
 
   /// Claro, escuro ou o do aparelho. Padrão: o do aparelho.
   ModoDoTema _modoDoTema = ModoDoTema.sistema;
+
+  /// A primeira visita ainda não dispensou o cartão "Como usar" da Hoje.
+  bool _ajudaDispensada = false;
 
   /// Se os três lembretes diários estão ligados. Padrão false: notificação é
   /// opt-in, nunca ligada sem o usuário pedir.
@@ -109,6 +113,8 @@ class Estado extends ChangeNotifier {
       (m) => m.chave == modo,
       orElse: () => ModoDoTema.sistema,
     );
+
+    _ajudaDispensada = _prefs.getBool(_kAjudaDispensada) ?? false;
 
     _lembretesAtivos = _prefs.getBool(_kLembretesAtivos) ?? false;
     _minutosLembreteManha = _minutosValidos(
@@ -180,6 +186,18 @@ class Estado extends ChangeNotifier {
     _escalaDeLeitura = nova;
     notifyListeners();
     await _prefs.setDouble(_kEscala, nova);
+  }
+
+  // --- ajuda de primeira visita ------------------------------------------- //
+
+  bool get ajudaDispensada => _ajudaDispensada;
+
+  /// Ajuda é para quem chega: depois de "Entendi", não volta nunca mais.
+  Future<void> dispensarAjuda() async {
+    if (_ajudaDispensada) return;
+    _ajudaDispensada = true;
+    notifyListeners();
+    await _prefs.setBool(_kAjudaDispensada, true);
   }
 
   // --- versão preferida ---------------------------------------------------- //

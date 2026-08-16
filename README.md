@@ -33,9 +33,8 @@ Windows e Linux a partir do mesmo código).
   Promessas de Deus e outra de Noite, cada uma num horário ajustável, abrindo a
   leitura certa ao ser tocada.
 - Layout responsivo: barra de navegação embaixo no celular, trilho lateral em
-  janela larga (a partir de 720px), coluna dupla com as duas versões lado a
-  lado (a partir de 1100px), coluna de leitura com largura confortável no
-  desktop.
+  janela larga (a partir de 720px), coluna de leitura com largura confortável
+  e centralizada no desktop.
 - Navegação por gesto e por teclado: deslizar troca de capítulo no celular; no
   Windows e na web as setas passam de capítulo e `Ctrl+F` abre a busca.
 
@@ -48,12 +47,11 @@ Windows e Linux a partir do mesmo código).
 | Devocional | Manhã, Noite e Promessas de Deus, com calendário |
 | Plano | Cronograma anual por mês, com marcação de lido |
 | Notas | Favoritos e anotações |
-| Sobre | Créditos, fontes das versões e links dos canais |
+| Sobre | Créditos, fonte da tradução e links dos canais |
 
 Na web, cada aba tem a própria URL (`/hoje`, `/biblia`, `/devocional`, `/plano`,
 `/notas`, `/sobre`) — dá para abrir, atualizar ou compartilhar qualquer uma
-direto. `?ler=joao.3.16` na URL abre esse versículo por cima da aba, para
-links de um versículo específico (`&versao=nvt` escolhe a versão).
+direto. `?ler=joao.3.16` na URL abre esse versículo por cima da aba.
 
 ## Stack
 
@@ -96,7 +94,6 @@ repositório: a BKJ e os devocionais não serão traduzidos de novo.
 | Conteúdo | Situação |
 |---|---|
 | BKJ 1611 | 66 livros, 1189 capítulos, **31.102 versículos, bate exatamente com o canon** |
-| NVT | 31.104 versículos; os 2 desvios são `3 João 1:15` e `Ap 12:18`, versificação da NLT |
 | Manhã e Noite | 366 dias, todos com manhã e noite (732 entradas) |
 | Promessas de Deus | 366 de 366 traduzidos |
 | Cronograma anual | 365 dias (366 em ano bissexto), 449 faixas |
@@ -182,18 +179,6 @@ motivo novo.
   única ramificação por plataforma no app — a web entra pelo pior caso (desktop
   sem toque). `_semGestoDeToque` em `lib/telas/biblia.dart` é getter e não
   `static final`, porque o teste troca a plataforma em tempo de execução.
-- **BKJ e NVT lado a lado é uma linha por versículo, não duas listas**: um só
-  `ListView` (`_LeitorDuplo`), cada item é a `Row` de um versículo com as duas
-  traduções — duas `ListView` com `ScrollController` compartilhado desalinham.
-  Só entra em janela larga (1100px); abaixo disso o botão nem aparece. Com a
-  coluna dupla ligada, o alternador de versão some da AppBar (não existe
-  "versão atual"). A ação de tocar um versículo usa `versao` explícito, para
-  gravar favorito e nota na versão certa de cada lado.
-- **`TelaBiblia.versaoInicial` é sobreposição local, não preferência global**:
-  uma marcação salva na NVT abre na NVT sem mudar a versão preferida do resto
-  do app (`_versao` separado de `Estado.versao`).
-- **O alternador de versão é um botão na AppBar que mostra a sigla em uso**,
-  não um `SegmentedButton` ocupando uma linha inteira.
 - **O alternador das três leituras usa chips, não `SegmentedButton`** — o
   `SegmentedButton` iguala a largura dos segmentos à do maior, e três vezes
   "Promessas de Deus" nunca cabe num celular.
@@ -294,8 +279,8 @@ motivo novo.
   **Teto conhecido**: é uma prévia só para o site inteiro; link direto para um
   versículo mostra a mesma imagem genérica (prévia por rota exigiria render no
   servidor).
-- **Link direto**, formato `?ler=joao.3.16` (capítulo sem versículo: `?ler=joao.3`;
-  versão opcional: `&versao=nvt`). Parâmetro de consulta, não caminho, porque o
+- **Link direto**, formato `?ler=joao.3.16` (capítulo sem versículo: `?ler=joao.3`).
+  Parâmetro de consulta, não caminho, porque o
   Pages devolveria 404. `alvoDoLink` e `linkDoVersiculo` em `lib/data/canon.dart`
   fazem a ida e volta.
 - **Identidade neutra**: `<title>`, `apple-mobile-web-app-title` e

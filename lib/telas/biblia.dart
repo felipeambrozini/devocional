@@ -38,6 +38,12 @@ class _TelaBibliaState extends State<TelaBiblia> {
   final _rolagem = ScrollController();
   bool _restaurou = false;
 
+  /// Onde cai o versículo pedido por link, nota ou busca ([widget.destacar]).
+  /// GlobalKey porque o `Scrollable.ensureVisible` precisa do item já
+  /// construído; sem ele não há como achar o versículo dentro do capítulo.
+  final _chaveDoAlvoDeRolagem = GlobalKey();
+  bool _rolouAteOAlvo = false;
+
   @override
   void initState() {
     super.initState();
@@ -94,10 +100,102 @@ class _TelaBibliaState extends State<TelaBiblia> {
     MaterialPageRoute(builder: (_) => const TelaBusca()),
   );
 
+  /// Grade de capítulos do livro aberto, direto pelo título do capítulo no
+  /// corpo: um passo em vez dos dois do seletor de livros, e o caminho que
+  /// não depende do deslize (que é invisível para quem chegou agora).
+  Future<void> _abrirGradeDeCapitulos() async {
+    final livro = _livroAtual;
+    final capitulo = await showModalBottomSheet<int>(
+      context: context,
+      builder: (_) => _FolhaDeCapitulos(livro: livro),
+    );
+    if (capitulo != null && mounted) _irPara(livro.slug, capitulo);
+  }
+
+  /// Depois do capítulo aberto por link, nota ou busca, rola até o versículo
+  /// pedido: quem chega por `?ler=joao.3.16` quer o versículo, não o topo do
+  /// capítulo. Roda uma vez por abertura.
+  void _rolarAteOAlvoSePreciso() {
+    final alvo = widget.destacar;
+    if (alvo == null || _rolouAteOAlvo) return;
+    _rolouAteOAlvo = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _rolarAteOAlvo(alvo.$1));
+  }
+
+  void _rolarAteOAlvo(int versiculo) {
+    var tentativas = 0;
+    void tentar() {
+      final contexto = _chaveDoAlvoDeRolagem.currentContext;
+      if (contexto != null) {
+        Scrollable.ensureVisible(
+          contexto,
+          alignment: 0.3,
+          duration: const Duration(milliseconds: 350),
+        );
+        return;
+      }
+      if (!mounted || ++tentativas >= 90 || !_rolagem.hasClients) return;
+      // Estimativa bruta primeiro: corpo em 17 com altura 1.6, mais o respiro
+      // de 24 dp do versículo. Só precisa chegar perto do item; o
+      // ensureVisible acima ajusta o resto.
+      if (tentativas == 1) {
+        _rolagem.jumpTo(
+          ((versiculo - 1) * 51)
+              .clamp(0.0, _rolagem.position.maxScrollExtent)
+              .toDouble(),
+        );
+      } else if (tentativas > 3) {
+        // A estimativa errou (uma introdução aberta, por exemplo): avança em
+        // blocos até o item entrar na árvore.
+        _rolagem.jumpTo(
+          (_rolagem.offset + 400)
+              .clamp(0.0, _rolagem.position.maxScrollExtent)
+              .toDouble(),
+        );
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) => tentar());
+    }
+
+    tentar();
+  }
+
   void _aoArrastarCapitulo(DragEndDetails detalhe) {
-    final velocidade = detalhe.primaryVelocity ?? 0;
-    if (velocidade < -250) _passarCapitulo(1);
-    if (velocidade > 250) _passarCapitulo(-1);
+    final horizontal = detalhe.primaryVelocity ?? 0;
+    final vertical = detalhe.velocity.pixelsPerSecond.dy;
+    // O corpo inteiro é um detector de arrasto horizontal em volta de uma
+    // lista vertical. Sem dominância clara, um flick horizontal durante a
+    // rolagem trocava de capítulo em silêncio; aqui o horizontal precisa
+    // vencer o vertical por 2,5x para valer.
+    if (horizontal.abs() < 250) return;
+    if (vertical.abs() * 2.5 > horizontal.abs()) return;
+    _passarCapituloComDesfazer(horizontal < 0 ? 1 : -1);
+  }
+
+  /// Passa de capítulo pelo deslize e oferece voltar: o deslize é o único
+  /// jeito de trocar de capítulo no toque, e um acidente não pode custar o
+  /// lugar na Escritura sem um "Desfazer" à mão. Setas e chevrons não passam
+  /// por aqui: são escolhas explícitas e não pedem volta.
+  void _passarCapituloComDesfazer(int passo) {
+    final livroAnterior = _livro;
+    final capituloAnterior = _capitulo;
+    _passarCapitulo(passo);
+    final mensageiro = ScaffoldMessenger.of(context);
+    mensageiro
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('${_livroAtual.nome} $_capitulo'),
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(
+            label: 'Desfazer',
+            onPressed: () {
+              if (!mounted) return;
+              _irPara(livroAnterior, capituloAnterior);
+              mensageiro.hideCurrentSnackBar();
+            },
+          ),
+        ),
+      );
   }
 
   /// Se vale a pena gastar uma faixa do rodapé com os chevrons de capítulo.
@@ -210,21 +308,39 @@ class _TelaBibliaState extends State<TelaBiblia> {
                           titulo: 'Capítulo não encontrado',
                         );
                       }
+                      // Quem chegou por link, nota ou busca pediu um versículo
+                      // exato; rolar até ele precisa de um frame depois do
+                      // capítulo montado.
+                      _rolarAteOAlvoSePreciso();
                       // Arrastar na horizontal passa de capítulo. Vale no
                       // desktop também: arrasto com o botão do mouse apertado
                       // dispara o mesmo reconhecedor. Só que ninguém descobre
                       // isso sem um dedo na tela, e é por isso que os chevrons
                       // continuam lá embaixo em quem não tem toque. Ver
                       // [_semGestoDeToque].
-                      return GestureDetector(
+                      final leitor = GestureDetector(
                         onHorizontalDragEnd: _aoArrastarCapitulo,
                         child: _Leitor(
                           capitulo: capitulo,
                           versao: Versao.bkj,
                           rolagem: _rolagem,
                           destacar: widget.destacar,
+                          alvoDeRolagem: widget.destacar?.$1,
+                          chaveDoAlvoDeRolagem: widget.destacar == null
+                              ? null
+                              : _chaveDoAlvoDeRolagem,
+                          aoAbrirCapitulos: _abrirGradeDeCapitulos,
                         ),
                       );
+                      // Só no toque o texto vira selecionável: por lá o dedo
+                      // escolhe com um toque e seleciona com pressão longa,
+                      // sem brigar com o deslize de capítulo. No mouse (web e
+                      // desktop) a seleção por arrasto disputaria a arena com
+                      // o gesto de capítulo, então lá Copiar pela folha do
+                      // versículo continua sendo o caminho.
+                      return _semGestoDeToque
+                          ? leitor
+                          : SelectionArea(child: leitor);
                     },
                   ),
                 ),
@@ -261,6 +377,9 @@ class _Leitor extends StatelessWidget {
     required this.versao,
     required this.rolagem,
     this.destacar,
+    this.alvoDeRolagem,
+    this.chaveDoAlvoDeRolagem,
+    this.aoAbrirCapitulos,
   });
 
   final Capitulo capitulo;
@@ -269,6 +388,15 @@ class _Leitor extends StatelessWidget {
   final Versao versao;
   final ScrollController rolagem;
   final (int, int)? destacar;
+
+  /// Versículo para onde rolar ao abrir (o primeiro da faixa pedida). Sempre
+  /// nulo no uso comum; só link, nota e busca pedem um versículo exato.
+  final int? alvoDeRolagem;
+  final GlobalKey? chaveDoAlvoDeRolagem;
+
+  /// Sem o deslize (que é invisível), o título do capítulo no corpo abre a
+  /// grade de capítulos num toque.
+  final VoidCallback? aoAbrirCapitulos;
 
   @override
   Widget build(BuildContext context) {
@@ -299,7 +427,35 @@ class _Leitor extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
               ],
-              Text(capitulo.referencia, style: tema.displayMedium),
+              Semantics(
+                button: aoAbrirCapitulos != null,
+                hint: aoAbrirCapitulos == null
+                    ? null
+                    : 'Toque para escolher o capítulo',
+                child: aoAbrirCapitulos == null
+                    ? Text(capitulo.referencia, style: tema.displayMedium)
+                    : InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: aoAbrirCapitulos,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 4,
+                            horizontal: 2,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                capitulo.referencia,
+                                style: tema.displayMedium,
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(Icons.expand_more, size: 22, color: cor.primary),
+                            ],
+                          ),
+                        ),
+                      ),
+              ),
               const SizedBox(height: 8),
               const Filete(),
               if (capitulo.titulo.isNotEmpty) ...[
@@ -323,6 +479,9 @@ class _Leitor extends StatelessWidget {
             (numero >= destacar!.$1 && numero <= destacar!.$2);
 
         return _LinhaDeVersiculo(
+          key: chaveDoAlvoDeRolagem != null && numero == alvoDeRolagem
+              ? chaveDoAlvoDeRolagem
+              : null,
           versao: versao,
           livro: capitulo.livro,
           capituloNumero: capitulo.numero,
@@ -342,6 +501,7 @@ class _Leitor extends StatelessWidget {
 /// "versão atual" só.
 class _LinhaDeVersiculo extends StatelessWidget {
   const _LinhaDeVersiculo({
+    super.key,
     required this.versao,
     required this.livro,
     required this.capituloNumero,
@@ -559,7 +719,7 @@ Future<void> _abrirAcoesDoVersiculo(
               // versículo em tela cheia, não muda nada no estado do app.
               ListTile(
                 leading: Icon(Icons.fullscreen, color: cor.primary),
-                title: const Text('Apresentar'),
+                title: const Text('Tela cheia'),
                 onTap: () {
                   Navigator.pop(folha);
                   Navigator.push(
@@ -625,6 +785,10 @@ String _textoDoVersiculo(
 /// numa transmissão. Por isso não usa `Estado.escalaDeLeitura`: o
 /// `FittedBox` ocupa o espaço disponível sozinho, sem precisar de um
 /// controle de tamanho novo.
+///
+/// Fecha só pelo botão de fechar, não por qualquer toque: durante uma
+/// transmissão, um toque acidental encerraria um momento deliberado de
+/// leitura.
 class TelaApresentacao extends StatelessWidget {
   const TelaApresentacao({
     super.key,
@@ -639,34 +803,47 @@ class TelaApresentacao extends StatelessWidget {
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
-    return GestureDetector(
-      onTap: () => Navigator.pop(context),
-      child: Scaffold(
-        backgroundColor: cor.surface,
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      texto,
-                      textAlign: TextAlign.center,
-                      style: tema.displayLarge?.copyWith(color: cor.onSurface),
+    return Scaffold(
+      backgroundColor: cor.surface,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        texto,
+                        textAlign: TextAlign.center,
+                        style: tema.displayLarge?.copyWith(
+                          color: cor.onSurface,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  referencia,
-                  style: tema.headlineSmall?.copyWith(color: cor.secondary),
-                ),
-              ],
+                  const SizedBox(height: 24),
+                  Text(
+                    referencia,
+                    style: tema.headlineSmall?.copyWith(color: cor.secondary),
+                  ),
+                ],
+              ),
             ),
-          ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: IconButton(
+                tooltip: 'Fechar',
+                icon: const Icon(Icons.close),
+                color: cor.primary,
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -685,6 +862,14 @@ class _SeletorDeLivro extends StatefulWidget {
 
 class _SeletorDeLivroState extends State<_SeletorDeLivro> {
   Livro? _escolhido;
+  final _controle = TextEditingController();
+  String _filtro = '';
+
+  @override
+  void dispose() {
+    _controle.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -702,11 +887,26 @@ class _SeletorDeLivroState extends State<_SeletorDeLivro> {
           ),
           const SizedBox(height: 8),
           const Filete(),
-          const SizedBox(height: 8),
+          // Busca só na etapa de livros: na grade de capítulos o texto já é
+          // o que se procura.
+          if (escolhido == null) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+              child: TextField(
+                controller: _controle,
+                onChanged: (v) => setState(() => _filtro = v.trim()),
+                decoration: const InputDecoration(
+                  hintText: 'Buscar livro',
+                  prefixIcon: Icon(Icons.search),
+                ),
+              ),
+            ),
+          ],
           Expanded(
             child: escolhido == null
                 ? _ListaDeLivros(
                     atual: widget.livroAtual,
+                    filtro: _filtro,
                     ao: (l) => l.capitulos == 1
                         ? Navigator.pop(context, (l.slug, 1))
                         : setState(() => _escolhido = l),
@@ -732,13 +932,48 @@ class _SeletorDeLivroState extends State<_SeletorDeLivro> {
 }
 
 class _ListaDeLivros extends StatelessWidget {
-  const _ListaDeLivros({required this.atual, required this.ao});
+  const _ListaDeLivros({
+    required this.atual,
+    required this.ao,
+    this.filtro = '',
+  });
 
   final String atual;
   final ValueChanged<Livro> ao;
+  final String filtro;
 
   @override
   Widget build(BuildContext context) {
+    if (filtro.isNotEmpty) {
+      // A busca é a porta de entrada para quem não quer escanear 66 chips:
+      // Miquéias e Hebreus deixam de pedir duas telas de varredura. Nome e
+      // abreviação, sem acento e sem caixa, como a busca de versículos.
+      final alvo = Conteudo.normalizar(filtro);
+      final achados = canon
+          .where(
+            (l) =>
+                Conteudo.normalizar(l.nome).contains(alvo) ||
+                Conteudo.normalizar(l.abrev).contains(alvo),
+          )
+          .toList();
+      return ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          if (achados.isEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 24, 4, 8),
+              child: Text(
+                'Nenhum livro com "$filtro".',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            )
+          else
+            _grade(achados),
+          const SizedBox(height: 16),
+        ],
+      );
+    }
+
     final antigo = canon
         .where((l) => l.testamento == Testamento.antigo)
         .toList();
@@ -773,6 +1008,40 @@ class _ListaDeLivros extends StatelessWidget {
         ),
     ],
   );
+}
+
+/// Folha com só a grade de capítulos do livro aberto: o atalho de um passo
+/// para quem já está lendo. Ver `_abrirGradeDeCapitulos`.
+class _FolhaDeCapitulos extends StatelessWidget {
+  const _FolhaDeCapitulos({required this.livro});
+
+  final Livro livro;
+
+  @override
+  Widget build(BuildContext context) {
+    final altura = MediaQuery.sizeOf(context).height * 0.55;
+    return SizedBox(
+      height: altura,
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          Text(
+            'Capítulo de ${livro.nome}',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 8),
+          const Filete(),
+          const SizedBox(height: 8),
+          Expanded(
+            child: _GradeDeCapitulos(
+              livro: livro,
+              ao: (c) => Navigator.pop(context, c),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _GradeDeCapitulos extends StatelessWidget {

@@ -201,8 +201,6 @@ arquivos por peso), em `lib/theme.dart`.
 
 A coluna de leitura é a unidade do layout: tudo que se lê (versículos, devocional, introdução) vive dentro de `LarguraDeLeitura` com máximo de **720px**, centralizado — nunca mais larga, em qualquer janela. A página respira em ritmo de 8px: 8, 10, 12, 14, 16 (padding do cartão), 20 (padding do devocional e horizontal do leitor), 24, 32 (fundo da lista).
 
-Responsivo em três patamares: barra de navegação embaixo no celular; trilho lateral a partir de **720px**; coluna dupla com as duas versões (BKJ e NVT) lado a lado a partir de **1100px**. A capa do livro escala para 1,4x quando a largura passa de **600px**.
-
 **A Regra da Coluna de Leitura.** Texto de leitura nunca ultrapassa 720px de largura, centralizado. No desktop, o leitor fica na coluna e o espaço em volta respira — o texto nunca vai de ponta a ponta.
 
 ## Elevation & Depth
@@ -273,7 +271,7 @@ Contidos e discretos: os controles existem para o texto passar. Nenhum component
 ### Don't:
 - **Don't** usar dourado sobre pergaminho (2,1:1, ilegível) nem clarear o bronze — o claro tem o próprio metal, escurecido.
 - **Don't** inventar um terceiro acento de cor ou uma terceira família de fonte.
-- **Don't** usar `SegmentedButton` para as três leituras (chips); o alternador de versão também é um botão na AppBar com a sigla, não uma linha inteira.
+- **Don't** usar `SegmentedButton` para as três leituras (chips).
 - **Don't** deixar o texto de leitura passar de 720px, nem multiplicar títulos pela escala do usuário.
 - **Don't** ler a paleta direto de `Cores` numa tela — só `Theme.of(context).colorScheme`.
 - **Don't** usar sombra, gradiente de fundo, brilho ou movimento decorativo: a estante é chapada, sóbria e solene.

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../data/estado.dart';
 import '../data/nuvem.dart';
 import 'comuns.dart';
 
@@ -13,7 +14,17 @@ class TelaSobre extends StatelessWidget {
     final tema = Theme.of(context).textTheme;
     final cor = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Sobre')),
+      appBar: AppBar(
+        title: const Text('Sobre'),
+        actions: [
+          IconButton(
+            tooltip: 'Tamanho do texto e aparência',
+            icon: const Icon(Icons.tune),
+            onPressed: () =>
+                ajustesDeLeitura(context, EscopoDoEstado.de(context)),
+          ),
+        ],
+      ),
       body: LarguraDeLeitura(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
@@ -56,10 +67,10 @@ class TelaSobre extends StatelessWidget {
                 'Quem entra com a conta Google salva favoritos, anotações e '
                 'dias de leitura marcados numa conta na nuvem, para não '
                 'perdê-los se o navegador limpar o armazenamento. Sobem só '
-                'esses três itens, mais o e-mail e o identificador da conta '
-                '— nunca o que você lê, nem quando lê; o tamanho da letra e '
-                'o tema continuam só no aparelho. Quem não entra usa o app '
-                'do mesmo jeito de sempre, sem nada saindo daqui.',
+                'esses três itens, mais o e-mail e o identificador da conta, nunca o que '
+                'você lê nem quando lê; o tamanho da letra e o tema continuam '
+                'só no aparelho. Quem não entra usa o app do mesmo jeito de '
+                'sempre, sem nada saindo daqui.',
                 style: tema.bodyLarge?.copyWith(height: 1.7),
               ),
               const SizedBox(height: 8),

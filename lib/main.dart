@@ -265,6 +265,17 @@ class _AppDevocionalState extends State<AppDevocional> {
         routerConfig: _router,
         title: 'Devocional',
         debugShowCheckedModeBanner: false,
+        // A escala de texto do aparelho (2x no Android, etc.) sempre foi
+        // ignorada: o app respondia só com os cinco passos próprios, que
+        // param em 1,5x. Aqui a escala do sistema passa a multiplicar tudo
+        // por cima, limitada a 2x para não quebrar o layout da navegação.
+        // Quem precisa de 2x no aparelho recebe 2x, somada à escala própria
+        // de leitura (que continua multiplicando só o texto corrido).
+        builder: (context, child) => MediaQuery.withClampedTextScaling(
+          minScaleFactor: 1.0,
+          maxScaleFactor: 2.0,
+          child: child!,
+        ),
         // Os dois temas vão sempre montados, e o `themeMode` escolhe. Assim
         // "Automático" funciona de verdade: o sistema pode virar o modo com o
         // app aberto, e o MaterialApp troca sozinho, sem passar pelo Estado.

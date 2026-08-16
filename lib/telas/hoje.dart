@@ -34,6 +34,13 @@ class _TelaHojeState extends State<TelaHoje> {
             children: [
               _Cabecalho(data: agora),
               const SizedBox(height: 20),
+              // Ajuda só para quem chega: um cartão curto na primeira visita,
+              // que some para sempre com "Entendi". O público da web cai aqui
+              // sem ninguém explicando nada; o resto do app não se anuncia.
+              if (!estado.ajudaDispensada) ...[
+                _CartaoDeAjuda(estado: estado),
+                const SizedBox(height: 16),
+              ],
               if (estado.ultimaLeitura != null) ...[
                 // Retomar uma leitura interrompida é a ação de maior intenção
                 // de quem abre o app, por isso vem antes das prévias do dia,
@@ -56,6 +63,63 @@ class _TelaHojeState extends State<TelaHoje> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Primeira visita: uma linha por gesto ou tela, e nada mais. Sobriedade até
+/// na ajuda; o botão "Entendi" some com ela para sempre (ver
+/// `Estado.ajudaDispensada`).
+class _CartaoDeAjuda extends StatelessWidget {
+  const _CartaoDeAjuda({required this.estado});
+
+  final Estado estado;
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
+    final tema = Theme.of(context).textTheme;
+    return Cartao(
+      titulo: 'Como usar',
+      acessorio: Icon(
+        Icons.auto_stories_outlined,
+        color: cor.primary,
+        size: 20,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Na Bíblia, desliza o dedo para virar o capítulo; com mouse e '
+            'teclado, usa as setas.',
+            style: tema.bodyMedium,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'O Devocional traz Manhã, Promessas e Noite, e vira sozinho com '
+            'o horário.',
+            style: tema.bodyMedium,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '"Ler tudo" abre a leitura do dia inteira.',
+            style: tema.bodyMedium,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'No Plano, marca o dia quando terminares a leitura.',
+            style: tema.bodyMedium,
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () => estado.dispensarAjuda(),
+              child: const Text('Entendi'),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -124,28 +188,18 @@ class _Cabecalho extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Na web, quem entrou com a conta Google ganha o próprio nome
-              // na saudação; sem conta, um convite compacto ao lado dela —
-              // login escondido na folha de ajustes não se acha numa versão
-              // pública. Fora da web é sempre "Felipe", sem conta nenhuma.
+              // na saudação. O convite para entrar mora na folha de ajustes,
+              // alcançável de todas as abas; um segundo convite aqui competia
+              // com a engrenagem pelo lado direito do cabeçalho. Fora da web
+              // é sempre "Felipe", sem conta nenhuma.
               kIsWeb
                   ? ListenableBuilder(
                       listenable: Nuvem.instancia,
                       builder: (context, _) {
                         final nome = Nuvem.instancia.primeiroNome;
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                nome == null ? saudacao : '$saudacao, $nome',
-                                style: tema.headlineMedium,
-                              ),
-                            ),
-                            if (nome == null) ...[
-                              const SizedBox(width: 8),
-                              const _BotaoDeEntrarCompacto(),
-                            ],
-                          ],
+                        return Text(
+                          nome == null ? saudacao : '$saudacao, $nome',
+                          style: tema.headlineMedium,
                         );
                       },
                     )
@@ -163,23 +217,52 @@ class _Cabecalho extends StatelessWidget {
   }
 }
 
-/// Convite de login compacto, ao lado da saudação. `entrarNaConta` é de
-/// `comuns.dart` — a mesma função por trás do botão da seção "Conta" na
-/// folha de ajustes, que continua lá para quem já entrou (e-mail, Sair).
-class _BotaoDeEntrarCompacto extends StatelessWidget {
-  const _BotaoDeEntrarCompacto();
+/// Texto de até 5 linhas que desvanece na última quando o corte é real.
+///
+/// A reticência sozinha parecia um fim de texto, e a prévia competia com o
+/// resto do cartão: o corte vira um convite ao "Ler tudo" quando se lê como
+/// corte. O `TextPainter` decide antes de pintar se o texto estoura; só então
+/// o `ShaderMask` suaviza a quinta linha para o fundo (o `dstIn` usa só o
+/// alfa do gradiente, preservando a cor do texto).
+class _ComFadeAoFim extends StatelessWidget {
+  const _ComFadeAoFim({required this.texto, required this.estilo});
+
+  final String texto;
+  final TextStyle? estilo;
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        minimumSize: Size.zero,
-        visualDensity: VisualDensity.compact,
-      ),
-      onPressed: () => entrarNaConta(context, Nuvem.instancia),
-      icon: Image.asset('assets/images/google.webp', width: 16, height: 16),
-      label: const Text('Entrar'),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final painter = TextPainter(
+          text: TextSpan(text: texto, style: estilo),
+          maxLines: 5,
+          textDirection: TextDirection.ltr,
+        )..layout(maxWidth: constraints.maxWidth);
+        if (!painter.didExceedMaxLines) {
+          return Text(
+            texto,
+            maxLines: 5,
+            overflow: TextOverflow.ellipsis,
+            style: estilo,
+          );
+        }
+        return ShaderMask(
+          shaderCallback: (limites) => const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.white, Colors.white, Colors.transparent],
+            stops: [0.82, 0.95, 1.0],
+          ).createShader(limites),
+          blendMode: BlendMode.dstIn,
+          child: Text(
+            texto,
+            maxLines: 5,
+            overflow: TextOverflow.ellipsis,
+            style: estilo,
+          ),
+        );
+      },
     );
   }
 }
@@ -273,16 +356,17 @@ class _PreviaDaLeitura extends StatelessWidget {
                 Text.rich(TextSpan(children: spans)),
                 const SizedBox(height: 8),
               ],
-              Text(
-                dev.texto,
-                maxLines: 5,
-                overflow: TextOverflow.ellipsis,
-                style: tema.bodyMedium?.copyWith(height: 1.6),
+              // O corte em 5 linhas precisa ler como corte, não como fim do
+              // texto: a prévia desvanece a última linha quando o texto
+              // realmente não cabe.
+              _ComFadeAoFim(
+                texto: dev.texto,
+                estilo: tema.bodyMedium?.copyWith(height: 1.6),
               ),
               const SizedBox(height: 10),
               Align(
                 alignment: Alignment.centerRight,
-                child: TextButton(
+                child: OutlinedButton.icon(
                   onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -292,7 +376,8 @@ class _PreviaDaLeitura extends StatelessWidget {
                       ),
                     ),
                   ),
-                  child: const Text('Ler tudo'),
+                  icon: const Icon(Icons.arrow_forward, size: 18),
+                  label: const Text('Ler tudo'),
                 ),
               ),
             ],
