@@ -30,7 +30,7 @@ jobs:
           flutter-version: 3.44.9
       - run: flutter pub get
       - run: flutter test
-      - run: flutter build web --release --base-href /devocional/ --dart-define=FIREBASE_API_KEY_WEB=${{ secrets.FIREBASE_API_KEY_WEB }} --dart-define=GEMINI_API_KEY_WEB=${{ secrets.GEMINI_API_KEY_WEB }}
+      - run: flutter build web --release --base-href /devocional/ --dart-define=FIREBASE_API_KEY_WEB=${{ secrets.FIREBASE_API_KEY_WEB }} --dart-define=GEMINI_API_KEY_WEB=${{ secrets.GEMINI_API_KEY_WEB }} --dart-define=TTS_API_KEY_WEB=${{ secrets.TTS_API_KEY_WEB }}
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
           path: build/web

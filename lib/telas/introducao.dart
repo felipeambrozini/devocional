@@ -4,18 +4,33 @@ import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
+import '../data/voz.dart';
 import 'comuns.dart';
 
 /// Introdução de um livro, na voz de Spurgeon.
-class TelaIntroducao extends StatelessWidget {
+class TelaIntroducao extends StatefulWidget {
   const TelaIntroducao({super.key, required this.slug});
 
   final String slug;
 
   @override
+  State<TelaIntroducao> createState() => _TelaIntroducaoState();
+}
+
+class _TelaIntroducaoState extends State<TelaIntroducao> {
+  @override
+  void dispose() {
+    // Sem o botão de parar à vista, não se deixa o áudio tocando ao fechar
+    // a tela: quem ouve a introdução a ouve por inteiro na tela dela.
+    Voz.instancia.parar();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
+    final slug = widget.slug;
     // Em tela estreita os balões de conversa moram embaixo, na base da tela;
     // o fim da lista precisa de folga para a última linha não ficar atrás
     // deles. Em tela larga os balões ficam fora da coluna de leitura.
@@ -91,6 +106,13 @@ class TelaIntroducao extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 const Filete(largura: 64),
+                const SizedBox(height: 14),
+                // A voz de Spurgeon lê a introdução inteira, do título à
+                // frase; tocar de novo para a leitura.
+                BotaoDeVoz(
+                  chave: 'introducao:$slug',
+                  texto: textoDeIntroducao(introducao),
+                ),
                 const SizedBox(height: 24),
                 for (final (titulo, corpo) in introducao.secoes) ...[
                   Text(titulo, style: tema.headlineSmall),

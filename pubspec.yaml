@@ -54,6 +54,7 @@ dependencies:
   # cliente HTTP do app; funciona igual em Android e web.
   http: ^1.6.0
   google_api_headers: ^5.3.7
+  just_audio: ^0.10.6
 
 dev_dependencies:
   flutter_test:

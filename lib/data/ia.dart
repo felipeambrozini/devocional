@@ -1,60 +1,19 @@
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:google_api_headers/google_api_headers.dart';
 import 'package:http/http.dart' as http;
 
+import 'google.dart';
 import 'modelos.dart';
 import 'personas.dart';
 
 /// Cliente da Gemini API gratuita (sem cartão de crédito).
 ///
-/// São duas chaves, uma por plataforma, porque cada uma prova a identidade
-/// de um jeito:
+/// A chave mora em `lib/data/google.dart`, junto do cabeçalho de identidade do
+/// apk e da chave da voz: o console do Cloud não deixa combinar a Generative
+/// Language API com a Cloud Text-to-Speech na mesma chave, então o chat usa a
+/// GEMINI_API_KEY e a voz usa a TTS_API_KEY.
 ///
-/// * _chaveWeb: criada no Google Cloud Console, restrita ao site do app
-///   (`https://felipeambrozini.github.io` e `localhost`) e à Generative
-///   Language API. O navegador manda o cabeçalho Origin, que é a prova que
-///   essa restrição confere.
-/// * _chaveAndroid: criada no Google Cloud Console, restrita ao app Android
-///   (`com.felipeambrozini.devocional` + SHA-1 da assinatura) e à Generative
-///   Language API. O celular prova a identidade com os cabeçalhos
-///   X-Android-Package/X-Android-Cert, calculados em tempo de execução pelo
-///   plugin google_api_headers — então debug e release funcionam sem trocar
-///   nada, desde que os dois SHA-1 estejam registrados na chave.
-///
-/// Não é segredo de servidor: a Google desenha este caminho para apps
-/// client-side, com CORS aberto (conferido em OPTIONS) e limite por projeto.
-/// As chaves chegam por `--dart-define` no build (GitHub Secrets no CI).
-const _chaveWeb = String.fromEnvironment('GEMINI_API_KEY_WEB');
-
-const _chaveAndroid = String.fromEnvironment('GEMINI_API_KEY_ANDROID');
-
-String get _chaveGemini {
-  if (kIsWeb) return _chaveWeb;
-  return _chaveAndroid;
-}
-
-/// Os cabeçalhos do pedido à Gemini.
-///
-/// Fora da web, a chave restrita ao app exige a identidade do apk em todo
-/// pedido. O plugin google_api_headers lê o nome do pacote e o SHA-1 da
-/// assinatura em tempo de execução — assim o mesmo código serve para o build
-/// de debug e o de release. Se o plugin faltar num aparelho, o pedido segue
-/// sem a prova, que a própria API recusa se precisar.
-Future<Map<String, String>> _cabecalhosDoPedido() async {
-  final cabecalhos = <String, String>{'Content-Type': 'application/json'};
-  if (!kIsWeb) {
-    try {
-      cabecalhos.addAll(await GoogleApiHeaders().getHeaders());
-    } catch (_) {
-      // Plataforma sem o plugin nativo: segue sem a prova de identidade.
-    }
-  }
-  return cabecalhos;
-}
-
 /// Alias estável da Google para o Flash atual: aponta para o modelo estável
 /// vigente, então o app não quebra quando a Google aposenta um modelo. Os
 /// Flash são a linha gratuita; os Pro saíram do tier grátis em 2026.
@@ -122,9 +81,9 @@ Future<String> perguntar({
         .post(
           Uri.parse(
             'https://generativelanguage.googleapis.com/v1beta/models/'
-            '$_modelo:generateContent?key=$_chaveGemini',
+            '$_modelo:generateContent?key=$chaveGemini',
           ),
-          headers: await _cabecalhosDoPedido(),
+          headers: await cabecalhosGoogle(),
           body: json.encode({
             'systemInstruction': {
               'parts': [

@@ -16,6 +16,7 @@ import 'data/lembretes.dart';
 import 'data/modelos.dart';
 import 'data/nuvem.dart';
 import 'data/personas.dart';
+import 'data/voz.dart';
 import 'telas/biblia.dart';
 import 'telas/chat.dart';
 import 'telas/comuns.dart';
@@ -204,7 +205,7 @@ final _router = GoRouter(
   navigatorKey: navigatorKey,
   initialLocation: '/hoje',
   redirect: (context, state) => state.uri.path == '/' ? '/hoje' : null,
-  observers: [_observadorDeCamadas],
+  observers: [_observadorDeCamadas, _observadorDaVoz],
   errorBuilder: (context, state) {
     // Rota desconhecida (link velho, digitado ou com caminho corrompido):
     // voltar para a primeira aba em vez da tela de erro padrão do go_router.
@@ -378,6 +379,10 @@ class Moldura extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   void _irParaAba(int i) {
+    // A leitura para ao sair da Bíblia: o shell mantém as abas vivas em
+    // Offstage, e o botão de parar sai da tela junto com o leitor. A mesma
+    // regra do _ObservadorDaVoz para as rotas empurradas por cima.
+    if (i != navigationShell.currentIndex) Voz.instancia.parar();
     navigationShell.goBranch(
       i,
       initialLocation: i == navigationShell.currentIndex,
@@ -475,6 +480,22 @@ class _ObservadorDeCamadas extends NavigatorObserver {
 }
 
 final _observadorDeCamadas = _ObservadorDeCamadas();
+
+/// Para a voz de Spurgeon quando uma rota opaca cobre a leitura: busca, a
+/// introdução, o chat, uma leitura aberta por link. O botão de parar fica
+/// soterrado debaixo da tela nova, e a regra é não deixar um áudio tocando
+/// sem o seu botão à vista.
+///
+/// Folha e diálogo (rotas transparentes) não passam por aqui: a tela de
+/// leitura continua visível e o botão, alcançável.
+class _ObservadorDaVoz extends NavigatorObserver {
+  @override
+  void didPush(Route route, Route? previousRoute) {
+    if (route is ModalRoute && route.opaque) Voz.instancia.parar();
+  }
+}
+
+final _observadorDaVoz = _ObservadorDaVoz();
 
 /// Pendura os dois balões de conversa por cima de todas as telas: Spurgeon à
 /// esquerda, Felipe à direita.

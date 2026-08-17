@@ -338,9 +338,15 @@ motivo novo.
   (`nuvemSuportada` em `lib/data/nuvem.dart`), e as chaves precisam ser
   trocadas por `String.fromEnvironment` de novo.
 - **Chaves de API via `--dart-define`** (16/08/2026): `FIREBASE_API_KEY_WEB`
-  em `lib/firebase_options.dart`; `GEMINI_API_KEY_WEB`
-  e `GEMINI_API_KEY_ANDROID` em `lib/data/ia.dart`. Sem os defines, o app abre
-  normal e só degrada nas telas que dependem delas (conta na nuvem e IA).
+  em `lib/firebase_options.dart`; `GEMINI_API_KEY_WEB` e
+  `GEMINI_API_KEY_ANDROID` para o chat e `TTS_API_KEY_WEB` e
+  `TTS_API_KEY_ANDROID` para a voz, todas em `lib/data/google.dart`. São dois
+  pares porque o console do Cloud não deixa combinar a Generative Language
+  API com a Cloud Text-to-Speech na mesma chave; a da voz tem as mesmas
+  restrições de origem (site/Android), mas só a API Text-to-Speech marcada,
+  com tier gratuito de 1 milhão de caracteres por mês. Sem os defines, o app
+  abre normal e só degrada nas telas que dependem delas (conta na nuvem, IA
+  e voz).
 - **Nome do pacote** trocado para `com.felipeambrozini.devocional` (09/08/2026),
   refletido no `android/app/build.gradle.kts`.
 
@@ -371,7 +377,7 @@ flutter run
 ```
 
 Para o app ter acesso à nuvem (conta Google) e à IA, crie um `.env.json` a
-partir do `.env.example` com as quatro chaves — o VS Code pega no F5 via
+partir do `.env.json` com as chaves — o VS Code pega no F5 via
 `dart-define-by-file` (`.vscode/launch.json`). Sem ele, o app abre normal e
 degrada só nesses recursos. O SDK é gerido pelo FVM (ver `.fvmrc`), na versão
 fixa 3.44.9.
@@ -387,10 +393,12 @@ flutter analyze
 
 ```bash
 # Android
-flutter build apk --dart-define=GEMINI_API_KEY_ANDROID=<chave>
+flutter build apk --dart-define=GEMINI_API_KEY_ANDROID=<chave> \
+  --dart-define=TTS_API_KEY_ANDROID=<chave>
 # Web
 flutter build web --dart-define=FIREBASE_API_KEY_WEB=<chave> \
-  --dart-define=GEMINI_API_KEY_WEB=<chave>
+  --dart-define=GEMINI_API_KEY_WEB=<chave> \
+  --dart-define=TTS_API_KEY_WEB=<chave>
 ```
 
 Ícone do app, favicon e tela de abertura são gerados a partir das fontes em
@@ -417,7 +425,7 @@ Flutter fixo em 3.44.9, para o GitHub Pages. O site mora em
 `felipeambrozini.github.io/devocional/` (um nível abaixo do domínio, por isso
 `pathSegmentsToKeep = 1` no resolvedor de caminho). O build usa
 `--base-href /devocional/` e as chaves de API vêm dos Secrets do repositório:
-`FIREBASE_API_KEY_WEB` e `GEMINI_API_KEY_WEB` (precisam estar cadastrados em
-Settings → Secrets and variables). As actions estão fixadas em commit SHA
+`FIREBASE_API_KEY_WEB`, `GEMINI_API_KEY_WEB` e `TTS_API_KEY_WEB` (precisam
+estar cadastrados em Settings → Secrets and variables). As actions estão fixadas em commit SHA
 completo, não em tag mutável.
 

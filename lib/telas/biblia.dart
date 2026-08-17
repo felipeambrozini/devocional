@@ -7,6 +7,7 @@ import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
+import '../data/voz.dart';
 import 'busca.dart';
 import 'comuns.dart';
 import 'introducao.dart';
@@ -72,6 +73,9 @@ class _TelaBibliaState extends State<TelaBiblia> {
   Livro get _livroAtual => livroPorSlug(_livro) ?? canon.first;
 
   void _irPara(String livro, int capitulo) {
+    // Um áudio tocando do capítulo antigo não pode continuar: o botão de
+    // parar dele saiu da tela, e a leitura nova começa do zero.
+    Voz.instancia.parar();
     setState(() {
       _livro = livro;
       _capitulo = capitulo;
@@ -468,6 +472,13 @@ class _Leitor extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               const Filete(),
+              // A voz de Spurgeon lê o capítulo inteiro, do título ao último
+              // versículo; tocar de novo para a leitura.
+              const SizedBox(height: 14),
+              BotaoDeVoz(
+                chave: 'capitulo:${capitulo.livro}.${capitulo.numero}',
+                texto: textoDeCapitulo(capitulo),
+              ),
               if (capitulo.titulo.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Text(

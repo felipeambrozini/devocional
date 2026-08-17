@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuthException;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +10,7 @@ import '../data/estado.dart';
 import '../data/lembretes.dart';
 import '../data/modelos.dart';
 import '../data/nuvem.dart';
+import '../data/voz.dart';
 
 /// A folga que as telas de leitura deixam no fim da lista para os balões de
 /// conversa (88 de folga mais 52 de balão, em `main.dart`) não cobrirem a
@@ -30,6 +33,8 @@ const linhasDeAjuda = [
   '"Ler tudo" abre a leitura do dia inteira.',
   'Os retratos de Spurgeon e de Felipe nas bordas da tela abrem as '
       'conversas: pergunte sobre a Palavra, peça uma aplicação, desabafe.',
+  'O retrato de Spurgeon no começo do capítulo e da introdução lê o texto '
+      'na voz dele: toque para ouvir, e toque de novo para encerrar.',
   'No Plano, marca o dia quando terminares a leitura.',
 ];
 
@@ -818,6 +823,206 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
               ],
             ),
           ),
+        );
+      },
+    );
+  }
+}
+
+/// Botão de ouvir na voz de Spurgeon: o retrato dele no chat, num comprimido
+/// que toca [texto] e, enquanto toca, mostra a leitura acontecendo.
+///
+/// [chave] identifica o que se ouve ("introducao:joao", "capitulo:joao.3"): a
+/// voz é de app inteiro, então o botão da introdução e o do capítulo mostram
+/// o mesmo estado para o mesmo áudio, e ouvir um para o outro.
+///
+/// O botão escuta o fim da própria leitura para fechar o ciclo com a
+/// confirmação "Leitura concluída.": parar no meio não é um fim, e não avisa.
+class BotaoDeVoz extends StatefulWidget {
+  const BotaoDeVoz({super.key, required this.chave, required this.texto});
+
+  final String chave;
+  final String texto;
+
+  @override
+  State<BotaoDeVoz> createState() => _BotaoDeVozState();
+}
+
+class _BotaoDeVozState extends State<BotaoDeVoz> {
+  StreamSubscription<String>? _conclusoes;
+
+  @override
+  void initState() {
+    super.initState();
+    _conclusoes = Voz.instancia.conclusoes.listen((chave) {
+      if (chave != widget.chave || !mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(content: Text('Leitura concluída.')));
+    });
+  }
+
+  @override
+  void dispose() {
+    _conclusoes?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
+    final tema = Theme.of(context).textTheme;
+    return ListenableBuilder(
+      listenable: Voz.instancia,
+      builder: (context, _) {
+        final voz = Voz.instancia;
+        final preparando = voz.carregando && voz.tocandoChave == widget.chave;
+        final ativo = voz.tocando && voz.tocandoChave == widget.chave;
+        // A leitura fala como o pregador, não como painel de controle: quem
+        // está lendo é uma pessoa, e o aviso completo vai no Semantics (o
+        // rótulo visível é curto para caber na pílula em escala 2x).
+        final rotulo = ativo
+            ? 'O pregador está lendo. Toque para encerrar a leitura.'
+            : preparando
+            ? 'Preparando a voz de Spurgeon. Toque para cancelar.'
+            : 'Ouvir na voz de Spurgeon';
+        final visivel = ativo
+            ? 'O pregador está lendo…'
+            : preparando
+            ? 'Preparando a voz…'
+            : 'Ouvir';
+        return Tooltip(
+          message: ativo ? 'Encerrar a leitura' : 'Ouvir na voz de Spurgeon',
+          child: Semantics(
+            button: true,
+            label: rotulo,
+            child: Material(
+              color: ativo ? cor.primaryContainer : cor.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(30),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  InkWell(
+                    borderRadius: BorderRadius.circular(30),
+                    // Durante o preparo o botão continua vivo: o toque cancela
+                    // em vez de prender quem tocou o capítulo errado num
+                    // relógio de até 90 segundos.
+                    onTap: preparando
+                        ? voz.parar
+                        : () => _alternar(context, voz),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(6, 6, 16, 6),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // O mesmo retrato do chat: aro dourado, e o cabelo,
+                          // que encosta na borda de cima da foto, preservado
+                          // pelo corte alinhado ao topo (ver BalaoDeChat).
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: cor.primary, width: 1.5),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(3),
+                              child: ClipOval(
+                                child: Image.asset(
+                                  'assets/images/spurgeon.webp',
+                                  width: 38,
+                                  height: 38,
+                                  fit: BoxFit.cover,
+                                  // Decorativa: o rótulo ao lado já diz o que
+                                  // o botão faz.
+                                  excludeFromSemantics: true,
+                                  alignment: Alignment.topCenter,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Icon(
+                            ativo
+                                ? Icons.stop_rounded
+                                : preparando
+                                ? Icons.hourglass_top_rounded
+                                : Icons.play_arrow_rounded,
+                            size: 20,
+                            color: ativo ? cor.onPrimaryContainer : cor.primary,
+                          ),
+                          const SizedBox(width: 6),
+                          // Flexible com reticências: em escala de texto 2x um
+                          // rótulo comprido ("O pregador está lendo…") não
+                          // pode estourar a largura da tela.
+                          Flexible(
+                            child: Text(
+                              visivel,
+                              overflow: TextOverflow.ellipsis,
+                              style: tema.labelLarge?.copyWith(
+                                color: ativo
+                                    ? cor.onPrimaryContainer
+                                    : cor.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // A linha fina de progresso, na borda de baixo da pílula:
+                  // quem ouve um capítulo de vinte minutos sabe quanto falta.
+                  if (ativo) ExcludeSemantics(child: _ProgressoDeLeitura(voz: voz)),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _alternar(BuildContext context, Voz voz) async {
+    try {
+      await voz.alternar(widget.chave, widget.texto);
+    } on VozException catch (erro) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(erro.mensagem)));
+      }
+    }
+  }
+}
+
+/// A linha fina de progresso da leitura: a posição do player sobre a duração
+/// total. Só é montada enquanto toca; sem player (testes) as streams ficam
+/// vazias e nada é desenhado.
+class _ProgressoDeLeitura extends StatelessWidget {
+  const _ProgressoDeLeitura({required this.voz});
+
+  final Voz voz;
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
+    return StreamBuilder<Duration>(
+      stream: voz.posicao,
+      builder: (context, posicao) {
+        final agora = posicao.data ?? Duration.zero;
+        return StreamBuilder<Duration?>(
+          stream: voz.duracao,
+          builder: (context, duracao) {
+            final total = duracao.data;
+            final fracao = total == null || total.inMilliseconds == 0
+                ? 0.0
+                : (agora.inMilliseconds / total.inMilliseconds).clamp(0.0, 1.0);
+            return LinearProgressIndicator(
+              value: fracao,
+              minHeight: 3,
+              color: cor.primary,
+              backgroundColor: cor.surfaceContainerHighest,
+            );
+          },
         );
       },
     );

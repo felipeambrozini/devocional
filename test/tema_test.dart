@@ -152,6 +152,20 @@ void main() {
           );
         },
       );
+
+      test(
+        '$nome: o botão de voz ativo tem letra legível sobre o próprio fundo',
+        () {
+          // O "Parar" do botão de ouvir usa primaryContainer com o metal
+          // cheio, a mesma receita do chip escolhido. Se alguém trocar o
+          // container por um tom sem contraste, o teste avisa.
+          final cor = construirTema(brilho: brilho).colorScheme;
+          expect(
+            contraste(cor.onPrimaryContainer, cor.primaryContainer),
+            greaterThan(4.5),
+          );
+        },
+      );
     }
 
     test('o destaque é o tom mais distante do fundo nas duas paletas', () {
