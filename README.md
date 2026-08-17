@@ -320,10 +320,20 @@ motivo novo.
   dentro do gesto do usuário.
 - **`lib/firebase_options.dart` é gerado** por `flutterfire configure` e
   **precisa ficar versionado** (o CI faz o build web e não tem como regerá-lo).
-  A chave de API é pública por desenho; quem protege os dados são as regras do
-  Firestore (`firestore.rules`, registrado no `firebase.json` e publicadas à
-  mão com `firebase deploy --only firestore:rules` ou coladas no console; não
-  há CI para elas) e a lista de domínios autorizados.
+  As chaves de API saíram do código-fonte e chegam por `--dart-define` no build
+  (variáveis de ambiente; no CI vêm dos Secrets do GitHub — ver abaixo). Elas
+  são públicas por desenho: quem protege os dados são as regras do Firestore
+  (`firestore.rules`, registrado no `firebase.json` e publicadas à mão com
+  `firebase deploy --only firestore:rules` ou coladas no console; não há CI
+  para elas) e a lista de domínios autorizados. **Cuidado ao regenerar com
+  `flutterfire configure`**: o arquivo volta com as chaves fixas e com os apps
+  iOS/Android, que o projeto não usa — o Firebase só roda na web
+  (`nuvemSuportada` em `lib/data/nuvem.dart`), e as chaves precisam ser
+  trocadas por `String.fromEnvironment` de novo.
+- **Chaves de API via `--dart-define`** (16/08/2026): `FIREBASE_API_KEY_WEB`
+  em `lib/firebase_options.dart`; `GEMINI_API_KEY_WEB`
+  e `GEMINI_API_KEY_ANDROID` em `lib/data/ia.dart`. Sem os defines, o app abre
+  normal e só degrada nas telas que dependem delas (conta na nuvem e IA).
 - **Nome do pacote** trocado para `com.felipeambrozini.devocional` (09/08/2026),
   refletido no `android/app/build.gradle.kts`.
 
@@ -353,7 +363,11 @@ flutter pub get
 flutter run
 ```
 
-O SDK é gerido pelo FVM (ver `.fvmrc`), na versão fixa 3.44.8.
+Para o app ter acesso à nuvem (conta Google) e à IA, crie um `.env.json` a
+partir do `.env.example` com as quatro chaves — o VS Code pega no F5 via
+`dart-define-by-file` (`.vscode/launch.json`). Sem ele, o app abre normal e
+degrada só nesses recursos. O SDK é gerido pelo FVM (ver `.fvmrc`), na versão
+fixa 3.44.8.
 
 ## Testes e análise
 
@@ -365,8 +379,12 @@ flutter analyze
 ## Gerando o app
 
 ```bash
-flutter build apk       # Android
-flutter build web       # Web
+# Android
+flutter build apk --dart-define=GEMINI_API_KEY_ANDROID=<chave>
+# Web
+flutter build web --dart-define=FIREBASE_API_KEY_WEB=<chave> \
+  --dart-define=GEMINI_API_KEY_WEB=<chave> \
+  --dart-define=GEMINI_API_KEY_ANDROID=<chave>
 ```
 
 Ícone do app, favicon e tela de abertura são gerados a partir das fontes em
@@ -392,5 +410,9 @@ O deploy é pelo GitHub Actions (`.github/workflows/deploy-web.yml`), com o
 Flutter fixo em 3.44.8, para o GitHub Pages. O site mora em
 `felipeambrozini.github.io/devocional/` (um nível abaixo do domínio, por isso
 `pathSegmentsToKeep = 1` no resolvedor de caminho). O build usa
-`--base-href /devocional/`.
+`--base-href /devocional/` e as chaves de API vêm dos Secrets do repositório:
+`FIREBASE_API_KEY_WEB`, `GEMINI_API_KEY_WEB` e
+`GEMINI_API_KEY_ANDROID` (precisam estar cadastrados em
+Settings → Secrets and variables). As actions estão fixadas em commit SHA
+completo, não em tag mutável.
 

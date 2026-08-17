@@ -26,11 +26,10 @@ import 'personas.dart';
 ///
 /// Não é segredo de servidor: a Google desenha este caminho para apps
 /// client-side, com CORS aberto (conferido em OPTIONS) e limite por projeto.
-const _chaveWeb =
-    'AIzaSyCA0Od5msmQjlEkyXtMVzJnLy0RTpmlT8g';
+/// As chaves chegam por `--dart-define` no build (GitHub Secrets no CI).
+const _chaveWeb = String.fromEnvironment('GEMINI_API_KEY_WEB');
 
-const _chaveAndroid =
-    'AIzaSyBAD7HPChEKw59751oB2Qlx6b31-_S4knk';
+const _chaveAndroid = String.fromEnvironment('GEMINI_API_KEY_ANDROID');
 
 String get _chaveGemini {
   if (kIsWeb) return _chaveWeb;

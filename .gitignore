@@ -18,10 +18,10 @@ migrate_working_dir/
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# O launch.json aponta para o .env.json local (--dart-define-from-file), que
+# tem as chaves de API, e o settings.json tem o caminho do FVM da máquina:
+# config local, não faz parte do app.
+.vscode/
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -33,8 +33,9 @@ migrate_working_dir/
 /build/
 /coverage/
 
-# Symbolication related
-app.*.symbols
+# Local-only build defines (chaves de API do Firebase/Gemini). Nunca versionado.
+.env
+.env.json
 
 # Obfuscation related
 app.*.map.json
