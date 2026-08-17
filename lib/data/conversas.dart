@@ -1,18 +1,25 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart' show VoidCallback;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'modelos.dart';
+import 'personas.dart';
 
-/// Histórico das conversas do chat, indexado pelo id da persona (ver
-/// `lib/data/personas.dart`), com as lápides de exclusão e a fusão com a
-/// cópia da nuvem. Vai sempre ao SharedPreferences, e quem entra na conta na
-/// web também o sincroniza na nuvem (ver `nuvem.dart`).
+/// Histórico das conversas do chat: cada persona guarda quantas conversas
+/// quiser (ver `lib/data/modelos.dart`), com as lápides de exclusão e a fusão
+/// com a cópia da nuvem. Vai sempre ao SharedPreferences, e quem entra na
+/// conta na web também o sincroniza na nuvem (ver `nuvem.dart`).
 ///
-/// Saiu de `estado.dart` num refactor: era o bloco mais denso do Estado e o
-/// único com regra de negócio própria (a lápide vence a conversa, e a
-/// conversa mais nova vence a lápide). O Estado continua dono da persistência
+/// Antes havia uma conversa só por persona, e a chave era o id dela. O formato
+/// antigo (persona → lista de mensagens) é migrado na leitura para uma única
+/// conversa com id fixo (`conversa-<persona>`), e as lápides antigas (por
+/// persona) migram junto; assim o histórico de quem já conversava não se perde
+/// nem "ressuscita" uma exclusão feita antes da atualização.
+///
+/// As regras de negócio continuam as de sempre: a lápide vence a conversa, e
+/// a conversa mais nova vence a lápide. O Estado continua dono da persistência
 /// e da notificação: esta classe chama [aoMudar] em toda mutação, e o Estado
 /// repassa aos próprios ouvintes — a sincronia com a nuvem é um deles, e é o
 /// que faz a mudança subir sozinha.
@@ -34,18 +41,32 @@ class Conversas {
   /// qualidade; também segura o tamanho do documento no Firestore.
   static const _maxMensagensPorConversa = 120;
 
+  /// O id que a migração do formato antigo dá à conversa única de cada persona.
+  static String _idDeConversaMigrada(String persona) => 'conversa-$persona';
+
+  /// As personas conhecidas, para distinguir uma chave antiga de lápide (era o
+  /// id da persona) de uma chave nova (o id da conversa). Quem é persona vira
+  /// a conversa migrada na leitura.
+  static final _idsDePersonas = {personaSpurgeon.id, personaFelipe.id};
+
   final SharedPreferences _prefs;
   final VoidCallback _aoMudar;
 
-  Map<String, List<Mensagem>> _conversas = {};
+  /// Persona → conversas. A lista não tem ordem garantida; quem mostra ordena
+  /// com [conversasDe].
+  Map<String, List<Conversa>> _conversas = {};
 
-  /// Lápides das conversas apagadas: persona → momento da exclusão. É o que
-  /// impede a fusão com a nuvem de "ressuscitar" uma conversa que o usuário
-  /// apagou: enquanto a lápide for mais nova que o histórico do outro lado,
-  /// o remoto é descartado. Uma conversa que continuou em outro aparelho
-  /// depois da exclusão volta, porque aí a lápide é mais velha que a
-  /// conversa, e o que o usuário apagou era só a cópia antiga.
+  /// Lápides das conversas apagadas: id da conversa → momento da exclusão. É o
+  /// que impede a fusão com a nuvem de "ressuscitar" uma conversa que o usuário
+  /// apagou: enquanto a lápide for mais nova que o histórico do outro lado, o
+  /// remoto é descartado. Uma conversa que continuou em outro aparelho depois
+  /// da exclusão volta, porque aí a lápide é mais velha que a conversa.
   Map<String, int> _apagadas = {};
+
+  /// A chave de uma lápide, migrando o formato antigo: lápide por persona vira
+  /// lápide da conversa migrada daquela persona.
+  String _chaveDeLapide(String chave) =>
+      _idsDePersonas.contains(chave) ? _idDeConversaMigrada(chave) : chave;
 
   void _ler() {
     final cruas = _prefs.getString(_chave);
@@ -59,16 +80,38 @@ class Conversas {
           final apagadas = entrada.value;
           if (apagadas is Map<String, dynamic>) {
             for (final e in apagadas.entries) {
-              if (e.value is int) _apagadas[e.key] = e.value as int;
+              if (e.value is! int) continue;
+              _apagadas[_chaveDeLapide(e.key)] = e.value as int;
             }
           }
           continue;
         }
-        if (entrada.value is! List) continue;
-        _conversas[entrada.key] = [
-          for (final item in entrada.value as List)
-            if (item is Map<String, dynamic>) Mensagem.doJson(item),
-        ];
+        if (entrada.value is List) {
+          // Formato antigo: uma conversa só por persona, o histórico era a
+          // própria lista de mensagens. Vira uma conversa com id fixo.
+          final mensagens = [
+            for (final item in entrada.value as List)
+              if (item is Map<String, dynamic>) Mensagem.doJson(item),
+          ];
+          if (mensagens.isEmpty) continue;
+          (_conversas[entrada.key] ??= []).add(
+            Conversa(
+              id: _idDeConversaMigrada(entrada.key),
+              titulo: _primeiraPergunta(mensagens),
+              momento: mensagens.last.momento,
+              mensagens: mensagens,
+            ),
+          );
+          continue;
+        }
+        if (entrada.value is! Map<String, dynamic>) continue;
+        final lista = _conversas[entrada.key] ??= [];
+        for (final e in (entrada.value as Map<String, dynamic>).entries) {
+          if (e.value is! Map<String, dynamic>) continue;
+          final conversa = Conversa.doJson(e.value);
+          if (conversa.id.isEmpty) continue;
+          lista.add(conversa);
+        }
       }
     } catch (_) {
       _conversas = {};
@@ -76,53 +119,145 @@ class Conversas {
     }
   }
 
-  /// O histórico da persona, na ordem em que foi conversado.
-  List<Mensagem> mensagensDe(String persona) =>
-      List.unmodifiable(_conversas[persona] ?? const []);
-
-  Future<void> registrarMensagem(String persona, Mensagem mensagem) async {
-    final lista = _conversas[persona] ??= [];
-    lista.add(mensagem);
-    if (lista.length > _maxMensagensPorConversa) {
-      lista.removeRange(0, lista.length - _maxMensagensPorConversa);
+  /// A primeira fala do visitante, para virar o título da conversa.
+  static String _primeiraPergunta(List<Mensagem> mensagens) {
+    for (final m in mensagens) {
+      if (m.doUsuario) return m.texto;
     }
+    return '';
+  }
+
+  /// As conversas da persona, da mais recente para a mais antiga.
+  List<Conversa> conversasDe(String persona) {
+    final lista = [...(_conversas[persona] ?? const <Conversa>[])];
+    lista.sort((a, b) => b.momento.compareTo(a.momento));
+    return List.unmodifiable(lista);
+  }
+
+  Conversa? conversaDe(String persona, String conversaId) {
+    for (final c in _conversas[persona] ?? const <Conversa>[]) {
+      if (c.id == conversaId) return c;
+    }
+    return null;
+  }
+
+  /// O histórico da conversa, na ordem em que foi conversado.
+  List<Mensagem> mensagensDe(String persona, String conversaId) {
+    final conversa = conversaDe(persona, conversaId);
+    if (conversa == null) return const [];
+    return List.unmodifiable(conversa.mensagens);
+  }
+
+  /// Uma conversa nova e vazia, já com o título da primeira pergunta. O chat
+  /// chama isto na primeira mensagem e passa a registrar nela; a conversa só
+  /// existe no histórico depois de alguém falar.
+  Future<Conversa> novaConversa(String persona, {required String titulo}) async {
+    final conversa = Conversa(
+      id: _novoIdDeConversa(),
+      titulo: titulo,
+      momento: DateTime.now().millisecondsSinceEpoch,
+      mensagens: [],
+    );
+    (_conversas[persona] ??= []).add(conversa);
+    _aoMudar();
+    await _gravar();
+    return conversa;
+  }
+
+  Future<void> registrarMensagem(
+    String persona,
+    String conversaId,
+    Mensagem mensagem,
+  ) async {
+    // Uma resposta que ainda voava quando a conversa foi apagada não pode
+    // ressuscitá-la: a lápide manda.
+    if (_apagadas.containsKey(conversaId)) return;
+    var conversa = conversaDe(persona, conversaId);
+    if (conversa == null) {
+      // Quem registra direto (testes, uma mensagem que chegou sem a conversa
+      // em memória) ganha a conversa na hora, com o título da primeira fala.
+      conversa = Conversa(
+        id: conversaId,
+        titulo: mensagem.doUsuario ? mensagem.texto : '',
+        momento: mensagem.momento,
+        mensagens: [],
+      );
+      (_conversas[persona] ??= []).add(conversa);
+    } else {
+      _conversas[persona]!.remove(conversa);
+    }
+    _conversas[persona]!.add(
+      conversa.comMensagem(mensagem, teto: _maxMensagensPorConversa),
+    );
     _aoMudar();
     await _gravar();
   }
 
-  /// Limpa a resposta interrompida das perguntas da persona.
+  /// Limpa a resposta interrompida das perguntas da conversa.
   ///
   /// Uma pergunta é registrada com [Mensagem.pendente] e só deixa de ser
   /// quando a resposta chega, ou quando o usuário envia outra pergunta e
   /// segue a vida. Vem da tela do chat; este bloco não sabe o que é uma
   /// resposta, só sabe marcar e desmarcar.
-  Future<void> marcarRespondidas(String persona) async {
-    final lista = _conversas[persona];
-    if (lista == null) return;
+  Future<void> marcarRespondidas(String persona, String conversaId) async {
+    final conversa = conversaDe(persona, conversaId);
+    if (conversa == null) return;
     var mudou = false;
-    for (var i = 0; i < lista.length; i++) {
-      final mensagem = lista[i];
-      if (!mensagem.pendente) continue;
-      // Mensagem é imutável; troca-se a instância no lugar da antiga.
-      lista[i] = Mensagem(
-        id: mensagem.id,
-        papel: mensagem.papel,
-        texto: mensagem.texto,
-        momento: mensagem.momento,
-      );
+    final novas = <Mensagem>[];
+    for (final mensagem in conversa.mensagens) {
+      if (!mensagem.pendente) {
+        novas.add(mensagem);
+        continue;
+      }
       mudou = true;
+      novas.add(
+        Mensagem(
+          id: mensagem.id,
+          papel: mensagem.papel,
+          texto: mensagem.texto,
+          momento: mensagem.momento,
+        ),
+      );
     }
     if (!mudou) return;
+    _conversas[persona]!.remove(conversa);
+    _conversas[persona]!.add(
+      Conversa(
+        id: conversa.id,
+        titulo: conversa.titulo,
+        momento: conversa.momento,
+        mensagens: novas,
+      ),
+    );
     _aoMudar();
     await _gravar();
   }
 
-  Future<void> limparConversa(String persona) async {
-    // A lápide é registrada sempre, mesmo sem histórico local: apagar no
-    // celular tem de alcançar a cópia da nuvem, que pode ter mensagens que
-    // este aparelho nunca viu. Sem ela, o remoto ressuscitaria a conversa.
-    _apagadas[persona] = DateTime.now().millisecondsSinceEpoch;
-    _conversas.remove(persona);
+  /// Apaga só a conversa pedida. A lápide é registrada sempre, mesmo sem
+  /// histórico local: apagar num aparelho tem de alcançar a cópia da nuvem,
+  /// que pode ter mensagens que este aparelho nunca viu. Sem ela, o remoto
+  /// ressuscitaria a conversa.
+  Future<void> limparConversa(String persona, String conversaId) async {
+    final lista = _conversas[persona];
+    if (lista != null) {
+      lista.removeWhere((c) => c.id == conversaId);
+      // Persona sem conversa nenhuma não aparece mais na serialização: a
+      // cópia fica só com as lápides, como antes do multi-conversas.
+      if (lista.isEmpty) _conversas.remove(persona);
+    }
+    _apagadas[conversaId] = DateTime.now().millisecondsSinceEpoch;
+    _aoMudar();
+    await _gravar();
+  }
+
+  /// Apaga todas as conversas da persona, cada uma com a própria lápide.
+  Future<void> limparTodasDe(String persona) async {
+    final lista = _conversas.remove(persona);
+    if (lista == null || lista.isEmpty) return;
+    final agora = DateTime.now().millisecondsSinceEpoch;
+    for (final c in lista) {
+      _apagadas[c.id] = agora;
+    }
     _aoMudar();
     await _gravar();
   }
@@ -140,13 +275,18 @@ class Conversas {
   /// a lápide viaja com o histórico nos dois caminhos.
   String serializarConversas() => json.encode({
     for (final e in _conversas.entries)
-      e.key: [for (final m in e.value) m.paraJson()],
+      e.key: {for (final c in e.value) c.id: c.paraJson()},
     if (_apagadas.isNotEmpty) 'apagadas': Map<String, dynamic>.from(_apagadas),
   });
 
-  /// Funde o histórico remoto com o local, por id de mensagem: uma mensagem
-  /// que já existe aqui não é duplicada, e nada que existia só num dos lados
-  /// se perde. Lixo remoto é engolido, como em `importar()`.
+  /// Funde o histórico remoto com o local, por id de conversa e de mensagem:
+  /// uma conversa que já existe aqui não é duplicada, e nada que existia só
+  /// num dos lados se perde. Lixo remoto é engolido, como em `importar()`.
+  ///
+  /// O remoto pode chegar no formato antigo (persona → lista de mensagens):
+  /// é migrado para a conversa única `conversa-<persona>`, exatamente como a
+  /// leitura local, para uma conversa iniciada antes da atualização continuar
+  /// sendo a mesma nos dois aparelhos.
   ///
   /// As lápides de exclusão (`apagadas`) entram na regra: a exclusão mais
   /// nova vence, e a conversa mais nova vence a exclusão. Assim apagar numa
@@ -159,95 +299,128 @@ class Conversas {
       final apagadas = mapa['apagadas'];
       if (apagadas is Map<String, dynamic>) {
         for (final e in apagadas.entries) {
-          if (e.value is int) lapidesRemotas[e.key] = e.value as int;
+          if (e.value is int) {
+            lapidesRemotas[_chaveDeLapide(e.key)] = e.value as int;
+          }
         }
       }
+
+      final remotas = <(String, Conversa)>[];
+      for (final entrada in mapa.entries) {
+        if (entrada.key == 'apagadas') continue;
+        if (entrada.value is List) {
+          final mensagens = [
+            for (final item in entrada.value as List)
+              if (item is Map<String, dynamic>) Mensagem.doJson(item),
+          ];
+          if (mensagens.isEmpty) continue;
+          remotas.add((
+            entrada.key,
+            Conversa(
+              id: _idDeConversaMigrada(entrada.key),
+              titulo: _primeiraPergunta(mensagens),
+              momento: mensagens.last.momento,
+              mensagens: mensagens,
+            ),
+          ));
+        } else if (entrada.value is Map<String, dynamic>) {
+          for (final e in (entrada.value as Map<String, dynamic>).entries) {
+            if (e.value is! Map<String, dynamic>) continue;
+            final conversa = Conversa.doJson(e.value);
+            if (conversa.id.isEmpty) continue;
+            remotas.add((entrada.key, conversa));
+          }
+        }
+      }
+
       var mudou = false;
-      // Uma exclusão pode chegar sem mensagem nenhuma: o aparelho que apagou
+
+      // Uma exclusão pode chegar sem conversa por trás: o aparelho que apagou
       // empurra só a lápide. Sem este passe, o reencontro a ignoraria, a
       // conversa antiga ficaria aqui e voltaria a subir na próxima mudança.
       for (final entrada in lapidesRemotas.entries) {
-        final remoto = mapa[entrada.key];
-        if (remoto is List && remoto.isNotEmpty) continue;
-        final persona = entrada.key;
-        final lapideRemota = entrada.value;
-        var localMaisNovo = -1;
-        for (final m in (_conversas[persona] ?? const <Mensagem>[])) {
-          if (m.momento > localMaisNovo) localMaisNovo = m.momento;
-        }
-        if (lapideRemota <= localMaisNovo) {
-          // A conversa local continuou depois da exclusão remota: prevalece.
-          continue;
-        }
-        if (_conversas.remove(persona) != null) mudou = true;
-        final lapideLocal = _apagadas[persona];
-        if (lapideLocal == null || lapideRemota > lapideLocal) {
-          _apagadas[persona] = lapideRemota;
-          mudou = true;
-        }
-      }
-      for (final entrada in mapa.entries) {
-        if (entrada.key == 'apagadas') continue;
-        if (entrada.value is! List) continue;
-        final remotos = [...entrada.value as List];
-        if (remotos.isEmpty) continue;
-        final persona = entrada.key;
-        final local = [...(_conversas[persona] ?? const <Mensagem>[])];
-        final lapideLocal = _apagadas[persona];
-        final lapideRemota = lapidesRemotas[persona];
-
-        var novoMaisNovo = -1;
-        for (final cru in remotos) {
-          if (cru is! Map<String, dynamic>) continue;
-          final momento = cru['momento'];
-          if (momento is int && momento > novoMaisNovo) novoMaisNovo = momento;
-        }
-        var localMaisNovo = -1;
-        for (final m in local) {
-          if (m.momento > localMaisNovo) localMaisNovo = m.momento;
-        }
-
-        if (lapideRemota != null &&
-            lapideRemota >= novoMaisNovo &&
-            lapideRemota > localMaisNovo) {
-          // A exclusão do outro lado é mais nova que todo o histórico local:
-          // apaga aqui também, e a lápide passa a ser a mais nova das duas.
-          if (_conversas.remove(persona) != null) mudou = true;
-          if (lapideLocal == null || lapideRemota > lapideLocal) {
-            _apagadas[persona] = lapideRemota;
+        final id = entrada.key;
+        if (remotas.any((r) => r.$2.id == id)) continue;
+        final local = _acharLocal(id);
+        final lapideLocal = _apagadas[id];
+        if (local == null) {
+          if (lapideLocal == null || entrada.value > lapideLocal) {
+            _apagadas[id] = entrada.value;
             mudou = true;
           }
           continue;
         }
-        if (lapideLocal != null && novoMaisNovo <= lapideLocal) {
+        if (entrada.value <= local.$2.momento) continue;
+        _conversas[local.$1]!.remove(local.$2);
+        if (lapideLocal == null || entrada.value > lapideLocal) {
+          _apagadas[id] = entrada.value;
+        }
+        mudou = true;
+      }
+
+      for (final (persona, remota) in remotas) {
+        final id = remota.id;
+        final lapideLocal = _apagadas[id];
+        final lapideRemota = lapidesRemotas[id];
+        final local = _acharLocal(id);
+        final localMaisNovo = local?.$2.momento ?? -1;
+
+        if (lapideRemota != null &&
+            lapideRemota >= remota.momento &&
+            lapideRemota > localMaisNovo) {
+          // A exclusão do outro lado é mais nova que todo o histórico local:
+          // apaga aqui também, e a lápide passa a ser a mais nova das duas.
+          if (local != null) _conversas[local.$1]!.remove(local.$2);
+          if (lapideLocal == null || lapideRemota > lapideLocal) {
+            _apagadas[id] = lapideRemota;
+          }
+          mudou = true;
+          continue;
+        }
+        if (lapideLocal != null && remota.momento <= lapideLocal) {
           // Apaguei aqui e o remoto não traz nada mais novo: fica apagado.
           continue;
         }
         if (lapideLocal != null) {
           // O outro lado continuou a conversa depois da exclusão: ela volta
           // inteira, e a lápide deixa de valer para sempre.
-          _apagadas.remove(persona);
+          _apagadas.remove(id);
           mudou = true;
         }
 
-        final ids = local.map((m) => m.id).toSet();
+        final lista = _conversas[persona] ??= [];
+        var conversa = lista.where((c) => c.id == id).firstOrNull;
+        if (conversa == null) {
+          conversa = Conversa(
+            id: id,
+            titulo: remota.titulo,
+            momento: remota.momento,
+            mensagens: [],
+          );
+          lista.add(conversa);
+          mudou = true;
+        }
+
+        final ids = conversa.mensagens.map((m) => m.id).toSet();
         var mudouNesta = false;
-        for (final cru in remotos) {
-          if (cru is! Map<String, dynamic>) continue;
-          final mensagem = Mensagem.doJson(cru);
-          if (mensagem.id.isEmpty || !ids.add(mensagem.id)) continue;
-          local.add(mensagem);
+        final novas = <Mensagem>[
+          for (final m in remota.mensagens)
+            if (m.id.isNotEmpty && ids.add(m.id)) m,
+        ];
+        if (novas.isNotEmpty) {
+          conversa = conversa.comMensagemDeTodas(novas, teto: _maxMensagensPorConversa);
+          lista[lista.indexWhere((c) => c.id == id)] = conversa;
           mudouNesta = true;
         }
         if (mudouNesta) {
-          local.sort((a, b) => a.momento.compareTo(b.momento));
-          if (local.length > _maxMensagensPorConversa) {
-            local.removeRange(0, local.length - _maxMensagensPorConversa);
+          if (conversa.titulo.isEmpty && remota.titulo.isNotEmpty) {
+            conversa = conversa.comTitulo(remota.titulo);
+            lista[lista.indexWhere((c) => c.id == id)] = conversa;
           }
-          _conversas[persona] = local;
           mudou = true;
         }
       }
+
       if (mudou) {
         _aoMudar();
         await _gravar();
@@ -255,5 +428,21 @@ class Conversas {
     } catch (_) {
       // Cópia ilegível: o local continua intacto e vai subir por cima.
     }
+  }
+
+  /// A conversa local com aquele id, e a persona dela. Busca em todas as
+  /// personas porque o id da conversa é único.
+  (String, Conversa)? _acharLocal(String id) {
+    for (final e in _conversas.entries) {
+      for (final c in e.value) {
+        if (c.id == id) return (e.key, c);
+      }
+    }
+    return null;
+  }
+
+  String _novoIdDeConversa() {
+    final agora = DateTime.now().millisecondsSinceEpoch;
+    return 'c$agora-${Random().nextInt(1 << 32)}';
   }
 }

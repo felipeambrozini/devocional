@@ -11,6 +11,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
+  /// Cria a conversa e devolve o id, como a tela do chat faria ao abrir uma
+  /// conversa existente.
+  Future<String> abrirConversa(Estado estado, List<Mensagem> mensagens) async {
+    var titulo = '';
+    for (final m in mensagens) {
+      if (m.doUsuario) {
+        titulo = m.texto;
+        break;
+      }
+    }
+    final conversa = await estado.novaConversa('spurgeon', titulo: titulo);
+    for (final m in mensagens) {
+      await estado.registrarMensagem('spurgeon', conversa.id, m);
+    }
+    return conversa.id;
+  }
+
   group('enviar', () {
     test('grava a pergunta, a resposta e limpa a pendência', () async {
       final estado = await Estado.abrir();
@@ -21,10 +38,12 @@ void main() {
           return 'Amém, meu filho.';
         },
       );
+      expect(conversador.id, isNull, reason: 'a conversa nova só nasce na fala');
 
       await conversador.enviar('Como vencer a ansiedade?');
 
-      final mensagens = estado.mensagensDe('spurgeon');
+      expect(conversador.id, isNotNull);
+      final mensagens = estado.mensagensDe('spurgeon', conversador.id!);
       expect(mensagens, hasLength(2));
       expect(mensagens.first.texto, 'Como vencer a ansiedade?');
       expect(mensagens.first.pendente, isFalse,
@@ -33,18 +52,23 @@ void main() {
       expect(mensagens.last.texto, 'Amém, meu filho.');
       expect(conversador.respondendo, isFalse);
       expect(conversador.erro, isNull);
+      expect(
+        estado.conversasDe('spurgeon').single.titulo,
+        'Como vencer a ansiedade?',
+        reason: 'a primeira pergunta vira o título no histórico',
+      );
     });
 
     test('a pergunta chega ao modelo como última fala do histórico', () async {
       final estado = await Estado.abrir();
-      await estado.registrarMensagem(
-        'spurgeon',
+      final id = await abrirConversa(estado, [
         Mensagem(id: '1', papel: 'user', texto: 'Tenho medo.', momento: 1),
-      );
+      ]);
       late String vista;
       final conversador = Conversador(
         persona: personaSpurgeon,
         estado: estado,
+        conversaId: id,
         chamar: ({required persona, required historico, required pergunta}) async {
           vista = pergunta;
           // O histórico que o modelo recebe já inclui a pergunta nova,
@@ -58,7 +82,7 @@ void main() {
 
       expect(vista, 'Como parar?');
       expect(
-        estado.mensagensDe('spurgeon').first.texto,
+        estado.mensagensDe('spurgeon', id).first.texto,
         'Tenho medo.',
         reason: 'a conversa antiga não é tocada',
       );
@@ -107,9 +131,9 @@ void main() {
 
       expect(conversador.erro, contains('limite gratuito'));
       expect(conversador.respondendo, isFalse);
-      expect(estado.mensagensDe('spurgeon'), hasLength(1));
+      expect(estado.mensagensDe('spurgeon', conversador.id!), hasLength(1));
       expect(
-        estado.mensagensDe('spurgeon').single.pendente,
+        estado.mensagensDe('spurgeon', conversador.id!).single.pendente,
         isTrue,
         reason: 'a pergunta fica marcada para o "Tentar de novo"',
       );
@@ -118,10 +142,13 @@ void main() {
 
       expect(conversador.erro, isNull);
       expect(conversador.respondendo, isFalse);
-      expect(estado.mensagensDe('spurgeon'), hasLength(2));
-      expect(estado.mensagensDe('spurgeon').last.texto, 'Agora sim.');
+      expect(estado.mensagensDe('spurgeon', conversador.id!), hasLength(2));
       expect(
-        estado.mensagensDe('spurgeon').first.pendente,
+        estado.mensagensDe('spurgeon', conversador.id!).last.texto,
+        'Agora sim.',
+      );
+      expect(
+        estado.mensagensDe('spurgeon', conversador.id!).first.pendente,
         isFalse,
         reason: 'a resposta chegou e limpa a pendência antiga',
       );
@@ -147,15 +174,14 @@ void main() {
       // continua seguro: refaz a última pergunta, sem duplicar a pergunta.
       await conversador.repetir();
       expect(feitas, ['Primeira', 'Primeira']);
-      expect(estado.mensagensDe('spurgeon'), hasLength(3));
+      expect(estado.mensagensDe('spurgeon', conversador.id!), hasLength(3));
     });
   });
 
   group('retomarInterrompida', () {
     test('última pergunta pendente oferece o tentar de novo', () async {
       final estado = await Estado.abrir();
-      await estado.registrarMensagem(
-        'spurgeon',
+      final id = await abrirConversa(estado, [
         Mensagem(
           id: '1',
           papel: 'user',
@@ -163,10 +189,11 @@ void main() {
           momento: 1,
           pendente: true,
         ),
-      );
+      ]);
       final conversador = Conversador(
         persona: personaSpurgeon,
         estado: estado,
+        conversaId: id,
         chamar: ({required persona, required historico, required pergunta}) async {
           return 'Aqui estou.';
         },
@@ -180,19 +207,32 @@ void main() {
       // E o "Tentar de novo" resolve de verdade.
       await conversador.repetir();
       expect(conversador.erro, isNull);
-      expect(estado.mensagensDe('spurgeon'), hasLength(2));
+      expect(estado.mensagensDe('spurgeon', id), hasLength(2));
     });
 
     test('conversa sossegada não acende o aviso', () async {
       final estado = await Estado.abrir();
-      await estado.registrarMensagem(
-        'spurgeon',
+      final id = await abrirConversa(estado, [
         Mensagem(id: '1', papel: 'user', texto: 'Oi', momento: 1),
-      );
-      await estado.registrarMensagem(
-        'spurgeon',
         Mensagem(id: '2', papel: 'assistant', texto: 'Paz.', momento: 2),
+      ]);
+      final conversador = Conversador(
+        persona: personaSpurgeon,
+        estado: estado,
+        conversaId: id,
+        chamar: ({required persona, required historico, required pergunta}) async {
+          return 'ok';
+        },
       );
+
+      conversador.retomarInterrompida();
+
+      expect(conversador.erro, isNull);
+      expect(conversador.ultimaPergunta, isEmpty);
+    });
+
+    test('conversa nova não tem o que retomar', () async {
+      final estado = await Estado.abrir();
       final conversador = Conversador(
         persona: personaSpurgeon,
         estado: estado,

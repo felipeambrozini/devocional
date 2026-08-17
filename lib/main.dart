@@ -21,6 +21,7 @@ import 'telas/chat.dart';
 import 'telas/comuns.dart';
 import 'telas/devocional.dart';
 import 'telas/hoje.dart';
+import 'telas/historico.dart';
 import 'telas/notas.dart';
 import 'telas/plano.dart';
 import 'telas/sobre.dart';
@@ -216,14 +217,42 @@ final _router = GoRouter(
     // Os chats não são abas: abrem por cima de tudo e merecem URL própria,
     // para sobreviver ao F5 e para um link compartilhado reabrir a conversa.
     // O balão empurra com `push`, não `go`: `go` trocaria a pilha inteira e
-    // o chat ficaria sem o botão de voltar.
+    // o chat ficaria sem o botão de voltar. A raiz abre o histórico da
+    // persona (ver `lib/telas/historico.dart`); cada conversa é um filho,
+    // `conversa` para uma nova e `conversa/:id` para uma específica.
     GoRoute(
       path: '/charles-spurgeon',
-      builder: (context, state) => TelaChat(persona: personaSpurgeon),
+      builder: (context, state) => TelaHistorico(persona: personaSpurgeon),
+      routes: [
+        GoRoute(
+          path: 'conversa',
+          builder: (context, state) => TelaChat(persona: personaSpurgeon),
+        ),
+        GoRoute(
+          path: 'conversa/:id',
+          builder: (context, state) => TelaChat(
+            persona: personaSpurgeon,
+            conversaId: state.pathParameters['id'],
+          ),
+        ),
+      ],
     ),
     GoRoute(
       path: '/felipe-ambrozini',
-      builder: (context, state) => TelaChat(persona: personaFelipe),
+      builder: (context, state) => TelaHistorico(persona: personaFelipe),
+      routes: [
+        GoRoute(
+          path: 'conversa',
+          builder: (context, state) => TelaChat(persona: personaFelipe),
+        ),
+        GoRoute(
+          path: 'conversa/:id',
+          builder: (context, state) => TelaChat(
+            persona: personaFelipe,
+            conversaId: state.pathParameters['id'],
+          ),
+        ),
+      ],
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>

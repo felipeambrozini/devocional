@@ -20,6 +20,7 @@ class Conversador extends ChangeNotifier {
     required this.persona,
     required this.estado,
     required this.chamar,
+    this.conversaId,
   });
 
   final Persona persona;
@@ -29,6 +30,13 @@ class Conversador extends ChangeNotifier {
     required List<Mensagem> historico,
     required String pergunta,
   }) chamar;
+
+  /// A conversa em que este turno escreve. null enquanto é uma conversa nova
+  /// que ainda não tem a primeira mensagem: o id nasce na primeira pergunta
+  /// ([enviar] chama [Estado.novaConversa]) e fica visível em [conversaId].
+  final String? conversaId;
+
+  String? _id;
 
   bool _respondendo = false;
 
@@ -49,13 +57,18 @@ class Conversador extends ChangeNotifier {
   String? get erro => _erro;
   String get ultimaPergunta => _ultimaPergunta;
 
+  /// O id de verdade da conversa: o recebido no construtor, ou o que nasceu
+  /// com a primeira pergunta. null só antes da primeira mensagem.
+  String? get id => _id ?? conversaId;
+
   /// Envia uma pergunta nova e espera a resposta.
   Future<void> enviar(String pergunta) async {
-    final id = persona.id;
+    final id = _id ??= await _novaConversa(pergunta);
     // Perguntas antigas que ficaram pendentes ficam para trás: quem envia
     // uma pergunta nova seguiu a vida, e só a mais nova interessa.
-    await estado.marcarRespondidas(id);
+    await estado.marcarRespondidas(persona.id, id);
     await estado.registrarMensagem(
+      persona.id,
       id,
       Mensagem(
         id: novoIdDeMensagem(),
@@ -70,6 +83,11 @@ class Conversador extends ChangeNotifier {
     await _perguntar(pergunta);
   }
 
+  Future<String> _novaConversa(String titulo) async {
+    final conversa = await estado.novaConversa(persona.id, titulo: titulo);
+    return conversa.id;
+  }
+
   /// Refaz a última pergunta que falhou, sem o usuário redigitar.
   Future<void> repetir() => _perguntar(_ultimaPergunta);
 
@@ -77,7 +95,9 @@ class Conversador extends ChangeNotifier {
   /// pendente, e a tela oferece "Tentar de novo" em vez de deixar a pergunta
   /// respondida pelo silêncio.
   void retomarInterrompida() {
-    final mensagens = estado.mensagensDe(persona.id);
+    final id = this.id;
+    if (id == null) return;
+    final mensagens = estado.mensagensDe(persona.id, id);
     final ultima = mensagens.isEmpty ? null : mensagens.last;
     if (ultima == null || !ultima.doUsuario || !ultima.pendente) return;
     _erro = 'A resposta anterior não chegou.';
@@ -87,6 +107,8 @@ class Conversador extends ChangeNotifier {
 
   /// Chama a IA com a pergunta já registrada no histórico.
   Future<void> _perguntar(String pergunta) async {
+    final id = this.id;
+    if (id == null) return;
     _respondendo = true;
     _erro = null;
     _ultimaPergunta = pergunta;
@@ -94,11 +116,12 @@ class Conversador extends ChangeNotifier {
     try {
       final resposta = await chamar(
         persona: persona,
-        historico: estado.mensagensDe(persona.id),
+        historico: estado.mensagensDe(persona.id, id),
         pergunta: pergunta,
       );
       await estado.registrarMensagem(
         persona.id,
+        id,
         Mensagem(
           id: novoIdDeMensagem(),
           papel: 'assistant',
@@ -107,7 +130,7 @@ class Conversador extends ChangeNotifier {
         ),
       );
       // A resposta chegou: nada fica pendente nesta conversa.
-      await estado.marcarRespondidas(persona.id);
+      await estado.marcarRespondidas(persona.id, id);
     } on IaException catch (erro) {
       _erro = erro.mensagem;
     } finally {

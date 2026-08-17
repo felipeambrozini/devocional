@@ -315,6 +315,94 @@ class AchadoDevocional {
   final String texto;
 }
 
+/// Uma conversa do chat com uma persona: um fio de [Mensagem] com identidade,
+/// título e momento próprios.
+///
+/// Antes havia uma conversa só por persona, e o histórico era a própria lista
+/// de mensagens. Agora cada persona guarda quantas conversas quiser; [titulo]
+/// (a primeira pergunta) e [momento] (a última fala) são o que a lista de
+/// histórico mostra. [id] é o que a fusão com a nuvem usa para não duplicar,
+/// como o id das mensagens.
+class Conversa {
+  Conversa({
+    required this.id,
+    required this.titulo,
+    required this.momento,
+    required this.mensagens,
+  });
+
+  factory Conversa.doJson(Map<String, dynamic> json) => Conversa(
+    id: json['id'] as String? ?? '',
+    titulo: json['titulo'] as String? ?? '',
+    momento: json['momento'] as int? ?? 0,
+    mensagens: [
+      for (final m in json['mensagens'] as List? ?? const [])
+        if (m is Map<String, dynamic>) Mensagem.doJson(m),
+    ],
+  );
+
+  final String id;
+
+  /// A primeira pergunta do visitante. Vazio numa conversa que só recebeu
+  /// falas da persona (raro, mas possível vinda de uma migração).
+  final String titulo;
+
+  /// A última fala, em milissegundos desde a época. É o que a lista de
+  /// histórico mostra como data e o que a ordena, do mais recente ao mais
+  /// antigo.
+  final int momento;
+
+  final List<Mensagem> mensagens;
+
+  Map<String, dynamic> paraJson() => {
+    'id': id,
+    'titulo': titulo,
+    'momento': momento,
+    'mensagens': [for (final m in mensagens) m.paraJson()],
+  };
+
+  /// Uma cópia com a mensagem nova no fim e o momento atualizado, para o
+  /// histórico listar a conversa na posição de quem acabou de falar.
+  Conversa comMensagem(Mensagem mensagem, {int? teto}) {
+    final novas = [...mensagens, mensagem];
+    if (teto != null && novas.length > teto) {
+      novas.removeRange(0, novas.length - teto);
+    }
+    return Conversa(
+      id: id,
+      titulo: titulo.isEmpty && mensagem.doUsuario ? mensagem.texto : titulo,
+      momento: mensagem.momento,
+      mensagens: novas,
+    );
+  }
+
+  /// Uma cópia com várias mensagens fundidas, ordenadas por momento. Usada
+  /// pela fusão com a nuvem, que pode trazer um lote inteiro de uma vez.
+  Conversa comMensagemDeTodas(List<Mensagem> novas, {int? teto}) {
+    final todas = [...mensagens, ...novas]
+      ..sort((a, b) => a.momento.compareTo(b.momento));
+    if (teto != null && todas.length > teto) {
+      todas.removeRange(0, todas.length - teto);
+    }
+    final ultimo = todas.last.momento;
+    return Conversa(
+      id: id,
+      titulo: titulo,
+      momento: ultimo > momento ? ultimo : momento,
+      mensagens: todas,
+    );
+  }
+
+  /// Uma cópia só com o título novo. Usada pela fusão, que pode trazer o
+  /// título de uma conversa que nasceu apagada ou sem fala do visitante.
+  Conversa comTitulo(String novo) => Conversa(
+    id: id,
+    titulo: novo,
+    momento: momento,
+    mensagens: mensagens,
+  );
+}
+
 /// Uma mensagem do chat com uma persona.
 ///
 /// [id] é o que faz a fusão com a cópia da nuvem não duplicar: uma mensagem

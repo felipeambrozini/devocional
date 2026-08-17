@@ -262,12 +262,12 @@ void main() {
     );
   });
 
-  testWidgets('o balão do chat abre a conversa e atualiza a URL', (
+  testWidgets('o balão do chat abre o histórico e atualiza a URL', (
     tester,
   ) async {
-    // O balão empurra a TelaChat pelo GoRouter (não por um Navigator cru):
-    // além de abrir o conteúdo, a barra de endereço precisa acompanhar e
-    // voltar junto quando a conversa fecha.
+    // O balão empurra a TelaHistorico pelo GoRouter (não por um Navigator
+    // cru): além de abrir o conteúdo, a barra de endereço precisa acompanhar
+    // e voltar junto quando o histórico fecha.
     await aquecerAssets(tester);
     await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
     await tester.pumpAndSettle();
@@ -279,11 +279,11 @@ void main() {
       tester.element(find.byType(Scaffold).first),
     ).state.uri.path;
 
-    await tester.tap(find.byTooltip('Conversar com Charles Spurgeon'));
+    await tester.tap(find.byTooltip('Conversas com Charles Spurgeon'));
     await tester.pumpAndSettle();
 
     expect(find.text('Charles Spurgeon'), findsWidgets);
-    expect(find.text('Príncipe dos Pregadores'), findsOneWidget);
+    expect(find.text('Conversas'), findsOneWidget);
     expect(
       GoRouter.of(tester.element(find.byType(Scaffold).first)).state.uri.path,
       '/charles-spurgeon',
@@ -297,7 +297,7 @@ void main() {
     expect(
       GoRouter.of(tester.element(find.byType(Scaffold).first)).state.uri.path,
       partida,
-      reason: 'fechar a conversa devolve a URL à localização de origem',
+      reason: 'fechar o histórico devolve a URL à localização de origem',
     );
   });
 
@@ -308,8 +308,11 @@ void main() {
       // tem de oferecer a resposta em vez de deixá-la respondida pelo
       // silêncio.
       final estado = await estadoLimpo();
+      final conversa =
+          await estado.novaConversa('spurgeon', titulo: 'Como vencer a ansiedade?');
       await estado.registrarMensagem(
         'spurgeon',
+        conversa.id,
         Mensagem(
           id: '1',
           papel: 'user',
@@ -323,7 +326,7 @@ void main() {
         MaterialApp(
           home: EscopoDoEstado(
             estado: estado,
-            child: TelaChat(persona: personaSpurgeon),
+            child: TelaChat(persona: personaSpurgeon, conversaId: conversa.id),
           ),
         ),
       );
@@ -338,6 +341,163 @@ void main() {
       expect(find.text('Como vencer a ansiedade?'), findsOneWidget);
     },
   );
+
+  Future<void> abrirHistorico(WidgetTester tester, Estado estado) async {
+    await tester.pumpWidget(AppDevocional(estado: estado));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Conversas com Charles Spurgeon'));
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> voltarParaCasa(WidgetTester tester) async {
+    // O router é global e os testes rodam no mesmo processo: devolve a
+    // navegação ao ponto de partida para não contaminar o teste seguinte.
+    while (tester.any(find.byIcon(Icons.arrow_back))) {
+      await tester.tap(find.byIcon(Icons.arrow_back).first);
+      await tester.pumpAndSettle();
+    }
+  }
+
+  testWidgets('o histórico lista as conversas, da mais recente à mais antiga', (
+    tester,
+  ) async {
+    final estado = await estadoLimpo();
+    final antiga = await estado.novaConversa('spurgeon', titulo: 'Primeira');
+    await estado.registrarMensagem(
+      'spurgeon',
+      antiga.id,
+      Mensagem(id: '1', papel: 'user', texto: 'Primeira', momento: 1),
+    );
+    final recente = await estado.novaConversa('spurgeon', titulo: 'Segunda');
+    await estado.registrarMensagem(
+      'spurgeon',
+      recente.id,
+      Mensagem(id: '2', papel: 'user', texto: 'Segunda', momento: 2),
+    );
+
+    await aquecerAssets(tester);
+    await abrirHistorico(tester, estado);
+
+    expect(find.text('Primeira'), findsOneWidget);
+    expect(find.text('Segunda'), findsOneWidget);
+    // A mais recente vem primeiro: a Segunda fica acima da Primeira.
+    expect(
+      tester.getTopLeft(find.text('Segunda')).dy,
+      lessThan(tester.getTopLeft(find.text('Primeira')).dy),
+    );
+
+    await voltarParaCasa(tester);
+  });
+
+  testWidgets('apagar uma conversa remove só ela, com confirmação', (
+    tester,
+  ) async {
+    final estado = await estadoLimpo();
+    final uma = await estado.novaConversa('spurgeon', titulo: 'Uma');
+    await estado.registrarMensagem(
+      'spurgeon',
+      uma.id,
+      Mensagem(id: '1', papel: 'user', texto: 'Uma', momento: 1),
+    );
+    final outra = await estado.novaConversa('spurgeon', titulo: 'Outra');
+    await estado.registrarMensagem(
+      'spurgeon',
+      outra.id,
+      Mensagem(id: '2', papel: 'user', texto: 'Outra', momento: 2),
+    );
+
+    await aquecerAssets(tester);
+    await abrirHistorico(tester, estado);
+
+    // Apaga a "Uma" pelo botão da própria linha.
+    await tester.tap(
+      find.descendant(
+        of: find.widgetWithText(ListTile, 'Uma'),
+        matching: find.byTooltip('Apagar conversa'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Apagar esta conversa?'), findsOneWidget);
+    expect(
+      find.textContaining('As outras conversas ficam.'),
+      findsOneWidget,
+      reason: 'o aviso promete que as demais não são tocadas',
+    );
+
+    await tester.tap(find.text('Apagar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Uma'), findsNothing);
+    expect(find.text('Outra'), findsOneWidget);
+    expect(estado.conversasDe('spurgeon'), hasLength(1));
+
+    await voltarParaCasa(tester);
+  });
+
+  testWidgets('apagar tudo remove todas as conversas, com confirmação', (
+    tester,
+  ) async {
+    final estado = await estadoLimpo();
+    for (final (titulo, momento) in [('Uma', 1), ('Outra', 2)]) {
+      final c = await estado.novaConversa('spurgeon', titulo: titulo);
+      await estado.registrarMensagem(
+        'spurgeon',
+        c.id,
+        Mensagem(id: '$momento', papel: 'user', texto: titulo, momento: momento),
+      );
+    }
+
+    await aquecerAssets(tester);
+    await abrirHistorico(tester, estado);
+
+    await tester.tap(find.byTooltip('Apagar todas as conversas'));
+    await tester.pumpAndSettle();
+    expect(find.text('Apagar todas as conversas?'), findsOneWidget);
+
+    await tester.tap(find.text('Apagar tudo'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Uma'), findsNothing);
+    expect(find.text('Outra'), findsNothing);
+    expect(
+      find.textContaining('Nenhuma conversa com Charles Spurgeon ainda'),
+      findsOneWidget,
+    );
+    expect(estado.conversasDe('spurgeon'), isEmpty);
+
+    await voltarParaCasa(tester);
+  });
+
+  testWidgets('tocar numa conversa abre o chat e atualiza a URL', (
+    tester,
+  ) async {
+    final estado = await estadoLimpo();
+    final c = await estado.novaConversa('spurgeon', titulo: 'Minha pergunta');
+    await estado.registrarMensagem(
+      'spurgeon',
+      c.id,
+      Mensagem(id: '1', papel: 'user', texto: 'Minha pergunta', momento: 1),
+    );
+
+    await aquecerAssets(tester);
+    await abrirHistorico(tester, estado);
+
+    await tester.tap(find.text('Minha pergunta'));
+    await tester.pumpAndSettle();
+
+    // A conversa abre com a pergunta no histórico.
+    expect(find.text('Minha pergunta'), findsWidgets);
+    final uri = GoRouter.of(
+      tester.element(find.byType(Scaffold).first),
+    ).state.uri;
+    expect(
+      uri.pathSegments,
+      ['charles-spurgeon', 'conversa', c.id],
+      reason: 'o F5 e um link compartilhado reabrem esta conversa, não outra',
+    );
+
+    await voltarParaCasa(tester);
+  });
 
   testWidgets('numa janela larga, a coluna de leitura fica centralizada '
       'ao lado do trilho de navegação', (tester) async {

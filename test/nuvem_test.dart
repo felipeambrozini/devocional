@@ -238,6 +238,7 @@ void main() {
       'mensagem nova sobe uma vez, com o texto de serializarConversas()',
       () async {
         final estado = await Estado.abrir();
+        final c = await estado.novaConversa('spurgeon', titulo: 'Ola');
         var envios = 0;
         String? enviado;
         final sincronia = Sincronia(
@@ -255,6 +256,7 @@ void main() {
 
         await estado.registrarMensagem(
           'spurgeon',
+          c.id,
           mensagem('a1', 'user', 'Ola', 1),
         );
         await assentar();
@@ -289,14 +291,23 @@ void main() {
 
     test('comecar() funde o histórico remoto sem apagar o local', () async {
       final estado = await Estado.abrir();
+      final c = await estado.novaConversa('spurgeon', titulo: 'daqui');
       await estado.registrarMensagem(
         'spurgeon',
+        c.id,
         mensagem('local', 'user', 'daqui', 1),
       );
       final remota = json.encode({
-        'spurgeon': [
-          {'id': 'remota', 'papel': 'assistant', 'texto': 'de la', 'momento': 2},
-        ],
+        'spurgeon': {
+          c.id: {
+            'id': c.id,
+            'titulo': 'daqui',
+            'momento': 2,
+            'mensagens': [
+              {'id': 'remota', 'papel': 'assistant', 'texto': 'de la', 'momento': 2},
+            ],
+          },
+        },
       });
 
       final sincronia = Sincronia(
@@ -310,7 +321,7 @@ void main() {
       await sincronia.comecar();
 
       expect(
-        estado.mensagensDe('spurgeon').map((m) => m.id),
+        estado.mensagensDe('spurgeon', c.id).map((m) => m.id),
         ['local', 'remota'],
         reason: 'fundir une por id, na ordem do momento',
       );
@@ -318,6 +329,7 @@ void main() {
 
     test('apagar conversa sobe a lápide para a nuvem', () async {
       final estado = await Estado.abrir();
+      final c = await estado.novaConversa('spurgeon', titulo: 'Ola');
       var envios = 0;
       String? enviado;
       final sincronia = Sincronia(
@@ -335,12 +347,13 @@ void main() {
 
       await estado.registrarMensagem(
         'spurgeon',
+        c.id,
         mensagem('a1', 'user', 'Ola', 1),
       );
       await assentar();
       expect(envios, 1);
 
-      await estado.limparConversa('spurgeon');
+      await estado.limparConversa('spurgeon', c.id);
       await assentar();
 
       expect(
@@ -355,7 +368,7 @@ void main() {
         reason: 'o histórico não sobe mais, só a lápide',
       );
       expect(
-        (mapa['apagadas'] as Map)['spurgeon'],
+        (mapa['apagadas'] as Map)[c.id],
         isA<int>(),
         reason: 'sem a lápide, o outro aparelho ressuscitaria a conversa',
       );

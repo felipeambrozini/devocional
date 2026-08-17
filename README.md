@@ -383,8 +383,7 @@ flutter analyze
 flutter build apk --dart-define=GEMINI_API_KEY_ANDROID=<chave>
 # Web
 flutter build web --dart-define=FIREBASE_API_KEY_WEB=<chave> \
-  --dart-define=GEMINI_API_KEY_WEB=<chave> \
-  --dart-define=GEMINI_API_KEY_ANDROID=<chave>
+  --dart-define=GEMINI_API_KEY_WEB=<chave>
 ```
 
 Ícone do app, favicon e tela de abertura são gerados a partir das fontes em
@@ -411,8 +410,7 @@ Flutter fixo em 3.44.8, para o GitHub Pages. O site mora em
 `felipeambrozini.github.io/devocional/` (um nível abaixo do domínio, por isso
 `pathSegmentsToKeep = 1` no resolvedor de caminho). O build usa
 `--base-href /devocional/` e as chaves de API vêm dos Secrets do repositório:
-`FIREBASE_API_KEY_WEB`, `GEMINI_API_KEY_WEB` e
-`GEMINI_API_KEY_ANDROID` (precisam estar cadastrados em
+`FIREBASE_API_KEY_WEB` e `GEMINI_API_KEY_WEB` (precisam estar cadastrados em
 Settings → Secrets and variables). As actions estão fixadas em commit SHA
 completo, não em tag mutável.
 

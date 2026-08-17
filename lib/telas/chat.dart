@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../data/conversador.dart';
 import '../data/estado.dart';
@@ -49,10 +50,10 @@ class BalaoDeChat extends StatelessWidget {
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     return Tooltip(
-      message: 'Conversar com ${persona.nome}',
+      message: 'Conversas com ${persona.nome}',
       child: Semantics(
         button: true,
-        label: 'Abrir conversa com ${persona.nome}',
+        label: 'Abrir histórico de conversas com ${persona.nome}',
         child: Material(
           color: cor.surfaceContainer,
           // Chapado, como todo o app: a sombra era a única do sistema inteiro,
@@ -92,10 +93,16 @@ class BalaoDeChat extends StatelessWidget {
 
 /// O chat com uma persona: histórico da conversa, campo de mensagem e a
 /// resposta da inteligência artificial gratuita.
+///
+/// [conversaId] é a conversa que este chat abre; null abre uma conversa nova,
+/// que só nasce (com o próprio id) na primeira pergunta. A lista de
+/// conversas fica em `lib/telas/historico.dart`, e é de lá que este chat é
+/// empurrado, junto com a URL que o F5 e o link compartilhado reabrem.
 class TelaChat extends StatefulWidget {
-  const TelaChat({super.key, required this.persona});
+  const TelaChat({super.key, required this.persona, this.conversaId});
 
   final Persona persona;
+  final String? conversaId;
 
   @override
   State<TelaChat> createState() => _TelaChatState();
@@ -104,6 +111,11 @@ class TelaChat extends StatefulWidget {
 class _TelaChatState extends State<TelaChat> {
   final _controle = TextEditingController();
   final _rolagem = ScrollController();
+
+  /// A conversa nova recebe o id só na primeira mensagem (o `Conversador`
+  /// chama o Estado); quando isso acontece, a URL ganha o id no lugar de
+  /// `/conversa`, para um F5 ou um link reabrirem a conversa de verdade.
+  bool _rotaAtualizada = false;
 
   /// O turno da conversa: registra a pergunta, chama a IA e grava a resposta.
   ///
@@ -128,6 +140,7 @@ class _TelaChatState extends State<TelaChat> {
         persona: widget.persona,
         estado: EscopoDoEstado.de(context),
         chamar: perguntar,
+        conversaId: widget.conversaId,
       );
       _conversador!.addListener(_aoMudarConversador);
       // Reabrir depois de uma resposta interrompida: a última pergunta ficou
@@ -156,6 +169,16 @@ class _TelaChatState extends State<TelaChat> {
     if (!mounted) return;
     setState(() {});
     if (_conversador?.respondendo ?? false) _rolarParaOFim();
+    // A conversa nova acabou de ganhar o id; a URL precisa acompanhar, para
+    // um F5 ou um link compartilhado reabrirem esta conversa e não outra.
+    final id = _conversador?.id;
+    if (id != null && widget.conversaId == null && !_rotaAtualizada) {
+      _rotaAtualizada = true;
+      final router = GoRouter.maybeOf(context);
+      if (router != null) {
+        router.replace('/${widget.persona.slug}/conversa/$id');
+      }
+    }
   }
 
   Future<void> _enviar() async {
@@ -169,13 +192,16 @@ class _TelaChatState extends State<TelaChat> {
   }
 
   Future<void> _limparConversa() async {
+    final id = _conversador?.id;
+    if (id == null) return;
     final confirmou = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Apagar a conversa?'),
+        title: const Text('Apagar esta conversa?'),
         content: const Text(
-          'Todo o histórico com esta pessoa será apagado deste aparelho, e '
-          'da cópia na nuvem se houver. Essa ação não pode ser desfeita.',
+          'Só esta conversa será apagada deste aparelho, e da cópia na nuvem '
+          'se houver. As outras conversas ficam. Essa ação não pode ser '
+          'desfeita.',
         ),
         actions: [
           TextButton(
@@ -190,7 +216,9 @@ class _TelaChatState extends State<TelaChat> {
       ),
     );
     if (confirmou != true || !mounted) return;
-    await EscopoDoEstado.de(context).limparConversa(widget.persona.id);
+    await EscopoDoEstado.de(context).limparConversa(widget.persona.id, id);
+    if (!mounted) return;
+    Navigator.of(context).pop();
   }
 
   void _rolarParaOFim() {
@@ -207,6 +235,9 @@ class _TelaChatState extends State<TelaChat> {
     final estado = EscopoDoEstado.de(context);
     final conversador = _conversador;
     final respondendo = conversador?.respondendo ?? false;
+    // A conversa aberta: a que veio na rota (existe antes do conversador
+    // nascer) ou a que nasceu na primeira pergunta de uma conversa nova.
+    final conversaId = conversador?.id ?? widget.conversaId;
 
     return Scaffold(
       appBar: AppBar(
@@ -246,11 +277,14 @@ class _TelaChatState extends State<TelaChat> {
           ],
         ),
         actions: [
-          IconButton(
-            tooltip: 'Apagar a conversa',
-            icon: const Icon(Icons.delete_outline),
-            onPressed: _limparConversa,
-          ),
+          // Sem id a conversa ainda não existe (não tem mensagem nenhuma):
+          // não há o que apagar. O botão nasce junto com a primeira pergunta.
+          if (conversaId != null)
+            IconButton(
+              tooltip: 'Apagar esta conversa',
+              icon: const Icon(Icons.delete_outline),
+              onPressed: _limparConversa,
+            ),
         ],
       ),
       body: Column(
@@ -259,7 +293,9 @@ class _TelaChatState extends State<TelaChat> {
             child: ListenableBuilder(
               listenable: estado,
               builder: (context, _) {
-                final mensagens = estado.mensagensDe(widget.persona.id);
+                final mensagens = conversaId == null
+                    ? const <Mensagem>[]
+                    : estado.mensagensDe(widget.persona.id, conversaId);
                 if (mensagens.isEmpty) {
                   return _BoasVindas(persona: widget.persona);
                 }

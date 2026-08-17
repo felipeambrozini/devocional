@@ -42,18 +42,18 @@ void main() {
     expect(
       GoRouter.optionURLReflectsImperativeAPIs,
       isTrue,
-      reason: 'o push do chat só chega ao motor com a opção ligada',
+      reason: 'o push do histórico só chega ao motor com a opção ligada',
     );
 
     chamadas.clear();
 
-    await tester.tap(find.byTooltip('Conversar com Charles Spurgeon'));
+    await tester.tap(find.byTooltip('Conversas com Charles Spurgeon'));
     await tester.pumpAndSettle();
 
     expect(
       chamadas,
       contains(('/charles-spurgeon', false)),
-      reason: 'abrir a conversa tem de pedir um pushState ao motor',
+      reason: 'abrir o histórico tem de pedir um pushState ao motor',
     );
 
     await tester.tap(find.byIcon(Icons.arrow_back));
@@ -62,7 +62,7 @@ void main() {
     expect(
       chamadas,
       contains(('/hoje', false)),
-      reason: 'fechar a conversa tem de devolver a URL ao motor',
+      reason: 'fechar o histórico tem de devolver a URL ao motor',
     );
   });
 }

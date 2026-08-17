@@ -349,15 +349,31 @@ class Estado extends ChangeNotifier {
   // mutação notifica os ouvintes do Estado (a nuvem é um deles, e é o que
   // faz a mudança subir sozinha).
 
-  List<Mensagem> mensagensDe(String persona) => conversas.mensagensDe(persona);
+  List<Conversa> conversasDe(String persona) => conversas.conversasDe(persona);
 
-  Future<void> registrarMensagem(String persona, Mensagem mensagem) =>
-      conversas.registrarMensagem(persona, mensagem);
+  Conversa? conversaDe(String persona, String conversaId) =>
+      conversas.conversaDe(persona, conversaId);
 
-  Future<void> marcarRespondidas(String persona) =>
-      conversas.marcarRespondidas(persona);
+  List<Mensagem> mensagensDe(String persona, String conversaId) =>
+      conversas.mensagensDe(persona, conversaId);
 
-  Future<void> limparConversa(String persona) => conversas.limparConversa(persona);
+  Future<Conversa> novaConversa(String persona, {required String titulo}) =>
+      conversas.novaConversa(persona, titulo: titulo);
+
+  Future<void> registrarMensagem(
+    String persona,
+    String conversaId,
+    Mensagem mensagem,
+  ) => conversas.registrarMensagem(persona, conversaId, mensagem);
+
+  Future<void> marcarRespondidas(String persona, String conversaId) =>
+      conversas.marcarRespondidas(persona, conversaId);
+
+  Future<void> limparConversa(String persona, String conversaId) =>
+      conversas.limparConversa(persona, conversaId);
+
+  Future<void> limparTodasDe(String persona) =>
+      conversas.limparTodasDe(persona);
 
   /// O que a cópia na nuvem recebe para as conversas. Ver o método homônimo
   /// em `Conversas`.

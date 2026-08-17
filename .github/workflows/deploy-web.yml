@@ -17,6 +17,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Sem isto os secrets de environment são invisíveis: `secrets.NOME` em job
+    # sem `environment:` só lê secrets de repositório.
+    environment: github-pages
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       # Versão exata, não "stable": uma release nova do Flutter podia quebrar
@@ -27,10 +30,7 @@ jobs:
           flutter-version: 3.44.8
       - run: flutter pub get
       - run: flutter test
-      - run: flutter build web --release --base-href /devocional/ \
-          --dart-define=FIREBASE_API_KEY_WEB=${{ secrets.FIREBASE_API_KEY_WEB }} \
-          --dart-define=GEMINI_API_KEY_WEB=${{ secrets.GEMINI_API_KEY_WEB }} \
-          --dart-define=GEMINI_API_KEY_ANDROID=${{ secrets.GEMINI_API_KEY_ANDROID }}
+      - run: flutter build web --release --base-href /devocional/ --dart-define=FIREBASE_API_KEY_WEB=${{ secrets.FIREBASE_API_KEY_WEB }} --dart-define=GEMINI_API_KEY_WEB=${{ secrets.GEMINI_API_KEY_WEB }}
       - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
           path: build/web
