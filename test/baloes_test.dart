@@ -1,0 +1,107 @@
+import 'package:felipe_ambrozini/data/estado.dart';
+import 'package:felipe_ambrozini/data/lembretes.dart';
+import 'package:felipe_ambrozini/main.dart';
+import 'package:felipe_ambrozini/telas/chat.dart';
+import 'package:felipe_ambrozini/telas/comuns.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class _LembretesFalsas implements Lembretes {
+  bool permissaoConcedida = true;
+  @override
+  Future<void> inicializar({
+    required void Function(String chaveDaLeitura) aoTocarNotificacao,
+  }) async {}
+
+  @override
+  Future<String?> chaveQueAbriuOApp() async => null;
+
+  @override
+  Future<bool> pedirPermissao() async => permissaoConcedida;
+
+  @override
+  Future<void> agendar({
+    required TimeOfDay manhaEPromessas,
+    required TimeOfDay noite,
+  }) async {}
+
+  @override
+  Future<void> cancelar() async {}
+
+  @override
+  Future<bool> agendados() async => false;
+
+  @override
+  String fusoAtual = 'America/Sao_Paulo';
+}
+
+void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    Lembretes.instancia = _LembretesFalsas();
+  });
+
+  testWidgets('contador sobe ao abrir a folha e continua ao abrir o seletor de horário', (
+    tester,
+  ) async {
+    // Explícito, e não o padrão do ambiente de teste: lembretesSuportados
+    // depende da plataforma, e a seção de lembretes só existe em Android.
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    try {
+      final estado = Estado(await SharedPreferences.getInstance());
+      await tester.pumpWidget(AppDevocional(estado: estado));
+      await tester.pumpAndSettle();
+
+      expect(camadasFlutuantes.value, 0);
+      expect(find.byTooltip('Conversas com Charles Spurgeon'), findsOneWidget);
+
+      await tester.tap(find.byType(BotaoDeAjustes));
+      await tester.pumpAndSettle();
+
+      expect(camadasFlutuantes.value, greaterThan(0), reason: 'folha aberta');
+      expect(find.text('Tamanho do texto'), findsOneWidget);
+      expect(
+        find.byTooltip('Conversas com Charles Spurgeon'),
+        findsNothing,
+        reason: 'os balões não podem flutuar por cima da folha de ajustes',
+      );
+
+      await tester.ensureVisible(find.byType(SwitchListTile));
+      await tester.tap(find.byType(SwitchListTile));
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Noite'));
+      final hora = MaterialLocalizations.of(
+        tester.element(find.text('Noite')),
+      ).formatTimeOfDay(const TimeOfDay(hour: 18, minute: 0));
+      await tester.tap(find.text(hora));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TimePickerDialog), findsOneWidget);
+      expect(
+        camadasFlutuantes.value,
+        greaterThan(1),
+        reason: 'o seletor de horário soma por cima da folha',
+      );
+      expect(
+        find.byTooltip('Conversas com Charles Spurgeon'),
+        findsNothing,
+        reason: 'os balões não podem flutuar por cima do seletor de horário',
+      );
+
+      // Fecha o seletor e a folha: o contador volta a zero. Um toque na
+      // barreira seria frágil — a folha isScrollControlled quase preenche a
+      // tela —, então o pop é explícito, como o botão de voltar faria.
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      Navigator.of(tester.element(find.text('Tamanho do texto'))).pop();
+      await tester.pumpAndSettle();
+      expect(camadasFlutuantes.value, 0);
+      expect(find.byTooltip('Conversas com Charles Spurgeon'), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+}
