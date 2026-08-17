@@ -162,8 +162,9 @@ class _TelaChatState extends State<TelaChat> {
   void dispose() {
     // O dispose também roda dentro do build (o do desmonte da rota), então a
     // contagem volta depois do frame, como no initState.
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => camadasFlutuantes.value--);
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => camadasFlutuantes.value--,
+    );
     _conversador?.removeListener(_aoMudarConversador);
     _conversador?.dispose();
     _controle.dispose();
@@ -248,7 +249,8 @@ class _TelaChatState extends State<TelaChat> {
     final conversaId = conversador?.id ?? widget.conversaId;
     // O corte do teto de mensagens acontece no Estado; a tela só pergunta se
     // a conversa aberta foi cortada para mostrar o aviso quieto no topo.
-    final cortada = conversaId != null &&
+    final cortada =
+        conversaId != null &&
         (estado.conversaDe(widget.persona.id, conversaId)?.cortada ?? false);
 
     return Scaffold(
@@ -371,10 +373,7 @@ class _TelaChatState extends State<TelaChat> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    'Respostas geradas por inteligência artificial',
-                    style: tema.labelMedium,
-                  ),
+                  Text(avisoDeIa, style: tema.labelMedium),
                   const SizedBox(height: 6),
                   TextField(
                     controller: _controle,
@@ -466,6 +465,14 @@ class _BoasVindas extends StatelessWidget {
                 height: 1.6,
               ),
             ),
+            const SizedBox(height: 16),
+            // A divulgação se repete aqui, fora do rodapé: quem lê a carta de
+            // boas-vindas ainda não chegou ao campo de escrever, e o aviso de
+            // que a resposta é gerada não pode aparecer só depois do convite.
+            Text(
+              avisoDeIa,
+              style: tema.labelMedium?.copyWith(color: cor.onSurfaceVariant),
+            ),
           ],
         ),
       ),
@@ -493,8 +500,9 @@ class _BalcaoDeMensagem extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
-        mainAxisAlignment:
-            usuario ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: usuario
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!usuario) ...[
@@ -523,9 +531,7 @@ class _BalcaoDeMensagem extends StatelessWidget {
                         color: cor.primary.withValues(alpha: 0.4),
                         width: 1,
                       )
-                    : Border(
-                        left: BorderSide(color: cor.primary, width: 3),
-                      ),
+                    : Border(left: BorderSide(color: cor.primary, width: 3)),
               ),
               child: Text(
                 mensagem.texto,
@@ -573,9 +579,7 @@ class _Bolha extends StatelessWidget {
           decoration: BoxDecoration(
             color: cor.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(10),
-            border: Border(
-              left: BorderSide(color: cor.primary, width: 3),
-            ),
+            border: Border(left: BorderSide(color: cor.primary, width: 3)),
           ),
           child: child,
         ),
@@ -601,9 +605,7 @@ class _AvisoDeCorte extends StatelessWidget {
         decoration: BoxDecoration(
           color: cor.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(10),
-          border: Border(
-            left: BorderSide(color: cor.primary, width: 3),
-          ),
+          border: Border(left: BorderSide(color: cor.primary, width: 3)),
         ),
         child: Text(
           'As falas mais antigas saíram quando esta conversa passou do '

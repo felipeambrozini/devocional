@@ -175,19 +175,16 @@ void main() {
     );
   });
 
-  testWidgets('a moldura abre em Hoje e mostra as seis seções', (tester) async {
+  testWidgets('a moldura abre em Hoje e mostra as cinco seções', (
+    tester,
+  ) async {
     await aquecerAssets(tester);
     await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
     await tester.pumpAndSettle();
 
-    for (final rotulo in [
-      'Hoje',
-      'Bíblia',
-      'Devocional',
-      'Plano',
-      'Notas',
-      'Sobre',
-    ]) {
+    // Sobre não é mais aba: a navegação inferior tem cinco destinos, e os
+    // créditos moram na folha de ajustes (ver o teste seguinte).
+    for (final rotulo in ['Hoje', 'Bíblia', 'Devocional', 'Plano', 'Notas']) {
       expect(find.text(rotulo), findsWidgets, reason: rotulo);
     }
     // A saudação depende do relógio, então aceita as três formas.
@@ -234,20 +231,25 @@ void main() {
     expect(find.textContaining('29 de fevereiro'), findsNothing);
   });
 
-  testWidgets('tocar em Sobre abre os créditos e atualiza a URL', (
+  testWidgets('Sobre abre da folha de ajustes e atualiza a URL', (
     tester,
   ) async {
-    // Sobre já foi acionado por dentro da folha de ajustes, com um
-    // `GoRouter.push`. Por fora do shell, isso nunca atualizava a barra de
-    // endereço (confirmado num teste isolado antes desta versão) — por isso
-    // virou uma aba como as outras cinco, pelo mesmo `goBranch`. Este teste
-    // prova as duas partes: o conteúdo abre e a URL interna do GoRouter
-    // segue, não só o widget.
+    // Sobre voltou a viver dentro da folha de ajustes (ver comuns.dart), e o
+    // caminho até ele agora é um `GoRouter.push` feito por fora do shell.
+    // Sem `optionURLReflectsImperativeAPIs`, ligada no main.dart, esse push
+    // abriria a tela mas deixaria a barra de endereço presa na aba — este
+    // teste prova as duas partes: o conteúdo abre e a URL interna segue.
     await aquecerAssets(tester);
     await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Sobre').last);
+    await tester.tap(find.byType(BotaoDeAjustes));
+    await tester.pumpAndSettle();
+
+    // A folha cresce até quase a tela inteira e rola; o tile de Sobre é o
+    // último item e pode nascer fora da área visível.
+    await tester.ensureVisible(find.text('Sobre'));
+    await tester.tap(find.text('Sobre'));
     await tester.pumpAndSettle();
 
     expect(find.text('Fontes do texto'), findsOneWidget);
@@ -308,8 +310,10 @@ void main() {
       // tem de oferecer a resposta em vez de deixá-la respondida pelo
       // silêncio.
       final estado = await estadoLimpo();
-      final conversa =
-          await estado.novaConversa('spurgeon', titulo: 'Como vencer a ansiedade?');
+      final conversa = await estado.novaConversa(
+        'spurgeon',
+        titulo: 'Como vencer a ansiedade?',
+      );
       await estado.registrarMensagem(
         'spurgeon',
         conversa.id,
@@ -342,70 +346,61 @@ void main() {
     },
   );
 
-  testWidgets(
-    'conversa que passou do teto mostra o aviso quieto do corte',
-    (tester) async {
-      // O corte acontece no Estado, na hora de registrar a mensagem que
-      // estoura o teto; a tela só mostra a nota quando a conversa foi cortada.
-      final estado = await estadoLimpo();
-      final conversa = await estado.novaConversa('spurgeon', titulo: 'm0');
-      for (var i = 0; i < 121; i++) {
-        await estado.registrarMensagem(
-          'spurgeon',
-          conversa.id,
-          Mensagem(
-            id: 'm$i',
-            papel: 'user',
-            texto: 'fala $i',
-            momento: i,
-          ),
-        );
-      }
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: EscopoDoEstado(
-            estado: estado,
-            child: TelaChat(persona: personaSpurgeon, conversaId: conversa.id),
-          ),
-        ),
-      );
-      await tester.pump();
-      await tester.pump();
-
-      expect(
-        find.textContaining('As falas mais antigas saíram'),
-        findsOneWidget,
-      );
-
-      // Desmonta o chat da conversa cortada antes de abrir a curta: sem isto o
-      // framework reusa o State (mesmo tipo de widget) e o conversador da
-      // conversa anterior continua no ar.
-      await tester.pumpWidget(const SizedBox());
-      await tester.pump();
-
-      // Uma conversa curta não leva o aviso.
-      final curta = await estado.novaConversa('spurgeon', titulo: 'curta');
+  testWidgets('conversa que passou do teto mostra o aviso quieto do corte', (
+    tester,
+  ) async {
+    // O corte acontece no Estado, na hora de registrar a mensagem que
+    // estoura o teto; a tela só mostra a nota quando a conversa foi cortada.
+    final estado = await estadoLimpo();
+    final conversa = await estado.novaConversa('spurgeon', titulo: 'm0');
+    for (var i = 0; i < 121; i++) {
       await estado.registrarMensagem(
         'spurgeon',
-        curta.id,
-        Mensagem(id: 'c1', papel: 'user', texto: 'oi', momento: 999),
+        conversa.id,
+        Mensagem(id: 'm$i', papel: 'user', texto: 'fala $i', momento: i),
       );
-      await tester.pumpWidget(
-        MaterialApp(
-          home: EscopoDoEstado(
-            estado: estado,
-            child: TelaChat(persona: personaSpurgeon, conversaId: curta.id),
-          ),
-        ),
-      );
-      await tester.pump();
-      await tester.pump();
+    }
 
-      expect(find.textContaining('As falas mais antigas saíram'), findsNothing);
-      expect(find.text('oi'), findsOneWidget);
-    },
-  );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: EscopoDoEstado(
+          estado: estado,
+          child: TelaChat(persona: personaSpurgeon, conversaId: conversa.id),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.textContaining('As falas mais antigas saíram'), findsOneWidget);
+
+    // Desmonta o chat da conversa cortada antes de abrir a curta: sem isto o
+    // framework reusa o State (mesmo tipo de widget) e o conversador da
+    // conversa anterior continua no ar.
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
+
+    // Uma conversa curta não leva o aviso.
+    final curta = await estado.novaConversa('spurgeon', titulo: 'curta');
+    await estado.registrarMensagem(
+      'spurgeon',
+      curta.id,
+      Mensagem(id: 'c1', papel: 'user', texto: 'oi', momento: 999),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: EscopoDoEstado(
+          estado: estado,
+          child: TelaChat(persona: personaSpurgeon, conversaId: curta.id),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.textContaining('As falas mais antigas saíram'), findsNothing);
+    expect(find.text('oi'), findsOneWidget);
+  });
 
   Future<void> abrirHistorico(WidgetTester tester, Estado estado) async {
     await tester.pumpWidget(AppDevocional(estado: estado));
@@ -508,7 +503,12 @@ void main() {
       await estado.registrarMensagem(
         'spurgeon',
         c.id,
-        Mensagem(id: '$momento', papel: 'user', texto: titulo, momento: momento),
+        Mensagem(
+          id: '$momento',
+          papel: 'user',
+          texto: titulo,
+          momento: momento,
+        ),
       );
     }
 
@@ -840,7 +840,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Tela cheia'));
+    await tester.tap(find.byTooltip('Tela cheia'));
     await tester.pumpAndSettle();
 
     expect(
@@ -851,9 +851,7 @@ void main() {
 
     // Um toque no texto não fecha: durante uma transmissão, um toque
     // acidental não pode encerrar a apresentação. Fecha só pelo botão.
-    await tester.tap(
-      find.text('No princípio, Deus criou os céus e a terra.'),
-    );
+    await tester.tap(find.text('No princípio, Deus criou os céus e a terra.'));
     await tester.pumpAndSettle();
     expect(find.text('Gênesis 1:1'), findsOneWidget);
 
@@ -904,54 +902,53 @@ void main() {
     },
   );
 
-  testWidgets(
-    'Manhã e Noite mostra o nome do livro por extenso em maiúsculas '
-    'e a referência abreviada do devocional, não o versículo completo',
-    (tester) async {
-      await aquecerAssets(tester);
-      final data = DateTime(2026, 1, 1);
-      await tester.runAsync(
-        () => Conteudo.instancia.devocional(data, Periodo.manha),
-      );
-      // Pré-aquece a introdução de Josué: sem isso a Future do CarregaUmaVez
-      // nunca completa dentro do tempo falso do teste.
-      await tester.runAsync(() => Conteudo.instancia.introducao('josue'));
-      await tester.pumpWidget(
-        MaterialApp(
-          home: EscopoDoEstado(
-            estado: await estadoLimpo(),
-            child: TelaDevocional(
-              dataInicial: data,
-              leituraInicial: Leitura.manha,
-            ),
+  testWidgets('Manhã e Noite mostra o nome do livro por extenso em maiúsculas '
+      'e a referência abreviada do devocional, não o versículo completo', (
+    tester,
+  ) async {
+    await aquecerAssets(tester);
+    final data = DateTime(2026, 1, 1);
+    await tester.runAsync(
+      () => Conteudo.instancia.devocional(data, Periodo.manha),
+    );
+    // Pré-aquece a introdução de Josué: sem isso a Future do CarregaUmaVez
+    // nunca completa dentro do tempo falso do teste.
+    await tester.runAsync(() => Conteudo.instancia.introducao('josue'));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: EscopoDoEstado(
+          estado: await estadoLimpo(),
+          child: TelaDevocional(
+            dataInicial: data,
+            leituraInicial: Leitura.manha,
           ),
         ),
-      );
-      await tester.pumpAndSettle();
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      // A referência da citação vem do próprio devocional (field `referencia`),
-      // exibida em caixa alta — não é o versículo completo da BKJ.
-      expect(
-        find.textContaining('JOSUÉ 5:12', findRichText: true),
-        findsOneWidget,
-      );
-      // O versículo completo da BKJ não aparece: só a referência abreviada.
-      expect(
-        find.textContaining(
-          'Elas comeram do fruto da terra de Canaã',
-          findRichText: true,
-        ),
-        findsNothing,
-      );
-      // Regressão: a referência em maiúsculas não pode impedir a introdução do
-      // livro de aparecer entre o seletor e o texto do devocional, com o título
-      // formal do livro ao lado.
-      expect(
-        find.text('Introdução: ${livroPorSlug('josue')!.tituloFormal}'),
-        findsOneWidget,
-      );
-    },
-  );
+    // A referência da citação vem do próprio devocional (field `referencia`),
+    // exibida em caixa alta — não é o versículo completo da BKJ.
+    expect(
+      find.textContaining('JOSUÉ 5:12', findRichText: true),
+      findsOneWidget,
+    );
+    // O versículo completo da BKJ não aparece: só a referência abreviada.
+    expect(
+      find.textContaining(
+        'Elas comeram do fruto da terra de Canaã',
+        findRichText: true,
+      ),
+      findsNothing,
+    );
+    // Regressão: a referência em maiúsculas não pode impedir a introdução do
+    // livro de aparecer entre o seletor e o texto do devocional, com o título
+    // formal do livro ao lado.
+    expect(
+      find.text('Introdução: ${livroPorSlug('josue')!.tituloFormal}'),
+      findsOneWidget,
+    );
+  });
 
   testWidgets(
     'Promessas de Deus mostra título, referência e versículo da BKJ',
@@ -1108,9 +1105,10 @@ void main() {
     }
 
     final span = tester.widget<RichText>(versiculo4).text as TextSpan;
-    final doAlvo = achatar(span, []).firstWhere(
-      (s) => s.text!.contains('E viu Deus'),
-    );
+    final doAlvo = achatar(
+      span,
+      [],
+    ).firstWhere((s) => s.text!.contains('E viu Deus'));
     expect(
       doAlvo.style?.color?.a,
       1.0,
@@ -1161,11 +1159,7 @@ void main() {
 
       // O deslize horizontal de verdade vira o capítulo e deixa o desfazer
       // à mão.
-      await tester.fling(
-        find.byType(ListView),
-        const Offset(-300, 0),
-        800,
-      );
+      await tester.fling(find.byType(ListView), const Offset(-300, 0), 800);
       await tester.pumpAndSettle();
       expect(estado.ultimaLeitura, ('genesis', 2));
       expect(find.text('Desfazer'), findsOneWidget);

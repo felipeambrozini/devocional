@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data/estado.dart';
@@ -32,6 +33,17 @@ class TelaSobre extends StatelessWidget {
             Text('Devocional', style: tema.displayMedium),
             const SizedBox(height: 8),
             const Filete(largura: 64),
+            const SizedBox(height: 12),
+            // A versão pequena, sem alarde, é o que basta para quem quer
+            // conferir se está na última compilação.
+            CarregaUmaVez<String>(
+              chave: 'versao',
+              carregar: () async => (await PackageInfo.fromPlatform()).version,
+              construir: (context, snap) => Text(
+                snap.data == null ? '' : 'Versão ${snap.data}',
+                style: tema.bodySmall?.copyWith(color: cor.onSurfaceVariant),
+              ),
+            ),
             const SizedBox(height: 24),
             Text('Fontes do texto', style: tema.headlineSmall),
             const SizedBox(height: 10),
@@ -57,6 +69,19 @@ class TelaSobre extends StatelessWidget {
               asset: 'assets/images/instagram.webp',
               rotulo: 'Instagram',
               url: 'https://www.instagram.com/felipe_ambrozini/',
+            ),
+            const SizedBox(height: 32),
+            Text('Ajuda', style: tema.headlineSmall),
+            const SizedBox(height: 10),
+            // A ajuda não pode morar só no primeiro dia: quem dispensou o
+            // cartão da Hoje não tem como vê-lo de novo, e Sobre é onde se
+            // procura por ajuda quando se procura.
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.help_outline, color: cor.primary),
+              title: const Text('Como usar'),
+              subtitle: const Text('O cartão da primeira visita, de novo.'),
+              onTap: () => _mostrarAjuda(context),
             ),
             // Só na web: é onde existe conta na nuvem (ver nuvem.dart).
             if (nuvemSuportada) ...[
@@ -95,6 +120,36 @@ class TelaSobre extends StatelessWidget {
       ),
     );
   }
+}
+
+/// As mesmas linhas do cartão "Como usar" da Hoje, num diálogo: a ajuda
+/// sobrevive ao "Entendi" da primeira visita.
+Future<void> _mostrarAjuda(BuildContext context) {
+  final tema = Theme.of(context).textTheme;
+  return showDialog<void>(
+    context: context,
+    builder: (dialogo) => AlertDialog(
+      title: const Text('Como usar'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final linha in linhasDeAjuda) ...[
+              Text(linha, style: tema.bodyMedium?.copyWith(height: 1.5)),
+              const SizedBox(height: 8),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogo),
+          child: const Text('Entendi'),
+        ),
+      ],
+    ),
+  );
 }
 
 /// Confirma e apaga a cópia da conta. O "não pode ser desfeita" é literal:

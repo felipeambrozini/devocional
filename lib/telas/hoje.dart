@@ -53,6 +53,7 @@ class _TelaHojeState extends State<TelaHoje> {
                 leitura: periodo == Periodo.manha
                     ? Leitura.manha
                     : Leitura.noite,
+                destaque: true,
               ),
               const SizedBox(height: 16),
               _PreviaDaLeitura(data: agora, leitura: Leitura.promessas),
@@ -90,28 +91,11 @@ class _CartaoDeAjuda extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Na Bíblia, desliza o dedo para virar o capítulo; com mouse e '
-            'teclado, usa as setas.',
-            style: tema.bodyMedium,
-          ),
+          for (final linha in linhasDeAjuda) ...[
+            Text(linha, style: tema.bodyMedium),
+            const SizedBox(height: 6),
+          ],
           const SizedBox(height: 6),
-          Text(
-            'O Devocional traz Manhã, Promessas e Noite, e vira sozinho com '
-            'o horário.',
-            style: tema.bodyMedium,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            '"Ler tudo" abre a leitura do dia inteira.',
-            style: tema.bodyMedium,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'No Plano, marca o dia quando terminares a leitura.',
-            style: tema.bodyMedium,
-          ),
-          const SizedBox(height: 12),
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
@@ -272,15 +256,23 @@ class _ComFadeAoFim extends StatelessWidget {
 ///
 /// Serve às três porque só o que muda é de onde o texto vem e se há título e
 /// versículo em destaque: Promessas de Deus tem os dois, Manhã e Noite não.
+///
+/// [destaque] marca a leitura do período da hora (a "de agora"): é a que
+/// ganha o filete dourado embaixo do título, dizendo que uma leitura começa
+/// ali. A outra prévia do dia fica compacta — uma linha e o botão — para a
+/// primeira não competir com ela pelo mesmo peso.
 class _PreviaDaLeitura extends StatelessWidget {
-  const _PreviaDaLeitura({required this.data, required this.leitura});
+  const _PreviaDaLeitura({
+    required this.data,
+    required this.leitura,
+    this.destaque = false,
+  });
 
   final DateTime data;
   final Leitura leitura;
+  final bool destaque;
 
-  String get _titulo => leitura == Leitura.promessas
-      ? leitura.rotulo
-      : 'Devocional da ${leitura.rotulo.toLowerCase()}';
+  String get _titulo => leitura.tituloCompleto;
 
   IconData get _icone => switch (leitura) {
     Leitura.manha => Icons.wb_sunny_outlined,
@@ -338,12 +330,51 @@ class _PreviaDaLeitura extends StatelessWidget {
           ),
           estiloReferencia: tema.titleSmall?.copyWith(color: cor.secondary),
         );
+        void abrirLeitura() => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>
+                TelaDevocional(dataInicial: data, leituraInicial: leitura),
+          ),
+        );
+        // A prévia fora do período da hora fica numa linha: quem olha para
+        // ela já viu que existe, e o peso do dia é da leitura de agora.
+        if (!destaque) {
+          return Cartao(
+            titulo: _titulo,
+            acessorio: Icon(_icone, color: cor.primary, size: 20),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    dev.titulo.isEmpty ? dev.texto : dev.titulo,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: tema.bodyMedium?.copyWith(
+                      color: cor.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: abrirLeitura,
+                  icon: const Icon(Icons.arrow_forward, size: 16),
+                  label: const Text('Ler tudo'),
+                ),
+              ],
+            ),
+          );
+        }
         return Cartao(
           titulo: _titulo,
           acessorio: Icon(_icone, color: cor.primary, size: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // O filete sob o título é a gramática da leitura que começa
+              // ali, a mesma da capa do devocional: a prévia de agora tem o
+              // mesmo gesto de chamada da leitura em si.
+              const Filete(),
+              const SizedBox(height: 12),
               if (dev.titulo.isNotEmpty)
                 Text(
                   dev.titulo,
@@ -368,15 +399,7 @@ class _PreviaDaLeitura extends StatelessWidget {
               Align(
                 alignment: Alignment.centerRight,
                 child: OutlinedButton.icon(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => TelaDevocional(
-                        dataInicial: data,
-                        leituraInicial: leitura,
-                      ),
-                    ),
-                  ),
+                  onPressed: abrirLeitura,
                   icon: const Icon(Icons.arrow_forward, size: 18),
                   label: const Text('Ler tudo'),
                 ),

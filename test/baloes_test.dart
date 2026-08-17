@@ -43,63 +43,122 @@ void main() {
     Lembretes.instancia = _LembretesFalsas();
   });
 
-  testWidgets('contador sobe ao abrir a folha e continua ao abrir o seletor de horário', (
+  testWidgets(
+    'contador sobe ao abrir a folha e continua ao abrir o seletor de horário',
+    (tester) async {
+      // Explícito, e não o padrão do ambiente de teste: lembretesSuportados
+      // depende da plataforma, e a seção de lembretes só existe em Android.
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      try {
+        final estado = Estado(await SharedPreferences.getInstance());
+        await tester.pumpWidget(AppDevocional(estado: estado));
+        await tester.pumpAndSettle();
+
+        expect(camadasFlutuantes.value, 0);
+        expect(
+          find.byTooltip('Conversas com Charles Spurgeon'),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.byType(BotaoDeAjustes));
+        await tester.pumpAndSettle();
+
+        expect(camadasFlutuantes.value, greaterThan(0), reason: 'folha aberta');
+        expect(find.text('Tamanho do texto'), findsOneWidget);
+        expect(
+          find.byTooltip('Conversas com Charles Spurgeon'),
+          findsNothing,
+          reason: 'os balões não podem flutuar por cima da folha de ajustes',
+        );
+
+        await tester.ensureVisible(
+          find.widgetWithText(
+            SwitchListTile,
+            'Avisar no horário do devocional',
+          ),
+        );
+        await tester.tap(
+          find.widgetWithText(
+            SwitchListTile,
+            'Avisar no horário do devocional',
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(find.text('Noite'));
+        final hora = MaterialLocalizations.of(
+          tester.element(find.text('Noite')),
+        ).formatTimeOfDay(const TimeOfDay(hour: 18, minute: 0));
+        await tester.tap(find.text(hora));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(TimePickerDialog), findsOneWidget);
+        expect(
+          camadasFlutuantes.value,
+          greaterThan(1),
+          reason: 'o seletor de horário soma por cima da folha',
+        );
+        expect(
+          find.byTooltip('Conversas com Charles Spurgeon'),
+          findsNothing,
+          reason: 'os balões não podem flutuar por cima do seletor de horário',
+        );
+
+        // Fecha o seletor e a folha: o contador volta a zero. Um toque na
+        // barreira seria frágil — a folha isScrollControlled quase preenche a
+        // tela —, então o pop é explícito, como o botão de voltar faria.
+        await tester.tap(find.text('OK'));
+        await tester.pumpAndSettle();
+        Navigator.of(tester.element(find.text('Tamanho do texto'))).pop();
+        await tester.pumpAndSettle();
+        expect(camadasFlutuantes.value, 0);
+        expect(
+          find.byTooltip('Conversas com Charles Spurgeon'),
+          findsOneWidget,
+        );
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    },
+  );
+
+  testWidgets('esconder os balões nos ajustes os tira de todas as telas', (
     tester,
   ) async {
-    // Explícito, e não o padrão do ambiente de teste: lembretesSuportados
-    // depende da plataforma, e a seção de lembretes só existe em Android.
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
     try {
       final estado = Estado(await SharedPreferences.getInstance());
       await tester.pumpWidget(AppDevocional(estado: estado));
       await tester.pumpAndSettle();
 
-      expect(camadasFlutuantes.value, 0);
+      expect(estado.baloesVisiveis, isTrue);
       expect(find.byTooltip('Conversas com Charles Spurgeon'), findsOneWidget);
 
       await tester.tap(find.byType(BotaoDeAjustes));
       await tester.pumpAndSettle();
 
-      expect(camadasFlutuantes.value, greaterThan(0), reason: 'folha aberta');
-      expect(find.text('Tamanho do texto'), findsOneWidget);
-      expect(
-        find.byTooltip('Conversas com Charles Spurgeon'),
-        findsNothing,
-        reason: 'os balões não podem flutuar por cima da folha de ajustes',
+      // O interruptor de conversas é o que liga a preferência; o de lembretes
+      // é outro SwitchListTile na mesma folha e não pode ser confundido.
+      await tester.ensureVisible(
+        find.widgetWithText(SwitchListTile, 'Mostrar botões de conversa'),
       );
-
-      await tester.ensureVisible(find.byType(SwitchListTile));
-      await tester.tap(find.byType(SwitchListTile));
+      await tester.tap(
+        find.widgetWithText(SwitchListTile, 'Mostrar botões de conversa'),
+      );
       await tester.pumpAndSettle();
 
-      await tester.ensureVisible(find.text('Noite'));
-      final hora = MaterialLocalizations.of(
-        tester.element(find.text('Noite')),
-      ).formatTimeOfDay(const TimeOfDay(hour: 18, minute: 0));
-      await tester.tap(find.text(hora));
-      await tester.pumpAndSettle();
+      expect(estado.baloesVisiveis, isFalse);
 
-      expect(find.byType(TimePickerDialog), findsOneWidget);
-      expect(
-        camadasFlutuantes.value,
-        greaterThan(1),
-        reason: 'o seletor de horário soma por cima da folha',
-      );
-      expect(
-        find.byTooltip('Conversas com Charles Spurgeon'),
-        findsNothing,
-        reason: 'os balões não podem flutuar por cima do seletor de horário',
-      );
-
-      // Fecha o seletor e a folha: o contador volta a zero. Um toque na
-      // barreira seria frágil — a folha isScrollControlled quase preenche a
-      // tela —, então o pop é explícito, como o botão de voltar faria.
-      await tester.tap(find.text('OK'));
-      await tester.pumpAndSettle();
+      // Fecha a folha sem camada nenhuma por cima: os balões poderiam voltar,
+      // e não voltam — a preferência vale de todas as telas.
       Navigator.of(tester.element(find.text('Tamanho do texto'))).pop();
       await tester.pumpAndSettle();
       expect(camadasFlutuantes.value, 0);
-      expect(find.byTooltip('Conversas com Charles Spurgeon'), findsOneWidget);
+      expect(
+        find.byTooltip('Conversas com Charles Spurgeon'),
+        findsNothing,
+        reason: 'os balões sumiram de vez, não só por cima da folha',
+      );
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }

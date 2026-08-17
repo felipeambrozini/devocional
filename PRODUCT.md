@@ -43,8 +43,10 @@ vitoriana dele, tratando o leitor por "tu".
 - Lembrete diário opcional (Android), com horários ajustáveis.
 - Cópia de segurança de favoritos, notas e progresso por exportar/importar
   (área de transferência); conta Google só na web, para espelhar na nuvem.
-- Navegação: abas Hoje, Bíblia, Devocional, Plano, Notas e Sobre; na web cada
-  aba tem URL própria e links diretos no formato `?ler=joao.3.16`.
+- Navegação: abas Hoje, Bíblia, Devocional, Plano e Notas; Sobre (créditos,
+  canais e ajuda) mora na folha de ajustes. Na web cada aba tem URL própria;
+  `/sobre` e as conversas também, e links diretos no formato `?ler=joao.3.16`
+  abrem um versículo.
 - Só em pt_BR; conteúdo vem de JSON locais em `assets/`, carregado sob demanda.
 
 ## Capabilities and Constraints

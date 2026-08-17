@@ -1,5 +1,4 @@
-import 'package:flutter/foundation.dart'
-    show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -119,7 +118,9 @@ class _TelaBibliaState extends State<TelaBiblia> {
     final alvo = widget.destacar;
     if (alvo == null || _rolouAteOAlvo) return;
     _rolouAteOAlvo = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _rolarAteOAlvo(alvo.$1));
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _rolarAteOAlvo(alvo.$1),
+    );
   }
 
   void _rolarAteOAlvo(int versiculo) {
@@ -396,10 +397,21 @@ class _Leitor extends StatelessWidget {
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
+    // Em tela estreita os balões de conversa moram embaixo, na base da tela;
+    // o fim da lista precisa de folga para a última linha não ficar atrás
+    // deles. Em tela larga os balões ficam fora da coluna de leitura.
+    final protegerDosBaloes =
+        EscopoDoEstado.de(context).baloesVisiveis &&
+        MediaQuery.sizeOf(context).width < 720;
 
     return ListView.builder(
       controller: rolagem,
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        8,
+        20,
+        protegerDosBaloes ? folgaDosBaloes : 32,
+      ),
       itemCount: capitulo.versiculos.length + 1,
       itemBuilder: (context, i) {
         if (i == 0) {
@@ -444,7 +456,11 @@ class _Leitor extends StatelessWidget {
                                 style: tema.displayMedium,
                               ),
                               const SizedBox(width: 8),
-                              Icon(Icons.expand_more, size: 22, color: cor.primary),
+                              Icon(
+                                Icons.expand_more,
+                                size: 22,
+                                color: cor.primary,
+                              ),
                             ],
                           ),
                         ),
@@ -618,7 +634,7 @@ Future<void> _abrirAcoesDoVersiculo(
   final marcacao = estado.marcacaoDe(versao, livro, capituloNumero, numero);
   await showModalBottomSheet<void>(
     context: context,
-    // Cinco ações mais o cabeçalho passam da altura em telas baixas ou em
+    // Quatro ações mais o cabeçalho passam da altura em telas baixas ou em
     // paisagem — mesmo motivo e mesma solução de ajustesDeLeitura, em
     // comuns.dart: isScrollControlled deixa a folha crescer, e o
     // SingleChildScrollView rola o que não couber em vez de estourar.
@@ -631,16 +647,45 @@ Future<void> _abrirAcoesDoVersiculo(
             mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
+                padding: const EdgeInsets.fromLTRB(20, 20, 8, 20),
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '$referencia:$numero',
-                      style: Theme.of(folha).textTheme.headlineSmall,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '$referencia:$numero',
+                            style: Theme.of(folha).textTheme.headlineSmall,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            texto,
+                            style: Theme.of(folha).textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(texto, style: Theme.of(folha).textTheme.bodyMedium),
+                    // "Tela cheia" é a ação de quem está ao vivo, não uma das
+                    // rotinas do dia; mora no cabeçalho, e não na lista de
+                    // ações com o mesmo peso de Favoritar e Copiar.
+                    IconButton(
+                      tooltip: 'Tela cheia',
+                      icon: const Icon(Icons.fullscreen),
+                      onPressed: () {
+                        Navigator.pop(folha);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => TelaApresentacao(
+                              texto: texto,
+                              referencia: '$referencia:$numero',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -707,24 +752,6 @@ Future<void> _abrirAcoesDoVersiculo(
                     ),
                   );
                   navegador.pop();
-                },
-              ),
-              // Ação sem consequência, como Copiar e Compartilhar: só mostra o
-              // versículo em tela cheia, não muda nada no estado do app.
-              ListTile(
-                leading: Icon(Icons.fullscreen, color: cor.primary),
-                title: const Text('Tela cheia'),
-                onTap: () {
-                  Navigator.pop(folha);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => TelaApresentacao(
-                        texto: texto,
-                        referencia: '$referencia:$numero',
-                      ),
-                    ),
-                  );
                 },
               ),
               ListTile(

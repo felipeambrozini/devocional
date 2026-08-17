@@ -26,6 +26,7 @@ class Estado extends ChangeNotifier {
   static const _kEscala = 'escala_de_leitura';
   static const _kModoDoTema = 'modo_do_tema';
   static const _kAjudaDispensada = 'ajuda_dispensada';
+  static const _kBaloesVisiveis = 'baloes_visiveis';
   static const _kLembretesAtivos = 'lembretes_ativos';
   static const _kMinutosLembreteManha = 'minutos_lembrete_manha';
   static const _kMinutosLembreteNoite = 'minutos_lembrete_noite';
@@ -57,6 +58,10 @@ class Estado extends ChangeNotifier {
 
   /// A primeira visita ainda não dispensou o cartão "Como usar" da Hoje.
   bool _ajudaDispensada = false;
+
+  /// Se os balões de conversa aparecem nas bordas das telas. Padrão true: o
+  /// chat só é descoberto pelos retratos, escondê-los esconde o caminho.
+  bool _baloesVisiveis = true;
 
   /// Se os três lembretes diários estão ligados. Padrão false: notificação é
   /// opt-in, nunca ligada sem o usuário pedir.
@@ -125,6 +130,8 @@ class Estado extends ChangeNotifier {
 
     _ajudaDispensada = _prefs.getBool(_kAjudaDispensada) ?? false;
 
+    _baloesVisiveis = _prefs.getBool(_kBaloesVisiveis) ?? true;
+
     _lembretesAtivos = _prefs.getBool(_kLembretesAtivos) ?? false;
     _minutosLembreteManha = _minutosValidos(
       _prefs.getInt(_kMinutosLembreteManha),
@@ -185,6 +192,19 @@ class Estado extends ChangeNotifier {
     notifyListeners();
     await _prefs.setInt(_kMinutosLembreteManha, minutosManha);
     await _prefs.setInt(_kMinutosLembreteNoite, minutosNoite);
+  }
+
+  // --- balões de conversa ---------------------------------------------------- //
+
+  bool get baloesVisiveis => _baloesVisiveis;
+
+  /// Só persiste; quem decide mostrar ou não os balões é o `_ComBaloes` do
+  /// `main.dart`. O default é true: o chat não tem outro caminho de entrada.
+  Future<void> definirBaloesVisiveis(bool novo) async {
+    if (novo == _baloesVisiveis) return;
+    _baloesVisiveis = novo;
+    notifyListeners();
+    await _prefs.setBool(_kBaloesVisiveis, novo);
   }
 
   // --- tamanho do texto de leitura ----------------------------------------- //

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuthException;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../data/canon.dart';
 import '../data/conteudo.dart';
@@ -7,6 +8,30 @@ import '../data/estado.dart';
 import '../data/lembretes.dart';
 import '../data/modelos.dart';
 import '../data/nuvem.dart';
+
+/// A folga que as telas de leitura deixam no fim da lista para os balões de
+/// conversa (88 de folga mais 52 de balão, em `main.dart`) não cobrirem a
+/// última linha. Só entra em telas estreitas: em tela larga os balões ficam
+/// fora da coluna de leitura, que é limitada por [LarguraDeLeitura].
+const folgaDosBaloes = 152.0;
+
+/// Divulgação de que o chat responde por inteligência artificial. O mesmo
+/// texto em todo lugar em que uma IA fala: rodapé do chat, boas-vindas e
+/// histórico vazio — repetir é o que o torna um aviso, não um enfeite.
+const avisoDeIa = 'Respostas geradas por inteligência artificial';
+
+/// As linhas do cartão "Como usar" da Hoje. A mesma ajuda reaparece em Sobre,
+/// porque quem dispensou o cartão na primeira visita não tem como vê-lo de
+/// novo — e o caminho para a ajuda não pode depender só do primeiro dia.
+const linhasDeAjuda = [
+  'Na Bíblia, desliza o dedo para virar o capítulo; com mouse e teclado, '
+      'usa as setas.',
+  'O Devocional traz Manhã, Promessas e Noite, e vira sozinho com o horário.',
+  '"Ler tudo" abre a leitura do dia inteira.',
+  'Os retratos de Spurgeon e de Felipe nas bordas da tela abrem as '
+      'conversas: pergunte sobre a Palavra, peça uma aplicação, desabafe.',
+  'No Plano, marca o dia quando terminares a leitura.',
+];
 
 /// Capa da Bíblia de Estudo Spurgeon, trocada conforme o tema claro/escuro.
 String capaBibliaSpurgeon(BuildContext context) {
@@ -286,7 +311,10 @@ class BotaoDeAjustes extends StatelessWidget {
   );
 }
 
-/// Ajustes de leitura: tamanho do texto e claro ou escuro.
+/// Ajustes de leitura: tamanho do texto e claro ou escuro, botões de
+/// conversa, lembretes, conta — e Sobre, que deixou de ser aba e voltou para
+/// a folha quando a URL das conversas passou a ser refletida no navegador
+/// (ver `main.dart`, `optionURLReflectsImperativeAPIs`).
 ///
 /// Fica numa folha acionada pela AppBar do leitor, e não numa tela de Ajustes,
 /// porque é onde o efeito se vê: muda o passo e o versículo atrás muda junto,
@@ -300,7 +328,7 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
     // deixa a folha crescer até quase a tela inteira, e o SingleChildScrollView
     // rola o que não couber em vez de estourar o layout.
     isScrollControlled: true,
-    builder: (_) => SafeArea(
+    builder: (folha) => SafeArea(
       child: ListenableBuilder(
         listenable: estado,
         builder: (context, _) {
@@ -351,6 +379,19 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                     ],
                   ),
                 ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 4),
+                  child: Text('Conversas', style: tema.headlineSmall),
+                ),
+                SwitchListTile(
+                  title: const Text('Mostrar botões de conversa'),
+                  subtitle: const Text(
+                    'Os retratos nas bordas das telas abrem as conversas com '
+                    'Spurgeon e com Felipe.',
+                  ),
+                  value: estado.baloesVisiveis,
+                  onChanged: (novo) => estado.definirBaloesVisiveis(novo),
+                ),
                 // Só em Android: é a única plataforma do projeto com um agendador
                 // de sistema que o plugin de fato controla. Ver lembretes.dart.
                 if (lembretesSuportados)
@@ -358,6 +399,21 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 // Só na web: Android já guarda tudo no aparelho. Ver
                 // nuvem.dart, mesma regra do lembretesSuportados acima.
                 if (nuvemSuportada) ..._secaoDaConta(context),
+                ListTile(
+                  leading: Icon(
+                    Icons.info_outline,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: const Text('Sobre'),
+                  subtitle: const Text('Fontes do texto, canais e privacidade'),
+                  onTap: () {
+                    // Sai da folha antes do push: uma rota sobre a folha
+                    // deixaria a folha embaixo da tela de Sobre no Android.
+                    final roteador = GoRouter.of(folha);
+                    Navigator.pop(folha);
+                    roteador.push('/sobre');
+                  },
+                ),
                 const SizedBox(height: 8),
               ],
             ),

@@ -165,10 +165,6 @@ const _destinos = <_Destino>[
     Icons.bookmark,
     TelaNotas(),
   ),
-  // Não é uma leitura como as outras cinco, mas ganhou uma URL própria
-  // porque a navegação inferior é o caminho natural dela, como das demais.
-  // Ver a seção "Web" do README.
-  _Destino('Sobre', 'sobre', Icons.info_outline, Icons.info, TelaSobre()),
 ];
 
 /// Um nó de foco por aba, criados uma vez para o app inteiro, não por
@@ -176,7 +172,7 @@ const _destinos = <_Destino>[
 /// tanto o `builder` da rota quanto o toque na barra de navegação (em
 /// `Moldura._irParaAba`) precisam do mesmo nó.
 ///
-/// Existem porque o shell mantém as seis abas vivas ao mesmo tempo (para
+/// Existem porque o shell mantém as abas vivas ao mesmo tempo (para
 /// preservar rolagem e capítulo aberto ao trocar de aba) escondendo as
 /// inativas com `Offstage`, que não exclui foco — o teclado não saberia a
 /// quem obedecer sem um escopo por aba. Mesmo problema, mesma solução de
@@ -185,9 +181,11 @@ final _escoposDasAbas = [
   for (final d in _destinos) FocusScopeNode(debugLabel: d.rotulo),
 ];
 
-/// Cada aba com o próprio caminho (`/hoje`, `/biblia`, ..., `/sobre`), para
-/// abrir direto por link e sobreviver a um F5 — o GitHub Pages não tem regra
-/// de reescrita, por isso o truque em web/404.html e web/index.html.
+/// Cada aba com o próprio caminho (`/hoje`, `/biblia`, `/devocional`,
+/// `/plano`, `/notas`), para abrir direto por link e sobreviver a um F5 — o
+/// GitHub Pages não tem regra de reescrita, por isso o truque em web/404.html
+/// e web/index.html. Sobre e as conversas também têm URL própria, fora do
+/// shell: são telas empurradas por cima das abas, não abas.
 ///
 /// `StatefulShellRoute.indexedStack`, não rotas soltas: rotas soltas
 /// trocariam de aba reconstruindo a Moldura do zero, perdendo a rolagem e o
@@ -253,6 +251,13 @@ final _router = GoRouter(
           ),
         ),
       ],
+    ),
+    GoRoute(
+      path: '/sobre',
+      // Sobre não é aba: a navegação inferior tem cinco destinos, e o caminho
+      // para os créditos fica no fim da folha de ajustes (ver comuns.dart).
+      // A URL própria continua valendo para F5 e link compartilhado.
+      builder: (context, state) => const TelaSobre(),
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
@@ -478,6 +483,8 @@ final _observadorDeCamadas = _ObservadorDeCamadas();
 /// aparecem também nas leituras abertas por cima das abas (o "Continuar
 /// leitura", o capítulo do link compartilhado). Somem quando
 /// [camadasFlutuantes] passa de zero, e reaparecem quando a camada fecha.
+/// Escondê-los nos ajustes (`estado.baloesVisiveis`) os tira de todas as
+/// telas: só o dono do aparelho decide se os retratos ficam no caminho.
 class _ComBaloes extends StatelessWidget {
   const _ComBaloes({required this.child});
 
@@ -490,50 +497,54 @@ class _ComBaloes extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final largo = MediaQuery.sizeOf(context).width >= 720;
+    final estado = EscopoDoEstado.de(context);
     return ListenableBuilder(
       listenable: camadasFlutuantes,
-      builder: (context, _) => Stack(
-        children: [
-          child,
-          if (camadasFlutuantes.value == 0) ...[
-            // O Tooltip do balão exige um Overlay por cima, e aqui estamos
-            // fora do Navigator (que é quem provê o Overlay do app). Este
-            // Overlay aninhado existe só para os balões e as suas dicas;
-            // nada de rota ou diálogo nasce aqui dentro.
-            Overlay(
-              initialEntries: [
-                OverlayEntry(
-                  builder: (context) => Stack(
-                    children: [
-                      // A folga de baixo é a altura da barra de navegação
-                      // (80) mais o respiro: o balão não pode cobrir o
-                      // destino da esquina. Em tela larga quem ocupa o canto
-                      // esquerdo é o trilho lateral, então o balão dele pula
-                      // para dentro do conteúdo.
-                      Positioned(
-                        left: largo ? 96 : 12,
-                        bottom: largo ? 12 : 88,
-                        child: BalaoDeChat(
-                          persona: personaSpurgeon,
-                          onTap: () => _abrirChat(personaSpurgeon),
+      builder: (context, _) {
+        if (!estado.baloesVisiveis) return child;
+        return Stack(
+          children: [
+            child,
+            if (camadasFlutuantes.value == 0) ...[
+              // O Tooltip do balão exige um Overlay por cima, e aqui estamos
+              // fora do Navigator (que é quem provê o Overlay do app). Este
+              // Overlay aninhado existe só para os balões e as suas dicas;
+              // nada de rota ou diálogo nasce aqui dentro.
+              Overlay(
+                initialEntries: [
+                  OverlayEntry(
+                    builder: (context) => Stack(
+                      children: [
+                        // A folga de baixo é a altura da barra de navegação
+                        // (80) mais o respiro: o balão não pode cobrir o
+                        // destino da esquina. Em tela larga quem ocupa o canto
+                        // esquerdo é o trilho lateral, então o balão dele pula
+                        // para dentro do conteúdo.
+                        Positioned(
+                          left: largo ? 96 : 12,
+                          bottom: largo ? 12 : 88,
+                          child: BalaoDeChat(
+                            persona: personaSpurgeon,
+                            onTap: () => _abrirChat(personaSpurgeon),
+                          ),
                         ),
-                      ),
-                      Positioned(
-                        right: 12,
-                        bottom: largo ? 12 : 88,
-                        child: BalaoDeChat(
-                          persona: personaFelipe,
-                          onTap: () => _abrirChat(personaFelipe),
+                        Positioned(
+                          right: 12,
+                          bottom: largo ? 12 : 88,
+                          child: BalaoDeChat(
+                            persona: personaFelipe,
+                            onTap: () => _abrirChat(personaFelipe),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ],
-        ],
-      ),
+        );
+      },
     );
   }
 }

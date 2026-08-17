@@ -348,6 +348,26 @@ void main() {
     );
   });
 
+  group('balões de conversa', () {
+    test('aparecem por padrão e podem ser escondidos de vez', () async {
+      final estado = await Estado.abrir();
+      expect(estado.baloesVisiveis, isTrue);
+
+      await estado.definirBaloesVisiveis(false);
+      expect(estado.baloesVisiveis, isFalse);
+
+      final relido = await reabrir();
+      expect(
+        relido.baloesVisiveis,
+        isFalse,
+        reason: 'a preferência sobrevive ao reabrir',
+      );
+
+      await relido.definirBaloesVisiveis(true);
+      expect((await reabrir()).baloesVisiveis, isTrue);
+    });
+  });
+
   group('conversas do chat', () {
     Mensagem mensagem(String id, String papel, String texto, int momento) =>
         Mensagem(id: id, papel: papel, texto: texto, momento: momento);
@@ -412,41 +432,47 @@ void main() {
       );
     });
 
-    test('limpar todas apaga a persona inteira, cada uma com a lápide',
-        () async {
-      final estado = await Estado.abrir();
-      final a = await conversaCom(estado, 'spurgeon', [
-        mensagem('1', 'user', 'um', 1),
-      ]);
-      final b = await conversaCom(estado, 'spurgeon', [
-        mensagem('2', 'user', 'dois', 2),
-      ]);
-      final f = await conversaCom(estado, 'felipe', [
-        mensagem('3', 'user', 'tres', 3),
-      ]);
+    test(
+      'limpar todas apaga a persona inteira, cada uma com a lápide',
+      () async {
+        final estado = await Estado.abrir();
+        final a = await conversaCom(estado, 'spurgeon', [
+          mensagem('1', 'user', 'um', 1),
+        ]);
+        final b = await conversaCom(estado, 'spurgeon', [
+          mensagem('2', 'user', 'dois', 2),
+        ]);
+        final f = await conversaCom(estado, 'felipe', [
+          mensagem('3', 'user', 'tres', 3),
+        ]);
 
-      await estado.limparTodasDe('spurgeon');
-      expect(estado.conversasDe('spurgeon'), isEmpty);
-      expect(estado.conversasDe('felipe'), hasLength(1));
+        await estado.limparTodasDe('spurgeon');
+        expect(estado.conversasDe('spurgeon'), isEmpty);
+        expect(estado.conversasDe('felipe'), hasLength(1));
 
-      final mapa = json.decode(estado.serializarConversas())
-          as Map<String, dynamic>;
-      final apagadas = mapa['apagadas'] as Map;
-      expect(apagadas[a.id], isA<int>());
-      expect(apagadas[b.id], isA<int>());
-      expect(
-        apagadas[f.id],
-        isNull,
-        reason: 'limpar uma persona não toca na outra',
-      );
-      expect((await reabrir()).conversasDe('spurgeon'), isEmpty);
-    });
+        final mapa =
+            json.decode(estado.serializarConversas()) as Map<String, dynamic>;
+        final apagadas = mapa['apagadas'] as Map;
+        expect(apagadas[a.id], isA<int>());
+        expect(apagadas[b.id], isA<int>());
+        expect(
+          apagadas[f.id],
+          isNull,
+          reason: 'limpar uma persona não toca na outra',
+        );
+        expect((await reabrir()).conversasDe('spurgeon'), isEmpty);
+      },
+    );
 
     test('teto de 120 mensagens por conversa, ficando com a cauda', () async {
       final estado = await Estado.abrir();
       final c = await estado.novaConversa('spurgeon', titulo: 'm0');
       for (var i = 0; i < 125; i++) {
-        await estado.registrarMensagem('spurgeon', c.id, mensagem('$i', 'user', 'm$i', i));
+        await estado.registrarMensagem(
+          'spurgeon',
+          c.id,
+          mensagem('$i', 'user', 'm$i', i),
+        );
       }
       final mensagens = estado.mensagensDe('spurgeon', c.id);
       expect(mensagens.length, 120);
@@ -458,7 +484,11 @@ void main() {
       final estado = await Estado.abrir();
       final c = await estado.novaConversa('spurgeon', titulo: 'm0');
       for (var i = 0; i < 121; i++) {
-        await estado.registrarMensagem('spurgeon', c.id, mensagem('$i', 'user', 'm$i', i));
+        await estado.registrarMensagem(
+          'spurgeon',
+          c.id,
+          mensagem('$i', 'user', 'm$i', i),
+        );
       }
       expect(estado.conversaDe('spurgeon', c.id)!.cortada, isTrue);
       expect(
@@ -492,7 +522,12 @@ void main() {
             'momento': 3,
             'mensagens': [
               {'id': 'a', 'papel': 'user', 'texto': 'local', 'momento': 1},
-              {'id': 'b', 'papel': 'assistant', 'texto': 'remota', 'momento': 3},
+              {
+                'id': 'b',
+                'papel': 'assistant',
+                'texto': 'remota',
+                'momento': 3,
+              },
             ],
           },
           'outra': {
@@ -520,24 +555,26 @@ void main() {
       );
     });
 
-    test('formato antigo remoto (lista por persona) migra para uma conversa',
-        () async {
-      final estado = await Estado.abrir();
-      final remota = json.encode({
-        'spurgeon': [
-          {'id': 'a', 'papel': 'user', 'texto': 'Ola', 'momento': 1},
-          {'id': 'b', 'papel': 'assistant', 'texto': 'Paz.', 'momento': 2},
-        ],
-      });
-      await estado.fundirConversas(remota);
+    test(
+      'formato antigo remoto (lista por persona) migra para uma conversa',
+      () async {
+        final estado = await Estado.abrir();
+        final remota = json.encode({
+          'spurgeon': [
+            {'id': 'a', 'papel': 'user', 'texto': 'Ola', 'momento': 1},
+            {'id': 'b', 'papel': 'assistant', 'texto': 'Paz.', 'momento': 2},
+          ],
+        });
+        await estado.fundirConversas(remota);
 
-      expect(
-        estado.mensagensDe('spurgeon', 'conversa-spurgeon').map((m) => m.id),
-        ['a', 'b'],
-        reason: 'o antigo histórico único vira a conversa migrada',
-      );
-      expect(estado.conversasDe('spurgeon').single.titulo, 'Ola');
-    });
+        expect(
+          estado.mensagensDe('spurgeon', 'conversa-spurgeon').map((m) => m.id),
+          ['a', 'b'],
+          reason: 'o antigo histórico único vira a conversa migrada',
+        );
+        expect(estado.conversasDe('spurgeon').single.titulo, 'Ola');
+      },
+    );
 
     test('lixo remoto e engolido sem derrubar o local', () async {
       final estado = await Estado.abrir();
@@ -637,8 +674,8 @@ void main() {
       await estado.fundirConversas(remota);
 
       expect(estado.conversasDe('spurgeon'), isEmpty);
-      final mapa = json.decode(estado.serializarConversas())
-          as Map<String, dynamic>;
+      final mapa =
+          json.decode(estado.serializarConversas()) as Map<String, dynamic>;
       expect(
         (mapa['apagadas'] as Map)[c.id],
         5,
@@ -647,51 +684,56 @@ void main() {
       expect((await reabrir()).conversasDe('spurgeon'), isEmpty);
     });
 
-    test('conversa que continuou em outro aparelho volta e limpa a lápide',
-        () async {
-      final estado = await Estado.abrir();
-      final c = await conversaCom(estado, 'spurgeon', [
-        mensagem('1', 'user', 'oi', 1),
-      ]);
-      await estado.limparConversa('spurgeon', c.id);
-      expect(estado.conversasDe('spurgeon'), isEmpty);
+    test(
+      'conversa que continuou em outro aparelho volta e limpa a lápide',
+      () async {
+        final estado = await Estado.abrir();
+        final c = await conversaCom(estado, 'spurgeon', [
+          mensagem('1', 'user', 'oi', 1),
+        ]);
+        await estado.limparConversa('spurgeon', c.id);
+        expect(estado.conversasDe('spurgeon'), isEmpty);
 
-      // O outro aparelho continuou a conversa depois da exclusão: as mensagens
-      // dele são mais novas que a lápide, e a conversa volta inteira.
-      final continuacao = DateTime.now().millisecondsSinceEpoch + 1000;
-      final remota = json.encode({
-        'spurgeon': {
-          c.id: {
-            'id': c.id,
-            'titulo': 'oi',
-            'momento': continuacao,
-            'mensagens': [
-              {
-                'id': '2',
-                'papel': 'user',
-                'texto': 'continuo aqui',
-                'momento': continuacao,
-              },
-            ],
+        // O outro aparelho continuou a conversa depois da exclusão: as mensagens
+        // dele são mais novas que a lápide, e a conversa volta inteira.
+        final continuacao = DateTime.now().millisecondsSinceEpoch + 1000;
+        final remota = json.encode({
+          'spurgeon': {
+            c.id: {
+              'id': c.id,
+              'titulo': 'oi',
+              'momento': continuacao,
+              'mensagens': [
+                {
+                  'id': '2',
+                  'papel': 'user',
+                  'texto': 'continuo aqui',
+                  'momento': continuacao,
+                },
+              ],
+            },
           },
-        },
-      });
-      await estado.fundirConversas(remota);
+        });
+        await estado.fundirConversas(remota);
 
-      expect(estado.mensagensDe('spurgeon', c.id).single.texto, 'continuo aqui');
-      expect(
-        estado.serializarConversas(),
-        isNot(contains('apagadas')),
-        reason: 'a conversa revivida não carrega mais a lápide',
-      );
-      expect((await reabrir()).mensagensDe('spurgeon', c.id).length, 1);
-    });
+        expect(
+          estado.mensagensDe('spurgeon', c.id).single.texto,
+          'continuo aqui',
+        );
+        expect(
+          estado.serializarConversas(),
+          isNot(contains('apagadas')),
+          reason: 'a conversa revivida não carrega mais a lápide',
+        );
+        expect((await reabrir()).mensagensDe('spurgeon', c.id).length, 1);
+      },
+    );
 
     test('lápide sem mensagens vira a cópia inteira e persiste', () async {
       final estado = await Estado.abrir();
       await estado.limparConversa('spurgeon', 'fantasma');
-      final mapa = json.decode(estado.serializarConversas())
-          as Map<String, dynamic>;
+      final mapa =
+          json.decode(estado.serializarConversas()) as Map<String, dynamic>;
       expect((mapa['apagadas'] as Map)['fantasma'], isA<int>());
       expect(
         (await reabrir()).serializarConversas(),
@@ -707,12 +749,14 @@ void main() {
       ]);
 
       // O outro aparelho apagou e empurrou só a lápide, sem histórico.
-      final remota = json.encode({'apagadas': {c.id: 5}});
+      final remota = json.encode({
+        'apagadas': {c.id: 5},
+      });
       await estado.fundirConversas(remota);
 
       expect(estado.conversasDe('spurgeon'), isEmpty);
-      final mapa = json.decode(estado.serializarConversas())
-          as Map<String, dynamic>;
+      final mapa =
+          json.decode(estado.serializarConversas()) as Map<String, dynamic>;
       expect(
         (mapa['apagadas'] as Map)[c.id],
         5,
@@ -721,51 +765,57 @@ void main() {
       expect((await reabrir()).conversasDe('spurgeon'), isEmpty);
     });
 
-    test('lápide remota sozinha e antiga não apaga a conversa que continuou',
-        () async {
-      final estado = await Estado.abrir();
-      final c = await conversaCom(estado, 'spurgeon', [
-        mensagem('1', 'user', 'oi', 7),
-      ]);
+    test(
+      'lápide remota sozinha e antiga não apaga a conversa que continuou',
+      () async {
+        final estado = await Estado.abrir();
+        final c = await conversaCom(estado, 'spurgeon', [
+          mensagem('1', 'user', 'oi', 7),
+        ]);
 
-      final remota = json.encode({'apagadas': {c.id: 5}});
-      await estado.fundirConversas(remota);
+        final remota = json.encode({
+          'apagadas': {c.id: 5},
+        });
+        await estado.fundirConversas(remota);
 
-      expect(
-        estado.mensagensDe('spurgeon', c.id).single.id,
-        '1',
-        reason: 'a conversa local é mais nova que a exclusão remota',
-      );
-    });
+        expect(
+          estado.mensagensDe('spurgeon', c.id).single.id,
+          '1',
+          reason: 'a conversa local é mais nova que a exclusão remota',
+        );
+      },
+    );
 
-    test('formato antigo local migra para uma conversa e lápide por persona',
-        () async {
-      SharedPreferences.setMockInitialValues({
-        'conversas': json.encode({
-          'spurgeon': [
-            {'id': '1', 'papel': 'user', 'texto': 'Ola', 'momento': 1},
-            {'id': '2', 'papel': 'assistant', 'texto': 'Paz.', 'momento': 2},
-          ],
-          'apagadas': {'felipe': 9},
-        }),
-      });
-      final estado = await Estado.abrir();
-      expect(estado.conversasDe('spurgeon'), hasLength(1));
-      expect(estado.conversasDe('spurgeon').single.id, 'conversa-spurgeon');
-      expect(estado.conversasDe('spurgeon').single.titulo, 'Ola');
-      expect(
-        estado.mensagensDe('spurgeon', 'conversa-spurgeon').length,
-        2,
-        reason: 'as mensagens antigas sobrevivem dentro da conversa migrada',
-      );
+    test(
+      'formato antigo local migra para uma conversa e lápide por persona',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          'conversas': json.encode({
+            'spurgeon': [
+              {'id': '1', 'papel': 'user', 'texto': 'Ola', 'momento': 1},
+              {'id': '2', 'papel': 'assistant', 'texto': 'Paz.', 'momento': 2},
+            ],
+            'apagadas': {'felipe': 9},
+          }),
+        });
+        final estado = await Estado.abrir();
+        expect(estado.conversasDe('spurgeon'), hasLength(1));
+        expect(estado.conversasDe('spurgeon').single.id, 'conversa-spurgeon');
+        expect(estado.conversasDe('spurgeon').single.titulo, 'Ola');
+        expect(
+          estado.mensagensDe('spurgeon', 'conversa-spurgeon').length,
+          2,
+          reason: 'as mensagens antigas sobrevivem dentro da conversa migrada',
+        );
 
-      // A lápide antiga, que apontava para a persona, migra para a conversa.
-      final mapa = json.decode(estado.serializarConversas())
-          as Map<String, dynamic>;
-      final apagadas = mapa['apagadas'] as Map;
-      expect(apagadas['conversa-felipe'], 9);
-      expect(apagadas['felipe'], isNull);
-    });
+        // A lápide antiga, que apontava para a persona, migra para a conversa.
+        final mapa =
+            json.decode(estado.serializarConversas()) as Map<String, dynamic>;
+        final apagadas = mapa['apagadas'] as Map;
+        expect(apagadas['conversa-felipe'], 9);
+        expect(apagadas['felipe'], isNull);
+      },
+    );
   });
 
   group('conversas corrompidas no armazenamento', () {
@@ -805,16 +855,13 @@ void main() {
     test('lápide com valor que não é int é descartada', () async {
       SharedPreferences.setMockInitialValues({
         'conversas': json.encode({
-          'apagadas': {
-            'conv-a': 'ontem',
-            'conv-b': 3,
-          },
+          'apagadas': {'conv-a': 'ontem', 'conv-b': 3},
         }),
       });
       final estado = await Estado.abrir();
       // A lápide torta não entra; a válida continua valendo.
-      final mapa = json.decode(estado.serializarConversas())
-          as Map<String, dynamic>;
+      final mapa =
+          json.decode(estado.serializarConversas()) as Map<String, dynamic>;
       final apagadas = mapa['apagadas'] as Map;
       expect(apagadas['conv-a'], isNull);
       expect(apagadas['conv-b'], 3);

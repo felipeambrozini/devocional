@@ -151,18 +151,15 @@ void main() {
       expect(falsas.agendamentos, hasLength(1));
     });
 
-    test(
-      'ligado e já agendado, não reagenda — abrir o app não cancela o '
-      'lembrete do dia que ainda não disparou',
-      () async {
-        await alternarLembretes(estado, true);
-        falsas.agendamentos.clear();
+    test('ligado e já agendado, não reagenda — abrir o app não cancela o '
+        'lembrete do dia que ainda não disparou', () async {
+      await alternarLembretes(estado, true);
+      falsas.agendamentos.clear();
 
-        await reagendarLembretesSeNecessario(estado);
+      await reagendarLembretesSeNecessario(estado);
 
-        expect(falsas.agendamentos, isEmpty);
-      },
-    );
+      expect(falsas.agendamentos, isEmpty);
+    });
   });
 
   group('toque na notificação', () {
@@ -215,9 +212,20 @@ void main() {
 
         // A folha agora rola (a seção Lembretes empurrou o conteúdo além da
         // altura padrão de teste), então o interruptor pode nascer fora da
-        // viewport visível.
-        await tester.ensureVisible(find.byType(SwitchListTile));
-        await tester.tap(find.byType(SwitchListTile));
+        // viewport visível. O finder é por texto porque a seção Conversas tem
+        // outro SwitchListTile na mesma folha.
+        await tester.ensureVisible(
+          find.widgetWithText(
+            SwitchListTile,
+            'Avisar no horário do devocional',
+          ),
+        );
+        await tester.tap(
+          find.widgetWithText(
+            SwitchListTile,
+            'Avisar no horário do devocional',
+          ),
+        );
         await tester.pumpAndSettle();
 
         expect(estado.lembretesAtivos, isTrue);
@@ -236,9 +244,20 @@ void main() {
 
         // A folha agora rola (a seção Lembretes empurrou o conteúdo além da
         // altura padrão de teste), então o interruptor pode nascer fora da
-        // viewport visível.
-        await tester.ensureVisible(find.byType(SwitchListTile));
-        await tester.tap(find.byType(SwitchListTile));
+        // viewport visível. O finder é por texto porque a seção Conversas tem
+        // outro SwitchListTile na mesma folha.
+        await tester.ensureVisible(
+          find.widgetWithText(
+            SwitchListTile,
+            'Avisar no horário do devocional',
+          ),
+        );
+        await tester.tap(
+          find.widgetWithText(
+            SwitchListTile,
+            'Avisar no horário do devocional',
+          ),
+        );
         await tester.pumpAndSettle();
 
         expect(estado.lembretesAtivos, isFalse);

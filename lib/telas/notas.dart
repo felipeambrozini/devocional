@@ -229,9 +229,7 @@ Future<void> _exportar(BuildContext context, Estado estado) async {
   final mensageiro = ScaffoldMessenger.of(context);
   await Clipboard.setData(ClipboardData(text: estado.exportar()));
   mensageiro.showSnackBar(
-    const SnackBar(
-      content: Text('Cópia copiada. Cole num arquivo de texto e guarde.'),
-    ),
+    const SnackBar(content: Text('Copiado. Guarde num arquivo de texto.')),
   );
 }
 
@@ -256,7 +254,7 @@ Future<void> _importar(BuildContext context, Estado estado) async {
             autofocus: true,
             maxLines: 6,
             minLines: 4,
-            decoration: const InputDecoration(hintText: '{ "versao": 1, ... }'),
+            decoration: const InputDecoration(),
           ),
         ],
       ),

@@ -142,7 +142,10 @@ class TelaHistorico extends StatelessWidget {
         builder: (context, _) {
           final conversas = estado.conversasDe(persona.id);
           if (conversas.isEmpty) {
-            return _SemConversas(persona: persona, aoComecar: () => _abrirNova(context));
+            return _SemConversas(
+              persona: persona,
+              aoComecar: () => _abrirNova(context),
+            );
           }
           return ListView.separated(
             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -164,7 +167,9 @@ class TelaHistorico extends StatelessWidget {
                   style: tema.titleMedium,
                 ),
                 subtitle: Text(
-                  dataLonga(DateTime.fromMillisecondsSinceEpoch(conversa.momento)),
+                  dataLonga(
+                    DateTime.fromMillisecondsSinceEpoch(conversa.momento),
+                  ),
                   style: tema.labelMedium,
                 ),
                 trailing: IconButton(
@@ -198,7 +203,10 @@ class _SemConversas extends StatelessWidget {
           children: [
             const Filete(largura: 64),
             const SizedBox(height: 18),
-            Text(persona.nome, style: Theme.of(context).textTheme.headlineSmall),
+            Text(
+              persona.nome,
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
             const SizedBox(height: 10),
             Text(
               'Nenhuma conversa com ${persona.nome} ainda. '
@@ -207,6 +215,17 @@ class _SemConversas extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                 height: 1.6,
+              ),
+            ),
+            const SizedBox(height: 12),
+            // O histórico é a porta de entrada do chat: o aviso de que as
+            // respostas são geradas por IA aparece aqui, antes da conversa,
+            // além do rodapé do chat e da carta de boas-vindas.
+            Text(
+              avisoDeIa,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 18),

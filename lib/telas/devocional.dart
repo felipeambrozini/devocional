@@ -19,6 +19,15 @@ enum Leitura {
 
   final String rotulo;
 
+  /// O nome completo da leitura, para títulos de cartão: "Devocional da
+  /// manhã" em vez do rótulo curto de chip "Manhã". Chips e títulos falam do
+  /// mesmo conceito com o mesmo substantivo; a diferença é só a forma.
+  String get tituloCompleto => switch (this) {
+    Leitura.manha => 'Devocional da manhã',
+    Leitura.noite => 'Devocional da noite',
+    Leitura.promessas => 'Promessas de Deus',
+  };
+
   /// Manhã e Noite têm período; Promessas não, por ser leitura única do dia.
   Periodo? get periodo => switch (this) {
     Leitura.manha => Periodo.manha,
@@ -82,6 +91,11 @@ class _TelaDevocionalState extends State<TelaDevocional> {
     final hoje = DateTime.now();
     final ehHoje = _data.month == hoje.month && _data.day == hoje.day;
     final estado = EscopoDoEstado.de(context);
+    // Em tela estreita os balões de conversa moram embaixo, na base da tela;
+    // o fim da lista precisa de folga para a última linha não ficar atrás
+    // deles. Em tela larga os balões ficam fora da coluna de leitura.
+    final protegerDosBaloes =
+        estado.baloesVisiveis && MediaQuery.sizeOf(context).width < 720;
 
     return Scaffold(
       appBar: AppBar(
@@ -110,7 +124,12 @@ class _TelaDevocionalState extends State<TelaDevocional> {
       ),
       body: LarguraDeLeitura(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            8,
+            16,
+            protegerDosBaloes ? folgaDosBaloes : 32,
+          ),
           children: [
             _AlternadorDeLeitura(
               atual: _leitura,
@@ -159,7 +178,7 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                     _CartaoDeLeitura(
                       titulo: dev.titulo.isNotEmpty
                           ? dev.titulo
-                          : '${_leitura.rotulo}, ${dataLonga(_data)}',
+                          : '${_leitura.tituloCompleto}, ${dataLonga(_data)}',
                       dev: dev,
                       texto: dev.texto,
                       capa: _leitura.capa,

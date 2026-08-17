@@ -3,16 +3,20 @@ import 'dart:io';
 
 import 'package:felipe_ambrozini/data/canon.dart';
 import 'package:felipe_ambrozini/data/conteudo.dart';
+import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:felipe_ambrozini/telas/introducao.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Guarda o formato das 66 introduções enquanto elas são escritas.
 ///
 /// São muitos arquivos escritos à mão; sem esta rede, um cabeçalho trocado ou um
 /// travessão esquecido só apareceria na tela, depois de tudo pronto.
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   final arquivos =
       Directory('assets/introducao')
           .listSync()
@@ -176,9 +180,16 @@ void main() {
   group('TelaIntroducao', () {
     // Leitura de asset é I/O real (ver app_test.dart): a introdução é
     // aquecida de antemão para o CarregaUmaVez responder no tempo falso.
+    // O EscopoDoEstado é o que o app de verdade monta por cima de toda tela
+    // (a introdução lê dele a folga dos balões de conversa).
     Future<void> abrir(WidgetTester tester, String slug) async {
       await tester.runAsync(() => Conteudo.instancia.introducao(slug));
-      await tester.pumpWidget(MaterialApp(home: TelaIntroducao(slug: slug)));
+      await tester.pumpWidget(
+        EscopoDoEstado(
+          estado: Estado(await SharedPreferences.getInstance()),
+          child: MaterialApp(home: TelaIntroducao(slug: slug)),
+        ),
+      );
       await tester.pumpAndSettle();
     }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/canon.dart';
 import '../data/conteudo.dart';
+import '../data/estado.dart';
 import '../data/modelos.dart';
 import 'comuns.dart';
 
@@ -15,6 +16,12 @@ class TelaIntroducao extends StatelessWidget {
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
+    // Em tela estreita os balões de conversa moram embaixo, na base da tela;
+    // o fim da lista precisa de folga para a última linha não ficar atrás
+    // deles. Em tela larga os balões ficam fora da coluna de leitura.
+    final protegerDosBaloes =
+        EscopoDoEstado.de(context).baloesVisiveis &&
+        MediaQuery.sizeOf(context).width < 720;
 
     return Scaffold(
       appBar: AppBar(title: Text(nomeDoLivro(slug))),
@@ -41,7 +48,12 @@ class TelaIntroducao extends StatelessWidget {
             }
 
             return ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                16,
+                20,
+                protegerDosBaloes ? folgaDosBaloes : 40,
+              ),
               children: [
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,

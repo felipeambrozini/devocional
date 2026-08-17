@@ -47,11 +47,14 @@ mesmo código).
 | Devocional | Manhã, Noite e Promessas de Deus, com calendário |
 | Plano | Cronograma anual por mês, com marcação de lido |
 | Notas | Favoritos e anotações |
-| Sobre | Créditos, fonte da tradução e links dos canais |
 
-Na web, cada aba tem a própria URL (`/hoje`, `/biblia`, `/devocional`, `/plano`,
-`/notas`, `/sobre`) — dá para abrir, atualizar ou compartilhar qualquer uma
-direto. `?ler=joao.3.16` na URL abre esse versículo por cima da aba.
+Sobre (créditos, fonte da tradução, canais e ajuda) não é aba: mora no fim da
+folha de ajustes, com URL própria.
+
+Na web, cada aba tem a própria URL (`/hoje`, `/biblia`, `/devocional`,
+`/plano`, `/notas`) — dá para abrir, atualizar ou compartilhar qualquer uma
+direto; `/sobre` e as conversas também têm URL própria. `?ler=joao.3.16` na
+URL abre esse versículo por cima da aba.
 
 ## Stack
 
@@ -275,6 +278,10 @@ motivo novo.
   `GoRouter.optionURLReflectsImperativeAPIs` (opção estática do go_router, que
   por padrão não reflete na URL as navegações imperativas — o motivo de a
   tela Sobre ter virado aba em 09/08/2026).
+- **Sobre volta para a folha de ajustes** (17/08/2026): com a opção acima
+  ligada, o `push` para `/sobre` também atualiza a URL; Sobre deixou de ser
+  aba (a navegação inferior ficou com cinco destinos) e voltou para o fim da
+  folha de ajustes, como os créditos de um aplicativo costumam ficar.
 - **`usePathUrlStrategy()`** vem de `package:flutter_web_plugins/url_strategy.dart`,
   não do barril `flutter_web_plugins.dart` (o barril puxa `dart:ui_web` sem
   condicional e quebra a compilação para a VM, que é o que o `flutter test`

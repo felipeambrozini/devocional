@@ -42,9 +42,14 @@ dependencies:
   firebase_core: ^4.13.0
   firebase_auth: ^6.5.7
   cloud_firestore: ^6.8.0
-  # Cada aba e a tela Sobre com o próprio caminho na URL (ver lib/main.dart).
-  # Pacote da própria equipe do Flutter, não um clone de terceiro.
+  # Cada aba com o próprio caminho na URL, e Sobre e as conversas também
+  # (ver lib/main.dart). Pacote da própria equipe do Flutter, não um clone de
+  # terceiro.
   go_router: ^17.5.0
+  # Número da versão na tela Sobre (ver lib/telas/sobre.dart). Já entra no
+  # build pela google_api_headers, dependência transitiva do Firebase; listar
+  # aqui o promove a dependência direta para o código poder importar.
+  package_info_plus: ^10.2.1
   # Chamadas HTTP para a Gemini API gratuita (ver lib/data/ia.dart). Único
   # cliente HTTP do app; funciona igual em Android e web.
   http: ^1.6.0
