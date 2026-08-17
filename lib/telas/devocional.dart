@@ -201,7 +201,6 @@ class _AlternadorDeLeitura extends StatelessWidget {
             selected: l == atual,
             onSelected: (_) => ao(l),
             showCheckmark: false,
-            visualDensity: VisualDensity.compact,
           ),
       ],
     );
@@ -253,6 +252,7 @@ class _CartaoDeLeitura extends StatelessWidget {
                     capa!,
                     height: alturaCapa(context, 130),
                     fit: BoxFit.cover,
+                    excludeFromSemantics: true,
                   ),
                 ),
                 const SizedBox(width: 14),

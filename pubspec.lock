@@ -353,18 +353,18 @@ packages:
     dependency: "direct main"
     description:
       name: go_router
-      sha256: d8f590a69729f719177ea68eb1e598295e8dbc41bbc247fed78b2c8a25660d7c
+      sha256: d7a3576cb312649eaa51f2356450aed686085fb58fcdebda5b359aa951eef7ea
       url: "https://pub.dev"
     source: hosted
-    version: "16.3.0"
+    version: "17.5.0"
   google_api_headers:
     dependency: "direct main"
     description:
       name: google_api_headers
-      sha256: "7a160648c3a7d5d8eb5770b0bb04ff995af94c9cfedc2609b71c804b004c5aab"
+      sha256: "0dcb9b054da84c7d09149675bb4136782539c0f7736c0b9f795caa2d47dea54d"
       url: "https://pub.dev"
     source: hosted
-    version: "5.3.6"
+    version: "5.3.7"
   hooks:
     dependency: transitive
     description:
@@ -932,4 +932,4 @@ packages:
     version: "3.1.3"
 sdks:
   dart: ">=3.12.2 <4.0.0"
-  flutter: ">=3.44.8"
+  flutter: ">=3.44.9"

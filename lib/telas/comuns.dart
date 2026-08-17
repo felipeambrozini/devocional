@@ -21,7 +21,7 @@ String capaBibliaSpurgeon(BuildContext context) {
 /// aumentada. Escala para cima quando a largura disponível passa de 600px.
 double alturaCapa(BuildContext context, double base) {
   final largura = MediaQuery.sizeOf(context).width;
-  return largura >= 600 ? base * 1.4 : base;
+  return largura >= 720 ? base * 1.4 : base;
 }
 
 /// Cartão com título em Cinzel na cor do tema. Repete em quase toda tela.

@@ -63,7 +63,7 @@ vitoriana dele, tratando o leitor por "tu".
 - Decisões recusadas de propósito (não reabrir sem motivo novo): streak de
   dias, áudio, cores de marcação, widget na tela inicial, lembretes em web,
   offline de verdade na web, sincronização fora da conta Google web.
-- Flutter fixo na versão 3.44.8 (`.fvmrc` e `deploy-web.yml`).
+- Flutter fixo na versão 3.44.9 (`.fvmrc` e `deploy-web.yml`).
 
 ## Brand Commitments
 

@@ -342,6 +342,71 @@ void main() {
     },
   );
 
+  testWidgets(
+    'conversa que passou do teto mostra o aviso quieto do corte',
+    (tester) async {
+      // O corte acontece no Estado, na hora de registrar a mensagem que
+      // estoura o teto; a tela só mostra a nota quando a conversa foi cortada.
+      final estado = await estadoLimpo();
+      final conversa = await estado.novaConversa('spurgeon', titulo: 'm0');
+      for (var i = 0; i < 121; i++) {
+        await estado.registrarMensagem(
+          'spurgeon',
+          conversa.id,
+          Mensagem(
+            id: 'm$i',
+            papel: 'user',
+            texto: 'fala $i',
+            momento: i,
+          ),
+        );
+      }
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EscopoDoEstado(
+            estado: estado,
+            child: TelaChat(persona: personaSpurgeon, conversaId: conversa.id),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        find.textContaining('As falas mais antigas saíram'),
+        findsOneWidget,
+      );
+
+      // Desmonta o chat da conversa cortada antes de abrir a curta: sem isto o
+      // framework reusa o State (mesmo tipo de widget) e o conversador da
+      // conversa anterior continua no ar.
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+
+      // Uma conversa curta não leva o aviso.
+      final curta = await estado.novaConversa('spurgeon', titulo: 'curta');
+      await estado.registrarMensagem(
+        'spurgeon',
+        curta.id,
+        Mensagem(id: 'c1', papel: 'user', texto: 'oi', momento: 999),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EscopoDoEstado(
+            estado: estado,
+            child: TelaChat(persona: personaSpurgeon, conversaId: curta.id),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.textContaining('As falas mais antigas saíram'), findsNothing);
+      expect(find.text('oi'), findsOneWidget);
+    },
+  );
+
   Future<void> abrirHistorico(WidgetTester tester, Estado estado) async {
     await tester.pumpWidget(AppDevocional(estado: estado));
     await tester.pumpAndSettle();

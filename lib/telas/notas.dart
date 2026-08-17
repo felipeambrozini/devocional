@@ -121,6 +121,7 @@ class _TelaNotasState extends State<TelaNotas> {
                         ? null
                         : IconButton(
                             icon: const Icon(Icons.clear),
+                            tooltip: 'Limpar busca',
                             onPressed: () => setState(() {
                               _controle.clear();
                               _busca = '';

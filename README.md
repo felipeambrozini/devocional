@@ -226,10 +226,10 @@ motivo novo.
 - **O `index.html` é editado à mão, e o `web: false` da splash é de propósito**:
   a abertura da web já está resolvida à mão; deixar o gerador mexer ali
   sobrescreveria isso.
-- **A versão do Flutter é fixa (`3.44.8`), não `stable`** (desde 08/08/2026),
+- **A versão do Flutter é fixa (`3.44.9`), não `stable`** (desde 08/08/2026),
   porque uma release nova podia quebrar o deploy web sem nenhuma mudança no
   repositório. Fixado em `.fvmrc` e no `deploy-web.yml`
-  (`subosito/flutter-action@v2`, `flutter-version: 3.44.8`). **Atualizar nos
+  (`subosito/flutter-action@v2`, `flutter-version: 3.44.9`). **Atualizar nos
   dois lugares ao mesmo tempo** e rodar a suíte local antes de comitar.
 
 ### Lembretes diários (Android)
@@ -367,7 +367,7 @@ Para o app ter acesso à nuvem (conta Google) e à IA, crie um `.env.json` a
 partir do `.env.example` com as quatro chaves — o VS Code pega no F5 via
 `dart-define-by-file` (`.vscode/launch.json`). Sem ele, o app abre normal e
 degrada só nesses recursos. O SDK é gerido pelo FVM (ver `.fvmrc`), na versão
-fixa 3.44.8.
+fixa 3.44.9.
 
 ## Testes e análise
 
@@ -406,7 +406,7 @@ desinstalar antes de instalar de novo.
 ## Publicação na web
 
 O deploy é pelo GitHub Actions (`.github/workflows/deploy-web.yml`), com o
-Flutter fixo em 3.44.8, para o GitHub Pages. O site mora em
+Flutter fixo em 3.44.9, para o GitHub Pages. O site mora em
 `felipeambrozini.github.io/devocional/` (um nível abaixo do domínio, por isso
 `pathSegmentsToKeep = 1` no resolvedor de caminho). O build usa
 `--base-href /devocional/` e as chaves de API vêm dos Secrets do repositório:

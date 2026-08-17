@@ -246,6 +246,10 @@ class _TelaChatState extends State<TelaChat> {
     // A conversa aberta: a que veio na rota (existe antes do conversador
     // nascer) ou a que nasceu na primeira pergunta de uma conversa nova.
     final conversaId = conversador?.id ?? widget.conversaId;
+    // O corte do teto de mensagens acontece no Estado; a tela só pergunta se
+    // a conversa aberta foi cortada para mostrar o aviso quieto no topo.
+    final cortada = conversaId != null &&
+        (estado.conversaDe(widget.persona.id, conversaId)?.cortada ?? false);
 
     return Scaffold(
       appBar: AppBar(
@@ -311,7 +315,7 @@ class _TelaChatState extends State<TelaChat> {
                 return ListView.builder(
                   controller: _rolagem,
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  itemCount: mensagens.length + 1,
+                  itemCount: mensagens.length + 1 + (cortada ? 1 : 0),
                   itemBuilder: (context, i) {
                     if (i == 0) {
                       // A conversa abre como página: o Filete que abre cada
@@ -321,8 +325,14 @@ class _TelaChatState extends State<TelaChat> {
                         child: Center(child: Filete(largura: 64)),
                       );
                     }
+                    if (cortada && i == 1) {
+                      // A conversa passou do teto e as falas mais antigas
+                      // saíram do histórico: a nota quieta explica por que a
+                      // conversa não começa na primeira pergunta.
+                      return const _AvisoDeCorte();
+                    }
                     return _BalcaoDeMensagem(
-                      mensagem: mensagens[i - 1],
+                      mensagem: mensagens[i - 1 - (cortada ? 1 : 0)],
                       persona: widget.persona,
                     );
                   },
@@ -570,6 +580,40 @@ class _Bolha extends StatelessWidget {
           child: child,
         ),
       ],
+    );
+  }
+}
+
+/// A conversa passou do teto de mensagens e as falas mais antigas saíram do
+/// histórico. A nota quieta mora no topo da lista, logo abaixo do Filete,
+/// explicando por que a conversa não começa na primeira pergunta.
+class _AvisoDeCorte extends StatelessWidget {
+  const _AvisoDeCorte();
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
+    final tema = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: cor.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(10),
+          border: Border(
+            left: BorderSide(color: cor.primary, width: 3),
+          ),
+        ),
+        child: Text(
+          'As falas mais antigas saíram quando esta conversa passou do '
+          'limite de mensagens.',
+          style: tema.bodySmall?.copyWith(
+            color: cor.onSurfaceVariant,
+            height: 1.5,
+          ),
+        ),
+      ),
     );
   }
 }

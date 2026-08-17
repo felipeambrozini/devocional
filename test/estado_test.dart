@@ -454,6 +454,31 @@ void main() {
       expect(mensagens.last.id, '124');
     });
 
+    test('o corte do teto marca a conversa como cortada, e persiste', () async {
+      final estado = await Estado.abrir();
+      final c = await estado.novaConversa('spurgeon', titulo: 'm0');
+      for (var i = 0; i < 121; i++) {
+        await estado.registrarMensagem('spurgeon', c.id, mensagem('$i', 'user', 'm$i', i));
+      }
+      expect(estado.conversaDe('spurgeon', c.id)!.cortada, isTrue);
+      expect(
+        (await reabrir()).conversaDe('spurgeon', c.id)!.cortada,
+        isTrue,
+        reason: 'quem reabrir a conversa precisa saber que as falas saíram',
+      );
+
+      // Abaixo do teto não nasce o flag: a conversa inteira ainda está lá.
+      final nova = await estado.novaConversa('spurgeon', titulo: 'curta');
+      for (var i = 0; i < 30; i++) {
+        await estado.registrarMensagem(
+          'spurgeon',
+          nova.id,
+          mensagem('n$i', 'user', 'm$i', i),
+        );
+      }
+      expect(estado.conversaDe('spurgeon', nova.id)!.cortada, isFalse);
+    });
+
     test('fundir nao duplica, ordena por momento e persiste', () async {
       final estado = await Estado.abrir();
       final c = await conversaCom(estado, 'spurgeon', [

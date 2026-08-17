@@ -67,7 +67,9 @@ class _TelaPlanoState extends State<TelaPlano> {
     Scrollable.ensureVisible(
       contexto,
       alignment: 0.5,
-      duration: const Duration(milliseconds: 300),
+      duration: MediaQuery.disableAnimationsOf(contexto)
+          ? Duration.zero
+          : const Duration(milliseconds: 300),
       curve: Curves.easeOutCubic,
     );
   }
@@ -84,7 +86,9 @@ class _TelaPlanoState extends State<TelaPlano> {
       Scrollable.ensureVisible(
         alvo,
         alignment: 0.15,
-        duration: const Duration(milliseconds: 350),
+        duration: MediaQuery.disableAnimationsOf(alvo)
+            ? Duration.zero
+            : const Duration(milliseconds: 350),
       );
     });
   }

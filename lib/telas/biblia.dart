@@ -130,7 +130,9 @@ class _TelaBibliaState extends State<TelaBiblia> {
         Scrollable.ensureVisible(
           contexto,
           alignment: 0.3,
-          duration: const Duration(milliseconds: 350),
+          duration: MediaQuery.disableAnimationsOf(contexto)
+              ? Duration.zero
+              : const Duration(milliseconds: 350),
         );
         return;
       }

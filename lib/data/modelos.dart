@@ -329,12 +329,14 @@ class Conversa {
     required this.titulo,
     required this.momento,
     required this.mensagens,
+    this.cortada = false,
   });
 
   factory Conversa.doJson(Map<String, dynamic> json) => Conversa(
     id: json['id'] as String? ?? '',
     titulo: json['titulo'] as String? ?? '',
     momento: json['momento'] as int? ?? 0,
+    cortada: json['cortada'] as bool? ?? false,
     mensagens: [
       for (final m in json['mensagens'] as List? ?? const [])
         if (m is Map<String, dynamic>) Mensagem.doJson(m),
@@ -354,10 +356,16 @@ class Conversa {
 
   final List<Mensagem> mensagens;
 
+  /// Verdadeiro quando esta conversa atingiu o teto de mensagens e as falas
+  /// mais antigas saíram do histórico. O chat mostra um aviso quieto para o
+  /// usuário saber que o corte aconteceu, em vez de falas sumindo em silêncio.
+  final bool cortada;
+
   Map<String, dynamic> paraJson() => {
     'id': id,
     'titulo': titulo,
     'momento': momento,
+    'cortada': cortada,
     'mensagens': [for (final m in mensagens) m.paraJson()],
   };
 
@@ -365,7 +373,9 @@ class Conversa {
   /// histórico listar a conversa na posição de quem acabou de falar.
   Conversa comMensagem(Mensagem mensagem, {int? teto}) {
     final novas = [...mensagens, mensagem];
+    var cortou = false;
     if (teto != null && novas.length > teto) {
+      cortou = true;
       novas.removeRange(0, novas.length - teto);
     }
     return Conversa(
@@ -373,6 +383,7 @@ class Conversa {
       titulo: titulo.isEmpty && mensagem.doUsuario ? mensagem.texto : titulo,
       momento: mensagem.momento,
       mensagens: novas,
+      cortada: cortada || cortou,
     );
   }
 
@@ -381,7 +392,9 @@ class Conversa {
   Conversa comMensagemDeTodas(List<Mensagem> novas, {int? teto}) {
     final todas = [...mensagens, ...novas]
       ..sort((a, b) => a.momento.compareTo(b.momento));
+    var cortou = false;
     if (teto != null && todas.length > teto) {
+      cortou = true;
       todas.removeRange(0, todas.length - teto);
     }
     final ultimo = todas.last.momento;
@@ -390,6 +403,7 @@ class Conversa {
       titulo: titulo,
       momento: ultimo > momento ? ultimo : momento,
       mensagens: todas,
+      cortada: cortada || cortou,
     );
   }
 
@@ -400,6 +414,7 @@ class Conversa {
     titulo: novo,
     momento: momento,
     mensagens: mensagens,
+    cortada: cortada,
   );
 }
 

@@ -27,7 +27,7 @@ jobs:
       # que já fixa o SDK local — aqui é o mesmo cuidado para o CI.
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
-          flutter-version: 3.44.8
+          flutter-version: 3.44.9
       - run: flutter pub get
       - run: flutter test
       - run: flutter build web --release --base-href /devocional/ --dart-define=FIREBASE_API_KEY_WEB=${{ secrets.FIREBASE_API_KEY_WEB }} --dart-define=GEMINI_API_KEY_WEB=${{ secrets.GEMINI_API_KEY_WEB }}
