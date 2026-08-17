@@ -49,6 +49,10 @@ class BalaoDeChat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
+    // O mesmo retrato que serve o polegar no celular (52) se perde na janela
+    // do navegador e no tablet: o balão cresce junto com a plataforma, no
+    // mesmo limiar largo (720) que o resto do app usa para trocar de moldura.
+    final tamanho = MediaQuery.sizeOf(context).width >= 720 ? 64.0 : 52.0;
     return Tooltip(
       message: 'Conversas com ${persona.nome}',
       child: Semantics(
@@ -63,18 +67,22 @@ class BalaoDeChat extends StatelessWidget {
           child: InkWell(
             customBorder: const CircleBorder(),
             onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.all(3),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: cor.primary, width: 1.5),
-                ),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: cor.primary, width: 1.5),
+              ),
+              // A folga entre o aro dourado e a foto, como no cabeçalho de
+              // hoje.dart: sem ela a foto preenche o círculo até a borda e o
+              // cabelo do Felipe encosta no aro. Com ela o aro fica limpo,
+              // como o do Spurgeon, que tem folga própria na foto.
+              child: Padding(
+                padding: const EdgeInsets.all(3),
                 child: ClipOval(
                   child: Image.asset(
                     persona.foto,
-                    width: 52,
-                    height: 52,
+                    width: tamanho,
+                    height: tamanho,
                     fit: BoxFit.cover,
                     // A foto é mais alta que larga e o cabelo encosta na borda
                     // superior: qualquer corte em cima corta o cabelo. Alinhada
