@@ -31,7 +31,7 @@ class DefaultFirebaseOptions {
     appId: '1:169480227109:web:5115ed3308487da23c72cc',
     messagingSenderId: '169480227109',
     projectId: 'devocional-15815',
-    authDomain: 'devocional-15815.firebaseapp.com',
+    authDomain: 'www.felipeambrozini.com.br',
     storageBucket: 'devocional-15815.firebasestorage.app',
     measurementId: 'G-2WLQXEVJ5S',
   );
