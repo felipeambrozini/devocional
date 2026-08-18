@@ -266,19 +266,61 @@ final _router = GoRouter(
           Moldura(navigationShell: navigationShell),
       branches: [
         for (final (i, d) in _destinos.indexed)
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/${d.caminho}',
-                builder: (context, state) =>
-                    FocusScope(node: _escoposDasAbas[i], child: d.tela),
-              ),
-            ],
-          ),
+          // O Devocional não é uma rota só: cada leitura tem a própria
+          // (`/manha`, `/promessas`, `/noite`), para a URL dizer o que está
+          // na tela e um link compartilhado reabrir a leitura certa. A rota
+          // `/devocional` (a da aba) só redireciona para a leitura do
+          // horário — sem ela, tocar na aba na primeira vez não teria para
+          // onde ir, e links velhos para `/devocional` morreriam.
+          if (d.caminho == 'devocional')
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/devocional',
+                  redirect: (context, state) {
+                    final data = state.uri.queryParameters['data'];
+                    final leitura = Leitura.pelaHora(DateTime.now().hour).name;
+                    return data == null ? '/$leitura' : '/$leitura?data=$data';
+                  },
+                ),
+                for (final l in Leitura.values)
+                  GoRoute(
+                    path: '/${l.name}',
+                    builder: (context, state) => FocusScope(
+                      node: _escoposDasAbas[i],
+                      child: TelaDevocional(
+                        leituraInicial: l,
+                        dataInicial: _dataDaRota(state),
+                      ),
+                    ),
+                  ),
+              ],
+            )
+          else
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/${d.caminho}',
+                  builder: (context, state) =>
+                      FocusScope(node: _escoposDasAbas[i], child: d.tela),
+                ),
+              ],
+            ),
       ],
     ),
   ],
 );
+
+/// A data escolhida no calendário vem na URL como `?data=AAAA-MM-DD`, para o
+/// F5 e um link compartilhado reabrirem o dia certo. `null` (sem parâmetro ou
+/// valor inválido) deixa a tela cair no dia de hoje.
+DateTime? _dataDaRota(GoRouterState state) {
+  final texto = state.uri.queryParameters['data'];
+  if (texto == null) return null;
+  final data = DateTime.tryParse(texto);
+  if (data == null) return null;
+  return DateTime(data.year, data.month, data.day);
+}
 
 class AppDevocional extends StatefulWidget {
   const AppDevocional({super.key, required this.estado});

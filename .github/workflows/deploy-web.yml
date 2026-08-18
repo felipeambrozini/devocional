@@ -44,4 +44,4 @@ jobs:
         env:
           # JSON da conta de serviço do Firebase (IAM → Service accounts → Create
           # key). Cadastrar no mesmo environment do workflow (github-pages).
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

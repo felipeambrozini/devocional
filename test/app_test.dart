@@ -370,6 +370,52 @@ void main() {
     );
   });
 
+  testWidgets('cada leitura do Devocional tem URL própria', (tester) async {
+    await aquecerAssets(tester);
+    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+    await tester.pumpAndSettle();
+
+    // O router é global e os testes rodam no mesmo processo: o teste anterior
+    // pode ter deixado a URL numa rota fora do shell (ex.: /sobre), onde não
+    // há trilho para tocar. Voltar a /hoje garante o shell na tela.
+    GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/hoje');
+    await tester.pumpAndSettle();
+
+    // A janela de teste (800 px) liga o trilho lateral, não a barra de baixo.
+    await tester.tap(
+      find.descendant(
+        of: find.byType(NavigationRail),
+        matching: find.text('Devocional'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // A aba cai na leitura do horário (Manhã antes das 18h, Noite depois),
+    // nunca em /devocional — é isto que livra a URL de repetir o nome da
+    // aba em devocional/devocional.
+    expect(
+      GoRouter.of(tester.element(find.byType(Scaffold).first)).state.uri.path,
+      anyOf('/manha', '/noite'),
+      reason: 'a aba Devocional abre direto na leitura do horário',
+    );
+
+    await tester.tap(find.text('Promessas de Deus'));
+    await tester.pumpAndSettle();
+    expect(
+      GoRouter.of(tester.element(find.byType(Scaffold).first)).state.uri.path,
+      '/promessas',
+      reason: 'o chip de Promessas escreve a própria rota na URL',
+    );
+
+    await tester.tap(find.text('Noite'));
+    await tester.pumpAndSettle();
+    expect(
+      GoRouter.of(tester.element(find.byType(Scaffold).first)).state.uri.path,
+      '/noite',
+      reason: 'o chip de Noite escreve a própria rota na URL',
+    );
+  });
+
   testWidgets(
     'reabrir o chat com uma resposta interrompida oferece tentar de novo',
     (tester) async {

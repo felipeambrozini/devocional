@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../data/canon.dart';
 import '../data/conteudo.dart';
@@ -84,8 +85,27 @@ class _TelaDevocionalState extends State<TelaDevocional> {
       lastDate: DateTime(_data.year + 5, 12, 31),
       helpText: 'Escolha a data do devocional',
     );
-    if (escolhida != null) setState(() => _data = escolhida);
+    if (escolhida != null) _irPara(_leitura, escolhida);
   }
+
+  /// Navega para a leitura com a data na URL (`/manha?data=AAAA-MM-DD`):
+  /// o chip, o calendário e o "voltar para hoje" escrevem a URL, e a rota
+  /// (main.dart) reconstrói a tela com `dataInicial`. A data de hoje não
+  /// aparece na URL de propósito, para o link continuar limpo.
+  void _irPara(Leitura leitura, DateTime data) {
+    if (leitura == _leitura && _mesmoDia(data, _data)) return;
+    final hoje = DateTime.now();
+    final ehHoje = _mesmoDia(data, hoje);
+    final parametro = ehHoje ? '' : '?data=${_formatoDeData(data)}';
+    GoRouter.of(context).go('/${leitura.name}$parametro');
+  }
+
+  static bool _mesmoDia(DateTime a, DateTime b) =>
+      a.month == b.month && a.day == b.day;
+
+  static String _formatoDeData(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-'
+      '${d.day.toString().padLeft(2, '0')}';
 
   Future<Devocional?> _carregar(Versao versao) {
     final periodo = _leitura.periodo;
@@ -126,7 +146,7 @@ class _TelaDevocionalState extends State<TelaDevocional> {
             IconButton(
               tooltip: 'Voltar para hoje',
               icon: const Icon(Icons.today_outlined),
-              onPressed: () => setState(() => _data = DateTime.now()),
+              onPressed: () => _irPara(_leitura, DateTime.now()),
             ),
         ],
       ),
@@ -141,7 +161,7 @@ class _TelaDevocionalState extends State<TelaDevocional> {
           children: [
             _AlternadorDeLeitura(
               atual: _leitura,
-              ao: (l) => setState(() => _leitura = l),
+              ao: (l) => _irPara(l, _data),
             ),
             const SizedBox(height: 16),
             CarregaUmaVez<Devocional?>(
