@@ -801,6 +801,14 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                       children: [
                         const Filete(),
                         const SizedBox(height: 16),
+                        // A voz de Spurgeon lê a introdução inteira, do
+                        // título à frase; tocar de novo para a leitura.
+                        BotaoDeVoz(
+                          chave: 'introducao:${widget.slug}',
+                          texto: textoDeIntroducao(introducao),
+                          referencia: 'Introdução de ${introducao.livro}',
+                        ),
+                        const SizedBox(height: 16),
                         for (final (titulo, corpo) in introducao.secoes) ...[
                           Text(titulo, style: tema.headlineSmall),
                           const SizedBox(height: 8),
@@ -1021,62 +1029,62 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
                             ),
                             const SizedBox(width: 10),
                           ],
-                           Icon(
-                             ativo
-                                 ? Icons.stop_rounded
-                                 : preparando
-                                 ? Icons.hourglass_top_rounded
-                                 : Icons.play_arrow_rounded,
-                             size: 20,
-                             color: cor.primary,
-                           ),
-                           const SizedBox(width: 6),
-                           // Flexible com reticências: em escala de texto 2x um
-                           // rótulo comprido ("O pregador está lendo…") não
-                           // pode estourar a largura da tela. Semantics: o
-                           // rótulo completo já vive no Semantics acima, e o
-                           // texto visível repetido faria o leitor de tela ler
-                           // a frase duas vezes.
-                           Flexible(
-                             child: ExcludeSemantics(
-                               child: Text(
-                                 visivel,
-                                 overflow: TextOverflow.ellipsis,
-                                 style: tema.labelLarge?.copyWith(
-                                   color: ativo || pausado
-                                       ? cor.primary
-                                       : cor.onSurfaceVariant,
-                                 ),
-                               ),
-                             ),
-                           ),
-                           // Uma sessão pausada precisa de um jeito de ser
-                           // encerrada sem trocar de página: sem o X, o sócio
-                           // pausado vira um invisital — e pausa que não se pode
-                           // fechar é uma gaiola. O X mata a sessão; o corpo da
-                           // pílula continua retomando.
-                           if (pausado)
-                             Padding(
-                               padding: const EdgeInsetsDirectional.only(
-                                 start: 6,
-                               ),
-                               child: Tooltip(
-                                 message: 'Encerrar a leitura pausada',
-                                 child: InkWell(
-                                   borderRadius: BorderRadius.circular(30),
-                                   onTap: voz.parar,
-                                   child: Padding(
-                                     padding: const EdgeInsets.all(4),
-                                     child: Icon(
-                                       Icons.close_rounded,
-                                       size: 18,
-                                       color: cor.onSurfaceVariant,
-                                     ),
-                                   ),
-                                 ),
-                               ),
-                             ),
-                         ],
+                          Icon(
+                            ativo
+                                ? Icons.stop_rounded
+                                : preparando
+                                ? Icons.hourglass_top_rounded
+                                : Icons.play_arrow_rounded,
+                            size: 20,
+                            color: cor.primary,
+                          ),
+                          const SizedBox(width: 6),
+                          // Flexible com reticências: em escala de texto 2x um
+                          // rótulo comprido ("O pregador está lendo…") não
+                          // pode estourar a largura da tela. Semantics: o
+                          // rótulo completo já vive no Semantics acima, e o
+                          // texto visível repetido faria o leitor de tela ler
+                          // a frase duas vezes.
+                          Flexible(
+                            child: ExcludeSemantics(
+                              child: Text(
+                                visivel,
+                                overflow: TextOverflow.ellipsis,
+                                style: tema.labelLarge?.copyWith(
+                                  color: ativo || pausado
+                                      ? cor.primary
+                                      : cor.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Uma sessão pausada precisa de um jeito de ser
+                          // encerrada sem trocar de página: sem o X, o sócio
+                          // pausado vira um invisital — e pausa que não se pode
+                          // fechar é uma gaiola. O X mata a sessão; o corpo da
+                          // pílula continua retomando.
+                          if (pausado)
+                            Padding(
+                              padding: const EdgeInsetsDirectional.only(
+                                start: 6,
+                              ),
+                              child: Tooltip(
+                                message: 'Encerrar a leitura pausada',
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(30),
+                                  onTap: voz.parar,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4),
+                                    child: Icon(
+                                      Icons.close_rounded,
+                                      size: 18,
+                                      color: cor.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ),
@@ -1142,10 +1150,11 @@ class IndicadorDeVozNaBarra extends StatelessWidget {
       listenable: Voz.instancia,
       builder: (context, _) {
         final voz = Voz.instancia;
-        final aqui = (voz.tocando || voz.carregando || voz.pausado) &&
+        final aqui =
+            (voz.tocando || voz.carregando || voz.pausado) &&
             voz.tocandoChave == chave;
         if (!aqui) return const SizedBox.shrink();
-// Preparando, o indicador mostra o preparo em curso: quem espera
+        // Preparando, o indicador mostra o preparo em curso: quem espera
         // ainda pode cancelar. O carregando continua ligado durante a
         // leitura (só se desliga no fim do play), por isso o preparo é
         // "carregando sem tocar".
@@ -1158,27 +1167,24 @@ class IndicadorDeVozNaBarra extends StatelessWidget {
             child: IconButton(
               tooltip: 'Cancelar o preparo',
               icon: Stack(
-                 alignment: Alignment.center,
-                 children: [
-                   SizedBox(
-                     width: 28,
-                     height: 28,
-                     child: CircularProgressIndicator(
-                       value: null,
-                       strokeWidth: 2,
-                       color: cor.primary,
-                       backgroundColor: cor.surfaceContainerHighest,
-                     ),
-                   ),
-                   Icon(
-                     Icons.hourglass_top_rounded,
-                     size: 18,
-                   ),
-               ],
-             ),
-             onPressed: voz.parar,
-           ),
-         );
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(
+                      value: null,
+                      strokeWidth: 2,
+                      color: cor.primary,
+                      backgroundColor: cor.surfaceContainerHighest,
+                    ),
+                  ),
+                  Icon(Icons.hourglass_top_rounded, size: 18),
+                ],
+              ),
+              onPressed: voz.parar,
+            ),
+          );
         }
         // Pausada de fora, o anel é o retomar: quem rolou para longe da
         // pílula não pode ter de voltar ao topo para continuar a leitura, e
@@ -1200,8 +1206,10 @@ class IndicadorDeVozNaBarra extends StatelessWidget {
                   // CircularProgressIndicator anima sozinho).
                   final fracao = total == null || total.inMilliseconds == 0
                       ? null
-                      : (agora.inMilliseconds / total.inMilliseconds)
-                            .clamp(0.0, 1.0);
+                      : (agora.inMilliseconds / total.inMilliseconds).clamp(
+                          0.0,
+                          1.0,
+                        );
                   return IconButton(
                     tooltip: retomar
                         ? 'Retomar a leitura'
@@ -1264,8 +1272,7 @@ class _ProgressoDeLeitura extends StatelessWidget {
             // indeterminada (o LinearProgressIndicator anima sozinho).
             final fracao = total == null || total.inMilliseconds == 0
                 ? null
-                : (agora.inMilliseconds / total.inMilliseconds)
-                      .clamp(0.0, 1.0);
+                : (agora.inMilliseconds / total.inMilliseconds).clamp(0.0, 1.0);
             return LinearProgressIndicator(
               value: fracao,
               minHeight: 3,
