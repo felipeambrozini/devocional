@@ -19,7 +19,7 @@ jobs:
     # sem `environment:` só lê secrets de repositório.
     environment: github-pages
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Versão exata, não "stable": uma release nova do Flutter podia quebrar
       # o deploy sem nenhuma mudança no repositório. Mesma versão do .fvmrc,
       # que já fixa o SDK local — aqui é o mesmo cuidado para o CI.
