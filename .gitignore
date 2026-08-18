@@ -33,6 +33,9 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Saída do deploy web (build/web copiado para public/devocional)
+/public/
+
 # Local-only build defines (chaves de API do Firebase/Gemini). Nunca versionado.
 .env
 .env.json

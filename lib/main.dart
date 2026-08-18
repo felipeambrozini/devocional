@@ -74,9 +74,9 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Sem isto a web usa "/#/biblia" (estratégia padrão do Flutter): o # nunca
   // vai ao servidor, então nunca dá 404, mas também não é o link limpo que se
-  // quer compartilhar. Com o caminho limpo, quem abre "/biblia" direto passa
-  // por web/404.html e web/index.html (ver os dois) antes do Flutter ler a
-  // URL — por isso nada disto tem efeito fora da web.
+  // quer compartilhar. Com o caminho limpo, quem abre "/biblia" direto cai no
+  // rewrite do Firebase Hosting para o index.html (firebase.json) — por isso
+  // nada disto tem efeito fora da web.
   if (kIsWeb) usePathUrlStrategy();
 
   final estado = await Estado.abrir();
@@ -184,9 +184,10 @@ final _escoposDasAbas = [
 
 /// Cada aba com o próprio caminho (`/hoje`, `/biblia`, `/devocional`,
 /// `/plano`, `/notas`), para abrir direto por link e sobreviver a um F5 — o
-/// GitHub Pages não tem regra de reescrita, por isso o truque em web/404.html
-/// e web/index.html. Sobre e as conversas também têm URL própria, fora do
-/// shell: são telas empurradas por cima das abas, não abas.
+/// Firebase Hosting devolve o index.html para qualquer caminho sob
+/// `/devocional/` (rewrite em firebase.json). Sobre e as conversas também têm
+/// URL própria, fora do shell: são telas empurradas por cima das abas, não
+/// abas.
 ///
 /// `StatefulShellRoute.indexedStack`, não rotas soltas: rotas soltas
 /// trocariam de aba reconstruindo a Moldura do zero, perdendo a rolagem e o

@@ -267,11 +267,9 @@ motivo novo.
 ### Web
 
 - **Cada aba com a própria URL** (09/08/2026) via `go_router` com
-  `StatefulShellRoute.indexedStack`. O GitHub Pages não tem regra de reescrita,
-  então `web/404.html` redireciona para `/?/biblia` e `web/index.html` restaura
-  o caminho com `history.replaceState`
-  (truque de https://github.com/rafgraph/spa-github-pages,
-  `pathSegmentsToKeep = 1`).
+  `StatefulShellRoute.indexedStack`. O Firebase Hosting devolve o index.html
+  para qualquer caminho sob `/devocional/` (rewrite em `firebase.json`), então
+  abrir `/devocional/biblia` direto ou dar F5 funciona sem truque de 404.
 - **Chat com URL própria** (16/08/2026): as conversas (`/charles-spurgeon`,
   `/felipe-ambrozini`) são empurradas por `push` por cima das abas, e a barra
   de endereço acompanha porque `main.dart` liga
@@ -421,11 +419,13 @@ desinstalar antes de instalar de novo.
 ## Publicação na web
 
 O deploy é pelo GitHub Actions (`.github/workflows/deploy-web.yml`), com o
-Flutter fixo em 3.44.9, para o GitHub Pages. O site mora em
-`felipeambrozini.com.br/devocional/` (um nível abaixo do domínio, por isso
-`pathSegmentsToKeep = 1` no resolvedor de caminho). O build usa
-`--base-href /devocional/` e as chaves de API vêm dos Secrets do repositório:
-`FIREBASE_API_KEY_WEB`, `GEMINI_API_KEY_WEB` e `TTS_API_KEY_WEB` (precisam
-estar cadastrados em Settings → Secrets and variables). As actions estão fixadas em commit SHA
-completo, não em tag mutável.
+Flutter fixo em 3.44.9, para o Firebase Hosting. O site mora em
+`felipeambrozini.com.br/devocional/` (um nível abaixo da raiz do domínio; o
+build vai para `public/devocional` e o rewrite em `firebase.json` cuida do
+SPA). O build usa `--base-href /devocional/` e as chaves de API vêm dos
+Secrets do repositório: `FIREBASE_API_KEY_WEB`, `GEMINI_API_KEY_WEB` e
+`TTS_API_KEY_WEB` (precisam estar cadastrados em Settings → Secrets and
+variables, no environment `github-pages`). O deploy usa
+`FIREBASE_SERVICE_ACCOUNT` (JSON da conta de serviço do Firebase). As actions
+estão fixadas em commit SHA completo, não em tag mutável.
 

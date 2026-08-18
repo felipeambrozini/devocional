@@ -1,25 +1,124 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <title>Devocional</title>
-  <script>
-    // O GitHub Pages não tem regra de reescrita: abrir "/biblia" direto (ou
-    // atualizar a página nela) bate aqui, no 404, antes até do Flutter
-    // carregar. Este redireciona para "/?/biblia..."; web/index.html lê a
-    // "?/" de volta e restaura o caminho limpo com history.replaceState,
-    // antes do Flutter ler a URL — a pessoa nunca vê o 404 nem o "?/".
-    // Técnica de https://github.com/rafgraph/spa-github-pages.
-    var pathSegmentsToKeep = 1; // mantém "/devocional"
-    var l = window.location;
-    l.replace(
-      l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-      l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
-      l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
-      (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-      l.hash
-    );
-  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Página não encontrada — Devocional</title>
+  <link rel="icon" type="image/png" href="/devocional/favicon.png"/>
+  <!--
+    As fontes do app (Cinzel e Montserrat, empacotadas localmente em
+    assets/fonts) chegam ao build em build/web/assets/assets/fonts/, e o
+    deploy as serve em /devocional/assets/assets/fonts/. Caminho absoluto de
+    propósito: o 404.html mora na raiz do domínio (public/404.html), fora de
+    /devocional/, então URL relativa quebraria conforme a rota do erro.
+  -->
+  <style>
+    @font-face {
+      font-family: 'Cinzel';
+      src: url('/devocional/assets/assets/fonts/Cinzel-Variable.ttf') format('truetype');
+      font-weight: 100 900;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Montserrat';
+      src: url('/devocional/assets/assets/fonts/Montserrat-Variable.ttf') format('truetype');
+      font-weight: 100 900;
+      font-display: swap;
+    }
+
+    /* Mesmas cores de lib/theme.dart, na lógica de claro/escuro de
+       web/index.html: pergaminho/bronze de dia, fundo/dourado de noite. */
+    :root {
+      --fundo: #F7F1E3;
+      --titulo: #5E4409;
+      --texto: #7A5C12;
+      --texto-suave: #6B5842;
+      --traco: #C2AE86;
+      --botao: #7A5C12;
+      --botao-texto: #F7F1E3;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --fundo: #2E1B10;
+        --titulo: #E3C567;
+        --texto: #C9A227;
+        --texto-suave: #C9B99A;
+        --traco: #8C6D1F;
+        --botao: #C9A227;
+        --botao-texto: #2E1B10;
+      }
+    }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: var(--fundo);
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      font-family: 'Montserrat', system-ui, sans-serif;
+      color: var(--texto-suave);
+    }
+    main {
+      text-align: center;
+      max-width: 420px;
+    }
+    .selo {
+      margin: 0 0 16px;
+      font-family: 'Cinzel', serif;
+      font-size: 96px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--titulo);
+      letter-spacing: .06em;
+    }
+    .rotulo {
+      margin: 0 auto 24px;
+      width: 64px;
+      border-top: 2px solid var(--traco);
+      padding-top: 16px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .28em;
+      text-transform: uppercase;
+      color: var(--texto);
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-family: 'Cinzel', serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--titulo);
+    }
+    p {
+      margin: 0 0 32px;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+    a {
+      display: inline-block;
+      padding: 12px 28px;
+      border-radius: 4px;
+      background: var(--botao);
+      color: var(--botao-texto);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-decoration: none;
+      text-transform: uppercase;
+    }
+  </style>
 </head>
-<body></body>
+<body>
+  <main>
+    <p class="selo">404</p>
+    <p class="rotulo">Devocional</p>
+    <h1>Página não encontrada</h1>
+    <p>O endereço que você abriu não existe ou foi movido.<br>Volte e continue a leitura de onde estava.</p>
+    <a href="/devocional/">Voltar ao devocional</a>
+  </main>
+</body>
 </html>

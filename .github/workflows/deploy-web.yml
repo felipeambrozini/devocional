@@ -7,15 +7,13 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     # Sem isto os secrets de environment são invisíveis: `secrets.NOME` em job
     # sem `environment:` só lê secrets de repositório.
@@ -31,19 +29,19 @@ jobs:
       - run: flutter pub get
       - run: flutter test
       - run: flutter build web --release --base-href /devocional/ --dart-define=FIREBASE_API_KEY_WEB=${{ secrets.FIREBASE_API_KEY_WEB }} --dart-define=GEMINI_API_KEY_WEB=${{ secrets.GEMINI_API_KEY_WEB }} --dart-define=TTS_API_KEY_WEB=${{ secrets.TTS_API_KEY_WEB }}
-      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+      # O Firebase Hosting serve da raiz do domínio; o app mora em /devocional/,
+      # então o build vai para public/devocional (o base-href acima combina). O
+      # 404.html também sobe à raiz do public: é lá que o Hosting procura a
+      # página de erro para rotas fora do rewrite (public/devocional/404.html,
+      # que este copy também produz, fica inalcançável — o rewrite cobre tudo).
+      - run: |
+          mkdir -p public/devocional
+          cp -r build/web/* public/devocional/
+          cp build/web/404.html public/404.html
+      - uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15.27.0
         with:
-          path: build/web
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
-        with:
-          node-version: 24
-      - id: deployment
-        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5
+          args: deploy --only hosting
+        env:
+          # JSON da conta de serviço do Firebase (IAM → Service accounts → Create
+          # key). Cadastrar no mesmo environment do workflow (github-pages).
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
