@@ -901,7 +901,7 @@ void main() {
       expect(
         copiado,
         '"No princípio, Deus criou os céus e a terra."\nGênesis 1:1 (BKJ)\n'
-        'https://felipeambrozini.github.io/devocional/?ler=genesis.1.1',
+        'https://felipeambrozini.com.br/devocional/?ler=genesis.1.1',
       );
     },
   );

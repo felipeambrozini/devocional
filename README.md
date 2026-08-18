@@ -422,7 +422,7 @@ desinstalar antes de instalar de novo.
 
 O deploy é pelo GitHub Actions (`.github/workflows/deploy-web.yml`), com o
 Flutter fixo em 3.44.9, para o GitHub Pages. O site mora em
-`felipeambrozini.github.io/devocional/` (um nível abaixo do domínio, por isso
+`felipeambrozini.com.br/devocional/` (um nível abaixo do domínio, por isso
 `pathSegmentsToKeep = 1` no resolvedor de caminho). O build usa
 `--base-href /devocional/` e as chaves de API vêm dos Secrets do repositório:
 `FIREBASE_API_KEY_WEB`, `GEMINI_API_KEY_WEB` e `TTS_API_KEY_WEB` (precisam

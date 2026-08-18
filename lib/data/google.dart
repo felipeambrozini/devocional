@@ -5,7 +5,7 @@ import 'package:google_api_headers/google_api_headers.dart';
 /// identidade de um jeito:
 ///
 /// * chaveWeb: criada no Google Cloud Console, restrita ao site do app
-///   (`https://felipeambrozini.github.io` e `localhost`) e às APIs que o app
+///   (`https://felipeambrozini.com.br` e `localhost`) e às APIs que o app
 ///   usa. O navegador manda o cabeçalho Origin, que é a prova que essa
 ///   restrição confere.
 /// * chaveAndroid: criada no Google Cloud Console, restrita ao app Android

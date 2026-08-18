@@ -393,7 +393,7 @@ enum Versao {
 /// versículo (o rastreador de prévia do WhatsApp não resolve caminho relativo)
 /// e para reconhecer, em `main.dart`, se `Uri.base` é o próprio site ou o
 /// diretório de trabalho de uma plataforma que não é web.
-const enderecoDoSite = 'https://felipeambrozini.github.io/devocional/';
+const enderecoDoSite = 'https://felipeambrozini.com.br/devocional/';
 
 /// Livro, capítulo e versículo (opcional) a partir do parâmetro `ler` de um
 /// link, como `joao.3.16` ou `joao.3`. Serve para main.dart abrir a leitura
