@@ -117,6 +117,7 @@ class _TelaIntroducaoState extends State<TelaIntroducao> {
                 BotaoDeVoz(
                   chave: 'introducao:$slug',
                   texto: textoDeIntroducao(introducao),
+                  tipo: TipoConteudoAudio.introducao,
                   referencia: 'Introdução de ${introducao.livro}',
                 ),
                 const SizedBox(height: 24),

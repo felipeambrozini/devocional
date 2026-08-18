@@ -801,6 +801,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                         BotaoDeVoz(
                           chave: 'introducao:${widget.slug}',
                           texto: textoDeIntroducao(introducao),
+                          tipo: TipoConteudoAudio.introducao,
                           referencia: 'Introdução de ${introducao.livro}',
                         ),
                         const SizedBox(height: 16),
@@ -863,9 +864,10 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
 ///
 /// [chave] identifica o que se ouve ("introducao:joao", "capitulo:joao.3"): a
 /// voz é de app inteiro, então o botão da introdução e o do capítulo mostram
-/// o mesmo estado para o mesmo áudio, e ouvir um para o outro. [referencia]
-/// nomeia o que terminou no aviso ("João 3"), para o fim da leitura não ser
-/// um "Leitura concluída." genérico.
+/// o mesmo estado para o mesmo áudio, e ouvir um para o outro. [tipo] decide
+/// a voz e o ritmo da síntese ([TipoConteudoAudio]): quem sabe o que se está
+/// ouvindo é quem monta o botão. [referencia] nomeia o que terminou no aviso
+/// ("João 3"), para o fim da leitura não ser um "Leitura concluída." genérico.
 ///
 /// O botão escuta o fim da própria leitura para fechar o ciclo com a
 /// confirmação "Leitura concluída.": parar no meio não é um fim, e não avisa.
@@ -874,11 +876,13 @@ class BotaoDeVoz extends StatefulWidget {
     super.key,
     required this.chave,
     required this.texto,
+    required this.tipo,
     this.referencia,
   });
 
   final String chave;
   final String texto;
+  final TipoConteudoAudio tipo;
   final String? referencia;
 
   @override
@@ -1102,7 +1106,11 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
 
   Future<void> _alternar(BuildContext context, Voz voz) async {
     try {
-      await voz.alternar(widget.chave, texto: widget.texto);
+      await voz.alternar(
+        widget.chave,
+        texto: widget.texto,
+        tipo: widget.tipo,
+      );
     } on VozException catch (erro) {
       if (context.mounted) _avisarErro(context, voz, erro);
     }

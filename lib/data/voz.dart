@@ -18,17 +18,11 @@ import 'modelos.dart';
 /// milhão de caracteres por mês, e um capítulo inteiro gasta ~3 mil — dá para
 /// ouvir o ano inteiro sem pagar nada.
 ///
-/// Para trocar de voz ou de interpretação, basta editar as constantes abaixo e
-/// audicionar em https://cloud.google.com/text-to-speech (sem chave). As vozes
-/// masculinas de pt-BR são: Neural2-B, Wavenet-B, Wavenet-E e Standard-B/E.
-const _voz = 'pt-BR-Neural2-B';
-
-/// Ritmo mais lento que o natural: a leitura cadenciada que a gravidade do
-/// texto pede. 1.0 é o ritmo padrão da voz.
-const _ritmo = 0.92;
-
-/// Tom dois semitons abaixo do natural, para o barítono encorpado. Em st
-/// (semitons): -2 é grave sem virar artificial.
+/// A voz e o ritmo não são um par só: cada tipo de conteúdo
+/// ([TipoConteudoAudio]) tem a própria voz e o próprio ritmo — a Bíblia e as
+/// introduções usam um narrador, e os devocionais outro, mais íntimo. Para
+/// trocar, é só editar o enum em `lib/data/modelos.dart` e audicionar em
+/// https://cloud.google.com/text-to-speech (sem chave).
 const _tom = -2.0;
 
 /// Falha na voz, já traduzida para o que o usuário deve ler.
@@ -142,7 +136,8 @@ List<String> _fatiarPorPalavras(String frase) {
   return pedacos;
 }
 
-/// Sintetiza [texto] na voz de Spurgeon e devolve o áudio MP3.
+/// Sintetiza [texto] na voz do tipo de conteúdo ([tipo]) e devolve o áudio
+/// MP3.
 ///
 /// A API aceita no máximo [_limiteDeBytesDoTexto] bytes de texto por pedido;
 /// um capítulo inteiro estoura isso, e o texto é fatiado em frases e pedido
@@ -153,6 +148,7 @@ List<String> _fatiarPorPalavras(String frase) {
 /// (em `lib/data/google.dart`) e o cliente global do pacote `http`.
 Future<Uint8List> sintetizar(
   String texto, {
+  required TipoConteudoAudio tipo,
   http.Client? cliente,
   String? chave,
 }) async {
@@ -177,10 +173,10 @@ Future<Uint8List> sintetizar(
             headers: await cabecalhosGoogle(),
             body: json.encode({
               'input': {'text': pedaco},
-              'voice': {'languageCode': 'pt-BR', 'name': _voz},
+              'voice': {'languageCode': 'pt-BR', 'name': tipo.voiceName},
               'audioConfig': {
                 'audioEncoding': 'MP3',
-                'speakingRate': _ritmo,
+                'speakingRate': tipo.speakingRate,
                 'pitch': _tom,
               },
             }),
@@ -315,6 +311,7 @@ class Voz extends ChangeNotifier {
   /// despejar: o retomar da barra não conhece o texto, e a sessão não pode
   /// morrer em silêncio.
   String? _textoDaSessao;
+  TipoConteudoAudio? _tipoDaSessao;
   http.Client? _clienteDaSessao;
   String? _chaveTtsDaSessao;
 
@@ -364,18 +361,22 @@ class Voz extends ChangeNotifier {
 
   final StreamController<String> _conclusoes = StreamController.broadcast();
 
-  /// Toca [texto] na voz de Spurgeon, ou para se ele já estiver tocando.
+  /// Toca [texto] na voz de [tipo] de conteúdo, ou para se ele já estiver
+  /// tocando.
   ///
   /// [chave] identifica o que se ouve ("capitulo:joao.3"); tocar de novo a
   /// mesma chave para a leitura, e outra chave troca o áudio sem precisar de
-  /// dois toques. [cliente] e [chaveTts] existem só para os testes injetarem
-  /// o HTTP falso e a chave de teste; o app usa os de verdade.
+  /// dois toques. [tipo] decide a voz e o ritmo da síntese ([TipoConteudoAudio]),
+  /// e quem sabe o tipo é quem monta o botão, não o [Voz]. [cliente] e
+  /// [chaveTts] existem só para os testes injetarem o HTTP falso e a chave de
+  /// teste; o app usa os de verdade.
   ///
   /// Erros viram [VozException] para a tela avisar; o estado fica limpo nos
   /// dois casos (erro e sucesso).
   Future<void> alternar(
     String chave, {
     required String texto,
+    required TipoConteudoAudio tipo,
     http.Client? cliente,
     String? chaveTts,
   }) async {
@@ -441,6 +442,7 @@ class Voz extends ChangeNotifier {
     _tocando = false;
     _pausado = false;
     _textoDaSessao = texto;
+    _tipoDaSessao = tipo;
     _clienteDaSessao = cliente;
     _chaveTtsDaSessao = chaveTts;
     notifyListeners();
@@ -452,6 +454,7 @@ class Voz extends ChangeNotifier {
       final bytes = await _obterAudio(
         chave,
         texto: texto,
+        tipo: tipo,
         cliente: cliente,
         chaveTts: chaveTts,
       );
@@ -581,7 +584,8 @@ class Voz extends ChangeNotifier {
     // A cache despejou a sessão: o retomar da barra não conhece o texto, mas
     // a sessão guardou como re-sintetizar — a leitura volta do zero.
     final texto = _textoDaSessao;
-    if (texto == null) return false;
+    final tipo = _tipoDaSessao;
+    if (texto == null || tipo == null) return false;
     _posicaoDaPausa = null;
     _pausado = false;
     _carregando = false;
@@ -589,6 +593,7 @@ class Voz extends ChangeNotifier {
     await alternar(
       chave,
       texto: texto,
+      tipo: tipo,
       cliente: _clienteDaSessao,
       chaveTts: _chaveTtsDaSessao,
     );
@@ -697,6 +702,7 @@ class Voz extends ChangeNotifier {
   Future<Uint8List> _obterAudio(
     String chave, {
     String? texto,
+    required TipoConteudoAudio tipo,
     http.Client? cliente,
     String? chaveTts,
   }) async {
@@ -704,6 +710,7 @@ class Voz extends ChangeNotifier {
     if (guardado != null) return guardado;
     final novo = await sintetizar(
       texto ?? '',
+      tipo: tipo,
       cliente: cliente,
       chave: chaveTts,
     );

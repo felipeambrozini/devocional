@@ -40,6 +40,39 @@ enum ModoDoTema {
   final String rotulo;
 }
 
+/// O tipo de conteúdo que a voz lê: cada um tem a própria voz e o próprio
+/// ritmo — a Bíblia e as introduções usam um narrador, e os devocionais outro.
+///
+/// Vive aqui, e não em `data/voz.dart`, porque é a decisão de quem monta o
+/// botão de ouvir, e `telas/` já importa `modelos.dart`.
+enum TipoConteudoAudio {
+  biblia,
+  devocionalManha,
+  devocionalNoite,
+  promessasDeDeus,
+  introducao;
+
+  /// O nome da voz na Google Text-to-Speech (ouvir em
+  /// https://cloud.google.com/text-to-speech, sem chave).
+  String get voiceName => switch (this) {
+    TipoConteudoAudio.biblia ||
+    TipoConteudoAudio.introducao => 'pt-BR-chirp3-hd-fenrir',
+    TipoConteudoAudio.devocionalManha ||
+    TipoConteudoAudio.devocionalNoite ||
+    TipoConteudoAudio.promessasDeDeus => 'pt-BR-chirp3-hd-orus',
+  };
+
+  /// Ritmo da leitura: 1.0 é o padrão da voz; o devocional da noite desce
+  /// ainda mais, porque a noite pede um passo mais lento que o do dia.
+  double get speakingRate => switch (this) {
+    TipoConteudoAudio.biblia => 0.92,
+    TipoConteudoAudio.devocionalManha => 0.94,
+    TipoConteudoAudio.devocionalNoite => 0.88,
+    TipoConteudoAudio.promessasDeDeus => 0.91,
+    TipoConteudoAudio.introducao => 0.92,
+  };
+}
+
 /// Um capítulo carregado: o sobrescrito (existe nos Salmos) e os versículos em ordem.
 class Capitulo {
   const Capitulo({

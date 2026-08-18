@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:felipe_ambrozini/data/voz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -134,6 +135,7 @@ void main() {
           texto: 'Texto.',
           cliente: clienteQueConta(pedidos),
           chaveTts: 'teste',
+          tipo: TipoConteudoAudio.biblia,
         );
         // O segundo toque chega no meio do preparo: é o botão cancelando, e
         // não pode pedir o áudio de novo.
@@ -142,6 +144,7 @@ void main() {
           texto: 'Texto.',
           cliente: clienteQueConta(pedidos),
           chaveTts: 'teste',
+          tipo: TipoConteudoAudio.biblia,
         );
         await primeiro;
         await esperarAvisos();
@@ -166,12 +169,14 @@ void main() {
         texto: 'Texto.',
         cliente: clienteQueConta(pedidos),
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       final segunda = Voz.instancia.alternar(
         'capitulo:c.3',
         texto: 'Texto.',
         cliente: clienteQueConta(pedidos),
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       // A nova chave já manda na sessão: o toque não morreu em silêncio.
       expect(Voz.instancia.carregando, isTrue);
@@ -197,6 +202,7 @@ void main() {
         texto: 'Texto.',
         cliente: clienteQueConta(pedidos),
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       await Voz.instancia.parar();
       await pendente;
@@ -224,6 +230,7 @@ void main() {
           texto: 'Texto.',
           cliente: cliente,
           chaveTts: 'teste',
+          tipo: TipoConteudoAudio.biblia,
         );
         leitor.encerrar();
         await natural;
@@ -235,6 +242,7 @@ void main() {
           texto: 'Texto.',
           cliente: cliente,
           chaveTts: 'teste',
+          tipo: TipoConteudoAudio.biblia,
         );
         leitor.concluida = false;
         leitor.encerrar();
@@ -246,6 +254,7 @@ void main() {
           texto: 'Texto.',
           cliente: cliente,
           chaveTts: 'teste',
+          tipo: TipoConteudoAudio.biblia,
         );
         await Voz.instancia.parar();
         await manual;
@@ -269,6 +278,7 @@ void main() {
         texto: 'Texto.',
         cliente: cliente,
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       leitor.encerrar();
       await primeira;
@@ -281,6 +291,7 @@ void main() {
         texto: 'Texto.',
         cliente: cliente,
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       // Deixa a segunda leitura começar a tocar: o parar() abaixo tem de
       // interromper uma reprodução em andamento — parar um preparo cancelaria
@@ -295,6 +306,7 @@ void main() {
         texto: 'Texto.',
         cliente: cliente,
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       await terceira;
       await esperarAvisos();
@@ -321,6 +333,7 @@ void main() {
           texto: 'Texto.',
           cliente: clienteQueConta(pedidos),
           chaveTts: 'teste',
+          tipo: TipoConteudoAudio.biblia,
         );
         leitor.encerrar();
         await primeira;
@@ -372,6 +385,7 @@ void main() {
         texto: 'Texto.',
         cliente: clienteQueConta(pedidos),
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       await esperarAvisos();
       expect(Voz.instancia.tocando, isTrue);
@@ -389,6 +403,7 @@ void main() {
         texto: 'Texto.',
         cliente: clienteQueConta(pedidos),
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       leitor.encerrar();
       await retomada;
@@ -415,6 +430,7 @@ void main() {
         texto: 'Texto.',
         cliente: clienteQueConta(pedidos),
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       await esperarAvisos();
       expect(Voz.instancia.tocando, isTrue);
@@ -441,6 +457,7 @@ void main() {
         texto: 'Texto.',
         cliente: clienteQueConta(pedidos),
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       await esperarAvisos();
 
@@ -472,6 +489,7 @@ void main() {
         texto: 'Texto.',
         cliente: clienteQueConta(pedidos),
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       await esperarAvisos();
       leitor.pausarDeFora();
@@ -502,6 +520,7 @@ void main() {
         texto: 'Texto.',
         cliente: clienteQueConta(pedidos),
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       await esperarAvisos();
 
@@ -524,6 +543,7 @@ void main() {
         texto: 'Texto.',
         cliente: clienteQueConta(pedidos),
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       leitor.encerrar();
       await segunda;
@@ -544,6 +564,7 @@ void main() {
         texto: 'A.',
         cliente: clienteQueConta(pedidos),
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       await esperarAvisos();
       expect(Voz.instancia.tocando, isTrue);
@@ -558,6 +579,7 @@ void main() {
         texto: 'B.',
         cliente: cliente,
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       await esperarAvisos();
 
@@ -584,6 +606,7 @@ void main() {
         texto: 'B.',
         cliente: clienteQueConta(pedidos),
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       leitor.encerrar();
       await retry;
@@ -602,6 +625,7 @@ void main() {
         texto: 'Texto.',
         cliente: clienteQueConta(pedidos),
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       await esperarAvisos();
       leitor.posicaoAtual = const Duration(minutes: 5);
@@ -618,6 +642,7 @@ void main() {
         texto: 'Texto.',
         cliente: clienteQueConta(pedidos),
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       leitor.encerrar();
       await toque;
@@ -640,6 +665,7 @@ void main() {
         texto: 'Texto.',
         cliente: clienteQueConta(pedidos),
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       await esperarAvisos();
       leitor.posicaoAtual = const Duration(minutes: 2);

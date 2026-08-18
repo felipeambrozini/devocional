@@ -35,6 +35,14 @@ enum Leitura {
     Leitura.promessas => null,
   };
 
+  /// O tipo de conteúdo da voz ([TipoConteudoAudio]): o dia e a noite têm
+  /// vozes próprias, e Promessas de Deus, obra separada, a própria.
+  TipoConteudoAudio get tipoDeVoz => switch (this) {
+    Leitura.manha => TipoConteudoAudio.devocionalManha,
+    Leitura.noite => TipoConteudoAudio.devocionalNoite,
+    Leitura.promessas => TipoConteudoAudio.promessasDeDeus,
+  };
+
   String get capa => this == Leitura.promessas
       ? 'assets/images/capa_promessas_de_deus.webp'
       : 'assets/images/capa_manha_e_noite.webp';
@@ -182,6 +190,7 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                       dev: dev,
                       texto: dev.texto,
                       capa: _leitura.capa,
+                      tipo: _leitura.tipoDeVoz,
                       vozChave: 'devocional:${_data.month}/${_data.day}',
                       vozTexto: _leitura == Leitura.promessas
                           ? 'Promessa para ${dataLonga(_data)}'
@@ -239,6 +248,7 @@ class _CartaoDeLeitura extends StatelessWidget {
     required this.dev,
     required this.texto,
     this.capa,
+    required this.tipo,
     required this.vozChave,
     required this.vozTexto,
     required this.vozReferencia,
@@ -252,6 +262,10 @@ class _CartaoDeLeitura extends StatelessWidget {
 
   /// Capa do livro de onde a leitura vem, para dar identidade ao cartão.
   final String? capa;
+
+  /// O tipo de conteúdo da leitura: a voz do dia e a da noite não são a
+  /// mesma ([TipoConteudoAudio]), e é o que o botão de ouvir usa na síntese.
+  final TipoConteudoAudio tipo;
 
   /// O que a voz de Spurgeon lê: chave do áudio, texto e referência.
   final String vozChave;
@@ -318,6 +332,7 @@ class _CartaoDeLeitura extends StatelessWidget {
           BotaoDeVoz(
             chave: vozChave,
             texto: vozTexto,
+            tipo: tipo,
             referencia: vozReferencia,
           ),
           const SizedBox(height: 14),

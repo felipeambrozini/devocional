@@ -45,9 +45,7 @@ void main() {
     test('lê o título, as seções em ordem e a frase com a atribuição', () {
       const introducao = Introducao(
         livro: 'João',
-        secoes: [
-          ('Estrutura', 'Primeiro parágrafo.\n\nSegundo parágrafo.'),
-        ],
+        secoes: [('Estrutura', 'Primeiro parágrafo.\n\nSegundo parágrafo.')],
         frase: 'Grandes coisas!',
         fraseComprovada: true,
         fonteDaFrase: 'O Tesouro de Davi',
@@ -88,12 +86,15 @@ void main() {
       final audio = corpo['audioConfig'] as Map<String, dynamic>;
       if (input['text'] != 'No princípio.' ||
           voice['languageCode'] != 'pt-BR' ||
-          voice['name'] != 'pt-BR-Neural2-B' ||
-          audio['audioEncoding'] != 'MP3') {
+          voice['name'] != 'pt-BR-chirp3-hd-fenrir' ||
+          audio['audioEncoding'] != 'MP3' ||
+          audio['speakingRate'] != 0.92) {
         return http.Response('pedido diferente do esperado', 500);
       }
       return http.Response(
-        json.encode({'audioContent': base64.encode([1, 2, 3])}),
+        json.encode({
+          'audioContent': base64.encode([1, 2, 3]),
+        }),
         200,
       );
     });
@@ -101,54 +102,100 @@ void main() {
     test('pede o MP3 à API com a voz e o pedido certos', () async {
       final audio = await sintetizar(
         'No princípio.',
+        tipo: TipoConteudoAudio.biblia,
         cliente: cliente,
         chave: 'teste',
       );
       expect(audio, [1, 2, 3]);
     });
 
-    test('texto maior que o teto é fatiado e os áudios emendados na ordem',
-        () async {
-      final pedidos = <String>[];
-      final fatiado = MockClient((request) async {
-        final corpo = json.decode(request.body) as Map<String, dynamic>;
-        final texto =
-            (corpo['input'] as Map<String, dynamic>)['text'] as String;
-        pedidos.add(texto);
-        return http.Response(
-          json.encode({
-            'audioContent': base64.encode(utf8.encode('áudio: $texto')),
-          }),
-          200,
-        );
-      });
-      // 600 frases: ~16 KB, mais de três vezes o teto de 5000 bytes da API.
-      final texto =
-          List.filled(600, 'Um versículo bem comprido.').join(' ');
-      final audio = await sintetizar(texto, cliente: fatiado, chave: 'teste');
+    test(
+      'cada tipo de conteúdo pede a própria voz e o próprio ritmo',
+      () async {
+        final pedidos = <(String, double)>[];
+        final medidor = MockClient((request) async {
+          final corpo = json.decode(request.body) as Map<String, dynamic>;
+          final voice = corpo['voice'] as Map<String, dynamic>;
+          final audio = corpo['audioConfig'] as Map<String, dynamic>;
+          pedidos.add((
+            voice['name'] as String,
+            audio['speakingRate'] as double,
+          ));
+          return http.Response(
+            json.encode({
+              'audioContent': base64.encode([1, 2, 3]),
+            }),
+            200,
+          );
+        });
+        for (final tipo in TipoConteudoAudio.values) {
+          await sintetizar(
+            'Texto.',
+            tipo: tipo,
+            cliente: medidor,
+            chave: 'teste',
+          );
+        }
+        expect(pedidos, [
+          ('pt-BR-chirp3-hd-fenrir', 0.92), // biblia
+          ('pt-BR-chirp3-hd-orus', 0.94), // devocionalManha
+          ('pt-BR-chirp3-hd-orus', 0.88), // devocionalNoite
+          ('pt-BR-chirp3-hd-orus', 0.91), // promessasDeDeus
+          ('pt-BR-chirp3-hd-fenrir', 0.92), // introducao
+        ]);
+      },
+    );
 
-      expect(pedidos.length, greaterThan(1));
-      for (final pedido in pedidos) {
-        expect(
-          utf8.encode(pedido).length,
-          lessThanOrEqualTo(5000),
-          reason: 'cada pedido respeita o teto da API',
+    test(
+      'texto maior que o teto é fatiado e os áudios emendados na ordem',
+      () async {
+        final pedidos = <String>[];
+        final fatiado = MockClient((request) async {
+          final corpo = json.decode(request.body) as Map<String, dynamic>;
+          final texto =
+              (corpo['input'] as Map<String, dynamic>)['text'] as String;
+          pedidos.add(texto);
+          return http.Response(
+            json.encode({
+              'audioContent': base64.encode(utf8.encode('áudio: $texto')),
+            }),
+            200,
+          );
+        });
+        // 600 frases: ~16 KB, mais de três vezes o teto de 5000 bytes da API.
+        final texto = List.filled(600, 'Um versículo bem comprido.').join(' ');
+        final audio = await sintetizar(
+          texto,
+          tipo: TipoConteudoAudio.biblia,
+          cliente: fatiado,
+          chave: 'teste',
         );
-      }
-      for (var i = 0; i < pedidos.length - 1; i++) {
-        expect(pedidos[i], endsWith('.'),
-            reason: 'o corte cai na fronteira de frase');
-      }
-      final esperado =
-          pedidos.map((pedido) => 'áudio: $pedido').join();
-      expect(utf8.decode(audio), esperado);
-    });
+
+        expect(pedidos.length, greaterThan(1));
+        for (final pedido in pedidos) {
+          expect(
+            utf8.encode(pedido).length,
+            lessThanOrEqualTo(5000),
+            reason: 'cada pedido respeita o teto da API',
+          );
+        }
+        for (var i = 0; i < pedidos.length - 1; i++) {
+          expect(
+            pedidos[i],
+            endsWith('.'),
+            reason: 'o corte cai na fronteira de frase',
+          );
+        }
+        final esperado = pedidos.map((pedido) => 'áudio: $pedido').join();
+        expect(utf8.decode(audio), esperado);
+      },
+    );
 
     test('sem chave no build avisa como ligar, não estoura', () async {
       // Os testes rodam sem --dart-define: a chave vem vazia, e o usuário
       // precisa da mensagem de configuração, não de um erro sem sentido.
       await expectLater(
-        sintetizar('Texto.', cliente: cliente),
+        sintetizar('Texto.', tipo: TipoConteudoAudio.biblia, cliente: cliente),
         throwsA(
           isA<VozException>().having(
             (e) => e.mensagem,
@@ -159,32 +206,44 @@ void main() {
       );
     });
 
-    test('403 (chave sem a API liberada) vira aviso de serviço, não de aparelho',
-        () async {
-      // O erro é de configuração da chave na nuvem: culpar o aparelho do
-      // leitor ("atualize ou recarregue") mandaria a um conserto que não
-      // existe. A mensagem fala do serviço e deixa o "Tentar de novo" agir.
-      final bloqueado = MockClient(
-        (_) async => http.Response('{"error":{}}', 403),
-      );
-      await expectLater(
-        sintetizar('Texto.', cliente: bloqueado, chave: 'teste'),
-        throwsA(
-          isA<VozException>().having(
-            (e) => e.mensagem,
-            'mensagem',
-            contains('não está disponível agora'),
+    test(
+      '403 (chave sem a API liberada) vira aviso de serviço, não de aparelho',
+      () async {
+        // O erro é de configuração da chave na nuvem: culpar o aparelho do
+        // leitor ("atualize ou recarregue") mandaria a um conserto que não
+        // existe. A mensagem fala do serviço e deixa o "Tentar de novo" agir.
+        final bloqueado = MockClient(
+          (_) async => http.Response('{"error":{}}', 403),
+        );
+        await expectLater(
+          sintetizar(
+            'Texto.',
+            tipo: TipoConteudoAudio.biblia,
+            cliente: bloqueado,
+            chave: 'teste',
           ),
-        ),
-      );
-    });
+          throwsA(
+            isA<VozException>().having(
+              (e) => e.mensagem,
+              'mensagem',
+              contains('não está disponível agora'),
+            ),
+          ),
+        );
+      },
+    );
 
     test('429 (teto do tier gratuito) vira aviso de esperar', () async {
       final noLimite = MockClient(
         (_) async => http.Response('{"error":{}}', 429),
       );
       await expectLater(
-        sintetizar('Texto.', cliente: noLimite, chave: 'teste'),
+        sintetizar(
+          'Texto.',
+          tipo: TipoConteudoAudio.biblia,
+          cliente: noLimite,
+          chave: 'teste',
+        ),
         throwsA(
           isA<VozException>().having(
             (e) => e.mensagem,
@@ -200,7 +259,12 @@ void main() {
         (_) async => http.Response(json.encode({'audioContent': ''}), 200),
       );
       await expectLater(
-        sintetizar('Texto.', cliente: vazia, chave: 'teste'),
+        sintetizar(
+          'Texto.',
+          tipo: TipoConteudoAudio.biblia,
+          cliente: vazia,
+          chave: 'teste',
+        ),
         throwsA(isA<VozException>()),
       );
     });

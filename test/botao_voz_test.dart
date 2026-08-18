@@ -1,3 +1,4 @@
+import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:felipe_ambrozini/data/voz.dart';
 import 'package:felipe_ambrozini/telas/comuns.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +9,11 @@ void main() {
 
   Widget montar({String chave = 'capitulo:joao.3'}) => MaterialApp(
     home: Scaffold(
-      body: BotaoDeVoz(chave: chave, texto: 'No princípio.'),
+      body: BotaoDeVoz(
+        chave: chave,
+        texto: 'No princípio.',
+        tipo: TipoConteudoAudio.biblia,
+      ),
     ),
   );
 

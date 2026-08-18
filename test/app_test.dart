@@ -1287,6 +1287,7 @@ void main() {
         texto: 'No princípio.',
         cliente: cliente,
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       await tester.pump();
       expect(Voz.instancia.carregando, isTrue);
@@ -1381,6 +1382,7 @@ void main() {
         texto: 'No princípio.',
         cliente: cliente,
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       await tester.pump();
       resposta.complete(
@@ -1525,6 +1527,7 @@ void main() {
         texto: 'No princípio.',
         cliente: cliente,
         chaveTts: 'teste',
+        tipo: TipoConteudoAudio.biblia,
       );
       await tester.pump();
       expect(Voz.instancia.carregando, isTrue);

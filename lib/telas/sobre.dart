@@ -140,6 +140,7 @@ class _TelaSobreState extends State<TelaSobre> {
                 return BotaoDeVoz(
                   chave: 'trecho:${capitulo.livro}.${capitulo.numero}',
                   texto: trecho,
+                  tipo: TipoConteudoAudio.biblia,
                   // Sem referência: "Leitura concluída." basta — o que
                   // terminou foi o trecho, não o capítulo.
                 );

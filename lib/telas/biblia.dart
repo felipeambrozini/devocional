@@ -562,6 +562,7 @@ class _Leitor extends StatelessWidget {
               BotaoDeVoz(
                 chave: 'capitulo:${capitulo.livro}.${capitulo.numero}',
                 texto: textoDeCapitulo(capitulo),
+                tipo: TipoConteudoAudio.biblia,
               ),
               if (capitulo.titulo.isNotEmpty) ...[
                 const SizedBox(height: 12),
