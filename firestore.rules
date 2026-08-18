@@ -8,34 +8,60 @@ rules_version = '2';
 // verdade; não editar o console e este arquivo em separado.
 //
 // Contrato do documento usuarios/{uid} (ver nuvem.dart):
-//   copia       mapa — a cópia de segurança que exportar() produz
+//   copia       mapa — a cópia de segurança que exportar() produz, com o
+//               esquema fixo {versao: int, marcacoes: list, dias_lidos: list}
 //   conversas   mapa — o histórico dos chats, serializado à parte
 //   atualizadoEm timestamp do servidor, gravado em toda escrita
 // O documento pode nascer só com copia ou só com conversas (cada sincronia
 // escreve os próprios campos com merge), por isso os campos opcionais são
 // validados apenas quando presentes.
+//
+// Limite do idioma: a linguagem de regras não itera mapas nem listas (não há
+// loop, e recursão é rejeitada na compilação). Por isso os tipos e tetos
+// abaixo só alcançam as chaves conhecidas e estáticas do contrato; o
+// conteúdo de mapas aninhados fica no teto de 1 MiB por documento do
+// próprio Firestore, e é sempre do próprio usuário.
 service cloud.firestore {
   match /databases/{database}/documents {
     // Cada um lê e escreve só o próprio documento, identificado pelo uid da
     // conta Google. Sem este `match`, o padrão do Firestore já é negar tudo
     // — mas ele fica explícito porque é a única linha que impede alguém de
-    // ler a cópia de outra pessoa.
+    // ler a cópia de outra pessoa. O provedor também é restrito: o app só
+    // entra com Google, e um provedor habilitado por engano no console não
+    // ganha documento.
     match /usuarios/{uid} {
       function dono() {
-        return request.auth != null && request.auth.uid == uid;
+        return request.auth != null &&
+            request.auth.uid == uid &&
+            request.auth.token.firebase.sign_in_provider == 'google.com';
+      }
+
+      // Esquema da cópia: as três chaves de exportar() em estado.dart são
+      // fixas e conhecidas, então dá para validar forma e tipos de cada uma.
+      function copiaValida() {
+        let c = request.resource.data.copia;
+        return c.keys().hasOnly(['versao', 'marcacoes', 'dias_lidos']) &&
+            c.versao is int &&
+            c.marcacoes is list && c.marcacoes.size() < 5000 &&
+            c.dias_lidos is list && c.dias_lidos.size() < 5000;
+      }
+
+      // Conversas: mapa de personas com teto de chaves. O submapa `apagadas`
+      // (lápides de exclusão) também é tipado e limitado quando presente.
+      function conversasValidas() {
+        let cs = request.resource.data.conversas;
+        return cs.size() < 5000 &&
+            (!('apagadas' in cs) ||
+                (cs.apagadas is map && cs.apagadas.size() < 5000));
       }
 
       // Forma e tipo do documento, para um cliente torto não gravar lixo no
       // próprio documento nem inflar o projeto com campos fora do contrato.
-      // O tamanho de um mapa conta as chaves; os valores são limitados pelo
-      // teto de 1 MiB do próprio Firestore.
       function valido() {
         let dados = request.resource.data;
         let soOsCampos = dados.keys().hasOnly(['copia', 'conversas', 'atualizadoEm']);
-        let copiaOk = !('copia' in dados) ||
-            (dados.copia is map && dados.copia.size() < 5000);
-        let conversasOk = !('conversas' in dados) ||
-            (dados.conversas is map && dados.conversas.size() < 5000);
+        let copiaOk = !('copia' in dados) || copiaValida();
+        let conversasOk = !('conversas' in dados) || conversasValidas();
         return soOsCampos && copiaOk && conversasOk &&
             dados.atualizadoEm is timestamp;
       }
