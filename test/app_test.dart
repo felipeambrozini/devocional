@@ -410,6 +410,11 @@ void main() {
       expect(find.text('Tentar de novo'), findsOneWidget);
       // A pergunta continua no histórico, esperando a resposta.
       expect(find.text('Como vencer a ansiedade?'), findsOneWidget);
+
+      // O balão de erro não fica fixo: dois segundos depois ele some sozinho.
+      await tester.pump(const Duration(seconds: 2));
+      expect(find.text('A resposta anterior não chegou.'), findsNothing);
+      expect(find.text('Tentar de novo'), findsNothing);
     },
   );
 

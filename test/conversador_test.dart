@@ -154,6 +154,33 @@ void main() {
       );
     });
 
+    test('o erro some sozinho depois da duração do balão', () async {
+      final estado = await Estado.abrir();
+      final conversador = Conversador(
+        persona: personaSpurgeon,
+        estado: estado,
+        duracaoDoErro: const Duration(milliseconds: 20),
+        chamar: ({required persona, required historico, required pergunta}) {
+          throw const IaException('Sem resposta.');
+        },
+      );
+
+      await conversador.enviar('Oi');
+
+      expect(conversador.erro, isNotNull, reason: 'a falha aparece na hora');
+
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(conversador.erro, isNull,
+          reason: 'o balão não fica fixo: o erro some sozinho');
+
+      // A pergunta continua pendente para o "Tentar de novo" de uma próxima
+      // visita, mesmo depois de o aviso ter saído da tela.
+      expect(
+        estado.mensagensDe('spurgeon', conversador.id!).single.pendente,
+        isTrue,
+      );
+    });
+
     test('repetir sem falha anterior refaz a última pergunta mesmo assim',
         () async {
       final estado = await Estado.abrir();

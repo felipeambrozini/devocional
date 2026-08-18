@@ -725,8 +725,8 @@ class _AvisoDeCorte extends StatelessWidget {
 }
 
 /// O aviso de resposta que não veio, com o motivo e o botão de tentar de
-/// novo. Não é parte do histórico: some sozinho quando a próxima tentativa
-/// começa.
+/// novo. Não é parte do histórico: some sozinho dois segundos depois de
+/// aparecer, ou antes, quando a próxima tentativa começa.
 class _ErroDeResposta extends StatelessWidget {
   const _ErroDeResposta({
     required this.persona,

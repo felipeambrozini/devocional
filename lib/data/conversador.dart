@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show ChangeNotifier;
 
 import 'estado.dart';
@@ -21,6 +23,7 @@ class Conversador extends ChangeNotifier {
     required this.estado,
     required this.chamar,
     this.conversaId,
+    this.duracaoDoErro = const Duration(seconds: 2),
   });
 
   final Persona persona;
@@ -45,6 +48,11 @@ class Conversador extends ChangeNotifier {
   /// parte do histórico e não deve ser persistido.
   String? _erro;
 
+  /// O balão de erro some sozinho depois de [duracaoDoErro]: um erro de rede
+  /// ou de serviço é momentâneo, e quem voltou à tela nesse meio-tempo não
+  /// precisa de aviso em pé.
+  Timer? _temporizadorDoErro;
+
   /// A pergunta que está no ar, para o "Tentar de novo" refazê-la sem que o
   /// usuário precise redigitar.
   String _ultimaPergunta = '';
@@ -54,6 +62,9 @@ class Conversador extends ChangeNotifier {
   bool _descartado = false;
 
   bool get respondendo => _respondendo;
+  /// Quanto tempo o balão de erro fica na tela antes de sumir sozinho.
+  final Duration duracaoDoErro;
+
   String? get erro => _erro;
   String get ultimaPergunta => _ultimaPergunta;
 
@@ -100,8 +111,21 @@ class Conversador extends ChangeNotifier {
     final mensagens = estado.mensagensDe(persona.id, id);
     final ultima = mensagens.isEmpty ? null : mensagens.last;
     if (ultima == null || !ultima.doUsuario || !ultima.pendente) return;
-    _erro = 'A resposta anterior não chegou.';
+    _mostrarErro('A resposta anterior não chegou.');
     _ultimaPergunta = ultima.texto;
+  }
+
+  /// Mostra o erro e agenda o sumiço: o balão não fica fixo, ele sai da tela
+  /// sozinho depois de [duracaoDoErro]. Uma nova falha no meio do caminho
+  /// reinicia a contagem.
+  void _mostrarErro(String mensagem) {
+    _erro = mensagem;
+    _temporizadorDoErro?.cancel();
+    _temporizadorDoErro = Timer(duracaoDoErro, () {
+      if (_descartado) return;
+      _erro = null;
+      notifyListeners();
+    });
     notifyListeners();
   }
 
@@ -111,6 +135,7 @@ class Conversador extends ChangeNotifier {
     if (id == null) return;
     _respondendo = true;
     _erro = null;
+    _temporizadorDoErro?.cancel();
     _ultimaPergunta = pergunta;
     notifyListeners();
     try {
@@ -132,7 +157,7 @@ class Conversador extends ChangeNotifier {
       // A resposta chegou: nada fica pendente nesta conversa.
       await estado.marcarRespondidas(persona.id, id);
     } on IaException catch (erro) {
-      _erro = erro.mensagem;
+      _mostrarErro(erro.mensagem);
     } finally {
       _respondendo = false;
       notifyListeners();
@@ -151,6 +176,7 @@ class Conversador extends ChangeNotifier {
   @override
   void dispose() {
     _descartado = true;
+    _temporizadorDoErro?.cancel();
     super.dispose();
   }
 }
