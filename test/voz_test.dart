@@ -107,6 +107,43 @@ void main() {
       expect(audio, [1, 2, 3]);
     });
 
+    test('texto maior que o teto é fatiado e os áudios emendados na ordem',
+        () async {
+      final pedidos = <String>[];
+      final fatiado = MockClient((request) async {
+        final corpo = json.decode(request.body) as Map<String, dynamic>;
+        final texto =
+            (corpo['input'] as Map<String, dynamic>)['text'] as String;
+        pedidos.add(texto);
+        return http.Response(
+          json.encode({
+            'audioContent': base64.encode(utf8.encode('áudio: $texto')),
+          }),
+          200,
+        );
+      });
+      // 600 frases: ~16 KB, mais de três vezes o teto de 5000 bytes da API.
+      final texto =
+          List.filled(600, 'Um versículo bem comprido.').join(' ');
+      final audio = await sintetizar(texto, cliente: fatiado, chave: 'teste');
+
+      expect(pedidos.length, greaterThan(1));
+      for (final pedido in pedidos) {
+        expect(
+          utf8.encode(pedido).length,
+          lessThanOrEqualTo(5000),
+          reason: 'cada pedido respeita o teto da API',
+        );
+      }
+      for (var i = 0; i < pedidos.length - 1; i++) {
+        expect(pedidos[i], endsWith('.'),
+            reason: 'o corte cai na fronteira de frase');
+      }
+      final esperado =
+          pedidos.map((pedido) => 'áudio: $pedido').join();
+      expect(utf8.decode(audio), esperado);
+    });
+
     test('sem chave no build avisa como ligar, não estoura', () async {
       // Os testes rodam sem --dart-define: a chave vem vazia, e o usuário
       // precisa da mensagem de configuração, não de um erro sem sentido.

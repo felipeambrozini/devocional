@@ -229,6 +229,15 @@ class Estado extends ChangeNotifier {
     await _prefs.setBool(_kBaloesTooltipDispensado, true);
   }
 
+  /// Volta a exibir a dica de primeiro uso dos balões (o caminho inverso de
+  /// [dispensarBalcaoTooltip], usado pela folha de ajustes).
+  Future<void> reexibirDicaDosBaloes() async {
+    if (!_baloesTooltipDispensado) return;
+    _baloesTooltipDispensado = false;
+    notifyListeners();
+    await _prefs.setBool(_kBaloesTooltipDispensado, false);
+  }
+
   bool get swipeTooltipDispensado => _swipeTooltipDispensado;
 
   /// Tooltip de primeiro uso do deslize: depois de "Entendi", não volta nunca mais.

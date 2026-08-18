@@ -10,6 +10,7 @@ class Persona {
     required this.id,
     required this.slug,
     required this.nome,
+    required this.nomeCurto,
     required this.titulo,
     required this.boasVindas,
     required this.sistema,
@@ -26,6 +27,10 @@ class Persona {
   final String slug;
 
   final String nome;
+
+  /// Nome curto da placa do balão: "Spurgeon" e "Felipe". O nome completo não
+  /// cabe sob um retrato de 52 px, e é como o resto do app chama os dois.
+  final String nomeCurto;
 
   /// Linha sob o nome no topo do chat.
   final String titulo;
@@ -55,6 +60,7 @@ const personaSpurgeon = Persona(
   id: 'spurgeon',
   slug: 'charles-spurgeon',
   nome: 'Charles Spurgeon',
+  nomeCurto: 'Spurgeon',
   titulo: 'Príncipe dos Pregadores',
   foto: 'assets/images/spurgeon.webp',
   boasVindas:
@@ -112,6 +118,7 @@ const personaFelipe = Persona(
   id: 'felipe',
   slug: 'felipe-ambrozini',
   nome: 'Felipe Ambrozini',
+  nomeCurto: 'Felipe',
   titulo: 'Criação, devocionais e apps',
   foto: 'assets/images/felipe.webp',
   saudacaoPorHorario: true,

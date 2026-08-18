@@ -39,7 +39,7 @@ class Conversas {
   /// Teto de mensagens por conversa. O histórico inteiro volta ao modelo a
   /// cada pergunta, então a cauda antiga além disto custa contexto sem ganhar
   /// qualidade; também segura o tamanho do documento no Firestore.
-  static const _maxMensagensPorConversa = 120;
+  static const maxMensagensPorConversa = 120;
 
   /// O id que a migração do formato antigo dá à conversa única de cada persona.
   static String _idDeConversaMigrada(String persona) => 'conversa-$persona';
@@ -187,7 +187,7 @@ class Conversas {
       _conversas[persona]!.remove(conversa);
     }
     _conversas[persona]!.add(
-      conversa.comMensagem(mensagem, teto: _maxMensagensPorConversa),
+      conversa.comMensagem(mensagem, teto: maxMensagensPorConversa),
     );
     _aoMudar();
     await _gravar();
@@ -408,7 +408,7 @@ class Conversas {
             if (m.id.isNotEmpty && ids.add(m.id)) m,
         ];
         if (novas.isNotEmpty) {
-          conversa = conversa.comMensagemDeTodas(novas, teto: _maxMensagensPorConversa);
+          conversa = conversa.comMensagemDeTodas(novas, teto: maxMensagensPorConversa);
           lista[lista.indexWhere((c) => c.id == id)] = conversa;
           mudouNesta = true;
         }
@@ -443,6 +443,6 @@ class Conversas {
 
   String _novoIdDeConversa() {
     final agora = DateTime.now().millisecondsSinceEpoch;
-    return 'c$agora-${Random().nextInt(1 << 32)}';
+    return 'c$agora-${Random().nextInt(0x7FFFFFFF)}';
   }
 }

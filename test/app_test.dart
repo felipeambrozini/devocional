@@ -138,8 +138,8 @@ void main() {
       );
       expect(bissexto!.data, '29-02');
 
-      // Em ano comum o cronograma não prevê a data, e é isso que faz a tela mostrar
-      // o aviso de dia de recuperação em vez de um cartão vazio.
+      // Em ano comum o cronograma não prevê a data — o dia não existe. Em ano
+      // bissexto a variante de 366 dias o inclui como dia próprio (acima).
       final comum = await conteudo.plano(bissexto: false);
       expect(comum.any((d) => d.data == '29-02'), isFalse);
       expect(comum.length, Conteudo.diasDoAno(2027));
@@ -290,10 +290,9 @@ void main() {
     // total do ano corrente. Escrito assim o teste continua valendo em 2028.
     final total = Conteudo.diasDoAno(DateTime.now().year);
     expect(find.text('de $total dias'), findsOneWidget);
-    // O aviso de 29 de fevereiro é só para ano bissexto. Ele aparecia em qualquer
-    // dia enquanto o cronograma carregava, porque o primeiro frame chega sem dado e
-    // caía no ramo de recuperação. Isto fixa o estado final; o flash de um frame
-    // fica fora do alcance de pumpAndSettle.
+    // Não existe aviso de 29 de fevereiro: em ano comum o dia não existe, e em
+    // ano bissexto o cronograma o inclui como dia próprio. O finder guarda que
+    // o antigo cartão de "dia de recuperação" não volte.
     expect(find.textContaining('29 de fevereiro'), findsNothing);
   });
 
@@ -439,6 +438,28 @@ void main() {
     );
     await tester.pump();
     await tester.pump();
+    // O segundo salto roda no post-frame do pump anterior; o frame que
+    // desenha a última fala é o seguinte.
+    await tester.pump();
+
+    // A conversa reabre na última fala, não no Filete: a última mensagem
+    // está visível e o aviso do corte (que mora no topo) ainda não foi
+    // construído.
+    expect(find.text('fala 120'), findsOneWidget);
+    expect(
+      find.textContaining('As falas mais antigas saíram'),
+      findsNothing,
+    );
+
+    // O aviso de corte existe e aparece quando a lista volta ao topo.
+    await tester.scrollUntilVisible(
+      find.textContaining('As falas mais antigas saíram'),
+      -200,
+      scrollable: find.descendant(
+        of: find.byType(ListView),
+        matching: find.byType(Scrollable),
+      ),
+    );
 
     expect(find.textContaining('As falas mais antigas saíram'), findsOneWidget);
 

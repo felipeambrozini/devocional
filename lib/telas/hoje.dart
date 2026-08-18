@@ -398,9 +398,12 @@ class _PreviaDaLeitura extends StatelessWidget {
               const SizedBox(height: 10),
               Align(
                 alignment: Alignment.centerRight,
-                child: OutlinedButton.icon(
+                // "Ler tudo" é TextButton em todo lugar (ação quieta, ver
+                // DESIGN.md); esta prévia usava OutlinedButton e a mesma
+                // ação tinha dois controles na mesma tela.
+                child: TextButton.icon(
                   onPressed: abrirLeitura,
-                  icon: const Icon(Icons.arrow_forward, size: 18),
+                  icon: const Icon(Icons.arrow_forward, size: 16),
                   label: const Text('Ler tudo'),
                 ),
               ),
@@ -425,13 +428,13 @@ class _LeituraDeHoje extends StatelessWidget {
       chave: Conteudo.chaveDoDia(data),
       carregar: () => Conteudo.instancia.diaDoPlano(data),
       construir: (context, snap) {
-        // Sem este guard o primeiro frame, que sempre chega sem dado porque a
-        // leitura é assíncrona, cairia no aviso de 29 de fevereiro abaixo e o
-        // mostraria em qualquer dia comum até o cronograma carregar.
-        // Erro (asset corrompido ou ausente) e "não há dia para esta data"
-        // pareciam a mesma coisa antes: os dois chegam com snap.data == null,
-        // e sem separar isso a tela sempre culpava 29 de fevereiro, mesmo
-        // num erro de verdade em qualquer outro dia do ano.
+        // Sem estes guards o primeiro frame, que sempre chega sem dado porque a
+        // leitura é assíncrona, desenharia um cartão vazio por um instante; e
+        // erro (asset corrompido ou ausente) também chega com snap.data == null,
+        // por isso o hasError vem antes do estado de carregamento.
+        // Depois de done, snap.data nunca é null: o cronograma comum cobre as
+        // 365 datas reais do ano e o bissexto as 366, incluindo 29-02 como dia
+        // próprio — o antigo cartão de "dia de recuperação" era código morto.
         if (snap.hasError) {
           return const Cartao(
             titulo: 'Leitura de hoje',
@@ -444,15 +447,7 @@ class _LeituraDeHoje extends StatelessWidget {
             child: Text('Carregando...'),
           );
         }
-        final dia = snap.data;
-        if (dia == null) {
-          return const Cartao(
-            titulo: 'Leitura de hoje',
-            child: Text(
-              'Dia de recuperação: o cronograma não prevê 29 de fevereiro.',
-            ),
-          );
-        }
+        final dia = snap.data!;
         final lido = estado.foiLido(dia.data);
         return Cartao(
           titulo: 'Leitura de hoje',

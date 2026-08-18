@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuthException;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/canon.dart';
 import '../data/conteudo.dart';
@@ -283,7 +282,7 @@ Future<bool> confirmarRemocao(
   final confirmou = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Remover marcação?'),
+      title: const Text('Remover dos favoritos?'),
       content: Text(
         comNota
             ? '$referencia e a anotação serão removidos. Essa ação não pode ser desfeita.'
@@ -410,11 +409,7 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                     'Mostra novamente a dica "Toque em Spurgeon para conversar sobre o capítulo".',
                   ),
                   onTap: () async {
-                    await estado.dispensarBalcaoTooltip();
-                    // Inverte para forçar reexibição (o método só define true, então
-                    // precisamos resetar manualmente via SharedPreferences).
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.setBool('baloes_tooltip_dispensado', false);
+                    await estado.reexibirDicaDosBaloes();
                     if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -1323,5 +1318,9 @@ const meses = <String>[
   'Dezembro',
 ];
 
-String dataLonga(DateTime data) =>
-    '${data.day} de ${meses[data.month - 1].toLowerCase()}';
+String dataLonga(DateTime data) {
+  final base = '${data.day} de ${meses[data.month - 1].toLowerCase()}';
+  // Sem ano no ano corrente ("17 de agosto"), com ano fora dele: na virada
+  // do ano, "17 de agosto" de outro ano seria ambíguo por um instante.
+  return data.year == DateTime.now().year ? base : '$base de ${data.year}';
+}

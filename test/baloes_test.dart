@@ -64,6 +64,23 @@ void main() {
           find.byTooltip('Conversas com Charles Spurgeon'),
           findsOneWidget,
         );
+        // A placa de nome é o que torna os retratos reconhecíveis sem tooltip:
+        // quem é cada um deve estar visível, não só no anúncio do leitor de
+        // tela. O finder desce até o balão para não colidir com outros textos.
+        expect(
+          find.descendant(
+            of: find.byType(BalaoDeChat),
+            matching: find.text('Spurgeon'),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: find.byType(BalaoDeChat),
+            matching: find.text('Felipe'),
+          ),
+          findsOneWidget,
+        );
 
         await tester.tap(find.byType(BotaoDeAjustes));
         await tester.pumpAndSettle();

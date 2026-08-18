@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/conversador.dart';
+import '../data/conversas.dart';
 import '../data/estado.dart';
 import '../data/ia.dart';
 import '../data/modelos.dart';
@@ -65,46 +66,81 @@ class BalaoDeChat extends StatelessWidget {
           child: Semantics(
             button: true,
             label: 'Abrir histórico de conversas com ${persona.nome}',
-            child: Material(
-              color: cor.surfaceContainer,
-              // Chapado, como todo o app: a sombra era a única do sistema inteiro,
-              // e o círculo com sombra flutuava sobre a leitura de Manhã.
-              elevation: 0,
-              shape: const CircleBorder(),
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: () {
-                  if (primeiraVez) {
-                    estado.dispensarBalcaoTooltip();
-                  }
-                  onTap();
-                },
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: cor.primary, width: 1.5),
-                  ),
-                  // A folga entre o aro dourado e a foto, como no cabeçalho de
-                  // hoje.dart: sem ela a foto preenche o círculo até a borda e o
-                  // cabelo do Felipe encosta no aro. Com ela o aro fica limpo,
-                  // como o do Spurgeon, que tem folga própria na foto.
-                  child: Padding(
-                    padding: const EdgeInsets.all(3),
-                    child: ClipOval(
-                      child: Image.asset(
-                        persona.foto,
-                        width: tamanho,
-                        height: tamanho,
-                        fit: BoxFit.cover,
-                        // A foto é mais alta que larga e o cabelo encosta na borda
-                        // superior: qualquer corte em cima corta o cabelo. Alinhada
-                        // ao topo, a sobra do BoxFit.cover cai toda na blusa.
-                        alignment: Alignment.topCenter,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Material(
+                  color: cor.surfaceContainer,
+                  // Chapado, como todo o app: a sombra era a única do sistema inteiro,
+                  // e o círculo com sombra flutuava sobre a leitura de Manhã.
+                  elevation: 0,
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: () {
+                      if (primeiraVez) {
+                        estado.dispensarBalcaoTooltip();
+                      }
+                      onTap();
+                    },
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: cor.primary, width: 1.5),
+                      ),
+                      // A folga entre o aro dourado e a foto, como no cabeçalho de
+                      // hoje.dart: sem ela a foto preenche o círculo até a borda e o
+                      // cabelo do Felipe encosta no aro. Com ela o aro fica limpo,
+                      // como o do Spurgeon, que tem folga própria na foto.
+                      child: Padding(
+                        padding: const EdgeInsets.all(3),
+                        child: ClipOval(
+                          child: Image.asset(
+                            persona.foto,
+                            width: tamanho,
+                            height: tamanho,
+                            fit: BoxFit.cover,
+                            // A foto é mais alta que larga e o cabelo encosta na borda
+                            // superior: qualquer corte em cima corta o cabelo. Alinhada
+                            // ao topo, a sobra do BoxFit.cover cai toda na blusa.
+                            alignment: Alignment.topCenter,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 4),
+                // A placa com o nome curto: o retrato flutuante sem nome era um
+                // enigma na primeira visita, quando só o tooltip dizia quem era.
+                // Mesmo tom do círculo, para o balão ler como um pendão só, e
+                // fio do metal a 45% como as bordas do sistema. Fora da
+                // Semantics, para o anúncio do botão não anunciar duas vezes.
+                ExcludeSemantics(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: cor.surfaceContainer,
+                      border: Border.all(
+                        color: cor.outline.withValues(alpha: 0.45),
+                        width: 1,
+                      ),
+                      // Cantos quase retos dos elementos recortados do sistema.
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      persona.nomeCurto,
+                      style: Theme.of(context)
+                          .textTheme
+                          .labelMedium
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -147,6 +183,11 @@ class _TelaChatState extends State<TelaChat> {
   /// só desenha, e o fluxo inteiro é testável (ver `test/conversador_test.dart`).
   Conversador? _conversador;
 
+  /// Estado de corte da conversa na abertura: o snackbar de corte é só para
+  /// o momento em que ele acontece, não para a conversa que já abriu cortada
+  /// (essa mostra a nota quieta no topo).
+  bool _cortadaAnterior = false;
+
   @override
   void initState() {
     super.initState();
@@ -168,7 +209,31 @@ class _TelaChatState extends State<TelaChat> {
       // Reabrir depois de uma resposta interrompida: a última pergunta ficou
       // pendente, e a tela oferece "Tentar de novo" em vez de deixar a
       // pergunta respondida pelo silêncio.
+      _cortadaAnterior =
+          widget.conversaId != null &&
+          (EscopoDoEstado.de(context)
+                  .conversaDe(widget.persona.id, widget.conversaId!)
+                  ?.cortada ??
+              false);
       _conversador!.retomarInterrompida();
+      // Reabrir cai na última fala, não no Filete: cada retomada começava
+      // com uma rolagem cheia manual. A segunda passada, registrada dentro
+      // do primeiro callback, roda no frame seguinte, quando a lista já
+      // mede os extents de verdade (a primeira medida é por estimativa).
+      final id = _conversador?.id ?? widget.conversaId;
+      if (id != null &&
+          EscopoDoEstado.de(context)
+              .mensagensDe(widget.persona.id, id)
+              .isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!_rolagem.hasClients) return;
+          _rolagem.jumpTo(_rolagem.position.maxScrollExtent);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!_rolagem.hasClients) return;
+            _rolagem.jumpTo(_rolagem.position.maxScrollExtent);
+          });
+        });
+      }
     });
   }
 
@@ -192,14 +257,35 @@ class _TelaChatState extends State<TelaChat> {
     if (!mounted) return;
     setState(() {});
     if (_conversador?.respondendo ?? false) _rolarParaOFim();
+    // O corte do teto acontece no Estado, em silêncio; o aviso quieto no
+    // topo só aparece na próxima visita. Anunciar na hora em que as falas
+    // saem, uma única vez por sessão de tela.
+    final id = _conversador?.id;
+    final cortadaAgora =
+        id != null &&
+        (EscopoDoEstado.de(context)
+                .conversaDe(widget.persona.id, id)
+                ?.cortada ??
+            false);
+    if (cortadaAgora && !_cortadaAnterior) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'As falas mais antigas saíram quando esta conversa passou de '
+            '${Conversas.maxMensagensPorConversa} mensagens.',
+          ),
+        ),
+      );
+    }
+    _cortadaAnterior = cortadaAgora;
     // A conversa nova acabou de ganhar o id; a URL precisa acompanhar, para
     // um F5 ou um link compartilhado reabrirem esta conversa e não outra.
-    final id = _conversador?.id;
-    if (id != null && widget.conversaId == null && !_rotaAtualizada) {
+    final idDaRota = _conversador?.id;
+    if (idDaRota != null && widget.conversaId == null && !_rotaAtualizada) {
       _rotaAtualizada = true;
       final router = GoRouter.maybeOf(context);
       if (router != null) {
-        router.replace('/${widget.persona.slug}/conversa/$id');
+        router.replace('/${widget.persona.slug}/conversa/$idDaRota');
       }
     }
   }
@@ -368,7 +454,6 @@ class _TelaChatState extends State<TelaChat> {
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: cor.secondary,
                     ),
                   ),
                 ),
@@ -605,6 +690,11 @@ class _Bolha extends StatelessWidget {
 /// A conversa passou do teto de mensagens e as falas mais antigas saíram do
 /// histórico. A nota quieta mora no topo da lista, logo abaixo do Filete,
 /// explicando por que a conversa não começa na primeira pergunta.
+///
+/// É nota de sistema, não fala da persona: por isso foge da gramática da
+/// citação (fio esquerdo de 3) e usa a do chip — fio fechado, tom de cartão
+/// dentro de cartão. A mesma caixa com fio à esquerda diria que a Palavra
+/// falou, e quem fala aqui é o próprio app.
 class _AvisoDeCorte extends StatelessWidget {
   const _AvisoDeCorte();
 
@@ -618,12 +708,12 @@ class _AvisoDeCorte extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: cor.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(10),
-          border: Border(left: BorderSide(color: cor.primary, width: 3)),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: cor.outline.withValues(alpha: 0.5)),
         ),
         child: Text(
-          'As falas mais antigas saíram quando esta conversa passou do '
-          'limite de mensagens.',
+          'As falas mais antigas saíram quando esta conversa passou de '
+          '${Conversas.maxMensagensPorConversa} mensagens.',
           style: tema.bodySmall?.copyWith(
             color: cor.onSurfaceVariant,
             height: 1.5,

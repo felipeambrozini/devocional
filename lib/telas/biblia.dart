@@ -521,33 +521,35 @@ class _Leitor extends StatelessWidget {
               ],
               Semantics(
                 button: aoAbrirCapitulos != null,
-                hint: aoAbrirCapitulos == null
-                    ? null
-                    : 'Toque para escolher o capítulo',
                 child: aoAbrirCapitulos == null
                     ? Text(capitulo.referencia, style: tema.displayMedium)
-                    : InkWell(
-                        borderRadius: BorderRadius.circular(8),
-                        onTap: aoAbrirCapitulos,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 4,
-                            horizontal: 2,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                capitulo.referencia,
-                                style: tema.displayMedium,
-                              ),
-                              const SizedBox(width: 8),
-                              Icon(
-                                Icons.expand_more,
-                                size: 22,
-                                color: cor.primary,
-                              ),
-                            ],
+                    : Tooltip(
+                        // O mesmo atalho da AppBar: a referência no corpo
+                        // também abre a grade, e só a AppBar tinha a dica.
+                        message: 'Toque para escolher o capítulo',
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: aoAbrirCapitulos,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 4,
+                              horizontal: 2,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  capitulo.referencia,
+                                  style: tema.displayMedium,
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(
+                                  Icons.expand_more,
+                                  size: 22,
+                                  color: cor.primary,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),

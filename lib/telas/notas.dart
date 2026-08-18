@@ -280,13 +280,18 @@ Future<void> _importar(BuildContext context, Estado estado) async {
         content: Text(
           marcacoes == 0 && dias == 0
               ? 'Nada de novo na cópia; tudo já estava aqui.'
-              : 'Importado: $marcacoes marcações, $dias dias de leitura.',
+              : 'Importado: $marcacoes favoritos, $dias dias de leitura.',
         ),
       ),
     );
-  } on FormatException catch (erro) {
+  } on FormatException {
     mensageiro.showSnackBar(
-      SnackBar(content: Text('Cópia não reconhecida. ${erro.message}')),
+      const SnackBar(
+        content: Text(
+          'Cópia não reconhecida. Verifique se colou o texto inteiro exportado '
+          'e tente de novo.',
+        ),
+      ),
     );
   }
 }

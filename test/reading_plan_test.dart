@@ -35,7 +35,8 @@ void main() {
           expect(datas, contains(chave), reason: 'falta $chave');
         }
       }
-      // 29 de fevereiro nao existe no cronograma: em ano bissexto e dia de recuperacao.
+      // 29 de fevereiro nao existe no cronograma comum: em ano bissexto a
+      // variante de 366 dias o inclui como dia proprio.
       expect(datas, isNot(contains('29-02')));
     });
 

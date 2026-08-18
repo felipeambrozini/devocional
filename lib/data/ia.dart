@@ -145,5 +145,5 @@ String _mensagemDeErro(http.Response resposta) {
 /// Identificador único de mensagem, para a fusão com a nuvem não duplicar.
 String novoIdDeMensagem() {
   final agora = DateTime.now().millisecondsSinceEpoch;
-  return '$agora-${Random().nextInt(1 << 32)}';
+  return '$agora-${Random().nextInt(0x7FFFFFFF)}';
 }

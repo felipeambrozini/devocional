@@ -76,7 +76,77 @@ String textoDeCapitulo(Capitulo capitulo) {
 /// Cliente compartilhado do app. Os testes injetam o próprio cliente falso.
 final _clientePadrao = http.Client();
 
+/// O teto de um pedido: 5000 bytes de texto. Capítulos inteiros estouram
+/// isto, então o texto é fatiado em frases e cada pedaço vira um pedido à
+/// API, com os áudios emendados na ordem — a leitura sai sem costura.
+const _limiteDeBytesDoTexto = 5000;
+
+/// Fim de frase em português: ponto, exclamação ou interrogação seguido de
+/// espaço e de maiúscula ou número — o "1. " dos versículos também é um bom
+/// lugar para a voz respirar entre pedaços.
+final _fimDeFrase = RegExp(r'(?<=[.!?])\s+(?=[A-Z0-9"“])');
+
+/// Corta [texto] em pedaços que a API aceita — cada um com no máximo
+/// [_limiteDeBytesDoTexto] bytes de UTF-8 — sempre na fronteira de frases.
+/// Uma frase que sozinha estoure o teto (não existe nos capítulos) é cortada
+/// na fronteira de palavras.
+List<String> _fatiar(String texto) {
+  if (utf8.encode(texto).length <= _limiteDeBytesDoTexto) return [texto];
+  final pedacos = <String>[];
+  var atual = StringBuffer();
+  var bytesAtuais = 0;
+  void fechar() {
+    if (bytesAtuais == 0) return;
+    pedacos.add(atual.toString());
+    atual = StringBuffer();
+    bytesAtuais = 0;
+  }
+
+  for (final frase in texto.split(_fimDeFrase)) {
+    final tamanho = utf8.encode(frase).length;
+    if (tamanho > _limiteDeBytesDoTexto) {
+      fechar();
+      pedacos.addAll(_fatiarPorPalavras(frase));
+      continue;
+    }
+    if (bytesAtuais > 0 &&
+        bytesAtuais + 1 + tamanho > _limiteDeBytesDoTexto) {
+      fechar();
+    }
+    if (bytesAtuais > 0) atual.write(' ');
+    atual.write(frase);
+    bytesAtuais += tamanho + (bytesAtuais == 0 ? 0 : 1);
+  }
+  fechar();
+  return pedacos;
+}
+
+/// Uma frase inteira não coube no teto: corta na fronteira de palavras.
+List<String> _fatiarPorPalavras(String frase) {
+  final pedacos = <String>[];
+  var atual = StringBuffer();
+  var bytesAtuais = 0;
+  for (final palavra in frase.split(' ')) {
+    final tamanho = utf8.encode(palavra).length;
+    if (bytesAtuais > 0 &&
+        bytesAtuais + 1 + tamanho > _limiteDeBytesDoTexto) {
+      pedacos.add(atual.toString());
+      atual = StringBuffer();
+      bytesAtuais = 0;
+    }
+    if (bytesAtuais > 0) atual.write(' ');
+    atual.write(palavra);
+    bytesAtuais += tamanho + (bytesAtuais == 0 ? 0 : 1);
+  }
+  if (bytesAtuais > 0) pedacos.add(atual.toString());
+  return pedacos;
+}
+
 /// Sintetiza [texto] na voz de Spurgeon e devolve o áudio MP3.
+///
+/// A API aceita no máximo [_limiteDeBytesDoTexto] bytes de texto por pedido;
+/// um capítulo inteiro estoura isso, e o texto é fatiado em frases e pedido
+/// por pedaço, com os áudios emendados na ordem.
 ///
 /// [cliente] e [chave] existem só para os testes injetarem um HTTP falso e a
 /// chave que quiserem; quem chama de verdade usa a chave TTS_API_KEY do build
@@ -94,51 +164,55 @@ Future<Uint8List> sintetizar(
     );
   }
 
-  final http.Response resposta;
-  try {
-    resposta = await (cliente ?? _clientePadrao)
-        .post(
-          Uri.parse(
-            'https://texttospeech.googleapis.com/v1/text:synthesize'
-            '?key=$chaveUsada',
-          ),
-          headers: await cabecalhosGoogle(),
-          body: json.encode({
-            'input': {'text': texto},
-            'voice': {'languageCode': 'pt-BR', 'name': _voz},
-            'audioConfig': {
-              'audioEncoding': 'MP3',
-              'speakingRate': _ritmo,
-              'pitch': _tom,
-            },
-          }),
-        )
-        .timeout(const Duration(seconds: 90));
-  } catch (_) {
-    throw const VozException(
-      'Não foi possível preparar a voz agora. Verifique a conexão e tente '
-      'de novo.',
-    );
-  }
+  final audio = BytesBuilder();
+  for (final pedaco in _fatiar(texto)) {
+    final http.Response resposta;
+    try {
+      resposta = await (cliente ?? _clientePadrao)
+          .post(
+            Uri.parse(
+              'https://texttospeech.googleapis.com/v1/text:synthesize'
+              '?key=$chaveUsada',
+            ),
+            headers: await cabecalhosGoogle(),
+            body: json.encode({
+              'input': {'text': pedaco},
+              'voice': {'languageCode': 'pt-BR', 'name': _voz},
+              'audioConfig': {
+                'audioEncoding': 'MP3',
+                'speakingRate': _ritmo,
+                'pitch': _tom,
+              },
+            }),
+          )
+          .timeout(const Duration(seconds: 90));
+    } catch (_) {
+      throw const VozException(
+        'Não foi possível preparar a voz agora. Verifique a conexão e tente '
+        'de novo.',
+      );
+    }
 
-  if (resposta.statusCode != 200) {
-    throw VozException(_mensagemDeErro(resposta));
-  }
+    if (resposta.statusCode != 200) {
+      throw VozException(_mensagemDeErro(resposta));
+    }
 
-  final Map corpo;
-  try {
-    corpo = json.decode(utf8.decode(resposta.bodyBytes)) as Map;
-  } catch (_) {
-    // 200 com corpo ilegível (HTML de proxy, resposta truncada): a mesma
-    // mensagem do serviço fora do ar, não uma exceção sem tratamento.
-    throw const VozException('A voz não respondeu agora. Tente de novo em '
-        'instantes.');
+    final Map corpo;
+    try {
+      corpo = json.decode(utf8.decode(resposta.bodyBytes)) as Map;
+    } catch (_) {
+      // 200 com corpo ilegível (HTML de proxy, resposta truncada): a mesma
+      // mensagem do serviço fora do ar, não uma exceção sem tratamento.
+      throw const VozException('A voz não respondeu agora. Tente de novo em '
+          'instantes.');
+    }
+    final audioDoPedaco = corpo['audioContent'];
+    if (audioDoPedaco is! String || audioDoPedaco.isEmpty) {
+      throw const VozException('O áudio veio vazio. Tente de novo.');
+    }
+    audio.add(base64.decode(audioDoPedaco));
   }
-  final audio = corpo['audioContent'];
-  if (audio is! String || audio.isEmpty) {
-    throw const VozException('O áudio veio vazio. Tente de novo.');
-  }
-  return base64.decode(audio);
+  return audio.takeBytes();
 }
 
 /// 403 é a chave sem a API ativada (configuração na nuvem): culpar o aparelho

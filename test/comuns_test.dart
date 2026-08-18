@@ -89,7 +89,7 @@ void main() {
       await tester.tap(find.text('abrir'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Remover marcação?'), findsOneWidget);
+      expect(find.text('Remover dos favoritos?'), findsOneWidget);
       await tester.tap(find.text('Cancelar'));
       await tester.pumpAndSettle();
 
