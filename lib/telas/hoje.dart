@@ -259,8 +259,7 @@ class _ComFadeAoFim extends StatelessWidget {
 ///
 /// [destaque] marca a leitura do período da hora (a "de agora"): é a que
 /// ganha o filete dourado embaixo do título, dizendo que uma leitura começa
-/// ali. A outra prévia do dia fica compacta — uma linha e o botão — para a
-/// primeira não competir com ela pelo mesmo peso.
+/// ali. As outras prévias do dia não têm o filete, mas o cartão é o mesmo.
 class _PreviaDaLeitura extends StatelessWidget {
   const _PreviaDaLeitura({
     required this.data,
@@ -337,33 +336,6 @@ class _PreviaDaLeitura extends StatelessWidget {
                 TelaDevocional(dataInicial: data, leituraInicial: leitura),
           ),
         );
-        // A prévia fora do período da hora fica numa linha: quem olha para
-        // ela já viu que existe, e o peso do dia é da leitura de agora.
-        if (!destaque) {
-          return Cartao(
-            titulo: _titulo,
-            acessorio: Icon(_icone, color: cor.primary, size: 20),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    dev.titulo.isEmpty ? dev.texto : dev.titulo,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: tema.bodyMedium?.copyWith(
-                      color: cor.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: abrirLeitura,
-                  icon: const Icon(Icons.arrow_forward, size: 16),
-                  label: const Text('Ler tudo'),
-                ),
-              ],
-            ),
-          );
-        }
         return Cartao(
           titulo: _titulo,
           acessorio: Icon(_icone, color: cor.primary, size: 20),
@@ -373,8 +345,10 @@ class _PreviaDaLeitura extends StatelessWidget {
               // O filete sob o título é a gramática da leitura que começa
               // ali, a mesma da capa do devocional: a prévia de agora tem o
               // mesmo gesto de chamada da leitura em si.
-              const Filete(),
-              const SizedBox(height: 12),
+              if (destaque) ...[
+                const Filete(),
+                const SizedBox(height: 12),
+              ],
               if (dev.titulo.isNotEmpty)
                 Text(
                   dev.titulo,
