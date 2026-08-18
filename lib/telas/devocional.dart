@@ -136,15 +136,6 @@ class _TelaDevocionalState extends State<TelaDevocional> {
               ao: (l) => setState(() => _leitura = l),
             ),
             const SizedBox(height: 16),
-            BotaoDeVoz(
-              chave: 'devocional:${_data.month}/${_data.day}',
-              texto: _leitura == Leitura.promessas
-                  ? 'Promessa para ${dataLonga(_data)}'
-                  : 'Devocional para ${dataLonga(_data)}',
-              referencia: _leitura == Leitura.promessas
-                  ? 'Promessa de Deus'
-                  : '${_leitura.rotulo.toLowerCase()}_${_data.month}_${_data.day}',
-            ),
             CarregaUmaVez<Devocional?>(
               chave:
                   '${_leitura.name}/${estado.versao.pasta}/${_data.month}/${_data.day}',
@@ -191,6 +182,13 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                       dev: dev,
                       texto: dev.texto,
                       capa: _leitura.capa,
+                      vozChave: 'devocional:${_data.month}/${_data.day}',
+                      vozTexto: _leitura == Leitura.promessas
+                          ? 'Promessa para ${dataLonga(_data)}'
+                          : 'Devocional para ${dataLonga(_data)}',
+                      vozReferencia: _leitura == Leitura.promessas
+                          ? 'Promessa de Deus'
+                          : '${_leitura.rotulo.toLowerCase()}_${_data.month}_${_data.day}',
                     ),
                   ],
                 );
@@ -241,6 +239,9 @@ class _CartaoDeLeitura extends StatelessWidget {
     required this.dev,
     required this.texto,
     this.capa,
+    required this.vozChave,
+    required this.vozTexto,
+    required this.vozReferencia,
   });
 
   final String titulo;
@@ -251,6 +252,11 @@ class _CartaoDeLeitura extends StatelessWidget {
 
   /// Capa do livro de onde a leitura vem, para dar identidade ao cartão.
   final String? capa;
+
+  /// O que a voz de Spurgeon lê: chave do áudio, texto e referência.
+  final String vozChave;
+  final String vozTexto;
+  final String vozReferencia;
 
   @override
   Widget build(BuildContext context) {
@@ -308,6 +314,12 @@ class _CartaoDeLeitura extends StatelessWidget {
           // A linha dourada só separa a citação do comentário, por isso vem
           // depois dela, não antes.
           const Filete(),
+          const SizedBox(height: 14),
+          BotaoDeVoz(
+            chave: vozChave,
+            texto: vozTexto,
+            referencia: vozReferencia,
+          ),
           const SizedBox(height: 14),
           Text(texto, style: tema.bodyLarge?.copyWith(height: 1.7)),
           const SizedBox(height: 8),
