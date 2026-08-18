@@ -23,7 +23,6 @@ import 'modelos.dart';
 /// introduções usam um narrador, e os devocionais outro, mais íntimo. Para
 /// trocar, é só editar o enum em `lib/data/modelos.dart` e audicionar em
 /// https://cloud.google.com/text-to-speech (sem chave).
-const _tom = -2.0;
 
 /// Falha na voz, já traduzida para o que o usuário deve ler.
 ///
@@ -177,7 +176,6 @@ Future<Uint8List> sintetizar(
               'audioConfig': {
                 'audioEncoding': 'MP3',
                 'speakingRate': tipo.speakingRate,
-                'pitch': _tom,
               },
             }),
           )
