@@ -54,7 +54,6 @@ ThemeData construirTema({
   //   surfaceContainer        cartão
   //   surfaceContainerHighest cartão dentro de cartão, citação, chip
   //   primary                 título e ícone
-  //   primaryContainer        estado ativo do botão de voz, com o metal cheio
   //   secondary               destaque: citação, referência, aba ativa
   //   outline                 borda e filete
   //   onSurface               corpo do texto
@@ -63,8 +62,6 @@ ThemeData construirTema({
       ? const ColorScheme.dark(
           primary: Cores.dourado,
           onPrimary: Cores.fundo,
-          primaryContainer: Cores.dourado,
-          onPrimaryContainer: Cores.fundo,
           secondary: Cores.douradoClaro,
           onSecondary: Cores.fundo,
           surface: Cores.fundo,
@@ -78,8 +75,6 @@ ThemeData construirTema({
       : const ColorScheme.light(
           primary: Cores.bronze,
           onPrimary: Cores.pergaminhoAlto,
-          primaryContainer: Cores.bronze,
-          onPrimaryContainer: Cores.pergaminhoAlto,
           secondary: Cores.bronzeEscuro,
           onSecondary: Cores.pergaminhoAlto,
           surface: Cores.pergaminho,

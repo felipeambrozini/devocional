@@ -27,6 +27,8 @@ class Estado extends ChangeNotifier {
   static const _kModoDoTema = 'modo_do_tema';
   static const _kAjudaDispensada = 'ajuda_dispensada';
   static const _kBaloesVisiveis = 'baloes_visiveis';
+  static const _kBaloesTooltipDispensado = 'baloes_tooltip_dispensado';
+  static const _kSwipeTooltipDispensado = 'swipe_tooltip_dispensado';
   static const _kLembretesAtivos = 'lembretes_ativos';
   static const _kMinutosLembreteManha = 'minutos_lembrete_manha';
   static const _kMinutosLembreteNoite = 'minutos_lembrete_noite';
@@ -62,6 +64,12 @@ class Estado extends ChangeNotifier {
   /// Se os balões de conversa aparecem nas bordas das telas. Padrão true: o
   /// chat só é descoberto pelos retratos, escondê-los esconde o caminho.
   bool _baloesVisiveis = true;
+
+  /// Se o tooltip de primeiro uso dos balões já foi dispensado.
+  bool _baloesTooltipDispensado = false;
+
+  /// Se o tooltip de primeiro uso do deslize para trocar capítulo já foi dispensado.
+  bool _swipeTooltipDispensado = false;
 
   /// Se os três lembretes diários estão ligados. Padrão false: notificação é
   /// opt-in, nunca ligada sem o usuário pedir.
@@ -131,6 +139,10 @@ class Estado extends ChangeNotifier {
     _ajudaDispensada = _prefs.getBool(_kAjudaDispensada) ?? false;
 
     _baloesVisiveis = _prefs.getBool(_kBaloesVisiveis) ?? true;
+
+    _baloesTooltipDispensado = _prefs.getBool(_kBaloesTooltipDispensado) ?? false;
+
+    _swipeTooltipDispensado = _prefs.getBool(_kSwipeTooltipDispensado) ?? false;
 
     _lembretesAtivos = _prefs.getBool(_kLembretesAtivos) ?? false;
     _minutosLembreteManha = _minutosValidos(
@@ -205,6 +217,26 @@ class Estado extends ChangeNotifier {
     _baloesVisiveis = novo;
     notifyListeners();
     await _prefs.setBool(_kBaloesVisiveis, novo);
+  }
+
+  bool get baloesTooltipDispensado => _baloesTooltipDispensado;
+
+  /// Tooltip de primeiro uso dos balões: depois de "Entendi", não volta nunca mais.
+  Future<void> dispensarBalcaoTooltip() async {
+    if (_baloesTooltipDispensado) return;
+    _baloesTooltipDispensado = true;
+    notifyListeners();
+    await _prefs.setBool(_kBaloesTooltipDispensado, true);
+  }
+
+  bool get swipeTooltipDispensado => _swipeTooltipDispensado;
+
+  /// Tooltip de primeiro uso do deslize: depois de "Entendi", não volta nunca mais.
+  Future<void> dispensarSwipeTooltip() async {
+    if (_swipeTooltipDispensado) return;
+    _swipeTooltipDispensado = true;
+    notifyListeners();
+    await _prefs.setBool(_kSwipeTooltipDispensado, true);
   }
 
   // --- tamanho do texto de leitura ----------------------------------------- //

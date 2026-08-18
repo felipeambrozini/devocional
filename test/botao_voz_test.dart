@@ -20,10 +20,11 @@ void main() {
       await tester.pumpWidget(montar());
 
       expect(find.text('Ouvir'), findsOneWidget);
-      // O rótulo de tela é curto; a frase inteira vive no Semantics (o nó
-      // funde o texto visível ao rótulo, separado por quebra de linha).
+      // O rótulo de tela é curto; a frase inteira vive no Semantics, e o
+      // texto visível é excluído dele para o leitor de tela não ler a frase
+      // duas vezes.
       expect(
-        find.bySemanticsLabel(RegExp('^Ouvir na voz de Spurgeon')),
+        find.bySemanticsLabel('Ouvir na voz de Spurgeon'),
         findsOneWidget,
       );
       semantica.dispose();
@@ -43,5 +44,22 @@ void main() {
         expect(find.text('Ouvir'), findsOneWidget);
       },
     );
+
+    testWidgets('o erro de leitura oferece "Tentar de novo"', (tester) async {
+      // Um erro de rede ou de serviço é momentâneo na maioria das vezes:
+      // sem a ação, o usuário teria de descobrir sozinho que tocar de novo
+      // é o caminho.
+      await tester.pumpWidget(montar());
+      await tester.tap(find.text('Ouvir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Tentar de novo'), findsOneWidget);
+
+      // O toque no aviso repete o pedido (e o aviso continua: a chave segue
+      // ausente no build de teste) — não é um botão morto.
+      await tester.tap(find.text('Tentar de novo'));
+      await tester.pumpAndSettle();
+      expect(find.text('Tentar de novo'), findsOneWidget);
+    });
   });
 }

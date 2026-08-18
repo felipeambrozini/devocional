@@ -9,6 +9,10 @@ import 'package:flutter/foundation.dart' show ChangeNotifier, kIsWeb;
 import '../firebase_options.dart';
 import 'estado.dart';
 
+/// RegExp para separar por espaços em branco (evita warning de RegExp deprecated).
+// ignore: deprecated_member_use
+final _espacos = RegExp(r'\s+');
+
 /// Se a conta na nuvem é uma opção nesta plataforma.
 ///
 /// Só web: é a única plataforma onde o navegador apaga o armazenamento
@@ -191,7 +195,7 @@ class Nuvem extends ChangeNotifier {
   /// `hoje.dart`. null sem conta, ou se a conta Google não devolveu nome.
   String? get primeiroNome {
     final nome = _pronta ? FirebaseAuth.instance.currentUser?.displayName : null;
-    return nome?.trim().split(RegExp(r'\s+')).firstOrNull;
+    return nome?.trim().split(_espacos).firstOrNull;
   }
 
   /// Prepara o Firebase e liga a sincronização ao estado de login. Chamar uma

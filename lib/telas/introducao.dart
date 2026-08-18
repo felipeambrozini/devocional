@@ -39,7 +39,12 @@ class _TelaIntroducaoState extends State<TelaIntroducao> {
         MediaQuery.sizeOf(context).width < 720;
 
     return Scaffold(
-      appBar: AppBar(title: Text(nomeDoLivro(slug))),
+      appBar: AppBar(
+        title: Text(nomeDoLivro(slug)),
+        // A mesma barra da Bíblia: quem rolou a introdução até o fim ainda
+        // vê a leitura no ar e pode encerrá-la (ou cancelar o preparo).
+        actions: [IndicadorDeVozNaBarra(chave: 'introducao:$slug')],
+      ),
       body: LarguraDeLeitura(
         // CarregaUmaVez e não FutureBuilder: a tela lê o tema, e o tema agora
         // muda quando se troca o tamanho do texto. Com um FutureBuilder cru, cada
@@ -112,6 +117,7 @@ class _TelaIntroducaoState extends State<TelaIntroducao> {
                 BotaoDeVoz(
                   chave: 'introducao:$slug',
                   texto: textoDeIntroducao(introducao),
+                  referencia: 'Introdução de ${introducao.livro}',
                 ),
                 const SizedBox(height: 24),
                 for (final (titulo, corpo) in introducao.secoes) ...[

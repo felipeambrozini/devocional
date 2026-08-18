@@ -74,8 +74,12 @@ class _TelaBibliaState extends State<TelaBiblia> {
 
   void _irPara(String livro, int capitulo) {
     // Um áudio tocando do capítulo antigo não pode continuar: o botão de
-    // parar dele saiu da tela, e a leitura nova começa do zero.
-    Voz.instancia.parar();
+    // parar dele saiu da tela, e a leitura nova começa do zero. Um preparo em
+    // curso não para aqui: o áudio ainda não toca, e o "Desfazer" do deslize
+    // devolve a voz que ficou pronta.
+    if (Voz.instancia.tocando || Voz.instancia.pausado) {
+      Voz.instancia.parar();
+    }
     setState(() {
       _livro = livro;
       _capitulo = capitulo;
@@ -185,6 +189,10 @@ class _TelaBibliaState extends State<TelaBiblia> {
   void _passarCapituloComDesfazer(int passo) {
     final livroAnterior = _livro;
     final capituloAnterior = _capitulo;
+    // A voz em curso (tocando, pausada ou no preparo) tem de voltar junto
+    // com a página: desfazer o deslize sem devolver o áudio seria desfazer
+    // pela metade.
+    final chaveDaLeitura = Voz.instancia.tocandoChave;
     _passarCapitulo(passo);
     final mensageiro = ScaffoldMessenger.of(context);
     mensageiro
@@ -198,6 +206,12 @@ class _TelaBibliaState extends State<TelaBiblia> {
             onPressed: () {
               if (!mounted) return;
               _irPara(livroAnterior, capituloAnterior);
+              if (chaveDaLeitura != null) {
+                Voz.instancia.retomar(
+                  'capitulo:$livroAnterior.$capituloAnterior',
+                  de: Voz.instancia.desdeAParada,
+                );
+              }
               mensageiro.hideCurrentSnackBar();
             },
           ),
@@ -242,25 +256,29 @@ class _TelaBibliaState extends State<TelaBiblia> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: TextButton(
-            onPressed: _abrirSeletor,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Flexible com reticências porque a barra ganhou três ações e um
-                // livro de nome longo em celular estreito estouraria a linha.
-                Flexible(
-                  child: Text(
-                    '${_livroAtual.nome} $_capitulo',
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).appBarTheme.titleTextStyle,
+          title: Tooltip(
+            message: 'Toque para escolher capítulo',
+            child: TextButton(
+              onPressed: _abrirSeletor,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Flexible com reticências porque a barra ganhou três ações e um
+                  // livro de nome longo em celular estreito estouraria a linha.
+                  Flexible(
+                    child: Text(
+                      '${_livroAtual.nome} $_capitulo',
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).appBarTheme.titleTextStyle,
+                    ),
                   ),
-                ),
-                Icon(Icons.expand_more, color: cor.primary, size: 20),
-              ],
+                  Icon(Icons.expand_more, color: cor.primary, size: 20),
+                ],
+              ),
             ),
           ),
           actions: [
+            IndicadorDeVozNaBarra(chave: 'capitulo:$_livro.$_capitulo'),
             IconButton(
               tooltip: 'Tamanho do texto e aparência',
               icon: const Icon(Icons.tune),
@@ -337,9 +355,73 @@ class _TelaBibliaState extends State<TelaBiblia> {
                       // seleção por arrasto disputaria a arena com o gesto de
                       // capítulo, então lá Copiar pela folha do versículo
                       // continua sendo o caminho.
-                      return _semGestoDeToque
+                      final corpoLeitura = _semGestoDeToque
                           ? leitor
                           : SelectionArea(child: leitor);
+                      // Alça de arraste na borda esquerda (mobile): indica que
+                      // deslizar horizontalmente troca de capítulo. Tooltip de
+                      // primeiro uso: "Arraste para trocar capítulo".
+                      return ListenableBuilder(
+                        listenable: estado,
+                        builder: (context, _) {
+                          final primeiraVez = !estado.swipeTooltipDispensado;
+                          return Stack(
+                            children: [
+                              corpoLeitura,
+                              if (!kIsWeb)
+                                Positioned(
+                                  left: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  width: 24,
+                                  child: Tooltip(
+                                    message: primeiraVez
+                                        ? 'Arraste para trocar capítulo'
+                                        : '',
+                                    child: Semantics(
+                                      label: primeiraVez
+                                          ? 'Arraste para trocar capítulo'
+                                          : '',
+                                      child: Listener(
+                                        onPointerDown: (_) {
+                                          if (primeiraVez) {
+                                            estado.dispensarSwipeTooltip();
+                                          }
+                                        },
+                                        child: Container(
+                                          width: 24,
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              begin: Alignment.centerLeft,
+                                              end: Alignment.centerRight,
+                                              colors: [
+                                                Theme.of(context)
+                                                    .colorScheme
+                                                    .primary
+                                                    .withValues(alpha: 0.12),
+                                                Colors.transparent,
+                                              ],
+                                            ),
+                                          ),
+                                          child: Center(
+                                            child: Icon(
+                                              Icons.drag_indicator,
+                                              size: 20,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary
+                                                  .withValues(alpha: 0.5),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
+                      );
                     },
                   ),
                 ),

@@ -3,6 +3,7 @@ import 'package:felipe_ambrozini/data/conteudo.dart';
 import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:felipe_ambrozini/main.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -31,6 +32,11 @@ void main() {
   ) async {
     await aquecerAssets(tester);
     final estado = Estado(await SharedPreferences.getInstance());
+    // O cartão cresceu com as linhas de ajuda: numa janela de 800x600 o
+    // botão fica fora da tela, e a tela precisa ser mais alta para o toque
+    // alcançá-lo sem depender de rolagem.
+    await tester.binding.setSurfaceSize(const Size(800, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(AppDevocional(estado: estado));
     await tester.pumpAndSettle();
 

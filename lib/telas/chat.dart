@@ -53,48 +53,62 @@ class BalaoDeChat extends StatelessWidget {
     // do navegador e no tablet: o balão cresce junto com a plataforma, no
     // mesmo limiar largo (720) que o resto do app usa para trocar de moldura.
     final tamanho = MediaQuery.sizeOf(context).width >= 720 ? 64.0 : 52.0;
-    return Tooltip(
-      message: 'Conversas com ${persona.nome}',
-      child: Semantics(
-        button: true,
-        label: 'Abrir histórico de conversas com ${persona.nome}',
-        child: Material(
-          color: cor.surfaceContainer,
-          // Chapado, como todo o app: a sombra era a única do sistema inteiro,
-          // e o círculo com sombra flutuava sobre a leitura de Manhã.
-          elevation: 0,
-          shape: const CircleBorder(),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: onTap,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: cor.primary, width: 1.5),
-              ),
-              // A folga entre o aro dourado e a foto, como no cabeçalho de
-              // hoje.dart: sem ela a foto preenche o círculo até a borda e o
-              // cabelo do Felipe encosta no aro. Com ela o aro fica limpo,
-              // como o do Spurgeon, que tem folga própria na foto.
-              child: Padding(
-                padding: const EdgeInsets.all(3),
-                child: ClipOval(
-                  child: Image.asset(
-                    persona.foto,
-                    width: tamanho,
-                    height: tamanho,
-                    fit: BoxFit.cover,
-                    // A foto é mais alta que larga e o cabelo encosta na borda
-                    // superior: qualquer corte em cima corta o cabelo. Alinhada
-                    // ao topo, a sobra do BoxFit.cover cai toda na blusa.
-                    alignment: Alignment.topCenter,
+    return ListenableBuilder(
+      listenable: EscopoDoEstado.de(context),
+      builder: (context, _) {
+        final estado = EscopoDoEstado.de(context);
+        final primeiraVez = !estado.baloesTooltipDispensado;
+        return Tooltip(
+          message: primeiraVez
+              ? 'Toque em ${persona.nome} para conversar sobre o capítulo'
+              : 'Conversas com ${persona.nome}',
+          child: Semantics(
+            button: true,
+            label: 'Abrir histórico de conversas com ${persona.nome}',
+            child: Material(
+              color: cor.surfaceContainer,
+              // Chapado, como todo o app: a sombra era a única do sistema inteiro,
+              // e o círculo com sombra flutuava sobre a leitura de Manhã.
+              elevation: 0,
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () {
+                  if (primeiraVez) {
+                    estado.dispensarBalcaoTooltip();
+                  }
+                  onTap();
+                },
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: cor.primary, width: 1.5),
+                  ),
+                  // A folga entre o aro dourado e a foto, como no cabeçalho de
+                  // hoje.dart: sem ela a foto preenche o círculo até a borda e o
+                  // cabelo do Felipe encosta no aro. Com ela o aro fica limpo,
+                  // como o do Spurgeon, que tem folga própria na foto.
+                  child: Padding(
+                    padding: const EdgeInsets.all(3),
+                    child: ClipOval(
+                      child: Image.asset(
+                        persona.foto,
+                        width: tamanho,
+                        height: tamanho,
+                        fit: BoxFit.cover,
+                        // A foto é mais alta que larga e o cabelo encosta na borda
+                        // superior: qualquer corte em cima corta o cabelo. Alinhada
+                        // ao topo, a sobra do BoxFit.cover cai toda na blusa.
+                        alignment: Alignment.topCenter,
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

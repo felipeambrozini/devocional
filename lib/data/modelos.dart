@@ -9,13 +9,15 @@ import 'canon.dart';
 ///
 /// Vivem aqui, e não no tema, porque o [Estado] precisa deles para recusar um
 /// valor gravado fora da lista, e o `data` não importa `theme.dart`.
-const escalasDeLeitura = <double>[0.9, 1.0, 1.15, 1.3, 1.5];
+const escalasDeLeitura = <double>[0.85, 1.0, 1.15, 1.3, 1.5, 1.75, 2.0];
 const rotulosDeEscala = <String>[
   'Pequeno',
   'Padrão',
   'Médio',
   'Grande',
   'Maior',
+  'Muito grande',
+  'Máximo',
 ];
 
 /// Claro, escuro ou o que o aparelho estiver usando.

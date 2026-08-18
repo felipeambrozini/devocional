@@ -68,6 +68,7 @@ void main() {
         for (final (titulo, corpo) in introducao.secoes) {
           expect(corpo.trim(), isNotEmpty, reason: titulo);
           expect(
+            // ignore: deprecated_member_use
             corpo.split(RegExp(r'\s+')).length,
             greaterThan(60),
             reason: '$titulo tem texto curto demais',

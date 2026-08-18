@@ -2,13 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../data/canon.dart';
+import '../data/conteudo.dart';
 import '../data/estado.dart';
+import '../data/modelos.dart';
 import '../data/nuvem.dart';
+import '../data/voz.dart';
 import 'comuns.dart';
 
 /// Créditos das traduções, da fonte dos devocionais e o link dos canais.
-class TelaSobre extends StatelessWidget {
+class TelaSobre extends StatefulWidget {
   const TelaSobre({super.key});
+
+  @override
+  State<TelaSobre> createState() => _TelaSobreState();
+}
+
+class _TelaSobreState extends State<TelaSobre> {
+  /// Quantas vezes a demonstração foi pedida de novo depois de um erro: a
+  /// chave do [CarregaUmaVez] muda a cada tentativa, e é assim que ele
+  /// recarrega sem reabrir a tela.
+  int _tentativasDaDemo = 0;
+
+  @override
+  void dispose() {
+    // A pílula da demonstração sai da tela com ela: a regra de não deixar um
+    // áudio tocando sem o botão de parar à vista vale aqui também.
+    Voz.instancia.parar();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +46,10 @@ class TelaSobre extends StatelessWidget {
             onPressed: () =>
                 ajustesDeLeitura(context, EscopoDoEstado.de(context)),
           ),
+          // A demonstração vive num ListView: quem rola até a ajuda não vê
+          // mais a pílula, e o trecho não pode tocar sem o botão de parar à
+          // vista. O indicador também cobre o trecho pausado (chamada).
+          const IndicadorDeVozNaBarra(chave: 'trecho:salmos.1'),
         ],
       ),
       body: LarguraDeLeitura(
@@ -56,6 +82,68 @@ class TelaSobre extends StatelessWidget {
               'fidelidade teológica, reverência literária e rigor no respeito '
               'aos direitos autorais.',
               style: tema.bodyLarge?.copyWith(height: 1.7),
+            ),
+            const SizedBox(height: 32),
+            Text('A voz de Spurgeon', style: tema.headlineSmall),
+            const SizedBox(height: 10),
+            Text(
+              'O retrato de Spurgeon nas telas de leitura lê o texto em voz '
+              'alta: um narrador masculino de barítono, sintetizado na nuvem '
+              'do Google, lendo devagar e em tom grave. A leitura precisa da '
+              'rede, e o limite gratuito de um milhão de caracteres por mês '
+              'cobre o uso de sobra. A demonstração abaixo toca só os três '
+              'primeiros versículos do Salmo 1.',
+              style: tema.bodyLarge?.copyWith(height: 1.7),
+            ),
+            const SizedBox(height: 16),
+            // A demonstração no próprio lugar da explicação: quem descobre a
+            // voz aqui ouve na hora, sem caçar um capítulo para testar.
+            Text(
+              'Ouça um trecho:',
+              style: tema.labelLarge?.copyWith(color: cor.onSurfaceVariant),
+            ),
+            const SizedBox(height: 10),
+            CarregaUmaVez<Capitulo>(
+              chave: 'voz-demo-salmos-1-$_tentativasDaDemo',
+              carregar: () =>
+                  Conteudo.instancia.capitulo(Versao.bkj, 'salmos', 1),
+              construir: (context, snap) {
+                if (snap.hasError) {
+                  // A demonstração não pode sumir em silêncio: quem a pediu
+                  // precisa saber que o trecho não veio, e de um jeito de
+                  // pedir de novo.
+                  return Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Tentar de novo'),
+                      onPressed: () =>
+                          setState(() => _tentativasDaDemo++),
+                    ),
+                  );
+                }
+                final capitulo = snap.data;
+                if (capitulo == null ||
+                    snap.connectionState != ConnectionState.done) {
+                  return const SizedBox.shrink();
+                }
+                // A demonstração toca só os três primeiros versículos, não o
+                // capítulo inteiro: o que se promete aqui é um trecho, e a
+                // pílula não deve gastar a quota de um Salmo 1 completo. A
+                // chave própria ("trecho:...") também impede que o trecho
+                // encurte o áudio do capítulo completo na cache da Bíblia.
+                final trecho = [
+                  capitulo.referencia,
+                  for (final (numero, texto)
+                      in capitulo.versiculos.take(3)) '$numero. $texto',
+                ].join(' ');
+                return BotaoDeVoz(
+                  chave: 'trecho:${capitulo.livro}.${capitulo.numero}',
+                  texto: trecho,
+                  // Sem referência: "Leitura concluída." basta — o que
+                  // terminou foi o trecho, não o capítulo.
+                );
+              },
             ),
             const SizedBox(height: 32),
             Text('Onde me encontrar', style: tema.headlineSmall),

@@ -136,6 +136,15 @@ class _TelaDevocionalState extends State<TelaDevocional> {
               ao: (l) => setState(() => _leitura = l),
             ),
             const SizedBox(height: 16),
+            BotaoDeVoz(
+              chave: 'devocional:${_data.month}/${_data.day}',
+              texto: _leitura == Leitura.promessas
+                  ? 'Promessa para ${dataLonga(_data)}'
+                  : 'Devocional para ${dataLonga(_data)}',
+              referencia: _leitura == Leitura.promessas
+                  ? 'Promessa de Deus'
+                  : '${_leitura.rotulo.toLowerCase()}_${_data.month}_${_data.day}',
+            ),
             CarregaUmaVez<Devocional?>(
               chave:
                   '${_leitura.name}/${estado.versao.pasta}/${_data.month}/${_data.day}',

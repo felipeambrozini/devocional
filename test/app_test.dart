@@ -1,8 +1,12 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:felipe_ambrozini/data/canon.dart';
 import 'package:felipe_ambrozini/data/conteudo.dart';
 import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:felipe_ambrozini/data/personas.dart';
+import 'package:felipe_ambrozini/data/voz.dart';
 import 'package:felipe_ambrozini/main.dart';
 import 'package:felipe_ambrozini/telas/biblia.dart';
 import 'package:felipe_ambrozini/telas/chat.dart';
@@ -14,7 +18,69 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+/// Leitor de áudio sem plataforma, para o teste do fluxo de voz: o teste
+/// decide quando a leitura termina ([encerrar]), onde ela está
+/// ([posicaoAtual]) e quando uma pausa de fora a interrompe ([pausarDeFora])
+/// — o suficiente para provar que a barra de cima acompanha o estado e que o
+/// "Desfazer" do deslize devolve a leitura de onde parou.
+class _LeitorFalsoDoApp implements LeitorDeAudio {
+  int toques = 0;
+
+  /// A posição pedida no último [tocar]: o que a retomada do "Desfazer"
+  /// precisa entregar.
+  Duration? ultimoDe;
+
+  @override
+  Duration? posicaoAtual;
+
+  @override
+  bool concluida = true;
+
+  @override
+  bool pausadoDeFora = false;
+
+  Completer<void>? _fim;
+
+  @override
+  Future<void> tocar(Uint8List bytes, {Duration? de}) {
+    pausadoDeFora = false;
+    toques++;
+    ultimoDe = de;
+    final fim = Completer<void>();
+    _fim = fim;
+    return fim.future;
+  }
+
+  @override
+  Future<void> silenciar() async {
+    final fim = _fim;
+    if (fim != null && !fim.isCompleted) fim.complete();
+  }
+
+  /// O áudio chegou ao fim: completa o tocar pendente.
+  void encerrar() {
+    final fim = _fim;
+    if (fim != null && !fim.isCompleted) fim.complete();
+  }
+
+  /// Uma chamada ou a perda de foco de áudio pausou a leitura: o player de
+  /// verdade completa o play() pausado, e é assim que a pausa é marcada.
+  void pausarDeFora() {
+    pausadoDeFora = true;
+    encerrar();
+  }
+
+  @override
+  Stream<Duration> get posicao => Stream<Duration>.value(Duration.zero);
+
+  @override
+  Stream<Duration?> get duracao =>
+      Stream<Duration?>.value(const Duration(minutes: 20));
+}
 
 /// Sobe o app de verdade e confere o que aparece na tela, lendo os assets reais.
 /// É o substituto verificável de olhar o app rodando.
@@ -253,9 +319,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Fontes do texto'), findsOneWidget);
+    // O parágrafo de créditos e o da voz empurram os canais para fora da
+    // área que a lista realiza de saída; sem rolar até eles, o finder não
+    // os encontra.
+    await tester.scrollUntilVisible(find.text('YouTube'), 200);
     expect(find.text('YouTube'), findsOneWidget);
-    // O parágrafo de créditos empurra o Instagram para fora da área que a
-    // lista realiza de saída; sem rolar até ele, o finder não o encontra.
     await tester.scrollUntilVisible(find.text('Instagram'), 200);
     expect(find.text('Instagram'), findsOneWidget);
     expect(
@@ -281,7 +349,7 @@ void main() {
       tester.element(find.byType(Scaffold).first),
     ).state.uri.path;
 
-    await tester.tap(find.byTooltip('Conversas com Charles Spurgeon'));
+    await tester.tap(find.byType(BalaoDeChat).first);
     await tester.pumpAndSettle();
 
     expect(find.text('Charles Spurgeon'), findsWidgets);
@@ -405,7 +473,7 @@ void main() {
   Future<void> abrirHistorico(WidgetTester tester, Estado estado) async {
     await tester.pumpWidget(AppDevocional(estado: estado));
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Conversas com Charles Spurgeon'));
+    await tester.tap(find.byType(BalaoDeChat).first);
     await tester.pumpAndSettle();
   }
 
@@ -1163,10 +1231,310 @@ void main() {
       await tester.pumpAndSettle();
       expect(estado.ultimaLeitura, ('genesis', 2));
       expect(find.text('Desfazer'), findsOneWidget);
-
       await tester.tap(find.text('Desfazer'));
       await tester.pumpAndSettle();
       expect(estado.ultimaLeitura, ('genesis', 1));
+    },
+  );
+
+  testWidgets(
+    'a barra de cima mostra o preparo e o tocar; deslizar derruba a leitura '
+    'e o desfazer a devolve de onde parou',
+    (tester) async {
+      await aquecerAssets(tester);
+      final estado = await estadoLimpo();
+      final leitor = _LeitorFalsoDoApp();
+      Voz.instancia.injetarLeitor = leitor;
+      addTearDown(() async {
+        await Voz.instancia.parar();
+        Voz.instancia.injetarLeitor = null;
+      });
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EscopoDoEstado(estado: estado, child: const TelaBiblia()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // A leitura começa; o preparo é lento (o cliente só responde quando o
+      // teste deixa) e a barra de cima tem de mostrá-lo — senão quem rolou
+      // não saberia que o toque pegou nem como cancelar.
+      final resposta = Completer<http.Response>();
+      final cliente = MockClient((_) => resposta.future);
+      final leitura = Voz.instancia.alternar(
+        'capitulo:genesis.1',
+        texto: 'No princípio.',
+        cliente: cliente,
+        chaveTts: 'teste',
+      );
+      await tester.pump();
+      expect(Voz.instancia.carregando, isTrue);
+      expect(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.byTooltip('Cancelar o preparo'),
+        ),
+        findsOneWidget,
+        reason: 'o preparo não pode ser invisível na barra de cima',
+      );
+
+      resposta.complete(
+        http.Response(
+          json.encode({'audioContent': base64.encode([1, 2, 3])}),
+          200,
+        ),
+      );
+      // Deixa o fluxo da resposta chegar ao tocar. pumpEventQueue não serve
+      // aqui: em testWidgets o relógio é falso, e o Future.delayed dele é um
+      // timer que nunca dispara sem pump.
+      await tester.pumpAndSettle();
+      expect(Voz.instancia.tocando, isTrue);
+      expect(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.byTooltip('Encerrar a leitura'),
+        ),
+        findsOneWidget,
+        reason: 'tocando, a barra de cima vira o botão de parar',
+      );
+      expect(
+        find.descendant(
+          of: find.byType(BotaoDeVoz),
+          matching: find.byType(Image),
+        ),
+        findsNothing,
+        reason: 'o retrato é o convite; tocando, ele sai da pílula',
+      );
+
+      // O deslize troca de capítulo e derruba a leitura: não se deixa um
+      // áudio tocando sem o botão de parar à vista.
+      leitor.posicaoAtual = const Duration(minutes: 3);
+      await tester.fling(find.byType(ListView), const Offset(-300, 0), 800);
+      await tester.pumpAndSettle();
+      expect(estado.ultimaLeitura, ('genesis', 2));
+      expect(Voz.instancia.tocando, isFalse,
+          reason: 'o deslize não pode deixar áudio no ar');
+      await leitura;
+
+      // O "Desfazer" devolve a página e a leitura, da posição em que estava:
+      // desfazer o deslize sem devolver o áudio seria desfazer pela metade.
+      await tester.tap(find.text('Desfazer'));
+      await tester.pumpAndSettle();
+      expect(estado.ultimaLeitura, ('genesis', 1));
+      expect(Voz.instancia.tocandoChave, 'capitulo:genesis.1');
+      expect(
+        leitor.ultimoDe,
+        const Duration(minutes: 3),
+        reason: 'a leitura retoma de onde parou, não do começo',
+      );
+      leitor.encerrar();
+    },
+  );
+
+  testWidgets(
+    'uma pausa de fora vira "Pausado" na pílula; o toque retoma de onde parou',
+    (tester) async {
+      await aquecerAssets(tester);
+      final estado = await estadoLimpo();
+      // Gênesis 2, e não o 1 do teste anterior: o teste da barra parou a
+      // chave "capitulo:genesis.1" há menos de 400 ms, e o debounce do
+      // reinício engoliria o toque desta sessão.
+      await estado.registrarLeitura('genesis', 2);
+      final leitor = _LeitorFalsoDoApp();
+      Voz.instancia.injetarLeitor = leitor;
+      addTearDown(() async {
+        await Voz.instancia.parar();
+        Voz.instancia.injetarLeitor = null;
+      });
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EscopoDoEstado(estado: estado, child: const TelaBiblia()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final resposta = Completer<http.Response>();
+      final cliente = MockClient((_) => resposta.future);
+      final leitura = Voz.instancia.alternar(
+        'capitulo:genesis.2',
+        texto: 'No princípio.',
+        cliente: cliente,
+        chaveTts: 'teste',
+      );
+      await tester.pump();
+      resposta.complete(
+        http.Response(
+          json.encode({'audioContent': base64.encode([1, 2, 3])}),
+          200,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(Voz.instancia.tocando, isTrue);
+
+      // Tocando, a barra de cima mostra o anel de progresso junto do parar:
+      // quem rolou para longe do botão continua vendo quanto falta.
+      expect(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.byType(CircularProgressIndicator),
+        ),
+        findsOneWidget,
+        reason: 'tocando, a barra de cima mostra o progresso no anel do parar',
+      );
+
+      // A chamada chega: o player pausa sozinho, e a UI tem de dizer a
+      // verdade em vez de congelar em "O pregador está lendo…".
+      leitor.posicaoAtual = const Duration(minutes: 3);
+      leitor.pausarDeFora();
+      await tester.pumpAndSettle();
+      expect(Voz.instancia.tocando, isFalse);
+      expect(Voz.instancia.pausado, isTrue);
+      expect(
+        find.descendant(
+          of: find.byType(BotaoDeVoz),
+          matching: find.text('Pausado. Toque para retomar.'),
+        ),
+        findsOneWidget,
+        reason: 'pausada, a pílula oferece retomar em vez de mentir o estado',
+      );
+      // O retomar agora mora nos dois lugares: na pílula e no anel da barra
+      // (quem rolou para longe do topo não pode ter de voltar).
+      expect(
+        find.byTooltip('Retomar a leitura'),
+        findsNWidgets(2),
+        reason: 'pílula e barra oferecem o retomar da sessão pausada',
+      );
+
+      // O toque no anel da barra retoma da posição da pausa, do áudio da
+      // memória — sem voltar ao topo do capítulo.
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.byTooltip('Retomar a leitura'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(Voz.instancia.pausado, isFalse);
+      expect(Voz.instancia.tocando, isTrue,
+          reason: 'o toque na sessão pausada retoma a leitura');
+      expect(leitor.toques, 2);
+      expect(
+        leitor.ultimoDe,
+        const Duration(minutes: 3),
+        reason: 'o retomar começa de onde a leitura parou, não do zero',
+      );
+
+      // Pausada de novo, o deslize também devolve a voz no "Desfazer": a
+      // sessão pausada ainda é "em curso", e desfazer a página sem a voz
+      // seria desfazer pela metade.
+      leitor.posicaoAtual = const Duration(minutes: 4);
+      leitor.pausarDeFora();
+      await tester.pumpAndSettle();
+      expect(Voz.instancia.pausado, isTrue);
+      await tester.fling(find.byType(ListView), const Offset(-300, 0), 800);
+      await tester.pumpAndSettle();
+      expect(estado.ultimaLeitura, ('genesis', 3));
+      await tester.tap(find.text('Desfazer'));
+      await tester.pumpAndSettle();
+      expect(estado.ultimaLeitura, ('genesis', 2));
+      expect(Voz.instancia.tocandoChave, 'capitulo:genesis.2',
+          reason: 'o desfazer devolve a sessão pausada junto com a página');
+      expect(
+        leitor.ultimoDe,
+        const Duration(minutes: 4),
+        reason: 'a sessão pausada retoma de onde a chamada a pegou',
+      );
+
+      // Pausada a terceira vez: a pílula agora oferece descartar, não só
+      // retomar. Sem um jeito de encerrar a pausa da própria tela, ela vira uma
+      // gaiola — e um descarte precisa ser mais perto que subir ao topo.
+      leitor.posicaoAtual = const Duration(minutes: 3, seconds: 30);
+      leitor.pausarDeFora();
+      await tester.pumpAndSettle();
+      expect(Voz.instancia.pausado, isTrue);
+      expect(
+        find.descendant(
+          of: find.byType(BotaoDeVoz),
+          matching: find.byTooltip('Encerrar a leitura pausada'),
+        ),
+        findsOneWidget,
+        reason: 'a pausa precisa de um jeito de ser encerrada da própria tela',
+      );
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BotaoDeVoz),
+          matching: find.byTooltip('Encerrar a leitura pausada'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(Voz.instancia.pausado, isFalse);
+      expect(Voz.instancia.tocandoChave, isNull,
+          reason: 'o descarte encerra a sessão pausada de vez');
+      expect(leitor.toques, 3, reason: 'o descarte não toca — só encerra');
+      leitor.encerrar();
+      await leitura;
+    },
+  );
+
+  testWidgets(
+    'o Desfazer devolve a voz que ficou pronta no preparo, não o silêncio',
+    (tester) async {
+      await aquecerAssets(tester);
+      final estado = await estadoLimpo();
+      // Gênesis 4: o teste anterior parou a chave genesis.2 há menos de 400 ms,
+      // e o debounce do reinício engoliria um toque de genesis.2 aqui.
+      await estado.registrarLeitura('genesis', 4);
+      final leitor = _LeitorFalsoDoApp();
+      Voz.instancia.injetarLeitor = leitor;
+      addTearDown(() async {
+        await Voz.instancia.parar();
+        Voz.instancia.injetarLeitor = null;
+      });
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EscopoDoEstado(estado: estado, child: const TelaBiblia()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final resposta = Completer<http.Response>();
+      final cliente = MockClient((_) => resposta.future);
+      final leitura = Voz.instancia.alternar(
+        'capitulo:genesis.4',
+        texto: 'No princípio.',
+        cliente: cliente,
+        chaveTts: 'teste',
+      );
+      await tester.pump();
+      expect(Voz.instancia.carregando, isTrue);
+
+      // O deslize troca de capítulo (4→5) com a síntese ainda no ar: o Desfazer
+      // tem de devolver a voz, não só a página — e a síntese não pode ser
+      // engolida pelo novo capítulo (ele cai no discard por versão, mas entra
+      // na cache: a quota não se perde).
+      await tester.fling(find.byType(ListView), const Offset(-300, 0), 800);
+      await tester.pumpAndSettle();
+      expect(estado.ultimaLeitura, ('genesis', 5));
+
+      // A síntese conclui DENTRO da janela do Desfazer (4s): o áudio está na
+      // cache, e o Desfazer retoma — não morre no silêncio do preparo.
+      resposta.complete(
+        http.Response(
+          json.encode({'audioContent': base64.encode([1, 2, 3])}),
+          200,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Desfazer'));
+      await tester.pumpAndSettle();
+      expect(estado.ultimaLeitura, ('genesis', 4));
+      expect(Voz.instancia.tocandoChave, 'capitulo:genesis.4');
+      expect(leitor.ultimoDe, isNull,
+          reason: 'preparo sem pausa: retoma do zero (sem posição)');
+      expect(leitor.toques, 2,
+          reason: 'o desfazer re-sintetizou (ou retomou da cache) a voz');
+      leitor.encerrar();
+      await leitura;
     },
   );
 
@@ -1237,3 +1605,5 @@ void main() {
     expect(dezembro.right, lessThanOrEqualTo(800));
   });
 }
+
+

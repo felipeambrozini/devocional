@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuthException;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/canon.dart';
 import '../data/conteudo.dart';
@@ -35,10 +36,12 @@ const linhasDeAjuda = [
       'conversas: pergunte sobre a Palavra, peça uma aplicação, desabafe.',
   'O retrato de Spurgeon no começo do capítulo e da introdução lê o texto '
       'na voz dele: toque para ouvir, e toque de novo para encerrar.',
+  'No computador, a tecla P também começa e encerra a leitura, e a barra de '
+      'cima ganha um botão de parar enquanto ela toca.',
   'No Plano, marca o dia quando terminares a leitura.',
 ];
 
-/// Capa da Bíblia de Estudo Spurgeon, trocada conforme o tema claro/escuro.
+/// Capa da Bíblia de Estudo Charles Haddon Spurgeon, trocada conforme o tema claro/escuro.
 String capaBibliaSpurgeon(BuildContext context) {
   final escuro = Theme.of(context).brightness == Brightness.dark;
   return escuro
@@ -397,6 +400,29 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                   value: estado.baloesVisiveis,
                   onChanged: (novo) => estado.definirBaloesVisiveis(novo),
                 ),
+                ListTile(
+                  leading: Icon(
+                    Icons.tips_and_updates_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: const Text('Reexibir dica dos botões de conversa'),
+                  subtitle: const Text(
+                    'Mostra novamente a dica "Toque em Spurgeon para conversar sobre o capítulo".',
+                  ),
+                  onTap: () async {
+                    await estado.dispensarBalcaoTooltip();
+                    // Inverte para forçar reexibição (o método só define true, então
+                    // precisamos resetar manualmente via SharedPreferences).
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setBool('baloes_tooltip_dispensado', false);
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Dica dos botões de conversa reexibida.'),
+                      ),
+                    );
+                  },
+                ),
                 // Só em Android: é a única plataforma do projeto com um agendador
                 // de sistema que o plugin de fato controla. Ver lembretes.dart.
                 if (lembretesSuportados)
@@ -753,7 +779,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Bíblia de Estudo Spurgeon',
+                                'Bíblia de Estudo Charles Haddon Spurgeon',
                                 style: tema.labelMedium,
                               ),
                             ],
@@ -834,15 +860,23 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
 ///
 /// [chave] identifica o que se ouve ("introducao:joao", "capitulo:joao.3"): a
 /// voz é de app inteiro, então o botão da introdução e o do capítulo mostram
-/// o mesmo estado para o mesmo áudio, e ouvir um para o outro.
+/// o mesmo estado para o mesmo áudio, e ouvir um para o outro. [referencia]
+/// nomeia o que terminou no aviso ("João 3"), para o fim da leitura não ser
+/// um "Leitura concluída." genérico.
 ///
 /// O botão escuta o fim da própria leitura para fechar o ciclo com a
 /// confirmação "Leitura concluída.": parar no meio não é um fim, e não avisa.
 class BotaoDeVoz extends StatefulWidget {
-  const BotaoDeVoz({super.key, required this.chave, required this.texto});
+  const BotaoDeVoz({
+    super.key,
+    required this.chave,
+    required this.texto,
+    this.referencia,
+  });
 
   final String chave;
   final String texto;
+  final String? referencia;
 
   @override
   State<BotaoDeVoz> createState() => _BotaoDeVozState();
@@ -856,9 +890,18 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
     super.initState();
     _conclusoes = Voz.instancia.conclusoes.listen((chave) {
       if (chave != widget.chave || !mounted) return;
+      final referencia = widget.referencia;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(const SnackBar(content: Text('Leitura concluída.')));
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              referencia == null
+                  ? 'Leitura concluída.'
+                  : 'Leitura concluída: $referencia.',
+            ),
+          ),
+        );
     });
   }
 
@@ -876,29 +919,55 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
       listenable: Voz.instancia,
       builder: (context, _) {
         final voz = Voz.instancia;
-        final preparando = voz.carregando && voz.tocandoChave == widget.chave;
+        // O carregando fica ligado a leitura inteira (só se desliga no fim do
+        // play): o preparo é "carregando sem tocar" — sem o !tocando, o
+        // tooltip diria "Cancelar o preparo" com o áudio tocando.
+        final preparando =
+            voz.carregando && !voz.tocando && voz.tocandoChave == widget.chave;
         final ativo = voz.tocando && voz.tocandoChave == widget.chave;
+        final pausado = voz.pausado && voz.tocandoChave == widget.chave;
         // A leitura fala como o pregador, não como painel de controle: quem
         // está lendo é uma pessoa, e o aviso completo vai no Semantics (o
         // rótulo visível é curto para caber na pílula em escala 2x).
         final rotulo = ativo
             ? 'O pregador está lendo. Toque para encerrar a leitura.'
+            : pausado
+            ? 'A leitura foi pausada. Toque para retomar.'
             : preparando
             ? 'Preparando a voz de Spurgeon. Toque para cancelar.'
             : 'Ouvir na voz de Spurgeon';
         final visivel = ativo
             ? 'O pregador está lendo…'
+            : pausado
+            ? 'Pausado. Toque para retomar.'
             : preparando
             ? 'Preparando a voz…'
             : 'Ouvir';
         return Tooltip(
-          message: ativo ? 'Encerrar a leitura' : 'Ouvir na voz de Spurgeon',
+          message: preparando
+              ? 'Cancelar o preparo'
+              : ativo
+              ? 'Encerrar a leitura'
+              : pausado
+              ? 'Retomar a leitura'
+              : 'Ouvir na voz de Spurgeon',
           child: Semantics(
             button: true,
             label: rotulo,
             child: Material(
-              color: ativo ? cor.primaryContainer : cor.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(30),
+              color: cor.surfaceContainerHighest,
+              // Ativo, o comprimido usa o anel do metal em vez do metal cheio:
+              // a pílula do metal cheio sobre o dourado da página empilhava
+              // dourado sobre dourado, e o anel reserva o fill para o chip
+              // escolhido, que é o alternador de leitura e de mês.
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+                // O anel acompanha a sessão viva: tocando ou pausada, a pílula
+                // ainda pertence ao metal do tema.
+                side: ativo || pausado
+                    ? BorderSide(color: cor.primary, width: 1.5)
+                    : BorderSide.none,
+              ),
               clipBehavior: Clip.antiAlias,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -907,7 +976,8 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
                     borderRadius: BorderRadius.circular(30),
                     // Durante o preparo o botão continua vivo: o toque cancela
                     // em vez de prender quem tocou o capítulo errado num
-                    // relógio de até 90 segundos.
+                    // relógio de até 90 segundos. Pausada, a pílula é o
+                    // próprio retomar: o toque volta à leitura de onde parou.
                     onTap: preparando
                         ? voz.parar
                         : () => _alternar(context, voz),
@@ -916,62 +986,108 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // O mesmo retrato do chat: aro dourado, e o cabelo,
-                          // que encosta na borda de cima da foto, preservado
-                          // pelo corte alinhado ao topo (ver BalaoDeChat).
-                          DecoratedBox(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: cor.primary, width: 1.5),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(3),
-                              child: ClipOval(
-                                child: Image.asset(
-                                  'assets/images/spurgeon.webp',
-                                  width: 38,
-                                  height: 38,
-                                  fit: BoxFit.cover,
-                                  // Decorativa: o rótulo ao lado já diz o que
-                                  // o botão faz.
-                                  excludeFromSemantics: true,
-                                  alignment: Alignment.topCenter,
+                          // O retrato é o convite: quem já ouve (ou está
+                          // pausado no meio) não precisa do rosto de novo ao
+                          // lado do rótulo — a leitura em andamento é ação,
+                          // não apresentação, e um sinal a menos deixa o
+                          // estado falar mais alto.
+                          if (!preparando && !ativo && !pausado) ...[
+                            // O mesmo retrato do chat: aro dourado, e o cabelo,
+                            // que encosta na borda de cima da foto, preservado
+                            // pelo corte alinhado ao topo (ver BalaoDeChat).
+                            DecoratedBox(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: cor.primary,
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(3),
+                                child: ClipOval(
+                                  child: Image.asset(
+                                    'assets/images/spurgeon.webp',
+                                    width: 38,
+                                    height: 38,
+                                    fit: BoxFit.cover,
+                                    // Decorativa: o rótulo ao lado já diz o que
+                                    // o botão faz.
+                                    excludeFromSemantics: true,
+                                    alignment: Alignment.topCenter,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 10),
-                          Icon(
-                            ativo
-                                ? Icons.stop_rounded
-                                : preparando
-                                ? Icons.hourglass_top_rounded
-                                : Icons.play_arrow_rounded,
-                            size: 20,
-                            color: ativo ? cor.onPrimaryContainer : cor.primary,
-                          ),
-                          const SizedBox(width: 6),
-                          // Flexible com reticências: em escala de texto 2x um
-                          // rótulo comprido ("O pregador está lendo…") não
-                          // pode estourar a largura da tela.
-                          Flexible(
-                            child: Text(
-                              visivel,
-                              overflow: TextOverflow.ellipsis,
-                              style: tema.labelLarge?.copyWith(
-                                color: ativo
-                                    ? cor.onPrimaryContainer
-                                    : cor.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ],
+                            const SizedBox(width: 10),
+                          ],
+                           Icon(
+                             ativo
+                                 ? Icons.stop_rounded
+                                 : preparando
+                                 ? Icons.hourglass_top_rounded
+                                 : Icons.play_arrow_rounded,
+                             size: 20,
+                             color: cor.primary,
+                           ),
+                           const SizedBox(width: 6),
+                           // Flexible com reticências: em escala de texto 2x um
+                           // rótulo comprido ("O pregador está lendo…") não
+                           // pode estourar a largura da tela. Semantics: o
+                           // rótulo completo já vive no Semantics acima, e o
+                           // texto visível repetido faria o leitor de tela ler
+                           // a frase duas vezes.
+                           Flexible(
+                             child: ExcludeSemantics(
+                               child: Text(
+                                 visivel,
+                                 overflow: TextOverflow.ellipsis,
+                                 style: tema.labelLarge?.copyWith(
+                                   color: ativo || pausado
+                                       ? cor.primary
+                                       : cor.onSurfaceVariant,
+                                 ),
+                               ),
+                             ),
+                           ),
+                           // Uma sessão pausada precisa de um jeito de ser
+                           // encerrada sem trocar de página: sem o X, o sócio
+                           // pausado vira um invisital — e pausa que não se pode
+                           // fechar é uma gaiola. O X mata a sessão; o corpo da
+                           // pílula continua retomando.
+                           if (pausado)
+                             Padding(
+                               padding: const EdgeInsetsDirectional.only(
+                                 start: 6,
+                               ),
+                               child: Tooltip(
+                                 message: 'Encerrar a leitura pausada',
+                                 child: InkWell(
+                                   borderRadius: BorderRadius.circular(30),
+                                   onTap: voz.parar,
+                                   child: Padding(
+                                     padding: const EdgeInsets.all(4),
+                                     child: Icon(
+                                       Icons.close_rounded,
+                                       size: 18,
+                                       color: cor.onSurfaceVariant,
+                                     ),
+                                   ),
+                                 ),
+                               ),
+                             ),
+                         ],
                       ),
                     ),
                   ),
                   // A linha fina de progresso, na borda de baixo da pílula:
                   // quem ouve um capítulo de vinte minutos sabe quanto falta.
-                  if (ativo) ExcludeSemantics(child: _ProgressoDeLeitura(voz: voz)),
+                  // Pausada, ela mostra onde a leitura parou. Durante o
+                  // preparo ela é indeterminada (o valor é nulo até a duração
+                  // chegar): até 90 segundos de espera não podem parecer um
+                  // botão morto, e sem a duração não há o que preencher.
+                  if (preparando || ativo || pausado)
+                    ExcludeSemantics(child: _ProgressoDeLeitura(voz: voz)),
                 ],
               ),
             ),
@@ -983,20 +1099,151 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
 
   Future<void> _alternar(BuildContext context, Voz voz) async {
     try {
-      await voz.alternar(widget.chave, widget.texto);
+      await voz.alternar(widget.chave, texto: widget.texto);
     } on VozException catch (erro) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(erro.mensagem)));
-      }
+      if (context.mounted) _avisarErro(context, voz, erro);
     }
+  }
+
+  /// O aviso de erro com um "Tentar de novo" à mão: um erro de rede ou de
+  /// serviço é momentâneo na maioria das vezes, e sem a ação o usuário teria
+  /// de descobrir sozinho que tocar de novo é o caminho.
+  void _avisarErro(BuildContext context, Voz voz, VozException erro) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(erro.mensagem),
+          action: SnackBarAction(
+            label: 'Tentar de novo',
+            onPressed: () => _alternar(context, voz),
+          ),
+        ),
+      );
+  }
+}
+
+/// O indicador "há leitura no ar" na barra de cima: aparece quando a chave
+/// desta tela está tocando ou se preparando, para quem rolou para longe do
+/// botão ainda saber que o toque pegou e poder encerrar (ou cancelar) a
+/// leitura. A mesma peça na Bíblia e na introdução: uma leitura não pode
+/// ficar sem o botão de parar à vista.
+class IndicadorDeVozNaBarra extends StatelessWidget {
+  const IndicadorDeVozNaBarra({super.key, required this.chave});
+
+  /// A chave de voz desta tela ("capitulo:joao.3", "introducao:joao"): só o
+  /// áudio dela aparece aqui; o de outra tela não rouba a barra.
+  final String chave;
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
+    return ListenableBuilder(
+      listenable: Voz.instancia,
+      builder: (context, _) {
+        final voz = Voz.instancia;
+        final aqui = (voz.tocando || voz.carregando || voz.pausado) &&
+            voz.tocandoChave == chave;
+        if (!aqui) return const SizedBox.shrink();
+// Preparando, o indicador mostra o preparo em curso: quem espera
+        // ainda pode cancelar. O carregando continua ligado durante a
+        // leitura (só se desliga no fim do play), por isso o preparo é
+        // "carregando sem tocar".
+        final preparando = voz.carregando && !voz.tocando;
+        if (preparando) {
+          // O anel gira enquanto o áudio não chegou — o que está parado no
+          // "Cancelar" é a página, não a barra de cima: quem rolou para longe
+          // ainda vê o preparo em andamento, e não um ícone congelado.
+          return ExcludeSemantics(
+            child: IconButton(
+              tooltip: 'Cancelar o preparo',
+              icon: Stack(
+                 alignment: Alignment.center,
+                 children: [
+                   SizedBox(
+                     width: 28,
+                     height: 28,
+                     child: CircularProgressIndicator(
+                       value: null,
+                       strokeWidth: 2,
+                       color: cor.primary,
+                       backgroundColor: cor.surfaceContainerHighest,
+                     ),
+                   ),
+                   Icon(
+                     Icons.hourglass_top_rounded,
+                     size: 18,
+                   ),
+               ],
+             ),
+             onPressed: voz.parar,
+           ),
+         );
+        }
+        // Pausada de fora, o anel é o retomar: quem rolou para longe da
+        // pílula não pode ter de voltar ao topo para continuar a leitura, e
+        // um toque que "encerrasse" aqui jogaria fora a posição da pausa.
+        final retomar = voz.pausado && !voz.tocando;
+        // Tocando ou pausada, o ícone ganha um anel de progresso: quem rolou
+        // para longe do botão continua sabendo quanto falta (ou onde a
+        // leitura parou) sem voltar ao topo.
+        return ExcludeSemantics(
+          child: StreamBuilder<Duration>(
+            stream: voz.posicao,
+            builder: (context, posicao) {
+              final agora = posicao.data ?? Duration.zero;
+              return StreamBuilder<Duration?>(
+                stream: voz.duracao,
+                builder: (context, duracao) {
+                  final total = duracao.data;
+                  // Sem duração conhecida o anel fica indeterminado (o
+                  // CircularProgressIndicator anima sozinho).
+                  final fracao = total == null || total.inMilliseconds == 0
+                      ? null
+                      : (agora.inMilliseconds / total.inMilliseconds)
+                            .clamp(0.0, 1.0);
+                  return IconButton(
+                    tooltip: retomar
+                        ? 'Retomar a leitura'
+                        : 'Encerrar a leitura',
+                    icon: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: CircularProgressIndicator(
+                            value: fracao,
+                            strokeWidth: 2,
+                            color: cor.primary,
+                            backgroundColor: cor.surfaceContainerHighest,
+                          ),
+                        ),
+                        Icon(
+                          retomar
+                              ? Icons.play_circle_outline
+                              : Icons.stop_circle_outlined,
+                          size: 18,
+                        ),
+                      ],
+                    ),
+                    onPressed: retomar ? voz.retomarDaPausa : voz.parar,
+                  );
+                },
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 }
 
 /// A linha fina de progresso da leitura: a posição do player sobre a duração
-/// total. Só é montada enquanto toca; sem player (testes) as streams ficam
-/// vazias e nada é desenhado.
+/// total. Só é montada enquanto toca ou prepara; sem player (testes) as
+/// streams ficam vazias e nada é desenhado. Enquanto a duração não chega (o
+/// preparo, o primeiro instante da leitura) o valor é nulo e a faixa vira a
+/// indeterminada animada — o que se move é o que se espera.
 class _ProgressoDeLeitura extends StatelessWidget {
   const _ProgressoDeLeitura({required this.voz});
 
@@ -1013,14 +1260,20 @@ class _ProgressoDeLeitura extends StatelessWidget {
           stream: voz.duracao,
           builder: (context, duracao) {
             final total = duracao.data;
+            // Sem duração conhecida não há o que preencher: a faixa fica
+            // indeterminada (o LinearProgressIndicator anima sozinho).
             final fracao = total == null || total.inMilliseconds == 0
-                ? 0.0
-                : (agora.inMilliseconds / total.inMilliseconds).clamp(0.0, 1.0);
+                ? null
+                : (agora.inMilliseconds / total.inMilliseconds)
+                      .clamp(0.0, 1.0);
             return LinearProgressIndicator(
               value: fracao,
               minHeight: 3,
               color: cor.primary,
-              backgroundColor: cor.surfaceContainerHighest,
+              // O trilho na cor da página se destaca do comprimido e deixa o
+              // fio dourado de progresso visível em vez de sumir no próprio
+              // fundo da pílula.
+              backgroundColor: cor.surface,
             );
           },
         );

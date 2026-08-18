@@ -329,17 +329,7 @@ class _AppDevocionalState extends State<AppDevocional> {
         routerConfig: _router,
         title: 'Devocional',
         debugShowCheckedModeBanner: false,
-        // A escala de texto do aparelho (2x no Android, etc.) sempre foi
-        // ignorada: o app respondia só com os cinco passos próprios, que
-        // param em 1,5x. Aqui a escala do sistema passa a multiplicar tudo
-        // por cima, limitada a 2x para não quebrar o layout da navegação.
-        // Quem precisa de 2x no aparelho recebe 2x, somada à escala própria
-        // de leitura (que continua multiplicando só o texto corrido).
-        builder: (context, child) => MediaQuery.withClampedTextScaling(
-          minScaleFactor: 1.0,
-          maxScaleFactor: 2.0,
-          child: _ComBaloes(child: child!),
-        ),
+        builder: (context, child) => _ComBaloes(child: child!),
         // Os dois temas vão sempre montados, e o `themeMode` escolhe. Assim
         // "Automático" funciona de verdade: o sistema pode virar o modo com o
         // app aberto, e o MaterialApp troca sozinho, sem passar pelo Estado.
@@ -382,7 +372,14 @@ class Moldura extends StatelessWidget {
     // A leitura para ao sair da Bíblia: o shell mantém as abas vivas em
     // Offstage, e o botão de parar sai da tela junto com o leitor. A mesma
     // regra do _ObservadorDaVoz para as rotas empurradas por cima.
-    if (i != navigationShell.currentIndex) Voz.instancia.parar();
+    //
+    // Pausada de fora (chamada, perda de foco de áudio), a sessão sobrevive
+    // à troca de aba: nada está tocando, a regra do botão à vista não se
+    // aplica, e quem volta encontra o "Pausado. Toque para retomar." no
+    // lugar exato em que a interrupção o deixou.
+    if (i != navigationShell.currentIndex && !Voz.instancia.pausado) {
+      Voz.instancia.parar();
+    }
     navigationShell.goBranch(
       i,
       initialLocation: i == navigationShell.currentIndex,

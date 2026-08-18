@@ -252,7 +252,7 @@ Contidos e discretos: os controles existem para o texto passar. Nenhum component
 ### Signature Components
 - **O Filete:** o fio de metal (2px, 48–64px, gradiente do metal para o traço) que abre capítulos, devocionais, introduções e separa seções dentro de cartões. É a assinatura visual do sistema — a "linha dourada" que diz que uma leitura começa ali.
 - **A Assinatura de Spurgeon:** a assinatura do pregador em tinta dourada chapada (Ouro Claro #E3C567), tingida pelo tema com `BlendMode.srcIn` para o metal do tema — um só asset, sempre na cor certa. Fecha o cartão do devocional, centralizada, 40px de altura.
-- **A Capa da Bíblia de Estudo Spurgeon:** a capa do livro (duas variantes, clara e escura) em cantos quase retos (3–4px), abrindo o cartão de introdução e o cabeçalho do devocional. É a peça de ilustração do sistema — a única imagem além da foto do Felipe no app.
+- **A Capa da Bíblia de Estudo Charles Haddon Spurgeon:** a capa do livro (duas variantes, clara e escura) em cantos quase retos (3–4px), abrindo o cartão de introdução e o cabeçalho do devocional. É a peça de ilustração do sistema — a única imagem além da foto do Felipe no app.
 - **O Cabeçalho do Leitor:** referência do capítulo em Cinzel displayMedium (28px w700), o título formal do livro em itálico discreto acima, e o Filete separando do texto. O capítulo abre como uma página de livro.
 - **A Caixa de Citação:** o versículo-base do devocional — citação em itálico na cor de destaque, referência em caixa alta (titleSmall), tudo num cartão surfaceContainerHighest com fio de metal de 3px à esquerda. É como o sistema mostra a Palavra dentro do comentário.
 

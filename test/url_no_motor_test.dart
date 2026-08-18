@@ -1,6 +1,7 @@
 import 'package:felipe_ambrozini/data/conteudo.dart';
 import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/main.dart';
+import 'package:felipe_ambrozini/telas/chat.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -47,7 +48,7 @@ void main() {
 
     chamadas.clear();
 
-    await tester.tap(find.byTooltip('Conversas com Charles Spurgeon'));
+    await tester.tap(find.byType(BalaoDeChat).first);
     await tester.pumpAndSettle();
 
     expect(

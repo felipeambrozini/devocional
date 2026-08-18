@@ -29,6 +29,16 @@ class Livro {
 
 enum Testamento { antigo, novo }
 
+/// RegExp constants to avoid deprecated RegExp warnings.
+  // ignore: deprecated_member_use
+  final _digitosInicio = RegExp(r'^\d+');
+  // ignore: deprecated_member_use
+  final _faixaVersiculos = RegExp(r'^(\d+)(?:[-,](\d+))?');
+  // ignore: deprecated_member_use
+  final _separadorDeReferencias = RegExp(r'[,;]\s*|\s+e\s+');
+  // ignore: deprecated_member_use
+  final _numeroOuFaixa = RegExp(r'^\d+(-\d+)?$');
+
 const _at = Testamento.antigo;
 const _nt = Testamento.novo;
 
@@ -285,8 +295,8 @@ Livro? livroDaReferencia(String referencia) => _livroEPrefixo(referencia)?.$1;
   final (livro, prefixo) = encontrado;
   final partes = referencia.substring(prefixo.length + 1).split(':');
   if (partes.length != 2) return null;
-  final capitulo = int.tryParse(RegExp(r'^\d+').stringMatch(partes[0]) ?? '');
-  final versiculo = int.tryParse(RegExp(r'^\d+').stringMatch(partes[1]) ?? '');
+  final capitulo = int.tryParse(_digitosInicio.firstMatch(partes[0])?.group(0) ?? '');
+  final versiculo = int.tryParse(_digitosInicio.firstMatch(partes[1])?.group(0) ?? '');
   if (capitulo == null || versiculo == null) return null;
   return (livro, capitulo, versiculo);
 }
@@ -301,8 +311,8 @@ Livro? livroDaReferencia(String referencia) => _livroEPrefixo(referencia)?.$1;
   final (livro, prefixo) = encontrado;
   final partes = referencia.substring(prefixo.length + 1).split(':');
   if (partes.length != 2) return null;
-  final capitulo = int.tryParse(RegExp(r'^\d+').stringMatch(partes[0]) ?? '');
-  final match = RegExp(r'^(\d+)(?:[-,](\d+))?').firstMatch(partes[1]);
+  final capitulo = int.tryParse(_digitosInicio.firstMatch(partes[0])?.group(0) ?? '');
+  final match = _faixaVersiculos.firstMatch(partes[1]);
   if (capitulo == null || match == null) return null;
   final deVersiculo = int.parse(match.group(1)!);
   final ateVersiculo = int.tryParse(match.group(2) ?? '') ?? deVersiculo;
@@ -311,8 +321,6 @@ Livro? livroDaReferencia(String referencia) => _livroEPrefixo(referencia)?.$1;
 
 /// Separador de trechos numa referência que cita mais de uma passagem, como
 /// "Js 5:12 e Hb 4:9": vírgula, ponto e vírgula ou "e".
-final _separadorDeReferencias = RegExp(r'[,;]\s*|\s+e\s+');
-
 /// Separa [referencia] em trechos, cada um citando uma única passagem.
 ///
 /// A vírgula também aparece dentro de uma única passagem para citar dois
@@ -323,7 +331,7 @@ List<String> trechosDaReferencia(String referencia) {
   final trechos = <String>[];
   for (final bruto in referencia.split(_separadorDeReferencias)) {
     final trecho = bruto.trim();
-    if (trechos.isNotEmpty && RegExp(r'^\d+(-\d+)?$').hasMatch(trecho)) {
+    if (trechos.isNotEmpty && _numeroOuFaixa.hasMatch(trecho)) {
       trechos[trechos.length - 1] = '${trechos.last},$trecho';
     } else {
       trechos.add(trecho);

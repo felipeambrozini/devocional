@@ -122,7 +122,11 @@ void main() {
       );
     });
 
-    test('403 (chave sem a API liberada) vira aviso de atualizar', () async {
+    test('403 (chave sem a API liberada) vira aviso de serviço, não de aparelho',
+        () async {
+      // O erro é de configuração da chave na nuvem: culpar o aparelho do
+      // leitor ("atualize ou recarregue") mandaria a um conserto que não
+      // existe. A mensagem fala do serviço e deixa o "Tentar de novo" agir.
       final bloqueado = MockClient(
         (_) async => http.Response('{"error":{}}', 403),
       );
@@ -132,7 +136,7 @@ void main() {
           isA<VozException>().having(
             (e) => e.mensagem,
             'mensagem',
-            contains('Atualize o aplicativo'),
+            contains('não está disponível agora'),
           ),
         ),
       );

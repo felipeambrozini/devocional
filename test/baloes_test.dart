@@ -39,7 +39,12 @@ class _LembretesFalsas implements Lembretes {
 
 void main() {
   setUp(() {
-    SharedPreferences.setMockInitialValues({});
+    // A dica de primeira visita já foi dada (o teste dela está no fim deste
+    // arquivo): estes testes tratam da presença dos balões, e o tooltip
+    // estável é o rótulo do balão.
+    SharedPreferences.setMockInitialValues({
+      'baloes_tooltip_dispensado': true,
+    });
     Lembretes.instancia = _LembretesFalsas();
   });
 

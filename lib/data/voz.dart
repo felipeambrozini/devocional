@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show ChangeNotifier, debugPrint;
+import 'package:flutter/widgets.dart'
+    show AppLifecycleState, ChangeNotifier, WidgetsBinding, debugPrint;
 import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
 
@@ -140,25 +141,35 @@ Future<Uint8List> sintetizar(
   return base64.decode(audio);
 }
 
-/// 400 e 403 são a chave sem a API ativada ou sem a restrição certa; 429 é o
-/// teto do tier gratuito. Não se envia o corpo da API ao usuário: é inglês
-/// técnico que não ajuda ninguém, e a maioria dos leitores não tem o Cloud
-/// Console. O detalhe técnico vai para o log, onde quem mantém o app procura.
-String _mensagemDeErro(http.Response resposta) {
-  if (resposta.statusCode == 400 || resposta.statusCode == 403) {
-    debugPrint(
-      'Voz: a Text-to-Speech recusou (${resposta.statusCode}): '
-      '${resposta.body}',
-    );
-    return 'A voz ainda não está pronta neste aparelho. Atualize o '
-        'aplicativo e tente de novo.';
+/// 403 é a chave sem a API ativada (configuração na nuvem): culpar o aparelho
+  /// do leitor mandaria a um conserto que não existe — a mensagem fala do
+  /// serviço e deixa o "Tentar de novo" agir. 400 é o pedido recusado; 429 é o
+  /// teto do tier gratuito. Não se envia o corpo da API ao usuário: é inglês
+  /// técnico que não ajuda ninguém, e a maioria dos leitores não tem o Cloud
+  /// Console. O detalhe técnico vai para o log, onde quem mantém o app procura.
+  String _mensagemDeErro(http.Response resposta) {
+    if (resposta.statusCode == 403) {
+      debugPrint(
+        'Voz: a Text-to-Speech recusou (${resposta.statusCode}): '
+        '${resposta.body}',
+      );
+      return 'O serviço de voz não está disponível agora. Tente de novo em '
+          'instantes.';
+    }
+    if (resposta.statusCode == 400) {
+      debugPrint(
+        'Voz: a Text-to-Speech recusou (${resposta.statusCode}): '
+        '${resposta.body}',
+      );
+      return 'A voz ainda não está pronta neste aparelho. Atualize o '
+          'aplicativo e tente de novo.';
+    }
+    if (resposta.statusCode == 429) {
+      return 'O limite gratuito da voz foi atingido. Espere um pouco e tente '
+          'de novo.';
+    }
+    return 'O serviço de voz não respondeu agora. Tente de novo em instantes.';
   }
-  if (resposta.statusCode == 429) {
-    return 'O limite gratuito da voz foi atingido. Espere um pouco e tente '
-        'de novo.';
-  }
-  return 'O serviço de voz não respondeu agora. Tente de novo em instantes.';
-}
 
 /// A voz do Spurgeon em uma sessão: sintetiza, toca e para.
 ///
@@ -185,11 +196,17 @@ class Voz extends ChangeNotifier {
   /// Áudios prontos, guardados pela chave do que tocam ("introducao:joao",
   /// "capitulo:joao.3"). A chave do cache é a mesma que o botão usa para
   /// saber o que está tocando agora.
-  final Map<String, Uint8List> _cache = {};
+  Map<String, Uint8List> _cache = {};
 
   /// O que a memória segura de áudio de uma vez. Um capítulo inteiro em MP3
   /// pesa ~150 KB; 24 cabem folgados e cobrem o ir e vir das leituras do dia.
   static const _limiteDaCache = 24;
+
+  /// Janela do debounce: um toque na mesma chave logo depois de parar é o
+  /// gesto repetido (o "Parar" e o "Ouvir" juntos), e recomeçar a leitura do
+  /// zero aí seria trocar o que se ouvia por engano. Retomar (o "Desfazer" do
+  /// deslize e a pílula pausada) é intenção explícita e não passa por aqui.
+  static const _debounce = Duration(milliseconds: 400);
 
   /// Contador de pedidos: trocar de capítulo ou fechar a tela no meio do
   /// carregamento não pode tocar um áudio que ninguém quer mais.
@@ -198,6 +215,34 @@ class Voz extends ChangeNotifier {
   bool _tocando = false;
   bool _carregando = false;
   String? _tocandoChave;
+
+  /// Pausada de fora (chamada, perda de foco de áudio): a leitura não acabou
+  /// nem foi parada — a sessão fica viva, esperando o retomar da posição em
+  /// que estava. É campo próprio, e não derivação dos outros três, porque um
+  /// preparo que falha também deixa "chave definida sem tocar" e não pode
+  /// parecer uma pausa.
+  bool _pausado = false;
+
+  /// A posição em que a pausa de fora segurou a leitura: o retomar (pílula,
+  /// barra e "Desfazer") volta a tocar daqui, e não do zero.
+  Duration? _posicaoDaPausa;
+
+  /// A última chave que o [parar] derrubou e quando: é o debounce do toque
+  /// seguinte na mesma chave. O relógio é Stopwatch de verdade (não o tempo
+  /// falso dos testes de widget) porque a janela é real.
+  String? _ultimaChaveParada;
+  Stopwatch? _relogioDaParada;
+
+  /// Onde a leitura estava quando o [parar] a derrubou (posição da pausa ou do
+  /// player, na ordem). O "Desfazer" do deslize devolve a leitura daqui.
+  Duration? _desdeAParada;
+
+  /// A sessão pausada guarda como re-sintetizar o áudio se a cache a
+  /// despejar: o retomar da barra não conhece o texto, e a sessão não pode
+  /// morrer em silêncio.
+  String? _textoDaSessao;
+  http.Client? _clienteDaSessao;
+  String? _chaveTtsDaSessao;
 
   /// Há um áudio tocando agora (a leitura começou e não terminou).
   bool get tocando => _tocando;
@@ -209,20 +254,38 @@ class Voz extends ChangeNotifier {
   /// "Parar", e os outros ficam em "Ouvir".
   String? get tocandoChave => _tocandoChave;
 
+  /// Pausada de fora: a leitura não acabou nem foi parada, e a sessão espera
+  /// o retomar da posição em que estava.
+  bool get pausado => _pausado;
+
+  /// A posição em que o [parar] derrubou a leitura: o "Desfazer" do deslize
+  /// passa isto para o [retomar] e a leitura volta de onde estava.
+  Duration? get desdeAParada => _desdeAParada;
+
   /// A posição da leitura atual, para a linha fina de progresso do botão. Sem
   /// player (nos testes não há plataforma de áudio) a stream fica vazia e
   /// nada é desenhado.
-  Stream<Duration> get posicao => _player?.positionStream ?? Stream<Duration>.empty();
+  Stream<Duration> get posicao =>
+      _leitorDeAudio?.posicao ??
+      _player?.positionStream ??
+      Stream<Duration>.empty();
 
   /// A duração total do áudio carregado, que junto com [posicao] vira o
   /// progresso. É nula até o player conhecer o áudio.
   Stream<Duration?> get duracao =>
-      _player?.durationStream ?? Stream<Duration?>.empty();
+      _leitorDeAudio?.duracao ??
+      _player?.durationStream ??
+      Stream<Duration?>.empty();
+
+  /// A posição atual da leitura, em Duration. No leitor de testes, a posição
+  /// é a que o teste ajustou no campo [LeitorDeAudio.posicaoAtual]; sem
+  /// leitor nenhum, a do player (ou zero, sem player).
+  Duration get posicaoAtual => _posicaoDoLeitor() ?? Duration.zero;
 
   /// Avisa quando uma leitura chega ao fim sozinha, com a chave do que
   /// terminou ("capitulo:joao.3"). O botão dessa chave mostra a confirmação
   /// "Leitura concluída." — parar no meio, pelo usuário ou pela navegação,
-  /// não emite nada.
+  /// e a pausa de fora não emitem nada.
   Stream<String> get conclusoes => _conclusoes.stream;
 
   final StreamController<String> _conclusoes = StreamController.broadcast();
@@ -231,52 +294,102 @@ class Voz extends ChangeNotifier {
   ///
   /// [chave] identifica o que se ouve ("capitulo:joao.3"); tocar de novo a
   /// mesma chave para a leitura, e outra chave troca o áudio sem precisar de
-  /// dois toques.
+  /// dois toques. [cliente] e [chaveTts] existem só para os testes injetarem
+  /// o HTTP falso e a chave de teste; o app usa os de verdade.
   ///
   /// Erros viram [VozException] para a tela avisar; o estado fica limpo nos
   /// dois casos (erro e sucesso).
-  Future<void> alternar(String chave, String texto) async {
-    // O guard é síncrono e vem antes de tudo: a quota é por caractere, e dois
-    // toques rápidos não podem atravessar o primeiro await e pedir o mesmo
-    // áudio duas vezes.
-    if (_carregando) return;
-    if (_tocando && _tocandoChave == chave) {
+  Future<void> alternar(
+    String chave, {
+    required String texto,
+    http.Client? cliente,
+    String? chaveTts,
+  }) async {
+    // O debounce vem antes de tudo: o segundo toque logo após o "Parar" é o
+    // gesto repetido, e recomeçar a leitura do zero aí seria trocar o que se
+    // ouvia por engano.
+    final relogio = _relogioDaParada;
+    if (_ultimaChaveParada == chave &&
+        relogio != null &&
+        relogio.elapsed < _debounce) {
+      return;
+    }
+    if (_carregando) {
+      // Durante o preparo, o mesmo toque cancela: é o botão "Cancelar" do
+      // botão e da barra, e não pode pedir o áudio de novo.
+      if (_tocandoChave == chave) {
+        await parar();
+        return;
+      }
+      // Outra chave substitui a carga em voo: o toque novo já manda na
+      // sessão, e o áudio antigo cai no descarte por versão (mas entra na
+      // cache — a quota não se perde).
+    } else if (_tocando && _tocandoChave == chave) {
       await parar();
       return;
+    }
+    // Pausada de fora com a mesma chave, o toque retoma de onde parou: do
+    // áudio da memória, na posição da pausa — sem gastar a quota de novo.
+    if (_pausado && _tocandoChave == chave) {
+      final bytes = _cache[chave];
+      if (bytes != null) {
+        final de = _posicaoDaPausa;
+        final versao = ++_versao;
+        _pausado = false;
+        _tocando = true;
+        _carregando = false;
+        notifyListeners();
+        try {
+          await _tocarLeitor(bytes, chave, versao: versao, de: de);
+        } on VozException {
+          rethrow;
+        } catch (_) {
+          throw const VozException(
+            'Não foi possível tocar o áudio. Tente de novo em instantes.',
+          );
+        } finally {
+          if (versao == _versao) {
+            _carregando = false;
+            if (!_tocando && !_pausado) _tocandoChave = null;
+            notifyListeners();
+          }
+        }
+        return;
+      }
+      // A cache despejou a sessão pausada: o toque recomeça a leitura do
+      // zero, com os dados novos — nada de morrer em silêncio.
+      _posicaoDaPausa = null;
     }
 
     final versao = ++_versao;
     _tocandoChave = chave;
     _carregando = true;
+    _tocando = false;
+    _pausado = false;
+    _textoDaSessao = texto;
+    _clienteDaSessao = cliente;
+    _chaveTtsDaSessao = chaveTts;
     notifyListeners();
     // O áudio anterior (de outra chave) para sem mexer no estado da sessão
     // nova: o player é um só, e só ele precisa ser silenciado. Tocar em
     // "Preparando…" cancela com [parar], que zera esse estado.
     await _silenciar();
     try {
-      final bytes = await _obterAudio(chave, texto);
-      if (versao != _versao) return;
-      final player = _player ??= AudioPlayer();
-      await player.setAudioSource(
-        AudioSource.uri(Uri.dataFromBytes(bytes, mimeType: 'audio/mpeg')),
+      final bytes = await _obterAudio(
+        chave,
+        texto: texto,
+        cliente: cliente,
+        chaveTts: chaveTts,
       );
       if (versao != _versao) return;
+      // Janela escondida (aba oculta na web, tela bloqueada, ligação): o
+      // áudio fica na cache esperando o primeiro plano — tocar agora seria
+      // tocar para ninguém.
+      if (!_appEmPrimeiroPlano()) return;
       _tocando = true;
-      try {
-        // Completa quando a leitura para, pausa ou chega ao fim: o botão
-        // volta a "Ouvir" sem ninguém precisar avisar.
-        await player.play();
-      } finally {
-        if (versao == _versao && _tocando) {
-          _tocando = false;
-          _tocandoChave = null;
-          // Chegou ao fim sozinho (parar e trocar de chave incrementam
-          // _versao e caem fora deste if): é o momento de fechar o ciclo com
-          // o "Leitura concluída.".
-          _conclusoes.add(chave);
-          notifyListeners();
-        }
-      }
+      _carregando = false;
+      notifyListeners();
+      await _tocarLeitor(bytes, chave, versao: versao, de: null);
     } on VozException {
       rethrow;
     } catch (_) {
@@ -288,7 +401,7 @@ class Voz extends ChangeNotifier {
     } finally {
       if (versao == _versao) {
         _carregando = false;
-        if (!_tocando) _tocandoChave = null;
+        if (!_tocando && !_pausado) _tocandoChave = null;
         notifyListeners();
       }
     }
@@ -301,19 +414,191 @@ class Voz extends ChangeNotifier {
   /// parar à vista. Também é a chamada dos testes nas telas que desmontam com
   /// a voz instalada: sem plataforma de áudio ali, parar é só o estado, e é
   /// isso que importa.
+  ///
+  /// A pausa de fora sobrevive à troca de aba e de tela ([main.dart] só para
+  /// quem não está pausado): encerrar uma sessão pausada é escolha explícita
+  /// (o "Encerrar a leitura pausada" da pílula), não consequência da
+  /// navegação.
   Future<void> parar() async {
+    // O debounce marca a chave derrubada e onde a leitura estava: o toque
+    // seguinte na mesma chave, dentro da janela, não recomeça do zero, e o
+    // "Desfazer" do deslize devolve a leitura da posição exata.
+    final chave = _tocandoChave;
+    _ultimaChaveParada = chave;
+    _relogioDaParada = Stopwatch()..start();
+    _desdeAParada = _posicaoDaPausa ?? _posicaoDoLeitor();
+    _posicaoDaPausa = null;
     _versao++;
     _tocando = false;
     _carregando = false;
+    _pausado = false;
     _tocandoChave = null;
     await _silenciar();
     notifyListeners();
   }
 
-  /// Silencia o player sem tocar no estado da sessão. Quem usa: [parar]
-  /// (que antes zera o estado) e [alternar] (que precisa parar o áudio
-  /// anterior sem apagar o estado novo).
+  /// Retoma a leitura de [chave] que o "Desfazer" do deslize devolveu: o
+  /// áudio da memória volta a tocar de [de] (onde a leitura parou). Sem o
+  /// áudio na cache não há o que tocar — [de] nulo é o preparo sem pausa,
+  /// que retoma do zero. Retomar é intenção explícita e não cai no debounce
+  /// do toque repetido.
+  Future<bool> retomar(String chave, {Duration? de}) async {
+    final bytes = _cache[chave];
+    if (bytes == null) return false;
+    final versao = ++_versao;
+    _tocandoChave = chave;
+    _tocando = true;
+    _carregando = false;
+    _pausado = false;
+    notifyListeners();
+    // O áudio do capítulo antigo (se ainda houver um) para: o "Desfazer"
+    // devolve a página e a leitura, e a sessão nova começa limpa.
+    await _silenciar();
+    try {
+      await _tocarLeitor(bytes, chave, versao: versao, de: de);
+    } on VozException {
+      rethrow;
+    } catch (_) {
+      throw const VozException(
+        'Não foi possível tocar o áudio. Tente de novo em instantes.',
+      );
+    } finally {
+      if (versao == _versao) {
+        _carregando = false;
+        if (!_tocando && !_pausado) _tocandoChave = null;
+        notifyListeners();
+      }
+    }
+    return true;
+  }
+
+  /// Retoma a leitura pausada de fora: do áudio da memória, na posição da
+  /// pausa. Se a cache despejou a sessão (24 capítulos novos), re-sintetiza
+  /// com o texto da sessão em vez de morrer em silêncio. Devolve false se não
+  /// havia sessão pausada.
+  Future<bool> retomarDaPausa() async {
+    if (!_pausado) return false;
+    final chave = _tocandoChave!;
+    final de = _posicaoDaPausa;
+    final bytes = _cache[chave];
+    if (bytes != null) {
+      final versao = ++_versao;
+      _pausado = false;
+      _tocando = true;
+      _carregando = false;
+      notifyListeners();
+      try {
+        await _tocarLeitor(bytes, chave, versao: versao, de: de);
+      } on VozException {
+        rethrow;
+      } catch (_) {
+        throw const VozException(
+          'Não foi possível tocar o áudio. Tente de novo em instantes.',
+        );
+      } finally {
+        if (versao == _versao) {
+          _carregando = false;
+          if (!_tocando && !_pausado) _tocandoChave = null;
+          notifyListeners();
+        }
+      }
+      return true;
+    }
+    // A cache despejou a sessão: o retomar da barra não conhece o texto, mas
+    // a sessão guardou como re-sintetizar — a leitura volta do zero.
+    final texto = _textoDaSessao;
+    if (texto == null) return false;
+    _posicaoDaPausa = null;
+    _pausado = false;
+    _carregando = false;
+    _tocandoChave = null;
+    await alternar(
+      chave,
+      texto: texto,
+      cliente: _clienteDaSessao,
+      chaveTts: _chaveTtsDaSessao,
+    );
+    return true;
+  }
+
+  /// Toca [bytes] e trata o fim da leitura. O leitor de testes decide o fim
+  /// ([pausadoDeFora], [concluida]); o player de verdade completa o play()
+  /// quando a leitura para, pausa ou chega ao fim, e o processingState diz
+  /// qual dos três foi. [versao] descarta a chegada de uma sessão que já foi
+  /// substituída (troca de chave, parada, deslize).
+  Future<void> _tocarLeitor(
+    Uint8List bytes,
+    String chave, {
+    required int versao,
+    Duration? de,
+  }) async {
+    final leitor = _leitorDeAudio;
+    if (leitor == null) {
+      final player = _player ??= AudioPlayer();
+      if (player.audioSource == null) {
+        await player.setAudioSource(
+          AudioSource.uri(Uri.dataFromBytes(bytes, mimeType: 'audio/mpeg')),
+        );
+      }
+      if (versao != _versao) return;
+      if (de != null) await player.seek(de);
+      await player.play();
+      if (versao != _versao) return;
+      // Pausada de fora (chamada, perda de foco), o play volta pausado, com a
+      // posição e o áudio carregados: é a sessão "Pausado". O fim natural
+      // volta completo.
+      if (player.processingState != ProcessingState.completed) {
+        _posicaoDaPausa = player.position;
+        _pausado = true;
+        _tocando = false;
+        _carregando = false;
+        notifyListeners();
+        return;
+      }
+      _tocando = false;
+      _tocandoChave = null;
+      _carregando = false;
+      _conclusoes.add(chave);
+      notifyListeners();
+      return;
+    }
+    await leitor.tocar(bytes, de: de);
+    if (versao != _versao) return;
+    if (leitor.pausadoDeFora) {
+      _posicaoDaPausa = leitor.posicaoAtual ?? Duration.zero;
+      _pausado = true;
+      _tocando = false;
+      _carregando = false;
+      notifyListeners();
+      return;
+    }
+    if (!leitor.concluida) {
+      // Interrupção sem pausa: a leitura parou, mas não chegou ao fim — sem
+      // "Leitura concluída." e sem sessão pausada esperando retomar.
+      _tocando = false;
+      _tocandoChave = null;
+      _carregando = false;
+      notifyListeners();
+      return;
+    }
+    _tocando = false;
+    _tocandoChave = null;
+    _carregando = false;
+    _conclusoes.add(chave);
+    notifyListeners();
+  }
+
+  /// Silencia o que estiver tocando sem tocar no estado da sessão. Quem usa:
+  /// [parar] (que antes zera o estado) e [alternar]/[retomar] (que precisam
+  /// parar o áudio anterior sem apagar o estado novo).
   Future<void> _silenciar() async {
+    final leitor = _leitorDeAudio;
+    if (leitor != null) {
+      // O leitor de testes completa o tocar pendente ao ser silenciado: é
+      // assim que o [Voz] sabe que a leitura acabou (interrompida).
+      await leitor.silenciar();
+      return;
+    }
     final player = _player;
     if (player == null) return;
     try {
@@ -335,11 +620,106 @@ class Voz extends ChangeNotifier {
   /// recém-baixado da Google. A cache só guarda áudio pronto: um erro de
   /// síntese não deixa um buraco que faria o próximo toque falhar do mesmo
   /// jeito.
-  Future<Uint8List> _obterAudio(String chave, String texto) async {
+  Future<Uint8List> _obterAudio(
+    String chave, {
+    String? texto,
+    http.Client? cliente,
+    String? chaveTts,
+  }) async {
     final guardado = _cache[chave];
     if (guardado != null) return guardado;
-    final novo = await sintetizar(texto);
+    final novo = await sintetizar(
+      texto ?? '',
+      cliente: cliente,
+      chave: chaveTts,
+    );
     _guardarNaCache(chave, novo);
     return novo;
   }
+
+  /// Onde a leitura está agora: no leitor de testes, a posição que o teste
+  /// ajustou; no app, a do player.
+  Duration? _posicaoDoLeitor() {
+    final leitor = _leitorDeAudio;
+    if (leitor != null) return leitor.posicaoAtual;
+    return _player?.position;
+  }
+
+  /// A janela está no primeiro plano? Com a aba escondida (web), a tela
+  /// bloqueada ou uma ligação no meio, o áudio pronto não toca nem conclui —
+  /// fica na cache esperando o primeiro plano. O flag dos testes decide
+  /// sozinho; sem binding (teste simples), assume o primeiro plano.
+  bool _appEmPrimeiroPlano() {
+    final paraTestes = primeiroPlanoParaTestes;
+    if (paraTestes != null) return paraTestes;
+    try {
+      final estado = WidgetsBinding.instance.lifecycleState;
+      return estado != AppLifecycleState.paused &&
+          estado != AppLifecycleState.detached;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  /// Interface para leitura de áudio em testes (implementada por
+  /// [LeitorFalso] em [voz_estados_test.dart] e [_LeitorFalsoDoApp] em
+  /// [app_test.dart]).
+  LeitorDeAudio? _leitorDeAudio;
+
+  /// Injeta um leitor de áudio falso para testes (sem plataforma real).
+  /// Os testes usam isto para controlar quando o áudio termina, pausa, etc.,
+  /// sem depender do just_audio.
+  set injetarLeitor(LeitorDeAudio? leitor) {
+    _leitorDeAudio = leitor;
+    notifyListeners();
+  }
+
+  /// Lê o leitor injetado, ou cai de volta ao player real se não houver
+  /// leitor falso definido. Usado internamente por [alternar], [parar], etc.
+  LeitorDeAudio? get leitorDeAudio => _leitorDeAudio;
+
+  /// Despeja o áudio da cache para testes: o próximo toque re-sintetiza em
+  /// vez de vir da memória. É como 24 capítulos novos despejariam a sessão.
+  void limparCacheParaTestes() {
+    _cache = {};
+    _versao++;
+    notifyListeners();
+  }
+
+  /// Para testes: quando definido, decide sozinho se a janela está no
+  /// primeiro plano ([_appEmPrimeiroPlano]) — os testes de aba escondida não
+  /// têm uma janela de verdade para consultar.
+  bool? primeiroPlanoParaTestes;
+}
+
+/// Mock leitor de áudio que os testes usam no lugar do just_audio.
+///
+/// Implementado inline nos arquivos de teste ([voz_estados_test.dart] e
+/// [app_test.dart]) para evitar dependência de plataforma.
+abstract class LeitorDeAudio {
+  /// Toca o áudio fornecido. O parâmetro [de] é a posição (em segundos/Duration)
+  /// de onde retomar caso houver uma retomada ("Desfazer" do deslize).
+  Future<void> tocar(Uint8List bytes, {Duration? de});
+
+  /// Para a leitura em andamento.
+  Future<void> silenciar();
+
+  /// Posição da reprodução atual, para o progresso.
+  Stream<Duration> get posicao;
+
+  /// Duração do áudio atual, para o progresso.
+  Stream<Duration?> get duracao;
+
+  /// Onde a leitura está agora: a retomada ("Desfazer") devolve a leitura
+  /// daqui. Os leitores falsos guardam isto num campo que o teste ajusta.
+  Duration? get posicaoAtual;
+
+  /// A última reprodução terminou por uma pausa de fora (chamada, perda de
+  /// foco de áudio)? O player de verdade completa o play() pausado, e é
+  /// assim que a pausa é marcada — o fim natural e a parada manual não.
+  bool get pausadoDeFora;
+
+  /// A última reprodução terminou sozinha? O fim natural é o único caso que
+  /// merece o "Leitura concluída."; interrupção e parada manual não.
+  bool get concluida;
 }
