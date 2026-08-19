@@ -81,7 +81,7 @@ void main() {
 
     await tester.enterText(find.byType(TextField), 'pastor');
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Anotações (1)'));
+    await tester.tap(find.text('Notas (1)'));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Salmos 23:1'), findsOneWidget);

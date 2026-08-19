@@ -188,6 +188,13 @@ class _TelaBibliaState extends State<TelaBiblia> {
   /// lugar na Escritura sem um "Desfazer" à mão. Setas e chevrons não passam
   /// por aqui: são escolhas explícitas e não pedem volta.
   void _passarCapituloComDesfazer(int passo) {
+    // O tooltip do deslize some quando o gesto acontece de verdade: um toque
+    // distraído na alça não pode apagar o único aviso do gesto (o antigo
+    // onPointerDown fazia isso); só o uso do gesto que ele ensina dispensa.
+    final estado = EscopoDoEstado.de(context);
+    if (!estado.swipeTooltipDispensado) {
+      estado.dispensarSwipeTooltip();
+    }
     final livroAnterior = _livro;
     final capituloAnterior = _capitulo;
     // A voz em curso (tocando, pausada ou no preparo) tem de voltar junto
@@ -360,8 +367,12 @@ class _TelaBibliaState extends State<TelaBiblia> {
                           ? leitor
                           : SelectionArea(child: leitor);
                       // Alça de arraste na borda esquerda (mobile): indica que
-                      // deslizar horizontalmente troca de capítulo. Tooltip de
-                      // primeiro uso: "Arraste para trocar capítulo".
+                      // deslizar horizontalmente troca de capítulo. O tooltip
+                      // de primeiro uso só some quando o gesto acontece de
+                      // verdade (ver `_passarCapituloComDesfazer`). A alça é
+                      // um indício, não um controle: quem desliza usa a tela
+                      // inteira como alvo de toque, muito maior que os 48px
+                      // mínimos, e um toque nela não faz nada.
                       return ListenableBuilder(
                         listenable: estado,
                         builder: (context, _) {
@@ -383,36 +394,29 @@ class _TelaBibliaState extends State<TelaBiblia> {
                                       label: primeiraVez
                                           ? 'Arraste para trocar capítulo'
                                           : '',
-                                      child: Listener(
-                                        onPointerDown: (_) {
-                                          if (primeiraVez) {
-                                            estado.dispensarSwipeTooltip();
-                                          }
-                                        },
-                                        child: Container(
-                                          width: 24,
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              begin: Alignment.centerLeft,
-                                              end: Alignment.centerRight,
-                                              colors: [
-                                                Theme.of(context)
-                                                    .colorScheme
-                                                    .primary
-                                                    .withValues(alpha: 0.12),
-                                                Colors.transparent,
-                                              ],
-                                            ),
-                                          ),
-                                          child: Center(
-                                            child: Icon(
-                                              Icons.drag_indicator,
-                                              size: 20,
-                                              color: Theme.of(context)
+                                      child: Container(
+                                        width: 24,
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.centerLeft,
+                                            end: Alignment.centerRight,
+                                            colors: [
+                                              Theme.of(context)
                                                   .colorScheme
                                                   .primary
-                                                  .withValues(alpha: 0.5),
-                                            ),
+                                                  .withValues(alpha: 0.12),
+                                              Colors.transparent,
+                                            ],
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Icon(
+                                            Icons.drag_indicator,
+                                            size: 20,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary
+                                                .withValues(alpha: 0.5),
                                           ),
                                         ),
                                       ),
@@ -484,20 +488,14 @@ class _Leitor extends StatelessWidget {
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
-    // Em tela estreita os balões de conversa moram embaixo, na base da tela;
-    // o fim da lista precisa de folga para a última linha não ficar atrás
-    // deles. Em tela larga os balões ficam fora da coluna de leitura.
-    final protegerDosBaloes =
-        EscopoDoEstado.de(context).baloesVisiveis &&
-        MediaQuery.sizeOf(context).width < 720;
 
     return ListView.builder(
       controller: rolagem,
-      padding: EdgeInsets.fromLTRB(
+      padding: const EdgeInsets.fromLTRB(
         Spacing.sp20,
         Spacing.sp8,
         Spacing.sp20,
-        protegerDosBaloes ? folgaDosBaloes : Spacing.sp32,
+        Spacing.sp32,
       ),
       itemCount: capitulo.versiculos.length + 1,
       itemBuilder: (context, i) {
@@ -796,6 +794,7 @@ Future<void> _abrirAcoesDoVersiculo(
                   marcacao != null ? 'Remover dos favoritos' : 'Favoritar',
                 ),
                 onTap: () {
+                  final eraFavorito = marcacao != null;
                   estado.alternarFavorito(
                     versao,
                     livro,
@@ -803,6 +802,40 @@ Future<void> _abrirAcoesDoVersiculo(
                     numero,
                   );
                   Navigator.pop(folha);
+                  // Remover é a única ação da folha sem volta, e o mesmo
+                  // toque que remove oferece o "Desfazer" (o padrão do
+                  // deslize de capítulo). Com nota o alternarFavorito se
+                  // recusa a remover (a nota manda, ver estado.dart), e
+                  // nesse caso não há o que desfazer.
+                  if (eraFavorito &&
+                      !estado.ehFavorito(
+                        versao,
+                        livro,
+                        capituloNumero,
+                        numero,
+                      )) {
+                    final mensageiro = ScaffoldMessenger.of(folha);
+                    mensageiro
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(
+                        SnackBar(
+                          content: const Text('Removido dos favoritos.'),
+                          duration: const Duration(seconds: 4),
+                          action: SnackBarAction(
+                            label: 'Desfazer',
+                            onPressed: () {
+                              estado.alternarFavorito(
+                                versao,
+                                livro,
+                                capituloNumero,
+                                numero,
+                              );
+                              mensageiro.hideCurrentSnackBar();
+                            },
+                          ),
+                        ),
+                      );
+                  }
                 },
               ),
               // Copiar é o que mais se faz com um versículo, e não existia. Vem
@@ -998,14 +1031,14 @@ class _SeletorDeLivroState extends State<_SeletorDeLivro> {
       height: altura,
       child: Column(
         children: [
-          // Cabeçalho rolável: numa janela baixa (paisagem, navegador
-          // redimensionado, escala 2x no campo de busca) o conteúdo fixo
-          // sozinho estouraria a folha; aqui ele encolhe e rola, e a lista
-          // embaixo fica com o resto.
-          Flexible(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
+          // Cabeçalho com altura própria: num Column, um Flexible (flex 1)
+          // dividiria o espaço da folha ao meio com a lista embaixo, e o
+          // vão não usado pelo cabeçalho sobraria em branco no fim da folha.
+          // Fora do flex, ele ocupa só o que precisa e a lista fica com todo
+          // o resto.
+          SingleChildScrollView(
+            child: Column(
+              children: [
                   const SizedBox(height: Spacing.sp12),
                   Text(
                     escolhido == null ? 'Escolha o livro' : escolhido.nome,
@@ -1040,7 +1073,6 @@ class _SeletorDeLivroState extends State<_SeletorDeLivro> {
                 ],
               ),
             ),
-          ),
           Expanded(
             child: escolhido == null
                 ? _ListaDeLivros(

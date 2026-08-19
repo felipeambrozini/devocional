@@ -17,10 +17,10 @@ import 'data/modelos.dart';
 import 'data/nuvem.dart';
 import 'data/personas.dart';
 import 'data/voz.dart';
-import 'spacing.dart';
 import 'telas/biblia.dart';
 import 'telas/chat.dart';
 import 'telas/comuns.dart';
+import 'telas/conversas.dart';
 import 'telas/devocional.dart';
 import 'telas/hoje.dart';
 import 'telas/historico.dart';
@@ -167,6 +167,13 @@ const _destinos = <_Destino>[
     Icons.bookmark,
     TelaNotas(),
   ),
+  _Destino(
+    'Conversas',
+    'conversas',
+    Icons.forum_outlined,
+    Icons.forum,
+    TelaConversas(),
+  ),
 ];
 
 /// Um nó de foco por aba, criados uma vez para o app inteiro, não por
@@ -184,7 +191,8 @@ final _escoposDasAbas = [
 ];
 
 /// Cada aba com o próprio caminho (`/hoje`, `/biblia`, `/devocional`,
-/// `/plano`, `/notas`), para abrir direto por link e sobreviver a um F5 — o
+/// `/plano`, `/notas`, `/conversas`), para abrir direto por link e sobreviver
+/// a um F5 — o
 /// Firebase Hosting devolve o index.html para qualquer caminho sob
 /// `/devocional/` (rewrite em firebase.json). Sobre e as conversas também têm
 /// URL própria, fora do shell: são telas empurradas por cima das abas, não
@@ -257,7 +265,7 @@ final _router = GoRouter(
     ),
     GoRoute(
       path: '/sobre',
-      // Sobre não é aba: a navegação inferior tem cinco destinos, e o caminho
+      // Sobre não é aba: a navegação inferior tem seis destinos, e o caminho
       // para os créditos fica no fim da folha de ajustes (ver comuns.dart).
       // A URL própria continua valendo para F5 e link compartilhado.
       builder: (context, state) => const TelaSobre(),
@@ -402,7 +410,7 @@ class _AppDevocionalState extends State<AppDevocional> {
 }
 
 /// Casca de navegação. Barra inferior no celular, trilho lateral em tela larga.
-/// O corte em 720 px é onde cinco rótulos deixam de caber com folga na horizontal.
+/// O corte em 720 px é onde seis rótulos deixam de caber com folga na horizontal.
 ///
 /// Sem estado próprio: quem sabe a aba atual é o [navigationShell], do
 /// GoRouter — duplicar isso num `_indice` local só criaria duas fontes de
@@ -453,27 +461,21 @@ class Moldura extends StatelessWidget {
     // cada tela limita o próprio corpo, e a moldura ocupa a janela como um app
     // da web deve.
     if (!largo) {
+      // Em tela estreita não há faixa de retratos de conversa nem balões
+      // flutuantes: as conversas moram na aba Conversas, e o texto de leitura
+      // não disputa viewport com ninguém.
       return Scaffold(
         body: navigationShell,
-        bottomNavigationBar: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Em tela estreita os retratos de conversa não podem flutuar por
-            // cima da leitura: a faixa é um rodapé de verdade, entre o
-            // conteúdo e a navegação, e nunca tampa texto.
-            const _BarraDosBaloes(),
-            NavigationBar(
-              selectedIndex: navigationShell.currentIndex,
-              onDestinationSelected: _irParaAba,
-              destinations: [
-                for (final d in _destinos)
-                  NavigationDestination(
-                    icon: Icon(d.icone),
-                    selectedIcon: Icon(d.iconeAtivo),
-                    label: d.rotulo,
-                  ),
-              ],
-            ),
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: navigationShell.currentIndex,
+          onDestinationSelected: _irParaAba,
+          destinations: [
+            for (final d in _destinos)
+              NavigationDestination(
+                icon: Icon(d.icone),
+                selectedIcon: Icon(d.iconeAtivo),
+                label: d.rotulo,
+              ),
           ],
         ),
       );
@@ -499,56 +501,6 @@ class Moldura extends StatelessWidget {
           Expanded(child: navigationShell),
         ],
       ),
-    );
-  }
-}
-
-/// A faixa fixa dos retratos de conversa em tela estreita: os dois balões
-/// ancorados entre o conteúdo e a barra de navegação, ocupando o lugar no
-/// layout em vez de flutuar por cima do texto. Some quando a preferência
-/// [Estado.baloesVisiveis] desliga os retratos, e nas telas abertas por cima
-/// das abas (leitura, chat) não existe — são telas de verdade, que tampam a
-/// moldura inteira.
-class _BarraDosBaloes extends StatelessWidget {
-  const _BarraDosBaloes();
-
-  @override
-  Widget build(BuildContext context) {
-    final cor = Theme.of(context).colorScheme;
-    final estado = EscopoDoEstado.de(context);
-    // O Estado é quem avisa quando a preferência muda: sem este ouvinte, a
-    // faixa só sumiria na próxima reconstrução da moldura.
-    return ListenableBuilder(
-      listenable: estado,
-      builder: (context, _) {
-        if (!estado.baloesVisiveis) return const SizedBox.shrink();
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(Spacing.sp12, Spacing.sp8, Spacing.sp12, Spacing.sp8),
-          decoration: BoxDecoration(
-            color: cor.surfaceContainer,
-            border: Border(
-              top: BorderSide(color: cor.primary, width: 0.5),
-            ),
-          ),
-          // Como antes, quando flutuavam: Spurgeon à esquerda, Felipe à
-          // direita, nas bordas da faixa.
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              BalaoDeChat(
-                persona: personaSpurgeon,
-                onTap: () => _router.push('/${personaSpurgeon.slug}'),
-              ),
-              const SizedBox(width: Spacing.sp16),
-              BalaoDeChat(
-                persona: personaFelipe,
-                onTap: () => _router.push('/${personaFelipe.slug}'),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }
@@ -600,9 +552,8 @@ final _observadorDaVoz = _ObservadorDaVoz();
 /// Pendura os dois balões de conversa por cima das telas largas: Spurgeon à
 /// esquerda, Felipe à direita.
 ///
-/// Em tela estreita eles não flutuam: moram na faixa fixa que a [Moldura]
-/// prende entre o conteúdo e a barra de navegação, e por isso nunca cobrem
-/// texto. Somem quando [camadasFlutuantes] passa de zero, e reaparecem quando
+/// Em tela estreita não existem: as conversas entram pela aba Conversas, e um
+/// balão flutuante por cima do texto de leitura não volta. Somem quando [camadasFlutuantes] passa de zero, e reaparecem quando
 /// a camada fecha. Escondê-los nos ajustes (`estado.baloesVisiveis`) os tira
 /// de todas as telas: só o dono do aparelho decide se os retratos ficam no
 /// caminho.

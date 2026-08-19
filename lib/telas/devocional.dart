@@ -121,11 +121,6 @@ class _TelaDevocionalState extends State<TelaDevocional> {
     final hoje = DateTime.now();
     final ehHoje = _data.month == hoje.month && _data.day == hoje.day;
     final estado = EscopoDoEstado.de(context);
-    // Em tela estreita os balões de conversa moram embaixo, na base da tela;
-    // o fim da lista precisa de folga para a última linha não ficar atrás
-    // deles. Em tela larga os balões ficam fora da coluna de leitura.
-    final protegerDosBaloes =
-        estado.baloesVisiveis && MediaQuery.sizeOf(context).width < 720;
 
     return Scaffold(
       appBar: AppBar(
@@ -134,6 +129,33 @@ class _TelaDevocionalState extends State<TelaDevocional> {
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
+          if (ehHoje)
+            // Marcar o dia como lido é o gesto de conclusão da leitura: vive
+            // na superfície onde a leitura acontece, e não só num cartão da
+            // Hoje, para quem leu o devocional do dia não precisar voltar
+            // para marcar. A mesma chave e o mesmo estado do cartão "Leitura
+            // de hoje" (`hoje.dart`) e do cronograma (`plano.dart`).
+            ListenableBuilder(
+              listenable: estado,
+              builder: (context, _) {
+                final chave = Conteudo.chaveDoDia(_data);
+                final lido = estado.foiLido(chave);
+                return IconButton(
+                  tooltip: lido ? 'Desmarcar dia como lido' : 'Marcar dia como lido',
+                  icon: Icon(
+                    lido ? Icons.check_circle : Icons.radio_button_unchecked,
+                    color: lido
+                        ? Theme.of(context).colorScheme.secondary
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  onPressed: () => alternarLidoComDesfazer(
+                    context,
+                    estado,
+                    chave,
+                  ),
+                );
+              },
+            ),
           IconButton(
             tooltip: 'Tamanho do texto e aparência',
             icon: const Icon(Icons.tune),
@@ -154,11 +176,11 @@ class _TelaDevocionalState extends State<TelaDevocional> {
       ),
       body: LarguraDeLeitura(
         child: ListView(
-          padding: EdgeInsets.fromLTRB(
+          padding: const EdgeInsets.fromLTRB(
             Spacing.sp16,
             Spacing.sp8,
             Spacing.sp16,
-            protegerDosBaloes ? folgaDosBaloes : Spacing.sp32,
+            Spacing.sp32,
           ),
           children: [
             _AlternadorDeLeitura(

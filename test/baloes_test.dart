@@ -185,4 +185,37 @@ void main() {
       debugDefaultTargetPlatformOverride = null;
     }
   });
+
+  testWidgets('em tela estreita, a aba Conversas é a entrada do chat', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    try {
+      final estado = Estado(await SharedPreferences.getInstance());
+      await tester.pumpWidget(AppDevocional(estado: estado));
+      await tester.pumpAndSettle();
+
+      // Sem faixa nem balão: nada de retrato por cima do texto de leitura.
+      expect(find.byType(BalaoDeChat), findsNothing);
+
+      await tester.tap(find.text('Conversas'));
+      await tester.pumpAndSettle();
+
+      // A aba é a entrada do chat: as duas cartas levam ao histórico de cada
+      // persona.
+      expect(find.text('Charles Spurgeon'), findsOneWidget);
+      expect(find.text('Felipe Ambrozini'), findsOneWidget);
+
+      await tester.tap(find.text('Charles Spurgeon'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Começar conversa'), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
 }

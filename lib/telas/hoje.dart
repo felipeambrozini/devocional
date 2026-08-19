@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../data/canon.dart';
 import '../data/conteudo.dart';
@@ -35,20 +36,9 @@ class _TelaHojeState extends State<TelaHoje> {
             children: [
               _Cabecalho(data: agora),
               const SizedBox(height: Spacing.sp20),
-              // Ajuda só para quem chega: um cartão curto na primeira visita,
-              // que some para sempre com "Entendi". O público da web cai aqui
-              // sem ninguém explicando nada; o resto do app não se anuncia.
-              if (!estado.ajudaDispensada) ...[
-                _CartaoDeAjuda(estado: estado),
-                const SizedBox(height: Spacing.sp16),
-              ],
-              if (estado.ultimaLeitura != null) ...[
-                // Retomar uma leitura interrompida é a ação de maior intenção
-                // de quem abre o app, por isso vem antes das prévias do dia,
-                // não depois das estatísticas de progresso.
-                _Continuar(ultima: estado.ultimaLeitura!),
-                const SizedBox(height: Spacing.sp16),
-              ],
+              // A leitura da hora abre a tela: é a única superfície com escala
+              // de cartão. As outras leituras do dia e a retomada são linhas
+              // quietas; o plano e o progresso ficam depois da dobra.
               _PreviaDaLeitura(
                 data: agora,
                 leitura: periodo == Periodo.manha
@@ -57,7 +47,25 @@ class _TelaHojeState extends State<TelaHoje> {
                 destaque: true,
               ),
               const SizedBox(height: Spacing.sp16),
-              _PreviaDaLeitura(data: agora, leitura: Leitura.promessas),
+              _PreviaDaLeitura(
+                data: agora,
+                leitura: Leitura.promessas,
+                linha: true,
+              ),
+              if (estado.ultimaLeitura != null) ...[
+                // Retomar uma leitura interrompida é a ação de maior intenção
+                // de quem abre o app, por isso fica colada nas leituras do
+                // dia, antes da ajuda e do plano.
+                const SizedBox(height: Spacing.sp8),
+                _Continuar(ultima: estado.ultimaLeitura!),
+              ],
+              // Ajuda só para quem chega: um cartão curto na primeira visita,
+              // que some para sempre com "Entendi". Fica depois da leitura e
+              // dos atalhos, para não competir com o que o visitante veio ler.
+              if (!estado.ajudaDispensada) ...[
+                const SizedBox(height: Spacing.sp16),
+                _CartaoDeAjuda(estado: estado),
+              ],
               const SizedBox(height: Spacing.sp16),
               _LeituraDeHoje(data: agora),
               const SizedBox(height: Spacing.sp16),
@@ -70,9 +78,10 @@ class _TelaHojeState extends State<TelaHoje> {
   }
 }
 
-/// Primeira visita: uma linha por gesto ou tela, e nada mais. Sobriedade até
-/// na ajuda; o botão "Entendi" some com ela para sempre (ver
-/// `Estado.ajudaDispensada`).
+/// Primeira visita: três linhas essenciais e nada mais, para a ajuda não
+/// competir com a leitura que abre a tela. A lista completa continua em Sobre
+/// ("Ver tudo"), junto com as fontes e a privacidade; o botão "Entendi" some
+/// com o cartão para sempre (ver `Estado.ajudaDispensada`).
 class _CartaoDeAjuda extends StatelessWidget {
   const _CartaoDeAjuda({required this.estado});
 
@@ -92,17 +101,24 @@ class _CartaoDeAjuda extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final linha in linhasDeAjuda) ...[
+          for (final linha in linhasDeAjuda.take(3)) ...[
             Text(linha, style: tema.bodyMedium),
             const SizedBox(height: Spacing.sp6),
           ],
-          const SizedBox(height: Spacing.sp6),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () => estado.dispensarAjuda(),
-              child: const Text('Entendi'),
-            ),
+          const SizedBox(height: Spacing.sp2),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => context.push('/sobre'),
+                child: const Text('Ver tudo'),
+              ),
+              const SizedBox(width: Spacing.sp8),
+              TextButton(
+                onPressed: () => estado.dispensarAjuda(),
+                child: const Text('Entendi'),
+              ),
+            ],
           ),
         ],
       ),
@@ -196,7 +212,7 @@ class _Cabecalho extends StatelessWidget {
           ),
         ),
         // Hoje não tem AppBar onde pendurar a ação, e sem isto os ajustes só
-        // seriam alcançáveis de duas das cinco abas.
+        // seriam alcançáveis de duas das seis abas.
         BotaoDeAjustes(estado: EscopoDoEstado.de(context)),
       ],
     );
@@ -260,17 +276,22 @@ class _ComFadeAoFim extends StatelessWidget {
 ///
 /// [destaque] marca a leitura do período da hora (a "de agora"): é a que
 /// ganha o filete dourado embaixo do título, dizendo que uma leitura começa
-/// ali. As outras prévias do dia não têm o filete, mas o cartão é o mesmo.
+/// ali, e a única que mantém a escala de cartão na Hoje.
+///
+/// [linha] troca o cartão por uma linha quieta (ícone, título e uma linha do
+/// texto), para as leituras que não são a de agora não competirem com ela.
 class _PreviaDaLeitura extends StatelessWidget {
   const _PreviaDaLeitura({
     required this.data,
     required this.leitura,
     this.destaque = false,
+    this.linha = false,
   });
 
   final DateTime data;
   final Leitura leitura;
   final bool destaque;
+  final bool linha;
 
   String get _titulo => leitura.tituloCompleto;
 
@@ -287,6 +308,14 @@ class _PreviaDaLeitura extends StatelessWidget {
         : Conteudo.instancia.devocional(data, periodo, versao: versao);
   }
 
+  void _abrir(BuildContext context) => Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) =>
+          TelaDevocional(dataInicial: data, leituraInicial: leitura),
+    ),
+  );
+
   /// Cartão de uma linha só, para quando ainda não há texto para mostrar.
   Widget _aviso(BuildContext context, String texto) => Cartao(
     titulo: _titulo,
@@ -297,6 +326,60 @@ class _PreviaDaLeitura extends StatelessWidget {
     ),
     child: Text(texto),
   );
+
+  /// Linha quieta: ícone, título e uma linha do texto. É a forma das
+  /// leituras que não são a de agora, para a Hoje ter uma só superfície com
+  /// escala de cartão.
+  Widget _linha(BuildContext context, AsyncSnapshot<Devocional?> snap) {
+    final cor = Theme.of(context).colorScheme;
+    final tema = Theme.of(context).textTheme;
+    final String subtitulo;
+    if (snap.hasError) {
+      subtitulo = 'Não foi possível carregar esta leitura.';
+    } else if (snap.connectionState != ConnectionState.done) {
+      subtitulo = 'Carregando...';
+    } else if (snap.data == null) {
+      subtitulo = 'Sem leitura para esta data.';
+    } else {
+      subtitulo = '';
+    }
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => _abrir(context),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          vertical: Spacing.sp10,
+          horizontal: Spacing.sp4,
+        ),
+        child: Row(
+          children: [
+            Icon(_icone, color: cor.primary, size: 18),
+            const SizedBox(width: Spacing.sp12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _titulo,
+                    style: tema.titleMedium?.copyWith(color: cor.onSurface),
+                  ),
+                  const SizedBox(height: Spacing.sp2),
+                  Text(
+                    subtitulo.isEmpty ? snap.data!.texto : subtitulo,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: tema.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: Spacing.sp8),
+            Icon(Icons.chevron_right, color: cor.onSurfaceVariant, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -312,6 +395,7 @@ class _PreviaDaLeitura extends StatelessWidget {
         // carrega quanto quando não existe leitura para a data, e tratar os dois
         // como um só deixava o cartão dizendo "Carregando..." para sempre num dia
         // sem devocional. É o mesmo guard que _LeituraDeHoje já usa logo abaixo.
+        if (linha) return _linha(context, snap);
         if (snap.hasError) {
           return _aviso(context, 'Não foi possível carregar esta leitura.');
         }
@@ -329,13 +413,6 @@ class _PreviaDaLeitura extends StatelessWidget {
             color: cor.secondary,
           ),
           estiloReferencia: tema.titleSmall?.copyWith(color: cor.secondary),
-        );
-        void abrirLeitura() => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) =>
-                TelaDevocional(dataInicial: data, leituraInicial: leitura),
-          ),
         );
         return Cartao(
           titulo: _titulo,
@@ -377,7 +454,7 @@ class _PreviaDaLeitura extends StatelessWidget {
                 // DESIGN.md); esta prévia usava OutlinedButton e a mesma
                 // ação tinha dois controles na mesma tela.
                 child: TextButton.icon(
-                  onPressed: abrirLeitura,
+                  onPressed: () => _abrir(context),
                   icon: const Icon(Icons.arrow_forward, size: 16),
                   label: const Text('Ler tudo'),
                 ),
@@ -395,49 +472,83 @@ class _LeituraDeHoje extends StatelessWidget {
 
   final DateTime data;
 
+  /// A leitura do plano é uma seção, não um cartão: o Filete abre a leitura
+  /// (a gramática do sistema) e o título em Cinzel dá o nome, sem competir
+  /// com o cartão da leitura da hora que abre a tela.
+  Widget _seccao(
+    BuildContext context, {
+    required Widget corpo,
+    Widget? acao,
+  }) {
+    final tema = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Filete(),
+        const SizedBox(height: Spacing.sp12),
+        Row(
+          children: [
+            Expanded(child: Text('Leitura de hoje', style: tema.titleLarge)),
+            ?acao,
+          ],
+        ),
+        const SizedBox(height: Spacing.sp8),
+        corpo,
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
+    final tema = Theme.of(context).textTheme;
     final estado = EscopoDoEstado.de(context);
     return CarregaUmaVez<DiaDoPlano?>(
       chave: Conteudo.chaveDoDia(data),
       carregar: () => Conteudo.instancia.diaDoPlano(data),
       construir: (context, snap) {
         // Sem estes guards o primeiro frame, que sempre chega sem dado porque a
-        // leitura é assíncrona, desenharia um cartão vazio por um instante; e
+        // leitura é assíncrona, desenharia uma seção vazia por um instante; e
         // erro (asset corrompido ou ausente) também chega com snap.data == null,
         // por isso o hasError vem antes do estado de carregamento.
         // Depois de done, snap.data nunca é null: o cronograma comum cobre as
         // 365 datas reais do ano e o bissexto as 366, incluindo 29-02 como dia
         // próprio — o antigo cartão de "dia de recuperação" era código morto.
         if (snap.hasError) {
-          return const Cartao(
-            titulo: 'Leitura de hoje',
-            child: Text('Não foi possível carregar o cronograma.'),
+          return _seccao(
+            context,
+            corpo: Text(
+              'Não foi possível carregar o cronograma.',
+              style: tema.bodyMedium,
+            ),
           );
         }
         if (snap.connectionState != ConnectionState.done) {
-          return const Cartao(
-            titulo: 'Leitura de hoje',
-            child: Text('Carregando...'),
+          return _seccao(
+            context,
+            corpo: Text('Carregando...', style: tema.bodyMedium),
           );
         }
         final dia = snap.data!;
         final lido = estado.foiLido(dia.data);
-        return Cartao(
-          titulo: 'Leitura de hoje',
-          acessorio: IconButton(
+        return _seccao(
+          context,
+          acao: IconButton(
             tooltip: lido ? 'Desmarcar' : 'Marcar como lido',
             icon: Icon(
               lido ? Icons.check_circle : Icons.radio_button_unchecked,
               color: lido ? cor.secondary : cor.onSurfaceVariant,
             ),
-            onPressed: () => estado.alternarLido(dia.data),
+            onPressed: () => alternarLidoComDesfazer(
+              context,
+              estado,
+              dia.data,
+            ),
           ),
-          child: Column(
+          corpo: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(dia.rotulo, style: Theme.of(context).textTheme.bodyLarge),
+              Text(dia.rotulo, style: tema.bodyLarge),
               const SizedBox(height: Spacing.sp12),
               Wrap(
                 spacing: Spacing.sp8,
@@ -467,34 +578,44 @@ class _Progresso extends StatelessWidget {
     final total = Conteudo.diasDoAno(ano);
     final progresso = estado.progressoDoAno(total);
     final porcento = (progresso * 100).round();
-    return Cartao(
-      titulo: 'Progresso do ano',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text('${estado.diasLidos}', style: tema.displayLarge),
-              const SizedBox(width: Spacing.sp6),
-              Text('de $total dias', style: tema.bodySmall),
-              const Spacer(),
-              Text('$porcento%', style: tema.headlineSmall),
-            ],
-          ),
-          const SizedBox(height: Spacing.sp12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progresso.clamp(0.0, 1.0),
-              minHeight: 7,
-              backgroundColor: cor.surfaceContainerHighest,
-              valueColor: AlwaysStoppedAnimation(cor.primary),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Uma linha quieta, não um cartão: o progresso apoia a leitura, não
+        // compete com ela.
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Text('Progresso do ano', style: tema.labelMedium),
+            const Spacer(),
+            Text(
+              '${estado.diasLidos}',
+              style: tema.titleMedium?.copyWith(color: cor.primary),
             ),
+            const SizedBox(width: Spacing.sp6),
+            Text('de $total dias', style: tema.bodySmall),
+            const SizedBox(width: Spacing.sp12),
+            Text(
+              '$porcento%',
+              style: tema.bodyMedium?.copyWith(
+                color: cor.secondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: Spacing.sp8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: progresso.clamp(0.0, 1.0),
+            minHeight: 5,
+            backgroundColor: cor.surfaceContainerHighest,
+            valueColor: AlwaysStoppedAnimation(cor.primary),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -506,21 +627,36 @@ class _Continuar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
+    final tema = Theme.of(context).textTheme;
     final (livro, capitulo) = ultima;
-    return Cartao(
-      titulo: 'Continuar leitura',
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: OutlinedButton.icon(
-          icon: const Icon(Icons.play_arrow, size: 18),
-          label: Text('${nomeDoLivro(livro)} $capitulo'),
-          onPressed: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) =>
-                  TelaBiblia(livroInicial: livro, capituloInicial: capitulo),
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              TelaBiblia(livroInicial: livro, capituloInicial: capitulo),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          vertical: Spacing.sp10,
+          horizontal: Spacing.sp4,
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.play_arrow, color: cor.primary, size: 18),
+            const SizedBox(width: Spacing.sp12),
+            Expanded(
+              child: Text(
+                'Continuar: ${nomeDoLivro(livro)} $capitulo',
+                style: tema.titleMedium?.copyWith(color: cor.onSurface),
+              ),
             ),
-          ),
+            const SizedBox(width: Spacing.sp8),
+            Icon(Icons.chevron_right, color: cor.onSurfaceVariant, size: 20),
+          ],
         ),
       ),
     );

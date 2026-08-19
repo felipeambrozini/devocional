@@ -59,7 +59,7 @@ class _TelaBuscaState extends State<TelaBusca> {
     if (termo.length < 3) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Escreve ao menos três letras para buscar.'),
+          content: Text('Escreva ao menos três letras para buscar.'),
         ),
       );
       return;
@@ -119,6 +119,23 @@ class _TelaBuscaState extends State<TelaBusca> {
     }
   }
 
+  /// Esvazia a busca e devolve a tela ao estado inicial, em vez de pedir
+  /// para quem pesquisou apagar o termo letra por letra.
+  void _limpar() {
+    _assinatura?.cancel();
+    _controle.clear();
+    setState(() {
+      _achados.clear();
+      _achadosDevocionais = [];
+      _buscando = false;
+      _buscandoDevocionais = false;
+      _erro = false;
+      _erroDevocionais = false;
+      _termoBuscado = '';
+      _referencia = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final versao = EscopoDoEstado.de(context).versao;
@@ -141,6 +158,10 @@ class _TelaBuscaState extends State<TelaBusca> {
                   controller: _controle,
                   autofocus: true,
                   textInputAction: TextInputAction.search,
+                  // Sem o onChanged não há rebuild quando o texto muda, e o
+                  // botão de limpar (que só aparece com texto) ficaria preso
+                  // ao estado do primeiro frame.
+                  onChanged: (_) => setState(() {}),
                   onSubmitted: (_) => _buscar(versao),
                   decoration: InputDecoration(
                     hintText: 'Palavra, expressão ou referência',
@@ -148,11 +169,27 @@ class _TelaBuscaState extends State<TelaBusca> {
                       Icons.search,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                    suffixIcon: IconButton(
-                      tooltip: 'Buscar',
-                      icon: const Icon(Icons.arrow_forward),
-                      onPressed: () => _buscar(versao),
-                    ),
+                    suffixIcon: _controle.text.isEmpty
+                        ? IconButton(
+                            tooltip: 'Buscar',
+                            icon: const Icon(Icons.arrow_forward),
+                            onPressed: () => _buscar(versao),
+                          )
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                tooltip: 'Limpar busca',
+                                icon: const Icon(Icons.clear),
+                                onPressed: _limpar,
+                              ),
+                              IconButton(
+                                tooltip: 'Buscar',
+                                icon: const Icon(Icons.arrow_forward),
+                                onPressed: () => _buscar(versao),
+                              ),
+                            ],
+                          ),
                   ),
                 ),
               ),
@@ -166,12 +203,14 @@ class _TelaBuscaState extends State<TelaBusca> {
                       achados: _achados,
                       buscando: _buscando,
                       erro: _erro,
+                      aoTentarDeNovo: () => _buscar(versao),
                     ),
                     _AbaDevocionais(
                       termoBuscado: _termoBuscado,
                       achados: _achadosDevocionais,
                       buscando: _buscandoDevocionais,
                       erro: _erroDevocionais,
+                      aoTentarDeNovo: () => _buscar(versao),
                     ),
                   ],
                 ),
@@ -192,6 +231,7 @@ class _AbaBiblia extends StatelessWidget {
     required this.achados,
     required this.buscando,
     required this.erro,
+    required this.aoTentarDeNovo,
   });
 
   final String termoBuscado;
@@ -200,10 +240,13 @@ class _AbaBiblia extends StatelessWidget {
   final List<Achado> achados;
   final bool buscando;
   final bool erro;
+  final VoidCallback aoTentarDeNovo;
 
   @override
   Widget build(BuildContext context) {
-    if (erro) return const AvisoDeErro();
+    if (erro) {
+      return _ErroDeBusca(aoTentarDeNovo: aoTentarDeNovo);
+    }
     if (termoBuscado.isEmpty) {
       return const AvisoVazio(
         icone: Icons.search,
@@ -364,16 +407,20 @@ class _AbaDevocionais extends StatelessWidget {
     required this.achados,
     required this.buscando,
     required this.erro,
+    required this.aoTentarDeNovo,
   });
 
   final String termoBuscado;
   final List<AchadoDevocional> achados;
   final bool buscando;
   final bool erro;
+  final VoidCallback aoTentarDeNovo;
 
   @override
   Widget build(BuildContext context) {
-    if (erro) return const AvisoDeErro();
+    if (erro) {
+      return _ErroDeBusca(aoTentarDeNovo: aoTentarDeNovo);
+    }
     if (termoBuscado.isEmpty) {
       return const AvisoVazio(
         icone: Icons.menu_book_outlined,
@@ -479,6 +526,26 @@ class _ItemDeAchadoDevocional extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Falha de busca com a recuperação à mão: um erro de stream ou de leitura
+/// de asset costuma ser momentâneo, e o "Tentar de novo" refaz a última
+/// busca sem digitar nada de novo.
+class _ErroDeBusca extends StatelessWidget {
+  const _ErroDeBusca({required this.aoTentarDeNovo});
+
+  final VoidCallback aoTentarDeNovo;
+
+  @override
+  Widget build(BuildContext context) => AvisoVazio(
+    icone: Icons.error_outline,
+    titulo: 'Não foi possível carregar',
+    detalhe: 'A busca falhou. Tente de novo.',
+    acao: TextButton(
+      onPressed: aoTentarDeNovo,
+      child: const Text('Tentar de novo'),
+    ),
+  );
 }
 
 /// Uma data qualquer, só para navegar até o dia certo do devocional: os

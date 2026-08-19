@@ -278,8 +278,13 @@ motivo novo.
   tela Sobre ter virado aba em 09/08/2026).
 - **Sobre volta para a folha de ajustes** (17/08/2026): com a opção acima
   ligada, o `push` para `/sobre` também atualiza a URL; Sobre deixou de ser
-  aba (a navegação inferior ficou com cinco destinos) e voltou para o fim da
+  aba (a navegação inferior ficou com seis destinos) e voltou para o fim da
   folha de ajustes, como os créditos de um aplicativo costumam ficar.
+- **Aba Conversas** (19/08/2026): as conversas ganharam a própria aba
+  (`/conversas`), com uma carta por persona abrindo o histórico por `push`
+  (`/charles-spurgeon`, `/felipe-ambrozini`). A seção Conversas da folha de
+  ajustes perdeu as duas entradas e ficou só com o interruptor dos balões e a
+  dica, que valem para as telas largas.
 - **`usePathUrlStrategy()`** vem de `package:flutter_web_plugins/url_strategy.dart`,
   não do barril `flutter_web_plugins.dart` (o barril puxa `dart:ui_web` sem
   condicional e quebra a compilação para a VM, que é o que o `flutter test`

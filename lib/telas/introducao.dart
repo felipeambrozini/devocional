@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../data/canon.dart';
 import '../data/conteudo.dart';
-import '../data/estado.dart';
 import '../data/modelos.dart';
 import '../data/voz.dart';
 import '../spacing.dart';
@@ -32,12 +31,6 @@ class _TelaIntroducaoState extends State<TelaIntroducao> {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     final slug = widget.slug;
-    // Em tela estreita os balões de conversa moram embaixo, na base da tela;
-    // o fim da lista precisa de folga para a última linha não ficar atrás
-    // deles. Em tela larga os balões ficam fora da coluna de leitura.
-    final protegerDosBaloes =
-        EscopoDoEstado.de(context).baloesVisiveis &&
-        MediaQuery.sizeOf(context).width < 720;
 
     return Scaffold(
       appBar: AppBar(
@@ -69,11 +62,11 @@ class _TelaIntroducaoState extends State<TelaIntroducao> {
             }
 
             return ListView(
-              padding: EdgeInsets.fromLTRB(
+              padding: const EdgeInsets.fromLTRB(
                 Spacing.sp20,
                 Spacing.sp16,
                 Spacing.sp20,
-                protegerDosBaloes ? folgaDosBaloes : Spacing.sp40,
+                Spacing.sp40,
               ),
               children: [
                 Row(

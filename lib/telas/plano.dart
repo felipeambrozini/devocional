@@ -101,7 +101,7 @@ class _TelaPlanoState extends State<TelaPlano> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Plano de leitura'),
+        title: const Text('Plano'),
         actions: [
           IconButton(
             tooltip: 'Tamanho do texto e aparência',

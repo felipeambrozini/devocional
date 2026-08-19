@@ -248,7 +248,7 @@ void main() {
     await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
     await tester.pumpAndSettle();
 
-    // Sobre não é mais aba: a navegação inferior tem cinco destinos, e os
+    // Sobre não é mais aba: a navegação inferior tem seis destinos, e os
     // créditos moram na folha de ajustes (ver o teste seguinte).
     for (final rotulo in ['Hoje', 'Bíblia', 'Devocional', 'Plano', 'Notas']) {
       expect(find.text(rotulo), findsWidgets, reason: rotulo);
@@ -1631,6 +1631,10 @@ void main() {
     expect(find.text('Como usar'), findsOneWidget);
     expect(find.text('Entendi'), findsOneWidget);
 
+    // O cartão fica abaixo da leitura da hora, que abre a tela: rola para
+    // tocar, como o visitante faria.
+    await tester.ensureVisible(find.text('Entendi'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Entendi'));
     await tester.pumpAndSettle();
     expect(find.text('Como usar'), findsNothing);

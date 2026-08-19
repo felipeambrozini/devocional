@@ -247,7 +247,7 @@ Contidos e discretos: os controles existem para o texto passar. Nenhum component
 ### Navigation
 - **Style:** barra embaixo no celular, trilho lateral a partir de 720px; fundo surfaceContainer, rótulos Montserrat w600 de 11–12px.
 - **States:** indicador = fio do metal a 45%; ícone e rótulo selecionados na cor de destaque, não selecionados em tinta suave.
-- **Mobile:** NavigationBar padrão do Material 3, cinco destinos: Hoje, Bíblia, Devocional, Plano, Notas.
+- **Mobile:** NavigationBar padrão do Material 3, seis destinos: Hoje, Bíblia, Devocional, Plano, Notas, Conversas.
 
 ### Signature Components
 - **O Filete:** o fio de metal (2px, 48–64px, gradiente do metal para o traço) que abre capítulos, devocionais, introduções e separa seções dentro de cartões. É a assinatura visual do sistema — a "linha dourada" que diz que uma leitura começa ali.

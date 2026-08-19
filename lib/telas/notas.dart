@@ -94,7 +94,7 @@ class _TelaNotasState extends State<TelaNotas> {
             indicatorColor: cor.primary,
             tabs: [
               Tab(text: 'Favoritos (${favoritos.length})'),
-              Tab(text: 'Anotações (${notas.length})'),
+              Tab(text: 'Notas (${notas.length})'),
             ],
           ),
         ),

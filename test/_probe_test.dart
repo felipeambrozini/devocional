@@ -32,9 +32,11 @@ void main() {
   ) async {
     await aquecerAssets(tester);
     final estado = Estado(await SharedPreferences.getInstance());
-    // O cartão cresceu com as linhas de ajuda: numa janela de 800x600 o
-    // botão fica fora da tela, e a tela precisa ser mais alta para o toque
-    // alcançá-lo sem depender de rolagem.
+    // O cartão cresceu com as linhas de ajuda e a Hoje agora abre com a
+    // leitura da hora no topo: numa janela de 800x900 o botão cai atrás da
+    // barra de navegação. A tela alta garante que o cartão inteiro caiba, e o
+    // ensureVisible traz o botão para o alcance do toque (mesma ideia de
+    // app_test.dart).
     await tester.binding.setSurfaceSize(const Size(800, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(AppDevocional(estado: estado));
@@ -43,6 +45,8 @@ void main() {
     expect(find.text('Como usar'), findsOneWidget);
     expect(find.text('Entendi'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('Entendi'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Entendi'));
     await tester.pumpAndSettle();
     expect(find.text('Como usar'), findsNothing);

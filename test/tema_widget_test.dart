@@ -96,10 +96,16 @@ void main() {
       expect(find.text(rotulo), findsOneWidget, reason: rotulo);
     }
 
+    // A folha rola: as escolhas mais baixas precisam entrar na tela antes do
+    // toque, como nas outras folhas do app (ver baloes_test.dart).
+    await tester.ensureVisible(find.text(ModoDoTema.claro.rotulo));
+    await tester.pumpAndSettle();
     await tester.tap(find.text(ModoDoTema.claro.rotulo));
     await tester.pumpAndSettle();
     expect(estado.modoDoTema, ModoDoTema.claro);
 
+    await tester.ensureVisible(find.text('Grande'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Grande'));
     await tester.pumpAndSettle();
     expect(estado.escalaDeLeitura, 1.3);

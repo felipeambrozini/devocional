@@ -10,14 +10,9 @@ import '../data/estado.dart';
 import '../data/lembretes.dart';
 import '../data/modelos.dart';
 import '../data/nuvem.dart';
+import '../data/personas.dart';
 import '../data/voz.dart';
 import '../spacing.dart';
-
-/// A folga que as telas de leitura deixam no fim da lista para os balões de
-/// conversa (88 de folga mais 52 de balão, em `main.dart`) não cobrirem a
-/// última linha. Só entra em telas estreitas: em tela larga os balões ficam
-/// fora da coluna de leitura, que é limitada por [LarguraDeLeitura].
-const folgaDosBaloes = 152.0;
 
 /// Divulgação de que o chat responde por inteligência artificial. O mesmo
 /// texto em todo lugar em que uma IA fala: rodapé do chat, boas-vindas e
@@ -28,17 +23,17 @@ const avisoDeIa = 'Respostas geradas por inteligência artificial';
 /// porque quem dispensou o cartão na primeira visita não tem como vê-lo de
 /// novo — e o caminho para a ajuda não pode depender só do primeiro dia.
 const linhasDeAjuda = [
-  'Na Bíblia, desliza o dedo para virar o capítulo; com mouse e teclado, '
-      'usa as setas.',
+  'Na Bíblia, deslize o dedo para virar o capítulo; com mouse e teclado, '
+      'use as setas.',
   'O Devocional traz Manhã, Promessas e Noite, e vira sozinho com o horário.',
   '"Ler tudo" abre a leitura do dia inteira.',
-  'Os retratos de Spurgeon e de Felipe nas bordas da tela abrem as '
-      'conversas: pergunte sobre a Palavra, peça uma aplicação, desabafe.',
+  'Na aba Conversas, o chat com Spurgeon e com Felipe: pergunte sobre a '
+      'Palavra, peça uma aplicação, desabafe.',
   'O retrato de Spurgeon no começo do capítulo e da introdução lê o texto '
       'na voz dele: toque para ouvir, e toque de novo para encerrar.',
   'No computador, a tecla P também começa e encerra a leitura, e a barra de '
       'cima ganha um botão de parar enquanto ela toca.',
-  'No Plano, marca o dia quando terminares a leitura.',
+  'No Plano, marque o dia quando terminar a leitura.',
 ];
 
 /// Capa da Bíblia de Estudo Charles Haddon Spurgeon, trocada conforme o tema claro/escuro.
@@ -184,11 +179,16 @@ class AvisoVazio extends StatelessWidget {
     required this.icone,
     required this.titulo,
     this.detalhe,
+    this.acao,
   });
 
   final IconData icone;
   final String titulo;
   final String? detalhe;
+
+  /// A próxima ação do estado vazio, quando existe: "Tentar de novo" num
+  /// erro, "Exportar" numa lista vazia que tem saída.
+  final Widget? acao;
 
   @override
   Widget build(BuildContext context) {
@@ -213,6 +213,10 @@ class AvisoVazio extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
+            ],
+            if (acao != null) ...[
+              const SizedBox(height: Spacing.sp12),
+              acao!,
             ],
           ],
         ),
@@ -304,6 +308,40 @@ Future<bool> confirmarRemocao(
   return confirmou ?? false;
 }
 
+/// Marca ou desmarca o dia como lido e oferece voltar no mesmo gesto.
+///
+/// O alternador é um toque só, e um toque errado num dia lido custaria o
+/// registro sem aviso: o "Desfazer" devolve o estado anterior. É o mesmo
+/// padrão do deslize de capítulo (`biblia.dart`): a ação tem sempre uma
+/// saída de um toque. Usado pelo "Leitura de hoje" (`hoje.dart`) e pelo
+/// botão da tela do devocional (`devocional.dart`).
+void alternarLidoComDesfazer(
+  BuildContext context,
+  Estado estado,
+  String chave,
+) {
+  final estavaLido = estado.foiLido(chave);
+  estado.alternarLido(chave);
+  final mensageiro = ScaffoldMessenger.of(context);
+  mensageiro
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Text(
+          estavaLido ? 'Dia desmarcado.' : 'Dia marcado como lido.',
+        ),
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'Desfazer',
+          onPressed: () {
+            estado.alternarLido(chave);
+            mensageiro.hideCurrentSnackBar();
+          },
+        ),
+      ),
+    );
+}
+
 /// Abre os ajustes de leitura. Usado onde não há AppBar para pendurar a ação,
 /// que hoje é só a tela Hoje.
 class BotaoDeAjustes extends StatelessWidget {
@@ -331,11 +369,10 @@ class BotaoDeAjustes extends StatelessWidget {
 Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
   return showModalBottomSheet<void>(
     context: context,
-    // Com a seção Lembretes (interruptor mais dois horários), o conteúdo passou
-    // a ultrapassar a altura de telas baixas ou em paisagem. isScrollControlled
-    // deixa a folha crescer até quase a tela inteira, e o SingleChildScrollView
-    // rola o que não couber em vez de estourar o layout.
-    isScrollControlled: true,
+    // Sem isScrollControlled a folha fica limitada a ~9/16 da tela: com ele, o
+    // conteúdo (Sobre, Tamanho, Aparência, Conversas, Lembretes e Conta) crescia
+    // até quase a tela inteira no celular. O SingleChildScrollView rola o que
+    // não couber em vez de estourar o layout.
     builder: (folha) => SafeArea(
       child: ListenableBuilder(
         listenable: estado,
@@ -346,8 +383,27 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Sobre no topo, e não no fim da folha: para o público da web,
+                // fontes, canais e privacidade são a prova de que o app é o
+                // que diz ser, e o caminho não pode depender de rolar cinco
+                // seções para encontrá-lo.
+                ListTile(
+                  leading: Icon(
+                    Icons.info_outline,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: const Text('Sobre'),
+                  subtitle: const Text('Fontes do texto, canais e privacidade'),
+                  onTap: () {
+                    // Sai da folha antes do push: uma rota sobre a folha
+                    // deixaria a folha embaixo da tela de Sobre no Android.
+                    final roteador = GoRouter.of(folha);
+                    Navigator.pop(folha);
+                    roteador.push('/sobre');
+                  },
+                ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp20, Spacing.sp20, Spacing.sp12),
+                  padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp8, Spacing.sp20, Spacing.sp12),
                   child: Text('Tamanho do texto', style: tema.headlineSmall),
                 ),
                 Padding(
@@ -365,6 +421,15 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                               estado.definirEscalaDeLeitura(escala),
                         ),
                     ],
+                  ),
+                ),
+                // O efeito da escolha se vê antes de fechar a folha: o corpo
+                // de leitura escala com o tema, e a linha abaixo é a amostra.
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp12, Spacing.sp20, Spacing.sp4),
+                  child: Text(
+                    'O texto de leitura fica deste tamanho.',
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 ),
                 Padding(
@@ -394,8 +459,8 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 SwitchListTile(
                   title: const Text('Mostrar botões de conversa'),
                   subtitle: const Text(
-                    'Os retratos nas bordas das telas abrem as conversas com '
-                    'Spurgeon e com Felipe.',
+                    'Nas telas largas, os retratos de Spurgeon e de Felipe '
+                    'ficam ao alcance do toque.',
                   ),
                   value: estado.baloesVisiveis,
                   onChanged: (novo) => estado.definirBaloesVisiveis(novo),
@@ -426,21 +491,6 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 // Só na web: Android já guarda tudo no aparelho. Ver
                 // nuvem.dart, mesma regra do lembretesSuportados acima.
                 if (nuvemSuportada) ..._secaoDaConta(context),
-                ListTile(
-                  leading: Icon(
-                    Icons.info_outline,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  title: const Text('Sobre'),
-                  subtitle: const Text('Fontes do texto, canais e privacidade'),
-                  onTap: () {
-                    // Sai da folha antes do push: uma rota sobre a folha
-                    // deixaria a folha embaixo da tela de Sobre no Android.
-                    final roteador = GoRouter.of(folha);
-                    Navigator.pop(folha);
-                    roteador.push('/sobre');
-                  },
-                ),
                 const SizedBox(height: Spacing.sp8),
               ],
             ),
@@ -453,6 +503,52 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
 
 TimeOfDay _horaDe(int minutos) =>
     TimeOfDay(hour: minutos ~/ 60, minute: minutos % 60);
+
+/// O retrato de uma persona num anel do metal, para as entradas de conversa:
+/// a carta da aba Conversas (`telas/conversas.dart`) e o topo do histórico.
+/// A mesma gramática do [BalaoDeChat] de `chat.dart`, sem a placa de nome nem
+/// a dica, que o nome da carta já nomeia.
+class RetratoDePersona extends StatelessWidget {
+  const RetratoDePersona({
+    super.key,
+    required this.persona,
+    this.tamanho = 38,
+  });
+
+  final Persona persona;
+  final double tamanho;
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: cor.primary, width: 1.5),
+      ),
+      padding: const EdgeInsets.all(Spacing.sp2),
+      child: ClipOval(
+        child: Image.asset(
+          persona.foto,
+          width: tamanho,
+          height: tamanho,
+          fit: BoxFit.cover,
+          // A foto é mais alta que larga e o cabelo encosta na borda
+          // superior; o corte alinhado ao topo preserva o cabelo.
+          alignment: Alignment.topCenter,
+          errorBuilder: (context, error, stackTrace) => Container(
+            color: cor.surfaceContainerHighest,
+            alignment: Alignment.center,
+            child: Text(
+              persona.nomeCurto.characters.first,
+              style: TextStyle(color: cor.primary, fontSize: tamanho * 0.42),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 /// Liga ou desliga os três lembretes diários. Pede permissão antes de ligar;
 /// devolve false sem mudar nada se ela for negada.
