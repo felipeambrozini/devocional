@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>169480227109-acd4hhe5rte2p0ljc2gos2orgh0mk7cg.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.169480227109-acd4hhe5rte2p0ljc2gos2orgh0mk7cg</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDgTOEBwVEBtiRWJahZ27zv9P2k7vQg9lI</string>
+	<key>GCM_SENDER_ID</key>
+	<string>169480227109</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.felipeambrozini.devocional</string>
+	<key>PROJECT_ID</key>
+	<string>devocional-15815</string>
+	<key>STORAGE_BUCKET</key>
+	<string>devocional-15815.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:169480227109:ios:8f722638a506e0d83c72cc</string>
+</dict>
+</plist>

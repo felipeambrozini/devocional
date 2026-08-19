@@ -21,10 +21,10 @@ packages:
     dependency: transitive
     description:
       name: archive
-      sha256: a96e8b390886ee8abb49b7bd3ac8df6f451c621619f52a26e815fdcf568959ff
+      sha256: be169cf6ac481e052c4538715d88841d567150dfe1df38aaec76461a4e7b39f2
       url: "https://pub.dev"
     source: hosted
-    version: "4.0.9"
+    version: "4.1.0"
   args:
     dependency: transitive
     description:
@@ -209,6 +209,38 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.1"
+  firebase_app_distribution:
+    dependency: "direct main"
+    description:
+      name: firebase_app_distribution
+      sha256: "2e08dc931258f54a01e8f9a58e8294cc959301db28fefbdf4b59072bdea26fe3"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.3.0"
+  firebase_app_distribution_android:
+    dependency: transitive
+    description:
+      name: firebase_app_distribution_android
+      sha256: "59dca4c239618a890c2b5aeea6e7955aa923638485e8ec2f5d38a2e41fe69534"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.3.0"
+  firebase_app_distribution_ios:
+    dependency: transitive
+    description:
+      name: firebase_app_distribution_ios
+      sha256: "311df4f3b76997e011f725cea3da1c02e45b2eb35b1c609a43312477aa9e73b5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.3.0"
+  firebase_app_distribution_platform_interface:
+    dependency: transitive
+    description:
+      name: firebase_app_distribution_platform_interface
+      sha256: "6a2b2f644e72d0ecb35da79e738c584fc3253ddedda751499c077f47daf54ca5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.3.0"
   firebase_auth:
     dependency: "direct main"
     description:
@@ -270,6 +302,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_dotenv:
+    dependency: "direct main"
+    description:
+      name: flutter_dotenv
+      sha256: b7c7be5cd9f6ef7a78429cabd2774d3c4af50e79cb2b7593e3d5d763ef95c61b
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.2.1"
   flutter_launcher_icons:
     dependency: "direct dev"
     description:
@@ -373,6 +413,54 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.3.7"
+  google_identity_services_web:
+    dependency: transitive
+    description:
+      name: google_identity_services_web
+      sha256: "5d187c46dc59e02646e10fe82665fc3884a9b71bc1c90c2b8b749316d33ee454"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.3+1"
+  google_sign_in:
+    dependency: "direct main"
+    description:
+      name: google_sign_in
+      sha256: "521031b65853b4409b8213c0387d57edaad7e2a949ce6dea0d8b2afc9cb29763"
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.2.0"
+  google_sign_in_android:
+    dependency: transitive
+    description:
+      name: google_sign_in_android
+      sha256: "57782125965ca87b03d42a147d40b046f1fd6a09141a58913e1b86671a5ef22e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.2.16"
+  google_sign_in_ios:
+    dependency: transitive
+    description:
+      name: google_sign_in_ios
+      sha256: ac1e4c1205267cb7999d1d81333fccffdfda29e853f434bbaf71525498bb6950
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.3.0"
+  google_sign_in_platform_interface:
+    dependency: transitive
+    description:
+      name: google_sign_in_platform_interface
+      sha256: "7f59208c42b415a3cca203571128d6f84f885fead2d5b53eb65a9e27f2965bb5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.1.0"
+  google_sign_in_web:
+    dependency: transitive
+    description:
+      name: google_sign_in_web
+      sha256: d473003eeca892f96a01a64fc803378be765071cb0c265ee872c7f8683245d14
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.3"
   hooks:
     dependency: transitive
     description:
@@ -409,10 +497,10 @@ packages:
     dependency: transitive
     description:
       name: image
-      sha256: "6300175e00616bbc832e2fc91bfa4d776af5402c81c7151bee6905bb08473c52"
+      sha256: "1976370a4df3091bb0f72409c187ad1f9132a818bc6b95ca59c0bae1c75c688e"
       url: "https://pub.dev"
     source: hosted
-    version: "4.9.1"
+    version: "4.9.2"
   intl:
     dependency: transitive
     description:
@@ -934,10 +1022,10 @@ packages:
     dependency: transitive
     description:
       name: vm_service
-      sha256: "0016aef94fc66495ac78af5859181e3f3bf2026bd8eecc72b9565601e19ab360"
+      sha256: "5f37239c4851efcef929cea7824e76df7f2f0970aef85d66bbc430afa40e72f0"
       url: "https://pub.dev"
     source: hosted
-    version: "15.2.0"
+    version: "15.3.0"
   web:
     dependency: transitive
     description:

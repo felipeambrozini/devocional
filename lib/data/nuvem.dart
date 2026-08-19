@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart' show ChangeNotifier, kIsWeb;
+import 'package:flutter/foundation.dart' show ChangeNotifier;
 
 import '../firebase_options.dart';
 import 'estado.dart';
@@ -19,7 +19,7 @@ final _espacos = RegExp(r'\s+');
 /// sozinho (ver `_AvisoDePerda` em `lib/telas/notas.dart`). O Android já
 /// guarda tudo no aparelho e continua só com o exportar/importar por
 /// clipboard. Mesmo formato de `lembretesSuportados` em `lib/data/lembretes.dart`.
-bool get nuvemSuportada => kIsWeb;
+bool get nuvemSuportada => true;
 
 /// Liga o [Estado] a um depósito remoto sem que o Estado saiba disso.
 ///

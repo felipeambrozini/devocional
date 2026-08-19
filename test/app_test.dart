@@ -248,8 +248,9 @@ void main() {
     await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
     await tester.pumpAndSettle();
 
-    // Sobre não é mais aba: a navegação inferior tem seis destinos, e os
-    // créditos moram na folha de ajustes (ver o teste seguinte).
+    // Sobre não é mais aba: o rail tem cinco destinos (Conversas fica nos
+    // balões de conversa), e os créditos moram na folha de ajustes (ver o
+    // teste seguinte).
     for (final rotulo in ['Hoje', 'Bíblia', 'Devocional', 'Plano', 'Notas']) {
       expect(find.text(rotulo), findsWidgets, reason: rotulo);
     }
@@ -275,8 +276,8 @@ void main() {
       ),
     );
     expect(find.text('Promessas de Deus'), findsWidgets);
-    // Com o cartão de Promessas a tela ficou mais alta que a viewport do teste,
-    // então o progresso só é construído depois da rolagem.
+    // Com o cartão de Promessas a tela ficou mais alta que a viewport do
+    // teste, então o progresso só é construído depois da rolagem.
     await tester.scrollUntilVisible(
       find.text('Progresso do ano'),
       200,
@@ -415,6 +416,73 @@ void main() {
       reason: 'o chip de Noite escreve a própria rota na URL',
     );
   });
+
+  testWidgets(
+    'a data escolhida no calendário do Devocional atualiza a tela',
+    (tester) async {
+      await aquecerAssets(tester);
+      await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+      await tester.pumpAndSettle();
+
+      final roteador = GoRouter.of(
+        tester.element(find.byType(Scaffold).first),
+      );
+      roteador.go('/manha');
+      await tester.pumpAndSettle();
+
+      // O calendário escreve a data na mesma rota (/manha?data=...), e o
+      // go_router chaveia a página só pelo caminho: a tela não é recriada, o
+      // State sobrevive e a data nova tem de ser recolhida pelo
+      // didUpdateWidget. Regressão: o título ficava preso no dia anterior.
+      //
+      // Sem pumpAndSettle: o corpo do dia 10 de janeiro não está no cache de
+      // assets do teste, e o spinner girando não deixaria a tela assentar.
+      final anoPassado = DateTime.now().year - 1;
+      roteador.go('/manha?data=$anoPassado-01-10');
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('10 de janeiro de $anoPassado'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'o calendário navega para o mesmo dia e mês de outro ano',
+    (tester) async {
+      await aquecerAssets(tester);
+      await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+      await tester.pumpAndSettle();
+
+      final roteador = GoRouter.of(
+        tester.element(find.byType(Scaffold).first),
+      );
+      roteador.go('/manha');
+      await tester.pumpAndSettle();
+
+      // O ano entra na comparação de "mesmo dia": escolher 19 de agosto do
+      // ano passado não pode ser o mesmo dia que 19 de agosto de hoje, senão
+      // a navegação morria no retorno cedo de _irPara e o usuário ficava
+      // preso no dia atual sem o botão de voltar para hoje à vista.
+      final anoPassado = DateTime.now().year - 1;
+      final agora = DateTime.now();
+      final mes = agora.month.toString().padLeft(2, '0');
+      final dia = agora.day.toString().padLeft(2, '0');
+      roteador.go('/manha?data=$anoPassado-$mes-$dia');
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        find.text(
+          '${agora.day} de ${meses[agora.month - 1].toLowerCase()} '
+          'de $anoPassado',
+        ),
+        findsOneWidget,
+      );
+      // Fora do dia atual, o botão de voltar para hoje aparece.
+      expect(find.byTooltip('Voltar para hoje'), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'reabrir o chat com uma resposta interrompida oferece tentar de novo',
@@ -1643,9 +1711,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // O cartão fica abaixo das duas leituras do dia, que abrem a tela: numa
+     // O cartão fica abaixo das duas leituras do dia, que abrem a tela: numa
     // janela de 600 px de altura a lista nem o constrói. Rola até ele, como
-    // o visitante faria, antes de conferir e tocar.
+    // o visitante faria, antes de conferir e tocar. O progresso do ano agora
+    // viaja com a leitura, mas não afeta a posição deste cartão de ajuda.
     await tester.scrollUntilVisible(
       find.text('Entendi'),
       200,

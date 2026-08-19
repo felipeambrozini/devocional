@@ -374,8 +374,7 @@ Future<bool> confirmarRemocao(
 /// O alternador é um toque só, e um toque errado num dia lido custaria o
 /// registro sem aviso: o "Desfazer" devolve o estado anterior. É o mesmo
 /// padrão do deslize de capítulo (`biblia.dart`): a ação tem sempre uma
-/// saída de um toque. Usado pelo "Leitura de hoje" (`hoje.dart`) e pelo
-/// botão da tela do devocional (`devocional.dart`).
+/// saída de um toque. Usado pelo "Leitura de hoje" (`hoje.dart`).
 void alternarLidoComDesfazer(
   BuildContext context,
   Estado estado,
@@ -577,7 +576,10 @@ class RetratoDePersona extends StatelessWidget {
             alignment: Alignment.center,
             child: Text(
               persona.nomeCurto.characters.first,
-              style: TextStyle(color: cor.primary, fontSize: tamanho * 0.42),
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                color: cor.primary,
+                fontSize: tamanho * 0.42,
+              ),
             ),
           ),
         ),

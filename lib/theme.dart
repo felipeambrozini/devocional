@@ -36,10 +36,9 @@ abstract final class Cores {
 
 /// Monta o tema.
 ///
-/// [escalaDeLeitura] multiplica só os estilos do texto corrido, que é o que o
-/// leitor da Bíblia, o devocional e as introduções usam. Rótulo de navegação,
-/// título e legenda ficam parados: aumentar a fonte de leitura não deve empurrar
-/// a barra de baixo nem quebrar o cabeçalho.
+/// [escalaDeLeitura] multiplica todos os tamanhos de texto do app — títulos,
+/// corpo, rótulos e tooltips — garantindo que o tamanho configurado pelo
+/// usuário seja respeitado em todo lugar.
 ///
 /// [brilho] escolhe a paleta. As telas nunca leem de [Cores] direto: tudo sai do
 /// `ColorScheme`, senão metade da interface continuaria marrom sobre pergaminho.
@@ -91,16 +90,21 @@ ThemeData construirTema({
   // o peso final fica por conta do casamento e da síntese de fonte do motor, que
   // variam por plataforma. `fontWeight` continua declarado porque é o que o
   // Flutter usa para escolher a família; `fontVariations` é o que pesa a letra.
+  /// A escala de leitura agora aplica-se a todos os textos do app, garantindo
+  /// que o tamanho configurado pelo usuário seja respeitado em títulos, rótulos
+  /// e corpo de texto — não apenas no texto corrido da leitura.
+  double escalar(double tamanho) => tamanho * escalaDeLeitura;
+
   TextStyle titulo(double tamanho, FontWeight peso) => TextStyle(
     fontFamily: 'Cinzel',
-    fontSize: tamanho,
+    fontSize: escalar(tamanho),
     fontWeight: peso,
     fontVariations: [FontVariation('wght', peso.value.toDouble())],
     color: esquema.primary,
   );
   TextStyle corpo(double tamanho, {Color? cor, FontWeight? peso}) => TextStyle(
     fontFamily: 'Montserrat',
-    fontSize: tamanho,
+    fontSize: escalar(tamanho),
     color: cor ?? esquema.onSurface,
     fontWeight: peso,
     fontVariations: [
@@ -108,8 +112,8 @@ ThemeData construirTema({
     ],
   );
 
-  /// Texto corrido de leitura, o único que a escala do usuário afeta.
-  TextStyle leitura(double tamanho) => corpo(tamanho * escalaDeLeitura);
+  /// Texto corrido de leitura — mantém a mesma escala que o restante agora.
+  TextStyle leitura(double tamanho) => corpo(tamanho);
 
   final traco = esquema.outline;
 

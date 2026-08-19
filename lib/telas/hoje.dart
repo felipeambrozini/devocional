@@ -38,7 +38,7 @@ class _TelaHojeState extends State<TelaHoje> {
               // A leitura do plano abre a tela, antes dos devocionais: é a
               // razão do app existir. A leitura da hora vem logo depois, no
               // cartão que ganha o filete; promessas mantém o cartão sem ele,
-              // e o progresso fica depois da dobra.
+              // e o progresso do ano segue a leitura como quem a acompanha.
               _LeituraDeHoje(data: agora),
               const SizedBox(height: Spacing.sp16),
               _PreviaDaLeitura(
@@ -60,8 +60,6 @@ class _TelaHojeState extends State<TelaHoje> {
                 const SizedBox(height: Spacing.sp16),
                 _CartaoDeAjuda(estado: estado),
               ],
-              const SizedBox(height: Spacing.sp16),
-              _Progresso(estado: estado, ano: agora.year),
             ],
           ),
         ),
@@ -168,7 +166,10 @@ class _Cabecalho extends StatelessWidget {
                     alignment: Alignment.center,
                     child: Text(
                       'F',
-                      style: TextStyle(color: cor.primary, fontSize: 24),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: cor.primary,
+                        fontSize: 24,
+                      ),
                     ),
                   ),
                 ),
@@ -405,8 +406,9 @@ class _LeituraDeHoje extends StatelessWidget {
   final DateTime data;
 
   /// A leitura do plano é uma seção, não um cartão: o Filete abre a leitura
-  /// (a gramática do sistema) e o título em Cinzel dá o nome. Ela abre a
-  /// tela, e os devocionais vêm logo abaixo, cada um no próprio cartão.
+  /// (a gramática do sistema) e o título em Cinzel dá o nome. Ela abre a tela
+  /// e leva o progresso do ano no fim, para sempre acompanhar a leitura; os
+  /// devocionais vêm logo abaixo, cada um no próprio cartão.
   Widget _seccao(
     BuildContext context, {
     required Widget corpo,
@@ -487,6 +489,10 @@ class _LeituraDeHoje extends StatelessWidget {
                 runSpacing: Spacing.sp8,
                 children: [for (final f in dia.faixas) BotaoDeFaixa(faixa: f)],
               ),
+              // O progresso do ano vem junto com a leitura: o acompanhamento
+              // não se separa dela na rolagem.
+              const SizedBox(height: Spacing.sp24),
+              _Progresso(estado: estado, ano: data.year),
             ],
           ),
         );
@@ -538,13 +544,28 @@ class _Progresso extends StatelessWidget {
           ],
         ),
         const SizedBox(height: Spacing.sp8),
+        // Barra sem animação: o LinearProgressIndicator anima o valor em
+        // ~300 ms, e sob carga paralela de testes isso faz o pumpAndSettle
+        // não-assentar de forma determinística. Uma barra direta tem o mesmo
+        // visual e nada anima — o progresso é mostrado no frame em que é.
         ClipRRect(
           borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: progresso.clamp(0.0, 1.0),
-            minHeight: 5,
-            backgroundColor: cor.surfaceContainerHighest,
-            valueColor: AlwaysStoppedAnimation(cor.primary),
+          child: Container(
+            height: 5,
+            decoration: BoxDecoration(
+              color: cor.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: FractionallySizedBox(
+              widthFactor: progresso.clamp(0.0, 1.0),
+              alignment: Alignment.centerLeft,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: cor.primary,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
           ),
         ),
       ],

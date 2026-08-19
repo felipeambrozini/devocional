@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "169480227109",
+    "project_id": "devocional-15815",
+    "storage_bucket": "devocional-15815.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:169480227109:android:286f46640a25846c3c72cc",
+        "android_client_info": {
+          "package_name": "com.felipeambrozini.devocional"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "169480227109-00cve2jo449qsdtop1c2f2h3phfm21m8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBup_2xL3pWlsfW-GVd_GX6LY2xrfR1t84"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "169480227109-00cve2jo449qsdtop1c2f2h3phfm21m8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "169480227109-acd4hhe5rte2p0ljc2gos2orgh0mk7cg.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.felipeambrozini.devocional"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

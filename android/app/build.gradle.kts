@@ -10,6 +10,8 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.appdistribution")
 }
 
 android {
@@ -51,6 +53,10 @@ android {
 
 flutter {
     source = "../.."
+}
+
+firebaseAppDistribution {
+    appId = "1:169480227109:android:286f46640a25846c3c72cc"
 }
 
 dependencies {

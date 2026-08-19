@@ -77,6 +77,22 @@ class _TelaDevocionalState extends State<TelaDevocional> {
     _leitura = widget.leituraInicial ?? Leitura.pelaHora(DateTime.now().hour);
   }
 
+  @override
+  void didUpdateWidget(TelaDevocional anterior) {
+    super.didUpdateWidget(anterior);
+    // O go_router chaveia a página de uma rota pelo caminho, sem os
+    // parâmetros: ir de /manha a /manha?data=... atualiza o widget no lugar,
+    // e o initState não roda de novo. Quem recolhe a data nova da URL é este
+    // método — sem ele, o calendário escrevia a URL mas a tela não mudava.
+    final novaData = widget.dataInicial ?? DateTime.now();
+    final novaLeitura = widget.leituraInicial ?? _leitura;
+    if (novaLeitura == _leitura && _mesmoDia(novaData, _data)) return;
+    setState(() {
+      _data = novaData;
+      _leitura = novaLeitura;
+    });
+  }
+
   Future<void> _escolherData() async {
     final escolhida = await showDatePicker(
       context: context,
@@ -102,8 +118,11 @@ class _TelaDevocionalState extends State<TelaDevocional> {
     GoRouter.of(context).go('/${leitura.name}$parametro');
   }
 
+  /// O ano entra na comparação: a data da URL é completa, e "19 de agosto"
+  /// de um ano não é o mesmo dia de outro. Sem ele, escolher no calendário o
+  /// mesmo dia e mês de um ano diferente não navegava, e a tela ficava presa.
   static bool _mesmoDia(DateTime a, DateTime b) =>
-      a.month == b.month && a.day == b.day;
+      a.year == b.year && a.month == b.month && a.day == b.day;
 
   static String _formatoDeData(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-'
@@ -119,7 +138,7 @@ class _TelaDevocionalState extends State<TelaDevocional> {
   @override
   Widget build(BuildContext context) {
     final hoje = DateTime.now();
-    final ehHoje = _data.month == hoje.month && _data.day == hoje.day;
+    final ehHoje = _mesmoDia(_data, hoje);
     final estado = EscopoDoEstado.de(context);
 
     return Scaffold(
@@ -129,33 +148,6 @@ class _TelaDevocionalState extends State<TelaDevocional> {
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
-          if (ehHoje)
-            // Marcar o dia como lido é o gesto de conclusão da leitura: vive
-            // na superfície onde a leitura acontece, e não só num cartão da
-            // Hoje, para quem leu o devocional do dia não precisar voltar
-            // para marcar. A mesma chave e o mesmo estado do cartão "Leitura
-            // de hoje" (`hoje.dart`) e do cronograma (`plano.dart`).
-            ListenableBuilder(
-              listenable: estado,
-              builder: (context, _) {
-                final chave = Conteudo.chaveDoDia(_data);
-                final lido = estado.foiLido(chave);
-                return IconButton(
-                  tooltip: lido ? 'Desmarcar dia como lido' : 'Marcar dia como lido',
-                  icon: Icon(
-                    lido ? Icons.check_circle : Icons.radio_button_unchecked,
-                    color: lido
-                        ? Theme.of(context).colorScheme.secondary
-                        : Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  onPressed: () => alternarLidoComDesfazer(
-                    context,
-                    estado,
-                    chave,
-                  ),
-                );
-              },
-            ),
           IconButton(
             tooltip: 'Tamanho do texto e aparência',
             icon: const Icon(Icons.tune),

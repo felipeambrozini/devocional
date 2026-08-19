@@ -41,14 +41,27 @@ void main() {
     await tester.pumpWidget(AppDevocional(estado: estado));
     await tester.pumpAndSettle();
 
+    // O GoRouter navega ate Hoje num frame: a lista nao existe ate a rota
+    // aterrar. Espera-a antes de rolar e tocar, senao o scroll nao encontra
+    // nada e o tap cai no espaco vazio.
+    for (var i = 0; i < 50 && find.byType(ListView).evaluate().isEmpty; i++) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    await tester.pumpAndSettle();
+
+    // O cartão fica abaixo das leituras do dia na 800×900: rola até ele para
+    // construí-lo (scrollUntilVisible materializa, não basta visto que o
+    // ListView já o constrói adiante do visitável), depois garante que está de
+    // fato à mostra antes de tocar.
     await tester.scrollUntilVisible(
       find.text('Entendi'),
-      200,
+      300,
       scrollable: find.descendant(
         of: find.byType(ListView),
         matching: find.byType(Scrollable),
       ),
     );
+    await tester.ensureVisible(find.text('Entendi'));
     await tester.pumpAndSettle();
 
     expect(find.text('Como usar'), findsOneWidget);
@@ -72,16 +85,15 @@ void main() {
     await tester.pumpWidget(AppDevocional(estado: estado));
     await tester.pumpAndSettle();
 
-    // O interruptor fica na seção "Leitura de hoje", a primeira da tela:
-    // rola até ele antes de tocar, como o visitante faria.
-    await tester.scrollUntilVisible(
-      find.byTooltip('Marcar como lido'),
-      200,
-      scrollable: find.descendant(
-        of: find.byType(ListView),
-        matching: find.byType(Scrollable),
-      ),
-    );
+    // O GoRouter navega ate Hoje num frame: a lista ainda nao existe.
+    // Espera-a antes de garantir o botao visivel e tocar.
+    for (var i = 0; i < 50 && find.byType(ListView).evaluate().isEmpty; i++) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.byTooltip('Marcar como lido'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Marcar como lido'));
     await tester.pumpAndSettle();
 

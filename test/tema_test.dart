@@ -215,19 +215,19 @@ void main() {
       expect(tema.bodyMedium?.fontSize, 15);
     });
 
-    test('a escala multiplica só o texto corrido de leitura', () {
+    test('a escala multiplica todos os tamanhos de texto do tema', () {
       final padrao = construirTema().textTheme;
       final grande = construirTema(escalaDeLeitura: 1.3).textTheme;
 
+      // Texto corrido de leitura
       expect(grande.bodyLarge?.fontSize, closeTo(17 * 1.3, 0.001));
       expect(grande.bodyMedium?.fontSize, closeTo(15 * 1.3, 0.001));
 
-      // Rótulo de navegação, título e legenda ficam parados: aumentar a fonte de
-      // leitura não deve empurrar a barra de baixo nem quebrar o cabeçalho.
-      expect(grande.bodySmall?.fontSize, padrao.bodySmall?.fontSize);
-      expect(grande.labelMedium?.fontSize, padrao.labelMedium?.fontSize);
-      expect(grande.headlineMedium?.fontSize, padrao.headlineMedium?.fontSize);
-      expect(grande.titleSmall?.fontSize, padrao.titleSmall?.fontSize);
+      // Título, rótulo e legenda aumentam junto
+      expect(grande.bodySmall?.fontSize, closeTo(padrao.bodySmall!.fontSize! * 1.3, 0.001));
+      expect(grande.labelMedium?.fontSize, closeTo(padrao.labelMedium!.fontSize! * 1.3, 0.001));
+      expect(grande.headlineMedium?.fontSize, closeTo(padrao.headlineMedium!.fontSize! * 1.3, 0.001));
+      expect(grande.titleSmall?.fontSize, closeTo(padrao.titleSmall!.fontSize! * 1.3, 0.001));
     });
 
     test('os passos oferecidos têm um rótulo cada e incluem o padrão', () {

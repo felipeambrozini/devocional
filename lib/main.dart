@@ -137,8 +137,9 @@ class _Destino {
     this.caminho,
     this.icone,
     this.iconeAtivo,
-    this.tela,
-  );
+    this.tela, {
+    this.mostrarNoRail = true,
+  });
 
   final String rotulo;
 
@@ -150,6 +151,10 @@ class _Destino {
   final IconData icone;
   final IconData iconeAtivo;
   final Widget tela;
+
+  /// Em telas largas os balões de conversa substituem a aba: esconder este
+  /// destino do NavigationRail mantém a navegação limpa.
+  final bool mostrarNoRail;
 }
 
 const _destinos = <_Destino>[
@@ -194,6 +199,7 @@ const _destinos = <_Destino>[
     Icons.forum_outlined,
     Icons.forum,
     TelaConversas(),
+    mostrarNoRail: false,
   ),
 ];
 
@@ -213,11 +219,11 @@ final _escoposDasAbas = [
 
 /// Cada aba com o próprio caminho (`/hoje`, `/biblia`, `/devocional`,
 /// `/plano`, `/notas`, `/conversas`), para abrir direto por link e sobreviver
-/// a um F5 — o
-/// Firebase Hosting devolve o index.html para qualquer caminho sob
+/// a um F5 — o Firebase Hosting devolve o index.html para qualquer caminho sob
 /// `/devocional/` (rewrite em firebase.json). Sobre e as conversas também têm
 /// URL própria, fora do shell: são telas empurradas por cima das abas, não
-/// abas.
+/// abas. "Conversas" tem `mostrarNoRail: false`: em telas largas os balões de
+/// conversa substituem a aba no NavigationRail, mas a rota continua ativa.
 ///
 /// `StatefulShellRoute.indexedStack`, não rotas soltas: rotas soltas
 /// trocariam de aba reconstruindo a Moldura do zero, perdendo a rolagem e o
@@ -502,15 +508,25 @@ class Moldura extends StatelessWidget {
       );
     }
 
+    // Em telas largas os balões de conversa substituem a aba: o rail omite
+    // Conversas para não duplicar a entrada do chat.
+    final destinosDoRail = [
+      for (final d in _destinos)
+        if (d.mostrarNoRail) d,
+    ];
+
     return Scaffold(
       body: Row(
         children: [
           NavigationRail(
-            selectedIndex: navigationShell.currentIndex,
+            selectedIndex: navigationShell.currentIndex.clamp(
+              0,
+              destinosDoRail.length - 1,
+            ),
             onDestinationSelected: _irParaAba,
             labelType: NavigationRailLabelType.all,
             destinations: [
-              for (final d in _destinos)
+              for (final d in destinosDoRail)
                 NavigationRailDestination(
                   icon: Icon(d.icone),
                   selectedIcon: Icon(d.iconeAtivo),
@@ -574,9 +590,11 @@ final _observadorDaVoz = _ObservadorDaVoz();
 /// esquerda, Felipe à direita.
 ///
 /// Em tela estreita não existem: as conversas entram pela aba Conversas, e um
-/// balão flutuante por cima do texto de leitura não volta. Somem quando [camadasFlutuantes] passa de zero, e reaparecem quando
-/// a camada fecha. A preferência gravada (`estado.baloesVisiveis`) continua
-/// valendo para quem a mudou antes de a aba Conversas existir.
+/// balão flutuante por cima do texto de leitura não volta. Em telas largas os
+/// balões substituem a aba no NavigationRail — que omite "Conversas" —, mas a
+/// rota `/conversas` continua ativa para quem chega por link direto. Somem
+/// quando [camadasFlutuantes] passa de zero, e reaparecem quando a camada
+/// fecha. A preferência gravada (`estado.baloesVisiveis`) continua valendo.
 class _ComBaloes extends StatelessWidget {
   const _ComBaloes({required this.child});
 
