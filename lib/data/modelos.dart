@@ -40,8 +40,8 @@ enum ModoDoTema {
   final String rotulo;
 }
 
-/// O tipo de conteúdo que a voz lê: cada um tem a própria voz e o próprio
-/// ritmo — a Bíblia e as introduções usam um narrador, e os devocionais outro.
+/// O tipo de conteúdo que a voz lê: todos usam a mesma voz, o Iapetus, e o
+/// que muda de um para o outro é o ritmo.
 ///
 /// Vive aqui, e não em `data/voz.dart`, porque é a decisão de quem monta o
 /// botão de ouvir, e `telas/` já importa `modelos.dart`.
@@ -54,13 +54,7 @@ enum TipoConteudoAudio {
 
   /// O nome da voz na Google Text-to-Speech (ouvir em
   /// https://cloud.google.com/text-to-speech, sem chave).
-  String get voiceName => switch (this) {
-    TipoConteudoAudio.biblia ||
-    TipoConteudoAudio.introducao => 'pt-BR-chirp3-hd-fenrir',
-    TipoConteudoAudio.devocionalManha ||
-    TipoConteudoAudio.devocionalNoite ||
-    TipoConteudoAudio.promessasDeDeus => 'pt-BR-chirp3-hd-orus',
-  };
+  String get voiceName => 'pt-BR-chirp3-hd-iapetus';
 
   /// Ritmo da leitura: 1.0 é o padrão da voz; o devocional da noite desce
   /// ainda mais, porque a noite pede um passo mais lento que o do dia.

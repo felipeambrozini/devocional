@@ -139,7 +139,7 @@ void main() {
       final audio = corpo['audioConfig'] as Map<String, dynamic>;
       if (input['text'] != 'No princípio.' ||
           voice['languageCode'] != 'pt-BR' ||
-          voice['name'] != 'pt-BR-chirp3-hd-fenrir' ||
+          voice['name'] != 'pt-BR-chirp3-hd-iapetus' ||
           audio['audioEncoding'] != 'MP3' ||
           audio['speakingRate'] != 0.92) {
         return http.Response('pedido diferente do esperado', 500);
@@ -163,7 +163,7 @@ void main() {
     });
 
     test(
-      'cada tipo de conteúdo pede a própria voz e o próprio ritmo',
+      'todo tipo de conteúdo pede a mesma voz, cada um com o próprio ritmo',
       () async {
         final pedidos = <(String, double)>[];
         final medidor = MockClient((request) async {
@@ -190,11 +190,11 @@ void main() {
           );
         }
         expect(pedidos, [
-          ('pt-BR-chirp3-hd-fenrir', 0.92), // biblia
-          ('pt-BR-chirp3-hd-orus', 0.94), // devocionalManha
-          ('pt-BR-chirp3-hd-orus', 0.88), // devocionalNoite
-          ('pt-BR-chirp3-hd-orus', 0.91), // promessasDeDeus
-          ('pt-BR-chirp3-hd-fenrir', 0.92), // introducao
+          ('pt-BR-chirp3-hd-iapetus', 0.92), // biblia
+          ('pt-BR-chirp3-hd-iapetus', 0.94), // devocionalManha
+          ('pt-BR-chirp3-hd-iapetus', 0.88), // devocionalNoite
+          ('pt-BR-chirp3-hd-iapetus', 0.91), // promessasDeDeus
+          ('pt-BR-chirp3-hd-iapetus', 0.92), // introducao
         ]);
       },
     );

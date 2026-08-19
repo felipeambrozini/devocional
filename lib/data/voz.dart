@@ -18,10 +18,9 @@ import 'modelos.dart';
 /// milhão de caracteres por mês, e um capítulo inteiro gasta ~3 mil — dá para
 /// ouvir o ano inteiro sem pagar nada.
 ///
-/// A voz e o ritmo não são um par só: cada tipo de conteúdo
-/// ([TipoConteudoAudio]) tem a própria voz e o próprio ritmo — a Bíblia e as
-/// introduções usam um narrador, e os devocionais outro, mais íntimo. Para
-/// trocar, é só editar o enum em `lib/data/modelos.dart` e audicionar em
+/// O ritmo e o conteúdo mudam, a voz não: todo tipo de conteúdo
+/// ([TipoConteudoAudio]) lê na mesma voz, o Iapetus. Para trocar, é só editar
+/// o enum em `lib/data/modelos.dart` e audicionar em
 /// https://cloud.google.com/text-to-speech (sem chave).
 
 /// Falha na voz, já traduzida para o que o usuário deve ler.

@@ -37,8 +37,8 @@ enum Leitura {
     Leitura.promessas => null,
   };
 
-  /// O tipo de conteúdo da voz ([TipoConteudoAudio]): o dia e a noite têm
-  /// vozes próprias, e Promessas de Deus, obra separada, a própria.
+  /// O tipo de conteúdo da voz ([TipoConteudoAudio]): todos leem na mesma
+  /// voz, com o ritmo de cada um.
   TipoConteudoAudio get tipoDeVoz => switch (this) {
     Leitura.manha => TipoConteudoAudio.devocionalManha,
     Leitura.noite => TipoConteudoAudio.devocionalNoite,
@@ -291,8 +291,8 @@ class _CartaoDeLeitura extends StatelessWidget {
   /// Capa do livro de onde a leitura vem, para dar identidade ao cartão.
   final String? capa;
 
-  /// O tipo de conteúdo da leitura: a voz do dia e a da noite não são a
-  /// mesma ([TipoConteudoAudio]), e é o que o botão de ouvir usa na síntese.
+  /// O tipo de conteúdo da leitura ([TipoConteudoAudio]): todos usam a mesma
+  /// voz, e é o que o botão de ouvir usa no ritmo da síntese.
   final TipoConteudoAudio tipo;
 
   /// O que a voz de Spurgeon lê: chave do áudio, texto e referência.
