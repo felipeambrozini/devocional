@@ -405,170 +405,187 @@ class _LeituraDeHoje extends StatelessWidget {
 
   final DateTime data;
 
-  /// A leitura do plano é uma seção, não um cartão: o Filete abre a leitura
-  /// (a gramática do sistema) e o título em Cinzel dá o nome. Ela abre a tela
-  /// e leva o progresso do ano no fim, para sempre acompanhar a leitura; os
-  /// devocionais vêm logo abaixo, cada um no próprio cartão.
-  Widget _seccao(
-    BuildContext context, {
-    required Widget corpo,
-    Widget? acao,
-  }) {
-    final tema = Theme.of(context).textTheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Filete(),
-        const SizedBox(height: Spacing.sp12),
-        Row(
-          children: [
-            Expanded(child: Text('Leitura de hoje', style: tema.titleLarge)),
-            ?acao,
-          ],
-        ),
-        const SizedBox(height: Spacing.sp8),
-        corpo,
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final cor = Theme.of(context).colorScheme;
-    final tema = Theme.of(context).textTheme;
     final estado = EscopoDoEstado.de(context);
     return CarregaUmaVez<DiaDoPlano?>(
       chave: Conteudo.chaveDoDia(data),
       carregar: () => Conteudo.instancia.diaDoPlano(data),
       construir: (context, snap) {
-        // Sem estes guards o primeiro frame, que sempre chega sem dado porque a
-        // leitura é assíncrona, desenharia uma seção vazia por um instante; e
-        // erro (asset corrompido ou ausente) também chega com snap.data == null,
-        // por isso o hasError vem antes do estado de carregamento.
-        // Depois de done, snap.data nunca é null: o cronograma comum cobre as
-        // 365 datas reais do ano e o bissexto as 366, incluindo 29-02 como dia
-        // próprio — o antigo cartão de "dia de recuperação" era código morto.
         if (snap.hasError) {
-          return _seccao(
-            context,
-            corpo: Text(
-              'Não foi possível carregar o cronograma.',
-              style: tema.bodyMedium,
-            ),
+          return _CartaoLeituraProgressoErro(
+            mensagem: 'Não foi possível carregar o cronograma.',
           );
         }
         if (snap.connectionState != ConnectionState.done) {
-          return _seccao(
-            context,
-            corpo: Text('Carregando...', style: tema.bodyMedium),
-          );
+          return const _CartaoLeituraProgressoCarregando();
         }
         final dia = snap.data!;
-        final lido = estado.foiLido(dia.data);
-        return _seccao(
-          context,
-          acao: IconButton(
-            tooltip: lido ? 'Desmarcar' : 'Marcar como lido',
-            icon: Icon(
-              lido ? Icons.check_circle : Icons.radio_button_unchecked,
-              color: lido ? cor.secondary : cor.onSurfaceVariant,
-            ),
-            onPressed: () => alternarLidoComDesfazer(
-              context,
-              estado,
-              dia.data,
-            ),
-          ),
-          corpo: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(dia.rotulo, style: tema.bodyLarge),
-              const SizedBox(height: Spacing.sp12),
-              Wrap(
-                spacing: Spacing.sp8,
-                runSpacing: Spacing.sp8,
-                children: [for (final f in dia.faixas) BotaoDeFaixa(faixa: f)],
-              ),
-              // O progresso do ano vem junto com a leitura: o acompanhamento
-              // não se separa dela na rolagem.
-              const SizedBox(height: Spacing.sp24),
-              _Progresso(estado: estado, ano: data.year),
-            ],
-          ),
-        );
+        return _CartaoLeituraProgresso(dia: dia, estado: estado, ano: data.year);
       },
     );
   }
 }
 
-class _Progresso extends StatelessWidget {
-  const _Progresso({required this.estado, required this.ano});
+/// Cartão unificado: leitura de hoje + progresso do ano, no estilo devocional.
+class _CartaoLeituraProgresso extends StatelessWidget {
+  const _CartaoLeituraProgresso({
+    required this.dia,
+    required this.estado,
+    required this.ano,
+  });
 
+  final DiaDoPlano dia;
   final Estado estado;
-
-  /// O ano decide o total: 366 dias em ano bissexto.
   final int ano;
 
   @override
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
+    final lido = estado.foiLido(dia.data);
     final total = Conteudo.diasDoAno(ano);
     final progresso = estado.progressoDoAno(total);
     final porcento = (progresso * 100).round();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Uma linha quieta, não um cartão: o progresso apoia a leitura, não
-        // compete com ela.
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text('Progresso do ano', style: tema.labelMedium),
-            const Spacer(),
-            Text(
-              '${estado.diasLidos}',
-              style: tema.titleMedium?.copyWith(color: cor.primary),
-            ),
-            const SizedBox(width: Spacing.sp6),
-            Text('de $total dias', style: tema.bodySmall),
-            const SizedBox(width: Spacing.sp12),
-            Text(
-              '$porcento%',
-              style: tema.bodyMedium?.copyWith(
-                color: cor.secondary,
-                fontWeight: FontWeight.w600,
+
+    return Cartao(
+      padding: const EdgeInsets.all(Spacing.sp20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Cabeçalho com título e ação de marcar como lido
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Filete(),
+                    const SizedBox(height: Spacing.sp12),
+                    Text('Leitura de hoje', style: tema.titleLarge),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: Spacing.sp8),
-        // Barra sem animação: o LinearProgressIndicator anima o valor em
-        // ~300 ms, e sob carga paralela de testes isso faz o pumpAndSettle
-        // não-assentar de forma determinística. Uma barra direta tem o mesmo
-        // visual e nada anima — o progresso é mostrado no frame em que é.
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: Container(
-            height: 5,
-            decoration: BoxDecoration(
-              color: cor.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: FractionallySizedBox(
-              widthFactor: progresso.clamp(0.0, 1.0),
-              alignment: Alignment.centerLeft,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: cor.primary,
-                  borderRadius: BorderRadius.circular(4),
+              IconButton(
+                tooltip: lido ? 'Desmarcar' : 'Marcar como lido',
+                icon: Icon(
+                  lido ? Icons.check_circle : Icons.radio_button_unchecked,
+                  color: lido ? cor.secondary : cor.onSurfaceVariant,
+                ),
+                onPressed: () => alternarLidoComDesfazer(
+                  context,
+                  estado,
+                  dia.data,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: Spacing.sp8),
+          // Rótulo do dia (ex: "Dia 1 — Gênesis 1–2")
+          Text(dia.rotulo, style: tema.bodyLarge),
+          const SizedBox(height: Spacing.sp12),
+          // Faixas do dia
+          Wrap(
+            spacing: Spacing.sp8,
+            runSpacing: Spacing.sp8,
+            children: [for (final f in dia.faixas) BotaoDeFaixa(faixa: f)],
+          ),
+          const SizedBox(height: Spacing.sp20),
+          // Filete separador antes do progresso
+          const Filete(),
+          const SizedBox(height: Spacing.sp14),
+          // Progresso do ano
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text('Progresso do ano', style: tema.labelMedium),
+              const Spacer(),
+              Text(
+                '${estado.diasLidos}',
+                style: tema.titleMedium?.copyWith(color: cor.primary),
+              ),
+              const SizedBox(width: Spacing.sp6),
+              Text('de $total dias', style: tema.bodySmall),
+              const SizedBox(width: Spacing.sp12),
+              Text(
+                '$porcento%',
+                style: tema.bodyMedium?.copyWith(
+                  color: cor.secondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: Spacing.sp8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: Container(
+              height: 5,
+              decoration: BoxDecoration(
+                color: cor.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: FractionallySizedBox(
+                widthFactor: progresso.clamp(0.0, 1.0),
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: cor.primary,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
+    );
+  }
+}
+
+class _CartaoLeituraProgressoErro extends StatelessWidget {
+  const _CartaoLeituraProgressoErro({required this.mensagem});
+  final String mensagem;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context).textTheme;
+    return Cartao(
+      padding: const EdgeInsets.all(Spacing.sp20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Filete(),
+          const SizedBox(height: Spacing.sp12),
+          Text('Leitura de hoje', style: tema.titleLarge),
+          const SizedBox(height: Spacing.sp8),
+          Text(mensagem, style: tema.bodyMedium),
+        ],
+      ),
+    );
+  }
+}
+
+class _CartaoLeituraProgressoCarregando extends StatelessWidget {
+  const _CartaoLeituraProgressoCarregando();
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context).textTheme;
+    return Cartao(
+      padding: const EdgeInsets.all(Spacing.sp20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Filete(),
+          const SizedBox(height: Spacing.sp12),
+          Text('Leitura de hoje', style: tema.titleLarge),
+          const SizedBox(height: Spacing.sp8),
+          Text('Carregando...', style: tema.bodyMedium),
+        ],
+      ),
     );
   }
 }

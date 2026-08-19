@@ -34,9 +34,9 @@ O aplicativo foi projetado com o princípio de exposição mínima de dados e pr
 ### 3.1 Injeção de Variáveis em Tempo de Compilação
 As chaves de API necessárias para o funcionamento dos serviços integrados (Firebase, IA Gemini e Google Text-to-Speech) não são mantidas estáticas no código-fonte. Elas são injetadas exclusivamente em tempo de compilação via parâmetros `--dart-define`:
 
-- `FIREBASE_API_KEY_WEB`
-- `GEMINI_API_KEY_WEB` e `GEMINI_API_KEY_ANDROID`
-- `TTS_API_KEY_WEB` e `TTS_API_KEY_ANDROID`
+- `FIREBASE_API_KEY_WEB`, `FIREBASE_API_KEY_ANDROID`, `FIREBASE_API_KEY_IOS`
+- `GEMINI_API_KEY_WEB`, `GEMINI_API_KEY_ANDROID`, `GEMINI_API_KEY_IOS`
+- `TTS_API_KEY_WEB`, `TTS_API_KEY_ANDROID`, `TTS_API_KEY_IOS`
 
 ### 3.2 Proteção de Chaves Públicas
 Conforme a arquitetura padrão para aplicações no lado do cliente (Web e Mobile), as chaves do Firebase e do Google Cloud presentes nos artefatos de compilação são consideradas públicas por desenho. A segurança dos serviços é assegurada por:
