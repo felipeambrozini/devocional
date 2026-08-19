@@ -37,7 +37,7 @@
     ],
     "rewrites": [
       {
-        "source": "/devocional**",
+        "source": "/devocional/**",
         "destination": "/devocional/index.html"
       }
     ]
