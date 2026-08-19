@@ -211,7 +211,8 @@ class Estado extends ChangeNotifier {
   bool get baloesVisiveis => _baloesVisiveis;
 
   /// Só persiste; quem decide mostrar ou não os balões é o `_ComBaloes` do
-  /// `main.dart`. O default é true: o chat não tem outro caminho de entrada.
+  /// `main.dart`. O default é true; a folha de ajustes não oferece mais o
+  /// interruptor (a aba Conversas é a entrada do chat).
   Future<void> definirBaloesVisiveis(bool novo) async {
     if (novo == _baloesVisiveis) return;
     _baloesVisiveis = novo;

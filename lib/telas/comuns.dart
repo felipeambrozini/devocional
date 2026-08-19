@@ -407,10 +407,10 @@ class BotaoDeAjustes extends StatelessWidget {
   );
 }
 
-/// Ajustes de leitura: tamanho do texto e claro ou escuro, botões de
-/// conversa, lembretes, conta — e Sobre, que deixou de ser aba e voltou para
-/// a folha quando a URL das conversas passou a ser refletida no navegador
-/// (ver `main.dart`, `optionURLReflectsImperativeAPIs`).
+/// Ajustes de leitura: tamanho do texto e claro ou escuro, a dica dos botões
+/// de conversa, lembretes, conta — e Sobre, que deixou de ser aba e voltou
+/// para a folha quando a URL das conversas passou a ser refletida no
+/// navegador (ver `main.dart`, `optionURLReflectsImperativeAPIs`).
 ///
 /// Fica numa folha acionada pela AppBar do leitor, e não numa tela de Ajustes,
 /// porque é onde o efeito se vê: muda o passo e o versículo atrás muda junto,
@@ -420,7 +420,7 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
   return showModalBottomSheet<void>(
     context: context,
     // Sem isScrollControlled a folha fica limitada a ~9/16 da tela: com ele, o
-    // conteúdo (Sobre, Tamanho, Aparência, Conversas, Lembretes e Conta) crescia
+    // conteúdo (Tamanho, Aparência, Conversas, Lembretes, Conta e Sobre) crescia
     // até quase a tela inteira no celular. O SingleChildScrollView rola o que
     // não couber em vez de estourar o layout.
     builder: (folha) => SafeArea(
@@ -433,25 +433,6 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Sobre no topo, e não no fim da folha: para o público da web,
-                // fontes, canais e privacidade são a prova de que o app é o
-                // que diz ser, e o caminho não pode depender de rolar cinco
-                // seções para encontrá-lo.
-                ListTile(
-                  leading: Icon(
-                    Icons.info_outline,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  title: const Text('Sobre'),
-                  subtitle: const Text('Fontes do texto, canais e privacidade'),
-                  onTap: () {
-                    // Sai da folha antes do push: uma rota sobre a folha
-                    // deixaria a folha embaixo da tela de Sobre no Android.
-                    final roteador = GoRouter.of(folha);
-                    Navigator.pop(folha);
-                    roteador.push('/sobre');
-                  },
-                ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp8, Spacing.sp20, Spacing.sp12),
                   child: Text('Tamanho do texto', style: tema.headlineSmall),
@@ -506,15 +487,6 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                   padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp24, Spacing.sp20, Spacing.sp4),
                   child: Text('Conversas', style: tema.headlineSmall),
                 ),
-                SwitchListTile(
-                  title: const Text('Mostrar botões de conversa'),
-                  subtitle: const Text(
-                    'Nas telas largas, os retratos de Spurgeon e de Felipe '
-                    'ficam ao alcance do toque.',
-                  ),
-                  value: estado.baloesVisiveis,
-                  onChanged: (novo) => estado.definirBaloesVisiveis(novo),
-                ),
                 ListTile(
                   leading: Icon(
                     Icons.tips_and_updates_outlined,
@@ -537,6 +509,23 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 // Só na web: Android já guarda tudo no aparelho. Ver
                 // nuvem.dart, mesma regra do lembretesSuportados acima.
                 if (nuvemSuportada) ..._secaoDaConta(context),
+                // Sobre no fim da folha: as escolhas do dia ficam na frente,
+                // e fontes, canais e privacidade esperam quem rola até o fim.
+                ListTile(
+                  leading: Icon(
+                    Icons.info_outline,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: const Text('Sobre'),
+                  subtitle: const Text('Fontes do texto, canais e privacidade'),
+                  onTap: () {
+                    // Sai da folha antes do push: uma rota sobre a folha
+                    // deixaria a folha embaixo da tela de Sobre no Android.
+                    final roteador = GoRouter.of(folha);
+                    Navigator.pop(folha);
+                    roteador.push('/sobre');
+                  },
+                ),
                 const SizedBox(height: Spacing.sp8),
               ],
             ),

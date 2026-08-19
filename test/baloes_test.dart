@@ -144,7 +144,7 @@ void main() {
     },
   );
 
-  testWidgets('esconder os balões nos ajustes os tira de todas as telas', (
+  testWidgets('a folha de ajustes não tem mais o interruptor dos balões', (
     tester,
   ) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
@@ -153,34 +153,20 @@ void main() {
       await tester.pumpWidget(AppDevocional(estado: estado));
       await tester.pumpAndSettle();
 
-      expect(estado.baloesVisiveis, isTrue);
-      expect(find.byTooltip('Conversas com Charles Spurgeon'), findsOneWidget);
-
       await tester.tap(find.byType(BotaoDeAjustes));
       await tester.pumpAndSettle();
 
-      // O interruptor de conversas é o que liga a preferência; o de lembretes
-      // é outro SwitchListTile na mesma folha e não pode ser confundido.
-      await tester.ensureVisible(
+      // A aba Conversas é a entrada do chat; o interruptor que escondia os
+      // balões saiu da folha junto com a função dele.
+      expect(
         find.widgetWithText(SwitchListTile, 'Mostrar botões de conversa'),
+        findsNothing,
       );
-      await tester.tap(
-        find.widgetWithText(SwitchListTile, 'Mostrar botões de conversa'),
-      );
-      await tester.pumpAndSettle();
+      expect(find.text('Reexibir dica dos botões de conversa'), findsOneWidget);
 
-      expect(estado.baloesVisiveis, isFalse);
-
-      // Fecha a folha sem camada nenhuma por cima: os balões poderiam voltar,
-      // e não voltam — a preferência vale de todas as telas.
       Navigator.of(tester.element(find.text('Tamanho do texto'))).pop();
       await tester.pumpAndSettle();
       expect(camadasFlutuantes.value, 0);
-      expect(
-        find.byTooltip('Conversas com Charles Spurgeon'),
-        findsNothing,
-        reason: 'os balões sumiram de vez, não só por cima da folha',
-      );
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }

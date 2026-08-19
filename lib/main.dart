@@ -554,9 +554,8 @@ final _observadorDaVoz = _ObservadorDaVoz();
 ///
 /// Em tela estreita não existem: as conversas entram pela aba Conversas, e um
 /// balão flutuante por cima do texto de leitura não volta. Somem quando [camadasFlutuantes] passa de zero, e reaparecem quando
-/// a camada fecha. Escondê-los nos ajustes (`estado.baloesVisiveis`) os tira
-/// de todas as telas: só o dono do aparelho decide se os retratos ficam no
-/// caminho.
+/// a camada fecha. A preferência gravada (`estado.baloesVisiveis`) continua
+/// valendo para quem a mudou antes de a aba Conversas existir.
 class _ComBaloes extends StatelessWidget {
   const _ComBaloes({required this.child});
 
