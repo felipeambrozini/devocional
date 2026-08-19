@@ -557,7 +557,6 @@ class _ComBaloes extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final largo = MediaQuery.sizeOf(context).width >= 720;
     final estado = EscopoDoEstado.de(context);
     return ListenableBuilder(
       listenable: camadasFlutuantes,
@@ -574,30 +573,67 @@ class _ComBaloes extends StatelessWidget {
               Overlay(
                 initialEntries: [
                   OverlayEntry(
-                    builder: (context) => Stack(
-                      children: [
-                        // A folga de baixo é a altura da barra de navegação
-                        // (80) mais o respiro: o balão não pode cobrir o
-                        // destino da esquina. Em tela larga quem ocupa o canto
-                        // esquerdo é o trilho lateral, então o balão dele pula
-                        // para dentro do conteúdo.
-                        Positioned(
-                          left: largo ? 96 : 12,
-                          bottom: largo ? 12 : 88,
-                          child: BalaoDeChat(
-                            persona: personaSpurgeon,
-                            onTap: () => _abrirChat(personaSpurgeon),
-                          ),
-                        ),
-                        Positioned(
-                          right: 12,
-                          bottom: largo ? 12 : 88,
-                          child: BalaoDeChat(
-                            persona: personaFelipe,
-                            onTap: () => _abrirChat(personaFelipe),
-                          ),
-                        ),
-                      ],
+                    builder: (context) => LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Em tela estreita os dois cantos de baixo ficam
+                        // dentro da leitura: um balão em cada canto tampa a
+                        // última linha do texto de cada lado. Empilhados num
+                        // canto só, cobrem bem menos leitura e nunca colidem
+                        // entre si quando o texto do sistema cresce. A folga
+                        // de baixo é a altura da barra de navegação (80) mais
+                        // o respiro: o balão não pode cobrir o destino da
+                        // esquina.
+                        if (constraints.maxWidth < 720) {
+                          return Stack(
+                            children: [
+                              Positioned(
+                                right: 12,
+                                bottom: 88,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    BalaoDeChat(
+                                      persona: personaSpurgeon,
+                                      onTap: () =>
+                                          _abrirChat(personaSpurgeon),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    BalaoDeChat(
+                                      persona: personaFelipe,
+                                      onTap: () =>
+                                          _abrirChat(personaFelipe),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+                        // Em tela larga quem ocupa o canto esquerdo é o
+                        // trilho lateral: o balão dele pula para dentro do
+                        // conteúdo, e o da direita fica na esquina.
+                        return Stack(
+                          children: [
+                            Positioned(
+                              left: 96,
+                              bottom: 12,
+                              child: BalaoDeChat(
+                                persona: personaSpurgeon,
+                                onTap: () => _abrirChat(personaSpurgeon),
+                              ),
+                            ),
+                            Positioned(
+                              right: 12,
+                              bottom: 12,
+                              child: BalaoDeChat(
+                                persona: personaFelipe,
+                                onTap: () => _abrirChat(personaFelipe),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ],

@@ -420,7 +420,7 @@ desinstalar antes de instalar de novo.
 
 O deploy é pelo GitHub Actions (`.github/workflows/deploy-web.yml`), com o
 Flutter fixo em 3.44.9, para o Firebase Hosting. O site mora em
-`felipeambrozini.com.br/devocional/` (um nível abaixo da raiz do domínio; o
+`www.felipeambrozini.com.br/devocional/` (um nível abaixo da raiz do domínio; o
 build vai para `public/devocional` e o rewrite em `firebase.json` cuida do
 SPA). O build usa `--base-href /devocional/` e as chaves de API vêm dos
 Secrets do repositório: `FIREBASE_API_KEY_WEB`, `GEMINI_API_KEY_WEB` e
