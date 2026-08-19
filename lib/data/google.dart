@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:google_api_headers/google_api_headers.dart';
 
 /// Chaves de API do Google, uma por plataforma, porque cada uma prova a
@@ -14,8 +14,10 @@ import 'package:google_api_headers/google_api_headers.dart';
 ///   X-Android-Package/X-Android-Cert, calculados em tempo de execução pelo
 ///   plugin google_api_headers — então debug e release funcionam sem trocar
 ///   nada, desde que os dois SHA-1 estejam registrados na chave.
+/// * chaveIos: criada no Google Cloud Console, restrita ao app iOS
+///   (`com.felipeambrozini.devocional` Bundle ID) e às APIs que o app usa.
 ///
-/// São dois pares de chave porque o console do Cloud não deixa juntar certas
+/// São três pares de chave porque o console do Cloud não deixa juntar certas
 /// APIs na mesma chave: a restrição da Generative Language API não combina com
 /// a da Cloud Text-to-Speech. Então:
 ///
@@ -30,18 +32,36 @@ const chaveGeminiWeb = String.fromEnvironment('GEMINI_API_KEY_WEB');
 
 const chaveGeminiAndroid = String.fromEnvironment('GEMINI_API_KEY_ANDROID');
 
+const chaveGeminiIos = String.fromEnvironment('GEMINI_API_KEY_IOS');
+
 String get chaveGemini {
   if (kIsWeb) return chaveGeminiWeb;
-  return chaveGeminiAndroid;
+  switch (defaultTargetPlatform) {
+    case TargetPlatform.iOS:
+      return chaveGeminiIos;
+    case TargetPlatform.android:
+      return chaveGeminiAndroid;
+    default:
+      return '';
+  }
 }
 
 const chaveTtsWeb = String.fromEnvironment('TTS_API_KEY_WEB');
 
 const chaveTtsAndroid = String.fromEnvironment('TTS_API_KEY_ANDROID');
 
+const chaveTtsIos = String.fromEnvironment('TTS_API_KEY_IOS');
+
 String get chaveTts {
   if (kIsWeb) return chaveTtsWeb;
-  return chaveTtsAndroid;
+  switch (defaultTargetPlatform) {
+    case TargetPlatform.iOS:
+      return chaveTtsIos;
+    case TargetPlatform.android:
+      return chaveTtsAndroid;
+    default:
+      return '';
+  }
 }
 
 /// Os cabeçalhos do pedido a uma API do Google.
