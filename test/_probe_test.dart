@@ -5,6 +5,7 @@ import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:felipe_ambrozini/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -15,6 +16,7 @@ void main() {
       final conteudo = Conteudo.instancia;
       await conteudo.plano();
       final agora = DateTime.now();
+      await conteudo.diaDoPlano(agora);
       for (final periodo in Periodo.values) {
         await conteudo.devocional(agora, periodo);
       }
@@ -85,16 +87,50 @@ void main() {
     await tester.pumpWidget(AppDevocional(estado: estado));
     await tester.pumpAndSettle();
 
+    // O _router é um singleton global (lib/main.dart). O primeiro teste
+    // muda o estado dele; garante que este teste comece na aba Hoje.
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    final goRouter = app.routerConfig as GoRouter;
+    goRouter.go('/hoje');
+    await tester.pumpAndSettle();
+
     // O GoRouter navega ate Hoje num frame: a lista ainda nao existe.
-    // Espera-a antes de garantir o botao visivel e tocar.
+    // Espera-a antes de garantir o botao visivel e tocar (mesmo padrão do teste 1).
     for (var i = 0; i < 50 && find.byType(ListView).evaluate().isEmpty; i++) {
       await tester.pump(const Duration(milliseconds: 20));
     }
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.byTooltip('Marcar como lido'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Marcar como lido'));
+    // O _LeituraDeHoje usa CarregaUmaVez (FutureBuilder) que carrega
+    // assincronamente. Espera o FutureBuilder completar.
+    await tester.pumpAndSettle(const Duration(seconds: 10));
+
+    // Procura pelo tooltip "Marcar como lido" ou "Desmarcar" que está no IconButton.
+    final botaoMarcar = find.byTooltip('Marcar como lido');
+    final botaoDesmarcar = find.byTooltip('Desmarcar');
+    
+    if (botaoMarcar.evaluate().isNotEmpty) {
+      expect(botaoMarcar, findsOneWidget);
+      await tester.ensureVisible(botaoMarcar);
+      await tester.pumpAndSettle();
+      await tester.tap(botaoMarcar);
+    } else if (botaoDesmarcar.evaluate().isNotEmpty) {
+      // Já está marcado - desmarca primeiro para testar o fluxo completo
+      expect(botaoDesmarcar, findsOneWidget);
+      await tester.ensureVisible(botaoDesmarcar);
+      await tester.pumpAndSettle();
+      await tester.tap(botaoDesmarcar);
+      await tester.pumpAndSettle();
+      
+      // Agora marca
+      final botaoMarcar2 = find.byTooltip('Marcar como lido');
+      expect(botaoMarcar2, findsOneWidget);
+      await tester.ensureVisible(botaoMarcar2);
+      await tester.pumpAndSettle();
+      await tester.tap(botaoMarcar2);
+    } else {
+      fail('Nem "Marcar como lido" nem "Desmarcar" encontrado. Verifique se o FutureBuilder completou.');
+    }
     await tester.pumpAndSettle();
 
     expect(find.text('Dia marcado como lido.'), findsOneWidget);

@@ -3,6 +3,8 @@ import 'dart:math';
 import 'canon.dart';
 import 'modelos.dart';
 
+int _contadorIdPlano = 0;
+
 /// Um dia de um plano de leitura criado pelo usuário.
 ///
 /// Diferente de [DiaDoPlano], não tem data: o plano do usuário é uma
@@ -117,12 +119,13 @@ class PlanoDoUsuario {
   };
 }
 
-/// Um id novo de plano: instante em base 36 mais quatro dígitos aleatórios.
-/// O instante sozinho já separaria planos criados na prática, e o aleatório
-/// torna o id de um link compartilhado difícil de adivinhar.
+/// Um id novo de plano: instante em base 36 mais contador + aleatório.
+/// O contador garante unicidade mesmo em laços apertados; o aleatório torna
+/// o id de um link compartilhado difícil de adivinhar.
 String novoIdDePlano() {
+  _contadorIdPlano++;
   final aleatorio = Random().nextInt(0x10000).toRadixString(16).padLeft(4, '0');
-  return '${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}$aleatorio';
+  return '${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}${_contadorIdPlano.toRadixString(36).padLeft(2, '0')}$aleatorio';
 }
 
 /// Distribui os capítulos de [livros] por [dias] dias, do primeiro capítulo

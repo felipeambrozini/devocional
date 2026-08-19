@@ -22,10 +22,9 @@ mesmo código).
   compartilhado; tela própria lista os favoritos e os que têm anotação, com
   busca por referência ou por texto da nota, e exporta uma cópia de segurança
   de tudo (favoritos, notas e progresso) para reimportar em outro aparelho.
-- **Conta Google, só na web**: opcional — favoritos, notas e progresso sobem
+- **Conta Google (Web, Android e iOS)**: opcional — favoritos, notas e progresso sobem
   sozinhos para a conta de quem entrar, para não perder nada se o navegador
-  limpar o armazenamento. O Android continua só com o
-  exportar/importar acima; ver `nuvemSuportada` em `lib/data/nuvem.dart`.
+  limpar o armazenamento. O Android e iOS também sincronizam; ver `nuvemSuportada` em `lib/data/nuvem.dart`.
 - **Busca** no texto da Bíblia e nos devocionais, em duas abas.
 - **Tamanho do texto** ajustável e **tema claro ou escuro**, pela barra do leitor
   ou do devocional. O padrão segue o aparelho, e dá para fixar um dos dois.
@@ -317,39 +316,19 @@ motivo novo.
 - **`biblia.dart` e `busca.dart` se importam um ao outro** — import circular
   entre dois arquivos é permitido em Dart, não é um erro: a busca abre o leitor
   num versículo e o leitor abre a busca com `Ctrl+F`.
-- **Conta Google e cópia na nuvem, só na web** (09/08/2026): `Sincronia` em
+- **Conta Google e cópia na nuvem (Web, Android e iOS)** (19/08/2026): `Sincronia` em
   `lib/data/nuvem.dart` é um ouvinte de fora sobre o `ChangeNotifier` do
   `Estado` (que **não mudou nenhuma linha**), reaproveitando `exportar()`/
   `importar()`. O filtro contra ruído e contra loop é comparar a string de
   `exportar()` com a última enviada. Documento único por usuário no Firestore
   (`usuarios/{uid}`); **remoção não sincroniza** (importar funde e nunca apaga).
-  Login por `signInWithPopup`, nunca `signInWithRedirect` (o redirect depende
-  de um iframe em `<projeto>.firebaseapp.com`, que a partição de armazenamento
-  do Chrome/Safari derruba num domínio de terceiros como o Pages). `onTap` sem
-  `await` antes do `signInWithPopup`: o navegador só abre a janela de login
-  dentro do gesto do usuário.
-- **`lib/firebase_options.dart` é gerado** por `flutterfire configure` e
-  **precisa ficar versionado** (o CI faz o build web e não tem como regerá-lo).
-  As chaves de API saíram do código-fonte e chegam por `--dart-define` no build
-  (variáveis de ambiente; no CI vêm dos Secrets do GitHub — ver abaixo). Elas
-  são públicas por desenho: quem protege os dados são as regras do Firestore
-  (`firestore.rules`, registrado no `firebase.json` e publicadas à mão com
-  `firebase deploy --only firestore:rules` ou coladas no console; não há CI
-  para elas) e a lista de domínios autorizados. **Cuidado ao regenerar com
-  `flutterfire configure`**: o arquivo volta com as chaves fixas e com os apps
-  iOS/Android, que o projeto não usa — o Firebase só roda na web
-  (`nuvemSuportada` em `lib/data/nuvem.dart`), e as chaves precisam ser
-  trocadas por `String.fromEnvironment` de novo.
-- **Chaves de API via `--dart-define`** (16/08/2026): `FIREBASE_API_KEY_WEB`
-  em `lib/firebase_options.dart`; `GEMINI_API_KEY_WEB` e
-  `GEMINI_API_KEY_ANDROID` para o chat e `TTS_API_KEY_WEB` e
-  `TTS_API_KEY_ANDROID` para a voz, todas em `lib/data/google.dart`. São dois
-  pares porque o console do Cloud não deixa combinar a Generative Language
-  API com a Cloud Text-to-Speech na mesma chave; a da voz tem as mesmas
-  restrições de origem (site/Android), mas só a API Text-to-Speech marcada,
-  com tier gratuito de 1 milhão de caracteres por mês. Sem os defines, o app
-  abre normal e só degrada nas telas que dependem delas (conta na nuvem, IA
-  e voz).
+  Login por `signInWithPopup` na web; no Android/iOS usa `google_sign_in` nativo.
+- **`lib/firebase_options.dart` lê do `.env.json` via `flutter_dotenv`** (19/08/2026):
+  não é mais gerado pelo `flutterfire configure`. As chaves ficam no `.env.json`
+  (gitignored) e entram via `dotenv.env['CHAVE']` no `firebase_options.dart`.
+  O CI usa `--dart-define-from-file=.env.json` ou secrets do GitHub.
+  As chaves são públicas por desenho: quem protege os dados são as regras do
+  Firestore (`firestore.rules`, publicado à mão) e a lista de domínios autorizados.
 - **Nome do pacote** trocado para `com.felipeambrozini.devocional` (09/08/2026),
   refletido no `android/app/build.gradle.kts`.
 
@@ -379,11 +358,11 @@ flutter pub get
 flutter run
 ```
 
-Para o app ter acesso à nuvem (conta Google) e à IA, crie um `.env.json` a
-partir do `.env.json` com as chaves — o VS Code pega no F5 via
-`dart-define-by-file` (`.vscode/launch.json`). Sem ele, o app abre normal e
-degrada só nesses recursos. O SDK é gerido pelo FVM (ver `.fvmrc`), na versão
-fixa 3.44.9.
+Para o app ter acesso à nuvem (conta Google) e à IA, crie um `.env.json` com
+as chaves (baseado no `.env.json` do repositório). O VS Code carrega no F5 via
+`--dart-define-from-file=.env.json` (`.vscode/launch.json`). Sem ele, o app
+abre normal e degrada só nesses recursos. O SDK é gerido pelo FVM (ver
+`.fvmrc`), na versão fixa 3.44.9.
 
 ## Testes e análise
 
@@ -396,13 +375,13 @@ flutter analyze
 
 ```bash
 # Android
-flutter build apk --dart-define=GEMINI_API_KEY_ANDROID=<chave> \
-  --dart-define=TTS_API_KEY_ANDROID=<chave>
+flutter build apk --dart-define-from-file=.env.json
 # Web
-flutter build web --dart-define=FIREBASE_API_KEY_WEB=<chave> \
-  --dart-define=GEMINI_API_KEY_WEB=<chave> \
-  --dart-define=TTS_API_KEY_WEB=<chave>
+flutter build web --dart-define-from-file=.env.json
 ```
+(O `.env.json` deve conter todas as chaves: `FIREBASE_API_KEY_WEB`,
+`FIREBASE_API_KEY_ANDROID`, `FIREBASE_API_KEY_IOS`, `GEMINI_API_KEY_WEB`,
+`GEMINI_API_KEY_ANDROID`, `TTS_API_KEY_WEB`, `TTS_API_KEY_ANDROID`, etc.)
 
 Ícone do app, favicon e tela de abertura são gerados a partir das fontes em
 `assets/icone/`; nunca editados à mão:

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 // Não `flutter_web_plugins.dart` (o barril): ele também exporta o registro de
 // plugins, que importa `dart:ui_web` sem condicional e quebra a compilação
 // para a VM — é o que `flutter test` usa. Este arquivo é condicional de
@@ -94,6 +95,9 @@ Future<void> main() async {
   // rewrite do Firebase Hosting para o index.html (firebase.json) — por isso
   // nada disto tem efeito fora da web.
   if (kIsWeb) usePathUrlStrategy();
+
+  // Carrega .env.json antes de inicializar Firebase (chaves em dotenv.env)
+  await dotenv.load(fileName: '.env.json');
 
   final estado = await Estado.abrir();
 
