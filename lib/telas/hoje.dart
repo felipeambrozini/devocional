@@ -36,9 +36,11 @@ class _TelaHojeState extends State<TelaHoje> {
             children: [
               _Cabecalho(data: agora),
               const SizedBox(height: Spacing.sp20),
-              // A leitura da hora abre a tela: é a única superfície com escala
-              // de cartão. As outras leituras do dia e a retomada são linhas
-              // quietas; o plano e o progresso ficam depois da dobra.
+              // A leitura da hora abre a tela: é a única que ganha o filete,
+              // dizendo que uma leitura começa ali. As outras leituras do dia
+              // vêm logo depois, cada uma com o próprio cartão; a retomada é
+              // a linha quieta que segue, e o plano e o progresso ficam
+              // depois da dobra.
               _PreviaDaLeitura(
                 data: agora,
                 leitura: periodo == Periodo.manha
@@ -50,7 +52,6 @@ class _TelaHojeState extends State<TelaHoje> {
               _PreviaDaLeitura(
                 data: agora,
                 leitura: Leitura.promessas,
-                linha: true,
               ),
               if (estado.ultimaLeitura != null) ...[
                 // Retomar uma leitura interrompida é a ação de maior intenção
@@ -276,22 +277,17 @@ class _ComFadeAoFim extends StatelessWidget {
 ///
 /// [destaque] marca a leitura do período da hora (a "de agora"): é a que
 /// ganha o filete dourado embaixo do título, dizendo que uma leitura começa
-/// ali, e a única que mantém a escala de cartão na Hoje.
-///
-/// [linha] troca o cartão por uma linha quieta (ícone, título e uma linha do
-/// texto), para as leituras que não são a de agora não competirem com ela.
+/// ali. As outras leituras do dia mantêm o mesmo cartão, só sem o filete.
 class _PreviaDaLeitura extends StatelessWidget {
   const _PreviaDaLeitura({
     required this.data,
     required this.leitura,
     this.destaque = false,
-    this.linha = false,
   });
 
   final DateTime data;
   final Leitura leitura;
   final bool destaque;
-  final bool linha;
 
   String get _titulo => leitura.tituloCompleto;
 
@@ -327,60 +323,6 @@ class _PreviaDaLeitura extends StatelessWidget {
     child: Text(texto),
   );
 
-  /// Linha quieta: ícone, título e uma linha do texto. É a forma das
-  /// leituras que não são a de agora, para a Hoje ter uma só superfície com
-  /// escala de cartão.
-  Widget _linha(BuildContext context, AsyncSnapshot<Devocional?> snap) {
-    final cor = Theme.of(context).colorScheme;
-    final tema = Theme.of(context).textTheme;
-    final String subtitulo;
-    if (snap.hasError) {
-      subtitulo = 'Não foi possível carregar esta leitura.';
-    } else if (snap.connectionState != ConnectionState.done) {
-      subtitulo = 'Carregando...';
-    } else if (snap.data == null) {
-      subtitulo = 'Sem leitura para esta data.';
-    } else {
-      subtitulo = '';
-    }
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: () => _abrir(context),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: Spacing.sp10,
-          horizontal: Spacing.sp4,
-        ),
-        child: Row(
-          children: [
-            Icon(_icone, color: cor.primary, size: 18),
-            const SizedBox(width: Spacing.sp12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _titulo,
-                    style: tema.titleMedium?.copyWith(color: cor.onSurface),
-                  ),
-                  const SizedBox(height: Spacing.sp2),
-                  Text(
-                    subtitulo.isEmpty ? snap.data!.texto : subtitulo,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: tema.bodySmall,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: Spacing.sp8),
-            Icon(Icons.chevron_right, color: cor.onSurfaceVariant, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
@@ -395,7 +337,6 @@ class _PreviaDaLeitura extends StatelessWidget {
         // carrega quanto quando não existe leitura para a data, e tratar os dois
         // como um só deixava o cartão dizendo "Carregando..." para sempre num dia
         // sem devocional. É o mesmo guard que _LeituraDeHoje já usa logo abaixo.
-        if (linha) return _linha(context, snap);
         if (snap.hasError) {
           return _aviso(context, 'Não foi possível carregar esta leitura.');
         }

@@ -32,21 +32,28 @@ void main() {
   ) async {
     await aquecerAssets(tester);
     final estado = Estado(await SharedPreferences.getInstance());
-    // O cartão cresceu com as linhas de ajuda e a Hoje agora abre com a
-    // leitura da hora no topo: numa janela de 800x900 o botão cai atrás da
-    // barra de navegação. A tela alta garante que o cartão inteiro caiba, e o
-    // ensureVisible traz o botão para o alcance do toque (mesma ideia de
-    // app_test.dart).
+    // O cartão cresceu com as linhas de ajuda e a Hoje abre com as duas
+    // leituras do dia no topo: numa janela de 800x900 o cartão nasce além
+    // da área que a lista constrói. Rola até ele, como o visitante faria,
+    // antes de conferir e tocar.
     await tester.binding.setSurfaceSize(const Size(800, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(AppDevocional(estado: estado));
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(
+      find.text('Entendi'),
+      200,
+      scrollable: find.descendant(
+        of: find.byType(ListView),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    await tester.pumpAndSettle();
+
     expect(find.text('Como usar'), findsOneWidget);
     expect(find.text('Entendi'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('Entendi'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Entendi'));
     await tester.pumpAndSettle();
     expect(find.text('Como usar'), findsNothing);

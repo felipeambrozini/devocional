@@ -1628,13 +1628,22 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    // O cartão fica abaixo das duas leituras do dia, que abrem a tela: numa
+    // janela de 600 px de altura a lista nem o constrói. Rola até ele, como
+    // o visitante faria, antes de conferir e tocar.
+    await tester.scrollUntilVisible(
+      find.text('Entendi'),
+      200,
+      scrollable: find.descendant(
+        of: find.byType(ListView),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    await tester.pumpAndSettle();
+
     expect(find.text('Como usar'), findsOneWidget);
     expect(find.text('Entendi'), findsOneWidget);
 
-    // O cartão fica abaixo da leitura da hora, que abre a tela: rola para
-    // tocar, como o visitante faria.
-    await tester.ensureVisible(find.text('Entendi'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Entendi'));
     await tester.pumpAndSettle();
     expect(find.text('Como usar'), findsNothing);
