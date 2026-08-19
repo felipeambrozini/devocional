@@ -5,12 +5,14 @@ import 'package:flutter/rendering.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
+import '../data/planos.dart';
 import '../spacing.dart';
 import 'comuns.dart';
-import 'faixa.dart';
+import 'meu_plano.dart';
+import 'novo_plano.dart';
 
-/// Cronograma anual agrupado por mês, com marcação de lido. São 365 dias, ou 366
-/// em ano bissexto, e a tela segue o ano corrente.
+/// Cronograma anual agrupado por mês, com marcação de lido — e, na aba Meus
+/// Planos, os planos de leitura que o usuário cria, compartilha e acompanha.
 class TelaPlano extends StatefulWidget {
   const TelaPlano({super.key, this.hoje});
 
@@ -23,6 +25,59 @@ class TelaPlano extends StatefulWidget {
 }
 
 class _TelaPlanoState extends State<TelaPlano> {
+  @override
+  Widget build(BuildContext context) {
+    final estado = EscopoDoEstado.de(context);
+
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Plano'),
+          actions: [
+            IconButton(
+              tooltip: 'Tamanho do texto e aparência',
+              icon: const Icon(Icons.tune),
+              onPressed: () => ajustesDeLeitura(context, estado),
+            ),
+          ],
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Cronograma'),
+              Tab(text: 'Meus planos'),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            _AbaDoCronograma(hoje: widget.hoje),
+            const _AbaDosMeusPlanos(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// O cronograma anual: a régua de meses e a lista de dias.
+///
+/// Vive com `AutomaticKeepAliveClientMixin` porque o TabBarView desmonta a
+/// aba que sai da tela: sem isto, trocar para Meus Planos e voltar
+/// recomeçaria o mês em janeiro e perderia a rolagem.
+class _AbaDoCronograma extends StatefulWidget {
+  const _AbaDoCronograma({required this.hoje});
+
+  final DateTime? hoje;
+
+  @override
+  State<_AbaDoCronograma> createState() => _AbaDoCronogramaState();
+}
+
+class _AbaDoCronogramaState extends State<_AbaDoCronograma>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   // Getter, não `late final`: o IndexedStack da moldura mantém esta tela viva
   // indefinidamente (ver main.dart), e um valor fixado na primeira leitura
   // travaria "hoje" no dia em que a tela foi aberta, inclusive na virada do
@@ -96,179 +151,284 @@ class _TelaPlanoState extends State<TelaPlano> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final estado = EscopoDoEstado.de(context);
     final hoje = _hoje;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Plano'),
-        actions: [
-          IconButton(
-            tooltip: 'Tamanho do texto e aparência',
-            icon: const Icon(Icons.tune),
-            onPressed: () => ajustesDeLeitura(context, estado),
+    return Column(
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(
+            horizontal: Spacing.sp12,
+            vertical: Spacing.sp8,
           ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(52),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: Spacing.sp12, vertical: Spacing.sp8),
-            child: Row(
-              children: [
-                for (var m = 1; m <= 12; m++)
-                  Padding(
-                    key: _chavesDeMes[m - 1],
-                    padding: const EdgeInsets.only(right: Spacing.sp8),
-                    child: ChoiceChip(
-                      label: Text(meses[m - 1]),
-                      selected: m == _mes,
-                      onSelected: (_) {
-                        setState(() => _mes = m);
-                        _centralizarMes();
-                      },
-                    ),
+          child: Row(
+            children: [
+              for (var m = 1; m <= 12; m++)
+                Padding(
+                  key: _chavesDeMes[m - 1],
+                  padding: const EdgeInsets.only(right: Spacing.sp8),
+                  child: ChoiceChip(
+                    label: Text(meses[m - 1]),
+                    selected: m == _mes,
+                    onSelected: (_) {
+                      setState(() => _mes = m);
+                      _centralizarMes();
+                    },
                   ),
-              ],
+                ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: LarguraDeLeitura(
+            child: CarregaUmaVez<List<DiaDoPlano>>(
+              // A tela mostra o cronograma do ano corrente, então segue a mesma variante
+              // que o resto do app: em ano bissexto, a de 366 dias, com 29 de fevereiro
+              // como dia próprio. Sem isto, esta tela mostrava sempre a de 365 e
+              // discordava de Hoje e do Devocional a partir de março de um ano bissexto.
+              //
+              // A chave leva o ano porque é ele que escolhe o arquivo; o mês não, porque a
+              // filtragem por mês é feita sobre a lista já carregada.
+              chave: 'plano/${hoje.year}',
+              carregar: () => Conteudo.instancia.plano(
+                bissexto: Conteudo.ehBissexto(hoje.year),
+              ),
+              construir: (context, snap) {
+                if (snap.hasError) return const AvisoDeErro();
+                if (snap.connectionState != ConnectionState.done) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final dias = snap.data!.where((d) => d.mes == _mes).toList();
+                final lidosNoMes =
+                    dias.where((d) => estado.foiLido(d.data)).length;
+                _rolarAteHoje();
+
+                return ListView.separated(
+                  controller: _rolagem,
+                  padding: const EdgeInsets.fromLTRB(
+                    Spacing.sp16,
+                    Spacing.sp12,
+                    Spacing.sp16,
+                    Spacing.sp32,
+                  ),
+                  // ponytail: monta o mês inteiro de uma vez em vez de só o visível.
+                  // São no máximo 31 cartões leves, e é o que faz o cartão de hoje já
+                  // existir na árvore quando _rolarAteHoje procura por ele; sem isso o
+                  // GlobalKey de um dia lá embaixo ainda não tem contexto. Se um dia a
+                  // lista crescer, o caminho é scrollable_positioned_list.
+                  scrollCacheExtent: const ScrollCacheExtent.pixels(4000),
+                  itemCount: dias.length + 1,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(height: Spacing.sp10),
+                  itemBuilder: (context, i) {
+                    if (i == 0) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: Spacing.sp6),
+                        child: Text(
+                          '$lidosNoMes de ${dias.length} dias concluídos em '
+                          '${meses[_mes - 1]}',
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                      );
+                    }
+                    final dia = dias[i - 1];
+                    final ehHoje =
+                        dia.mes == hoje.month && dia.dia == hoje.day;
+                    return CartaoDeDia(
+                      key: ehHoje ? _chaveDeHoje : null,
+                      numero: dia.dia,
+                      rotulo: dia.rotulo,
+                      faixas: dia.faixas,
+                      lido: estado.foiLido(dia.data),
+                      destacar: ehHoje,
+                      aoAlternar: () => estado.alternarLido(dia.data),
+                    );
+                  },
+                );
+              },
             ),
           ),
         ),
-      ),
-      body: LarguraDeLeitura(
-        child: CarregaUmaVez<List<DiaDoPlano>>(
-          // A tela mostra o cronograma do ano corrente, então segue a mesma variante
-          // que o resto do app: em ano bissexto, a de 366 dias, com 29 de fevereiro
-          // como dia próprio. Sem isto, esta tela mostrava sempre a de 365 e
-          // discordava de Hoje e do Devocional a partir de março de um ano bissexto.
-          //
-          // A chave leva o ano porque é ele que escolhe o arquivo; o mês não, porque a
-          // filtragem por mês é feita sobre a lista já carregada.
-          chave: 'plano/${hoje.year}',
-          carregar: () => Conteudo.instancia.plano(
-            bissexto: Conteudo.ehBissexto(hoje.year),
-          ),
-          construir: (context, snap) {
-            if (snap.hasError) return const AvisoDeErro();
-            if (snap.connectionState != ConnectionState.done) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            final dias = snap.data!.where((d) => d.mes == _mes).toList();
-            final lidosNoMes = dias.where((d) => estado.foiLido(d.data)).length;
-            _rolarAteHoje();
+      ],
+    );
+  }
+}
 
-            return ListView.separated(
-              controller: _rolagem,
-              padding: const EdgeInsets.fromLTRB(Spacing.sp16, Spacing.sp12, Spacing.sp16, Spacing.sp32),
-              // ponytail: monta o mês inteiro de uma vez em vez de só o visível.
-              // São no máximo 31 cartões leves, e é o que faz o cartão de hoje já
-              // existir na árvore quando _rolarAteHoje procura por ele; sem isso o
-              // GlobalKey de um dia lá embaixo ainda não tem contexto. Se um dia a
-              // lista crescer, o caminho é scrollable_positioned_list.
-              scrollCacheExtent: const ScrollCacheExtent.pixels(4000),
-              itemCount: dias.length + 1,
-              separatorBuilder: (_, _) => const SizedBox(height: Spacing.sp10),
-              itemBuilder: (context, i) {
-                if (i == 0) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: Spacing.sp6),
-                    child: Text(
-                      '$lidosNoMes de ${dias.length} dias concluídos em ${meses[_mes - 1]}',
-                      style: Theme.of(context).textTheme.titleSmall,
+/// A aba Meus Planos: a lista dos planos do usuário e o caminho para criar
+/// um novo.
+class _AbaDosMeusPlanos extends StatelessWidget {
+  const _AbaDosMeusPlanos();
+
+  @override
+  Widget build(BuildContext context) {
+    final estado = EscopoDoEstado.de(context);
+    final planos = estado.planosDoUsuario;
+
+    return LarguraDeLeitura(
+      child: planos.isEmpty
+          ? AvisoVazio(
+              icone: Icons.edit_calendar_outlined,
+              titulo: 'Nenhum plano de leitura ainda',
+              detalhe:
+                  'Escolha um ou mais livros e em quantos dias quer lê-los: '
+                  'o plano se monta sozinho, dia por dia.',
+              acao: FilledButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text('Criar plano'),
+                onPressed: () => _abrirNovoPlano(context, estado),
+              ),
+            )
+          : ListView(
+              padding: const EdgeInsets.fromLTRB(
+                Spacing.sp16,
+                Spacing.sp12,
+                Spacing.sp16,
+                Spacing.sp32,
+              ),
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Seus planos',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
                     ),
-                  );
-                }
-                final dia = dias[i - 1];
-                final ehHoje = dia.mes == hoje.month && dia.dia == hoje.day;
-                return _CartaoDoDia(
-                  key: ehHoje ? _chaveDeHoje : null,
-                  dia: dia,
-                  lido: estado.foiLido(dia.data),
-                  ehHoje: ehHoje,
-                  aoAlternar: () => estado.alternarLido(dia.data),
-                );
-              },
-            );
-          },
-        ),
+                    FilledButton.icon(
+                      icon: const Icon(Icons.add),
+                      label: const Text('Criar plano'),
+                      onPressed: () => _abrirNovoPlano(context, estado),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: Spacing.sp12),
+                for (final plano in planos) ...[
+                  _CartaoDePlano(plano: plano),
+                  const SizedBox(height: Spacing.sp10),
+                ],
+              ],
+            ),
+    );
+  }
+
+  Future<void> _abrirNovoPlano(BuildContext context, Estado estado) async {
+    final criado = await Navigator.push<PlanoDoUsuario>(
+      context,
+      MaterialPageRoute(builder: (_) => TelaNovoPlano(estado: estado)),
+    );
+    if (criado == null || !context.mounted) return;
+    _abrirDetalhe(context, estado, criado);
+  }
+
+  void _abrirDetalhe(
+    BuildContext context,
+    Estado estado,
+    PlanoDoUsuario plano,
+  ) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            TelaDeUmPlano(estado: estado, planoId: plano.id, plano: plano),
       ),
     );
   }
 }
 
-class _CartaoDoDia extends StatelessWidget {
-  const _CartaoDoDia({
-    super.key,
-    required this.dia,
-    required this.lido,
-    required this.ehHoje,
-    required this.aoAlternar,
-  });
+/// Cartão de um plano na lista de Meus Planos: o que se lê, em quanto tempo
+/// e o progresso. Tocar abre o plano; excluir e compartilhar vivem na tela
+/// do plano.
+class _CartaoDePlano extends StatelessWidget {
+  const _CartaoDePlano({required this.plano});
 
-  final DiaDoPlano dia;
-  final bool lido;
-  final bool ehHoje;
-  final VoidCallback aoAlternar;
+  final PlanoDoUsuario plano;
 
   @override
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
+    final estado = EscopoDoEstado.de(context);
+    final dias = plano.diasDoPlano.length;
+    final lidos = estado.diasLidosDoPlano(plano.id);
+
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(
-          // O dia de hoje ganha borda dourada plena para se achar de relance
-          // dentro de uma lista de trinta e um cartões parecidos.
-          color: ehHoje ? cor.primary : cor.outline.withValues(alpha: 0.35),
-          width: ehHoje ? 1.6 : 1,
-        ),
+        side: BorderSide(color: cor.outline.withValues(alpha: 0.35)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(Spacing.sp14, Spacing.sp12, Spacing.sp8, Spacing.sp12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 34,
-              child: Text(
-                '${dia.dia}',
-                style: tema.headlineSmall?.copyWith(
-                  color: lido ? cor.secondary : cor.primary,
-                ),
-              ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => TelaDeUmPlano(
+              estado: estado,
+              planoId: plano.id,
+              plano: plano,
             ),
-            const SizedBox(width: Spacing.sp8),
-            Expanded(
-              child: Column(
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            Spacing.sp14,
+            Spacing.sp12,
+            Spacing.sp8,
+            Spacing.sp12,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    dia.rotulo,
-                    style: tema.bodyMedium?.copyWith(
-                      decoration: lido ? TextDecoration.lineThrough : null,
-                      color: lido ? cor.onSurfaceVariant : cor.onSurface,
+                  Expanded(
+                    child: Text(
+                      plano.titulo,
+                      style: tema.titleMedium,
                     ),
                   ),
-                  const SizedBox(height: Spacing.sp10),
-                  Wrap(
-                    spacing: Spacing.sp8,
-                    runSpacing: Spacing.sp8,
-                    children: [
-                      for (final f in dia.faixas) BotaoDeFaixa(faixa: f),
-                    ],
-                  ),
+                  if (plano.compartilhado)
+                    Padding(
+                      padding: const EdgeInsets.only(top: Spacing.sp2),
+                      child: Tooltip(
+                        message: 'Plano compartilhado por link',
+                        child: Icon(
+                          Icons.group_outlined,
+                          size: 18,
+                          color: cor.primary,
+                        ),
+                      ),
+                    ),
                 ],
               ),
-            ),
-            IconButton(
-              tooltip: lido ? 'Desmarcar' : 'Marcar como lido',
-              icon: Icon(
-                lido ? Icons.check_circle : Icons.radio_button_unchecked,
-                color: lido ? cor.secondary : cor.onSurfaceVariant,
+              const SizedBox(height: Spacing.sp2),
+              Text(
+                resumoDosLivros(plano.livros),
+                style: tema.bodySmall?.copyWith(color: cor.onSurfaceVariant),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              onPressed: aoAlternar,
-            ),
-          ],
+              Text(
+                '${plano.dias} dias · ${plano.totalDeCapitulos} capítulos',
+                style: tema.labelMedium?.copyWith(color: cor.onSurfaceVariant),
+              ),
+              const SizedBox(height: Spacing.sp10),
+              Text(
+                '$lidos de $dias dias lidos',
+                style: tema.labelMedium,
+              ),
+              const SizedBox(height: Spacing.sp6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(3),
+                child: LinearProgressIndicator(
+                  value: dias == 0 ? 0 : lidos / dias,
+                  minHeight: 6,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

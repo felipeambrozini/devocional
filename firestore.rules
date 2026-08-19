@@ -76,5 +76,76 @@ service cloud.firestore {
       allow delete: if dono();
       allow read: if dono();
     }
+
+    // Planos de leitura compartilhados (ver lib/data/planos_nuvem.dart).
+    //
+    // Contrato do documento planos/{planoId}:
+    //   titulo        string
+    //   livros        list de slugs do canon
+    //   dias          int >= 1
+    //   criadoPor     string — uid de quem criou
+    //   criadoEm      timestamp do servidor
+    //   participantes mapa uid -> {nome: string, lidos: list de int}
+    //
+    // Quem cria o documento entra como primeiro participante. Depois disso,
+    // qualquer participante lê o documento inteiro — é isso que permite ver
+    // o progresso de todos — e cada um só pode escrever na própria entrada:
+    // entrar (criar a própria entrada), marcar dias ou sair (apagá-la). Só o
+    // criador apaga o plano para todos.
+    match /planos/{planoId} {
+      function google() {
+        return request.auth != null &&
+            request.auth.token.firebase.sign_in_provider == 'google.com';
+      }
+
+      // Entrada própria válida: ausente (saindo do plano) ou com nome e
+      // lista de dias dentro dos tetos.
+      function minhaEntradaValida(uid) {
+        let entrada = request.resource.data.participantes[uid];
+        return !(uid in request.resource.data.participantes) ||
+            (entrada is map &&
+                'nome' in entrada && entrada.nome is string &&
+                entrada.nome.size() < 100 &&
+                'lidos' in entrada && entrada.lidos is list &&
+                entrada.lidos.size() <= 1000);
+      }
+
+      // A escrita só toca a própria entrada de `uid` no mapa de
+      // participantes — nem outros participantes, nem campos do plano.
+      function soAParticipacaoDoProprio(uid) {
+        return request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['participantes']) &&
+            request.resource.data.participantes.diff(resource.data.participantes)
+                .affectedKeys().hasOnly([uid]) &&
+            minhaEntradaValida(uid);
+      }
+
+      allow create: if google() &&
+          request.resource.data.criadoPor == request.auth.uid &&
+          request.resource.data.criadoEm is timestamp &&
+          request.resource.data.titulo is string &&
+          request.resource.data.titulo.size() <= 200 &&
+          request.resource.data.livros is list &&
+          request.resource.data.livros.size() <= 66 &&
+          request.resource.data.dias is int &&
+          request.resource.data.dias >= 1 && request.resource.data.dias <= 730 &&
+          'participantes' in request.resource.data &&
+          request.resource.data.participantes.keys()
+              .hasOnly([request.auth.uid]) &&
+          minhaEntradaValida(request.auth.uid);
+
+      // Participantes leem o plano inteiro (títulos, progresso de todos).
+      allow read: if google() &&
+          'participantes' in resource.data &&
+          resource.data.participantes is map &&
+          request.auth.uid in resource.data.participantes;
+
+      // Entrar, marcar dias e sair são o mesmo tipo de escrita: só a
+      // própria entrada. Quem ainda não participa pode criá-la (é o entrar
+      // pelo link); quem participa pode mudá-la ou apagá-la.
+      allow update: if google() && soAParticipacaoDoProprio(request.auth.uid);
+
+      allow delete: if google() && resource.data.criadoPor == request.auth.uid;
+    }
   }
 }

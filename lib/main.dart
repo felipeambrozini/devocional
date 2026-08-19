@@ -16,6 +16,7 @@ import 'data/lembretes.dart';
 import 'data/modelos.dart';
 import 'data/nuvem.dart';
 import 'data/personas.dart';
+import 'data/planos_nuvem.dart';
 import 'data/voz.dart';
 import 'telas/biblia.dart';
 import 'telas/chat.dart';
@@ -24,6 +25,7 @@ import 'telas/conversas.dart';
 import 'telas/devocional.dart';
 import 'telas/hoje.dart';
 import 'telas/historico.dart';
+import 'telas/meu_plano.dart';
 import 'telas/notas.dart';
 import 'telas/plano.dart';
 import 'telas/sobre.dart';
@@ -71,6 +73,19 @@ void _abrirLeituraDoLink() {
   );
 }
 
+/// Abre o plano compartilhado do parâmetro `plano` da URL (`?plano=<id>`),
+/// para quem chega por um link divulgado por outra pessoa. Como
+/// [_abrirLeituraDoLink], é uma sobreposição por cima de qualquer aba.
+void _abrirPlanoDoLink(Estado estado) {
+  final parametro = Uri.base.queryParameters['plano'];
+  if (parametro == null) return;
+  navigatorKey.currentState?.push(
+    MaterialPageRoute(
+      builder: (_) => TelaDeUmPlano(estado: estado, planoId: parametro),
+    ),
+  );
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Sem isto a web usa "/#/biblia" (estratégia padrão do Flutter): o # nunca
@@ -85,7 +100,10 @@ Future<void> main() async {
   // Sem await: o firebase_core_web busca o SDK JS do gstatic, e esperar isso
   // antes do runApp poria uma ida à rede na frente do primeiro quadro, num
   // app que hoje abre sem depender de rede nenhuma. Fora da web não chama.
-  if (nuvemSuportada) unawaited(Nuvem.instancia.iniciar(estado));
+  if (nuvemSuportada) {
+    unawaited(Nuvem.instancia.iniciar(estado));
+    unawaited(PlanosNaNuvem.instancia.iniciar(estado));
+  }
 
   await Lembretes.instancia.inicializar(
     aoTocarNotificacao: _abrirLeituraDoLembrete,
@@ -105,7 +123,10 @@ Future<void> main() async {
   } else {
     // Um link e um toque de notificação nunca chegam juntos: o link só existe
     // na web, e lembrete só em Android. O `else` é só para não empurrar
-    // duas telas por cima uma da outra se algum dia os dois coincidirem.
+    // duas telas por cima uma da outra se algum dia os dois coincidirem. Um
+    // plano e uma leitura também não chegam juntos na URL; o plano vem
+    // primeiro, e a leitura abre só quando não há plano.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _abrirPlanoDoLink(estado));
     WidgetsBinding.instance.addPostFrameCallback((_) => _abrirLeituraDoLink());
   }
 }

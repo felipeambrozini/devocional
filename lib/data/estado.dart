@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'canon.dart';
 import 'conversas.dart';
 import 'modelos.dart';
+import 'planos.dart';
 
 /// Estado persistido do app: progresso de leitura, favoritos, notas e preferências.
 ///
@@ -32,6 +33,8 @@ class Estado extends ChangeNotifier {
   static const _kLembretesAtivos = 'lembretes_ativos';
   static const _kMinutosLembreteManha = 'minutos_lembrete_manha';
   static const _kMinutosLembreteNoite = 'minutos_lembrete_noite';
+  static const _kPlanos = 'planos_do_usuario';
+  static const _kPlanosLidos = 'planos_lidos';
 
   /// 6h e 18h, os horários padrão do lembrete. Minutos desde meia-noite, não
   /// `TimeOfDay`: `estado.dart` não importa `material.dart`, e um `int` grava
@@ -77,6 +80,14 @@ class Estado extends ChangeNotifier {
 
   int _minutosLembreteManha = minutosPadraoManha;
   int _minutosLembreteNoite = minutosPadraoNoite;
+
+  /// Planos de leitura do usuário, do mais novo ao mais antigo.
+  List<PlanoDoUsuario> _planos = [];
+
+  /// Dias marcados como lidos em cada plano, por id do plano. Nos planos
+  /// compartilhados isto é só o espelho local: a verdade vive no documento
+  /// `planos/{id}` do Firestore, e quem a aplica é `aplicarPlanoDaNuvem`.
+  Map<String, Set<int>> _planosLidos = {};
 
   /// Histórico das conversas do chat, com a fusão e as lápides de exclusão.
   ///
@@ -153,6 +164,36 @@ class Estado extends ChangeNotifier {
       _prefs.getInt(_kMinutosLembreteNoite),
       minutosPadraoNoite,
     );
+
+    final planosCru = _prefs.getString(_kPlanos);
+    if (planosCru != null && planosCru.isNotEmpty) {
+      try {
+        _planos = [
+          for (final item in json.decode(planosCru) as List)
+            PlanoDoUsuario.doJson(item as Map<String, dynamic>),
+        ];
+      } catch (_) {
+        // Dado corrompido não deve impedir o app de abrir, mesma regra das
+        // marcações.
+        _planos = [];
+      }
+    }
+
+    final planosLidosCru = _prefs.getString(_kPlanosLidos);
+    if (planosLidosCru != null && planosLidosCru.isNotEmpty) {
+      try {
+        final mapa = json.decode(planosLidosCru) as Map<String, dynamic>;
+        _planosLidos = {
+          for (final MapEntry(key: id, value: dias) in mapa.entries)
+            id: {
+              for (final dia in dias as List)
+                if (dia is int) dia,
+            },
+        };
+      } catch (_) {
+        _planosLidos = {};
+      }
+    }
     // As conversas do chat são lidas pelo próprio `conversas`, no construtor.
   }
 
@@ -401,6 +442,117 @@ class Estado extends ChangeNotifier {
   Future<void> _gravarMarcacoes() async {
     final lista = [for (final m in _marcacoes.values) m.paraJson()];
     await _prefs.setString(_kMarcacoes, json.encode(lista));
+  }
+
+  // --- planos de leitura do usuário ---------------------------------------- //
+
+  /// Do mais novo ao mais antigo.
+  List<PlanoDoUsuario> get planosDoUsuario => List.unmodifiable(_planos);
+
+  PlanoDoUsuario? planoDoUsuario(String id) {
+    for (final plano in _planos) {
+      if (plano.id == id) return plano;
+    }
+    return null;
+  }
+
+  bool foiLidoNoPlano(String planoId, int dia) =>
+      _planosLidos[planoId]?.contains(dia) ?? false;
+
+  int diasLidosDoPlano(String planoId) => _planosLidos[planoId]?.length ?? 0;
+
+  Future<PlanoDoUsuario> criarPlano({
+    required String titulo,
+    required List<String> livros,
+    required int dias,
+  }) async {
+    final plano = PlanoDoUsuario(
+      id: novoIdDePlano(),
+      titulo: titulo.trim().isEmpty
+          ? tituloDePlano(livros, dias)
+          : titulo.trim(),
+      livros: livros,
+      dias: dias,
+      criadoEm: DateTime.now(),
+    );
+    _planos.insert(0, plano);
+    notifyListeners();
+    await _gravarPlanos();
+    return plano;
+  }
+
+  Future<void> removerPlano(String id) async {
+    final antes = _planos.length;
+    _planos.removeWhere((p) => p.id == id);
+    if (_planos.length == antes) return;
+    _planosLidos.remove(id);
+    notifyListeners();
+    await _gravarPlanos();
+    await _gravarPlanosLidos();
+  }
+
+  Future<void> alternarLidoNoPlano(String planoId, int dia) async {
+    final lidos = _planosLidos.putIfAbsent(planoId, () => <int>{});
+    if (!lidos.remove(dia)) lidos.add(dia);
+    notifyListeners();
+    await _gravarPlanosLidos();
+  }
+
+  /// Substitui os dias lidos de um plano inteiros. Usado pelos planos
+  /// compartilhados, onde o documento é a verdade: alternar a partir de um
+  /// espelho velho apagaria dias marcados noutro aparelho.
+  Future<void> substituirLidosDoPlano(String planoId, Set<int> lidos) async {
+    _planosLidos[planoId] = {...lidos};
+    notifyListeners();
+    await _gravarPlanosLidos();
+  }
+
+  /// Guarda (ou substitui) um plano que veio da nuvem, com os dias que o
+  /// usuário já marcou lá. Usado pela sincronia ao entrar na conta e pela
+  /// tela do plano aberto por link. Substitui pela cópia da nuvem em caso de
+  /// duplicata: o documento é a verdade do plano compartilhado.
+  Future<void> aplicarPlanoDaNuvem(
+    PlanoDoUsuario plano, {
+    required Set<int> lidos,
+  }) async {
+    final i = _planos.indexWhere((p) => p.id == plano.id);
+    if (i >= 0) {
+      // Já está na lista (aberto por link, ou outra cópia do app): troca no
+      // lugar, para a posição na lista não saltar a cada abertura.
+      _planos[i] = plano;
+    } else {
+      _planos.insert(0, plano);
+    }
+    _planosLidos[plano.id] = lidos;
+    notifyListeners();
+    await _gravarPlanos();
+    await _gravarPlanosLidos();
+  }
+
+  /// Marca um plano como compartilhado depois de ele subir para a nuvem.
+  Future<void> marcarCompartilhado(String id) async {
+    final i = _planos.indexWhere((p) => p.id == id);
+    if (i == -1) return;
+    _planos[i] = _planos[i].compartilhadoComo(true);
+    notifyListeners();
+    await _gravarPlanos();
+  }
+
+  Future<void> _gravarPlanos() async {
+    await _prefs.setString(
+      _kPlanos,
+      json.encode([for (final p in _planos) p.paraJson()]),
+    );
+  }
+
+  Future<void> _gravarPlanosLidos() async {
+    await _prefs.setString(
+      _kPlanosLidos,
+      json.encode({
+        for (final MapEntry(key: id, value: dias) in _planosLidos.entries)
+          id: dias.toList()..sort(),
+      }),
+    );
   }
 
   // --- conversas do chat --------------------------------------------------- //

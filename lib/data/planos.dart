@@ -1,0 +1,216 @@
+import 'dart:math';
+
+import 'canon.dart';
+import 'modelos.dart';
+
+/// Um dia de um plano de leitura criado pelo usuário.
+///
+/// Diferente de [DiaDoPlano], não tem data: o plano do usuário é uma
+/// sequência de 1 a N dias, e não um calendário.
+class DiaDePlanoDoUsuario {
+  const DiaDePlanoDoUsuario({required this.numero, required this.faixas});
+
+  /// Posição do dia no plano, de 1 em diante. É a chave de progresso.
+  final int numero;
+
+  final List<Faixa> faixas;
+
+  String get rotulo => faixas.map((f) => f.rotulo).join(', ');
+}
+
+/// Um plano de leitura criado pelo usuário na aba Meus Planos.
+///
+/// Guarda só a receita — livros e dias — e monta os dias na hora
+/// ([diasDoPlano]): é determinístico, e mudar o algoritmo de distribuição
+/// nunca deixa um plano gravado inconsistente.
+///
+/// [compartilhado] diz que o plano também vive num documento `planos/{id}`
+/// do Firestore (ver `lib/data/planos_nuvem.dart`): aí o progresso é de cada
+/// participante, gravado na própria entrada do documento. A cópia local é o
+/// espelho; o documento é a verdade.
+class PlanoDoUsuario {
+  const PlanoDoUsuario({
+    required this.id,
+    required this.titulo,
+    required this.livros,
+    required this.dias,
+    required this.criadoEm,
+    this.compartilhado = false,
+  });
+
+  factory PlanoDoUsuario.doJson(Map<String, dynamic> json) => PlanoDoUsuario(
+    id: json['id'] as String? ?? '',
+    titulo: json['titulo'] as String? ?? '',
+    livros: [
+      for (final l in json['livros'] as List? ?? const [])
+        if (l is String && livroPorSlug(l) != null) l,
+    ],
+    dias: json['dias'] as int? ?? 1,
+    criadoEm: DateTime.fromMillisecondsSinceEpoch(
+      json['criadoEm'] as int? ?? 0,
+    ),
+    compartilhado: json['compartilhado'] as bool? ?? false,
+  );
+
+  /// De um documento `planos/{id}` do Firestore, cujo esquema é outro (ver
+  /// `lib/data/planos_nuvem.dart`). O documento não traz o próprio id nem o
+  /// campo `compartilhado` — quem vem de lá é compartilhado por definição.
+  factory PlanoDoUsuario.doJsonDaNuvem(
+    Map<String, dynamic> json, {
+    required String id,
+    required DateTime criadoEm,
+  }) => PlanoDoUsuario(
+    id: id,
+    titulo: json['titulo'] as String? ?? '',
+    livros: [
+      for (final l in json['livros'] as List? ?? const [])
+        if (l is String && livroPorSlug(l) != null) l,
+    ],
+    dias: json['dias'] as int? ?? 1,
+    criadoEm: criadoEm,
+    compartilhado: true,
+  );
+
+  /// Identidade estável do plano, e o id do documento na nuvem quando
+  /// compartilhado. Gerado por [novoIdDePlano], para um link compartilhado
+  /// não ser adivinhável de propósito.
+  final String id;
+  final String titulo;
+
+  /// Slugs dos livros, na ordem canônica.
+  final List<String> livros;
+
+  /// Quantos dias o plano tem. Pode ser maior que o número de dias de
+  /// verdade quando passou do total de capítulos — a montagem corta os dias
+  /// vazios (ver [montarPlanoDeLeitura]).
+  final int dias;
+  final DateTime criadoEm;
+  final bool compartilhado;
+
+  List<DiaDePlanoDoUsuario> get diasDoPlano =>
+      montarPlanoDeLeitura(livros: livros, dias: dias);
+
+  int get totalDeCapitulos {
+    var total = 0;
+    for (final slug in livros) {
+      total += livroPorSlug(slug)?.capitulos ?? 0;
+    }
+    return total;
+  }
+
+  PlanoDoUsuario compartilhadoComo(bool novo) => PlanoDoUsuario(
+    id: id,
+    titulo: titulo,
+    livros: livros,
+    dias: dias,
+    criadoEm: criadoEm,
+    compartilhado: novo,
+  );
+
+  Map<String, dynamic> paraJson() => {
+    'id': id,
+    'titulo': titulo,
+    'livros': livros,
+    'dias': dias,
+    'criadoEm': criadoEm.millisecondsSinceEpoch,
+    if (compartilhado) 'compartilhado': true,
+  };
+}
+
+/// Um id novo de plano: instante em base 36 mais quatro dígitos aleatórios.
+/// O instante sozinho já separaria planos criados na prática, e o aleatório
+/// torna o id de um link compartilhado difícil de adivinhar.
+String novoIdDePlano() {
+  final aleatorio = Random().nextInt(0x10000).toRadixString(16).padLeft(4, '0');
+  return '${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}$aleatorio';
+}
+
+/// Distribui os capítulos de [livros] por [dias] dias, do primeiro capítulo
+/// do primeiro livro ao último do último.
+///
+/// Cada dia recebe um trecho contíguo dos capítulos, com contagens o mais
+/// parecidas possível (Salmos tem 150 capítulos; em 30 dias, uns dias pegam
+/// 5 e outros 6). Os capítulos de um mesmo livro que ficam no mesmo dia
+/// viram uma faixa só — "Salmos 51 a 55" — e a virada de livro quebra a
+/// faixa, como no cronograma anual.
+///
+/// Quando [dias] passa do total de capítulos, os dias que sobrariam vazios
+/// são cortados: a tela de criação já impede isso (valida dias até o total),
+/// e esta defesa é para planos gravados por uma versão futura ou corrompidos.
+List<DiaDePlanoDoUsuario> montarPlanoDeLeitura({
+  required List<String> livros,
+  required int dias,
+}) {
+  final capitulos = <(String, int)>[];
+  for (final slug in livros) {
+    final livro = livroPorSlug(slug);
+    if (livro == null) continue;
+    for (var numero = 1; numero <= livro.capitulos; numero++) {
+      capitulos.add((slug, numero));
+    }
+  }
+  if (capitulos.isEmpty) return const [];
+  if (dias < 1) return const [];
+
+  final porDia = capitulos.length / dias;
+  final plano = <DiaDePlanoDoUsuario>[];
+  for (var dia = 0; dia < dias; dia++) {
+    final de = (dia * porDia).round();
+    final ate = ((dia + 1) * porDia).round();
+    if (ate <= de) continue;
+    plano.add(
+      DiaDePlanoDoUsuario(
+        numero: plano.length + 1,
+        faixas: _agruparEmFaixas(capitulos.sublist(de, ate)),
+      ),
+    );
+  }
+  return plano;
+}
+
+/// Capítulos consecutivos do mesmo livro viram uma faixa; a troca de livro
+/// (ou um salto de capítulo, impossível aqui porque o trecho é contíguo)
+/// fecha a faixa anterior.
+List<Faixa> _agruparEmFaixas(List<(String, int)> trecho) {
+  final faixas = <Faixa>[];
+  String? livroAtual;
+  var de = 0;
+  var ate = 0;
+  for (final (livro, capitulo) in trecho) {
+    if (livro == livroAtual && capitulo == ate + 1) {
+      ate = capitulo;
+    } else {
+      if (livroAtual != null) {
+        faixas.add(Faixa(livro: livroAtual, deCapitulo: de, ateCapitulo: ate));
+      }
+      livroAtual = livro;
+      de = capitulo;
+      ate = capitulo;
+    }
+  }
+  if (livroAtual != null) {
+    faixas.add(Faixa(livro: livroAtual, deCapitulo: de, ateCapitulo: ate));
+  }
+  return faixas;
+}
+
+/// Os nomes dos livros num resumo curto para listas: "Gênesis", "Gênesis e
+/// Êxodo" ou "Gênesis, Êxodo e mais 3 livros".
+String resumoDosLivros(List<String> livros) {
+  final nomes = [for (final slug in livros) nomeDoLivro(slug)];
+  return switch (nomes.length) {
+    0 => '',
+    1 => nomes.first,
+    2 => '${nomes[0]} e ${nomes[1]}',
+    3 => '${nomes[0]}, ${nomes[1]} e ${nomes[2]}',
+    _ => '${nomes[0]}, ${nomes[1]} e mais ${nomes.length - 2} livros',
+  };
+}
+
+/// Título padrão de um plano, para quando quem cria não dá nome próprio:
+/// "Gênesis em 30 dias" ou "Gênesis, Êxodo e mais 64 livros em 365 dias".
+String tituloDePlano(List<String> livros, int dias) {
+  final livrosTexto = resumoDosLivros(livros);
+  if (livrosTexto.isEmpty) return 'Plano de leitura em $dias dias';
+  return '$livrosTexto em $dias ${dias == 1 ? 'dia' : 'dias'}';
+}
