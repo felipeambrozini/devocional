@@ -454,16 +454,25 @@ class Moldura extends StatelessWidget {
     if (!largo) {
       return Scaffold(
         body: navigationShell,
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: navigationShell.currentIndex,
-          onDestinationSelected: _irParaAba,
-          destinations: [
-            for (final d in _destinos)
-              NavigationDestination(
-                icon: Icon(d.icone),
-                selectedIcon: Icon(d.iconeAtivo),
-                label: d.rotulo,
-              ),
+        bottomNavigationBar: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Em tela estreita os retratos de conversa não podem flutuar por
+            // cima da leitura: a faixa é um rodapé de verdade, entre o
+            // conteúdo e a navegação, e nunca tampa texto.
+            const _BarraDosBaloes(),
+            NavigationBar(
+              selectedIndex: navigationShell.currentIndex,
+              onDestinationSelected: _irParaAba,
+              destinations: [
+                for (final d in _destinos)
+                  NavigationDestination(
+                    icon: Icon(d.icone),
+                    selectedIcon: Icon(d.iconeAtivo),
+                    label: d.rotulo,
+                  ),
+              ],
+            ),
           ],
         ),
       );
@@ -489,6 +498,54 @@ class Moldura extends StatelessWidget {
           Expanded(child: navigationShell),
         ],
       ),
+    );
+  }
+}
+
+/// A faixa fixa dos retratos de conversa em tela estreita: os dois balões
+/// ancorados entre o conteúdo e a barra de navegação, ocupando o lugar no
+/// layout em vez de flutuar por cima do texto. Some quando a preferência
+/// [Estado.baloesVisiveis] desliga os retratos, e nas telas abertas por cima
+/// das abas (leitura, chat) não existe — são telas de verdade, que tampam a
+/// moldura inteira.
+class _BarraDosBaloes extends StatelessWidget {
+  const _BarraDosBaloes();
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
+    final estado = EscopoDoEstado.de(context);
+    // O Estado é quem avisa quando a preferência muda: sem este ouvinte, a
+    // faixa só sumiria na próxima reconstrução da moldura.
+    return ListenableBuilder(
+      listenable: estado,
+      builder: (context, _) {
+        if (!estado.baloesVisiveis) return const SizedBox.shrink();
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: cor.surfaceContainer,
+            border: Border(
+              top: BorderSide(color: cor.outlineVariant, width: 0.5),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              BalaoDeChat(
+                persona: personaSpurgeon,
+                onTap: () => _router.push('/${personaSpurgeon.slug}'),
+              ),
+              const SizedBox(width: 16),
+              BalaoDeChat(
+                persona: personaFelipe,
+                onTap: () => _router.push('/${personaFelipe.slug}'),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -537,15 +594,15 @@ class _ObservadorDaVoz extends NavigatorObserver {
 
 final _observadorDaVoz = _ObservadorDaVoz();
 
-/// Pendura os dois balões de conversa por cima de todas as telas: Spurgeon à
+/// Pendura os dois balões de conversa por cima das telas largas: Spurgeon à
 /// esquerda, Felipe à direita.
 ///
-/// Nascem aqui, no builder do MaterialApp, e não dentro de uma tela: assim
-/// aparecem também nas leituras abertas por cima das abas (o "Continuar
-/// leitura", o capítulo do link compartilhado). Somem quando
-/// [camadasFlutuantes] passa de zero, e reaparecem quando a camada fecha.
-/// Escondê-los nos ajustes (`estado.baloesVisiveis`) os tira de todas as
-/// telas: só o dono do aparelho decide se os retratos ficam no caminho.
+/// Em tela estreita eles não flutuam: moram na faixa fixa que a [Moldura]
+/// prende entre o conteúdo e a barra de navegação, e por isso nunca cobrem
+/// texto. Somem quando [camadasFlutuantes] passa de zero, e reaparecem quando
+/// a camada fecha. Escondê-los nos ajustes (`estado.baloesVisiveis`) os tira
+/// de todas as telas: só o dono do aparelho decide se os retratos ficam no
+/// caminho.
 class _ComBaloes extends StatelessWidget {
   const _ComBaloes({required this.child});
 
@@ -562,59 +619,28 @@ class _ComBaloes extends StatelessWidget {
       listenable: camadasFlutuantes,
       builder: (context, _) {
         if (!estado.baloesVisiveis) return child;
-        return Stack(
-          children: [
-            child,
-            if (camadasFlutuantes.value == 0) ...[
-              // O Tooltip do balão exige um Overlay por cima, e aqui estamos
-              // fora do Navigator (que é quem provê o Overlay do app). Este
-              // Overlay aninhado existe só para os balões e as suas dicas;
-              // nada de rota ou diálogo nasce aqui dentro.
-              Overlay(
-                initialEntries: [
-                  OverlayEntry(
-                    builder: (context) => LayoutBuilder(
-                      builder: (context, constraints) {
-                        // Em tela estreita os dois cantos de baixo ficam
-                        // dentro da leitura: um balão em cada canto tampa a
-                        // última linha do texto de cada lado. Empilhados num
-                        // canto só, cobrem bem menos leitura e nunca colidem
-                        // entre si quando o texto do sistema cresce. A folga
-                        // de baixo é a altura da barra de navegação (80) mais
-                        // o respiro: o balão não pode cobrir o destino da
-                        // esquina.
-                        if (constraints.maxWidth < 720) {
-                          return Stack(
-                            children: [
-                              Positioned(
-                                right: 12,
-                                bottom: 88,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    BalaoDeChat(
-                                      persona: personaSpurgeon,
-                                      onTap: () =>
-                                          _abrirChat(personaSpurgeon),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    BalaoDeChat(
-                                      persona: personaFelipe,
-                                      onTap: () =>
-                                          _abrirChat(personaFelipe),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          );
-                        }
-                        // Em tela larga quem ocupa o canto esquerdo é o
-                        // trilho lateral: o balão dele pula para dentro do
-                        // conteúdo, e o da direita fica na esquina.
-                        return Stack(
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            // Tela estreita: os retratos estão na faixa da Moldura, não aqui.
+            // Este overlay só existe para as telas largas, onde os cantos de
+            // baixo ficam vazios e o balão não tampa a leitura.
+            if (constraints.maxWidth < 720) return child;
+            return Stack(
+              children: [
+                child,
+                if (camadasFlutuantes.value == 0) ...[
+                  // O Tooltip do balão exige um Overlay por cima, e aqui
+                  // estamos fora do Navigator (que é quem provê o Overlay do
+                  // app). Este Overlay aninhado existe só para os balões e as
+                  // suas dicas; nada de rota ou diálogo nasce aqui dentro.
+                  Overlay(
+                    initialEntries: [
+                      OverlayEntry(
+                        builder: (context) => Stack(
                           children: [
+                            // Em tela larga quem ocupa o canto esquerdo é o
+                            // trilho lateral: o balão dele pula para dentro do
+                            // conteúdo, e o da direita fica na esquina.
                             Positioned(
                               left: 96,
                               bottom: 12,
@@ -632,14 +658,14 @@ class _ComBaloes extends StatelessWidget {
                               ),
                             ),
                           ],
-                        );
-                      },
-                    ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
-          ],
+              ],
+            );
+          },
         );
       },
     );
