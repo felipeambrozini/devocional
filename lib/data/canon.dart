@@ -131,7 +131,7 @@ const canon = <Livro>[
   Livro('amos', 'Amós', 'Am', 9, _at, 'O Livro de Amós'),
   Livro('obadias', 'Obadias', 'Ob', 1, _at, 'O Livro de Obadias'),
   Livro('jonas', 'Jonas', 'Jn', 4, _at, 'O Livro de Jonas'),
-  Livro('miqueias', 'Miquéias', 'Mq', 7, _at, 'O Livro de Miquéias'),
+  Livro('miqueias', 'Miqueias', 'Mq', 7, _at, 'O Livro de Miqueias'),
   Livro('naum', 'Naum', 'Na', 3, _at, 'O Livro de Naum'),
   Livro('habacuque', 'Habacuque', 'Hc', 3, _at, 'O Livro de Habacuque'),
   Livro('sofonias', 'Sofonias', 'Sf', 3, _at, 'O Livro de Sofonias'),
@@ -254,13 +254,11 @@ String nomeDoLivro(String slug) => _porSlug[slug]?.nome ?? slug;
 
 /// Abreviações alternativas vistas nas fontes originais dos devocionais, que não
 /// batem com a abreviação oficial do canon: "Ex" sem acento para Êxodo, "Isa"
-/// de três letras para Isaías, "Cantares" sem "de Salomão", e "Miqueias" sem
-/// acento.
+/// de três letras para Isaías, e "Cantares" sem "de Salomão".
 const _apelidosDeLivro = <String, String>{
   'Ex': 'exodo',
   'Isa': 'isaias',
   'Cantares': 'cantares',
-  'Miqueias': 'miqueias',
 };
 
 /// Sem diferenciar maiúsculas: o Devocional reescreve a referência do dia com o

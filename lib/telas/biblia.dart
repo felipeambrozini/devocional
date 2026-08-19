@@ -1075,7 +1075,7 @@ class _ListaDeLivros extends StatelessWidget {
   Widget build(BuildContext context) {
     if (filtro.isNotEmpty) {
       // A busca é a porta de entrada para quem não quer escanear 66 chips:
-      // Miquéias e Hebreus deixam de pedir duas telas de varredura. Nome e
+      // Miqueias e Hebreus deixam de pedir duas telas de varredura. Nome e
       // abreviação, sem acento e sem caixa, como a busca de versículos.
       final alvo = Conteudo.normalizar(filtro);
       final achados = canon

@@ -113,7 +113,7 @@ Regras que valem para os assets anuais (`assets/devotionals/*.json` e
   aspas curvas**: vírgula, ponto e vírgula ou ponto, e aspas retas `"`.
 - **Referências no JSON precisam resolver no canon do app** (`lib/data/canon.dart`
   usa `_livroEPrefixo`). Atenção às acentuações não óbvias: "Oseias" **sem**
-  acento e "Miquéias" **com** acento.
+  acento.
 - **Voz vitoriana de Spurgeon**, tratando o leitor por "tu"; citações bíblicas
   no registro BKJ do app.
 
