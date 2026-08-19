@@ -72,8 +72,8 @@ void main() {
     await tester.pumpWidget(AppDevocional(estado: estado));
     await tester.pumpAndSettle();
 
-    // O interruptor fica na seção "Leitura de hoje", abaixo das leituras do
-    // dia: rola até ele antes de tocar, como o visitante faria.
+    // O interruptor fica na seção "Leitura de hoje", a primeira da tela:
+    // rola até ele antes de tocar, como o visitante faria.
     await tester.scrollUntilVisible(
       find.byTooltip('Marcar como lido'),
       200,

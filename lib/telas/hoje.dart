@@ -8,7 +8,6 @@ import '../data/estado.dart';
 import '../data/modelos.dart';
 import '../data/nuvem.dart';
 import '../spacing.dart';
-import 'biblia.dart';
 import 'comuns.dart';
 import 'devocional.dart';
 import 'faixa.dart';
@@ -36,11 +35,12 @@ class _TelaHojeState extends State<TelaHoje> {
             children: [
               _Cabecalho(data: agora),
               const SizedBox(height: Spacing.sp20),
-              // A leitura da hora abre a tela: é a única que ganha o filete,
-              // dizendo que uma leitura começa ali. As outras leituras do dia
-              // vêm logo depois, cada uma com o próprio cartão; a retomada é
-              // a linha quieta que segue, e o plano e o progresso ficam
-              // depois da dobra.
+              // A leitura do plano abre a tela, antes dos devocionais: é a
+              // razão do app existir. A leitura da hora vem logo depois, no
+              // cartão que ganha o filete; promessas mantém o cartão sem ele,
+              // e o progresso fica depois da dobra.
+              _LeituraDeHoje(data: agora),
+              const SizedBox(height: Spacing.sp16),
               _PreviaDaLeitura(
                 data: agora,
                 leitura: periodo == Periodo.manha
@@ -53,22 +53,13 @@ class _TelaHojeState extends State<TelaHoje> {
                 data: agora,
                 leitura: Leitura.promessas,
               ),
-              if (estado.ultimaLeitura != null) ...[
-                // Retomar uma leitura interrompida é a ação de maior intenção
-                // de quem abre o app, por isso fica colada nas leituras do
-                // dia, antes da ajuda e do plano.
-                const SizedBox(height: Spacing.sp8),
-                _Continuar(ultima: estado.ultimaLeitura!),
-              ],
               // Ajuda só para quem chega: um cartão curto na primeira visita,
-              // que some para sempre com "Entendi". Fica depois da leitura e
-              // dos atalhos, para não competir com o que o visitante veio ler.
+              // que some para sempre com "Entendi". Fica depois das leituras
+              // do dia, para não competir com o que o visitante veio ler.
               if (!estado.ajudaDispensada) ...[
                 const SizedBox(height: Spacing.sp16),
                 _CartaoDeAjuda(estado: estado),
               ],
-              const SizedBox(height: Spacing.sp16),
-              _LeituraDeHoje(data: agora),
               const SizedBox(height: Spacing.sp16),
               _Progresso(estado: estado, ano: agora.year),
             ],
@@ -414,8 +405,8 @@ class _LeituraDeHoje extends StatelessWidget {
   final DateTime data;
 
   /// A leitura do plano é uma seção, não um cartão: o Filete abre a leitura
-  /// (a gramática do sistema) e o título em Cinzel dá o nome, sem competir
-  /// com o cartão da leitura da hora que abre a tela.
+  /// (a gramática do sistema) e o título em Cinzel dá o nome. Ela abre a
+  /// tela, e os devocionais vêm logo abaixo, cada um no próprio cartão.
   Widget _seccao(
     BuildContext context, {
     required Widget corpo,
@@ -557,49 +548,6 @@ class _Progresso extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _Continuar extends StatelessWidget {
-  const _Continuar({required this.ultima});
-
-  final (String, int) ultima;
-
-  @override
-  Widget build(BuildContext context) {
-    final cor = Theme.of(context).colorScheme;
-    final tema = Theme.of(context).textTheme;
-    final (livro, capitulo) = ultima;
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) =>
-              TelaBiblia(livroInicial: livro, capituloInicial: capitulo),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: Spacing.sp10,
-          horizontal: Spacing.sp4,
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.play_arrow, color: cor.primary, size: 18),
-            const SizedBox(width: Spacing.sp12),
-            Expanded(
-              child: Text(
-                'Continuar: ${nomeDoLivro(livro)} $capitulo',
-                style: tema.titleMedium?.copyWith(color: cor.onSurface),
-              ),
-            ),
-            const SizedBox(width: Spacing.sp8),
-            Icon(Icons.chevron_right, color: cor.onSurfaceVariant, size: 20),
-          ],
-        ),
-      ),
     );
   }
 }

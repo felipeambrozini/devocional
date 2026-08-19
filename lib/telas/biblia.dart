@@ -37,7 +37,10 @@ class _TelaBibliaState extends State<TelaBiblia> {
   late String _livro;
   late int _capitulo;
   final _rolagem = ScrollController();
-  bool _restaurou = false;
+
+  /// Uma única vez por instância: a aba retoma a última leitura, e quem
+  /// chegou com destino explícito registra esse destino como última leitura.
+  bool _inicializada = false;
 
   /// Onde cai o versículo pedido por link, nota ou busca ([widget.destacar]).
   /// GlobalKey porque o `Scrollable.ensureVisible` precisa do item já
@@ -61,13 +64,45 @@ class _TelaBibliaState extends State<TelaBiblia> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Só retoma a última leitura quando a tela abriu sem destino explícito.
-    if (_restaurou || widget.livroInicial != null) return;
-    _restaurou = true;
-    final ultima = EscopoDoEstado.de(context).ultimaLeitura;
-    if (ultima != null) {
-      _livro = ultima.$1;
-      _capitulo = ultima.$2;
+    // Depender do TickerMode aqui é o que acorda este método quando a aba
+    // Bíblia volta à frente: o go_router envolve cada aba em Offstage +
+    // TickerMode, e a troca de aba liga e desliga o TickerMode.
+    final ativa = TickerMode.valuesOf(context).enabled;
+    final estado = EscopoDoEstado.de(context);
+    final ultima = estado.ultimaLeitura;
+
+    if (widget.livroInicial != null) {
+      // Quem chegou com destino explícito (link, busca, nota, faixa) também
+      // está lendo: esse destino vira a última leitura, para a aba Bíblia
+      // abrir nele na próxima vez.
+      if (!_inicializada) {
+        _inicializada = true;
+        final livro = widget.livroInicial!;
+        final capitulo = widget.capituloInicial ?? 1;
+        // Depois do frame: registrarLeitura avisa a árvore, e avisar no meio
+        // do ciclo de build é proibido.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) estado.registrarLeitura(livro, capitulo);
+        });
+      }
+      return;
+    }
+
+    // A aba: na primeira vez retoma a última leitura; nas seguintes, reabre
+    // o último livro quando ele mudou por fora (tela empurrada, link, toque
+    // de lembrete) e a aba volta à frente.
+    if (!_inicializada) {
+      _inicializada = true;
+      if (ultima != null) {
+        _livro = ultima.$1;
+        _capitulo = ultima.$2;
+      }
+    } else if (ativa &&
+        ultima != null &&
+        (ultima.$1 != _livro || ultima.$2 != _capitulo)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _irPara(ultima.$1, ultima.$2);
+      });
     }
   }
 

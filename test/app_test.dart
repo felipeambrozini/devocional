@@ -790,7 +790,7 @@ void main() {
   ) async {
     // As rotas empurradas nascem no Navigator raiz, fora da moldura. Com a
     // LarguraDeLeitura no lugar errado elas ficavam de fora dela, e o mesmo
-    // leitor tinha 720 px pela aba e a janela inteira pelo "Continuar leitura".
+    // leitor tinha 720 px pela aba e a janela inteira por uma rota empurrada.
     tester.view.physicalSize = const Size(1600, 900);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -1706,6 +1706,62 @@ void main() {
     );
     expect(dezembro.left, greaterThanOrEqualTo(0));
     expect(dezembro.right, lessThanOrEqualTo(800));
+  });
+
+  testWidgets('a Hoje não mostra mais o cartão Continuar', (tester) async {
+    await aquecerAssets(tester);
+    final estado = await estadoLimpo();
+    await estado.registrarLeitura('romanos', 8);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: EscopoDoEstado(estado: estado, child: const TelaHoje()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // O retomar agora mora na própria aba Bíblia: a linha quieta da Hoje era
+    // um duplicado, e rolar até o fim garante que ela não nasceu escondida
+    // abaixo da dobra (a lista só constrói o que entra na tela).
+    await tester.drag(find.byType(ListView), const Offset(0, -3000));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Continuar'), findsNothing);
+  });
+
+  testWidgets('a aba Bíblia reabre o último livro, mesmo aberto por fora', (
+    tester,
+  ) async {
+    // O shell mantém a aba viva: o retomar dela precisa funcionar também no
+    // meio da sessão, quando a última leitura mudou por uma tela empurrada
+    // (link, busca, nota) — e não só no primeiro quadro.
+    await aquecerAssets(tester);
+    await tester.runAsync(() async {
+      for (final v in Versao.values) {
+        await Conteudo.instancia.capitulo(v, 'genesis', 2);
+        await Conteudo.instancia.capitulo(v, 'genesis', 3);
+      }
+    });
+    final estado = await estadoLimpo();
+    await estado.registrarLeitura('genesis', 2);
+    await tester.pumpWidget(AppDevocional(estado: estado));
+    await tester.pumpAndSettle();
+
+    // Ao abrir a aba, ela já está na última leitura gravada.
+    await tester.tap(find.text('Bíblia').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Gênesis 2'), findsWidgets);
+
+    // A última leitura muda por fora, com a aba escondida — como uma tela
+    // empurrada registra o destino dela.
+    await tester.tap(find.text('Hoje').last);
+    await tester.pumpAndSettle();
+    await estado.registrarLeitura('genesis', 3);
+    await tester.pumpAndSettle();
+
+    // A aba escondida não pulou por trás; ao voltar para ela, o último
+    // livro aberto está na frente.
+    await tester.tap(find.text('Bíblia').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Gênesis 3'), findsWidgets);
   });
 }
 
