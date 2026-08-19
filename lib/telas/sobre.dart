@@ -271,15 +271,9 @@ Future<void> _apagarDaNuvem(BuildContext context) async {
   final mensageiro = ScaffoldMessenger.of(context);
   try {
     await Nuvem.instancia.apagarDados();
-    mensageiro.showSnackBar(
-      const SnackBar(content: Text('Dados apagados da nuvem.')),
-    );
+    mostrarAvisoNo(mensageiro, 'Dados apagados da nuvem.');
   } catch (_) {
-    mensageiro.showSnackBar(
-      const SnackBar(
-        content: Text('Não foi possível apagar agora. Tente de novo.'),
-      ),
-    );
+    mostrarAvisoNo(mensageiro, 'Não foi possível apagar agora. Tente de novo.');
   }
 }
 

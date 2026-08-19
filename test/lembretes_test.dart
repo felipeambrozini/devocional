@@ -266,6 +266,9 @@ void main() {
           find.textContaining('Permissão de notificação negada'),
           findsOneWidget,
         );
+        // Deixa o aviso fechar sozinho, senão o timer dele fica pendente.
+        await tester.pump(const Duration(seconds: 3));
+        await tester.pumpAndSettle();
       });
     });
   });

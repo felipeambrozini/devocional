@@ -954,6 +954,9 @@ void main() {
         '"No princípio, Deus criou os céus e a terra."\nGênesis 1:1 (BKJ)\n'
         'https://www.felipeambrozini.com.br/devocional/?ler=genesis.1.1',
       );
+      // Deixa o aviso fechar sozinho, senão o timer dele fica pendente.
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pumpAndSettle();
     },
   );
 
@@ -1306,6 +1309,9 @@ void main() {
       await tester.tap(find.text('Desfazer'));
       await tester.pumpAndSettle();
       expect(estado.ultimaLeitura, ('genesis', 1));
+      // Deixa o aviso fechar sozinho, senão o timer dele fica pendente.
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pumpAndSettle();
     },
   );
 
@@ -1401,6 +1407,9 @@ void main() {
         reason: 'a leitura retoma de onde parou, não do começo',
       );
       leitor.encerrar();
+      // Deixa o aviso fechar sozinho, senão o timer dele fica pendente.
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pumpAndSettle();
     },
   );
 
@@ -1547,6 +1556,9 @@ void main() {
       expect(leitor.toques, 3, reason: 'o descarte não toca — só encerra');
       leitor.encerrar();
       await leitura;
+      // Deixa o aviso fechar sozinho, senão o timer dele fica pendente.
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pumpAndSettle();
     },
   );
 
@@ -1591,7 +1603,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(estado.ultimaLeitura, ('genesis', 5));
 
-      // A síntese conclui DENTRO da janela do Desfazer (4s): o áudio está na
+      // A síntese conclui DENTRO da janela do Desfazer (3s): o áudio está na
       // cache, e o Desfazer retoma — não morre no silêncio do preparo.
       resposta.complete(
         http.Response(
@@ -1610,6 +1622,9 @@ void main() {
           reason: 'o desfazer re-sintetizou (ou retomou da cache) a voz');
       leitor.encerrar();
       await leitura;
+      // Deixa o aviso fechar sozinho, senão o timer dele fica pendente.
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pumpAndSettle();
     },
   );
 

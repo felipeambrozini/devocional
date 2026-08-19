@@ -202,29 +202,21 @@ class _TelaBibliaState extends State<TelaBiblia> {
     // pela metade.
     final chaveDaLeitura = Voz.instancia.tocandoChave;
     _passarCapitulo(passo);
-    final mensageiro = ScaffoldMessenger.of(context);
-    mensageiro
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text('${_livroAtual.nome} $_capitulo'),
-          duration: const Duration(seconds: 4),
-          action: SnackBarAction(
-            label: 'Desfazer',
-            onPressed: () {
-              if (!mounted) return;
-              _irPara(livroAnterior, capituloAnterior);
-              if (chaveDaLeitura != null) {
-                Voz.instancia.retomar(
-                  'capitulo:$livroAnterior.$capituloAnterior',
-                  de: Voz.instancia.desdeAParada,
-                );
-              }
-              mensageiro.hideCurrentSnackBar();
-            },
-          ),
-        ),
-      );
+    mostrarAviso(
+      context,
+      '${_livroAtual.nome} $_capitulo',
+      rotuloDeAcao: 'Desfazer',
+      aoAgir: () {
+        if (!mounted) return;
+        _irPara(livroAnterior, capituloAnterior);
+        if (chaveDaLeitura != null) {
+          Voz.instancia.retomar(
+            'capitulo:$livroAnterior.$capituloAnterior',
+            de: Voz.instancia.desdeAParada,
+          );
+        }
+      },
+    );
   }
 
   /// Se vale a pena gastar uma faixa do rodapé com os chevrons de capítulo.
@@ -815,26 +807,17 @@ Future<void> _abrirAcoesDoVersiculo(
                         numero,
                       )) {
                     final mensageiro = ScaffoldMessenger.of(folha);
-                    mensageiro
-                      ..hideCurrentSnackBar()
-                      ..showSnackBar(
-                        SnackBar(
-                          content: const Text('Removido dos favoritos.'),
-                          duration: const Duration(seconds: 4),
-                          action: SnackBarAction(
-                            label: 'Desfazer',
-                            onPressed: () {
-                              estado.alternarFavorito(
-                                versao,
-                                livro,
-                                capituloNumero,
-                                numero,
-                              );
-                              mensageiro.hideCurrentSnackBar();
-                            },
-                          ),
-                        ),
-                      );
+                    mostrarAvisoNo(
+                      mensageiro,
+                      'Removido dos favoritos.',
+                      rotuloDeAcao: 'Desfazer',
+                      aoAgir: () => estado.alternarFavorito(
+                        versao,
+                        livro,
+                        capituloNumero,
+                        numero,
+                      ),
+                    );
                   }
                 },
               ),
@@ -859,9 +842,7 @@ Future<void> _abrirAcoesDoVersiculo(
                     ),
                   );
                   navegador.pop();
-                  mensageiro.showSnackBar(
-                    const SnackBar(content: Text('Versículo copiado.')),
-                  );
+                  mostrarAvisoNo(mensageiro, 'Versículo copiado.');
                 },
               ),
               ListTile(

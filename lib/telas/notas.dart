@@ -229,9 +229,7 @@ class _AvisoDePerda extends StatelessWidget {
 Future<void> _exportar(BuildContext context, Estado estado) async {
   final mensageiro = ScaffoldMessenger.of(context);
   await Clipboard.setData(ClipboardData(text: estado.exportar()));
-  mensageiro.showSnackBar(
-    const SnackBar(content: Text('Copiado. Guarde num arquivo de texto.')),
-  );
+  mostrarAvisoNo(mensageiro, 'Copiado. Guarde num arquivo de texto.');
 }
 
 /// Pede a cópia colada e funde com o que já existe.
@@ -276,23 +274,17 @@ Future<void> _importar(BuildContext context, Estado estado) async {
   final mensageiro = ScaffoldMessenger.of(context);
   try {
     final (marcacoes, dias) = await estado.importar(texto);
-    mensageiro.showSnackBar(
-      SnackBar(
-        content: Text(
-          marcacoes == 0 && dias == 0
-              ? 'Nada de novo na cópia; tudo já estava aqui.'
-              : 'Importado: $marcacoes favoritos, $dias dias de leitura.',
-        ),
-      ),
+    mostrarAvisoNo(
+      mensageiro,
+      marcacoes == 0 && dias == 0
+          ? 'Nada de novo na cópia; tudo já estava aqui.'
+          : 'Importado: $marcacoes favoritos, $dias dias de leitura.',
     );
   } on FormatException {
-    mensageiro.showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Cópia não reconhecida. Verifique se colou o texto inteiro exportado '
-          'e tente de novo.',
-        ),
-      ),
+    mostrarAvisoNo(
+      mensageiro,
+      'Cópia não reconhecida. Verifique se colou o texto inteiro exportado '
+      'e tente de novo.',
     );
   }
 }

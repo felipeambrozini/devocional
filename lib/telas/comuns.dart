@@ -19,6 +19,66 @@ import '../spacing.dart';
 /// histórico vazio — repetir é o que o torna um aviso, não um enfeite.
 const avisoDeIa = 'Respostas geradas por inteligência artificial';
 
+/// Quanto tempo um aviso de snackbar fica na tela antes de fechar sozinho. Um
+/// valor só em todo o projeto: se a duração mudar um dia, muda aqui.
+const duracaoDeAviso = Duration(seconds: 3);
+
+/// Mostra um aviso na snackbar e o fecha sozinho depois de [duracaoDeAviso].
+///
+/// O ScaffoldMessenger tem um timer próprio para isso, mas ele nunca nasce
+/// quando o SnackBar tem ação (bug do Flutter 3.44.9, reproduzido em teste):
+/// um "Desfazer" ou um "Tentar de novo" deixava o aviso na tela para sempre.
+/// Então o fechamento sai daqui, e o `closed` do aviso garante que um fechar
+/// tardio não leva junto um aviso mais novo mostrado no meio do caminho.
+///
+/// Quem mostra um aviso sempre passa por aqui: assim a duração é uma só, a de
+/// [duracaoDeAviso], e o comportamento é o mesmo em toda parte.
+void mostrarAviso(
+  BuildContext context,
+  String texto, {
+  String? rotuloDeAcao,
+  VoidCallback? aoAgir,
+}) => mostrarAvisoNo(
+  ScaffoldMessenger.of(context),
+  texto,
+  rotuloDeAcao: rotuloDeAcao,
+  aoAgir: aoAgir,
+);
+
+/// O mesmo que [mostrarAviso], mas com o messenger já em mãos — o caso das
+/// telas que capturam o messenger antes de um `await` e só mostram o aviso
+/// depois, quando o contexto pode não estar mais montado.
+void mostrarAvisoNo(
+  ScaffoldMessengerState mensageiro,
+  String texto, {
+  String? rotuloDeAcao,
+  VoidCallback? aoAgir,
+}) {
+  mensageiro.hideCurrentSnackBar();
+  final aviso = mensageiro.showSnackBar(
+    SnackBar(
+      content: Text(texto),
+      duration: duracaoDeAviso,
+      action: rotuloDeAcao == null
+          ? null
+          : SnackBarAction(
+              label: rotuloDeAcao,
+              onPressed: () {
+                aoAgir?.call();
+                mensageiro.hideCurrentSnackBar();
+              },
+            ),
+    ),
+  );
+  var fechou = false;
+  aviso.closed.whenComplete(() => fechou = true);
+  Future<void>.delayed(duracaoDeAviso, () {
+    if (!fechou) {
+      mensageiro.hideCurrentSnackBar();
+    }
+  });
+}
+
 /// As linhas do cartão "Como usar" da Hoje. A mesma ajuda reaparece em Sobre,
 /// porque quem dispensou o cartão na primeira visita não tem como vê-lo de
 /// novo — e o caminho para a ajuda não pode depender só do primeiro dia.
@@ -322,24 +382,14 @@ void alternarLidoComDesfazer(
 ) {
   final estavaLido = estado.foiLido(chave);
   estado.alternarLido(chave);
-  final mensageiro = ScaffoldMessenger.of(context);
-  mensageiro
-    ..hideCurrentSnackBar()
-    ..showSnackBar(
-      SnackBar(
-        content: Text(
-          estavaLido ? 'Dia desmarcado.' : 'Dia marcado como lido.',
-        ),
-        duration: const Duration(seconds: 4),
-        action: SnackBarAction(
-          label: 'Desfazer',
-          onPressed: () {
-            estado.alternarLido(chave);
-            mensageiro.hideCurrentSnackBar();
-          },
-        ),
-      ),
-    );
+  // Confirmação de um toque só, não um erro: aparece e some sozinho, sem
+  // depender do "Desfazer" para fechar.
+  mostrarAviso(
+    context,
+    estavaLido ? 'Dia desmarcado.' : 'Dia marcado como lido.',
+    rotuloDeAcao: 'Desfazer',
+    aoAgir: () => estado.alternarLido(chave),
+  );
 }
 
 /// Abre os ajustes de leitura. Usado onde não há AppBar para pendurar a ação,
@@ -477,11 +527,7 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                   onTap: () async {
                     await estado.reexibirDicaDosBaloes();
                     if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Dica dos botões de conversa reexibida.'),
-                      ),
-                    );
+                    mostrarAviso(context, 'Dica dos botões de conversa reexibida.');
                   },
                 ),
                 // Só em Android: é a única plataforma do projeto com um agendador
@@ -679,15 +725,12 @@ Future<void> entrarNaConta(BuildContext context, Nuvem nuvem) async {
     await nuvem.entrar();
   } on FirebaseAuthException catch (erro) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          erro.code == 'popup-closed-by-user'
-              ? 'Login cancelado.'
-              : 'Não foi possível entrar. Verifique se o navegador permite '
-                    'janelas deste site.',
-        ),
-      ),
+    mostrarAviso(
+      context,
+      erro.code == 'popup-closed-by-user'
+          ? 'Login cancelado.'
+          : 'Não foi possível entrar. Verifique se o navegador permite '
+                'janelas deste site.',
     );
   }
 }
@@ -766,13 +809,10 @@ class _SecaoDeLembretes {
   Future<void> _alternar(BuildContext context, bool novo) async {
     final concedida = await alternarLembretes(estado, novo);
     if (!concedida && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Permissão de notificação negada. Ative em Configurações do '
-            'aparelho para usar os lembretes.',
-          ),
-        ),
+      mostrarAviso(
+        context,
+        'Permissão de notificação negada. Ative em Configurações do '
+        'aparelho para usar os lembretes.',
       );
     }
   }
@@ -995,17 +1035,12 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
     _conclusoes = Voz.instancia.conclusoes.listen((chave) {
       if (chave != widget.chave || !mounted) return;
       final referencia = widget.referencia;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(
-              referencia == null
-                  ? 'Leitura concluída.'
-                  : 'Leitura concluída: $referencia.',
-            ),
-          ),
-        );
+      mostrarAviso(
+        context,
+        referencia == null
+            ? 'Leitura concluída.'
+            : 'Leitura concluída: $referencia.',
+      );
     });
   }
 
@@ -1217,17 +1252,12 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
   /// serviço é momentâneo na maioria das vezes, e sem a ação o usuário teria
   /// de descobrir sozinho que tocar de novo é o caminho.
   void _avisarErro(BuildContext context, Voz voz, VozException erro) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(erro.mensagem),
-          action: SnackBarAction(
-            label: 'Tentar de novo',
-            onPressed: () => _alternar(context, voz),
-          ),
-        ),
-      );
+    mostrarAviso(
+      context,
+      erro.mensagem,
+      rotuloDeAcao: 'Tentar de novo',
+      aoAgir: () => _alternar(context, voz),
+    );
   }
 }
 

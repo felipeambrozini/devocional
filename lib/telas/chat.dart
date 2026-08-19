@@ -269,13 +269,10 @@ class _TelaChatState extends State<TelaChat> {
                 ?.cortada ??
             false);
     if (cortadaAgora && !_cortadaAnterior) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'As falas mais antigas saíram quando esta conversa passou de '
-            '${Conversas.maxMensagensPorConversa} mensagens.',
-          ),
-        ),
+      mostrarAviso(
+        context,
+        'As falas mais antigas saíram quando esta conversa passou de '
+        '${Conversas.maxMensagensPorConversa} mensagens.',
       );
     }
     _cortadaAnterior = cortadaAgora;

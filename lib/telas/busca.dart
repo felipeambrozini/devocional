@@ -57,11 +57,7 @@ class _TelaBuscaState extends State<TelaBusca> {
     // explicava por quê.
     if (termo.isEmpty) return;
     if (termo.length < 3) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Escreva ao menos três letras para buscar.'),
-        ),
-      );
+      mostrarAviso(context, 'Escreva ao menos três letras para buscar.');
       return;
     }
 
