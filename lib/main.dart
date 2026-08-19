@@ -523,15 +523,17 @@ class _BarraDosBaloes extends StatelessWidget {
         if (!estado.baloesVisiveis) return const SizedBox.shrink();
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
           decoration: BoxDecoration(
             color: cor.surfaceContainer,
             border: Border(
               top: BorderSide(color: cor.outlineVariant, width: 0.5),
             ),
           ),
+          // Como antes, quando flutuavam: Spurgeon à esquerda, Felipe à
+          // direita, nas bordas da faixa.
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               BalaoDeChat(
                 persona: personaSpurgeon,
