@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:felipe_ambrozini/data/voz.dart';
@@ -68,6 +69,58 @@ void main() {
       expect(
         textoDeIntroducao(semFrase),
         'Introdução de João. Estrutura Um parágrafo.',
+      );
+    });
+  });
+
+  group('textoDeDevocional', () {
+    test('lê o cabeçalho, o versículo-base com a referência e o comentário',
+        () {
+      const dev = Devocional(
+        referencia: 'João 6:37',
+        versiculo: 'Tudo o que o Pai me dá virá a mim.',
+        texto: 'Que palavra doce é esta.',
+        titulo: '',
+      );
+      expect(
+        textoDeDevocional(
+          dev,
+          cabecalho: 'Devocional da manhã, 18 de agosto',
+        ),
+        'Devocional da manhã, 18 de agosto "Tudo o que o Pai me dá virá a '
+        'mim." João 6:37 Que palavra doce é esta.',
+      );
+    });
+
+    test('lê o título e os versículos adicionais do dia raro', () {
+      const dev = Devocional(
+        referencia: 'Judas 1:1',
+        versiculo: 'Judas, servo de Jesus Cristo.',
+        titulo: 'Uma promessa para hoje',
+        outrosVersiculos: [
+          ('1 Coríntios 1:2', 'À igreja de Deus.'),
+        ],
+        texto: 'O comentário.',
+      );
+      expect(
+        textoDeDevocional(dev, cabecalho: 'Promessa para 18 de agosto'),
+        'Promessa para 18 de agosto Uma promessa para hoje "Judas, servo de '
+        'Jesus Cristo." Judas 1:1 "À igreja de Deus." 1 Coríntios 1:2 O '
+        'comentário.',
+      );
+    });
+
+    test('sem versículo falado (Manhã e Noite) só anuncia a referência', () {
+      const dev = Devocional(
+        referencia: 'João 6:37',
+        versiculo: '',
+        texto: 'O versículo vem embutido no próprio comentário.',
+        titulo: '',
+      );
+      expect(
+        textoDeDevocional(dev, cabecalho: 'Devocional da noite, 18 de agosto'),
+        'Devocional da noite, 18 de agosto João 6:37 O versículo vem embutido '
+        'no próprio comentário.',
       );
     });
   });
@@ -266,6 +319,93 @@ void main() {
           chave: 'teste',
         ),
         throwsA(isA<VozException>()),
+      );
+    });
+  });
+
+  group('sintetizarEmPartes', () {
+    test(
+      'entrega a primeira parte antes e as demais na ordem, sem estourar '
+      'o teto do streaming',
+      () async {
+        final pedidos = <String>[];
+        final cliente = MockClient((request) async {
+          final corpo = json.decode(request.body) as Map<String, dynamic>;
+          final texto =
+              (corpo['input'] as Map<String, dynamic>)['text'] as String;
+          pedidos.add(texto);
+          return http.Response(
+            json.encode({
+              'audioContent': base64.encode(utf8.encode('áudio: $texto')),
+            }),
+            200,
+          );
+        });
+        // 300 frases: ~8 KB, várias partes no teto do streaming (2000 bytes).
+        final texto = List.filled(300, 'Um versículo bem comprido.').join(' ');
+        final recebidas = <Uint8List>[];
+        await sintetizarEmPartes(
+          texto,
+          tipo: TipoConteudoAudio.biblia,
+          cliente: cliente,
+          chave: 'teste',
+          aoChegar: recebidas.add,
+        );
+
+        expect(pedidos.length, greaterThan(1));
+        for (final pedido in pedidos) {
+          expect(
+            utf8.encode(pedido).length,
+            lessThanOrEqualTo(2000),
+            reason: 'cada pedaço do streaming respeita o teto menor',
+          );
+        }
+        expect(recebidas.length, pedidos.length);
+        final esperado = pedidos.map((pedido) => 'áudio: $pedido').join();
+        expect(utf8.decode([for (final parte in recebidas) ...parte]), esperado);
+      },
+    );
+
+    test('texto pequeno vira uma parte só', () async {
+      final pedidos = <String>[];
+      final cliente = MockClient((request) async {
+        final corpo = json.decode(request.body) as Map<String, dynamic>;
+        pedidos.add((corpo['input'] as Map<String, dynamic>)['text'] as String);
+        return http.Response(
+          json.encode({
+            'audioContent': base64.encode([1, 2, 3]),
+          }),
+          200,
+        );
+      });
+      final recebidas = <Uint8List>[];
+      await sintetizarEmPartes(
+        'Texto pequeno.',
+        tipo: TipoConteudoAudio.biblia,
+        cliente: cliente,
+        chave: 'teste',
+        aoChegar: recebidas.add,
+      );
+      expect(pedidos, ['Texto pequeno.']);
+      expect(recebidas, [
+        [1, 2, 3],
+      ]);
+    });
+
+    test('sem chave no build avisa como ligar, não estoura', () async {
+      await expectLater(
+        sintetizarEmPartes(
+          'Texto.',
+          tipo: TipoConteudoAudio.biblia,
+          aoChegar: (_) {},
+        ),
+        throwsA(
+          isA<VozException>().having(
+            (e) => e.mensagem,
+            'mensagem',
+            contains('TTS_API_KEY'),
+          ),
+        ),
       );
     });
   });

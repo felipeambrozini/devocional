@@ -66,13 +66,37 @@ String textoDeCapitulo(Capitulo capitulo) {
   return partes.join(' ');
 }
 
+/// O texto que a voz lê para um devocional: o cabeçalho ("Devocional da
+/// manhã, 18 de agosto"), o título quando a leitura tem um (as Promessas),
+/// cada versículo falado com a referência — também os versículos extras do
+/// dia raro — e o comentário inteiro: o mesmo conteúdo da tela, da primeira
+/// linha à última, como nas introduções e nos capítulos.
+String textoDeDevocional(Devocional dev, {required String cabecalho}) {
+  final partes = <String>[cabecalho];
+  if (dev.titulo.isNotEmpty) partes.add(dev.titulo);
+  final pares = [(dev.referencia, dev.versiculo), ...dev.outrosVersiculos];
+  for (final (referencia, versiculo) in pares) {
+    if (versiculo.isNotEmpty) partes.add('"$versiculo"');
+    if (referencia.isNotEmpty) partes.add(referencia);
+  }
+  if (dev.texto.isNotEmpty) partes.add(dev.texto);
+  return partes.join(' ');
+}
+
 /// Cliente compartilhado do app. Os testes injetam o próprio cliente falso.
 final _clientePadrao = http.Client();
 
-/// O teto de um pedido: 5000 bytes de texto. Capítulos inteiros estouram
-/// isto, então o texto é fatiado em frases e cada pedaço vira um pedido à
-/// API, com os áudios emendados na ordem — a leitura sai sem costura.
+/// O teto de um pedido à API: 5000 bytes de texto. Capítulos inteiros
+/// estouram isto, então o texto é fatiado em frases e cada pedaço vira um
+/// pedido à API, com os áudios emendados na ordem — a leitura sai sem
+/// costura.
 const _limiteDeBytesDoTexto = 5000;
+
+/// O teto de um pedaço da leitura em streaming, menor que o teto da API de
+/// propósito: a primeira parte chega mais rápido e a voz começa enquanto o
+/// resto ainda está sendo sintetizado. Mais pedaços não custam mais na
+/// quota — ela conta caracteres, não pedidos.
+const _limiteDeBytesDoPedaco = 2000;
 
 /// Fim de frase em português: ponto, exclamação ou interrogação seguido de
 /// espaço e de maiúscula ou número — o "1. " dos versículos também é um bom
@@ -80,11 +104,15 @@ const _limiteDeBytesDoTexto = 5000;
 final _fimDeFrase = RegExp(r'(?<=[.!?])\s+(?=[A-Z0-9"“])');
 
 /// Corta [texto] em pedaços que a API aceita — cada um com no máximo
-/// [_limiteDeBytesDoTexto] bytes de UTF-8 — sempre na fronteira de frases.
-/// Uma frase que sozinha estoure o teto (não existe nos capítulos) é cortada
-/// na fronteira de palavras.
-List<String> _fatiar(String texto) {
-  if (utf8.encode(texto).length <= _limiteDeBytesDoTexto) return [texto];
+/// [limite] bytes de UTF-8 — sempre na fronteira de frases. Uma frase que
+/// sozinha estoure o teto (não existe nos capítulos) é cortada na fronteira
+/// de palavras. Quem toca em streaming usa um teto menor ([limite] abaixo do
+/// da API) para a primeira parte chegar mais cedo.
+List<String> _fatiar(
+  String texto, {
+  int limite = _limiteDeBytesDoTexto,
+}) {
+  if (utf8.encode(texto).length <= limite) return [texto];
   final pedacos = <String>[];
   var atual = StringBuffer();
   var bytesAtuais = 0;
@@ -97,13 +125,12 @@ List<String> _fatiar(String texto) {
 
   for (final frase in texto.split(_fimDeFrase)) {
     final tamanho = utf8.encode(frase).length;
-    if (tamanho > _limiteDeBytesDoTexto) {
+    if (tamanho > limite) {
       fechar();
-      pedacos.addAll(_fatiarPorPalavras(frase));
+      pedacos.addAll(_fatiarPorPalavras(frase, limite: limite));
       continue;
     }
-    if (bytesAtuais > 0 &&
-        bytesAtuais + 1 + tamanho > _limiteDeBytesDoTexto) {
+    if (bytesAtuais > 0 && bytesAtuais + 1 + tamanho > limite) {
       fechar();
     }
     if (bytesAtuais > 0) atual.write(' ');
@@ -115,14 +142,13 @@ List<String> _fatiar(String texto) {
 }
 
 /// Uma frase inteira não coube no teto: corta na fronteira de palavras.
-List<String> _fatiarPorPalavras(String frase) {
+List<String> _fatiarPorPalavras(String frase, {required int limite}) {
   final pedacos = <String>[];
   var atual = StringBuffer();
   var bytesAtuais = 0;
   for (final palavra in frase.split(' ')) {
     final tamanho = utf8.encode(palavra).length;
-    if (bytesAtuais > 0 &&
-        bytesAtuais + 1 + tamanho > _limiteDeBytesDoTexto) {
+    if (bytesAtuais > 0 && bytesAtuais + 1 + tamanho > limite) {
       pedacos.add(atual.toString());
       atual = StringBuffer();
       bytesAtuais = 0;
@@ -135,8 +161,75 @@ List<String> _fatiarPorPalavras(String frase) {
   return pedacos;
 }
 
+/// A chave da API de voz, vinda do build: quem toca de verdade usa a chave
+/// TTS_API_KEY (em `lib/data/google.dart`); os testes injetam a que quiserem.
+String _chaveUsada(String? chave) {
+  final usada = chave ?? chaveTts;
+  if (usada.isEmpty) {
+    throw const VozException(
+      'A voz de Spurgeon ainda não foi ligada: o build precisa da chave '
+      'TTS_API_KEY.',
+    );
+  }
+  return usada;
+}
+
+/// Pede o MP3 de [pedaco] à API de voz e devolve o áudio decodificado. É o
+/// pedido de um pedaço, com o tratamento do fracasso e da resposta estranha.
+Future<Uint8List> _pedirAudio(
+  String pedaco, {
+  required TipoConteudoAudio tipo,
+  required http.Client cliente,
+  required String chaveUsada,
+}) async {
+  final http.Response resposta;
+  try {
+    resposta = await cliente
+        .post(
+          Uri.parse(
+            'https://texttospeech.googleapis.com/v1/text:synthesize'
+            '?key=$chaveUsada',
+          ),
+          headers: await cabecalhosGoogle(),
+          body: json.encode({
+            'input': {'text': pedaco},
+            'voice': {'languageCode': 'pt-BR', 'name': tipo.voiceName},
+            'audioConfig': {
+              'audioEncoding': 'MP3',
+              'speakingRate': tipo.speakingRate,
+            },
+          }),
+        )
+        .timeout(const Duration(seconds: 90));
+  } catch (_) {
+    throw const VozException(
+      'Não foi possível preparar a voz agora. Verifique a conexão e tente '
+      'de novo.',
+    );
+  }
+
+  if (resposta.statusCode != 200) {
+    throw VozException(_mensagemDeErro(resposta));
+  }
+
+  final Map corpo;
+  try {
+    corpo = json.decode(utf8.decode(resposta.bodyBytes)) as Map;
+  } catch (_) {
+    // 200 com corpo ilegível (HTML de proxy, resposta truncada): a mesma
+    // mensagem do serviço fora do ar, não uma exceção sem tratamento.
+    throw const VozException('A voz não respondeu agora. Tente de novo em '
+        'instantes.');
+  }
+  final audioDoPedaco = corpo['audioContent'];
+  if (audioDoPedaco is! String || audioDoPedaco.isEmpty) {
+    throw const VozException('O áudio veio vazio. Tente de novo.');
+  }
+  return base64.decode(audioDoPedaco);
+}
+
 /// Sintetiza [texto] na voz do tipo de conteúdo ([tipo]) e devolve o áudio
-/// MP3.
+/// MP3 inteiro.
 ///
 /// A API aceita no máximo [_limiteDeBytesDoTexto] bytes de texto por pedido;
 /// um capítulo inteiro estoura isso, e o texto é fatiado em frases e pedido
@@ -151,62 +244,62 @@ Future<Uint8List> sintetizar(
   http.Client? cliente,
   String? chave,
 }) async {
-  final chaveUsada = chave ?? chaveTts;
-  if (chaveUsada.isEmpty) {
-    throw const VozException(
-      'A voz de Spurgeon ainda não foi ligada: o build precisa da chave '
-      'TTS_API_KEY.',
-    );
-  }
-
+  final chaveUsada = _chaveUsada(chave);
+  final clienteUsado = cliente ?? _clientePadrao;
   final audio = BytesBuilder();
   for (final pedaco in _fatiar(texto)) {
-    final http.Response resposta;
-    try {
-      resposta = await (cliente ?? _clientePadrao)
-          .post(
-            Uri.parse(
-              'https://texttospeech.googleapis.com/v1/text:synthesize'
-              '?key=$chaveUsada',
-            ),
-            headers: await cabecalhosGoogle(),
-            body: json.encode({
-              'input': {'text': pedaco},
-              'voice': {'languageCode': 'pt-BR', 'name': tipo.voiceName},
-              'audioConfig': {
-                'audioEncoding': 'MP3',
-                'speakingRate': tipo.speakingRate,
-              },
-            }),
-          )
-          .timeout(const Duration(seconds: 90));
-    } catch (_) {
-      throw const VozException(
-        'Não foi possível preparar a voz agora. Verifique a conexão e tente '
-        'de novo.',
-      );
-    }
-
-    if (resposta.statusCode != 200) {
-      throw VozException(_mensagemDeErro(resposta));
-    }
-
-    final Map corpo;
-    try {
-      corpo = json.decode(utf8.decode(resposta.bodyBytes)) as Map;
-    } catch (_) {
-      // 200 com corpo ilegível (HTML de proxy, resposta truncada): a mesma
-      // mensagem do serviço fora do ar, não uma exceção sem tratamento.
-      throw const VozException('A voz não respondeu agora. Tente de novo em '
-          'instantes.');
-    }
-    final audioDoPedaco = corpo['audioContent'];
-    if (audioDoPedaco is! String || audioDoPedaco.isEmpty) {
-      throw const VozException('O áudio veio vazio. Tente de novo.');
-    }
-    audio.add(base64.decode(audioDoPedaco));
+    audio.add(
+      await _pedirAudio(
+        pedaco,
+        tipo: tipo,
+        cliente: clienteUsado,
+        chaveUsada: chaveUsada,
+      ),
+    );
   }
   return audio.takeBytes();
+}
+
+/// Sintetiza [texto] pedaço a pedaço, chamando [aoChegar] com cada áudio na
+/// ordem. Só o primeiro pedaço é esperado: ele chega em poucos segundos e a
+/// leitura começa, e os demais — pedidos em paralelo, entregues na ordem —
+/// vão chegando enquanto o primeiro toca. É como a leitura deixa de demorar
+/// o texto inteiro: a espera do ouvinte vira a espera do primeiro pedaço.
+///
+/// Os pedaços são menores que o teto da API ([_limiteDeBytesDoPedaco] em vez
+/// de [_limiteDeBytesDoTexto]): mais pedaços não custam mais na quota, e o
+/// primeiro deles chega bem antes do áudio inteiro ficaria pronto.
+Future<void> sintetizarEmPartes(
+  String texto, {
+  required TipoConteudoAudio tipo,
+  required FutureOr<void> Function(Uint8List parte) aoChegar,
+  http.Client? cliente,
+  String? chave,
+}) async {
+  final chaveUsada = _chaveUsada(chave);
+  final clienteUsado = cliente ?? _clientePadrao;
+  final pedacos = _fatiar(texto, limite: _limiteDeBytesDoPedaco);
+  await aoChegar(
+    await _pedirAudio(
+      pedacos.first,
+      tipo: tipo,
+      cliente: clienteUsado,
+      chaveUsada: chaveUsada,
+    ),
+  );
+  if (pedacos.length == 1) return;
+  final restantes = await Future.wait([
+    for (final pedaco in pedacos.skip(1))
+      _pedirAudio(
+        pedaco,
+        tipo: tipo,
+        cliente: clienteUsado,
+        chaveUsada: chaveUsada,
+      ),
+  ]);
+  for (final parte in restantes) {
+    await aoChegar(parte);
+  }
 }
 
 /// 403 é a chave sem a API ativada (configuração na nuvem): culpar o aparelho
@@ -262,9 +355,10 @@ class Voz extends ChangeNotifier {
   AudioPlayer? _player;
 
   /// Áudios prontos, guardados pela chave do que tocam ("introducao:joao",
-  /// "capitulo:joao.3"). A chave do cache é a mesma que o botão usa para
-  /// saber o que está tocando agora.
-  Map<String, Uint8List> _cache = {};
+  /// "capitulo:joao.3"). O valor é a lista de pedaços do áudio na ordem — o
+  /// formato do streaming, e o que o player emenda numa playlist. A chave do
+  /// cache é a mesma que o botão usa para saber o que está tocando agora.
+  Map<String, List<Uint8List>> _cache = {};
 
   /// O que a memória segura de áudio de uma vez. Um capítulo inteiro em MP3
   /// pesa ~150 KB; 24 cabem folgados e cobrem o ir e vir das leituras do dia.
@@ -404,8 +498,8 @@ class Voz extends ChangeNotifier {
     // Pausada de fora com a mesma chave, o toque retoma de onde parou: do
     // áudio da memória, na posição da pausa — sem gastar a quota de novo.
     if (_pausado && _tocandoChave == chave) {
-      final bytes = _cache[chave];
-      if (bytes != null) {
+      final partes = _cache[chave];
+      if (partes != null) {
         final de = _posicaoDaPausa;
         final versao = ++_versao;
         _pausado = false;
@@ -413,7 +507,7 @@ class Voz extends ChangeNotifier {
         _carregando = false;
         notifyListeners();
         try {
-          await _tocarLeitor(bytes, chave, versao: versao, de: de);
+          await _tocarTudo(partes, chave, versao: versao, de: de);
         } on VozException {
           rethrow;
         } catch (_) {
@@ -449,22 +543,31 @@ class Voz extends ChangeNotifier {
     // "Preparando…" cancela com [parar], que zera esse estado.
     await _silenciar();
     try {
-      final bytes = await _obterAudio(
-        chave,
-        texto: texto,
-        tipo: tipo,
-        cliente: cliente,
-        chaveTts: chaveTts,
-      );
-      if (versao != _versao) return;
-      // Janela escondida (aba oculta na web, tela bloqueada, ligação): o
-      // áudio fica na cache esperando o primeiro plano — tocar agora seria
-      // tocar para ninguém.
-      if (!_appEmPrimeiroPlano()) return;
-      _tocando = true;
-      _carregando = false;
-      notifyListeners();
-      await _tocarLeitor(bytes, chave, versao: versao, de: null);
+      final guardado = _cache[chave];
+      if (guardado != null) {
+        // O áudio inteiro já está na memória (ouviu antes nesta sessão): toca
+        // direto, sem gastar a quota de novo.
+        if (versao != _versao) return;
+        // Janela escondida (aba oculta na web, tela bloqueada, ligação): o
+        // áudio fica na cache esperando o primeiro plano — tocar agora seria
+        // tocar para ninguém.
+        if (!_appEmPrimeiroPlano()) return;
+        _tocando = true;
+        _carregando = false;
+        notifyListeners();
+        await _tocarTudo(guardado, chave, versao: versao, de: null);
+      } else {
+        // O áudio não existe ainda: sintetiza em streaming, com a primeira
+        // parte tocando assim que chega e o resto emendado na leitura.
+        await _tocarNovaSintese(
+          chave,
+          texto: texto,
+          tipo: tipo,
+          cliente: cliente,
+          chaveTts: chaveTts,
+          versao: versao,
+        );
+      }
     } on VozException {
       rethrow;
     } catch (_) {
@@ -518,8 +621,8 @@ class Voz extends ChangeNotifier {
   /// que retoma do zero. Retomar é intenção explícita e não cai no debounce
   /// do toque repetido.
   Future<bool> retomar(String chave, {Duration? de}) async {
-    final bytes = _cache[chave];
-    if (bytes == null) return false;
+    final partes = _cache[chave];
+    if (partes == null) return false;
     final versao = ++_versao;
     _tocandoChave = chave;
     _tocando = true;
@@ -530,7 +633,7 @@ class Voz extends ChangeNotifier {
     // devolve a página e a leitura, e a sessão nova começa limpa.
     await _silenciar();
     try {
-      await _tocarLeitor(bytes, chave, versao: versao, de: de);
+      await _tocarTudo(partes, chave, versao: versao, de: de);
     } on VozException {
       rethrow;
     } catch (_) {
@@ -555,15 +658,15 @@ class Voz extends ChangeNotifier {
     if (!_pausado) return false;
     final chave = _tocandoChave!;
     final de = _posicaoDaPausa;
-    final bytes = _cache[chave];
-    if (bytes != null) {
+    final partes = _cache[chave];
+    if (partes != null) {
       final versao = ++_versao;
       _pausado = false;
       _tocando = true;
       _carregando = false;
       notifyListeners();
       try {
-        await _tocarLeitor(bytes, chave, versao: versao, de: de);
+        await _tocarTudo(partes, chave, versao: versao, de: de);
       } on VozException {
         rethrow;
       } catch (_) {
@@ -598,29 +701,59 @@ class Voz extends ChangeNotifier {
     return true;
   }
 
-  /// Toca [bytes] e trata o fim da leitura. O leitor de testes decide o fim
-  /// ([pausadoDeFora], [concluida]); o player de verdade completa o play()
-  /// quando a leitura para, pausa ou chega ao fim, e o processingState diz
-  /// qual dos três foi. [versao] descarta a chegada de uma sessão que já foi
-  /// substituída (troca de chave, parada, deslize).
-  Future<void> _tocarLeitor(
-    Uint8List bytes,
-    String chave, {
+  /// Começa a tocar [partes] e devolve assim que a leitura começa (ou seja,
+  /// quando o áudio está carregando no player de verdade, ou no instante do
+  /// tocar no leitor de testes) — é [aoFim] quem recebe o fim da leitura, o
+  /// play do player ou o tocar do leitor, para [_acompanharLeitura] esperar
+  /// sem emaranhar as futures. [de] é a posição de onde a retomada continua.
+  ///
+  /// A fonte é sempre substituída, mesmo que o player já tenha uma: o player
+  /// é de sessão, e tocar outro capítulo sem trocar a fonte tocaria o
+  /// capítulo antigo de novo.
+  Future<void> iniciarLeitura(
+    List<Uint8List> partes, {
     required int versao,
     Duration? de,
+    required void Function(Future<void> fim) aoFim,
   }) async {
     final leitor = _leitorDeAudio;
     if (leitor == null) {
       final player = _player ??= AudioPlayer();
-      if (player.audioSource == null) {
-        await player.setAudioSource(
-          AudioSource.uri(Uri.dataFromBytes(bytes, mimeType: 'audio/mpeg')),
-        );
+      await player.setAudioSources([
+        for (final parte in partes)
+          AudioSource.uri(Uri.dataFromBytes(parte, mimeType: 'audio/mpeg')),
+      ]);
+      if (versao != _versao) {
+        aoFim(Future<void>.value());
+        return;
       }
-      if (versao != _versao) return;
       if (de != null) await player.seek(de);
-      await player.play();
-      if (versao != _versao) return;
+      aoFim(player.play());
+      return;
+    }
+    aoFim(
+      versao == _versao
+          ? leitor.tocar(_emendarPartes(partes), de: de)
+          : Future<void>.value(),
+    );
+  }
+
+  /// Acompanha a leitura até o fim e fecha o ciclo: o fim natural vira
+  /// "Leitura concluída.", a pausa de fora vira a sessão "Pausado", e a
+  /// interrupção limpa o estado. [fim] é o play do player ou o tocar do
+  /// leitor de testes — completa quando a leitura para, pausa ou termina.
+  /// [versao] descarta a chegada de uma sessão que já foi substituída
+  /// (troca de chave, parada, deslize).
+  Future<void> _acompanharLeitura(
+    Future<void> fim,
+    String chave, {
+    required int versao,
+  }) async {
+    await fim;
+    if (versao != _versao) return;
+    final leitor = _leitorDeAudio;
+    if (leitor == null) {
+      final player = _player!;
       // Pausada de fora (chamada, perda de foco), o play volta pausado, com a
       // posição e o áudio carregados: é a sessão "Pausado". O fim natural
       // volta completo.
@@ -632,24 +765,14 @@ class Voz extends ChangeNotifier {
         notifyListeners();
         return;
       }
-      _tocando = false;
-      _tocandoChave = null;
-      _carregando = false;
-      _conclusoes.add(chave);
-      notifyListeners();
-      return;
-    }
-    await leitor.tocar(bytes, de: de);
-    if (versao != _versao) return;
-    if (leitor.pausadoDeFora) {
+    } else if (leitor.pausadoDeFora) {
       _posicaoDaPausa = leitor.posicaoAtual ?? Duration.zero;
       _pausado = true;
       _tocando = false;
       _carregando = false;
       notifyListeners();
       return;
-    }
-    if (!leitor.concluida) {
+    } else if (!leitor.concluida) {
       // Interrupção sem pausa: a leitura parou, mas não chegou ao fim — sem
       // "Leitura concluída." e sem sessão pausada esperando retomar.
       _tocando = false;
@@ -663,6 +786,112 @@ class Voz extends ChangeNotifier {
     _carregando = false;
     _conclusoes.add(chave);
     notifyListeners();
+  }
+
+  /// Toca [partes] do começo (ou de [de]) e acompanha a leitura até o fim:
+  /// é o caminho do áudio inteiro já pronto — a cache, o retomar do
+  /// "Desfazer" e o retomar da pausa.
+  Future<void> _tocarTudo(
+    List<Uint8List> partes,
+    String chave, {
+    required int versao,
+    Duration? de,
+  }) async {
+    var fim = Future<void>.value();
+    await iniciarLeitura(partes, versao: versao, de: de, aoFim: (f) => fim = f);
+    if (versao != _versao) return;
+    await _acompanharLeitura(fim, chave, versao: versao);
+  }
+
+  /// Sintetiza [texto] em streaming e toca: a primeira parte começa a tocar
+  /// assim que chega — o ouvinte não espera o texto inteiro ser preparado — e
+  /// as demais são emendadas na leitura enquanto ela acontece. O áudio
+  /// completo entra na cache ao final: mesmo se a leitura for cancelada no
+  /// meio do preparo (outra chave, deslize), a quota não se perde.
+  Future<void> _tocarNovaSintese(
+    String chave, {
+    required String texto,
+    required TipoConteudoAudio tipo,
+    http.Client? cliente,
+    String? chaveTts,
+    required int versao,
+  }) async {
+    final partes = <Uint8List>[];
+    var leituraComecou = false;
+    final fimDaLeitura = Completer<void>();
+    try {
+      await sintetizarEmPartes(
+        texto,
+        tipo: tipo,
+        cliente: cliente,
+        chave: chaveTts,
+        aoChegar: (parte) async {
+          // A parte entra na cache antes do descarte por versão: um cancelar
+          // no meio do preparo não joga fora o que a quota já pagou.
+          partes.add(parte);
+          if (versao != _versao) return;
+          if (leituraComecou) {
+            // O resto do áudio emenda na leitura que já toca (só o player de
+            // verdade; o leitor de testes já recebeu o áudio inteiro).
+            await _emendarNoPlayer(parte, versao: versao);
+            return;
+          }
+          if (!_appEmPrimeiroPlano()) return;
+          leituraComecou = true;
+          _tocando = true;
+          _carregando = false;
+          notifyListeners();
+          // A leitura corre em paralelo à síntese do resto: o primeiro
+          // pedaço toca enquanto a fila se enche.
+          await iniciarLeitura(
+            partes,
+            versao: versao,
+            de: null,
+            aoFim: (fim) {
+              unawaited(
+                _acompanharLeitura(fim, chave, versao: versao).whenComplete(
+                  () {
+                    if (!fimDaLeitura.isCompleted) fimDaLeitura.complete();
+                  },
+                ),
+              );
+            },
+          );
+        },
+      );
+    } catch (_) {
+      // Um pedaço falhou depois de a leitura já ter começado: o que toca
+      // deve parar — o erro volta para a tela, mas não deixa um áudio solto
+      // tocando sem botão.
+      if (leituraComecou) {
+        _versao++;
+        await _silenciar();
+        _tocando = false;
+        _tocandoChave = null;
+        _carregando = false;
+        notifyListeners();
+      }
+      rethrow;
+    }
+    _guardarNaCache(chave, partes);
+    if (leituraComecou) await fimDaLeitura.future;
+  }
+
+  /// Emenda [parte] na playlist do player que já toca: é assim que o
+  /// streaming enche a leitura enquanto o primeiro pedaço está no ar. No
+  /// leitor de testes não há o que emendar — ele já recebeu o áudio inteiro.
+  Future<void> _emendarNoPlayer(Uint8List parte, {required int versao}) async {
+    if (versao != _versao) return;
+    final player = _player;
+    if (player == null) return;
+    try {
+      await player.addAudioSource(
+        AudioSource.uri(Uri.dataFromBytes(parte, mimeType: 'audio/mpeg')),
+      );
+    } catch (_) {
+      // Sem plataforma de áudio (teste, navegador sem suporte): o pedaço
+      // fica na cache e a leitura segue com o que já toca.
+    }
   }
 
   /// Silencia o que estiver tocando sem tocar no estado da sessão. Quem usa:
@@ -686,34 +915,21 @@ class Voz extends ChangeNotifier {
     }
   }
 
-  void _guardarNaCache(String chave, Uint8List bytes) {
-    _cache[chave] = bytes;
+  void _guardarNaCache(String chave, List<Uint8List> partes) {
+    _cache[chave] = partes;
     while (_cache.length > _limiteDaCache) {
       _cache.remove(_cache.keys.first);
     }
   }
 
-  /// O áudio de [chave], da memória se já foi sintetizado nesta sessão, ou
-  /// recém-baixado da Google. A cache só guarda áudio pronto: um erro de
-  /// síntese não deixa um buraco que faria o próximo toque falhar do mesmo
-  /// jeito.
-  Future<Uint8List> _obterAudio(
-    String chave, {
-    String? texto,
-    required TipoConteudoAudio tipo,
-    http.Client? cliente,
-    String? chaveTts,
-  }) async {
-    final guardado = _cache[chave];
-    if (guardado != null) return guardado;
-    final novo = await sintetizar(
-      texto ?? '',
-      tipo: tipo,
-      cliente: cliente,
-      chave: chaveTts,
-    );
-    _guardarNaCache(chave, novo);
-    return novo;
+  /// Emenda [partes] num áudio só: é o que o leitor de testes recebe. O
+  /// player de verdade recebe a lista e a emenda sozinho, na playlist.
+  Uint8List _emendarPartes(List<Uint8List> partes) {
+    final emendado = BytesBuilder();
+    for (final parte in partes) {
+      emendado.add(parte);
+    }
+    return emendado.takeBytes();
   }
 
   /// Onde a leitura está agora: no leitor de testes, a posição que o teste

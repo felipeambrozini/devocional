@@ -5,6 +5,7 @@ import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
+import '../data/voz.dart';
 import 'comuns.dart';
 
 /// As três leituras diárias, na ordem em que aparecem no alternador do topo.
@@ -211,13 +212,20 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                       texto: dev.texto,
                       capa: _leitura.capa,
                       tipo: _leitura.tipoDeVoz,
-                      vozChave: 'devocional:${_data.month}/${_data.day}',
-                      vozTexto: _leitura == Leitura.promessas
-                          ? 'Promessa para ${dataLonga(_data)}'
-                          : 'Devocional para ${dataLonga(_data)}',
-                      vozReferencia: _leitura == Leitura.promessas
-                          ? 'Promessa de Deus'
-                          : '${_leitura.rotulo.toLowerCase()}_${_data.month}_${_data.day}',
+                      // A chave leva a leitura junto: Manhã e Noite do mesmo
+                      // dia são leituras diferentes, e a cache não pode
+                      // confundi-las numa só.
+                      vozChave:
+                          'devocional:${_leitura.name}:${_data.month}/${_data.day}',
+                      vozTexto: textoDeDevocional(
+                        dev,
+                        cabecalho: _leitura == Leitura.promessas
+                            ? 'Promessa para ${dataLonga(_data)}'
+                            : '${_leitura.tituloCompleto}, ${dataLonga(_data)}',
+                      ),
+                      vozReferencia: dev.referencia.isNotEmpty
+                          ? dev.referencia
+                          : _leitura.rotulo,
                     ),
                   ],
                 );
