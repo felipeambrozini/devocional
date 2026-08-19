@@ -11,6 +11,7 @@ import '../data/lembretes.dart';
 import '../data/modelos.dart';
 import '../data/nuvem.dart';
 import '../data/voz.dart';
+import '../spacing.dart';
 
 /// A folga que as telas de leitura deixam no fim da lista para os balões de
 /// conversa (88 de folga mais 52 de balão, em `main.dart`) não cobrirem a
@@ -63,7 +64,7 @@ class Cartao extends StatelessWidget {
     this.titulo,
     this.acessorio,
     required this.child,
-    this.padding = const EdgeInsets.all(16),
+    this.padding = const EdgeInsets.all(Spacing.sp16),
   });
 
   final String? titulo;
@@ -91,7 +92,7 @@ class Cartao extends StatelessWidget {
                   ?acessorio,
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: Spacing.sp12),
             ],
             child,
           ],
@@ -194,19 +195,19 @@ class AvisoVazio extends StatelessWidget {
     final cor = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(Spacing.sp32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icone, size: 44, color: cor.outline),
-            const SizedBox(height: 16),
+            const SizedBox(height: Spacing.sp16),
             Text(
               titulo,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             if (detalhe != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: Spacing.sp8),
               Text(
                 detalhe!,
                 textAlign: TextAlign.center,
@@ -346,14 +347,14 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                  padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp20, Spacing.sp20, Spacing.sp12),
                   child: Text('Tamanho do texto', style: tema.headlineSmall),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: Spacing.sp20),
                   child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+                    spacing: Spacing.sp8,
+                    runSpacing: Spacing.sp8,
                     children: [
                       for (final (i, escala) in escalasDeLeitura.indexed)
                         ChoiceChip(
@@ -367,14 +368,14 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                  padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp24, Spacing.sp20, Spacing.sp12),
                   child: Text('Aparência', style: tema.headlineSmall),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: Spacing.sp20),
                   child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+                    spacing: Spacing.sp8,
+                    runSpacing: Spacing.sp8,
                     children: [
                       for (final modo in ModoDoTema.values)
                         ChoiceChip(
@@ -387,7 +388,7 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 4),
+                  padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp24, Spacing.sp20, Spacing.sp4),
                   child: Text('Conversas', style: tema.headlineSmall),
                 ),
                 SwitchListTile(
@@ -440,7 +441,7 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                     roteador.push('/sobre');
                   },
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: Spacing.sp8),
               ],
             ),
           );
@@ -518,7 +519,7 @@ List<Widget> _secaoDaConta(BuildContext context) {
   final nuvem = Nuvem.instancia;
   return [
     Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 4),
+      padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp24, Spacing.sp20, Spacing.sp4),
       child: Text('Conta', style: Theme.of(context).textTheme.headlineSmall),
     ),
     ListenableBuilder(
@@ -539,7 +540,7 @@ List<Widget> _secaoDaConta(BuildContext context) {
               ),
             )
           : Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+              padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp4, Spacing.sp20, Spacing.sp8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -547,7 +548,7 @@ List<Widget> _secaoDaConta(BuildContext context) {
                     'Guarda favoritos, anotações e progresso na sua conta.',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: Spacing.sp10),
                   // O "G" é o asset oficial do Google
                   // (developers.google.com/identity/images/g-logo.png), do
                   // jeito que as diretrizes de marca pedem: não redesenhado à
@@ -611,7 +612,7 @@ class _SecaoDeLembretes {
     final tema = Theme.of(context).textTheme;
     return [
       Padding(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 4),
+        padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp24, Spacing.sp20, Spacing.sp4),
         child: Text('Lembretes', style: tema.headlineSmall),
       ),
       SwitchListTile(
@@ -741,7 +742,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
         if (introducao == null) return const SizedBox.shrink();
 
         return Padding(
-          padding: const EdgeInsets.only(bottom: 24),
+          padding: const EdgeInsets.only(bottom: Spacing.sp24),
           child: Card(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -750,7 +751,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                   borderRadius: BorderRadius.circular(14),
                   onTap: () => setState(() => _aberta = !_aberta),
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(Spacing.sp16),
                     child: Row(
                       children: [
                         ClipRRect(
@@ -763,7 +764,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                             excludeFromSemantics: true,
                           ),
                         ),
-                        const SizedBox(width: 14),
+                        const SizedBox(width: Spacing.sp14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -772,7 +773,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                                 'Introdução: ${livroPorSlug(widget.slug)!.tituloFormal}',
                                 style: tema.titleLarge,
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: Spacing.sp4),
                               Text(
                                 'Bíblia de Estudo Charles Haddon Spurgeon',
                                 style: tema.labelMedium,
@@ -790,12 +791,12 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                 ),
                 if (_aberta)
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    padding: const EdgeInsets.fromLTRB(Spacing.sp16, 0, Spacing.sp16, Spacing.sp16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Filete(),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: Spacing.sp16),
                         // A voz de Spurgeon lê a introdução inteira, do
                         // título à frase; tocar de novo para a leitura.
                         BotaoDeVoz(
@@ -804,23 +805,23 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                           tipo: TipoConteudoAudio.introducao,
                           referencia: 'Introdução de ${introducao.livro}',
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: Spacing.sp16),
                         for (final (titulo, corpo) in introducao.secoes) ...[
                           Text(titulo, style: tema.headlineSmall),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: Spacing.sp8),
                           for (final paragrafo in corpo.split('\n\n')) ...[
                             Text(
                               paragrafo,
                               style: tema.bodyMedium?.copyWith(height: 1.7),
                             ),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: Spacing.sp10),
                           ],
-                          const SizedBox(height: 12),
+                          const SizedBox(height: Spacing.sp12),
                         ],
                         if (introducao.frase.isNotEmpty)
                           Container(
                             width: double.infinity,
-                            padding: const EdgeInsets.all(14),
+                            padding: const EdgeInsets.all(Spacing.sp14),
                             decoration: BoxDecoration(
                               color: cor.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(10),
@@ -839,7 +840,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                                     height: 1.6,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: Spacing.sp8),
                                 Text(
                                   introducao.atribuicao,
                                   style: tema.labelMedium,
@@ -989,7 +990,7 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
                         ? voz.parar
                         : () => _alternar(context, voz),
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(6, 6, 16, 6),
+                      padding: const EdgeInsets.fromLTRB(Spacing.sp6, Spacing.sp6, Spacing.sp16, Spacing.sp6),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -1011,7 +1012,7 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
                                 ),
                               ),
                               child: Padding(
-                                padding: const EdgeInsets.all(3),
+                                padding: const EdgeInsets.all(Spacing.sp3),
                                 child: ClipOval(
                                   child: Image.asset(
                                     'assets/images/spurgeon.webp',
@@ -1026,7 +1027,7 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 10),
+                            const SizedBox(width: Spacing.sp10),
                           ],
                           Icon(
                             ativo
@@ -1037,7 +1038,7 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
                             size: 20,
                             color: cor.primary,
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: Spacing.sp6),
                           // Flexible com reticências: em escala de texto 2x um
                           // rótulo comprido ("O pregador está lendo…") não
                           // pode estourar a largura da tela. Semantics: o
@@ -1073,7 +1074,7 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
                                   borderRadius: BorderRadius.circular(30),
                                   onTap: voz.parar,
                                   child: Padding(
-                                    padding: const EdgeInsets.all(4),
+                                    padding: const EdgeInsets.all(Spacing.sp4),
                                     child: Icon(
                                       Icons.close_rounded,
                                       size: 18,

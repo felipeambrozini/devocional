@@ -7,6 +7,7 @@ import '../data/estado.dart';
 import '../data/ia.dart';
 import '../data/modelos.dart';
 import '../data/personas.dart';
+import '../spacing.dart';
 import 'comuns.dart';
 
 /// A conversa com uma persona, enquadrada como carta da Estante.
@@ -93,7 +94,7 @@ class BalaoDeChat extends StatelessWidget {
                       // cabelo do Felipe encosta no aro. Com ela o aro fica limpo,
                       // como o do Spurgeon, que tem folga própria na foto.
                       child: Padding(
-                        padding: const EdgeInsets.all(3),
+                        padding: const EdgeInsets.all(Spacing.sp3),
                         child: ClipOval(
                           child: Image.asset(
                             persona.foto,
@@ -110,7 +111,7 @@ class BalaoDeChat extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: Spacing.sp4),
                 // A placa com o nome curto: o retrato flutuante sem nome era um
                 // enigma na primeira visita, quando só o tooltip dizia quem era.
                 // Mesmo tom do círculo, para o balão ler como um pendão só, e
@@ -119,8 +120,8 @@ class BalaoDeChat extends StatelessWidget {
                 ExcludeSemantics(
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
+                      horizontal: Spacing.sp8,
+                      vertical: Spacing.sp3,
                     ),
                     decoration: BoxDecoration(
                       color: cor.surfaceContainer,
@@ -367,7 +368,7 @@ class _TelaChatState extends State<TelaChat> {
                 alignment: Alignment.topCenter,
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: Spacing.sp10),
             // Flexible com reticências, como na barra do leitor
             // (biblia.dart): o nome longo de uma persona em celular estreito
             // com escala 2x estouraria a linha da AppBar.
@@ -416,14 +417,14 @@ class _TelaChatState extends State<TelaChat> {
                 // O cabeçalho (o Filete) é o índice 0; as mensagens vêm depois.
                 return ListView.builder(
                   controller: _rolagem,
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  padding: const EdgeInsets.fromLTRB(Spacing.sp16, Spacing.sp16, Spacing.sp16, Spacing.sp8),
                   itemCount: mensagens.length + 1 + (cortada ? 1 : 0),
                   itemBuilder: (context, i) {
                     if (i == 0) {
                       // A conversa abre como página: o Filete que abre cada
                       // leitura da Estante sinaliza onde o fio começa.
                       return const Padding(
-                        padding: EdgeInsets.only(bottom: 18),
+                        padding: EdgeInsets.only(bottom: Spacing.sp18),
                         child: Center(child: Filete(largura: 64)),
                       );
                     }
@@ -444,14 +445,14 @@ class _TelaChatState extends State<TelaChat> {
           ),
           if (respondendo)
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+              padding: const EdgeInsets.fromLTRB(Spacing.sp16, Spacing.sp4, Spacing.sp16, 0),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: _Bolha(
                   avatar: widget.persona.foto,
                   child: SizedBox(
-                    width: 18,
-                    height: 18,
+                    width: Spacing.sp18,
+                    height: Spacing.sp18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                     ),
@@ -468,12 +469,12 @@ class _TelaChatState extends State<TelaChat> {
           SafeArea(
             top: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 6, 12, 10),
+              padding: const EdgeInsets.fromLTRB(Spacing.sp12, Spacing.sp6, Spacing.sp12, Spacing.sp10),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(avisoDeIa, style: tema.labelMedium),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: Spacing.sp6),
                   TextField(
                     controller: _controle,
                     minLines: 1,
@@ -488,10 +489,10 @@ class _TelaChatState extends State<TelaChat> {
                           : 'Escreva para ${widget.persona.nome}...',
                       suffixIcon: respondendo
                           ? const Padding(
-                              padding: EdgeInsets.all(12),
+                              padding: EdgeInsets.all(Spacing.sp12),
                               child: SizedBox(
-                                width: 18,
-                                height: 18,
+                                width: Spacing.sp18,
+                                height: Spacing.sp18,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                 ),
@@ -527,7 +528,7 @@ class _BoasVindas extends StatelessWidget {
     final tema = Theme.of(context).textTheme;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(Spacing.sp32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -537,7 +538,7 @@ class _BoasVindas extends StatelessWidget {
                 border: Border.all(color: cor.primary, width: 2),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(2),
+                padding: const EdgeInsets.all(Spacing.sp2),
                 child: ClipOval(
                   child: Image.asset(
                     persona.foto,
@@ -549,13 +550,13 @@ class _BoasVindas extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: Spacing.sp18),
             // A carta de boas-vindas também é página: abre pelo Filete, como
             // toda leitura da Estante.
             const Filete(largura: 64),
-            const SizedBox(height: 12),
+            const SizedBox(height: Spacing.sp12),
             Text(persona.nome, style: tema.headlineSmall),
-            const SizedBox(height: 10),
+            const SizedBox(height: Spacing.sp10),
             Text(
               persona.boasVindas,
               textAlign: TextAlign.center,
@@ -564,7 +565,7 @@ class _BoasVindas extends StatelessWidget {
                 height: 1.6,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: Spacing.sp16),
             // A divulgação se repete aqui, fora do rodapé: quem lê a carta de
             // boas-vindas ainda não chegou ao campo de escrever, e o aviso de
             // que a resposta é gerada não pode aparecer só depois do convite.
@@ -597,7 +598,7 @@ class _BalcaoDeMensagem extends StatelessWidget {
     final usuario = mensagem.doUsuario;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: Spacing.sp10),
       child: Row(
         mainAxisAlignment: usuario
             ? MainAxisAlignment.end
@@ -614,12 +615,12 @@ class _BalcaoDeMensagem extends StatelessWidget {
                 alignment: Alignment.topCenter,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: Spacing.sp8),
           ],
           Flexible(
             child: Container(
               constraints: const BoxConstraints(maxWidth: 460),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: Spacing.sp14, vertical: Spacing.sp10),
               decoration: BoxDecoration(
                 color: usuario
                     ? cor.surfaceContainer
@@ -672,9 +673,9 @@ class _Bolha extends StatelessWidget {
             alignment: Alignment.topCenter,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: Spacing.sp8),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: Spacing.sp14, vertical: Spacing.sp12),
           decoration: BoxDecoration(
             color: cor.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(10),
@@ -703,9 +704,9 @@ class _AvisoDeCorte extends StatelessWidget {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.only(bottom: Spacing.sp14),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(Spacing.sp12),
         decoration: BoxDecoration(
           color: cor.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(14),
@@ -745,7 +746,7 @@ class _ErroDeResposta extends StatelessWidget {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+      padding: const EdgeInsets.fromLTRB(Spacing.sp16, Spacing.sp4, Spacing.sp16, 0),
       child: Align(
         alignment: Alignment.centerLeft,
         child: Row(
@@ -762,10 +763,10 @@ class _ErroDeResposta extends StatelessWidget {
                 alignment: Alignment.topCenter,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: Spacing.sp8),
             Flexible(
               child: Container(
-                padding: const EdgeInsets.fromLTRB(14, 10, 8, 8),
+                padding: const EdgeInsets.fromLTRB(Spacing.sp14, Spacing.sp10, Spacing.sp8, Spacing.sp8),
                 decoration: BoxDecoration(
                   color: cor.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(10),
@@ -788,7 +789,7 @@ class _ErroDeResposta extends StatelessWidget {
                       icon: const Icon(Icons.refresh, size: 18),
                       label: const Text('Tentar de novo'),
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: Spacing.sp8),
                       ),
                     ),
                   ],

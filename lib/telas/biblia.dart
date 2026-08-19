@@ -8,6 +8,7 @@ import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
 import '../data/voz.dart';
+import '../spacing.dart';
 import 'busca.dart';
 import 'comuns.dart';
 import 'introducao.dart';
@@ -493,10 +494,10 @@ class _Leitor extends StatelessWidget {
     return ListView.builder(
       controller: rolagem,
       padding: EdgeInsets.fromLTRB(
-        20,
-        8,
-        20,
-        protegerDosBaloes ? folgaDosBaloes : 32,
+        Spacing.sp20,
+        Spacing.sp8,
+        Spacing.sp20,
+        protegerDosBaloes ? folgaDosBaloes : Spacing.sp32,
       ),
       itemCount: capitulo.versiculos.length + 1,
       itemBuilder: (context, i) {
@@ -517,7 +518,7 @@ class _Leitor extends StatelessWidget {
                     color: cor.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: Spacing.sp4),
               ],
               Semantics(
                 button: aoAbrirCapitulos != null,
@@ -532,8 +533,8 @@ class _Leitor extends StatelessWidget {
                           onTap: aoAbrirCapitulos,
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
-                              vertical: 4,
-                              horizontal: 2,
+                              vertical: Spacing.sp4,
+                              horizontal: Spacing.sp2,
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -542,7 +543,7 @@ class _Leitor extends StatelessWidget {
                                   capitulo.referencia,
                                   style: tema.displayMedium,
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: Spacing.sp8),
                                 Icon(
                                   Icons.expand_more,
                                   size: 22,
@@ -554,18 +555,18 @@ class _Leitor extends StatelessWidget {
                         ),
                       ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: Spacing.sp8),
               const Filete(),
               // A voz de Spurgeon lê o capítulo inteiro, do título ao último
               // versículo; tocar de novo para a leitura.
-              const SizedBox(height: 14),
+              const SizedBox(height: Spacing.sp14),
               BotaoDeVoz(
                 chave: 'capitulo:${capitulo.livro}.${capitulo.numero}',
                 texto: textoDeCapitulo(capitulo),
                 tipo: TipoConteudoAudio.biblia,
               ),
               if (capitulo.titulo.isNotEmpty) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: Spacing.sp12),
                 Text(
                   capitulo.titulo,
                   style: tema.bodyMedium?.copyWith(
@@ -574,7 +575,7 @@ class _Leitor extends StatelessWidget {
                   ),
                 ),
               ],
-              const SizedBox(height: 16),
+              const SizedBox(height: Spacing.sp16),
             ],
           );
         }
@@ -650,7 +651,7 @@ class _LinhaDeVersiculo extends StatelessWidget {
           // 12 e não 7: com bodyLarge em 17 e altura 1.6, um versículo de uma
           // linha ficava em cerca de 41 dp de alvo, abaixo dos 48 dp mínimos.
           // Os curtos são justamente os mais marcados.
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+          padding: const EdgeInsets.symmetric(vertical: Spacing.sp12, horizontal: Spacing.sp6),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             color: marcacao != null
@@ -692,12 +693,12 @@ class _LinhaDeVersiculo extends StatelessWidget {
                 ),
               ),
               if (marcacao != null && marcacao.nota.isNotEmpty) ...[
-                const SizedBox(height: 6),
+                const SizedBox(height: Spacing.sp6),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(Icons.edit_note, size: 15, color: cor.primary),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: Spacing.sp6),
                     Expanded(
                       child: Text(
                         marcacao.nota,
@@ -743,7 +744,7 @@ Future<void> _abrirAcoesDoVersiculo(
             mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 8, 20),
+                padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp20, Spacing.sp8, Spacing.sp20),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -755,7 +756,7 @@ Future<void> _abrirAcoesDoVersiculo(
                             '$referencia:$numero',
                             style: Theme.of(folha).textTheme.headlineSmall,
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: Spacing.sp8),
                           Text(
                             texto,
                             style: Theme.of(folha).textTheme.bodyMedium,
@@ -926,7 +927,7 @@ class TelaApresentacao extends StatelessWidget {
         child: Stack(
           children: [
             Padding(
-              padding: const EdgeInsets.all(32),
+              padding: const EdgeInsets.all(Spacing.sp32),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -942,7 +943,7 @@ class TelaApresentacao extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: Spacing.sp24),
                   Text(
                     referencia,
                     style: tema.headlineSmall?.copyWith(color: cor.secondary),
@@ -1005,18 +1006,18 @@ class _SeletorDeLivroState extends State<_SeletorDeLivro> {
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  const SizedBox(height: 12),
+                  const SizedBox(height: Spacing.sp12),
                   Text(
                     escolhido == null ? 'Escolha o livro' : escolhido.nome,
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: Spacing.sp8),
                   const Filete(),
                   // Busca só na etapa de livros: na grade de capítulos o texto
                   // já é o que se procura.
                   if (escolhido == null) ...[
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+                      padding: const EdgeInsets.fromLTRB(Spacing.sp16, Spacing.sp10, Spacing.sp16, Spacing.sp4),
                       child: TextField(
                         controller: _controle,
                         onChanged: (v) => setState(() => _filtro = v.trim()),
@@ -1029,7 +1030,7 @@ class _SeletorDeLivroState extends State<_SeletorDeLivro> {
                   ],
                   if (escolhido != null)
                     Padding(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(Spacing.sp8),
                       child: TextButton.icon(
                         onPressed: () => setState(() => _escolhido = null),
                         icon: const Icon(Icons.arrow_back),
@@ -1086,11 +1087,11 @@ class _ListaDeLivros extends StatelessWidget {
           )
           .toList();
       return ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: Spacing.sp16),
         children: [
           if (achados.isEmpty)
             Padding(
-              padding: const EdgeInsets.fromLTRB(4, 24, 4, 8),
+              padding: const EdgeInsets.fromLTRB(Spacing.sp4, Spacing.sp24, Spacing.sp4, Spacing.sp8),
               child: Text(
                 'Nenhum livro com "$filtro".',
                 style: Theme.of(context).textTheme.bodyMedium,
@@ -1098,7 +1099,7 @@ class _ListaDeLivros extends StatelessWidget {
             )
           else
             _grade(achados),
-          const SizedBox(height: 16),
+          const SizedBox(height: Spacing.sp16),
         ],
       );
     }
@@ -1109,25 +1110,25 @@ class _ListaDeLivros extends StatelessWidget {
     final novo = canon.where((l) => l.testamento == Testamento.novo).toList();
 
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: Spacing.sp16),
       children: [
         _tituloDeSecao(context, 'Antigo Testamento'),
         _grade(antigo),
         _tituloDeSecao(context, 'Novo Testamento'),
         _grade(novo),
-        const SizedBox(height: 16),
+        const SizedBox(height: Spacing.sp16),
       ],
     );
   }
 
   Widget _tituloDeSecao(BuildContext context, String texto) => Padding(
-    padding: const EdgeInsets.fromLTRB(4, 12, 4, 8),
+    padding: const EdgeInsets.fromLTRB(Spacing.sp4, Spacing.sp12, Spacing.sp4, Spacing.sp8),
     child: Text(texto, style: Theme.of(context).textTheme.titleSmall),
   );
 
   Widget _grade(List<Livro> livros) => Wrap(
-    spacing: 8,
-    runSpacing: 8,
+    spacing: Spacing.sp8,
+    runSpacing: Spacing.sp8,
     children: [
       for (final l in livros)
         ChoiceChip(
@@ -1153,14 +1154,14 @@ class _FolhaDeCapitulos extends StatelessWidget {
       height: altura,
       child: Column(
         children: [
-          const SizedBox(height: 12),
+          const SizedBox(height: Spacing.sp12),
           Text(
             'Capítulo de ${livro.nome}',
             style: Theme.of(context).textTheme.headlineSmall,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: Spacing.sp8),
           const Filete(),
-          const SizedBox(height: 8),
+          const SizedBox(height: Spacing.sp8),
           Expanded(
             child: _GradeDeCapitulos(
               livro: livro,
@@ -1183,12 +1184,12 @@ class _GradeDeCapitulos extends StatelessWidget {
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     return GridView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(Spacing.sp16),
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: 64,
         childAspectRatio: 1,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
+        crossAxisSpacing: Spacing.sp8,
+        mainAxisSpacing: Spacing.sp8,
       ),
       itemCount: livro.capitulos,
       itemBuilder: (context, i) => OutlinedButton(
@@ -1226,7 +1227,7 @@ class _BarraDeCapitulo extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: Spacing.sp12, vertical: Spacing.sp4),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [

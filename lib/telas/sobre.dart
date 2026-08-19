@@ -8,6 +8,7 @@ import '../data/estado.dart';
 import '../data/modelos.dart';
 import '../data/nuvem.dart';
 import '../data/voz.dart';
+import '../spacing.dart';
 import 'comuns.dart';
 
 /// Créditos das traduções, da fonte dos devocionais e o link dos canais.
@@ -54,12 +55,12 @@ class _TelaSobreState extends State<TelaSobre> {
       ),
       body: LarguraDeLeitura(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
+          padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp16, Spacing.sp20, Spacing.sp40),
           children: [
             Text('Devocional', style: tema.displayMedium),
-            const SizedBox(height: 8),
+            const SizedBox(height: Spacing.sp8),
             const Filete(largura: 64),
-            const SizedBox(height: 12),
+            const SizedBox(height: Spacing.sp12),
             // A versão pequena, sem alarde, é o que basta para quem quer
             // conferir se está na última compilação.
             CarregaUmaVez<String>(
@@ -70,9 +71,9 @@ class _TelaSobreState extends State<TelaSobre> {
                 style: tema.bodySmall?.copyWith(color: cor.onSurfaceVariant),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: Spacing.sp24),
             Text('Fontes do texto', style: tema.headlineSmall),
-            const SizedBox(height: 10),
+            const SizedBox(height: Spacing.sp10),
             Text(
               'Este aplicativo utiliza uma tradução autoral e inédita da '
               'King James 1611, elaborada diretamente do texto '
@@ -83,9 +84,9 @@ class _TelaSobreState extends State<TelaSobre> {
               'aos direitos autorais.',
               style: tema.bodyLarge?.copyWith(height: 1.7),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: Spacing.sp32),
             Text('A voz de Spurgeon', style: tema.headlineSmall),
-            const SizedBox(height: 10),
+            const SizedBox(height: Spacing.sp10),
             Text(
               'O retrato de Spurgeon nas telas de leitura lê o texto em voz '
               'alta: um narrador masculino de barítono, sintetizado na nuvem '
@@ -95,14 +96,14 @@ class _TelaSobreState extends State<TelaSobre> {
               'primeiros versículos do Salmo 1.',
               style: tema.bodyLarge?.copyWith(height: 1.7),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: Spacing.sp16),
             // A demonstração no próprio lugar da explicação: quem descobre a
             // voz aqui ouve na hora, sem caçar um capítulo para testar.
             Text(
               'Ouça um trecho:',
               style: tema.labelLarge?.copyWith(color: cor.onSurfaceVariant),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: Spacing.sp10),
             CarregaUmaVez<Capitulo>(
               chave: 'voz-demo-salmos-1-$_tentativasDaDemo',
               carregar: () =>
@@ -146,9 +147,9 @@ class _TelaSobreState extends State<TelaSobre> {
                 );
               },
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: Spacing.sp32),
             Text('Onde me encontrar', style: tema.headlineSmall),
-            const SizedBox(height: 10),
+            const SizedBox(height: Spacing.sp10),
             _LinkDeCanal(
               asset: 'assets/images/youtube.webp',
               rotulo: 'YouTube',
@@ -159,9 +160,9 @@ class _TelaSobreState extends State<TelaSobre> {
               rotulo: 'Instagram',
               url: 'https://www.instagram.com/felipe_ambrozini/',
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: Spacing.sp32),
             Text('Ajuda', style: tema.headlineSmall),
-            const SizedBox(height: 10),
+            const SizedBox(height: Spacing.sp10),
             // A ajuda não pode morar só no primeiro dia: quem dispensou o
             // cartão da Hoje não tem como vê-lo de novo, e Sobre é onde se
             // procura por ajuda quando se procura.
@@ -174,9 +175,9 @@ class _TelaSobreState extends State<TelaSobre> {
             ),
             // Só na web: é onde existe conta na nuvem (ver nuvem.dart).
             if (nuvemSuportada) ...[
-              const SizedBox(height: 32),
+              const SizedBox(height: Spacing.sp32),
               Text('Conta e privacidade', style: tema.headlineSmall),
-              const SizedBox(height: 10),
+              const SizedBox(height: Spacing.sp10),
               Text(
                 'Quem entra com a conta Google salva favoritos, anotações e '
                 'dias de leitura marcados numa conta na nuvem, para não '
@@ -187,7 +188,7 @@ class _TelaSobreState extends State<TelaSobre> {
                 'sempre, sem nada saindo daqui.',
                 style: tema.bodyLarge?.copyWith(height: 1.7),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: Spacing.sp8),
               ListenableBuilder(
                 listenable: Nuvem.instancia,
                 builder: (context, _) => Nuvem.instancia.logado
@@ -226,7 +227,7 @@ Future<void> _mostrarAjuda(BuildContext context) {
           children: [
             for (final linha in linhasDeAjuda) ...[
               Text(linha, style: tema.bodyMedium?.copyWith(height: 1.5)),
-              const SizedBox(height: 8),
+              const SizedBox(height: Spacing.sp8),
             ],
           ],
         ),

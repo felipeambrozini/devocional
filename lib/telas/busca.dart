@@ -6,6 +6,7 @@ import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
+import '../spacing.dart';
 import 'biblia.dart';
 import 'comuns.dart';
 import 'devocional.dart';
@@ -135,7 +136,7 @@ class _TelaBuscaState extends State<TelaBusca> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(Spacing.sp16),
                 child: TextField(
                   controller: _controle,
                   autofocus: true,
@@ -222,7 +223,7 @@ class _AbaBiblia extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          padding: const EdgeInsets.fromLTRB(Spacing.sp16, 0, Spacing.sp16, Spacing.sp8),
           child: Row(
             children: [
               // A busca para no teto e a lista fica cortada. Dizer só "300
@@ -236,7 +237,7 @@ class _AbaBiblia extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: Spacing.sp10),
               if (buscando)
                 const SizedBox(
                   width: 13,
@@ -248,9 +249,9 @@ class _AbaBiblia extends StatelessWidget {
         ),
         Expanded(
           child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+            padding: const EdgeInsets.fromLTRB(Spacing.sp16, 0, Spacing.sp16, Spacing.sp32),
             itemCount: achados.length + (temReferencia ? 1 : 0),
-            separatorBuilder: (_, _) => const Divider(height: 18),
+            separatorBuilder: (_, _) => const Divider(height: Spacing.sp18),
             itemBuilder: (context, i) {
               if (temReferencia && i == 0) {
                 return _CartaoDeReferencia(referencia: referencia!);
@@ -295,11 +296,11 @@ class _CartaoDeReferencia extends StatelessWidget {
       ),
       borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: Spacing.sp10, horizontal: Spacing.sp4),
         child: Row(
           children: [
             Icon(Icons.arrow_forward, size: 18, color: cor.primary),
-            const SizedBox(width: 10),
+            const SizedBox(width: Spacing.sp10),
             Text(
               'Ir para $rotulo',
               style: Theme.of(
@@ -336,7 +337,7 @@ class _ItemDeAchado extends StatelessWidget {
       ),
       borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: Spacing.sp4, horizontal: Spacing.sp4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -344,7 +345,7 @@ class _ItemDeAchado extends StatelessWidget {
               achado.referencia,
               style: tema.titleSmall?.copyWith(color: cor.secondary),
             ),
-            const SizedBox(height: 5),
+            const SizedBox(height: Spacing.sp5),
             Text.rich(
               destacar(achado.texto, termo, tema, cor),
               maxLines: 4,
@@ -391,7 +392,7 @@ class _AbaDevocionais extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          padding: const EdgeInsets.fromLTRB(Spacing.sp16, 0, Spacing.sp16, Spacing.sp8),
           child: Row(
             children: [
               Expanded(
@@ -400,7 +401,7 @@ class _AbaDevocionais extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: Spacing.sp10),
               if (buscando)
                 const SizedBox(
                   width: 13,
@@ -412,9 +413,9 @@ class _AbaDevocionais extends StatelessWidget {
         ),
         Expanded(
           child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+            padding: const EdgeInsets.fromLTRB(Spacing.sp16, 0, Spacing.sp16, Spacing.sp32),
             itemCount: achados.length,
-            separatorBuilder: (_, _) => const Divider(height: 18),
+            separatorBuilder: (_, _) => const Divider(height: Spacing.sp18),
             itemBuilder: (context, i) => _ItemDeAchadoDevocional(
               achado: achados[i],
               termo: termoBuscado,
@@ -449,7 +450,7 @@ class _ItemDeAchadoDevocional extends StatelessWidget {
       ),
       borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: Spacing.sp4, horizontal: Spacing.sp4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -458,7 +459,7 @@ class _ItemDeAchadoDevocional extends StatelessWidget {
               style: tema.titleSmall?.copyWith(color: cor.secondary),
             ),
             if (achado.titulo.isNotEmpty) ...[
-              const SizedBox(height: 2),
+              const SizedBox(height: Spacing.sp2),
               Text(
                 achado.titulo,
                 style: tema.bodySmall?.copyWith(
@@ -467,7 +468,7 @@ class _ItemDeAchadoDevocional extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(height: 5),
+            const SizedBox(height: Spacing.sp5),
             Text.rich(
               destacar(achado.texto, termo, tema, cor),
               maxLines: 4,

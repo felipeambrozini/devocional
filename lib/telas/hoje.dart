@@ -6,6 +6,7 @@ import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
 import '../data/nuvem.dart';
+import '../spacing.dart';
 import 'biblia.dart';
 import 'comuns.dart';
 import 'devocional.dart';
@@ -30,23 +31,23 @@ class _TelaHojeState extends State<TelaHoje> {
       body: SafeArea(
         child: LarguraDeLeitura(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+            padding: const EdgeInsets.fromLTRB(Spacing.sp16, Spacing.sp8, Spacing.sp16, Spacing.sp32),
             children: [
               _Cabecalho(data: agora),
-              const SizedBox(height: 20),
+              const SizedBox(height: Spacing.sp20),
               // Ajuda só para quem chega: um cartão curto na primeira visita,
               // que some para sempre com "Entendi". O público da web cai aqui
               // sem ninguém explicando nada; o resto do app não se anuncia.
               if (!estado.ajudaDispensada) ...[
                 _CartaoDeAjuda(estado: estado),
-                const SizedBox(height: 16),
+                const SizedBox(height: Spacing.sp16),
               ],
               if (estado.ultimaLeitura != null) ...[
                 // Retomar uma leitura interrompida é a ação de maior intenção
                 // de quem abre o app, por isso vem antes das prévias do dia,
                 // não depois das estatísticas de progresso.
                 _Continuar(ultima: estado.ultimaLeitura!),
-                const SizedBox(height: 16),
+                const SizedBox(height: Spacing.sp16),
               ],
               _PreviaDaLeitura(
                 data: agora,
@@ -55,11 +56,11 @@ class _TelaHojeState extends State<TelaHoje> {
                     : Leitura.noite,
                 destaque: true,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: Spacing.sp16),
               _PreviaDaLeitura(data: agora, leitura: Leitura.promessas),
-              const SizedBox(height: 16),
+              const SizedBox(height: Spacing.sp16),
               _LeituraDeHoje(data: agora),
-              const SizedBox(height: 16),
+              const SizedBox(height: Spacing.sp16),
               _Progresso(estado: estado, ano: agora.year),
             ],
           ),
@@ -93,9 +94,9 @@ class _CartaoDeAjuda extends StatelessWidget {
         children: [
           for (final linha in linhasDeAjuda) ...[
             Text(linha, style: tema.bodyMedium),
-            const SizedBox(height: 6),
+            const SizedBox(height: Spacing.sp6),
           ],
-          const SizedBox(height: 6),
+          const SizedBox(height: Spacing.sp6),
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
@@ -140,7 +141,7 @@ class _Cabecalho extends StatelessWidget {
               shape: BoxShape.circle,
               border: Border.all(color: cor.primary, width: 2),
             ),
-            padding: const EdgeInsets.all(3),
+            padding: const EdgeInsets.all(Spacing.sp3),
             child: ClipOval(
               child: SizedBox(
                 width: 60,
@@ -166,7 +167,7 @@ class _Cabecalho extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: Spacing.sp14),
         ],
         Expanded(
           child: Column(
@@ -189,7 +190,7 @@ class _Cabecalho extends StatelessWidget {
                       },
                     )
                   : Text('$saudacao, Felipe', style: tema.headlineMedium),
-              const SizedBox(height: 4),
+              const SizedBox(height: Spacing.sp4),
               Text(dataLonga(data), style: tema.bodySmall),
             ],
           ),
@@ -347,20 +348,20 @@ class _PreviaDaLeitura extends StatelessWidget {
               // mesmo gesto de chamada da leitura em si.
               if (destaque) ...[
                 const Filete(),
-                const SizedBox(height: 12),
+                const SizedBox(height: Spacing.sp12),
               ],
               if (dev.titulo.isNotEmpty)
                 Text(
                   dev.titulo,
                   style: tema.titleMedium?.copyWith(color: cor.primary),
                 ),
-              const SizedBox(height: 8),
+              const SizedBox(height: Spacing.sp8),
               // A citação vem antes do nome do livro, e o nome do livro fica
               // ao lado do fim da citação, não numa linha própria embaixo.
               // Mais de uma linha no raro dia com mais de um versículo-base.
               if (spans.isNotEmpty) ...[
                 Text.rich(TextSpan(children: spans)),
-                const SizedBox(height: 8),
+                const SizedBox(height: Spacing.sp8),
               ],
               // O corte em 5 linhas precisa ler como corte, não como fim do
               // texto: a prévia desvanece a última linha quando o texto
@@ -369,7 +370,7 @@ class _PreviaDaLeitura extends StatelessWidget {
                 texto: dev.texto,
                 estilo: tema.bodyMedium?.copyWith(height: 1.6),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: Spacing.sp10),
               Align(
                 alignment: Alignment.centerRight,
                 // "Ler tudo" é TextButton em todo lugar (ação quieta, ver
@@ -437,10 +438,10 @@ class _LeituraDeHoje extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(dia.rotulo, style: Theme.of(context).textTheme.bodyLarge),
-              const SizedBox(height: 12),
+              const SizedBox(height: Spacing.sp12),
               Wrap(
-                spacing: 8,
-                runSpacing: 8,
+                spacing: Spacing.sp8,
+                runSpacing: Spacing.sp8,
                 children: [for (final f in dia.faixas) BotaoDeFaixa(faixa: f)],
               ),
             ],
@@ -476,13 +477,13 @@ class _Progresso extends StatelessWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text('${estado.diasLidos}', style: tema.displayLarge),
-              const SizedBox(width: 6),
+              const SizedBox(width: Spacing.sp6),
               Text('de $total dias', style: tema.bodySmall),
               const Spacer(),
               Text('$porcento%', style: tema.headlineSmall),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: Spacing.sp12),
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(

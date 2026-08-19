@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
 import '../data/personas.dart';
+import '../spacing.dart';
 import 'comuns.dart';
 
 /// O histórico de conversas com uma persona: a lista de todas as conversas,
@@ -98,7 +99,7 @@ class TelaHistorico extends StatelessWidget {
                 alignment: Alignment.topCenter,
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: Spacing.sp10),
             Flexible(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,12 +149,12 @@ class TelaHistorico extends StatelessWidget {
             );
           }
           return ListView.separated(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(vertical: Spacing.sp8),
             itemCount: conversas.length,
             separatorBuilder: (context, _) => Divider(
               height: 1,
-              indent: 16,
-              endIndent: 16,
+              indent: Spacing.sp16,
+              endIndent: Spacing.sp16,
               color: cor.outlineVariant.withValues(alpha: 0.5),
             ),
             itemBuilder: (context, i) {
@@ -197,17 +198,17 @@ class _SemConversas extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(Spacing.sp32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Filete(largura: 64),
-            const SizedBox(height: 18),
+            const SizedBox(height: Spacing.sp18),
             Text(
               persona.nome,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: Spacing.sp10),
             Text(
               'Nenhuma conversa com ${persona.nome} ainda. '
               'Comece pela primeira pergunta.',
@@ -217,7 +218,7 @@ class _SemConversas extends StatelessWidget {
                 height: 1.6,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: Spacing.sp12),
             // O histórico é a porta de entrada do chat: o aviso de que as
             // respostas são geradas por IA aparece aqui, antes da conversa,
             // além do rodapé do chat e da carta de boas-vindas.
@@ -228,7 +229,7 @@ class _SemConversas extends StatelessWidget {
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: Spacing.sp18),
             FilledButton.icon(
               onPressed: aoComecar,
               icon: const Icon(Icons.add_comment_outlined),

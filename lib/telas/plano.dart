@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
+import '../spacing.dart';
 import 'comuns.dart';
 import 'faixa.dart';
 
@@ -112,13 +113,13 @@ class _TelaPlanoState extends State<TelaPlano> {
           preferredSize: const Size.fromHeight(52),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: Spacing.sp12, vertical: Spacing.sp8),
             child: Row(
               children: [
                 for (var m = 1; m <= 12; m++)
                   Padding(
                     key: _chavesDeMes[m - 1],
-                    padding: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.only(right: Spacing.sp8),
                     child: ChoiceChip(
                       label: Text(meses[m - 1]),
                       selected: m == _mes,
@@ -157,7 +158,7 @@ class _TelaPlanoState extends State<TelaPlano> {
 
             return ListView.separated(
               controller: _rolagem,
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+              padding: const EdgeInsets.fromLTRB(Spacing.sp16, Spacing.sp12, Spacing.sp16, Spacing.sp32),
               // ponytail: monta o mês inteiro de uma vez em vez de só o visível.
               // São no máximo 31 cartões leves, e é o que faz o cartão de hoje já
               // existir na árvore quando _rolarAteHoje procura por ele; sem isso o
@@ -165,11 +166,11 @@ class _TelaPlanoState extends State<TelaPlano> {
               // lista crescer, o caminho é scrollable_positioned_list.
               scrollCacheExtent: const ScrollCacheExtent.pixels(4000),
               itemCount: dias.length + 1,
-              separatorBuilder: (_, _) => const SizedBox(height: 10),
+              separatorBuilder: (_, _) => const SizedBox(height: Spacing.sp10),
               itemBuilder: (context, i) {
                 if (i == 0) {
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
+                    padding: const EdgeInsets.only(bottom: Spacing.sp6),
                     child: Text(
                       '$lidosNoMes de ${dias.length} dias concluídos em ${meses[_mes - 1]}',
                       style: Theme.of(context).textTheme.titleSmall,
@@ -223,7 +224,7 @@ class _CartaoDoDia extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
+        padding: const EdgeInsets.fromLTRB(Spacing.sp14, Spacing.sp12, Spacing.sp8, Spacing.sp12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -236,7 +237,7 @@ class _CartaoDoDia extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: Spacing.sp8),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,10 +249,10 @@ class _CartaoDoDia extends StatelessWidget {
                       color: lido ? cor.onSurfaceVariant : cor.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: Spacing.sp10),
                   Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+                    spacing: Spacing.sp8,
+                    runSpacing: Spacing.sp8,
                     children: [
                       for (final f in dia.faixas) BotaoDeFaixa(faixa: f),
                     ],

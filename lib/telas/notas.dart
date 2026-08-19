@@ -6,6 +6,7 @@ import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
 import '../data/nuvem.dart';
+import '../spacing.dart';
 import 'biblia.dart';
 import 'comuns.dart';
 
@@ -110,7 +111,7 @@ class _TelaNotasState extends State<TelaNotas> {
                   (estado.marcacoes.isNotEmpty || estado.diasLidos > 0))
                 _AvisoDePerda(onExportar: () => _exportar(context, estado)),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                padding: const EdgeInsets.fromLTRB(Spacing.sp16, Spacing.sp12, Spacing.sp16, Spacing.sp4),
                 child: TextField(
                   controller: _controle,
                   onChanged: (v) => setState(() => _busca = v),
@@ -191,11 +192,11 @@ class _AvisoDePerda extends StatelessWidget {
     return Container(
       width: double.infinity,
       color: cor.surfaceContainerHighest,
-      padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+      padding: const EdgeInsets.fromLTRB(Spacing.sp16, Spacing.sp10, Spacing.sp8, Spacing.sp10),
       child: Row(
         children: [
           Icon(Icons.info_outline, color: cor.onSurfaceVariant, size: 20),
-          const SizedBox(width: 12),
+          const SizedBox(width: Spacing.sp12),
           Expanded(
             child: ListenableBuilder(
               listenable: Nuvem.instancia,
@@ -248,7 +249,7 @@ Future<void> _importar(BuildContext context, Estado estado) async {
             'que já está no aparelho.',
             style: Theme.of(dialogo).textTheme.bodySmall,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: Spacing.sp12),
           TextField(
             controller: controle,
             autofocus: true,
@@ -311,9 +312,9 @@ class _Lista extends StatelessWidget {
   Widget build(BuildContext context) {
     if (itens.isEmpty) return vazio;
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      padding: const EdgeInsets.fromLTRB(Spacing.sp16, Spacing.sp16, Spacing.sp16, Spacing.sp32),
       itemCount: itens.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 10),
+      separatorBuilder: (_, _) => const SizedBox(height: Spacing.sp10),
       itemBuilder: (context, i) =>
           _CartaoDeMarcacao(marcacao: itens[i], mostrarNota: mostrarNota),
     );
@@ -346,7 +347,7 @@ class _CartaoDeMarcacao extends StatelessWidget {
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+          padding: const EdgeInsets.fromLTRB(Spacing.sp16, Spacing.sp12, Spacing.sp8, Spacing.sp12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -392,7 +393,7 @@ class _CartaoDeMarcacao extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: Spacing.sp4),
               // O texto do versículo não é guardado junto da marcação: fica sempre
               // na versão salva, e assim uma correção no asset se reflete aqui.
               CarregaUmaVez<String>(
@@ -418,10 +419,10 @@ class _CartaoDeMarcacao extends StatelessWidget {
                 ),
               ),
               if (mostrarNota && marcacao.nota.isNotEmpty) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: Spacing.sp12),
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(Spacing.sp12),
                   decoration: BoxDecoration(
                     color: cor.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(10),

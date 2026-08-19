@@ -17,6 +17,7 @@ import 'data/modelos.dart';
 import 'data/nuvem.dart';
 import 'data/personas.dart';
 import 'data/voz.dart';
+import 'spacing.dart';
 import 'telas/biblia.dart';
 import 'telas/chat.dart';
 import 'telas/comuns.dart';
@@ -523,11 +524,11 @@ class _BarraDosBaloes extends StatelessWidget {
         if (!estado.baloesVisiveis) return const SizedBox.shrink();
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+          padding: const EdgeInsets.fromLTRB(Spacing.sp12, Spacing.sp8, Spacing.sp12, Spacing.sp8),
           decoration: BoxDecoration(
             color: cor.surfaceContainer,
             border: Border(
-              top: BorderSide(color: cor.outlineVariant, width: 0.5),
+              top: BorderSide(color: cor.primary, width: 0.5),
             ),
           ),
           // Como antes, quando flutuavam: Spurgeon à esquerda, Felipe à
@@ -539,7 +540,7 @@ class _BarraDosBaloes extends StatelessWidget {
                 persona: personaSpurgeon,
                 onTap: () => _router.push('/${personaSpurgeon.slug}'),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: Spacing.sp16),
               BalaoDeChat(
                 persona: personaFelipe,
                 onTap: () => _router.push('/${personaFelipe.slug}'),

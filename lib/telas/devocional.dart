@@ -6,6 +6,7 @@ import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
 import '../data/voz.dart';
+import '../spacing.dart';
 import 'comuns.dart';
 
 /// As três leituras diárias, na ordem em que aparecem no alternador do topo.
@@ -154,17 +155,17 @@ class _TelaDevocionalState extends State<TelaDevocional> {
       body: LarguraDeLeitura(
         child: ListView(
           padding: EdgeInsets.fromLTRB(
-            16,
-            8,
-            16,
-            protegerDosBaloes ? folgaDosBaloes : 32,
+            Spacing.sp16,
+            Spacing.sp8,
+            Spacing.sp16,
+            protegerDosBaloes ? folgaDosBaloes : Spacing.sp32,
           ),
           children: [
             _AlternadorDeLeitura(
               atual: _leitura,
               ao: (l) => _irPara(l, _data),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: Spacing.sp16),
             CarregaUmaVez<Devocional?>(
               chave:
                   '${_leitura.name}/${estado.versao.pasta}/${_data.month}/${_data.day}',
@@ -172,13 +173,13 @@ class _TelaDevocionalState extends State<TelaDevocional> {
               construir: (context, snap) {
                 if (snap.hasError) {
                   return const Padding(
-                    padding: EdgeInsets.all(32),
+                    padding: EdgeInsets.all(Spacing.sp32),
                     child: AvisoDeErro(),
                   );
                 }
                 if (snap.connectionState != ConnectionState.done) {
                   return const Padding(
-                    padding: EdgeInsets.all(32),
+                    padding: EdgeInsets.all(Spacing.sp32),
                     child: Center(child: CircularProgressIndicator()),
                   );
                 }
@@ -255,8 +256,8 @@ class _AlternadorDeLeitura extends StatelessWidget {
   Widget build(BuildContext context) {
     return Wrap(
       alignment: WrapAlignment.center,
-      spacing: 8,
-      runSpacing: 8,
+      spacing: Spacing.sp8,
+      runSpacing: Spacing.sp8,
       children: [
         for (final l in Leitura.values)
           ChoiceChip(
@@ -314,7 +315,7 @@ class _CartaoDeLeitura extends StatelessWidget {
       estiloReferencia: tema.titleSmall?.copyWith(color: cor.secondary),
     );
     return Cartao(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(Spacing.sp20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -331,7 +332,7 @@ class _CartaoDeLeitura extends StatelessWidget {
                     excludeFromSemantics: true,
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: Spacing.sp14),
               ],
               Expanded(
                 child: Column(
@@ -344,7 +345,7 @@ class _CartaoDeLeitura extends StatelessWidget {
                     // seguida da atribuição. Mais de uma linha no raro dia com
                     // mais de um versículo-base.
                     if (spans.isNotEmpty) ...[
-                      const SizedBox(height: 10),
+                      const SizedBox(height: Spacing.sp10),
                       Text.rich(TextSpan(children: spans)),
                     ],
                   ],
@@ -352,20 +353,20 @@ class _CartaoDeLeitura extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: Spacing.sp14),
           // A linha dourada só separa a citação do comentário, por isso vem
           // depois dela, não antes.
           const Filete(),
-          const SizedBox(height: 14),
+          const SizedBox(height: Spacing.sp14),
           BotaoDeVoz(
             chave: vozChave,
             texto: vozTexto,
             tipo: tipo,
             referencia: vozReferencia,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: Spacing.sp14),
           Text(texto, style: tema.bodyLarge?.copyWith(height: 1.7)),
-          const SizedBox(height: 8),
+          const SizedBox(height: Spacing.sp8),
           Center(
             child: Image.asset(
               'assets/images/assinatura_spurgeon.webp',

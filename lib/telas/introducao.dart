@@ -5,6 +5,7 @@ import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
 import '../data/voz.dart';
+import '../spacing.dart';
 import 'comuns.dart';
 
 /// Introdução de um livro, na voz de Spurgeon.
@@ -69,10 +70,10 @@ class _TelaIntroducaoState extends State<TelaIntroducao> {
 
             return ListView(
               padding: EdgeInsets.fromLTRB(
-                20,
-                16,
-                20,
-                protegerDosBaloes ? folgaDosBaloes : 40,
+                Spacing.sp20,
+                Spacing.sp16,
+                Spacing.sp20,
+                protegerDosBaloes ? folgaDosBaloes : Spacing.sp40,
               ),
               children: [
                 Row(
@@ -88,13 +89,13 @@ class _TelaIntroducaoState extends State<TelaIntroducao> {
                         excludeFromSemantics: true,
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: Spacing.sp16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(introducao.livro, style: tema.displayMedium),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: Spacing.sp4),
                           Text(
                             livroPorSlug(slug)!.tituloFormal,
                             style: tema.bodySmall?.copyWith(
@@ -102,16 +103,16 @@ class _TelaIntroducaoState extends State<TelaIntroducao> {
                               color: cor.onSurfaceVariant,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: Spacing.sp8),
                           Text('Introdução', style: tema.titleSmall),
                         ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: Spacing.sp16),
                 const Filete(largura: 64),
-                const SizedBox(height: 14),
+                const SizedBox(height: Spacing.sp14),
                 // A voz de Spurgeon lê a introdução inteira, do título à
                 // frase; tocar de novo para a leitura.
                 BotaoDeVoz(
@@ -120,19 +121,19 @@ class _TelaIntroducaoState extends State<TelaIntroducao> {
                   tipo: TipoConteudoAudio.introducao,
                   referencia: 'Introdução de ${introducao.livro}',
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: Spacing.sp24),
                 for (final (titulo, corpo) in introducao.secoes) ...[
                   Text(titulo, style: tema.headlineSmall),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: Spacing.sp10),
                   // Os parágrafos vêm separados por linha em branco no JSON.
                   for (final paragrafo in corpo.split('\n\n')) ...[
                     Text(
                       paragrafo,
                       style: tema.bodyLarge?.copyWith(height: 1.7),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: Spacing.sp12),
                   ],
-                  const SizedBox(height: 16),
+                  const SizedBox(height: Spacing.sp16),
                 ],
                 if (introducao.frase.isNotEmpty) _Frase(introducao: introducao),
               ],
@@ -154,7 +155,7 @@ class _Frase extends StatelessWidget {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(Spacing.sp20),
       decoration: BoxDecoration(
         color: cor.surfaceContainer,
         borderRadius: BorderRadius.circular(14),
@@ -171,7 +172,7 @@ class _Frase extends StatelessWidget {
               color: cor.secondary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: Spacing.sp12),
           Text(introducao.atribuicao, style: tema.labelMedium),
         ],
       ),
