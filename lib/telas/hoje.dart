@@ -446,7 +446,6 @@ class _CartaoLeituraProgresso extends StatelessWidget {
     final lido = estado.foiLido(dia.data);
     final total = Conteudo.diasDoAno(ano);
     final progresso = estado.progressoDoAno(total);
-    final porcento = (progresso * 100).round();
 
     return Cartao(
       padding: const EdgeInsets.all(Spacing.sp20),
@@ -503,18 +502,8 @@ class _CartaoLeituraProgresso extends StatelessWidget {
               Text('Progresso do ano', style: tema.labelMedium),
               const Spacer(),
               Text(
-                '${estado.diasLidos}',
-                style: tema.titleMedium?.copyWith(color: cor.primary),
-              ),
-              const SizedBox(width: Spacing.sp6),
-              Text('de $total dias', style: tema.bodySmall),
-              const SizedBox(width: Spacing.sp12),
-              Text(
-                '$porcento%',
-                style: tema.bodyMedium?.copyWith(
-                  color: cor.secondary,
-                  fontWeight: FontWeight.w600,
-                ),
+                '${estado.diasLidos} de $total dias',
+                style: tema.bodyMedium?.copyWith(color: cor.primary),
               ),
             ],
           ),
