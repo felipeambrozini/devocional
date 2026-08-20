@@ -43,6 +43,9 @@ jobs:
         run: flutter pub get
 
       - name: Build APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           flutter build apk --release \
             --dart-define=FIREBASE_API_KEY_WEB=${{ secrets.FIREBASE_API_KEY_WEB }} \
