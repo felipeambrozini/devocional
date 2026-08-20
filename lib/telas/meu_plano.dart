@@ -256,7 +256,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
   }
 
   Future<void> _copiarLink() async {
-    final link = linkDoPlano(widget.planoId);
+    final link = linkDoPlano(widget.planoId, titulo: _plano?.titulo);
     await Clipboard.setData(ClipboardData(text: link));
     if (mounted) mostrarAviso(context, 'Link copiado.');
   }

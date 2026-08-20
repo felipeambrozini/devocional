@@ -75,15 +75,17 @@ void _abrirLeituraDoLink() {
   );
 }
 
-/// Abre o plano compartilhado do parâmetro `plano` da URL (`?plano=<id>`),
-/// para quem chega por um link divulgado por outra pessoa. Como
-/// [_abrirLeituraDoLink], é uma sobreposição por cima de qualquer aba.
+/// Abre o plano compartilhado do parâmetro `plano` da URL — `?plano=<id>` ou
+/// `?plano=<slug-legível>-<id>`, ver [linkDoPlano] — para quem chega por um
+/// link divulgado por outra pessoa. Como [_abrirLeituraDoLink], é uma
+/// sobreposição por cima de qualquer aba.
 void _abrirPlanoDoLink(Estado estado) {
   final parametro = Uri.base.queryParameters['plano'];
   if (parametro == null) return;
+  final planoId = idDoParametroDePlano(parametro);
   navigatorKey.currentState?.push(
     MaterialPageRoute(
-      builder: (_) => TelaDeUmPlano(estado: estado, planoId: parametro),
+      builder: (_) => TelaDeUmPlano(estado: estado, planoId: planoId),
     ),
   );
 }

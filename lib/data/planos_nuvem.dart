@@ -138,7 +138,7 @@ class PlanosNaNuvem {
         'Não foi possível compartilhar agora. Verifique a conexão e tente de novo.',
       );
     }
-    return linkDoPlano(plano.id);
+    return linkDoPlano(plano.id, titulo: plano.titulo);
   }
 
   /// Escreve os dias lidos do usuário na própria entrada do documento.
@@ -240,7 +240,50 @@ class PlanosNaNuvem {
   }
 }
 
+/// Acentos comuns do português, para o slug do link não sair cheio de `%C3%A3`
+/// nem preservar letra que a URL só mostraria escapada.
+const _acentos = {
+  'á': 'a', 'à': 'a', 'ã': 'a', 'â': 'a', 'ä': 'a',
+  'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+  'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
+  'ó': 'o', 'ò': 'o', 'õ': 'o', 'ô': 'o', 'ö': 'o',
+  'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
+  'ç': 'c', 'ñ': 'n',
+};
+
+/// O título em minúsculas, sem acento e com hífen no lugar de espaço ou
+/// pontuação — só a parte legível do link, ver [linkDoPlano].
+String _slugDoTitulo(String titulo) {
+  final semAcento = titulo
+      .toLowerCase()
+      .split('')
+      .map((c) => _acentos[c] ?? c)
+      .join();
+  final slug = semAcento
+      .replaceAll(RegExp('[^a-z0-9]+'), '-')
+      .replaceAll(RegExp(r'^-+|-+$'), '');
+  // Um título com o livro inteiro da Bíblia não pode virar um link gigante.
+  return slug.length <= 50
+      ? slug
+      : slug.substring(0, 50).replaceAll(RegExp(r'-+$'), '');
+}
+
 /// O link de um plano compartilhado, para mandar a alguém. O `?plano=` é
 /// lido em `main.dart`, que abre a tela do plano sobre qualquer aba.
-String linkDoPlano(String planoId) =>
-    '$enderecoDoSite?plano=$planoId';
+///
+/// [titulo], quando dado, vira um slug legível na frente do id de verdade
+/// ("genesis-em-30-dias-hlj2pu6uw801b99b") — só estética: quem abre o link
+/// busca pelo plano sempre pelo id, o último trecho depois do último hífen
+/// (ver [idDoParametroDePlano]), que continua único mesmo que duas pessoas
+/// deem o mesmo nome a planos diferentes.
+String linkDoPlano(String planoId, {String? titulo}) {
+  final slug = titulo == null ? '' : _slugDoTitulo(titulo);
+  final caminho = slug.isEmpty ? planoId : '$slug-$planoId';
+  return '$enderecoDoSite?plano=$caminho';
+}
+
+/// O id de verdade de dentro do parâmetro `?plano=` da URL — despe o slug
+/// legível que [linkDoPlano] põe na frente, se houver. O id nunca tem
+/// hífen (vem de [novoIdDePlano], puro base 36), então o último trecho
+/// depois do último hífen sempre é ele, com ou sem slug na frente.
+String idDoParametroDePlano(String parametro) => parametro.split('-').last;
