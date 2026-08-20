@@ -215,6 +215,11 @@ class Nuvem extends ChangeNotifier {
 
   bool get logado => _pronta && FirebaseAuth.instance.currentUser != null;
   String? get email => _pronta ? FirebaseAuth.instance.currentUser?.email : null;
+
+  /// O uid de quem está com a conta aberta, para saber se é o criador de um
+  /// plano compartilhado (ver `excluirPlano`/`sairDoPlano` em
+  /// `lib/telas/comuns.dart`). null sem conta, ou antes de [iniciar].
+  String? get uid => _pronta ? FirebaseAuth.instance.currentUser?.uid : null;
   bool get falhouAoEnviar => _sincronia?.falhouAoEnviar ?? false;
 
   /// Primeiro nome de quem entrou, para a saudação de `_Cabecalho` em

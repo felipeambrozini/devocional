@@ -38,6 +38,7 @@ class PlanoDoUsuario {
     required this.dias,
     required this.criadoEm,
     this.compartilhado = false,
+    this.criadoPor,
   });
 
   factory PlanoDoUsuario.doJson(Map<String, dynamic> json) => PlanoDoUsuario(
@@ -52,6 +53,7 @@ class PlanoDoUsuario {
       json['criadoEm'] as int? ?? 0,
     ),
     compartilhado: json['compartilhado'] as bool? ?? false,
+    criadoPor: json['criadoPor'] as String?,
   );
 
   /// De um documento `planos/{id}` do Firestore, cujo esquema é outro (ver
@@ -71,6 +73,7 @@ class PlanoDoUsuario {
     dias: json['dias'] as int? ?? 1,
     criadoEm: criadoEm,
     compartilhado: true,
+    criadoPor: json['criadoPor'] as String?,
   );
 
   /// Identidade estável do plano, e o id do documento na nuvem quando
@@ -88,6 +91,11 @@ class PlanoDoUsuario {
   final int dias;
   final DateTime criadoEm;
   final bool compartilhado;
+
+  /// O uid de quem criou, só em plano compartilhado — é quem tem o poder de
+  /// excluir para todos; os demais só podem sair (ver `excluirPlano` e
+  /// `sairDoPlano` em `lib/telas/comuns.dart`).
+  final String? criadoPor;
 
   List<DiaDePlanoDoUsuario> get diasDoPlano =>
       montarPlanoDeLeitura(livros: livros, dias: dias);
@@ -107,6 +115,7 @@ class PlanoDoUsuario {
     dias: dias,
     criadoEm: criadoEm,
     compartilhado: novo,
+    criadoPor: criadoPor,
   );
 
   Map<String, dynamic> paraJson() => {
@@ -116,6 +125,7 @@ class PlanoDoUsuario {
     'dias': dias,
     'criadoEm': criadoEm.millisecondsSinceEpoch,
     if (compartilhado) 'compartilhado': true,
+    if (criadoPor != null) 'criadoPor': criadoPor,
   };
 }
 

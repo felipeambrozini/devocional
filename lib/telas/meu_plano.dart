@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 
@@ -173,16 +172,8 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
   }
 
   /// O uid da conta, só onde a nuvem existe. Num plano local não há conta
-  /// envolvida, e em plataformas sem Firebase (Android, testes) chamar o
-  /// FirebaseAuth derrubaria a tela.
-  String? get _uid {
-    if (!_compartilhado || !nuvemSuportada) return null;
-    try {
-      return FirebaseAuth.instance.currentUser?.uid;
-    } catch (_) {
-      return null;
-    }
-  }
+  /// envolvida.
+  String? get _uid => _compartilhado ? Nuvem.instancia.uid : null;
 
   /// Os dias lidos do usuário corrente, segundo a verdade de cada modo.
   Set<int> _lidosDe(Map<String, dynamic> dados) {
@@ -309,21 +300,8 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
   }
 
   Future<void> _sairDoPlano() async {
-    final confirmou = await _confirmar(
-      titulo: 'Sair do plano?',
-      detalhe:
-          'Seu progresso deixa de aparecer para os outros; o plano continua '
-          'para quem permaneceu.',
-      rotulo: 'Sair',
-    );
-    if (confirmou != true || !mounted) return;
-    try {
-      await PlanosNaNuvem.instancia.sair(widget.planoId);
-      await widget.estado.removerPlano(widget.planoId);
-      if (mounted) Navigator.pop(context);
-    } on PlanosNaNuvemException catch (erro) {
-      if (mounted) mostrarAviso(context, erro.mensagem);
-    }
+    final saiu = await sairDoPlano(context, widget.estado, widget.planoId);
+    if (saiu && mounted) Navigator.pop(context);
   }
 
   Future<void> _excluirPlano({required bool compartilhado}) async {
@@ -335,29 +313,6 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
     );
     if (excluiu && mounted) Navigator.pop(context);
   }
-
-  Future<bool?> _confirmar({
-    required String titulo,
-    required String detalhe,
-    required String rotulo,
-  }) =>
-      showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(titulo),
-          content: Text(detalhe),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(rotulo),
-            ),
-          ],
-        ),
-      );
 
   @override
   Widget build(BuildContext context) {

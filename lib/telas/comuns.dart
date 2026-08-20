@@ -698,6 +698,46 @@ Future<bool> excluirPlano(
   return true;
 }
 
+/// Confirma e sai de um plano compartilhado: apaga só a própria participação
+/// na nuvem, e o plano some do espelho local — mas continua existindo para
+/// quem ficou. É o que a lixeira faz por quem não é o criador, que não tem o
+/// poder de [excluirPlano] para todos.
+Future<bool> sairDoPlano(
+  BuildContext context,
+  Estado estado,
+  String planoId,
+) async {
+  final confirmou = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Sair do plano?'),
+      content: const Text(
+        'Seu progresso deixa de aparecer para os outros; o plano continua '
+        'para quem permaneceu.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Sair'),
+        ),
+      ],
+    ),
+  );
+  if (confirmou != true) return false;
+  try {
+    await PlanosNaNuvem.instancia.sair(planoId);
+  } on PlanosNaNuvemException catch (erro) {
+    if (context.mounted) mostrarAviso(context, erro.mensagem);
+    return false;
+  }
+  await estado.removerPlano(planoId);
+  return true;
+}
+
 /// Tenta o login e mostra o motivo quando não completa. Público porque dois
 /// botões chamam isto: o do cabeçalho da Hoje (`hoje.dart`, `_BotaoDeConta`)
 /// e o cartão de plano compartilhado (`meu_plano.dart`). Quem chama precisa
