@@ -1,8 +1,8 @@
-name: Distribute iOS
+name: Distribute iOS (DISABLED - requires Apple Developer Program $99/yr)
 
 on:
-  push:
-    branches: [main]
+  # push:
+  #   branches: [main]
   workflow_dispatch:
 
 permissions:
