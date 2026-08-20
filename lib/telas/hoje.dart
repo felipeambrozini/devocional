@@ -544,26 +544,11 @@ class _CartaoLeituraProgresso extends StatelessWidget {
           const SizedBox(height: Spacing.sp8),
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
-            child: Container(
-              height: 5,
-              decoration: BoxDecoration(
-                // Trilho na cor da página (surface), com borda no outline do
-                // tema: mesmo se o cartão tiver o mesmo tom da página, a
-                // borda garante que o trilho não suma no fundo.
-                color: cor.surface,
-                border: Border.all(color: cor.outline),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: FractionallySizedBox(
-                widthFactor: progresso.clamp(0.0, 1.0),
-                alignment: Alignment.centerLeft,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: cor.primary,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ),
+            child: LinearProgressIndicator(
+              value: progresso.clamp(0.0, 1.0),
+              minHeight: 5,
+              color: cor.primary,
+              backgroundColor: cor.outline,
             ),
           ),
         ],
