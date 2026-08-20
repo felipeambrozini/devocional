@@ -327,26 +327,13 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
   }
 
   Future<void> _excluirPlano({required bool compartilhado}) async {
-    final confirmou = await _confirmar(
-      titulo: 'Excluir plano?',
-      detalhe: compartilhado
-          ? 'O plano será apagado para todos os participantes, junto com o '
-                'progresso de cada um. Essa ação não pode ser desfeita.'
-          : 'O plano e o progresso dele serão apagados. Essa ação não pode '
-                'ser desfeita.',
-      rotulo: 'Excluir',
+    final excluiu = await excluirPlano(
+      context,
+      widget.estado,
+      widget.planoId,
+      compartilhado: compartilhado,
     );
-    if (confirmou != true || !mounted) return;
-    if (compartilhado) {
-      try {
-        await PlanosNaNuvem.instancia.excluir(widget.planoId);
-      } on PlanosNaNuvemException catch (erro) {
-        if (mounted) mostrarAviso(context, erro.mensagem);
-        return;
-      }
-    }
-    await widget.estado.removerPlano(widget.planoId);
-    if (mounted) Navigator.pop(context);
+    if (excluiu && mounted) Navigator.pop(context);
   }
 
   Future<bool?> _confirmar({
@@ -569,7 +556,7 @@ class _CabecalhoDoPlano extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(resumoDosLivros(plano.livros), style: tema.titleMedium),
+            Text(listaDosLivros(plano.livros), style: tema.titleMedium),
             const SizedBox(height: Spacing.sp4),
             Text(
               '${plano.dias} dias · ${plano.totalDeCapitulos} capítulos',

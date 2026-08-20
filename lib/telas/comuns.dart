@@ -11,6 +11,7 @@ import '../data/lembretes.dart';
 import '../data/modelos.dart';
 import '../data/nuvem.dart';
 import '../data/personas.dart';
+import '../data/planos_nuvem.dart';
 import '../data/voz.dart';
 import '../spacing.dart';
 import 'faixa.dart';
@@ -646,6 +647,55 @@ Future<void> reagendarLembretesSeNecessario(Estado estado) async {
     manhaEPromessas: _horaDe(estado.minutosLembreteManha),
     noite: _horaDe(estado.minutosLembreteNoite),
   );
+}
+
+/// Confirma e exclui um plano — o compartilhado some da nuvem para todos
+/// antes do espelho local sumir, o local só sai do espelho. Devolve se
+/// excluiu de fato, para quem chama (a tela do plano) saber se ainda pode
+/// sair dela.
+///
+/// Público porque a lixeira do cartão de "Meus Planos" (`plano.dart`) e o
+/// menu de opções dentro do plano (`meu_plano.dart`) levam à mesma exclusão.
+Future<bool> excluirPlano(
+  BuildContext context,
+  Estado estado,
+  String planoId, {
+  required bool compartilhado,
+}) async {
+  final confirmou = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Excluir plano?'),
+      content: Text(
+        compartilhado
+            ? 'O plano será apagado para todos os participantes, junto com o '
+                  'progresso de cada um. Essa ação não pode ser desfeita.'
+            : 'O plano e o progresso dele serão apagados. Essa ação não pode '
+                  'ser desfeita.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Excluir'),
+        ),
+      ],
+    ),
+  );
+  if (confirmou != true) return false;
+  if (compartilhado) {
+    try {
+      await PlanosNaNuvem.instancia.excluir(planoId);
+    } on PlanosNaNuvemException catch (erro) {
+      if (context.mounted) mostrarAviso(context, erro.mensagem);
+      return false;
+    }
+  }
+  await estado.removerPlano(planoId);
+  return true;
 }
 
 /// Tenta o login e mostra o motivo quando não completa. Público porque dois

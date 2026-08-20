@@ -401,14 +401,33 @@ class _CartaoDePlano extends StatelessWidget {
                         ),
                       ),
                     ),
+                  // Lixeira direto no cartão: excluir não deveria exigir
+                  // abrir o plano e achar o menu de três pontinhos lá dentro.
+                  SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      tooltip: 'Excluir plano',
+                      icon: Icon(
+                        Icons.delete_outline,
+                        size: 20,
+                        color: cor.onSurfaceVariant,
+                      ),
+                      onPressed: () => excluirPlano(
+                        context,
+                        estado,
+                        plano.id,
+                        compartilhado: plano.compartilhado,
+                      ),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: Spacing.sp2),
               Text(
-                resumoDosLivros(plano.livros),
+                listaDosLivros(plano.livros),
                 style: tema.bodySmall?.copyWith(color: cor.onSurfaceVariant),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
               Text(
                 '${plano.dias} dias · ${plano.totalDeCapitulos} capítulos',

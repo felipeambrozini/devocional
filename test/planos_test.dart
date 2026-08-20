@@ -114,6 +114,15 @@ void main() {
       );
     });
 
+    test('listaDosLivros não trunca, ao contrário do resumo', () {
+      expect(listaDosLivros([]), '');
+      expect(listaDosLivros(['genesis']), 'Gênesis');
+      expect(
+        listaDosLivros(['genesis', 'exodo', 'levitico', 'numeros']),
+        'Gênesis, Êxodo, Levítico e Números',
+      );
+    });
+
     test('tituloDePlano usa o resumo e concorda no singular', () {
       expect(tituloDePlano(['genesis'], 1), 'Gênesis em 1 dia');
       expect(tituloDePlano(['genesis'], 30), 'Gênesis em 30 dias');

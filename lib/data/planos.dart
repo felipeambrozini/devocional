@@ -210,6 +210,17 @@ String resumoDosLivros(List<String> livros) {
   };
 }
 
+/// Os nomes de todos os livros do plano, sem truncar — ao contrário de
+/// [resumoDosLivros]: "Gênesis, Êxodo e Levítico".
+String listaDosLivros(List<String> livros) {
+  final nomes = [for (final slug in livros) nomeDoLivro(slug)];
+  return switch (nomes.length) {
+    0 => '',
+    1 => nomes.first,
+    _ => '${nomes.sublist(0, nomes.length - 1).join(', ')} e ${nomes.last}',
+  };
+}
+
 /// Título padrão de um plano, para quando quem cria não dá nome próprio:
 /// "Gênesis em 30 dias" ou "Gênesis, Êxodo e mais 64 livros em 365 dias".
 String tituloDePlano(List<String> livros, int dias) {
