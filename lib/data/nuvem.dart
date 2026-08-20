@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart' show ChangeNotifier, kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -229,6 +231,10 @@ class Nuvem extends ChangeNotifier {
     return nome?.trim().split(_espacos).firstOrNull;
   }
 
+  /// Foto de perfil da conta Google de quem entrou, para o avatar de
+  /// `_Cabecalho` em `hoje.dart`. null sem conta, ou sem foto no Google.
+  String? get fotoUrl => _pronta ? FirebaseAuth.instance.currentUser?.photoURL : null;
+
   /// Prepara o Firebase e liga a sincronização ao estado de login. Chamar uma
   /// vez, em `main.dart`, só quando [nuvemSuportada].
   ///
@@ -376,6 +382,19 @@ class Nuvem extends ChangeNotifier {
     await FirebaseAuth.instance.signInWithCredential(
       GoogleAuthProvider.credential(idToken: conta.authentication.idToken),
     );
+  }
+
+  /// Sobe a foto escolhida na câmera ou galeria (`_escolherFoto` em
+  /// `hoje.dart`) para o Storage e atualiza a photoURL da conta com o link.
+  /// `fotoUrl` lê direto do `currentUser`, então o `notifyListeners` aqui é o
+  /// único jeito de repintar o avatar sem esperar um evento do Auth.
+  Future<void> atualizarFoto(Uint8List bytes) async {
+    final usuario = FirebaseAuth.instance.currentUser;
+    if (usuario == null) return;
+    final referencia = FirebaseStorage.instance.ref('fotos_de_perfil/${usuario.uid}.jpg');
+    await referencia.putData(bytes, SettableMetadata(contentType: 'image/jpeg'));
+    await usuario.updatePhotoURL(await referencia.getDownloadURL());
+    notifyListeners();
   }
 
   Future<void> sair() async {

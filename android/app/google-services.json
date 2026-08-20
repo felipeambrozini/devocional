@@ -14,13 +14,29 @@
       },
       "oauth_client": [
         {
+          "client_id": "169480227109-29f5g9gj60fe67q008nmv9h8utjtegdi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.felipeambrozini.devocional",
+            "certificate_hash": "f7bd18b0f29d0b207d83a2fb09ce0fb79602c050"
+          }
+        },
+        {
+          "client_id": "169480227109-q5imtb38a2tcftrjaa7mh1kpivgkctsi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.felipeambrozini.devocional",
+            "certificate_hash": "53592683edc5abdddf263fff66c1278e96520ff8"
+          }
+        },
+        {
           "client_id": "169480227109-00cve2jo449qsdtop1c2f2h3phfm21m8.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCu6dc2xVdmfdNFG6HB-7t7x4U_VZHaVz0"
+          "current_key": "AIzaSyBup_2xL3pWlsfW-GVd_GX6LY2xrfR1t84"
         }
       ],
       "services": {

@@ -1,12 +1,13 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
 import '../data/nuvem.dart';
+import '../data/registro.dart';
 import '../spacing.dart';
 import 'comuns.dart';
 import 'devocional.dart';
@@ -127,6 +128,49 @@ String _saudacaoPelaHora(int hora) {
   return 'Boa noite';
 }
 
+/// Deixa escolher entre câmera e galeria, sobe a foto para o Storage e
+/// atualiza a conta — tudo num toque no avatar de `_Cabecalho`.
+Future<void> _escolherFoto(BuildContext context) async {
+  final origem = await showModalBottomSheet<ImageSource>(
+    context: context,
+    builder: (folha) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.photo_camera),
+            title: const Text('Câmera'),
+            onTap: () => Navigator.pop(folha, ImageSource.camera),
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_library),
+            title: const Text('Galeria'),
+            onTap: () => Navigator.pop(folha, ImageSource.gallery),
+          ),
+        ],
+      ),
+    ),
+  );
+  if (origem == null || !context.mounted) return;
+
+  final arquivo = await ImagePicker().pickImage(
+    source: origem,
+    // Foto de perfil não precisa da resolução da câmera; menor já poupa
+    // banda no upload e no carregamento do avatar depois.
+    maxWidth: 512,
+    imageQuality: 85,
+  );
+  if (arquivo == null || !context.mounted) return;
+
+  final mensageiro = ScaffoldMessenger.of(context);
+  try {
+    await Nuvem.instancia.atualizarFoto(await arquivo.readAsBytes());
+  } catch (erro, pilha) {
+    Registro.erro('_escolherFoto', erro, pilha);
+    mostrarAvisoNo(mensageiro, 'Não foi possível atualizar a foto.');
+  }
+}
+
 class _Cabecalho extends StatelessWidget {
   const _Cabecalho({required this.data});
 
@@ -138,81 +182,73 @@ class _Cabecalho extends StatelessWidget {
     final tema = Theme.of(context).textTheme;
     final saudacao = _saudacaoPelaHora(data.hour);
 
-    return Row(
-      children: [
-        // Na web o app fica público; sem foto nem nome, só a saudação.
-        if (!kIsWeb) ...[
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: cor.primary, width: 2),
-            ),
-            padding: const EdgeInsets.all(Spacing.sp3),
-            child: ClipOval(
-              child: SizedBox(
-                width: 60,
-                height: 60,
-                child: Image.asset(
-                  'assets/images/felipe.webp',
-                  fit: BoxFit.cover,
-                  semanticLabel: 'Foto de Felipe',
-                  // A foto é mais alta que larga e o cabelo encosta na borda
-                  // superior; o corte centralizado do BoxFit.cover cortava o
-                  // topo da cabeça. Alinhada ao topo, a sobra cai toda
-                  // embaixo, na blusa.
-                  alignment: Alignment.topCenter,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    color: cor.surfaceContainerHighest,
-                    alignment: Alignment.center,
-                    child: Text(
-                      'F',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: cor.primary,
-                        fontSize: 24,
+    return ListenableBuilder(
+      listenable: Nuvem.instancia,
+      builder: (context, _) {
+        final nuvem = Nuvem.instancia;
+        final nome = nuvem.primeiroNome;
+        return Row(
+          children: [
+            // Avatar da própria conta Google de quem entrou; sem conta, sem
+            // avatar — só a saudação, igual na web e no aparelho.
+            if (nuvem.logado) ...[
+              GestureDetector(
+                onTap: () => _escolherFoto(context),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundImage: nuvem.fotoUrl != null ? NetworkImage(nuvem.fotoUrl!) : null,
+                      child: nuvem.fotoUrl == null
+                          ? Text(
+                              (nome ?? '?').substring(0, 1).toUpperCase(),
+                              style: tema.headlineMedium?.copyWith(color: cor.primary),
+                            )
+                          : null,
+                    ),
+                    // Único jeito de saber que o avatar aceita toque, já que
+                    // ele não parece um botão por si.
+                    Positioned(
+                      bottom: -2,
+                      right: -2,
+                      child: CircleAvatar(
+                        radius: 12,
+                        backgroundColor: cor.primary,
+                        child: Icon(Icons.camera_alt, size: 14, color: cor.onPrimary),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: Spacing.sp14),
-        ],
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Quem entrou com a conta Google ganha o próprio nome na
-              // saudação, em todas as plataformas: o botão de entrar mora no
-              // fim desta mesma linha. Sem conta, na web, fica só a
-              // saudação; no aparelho, "Felipe".
-              ListenableBuilder(
-                listenable: Nuvem.instancia,
-                builder: (context, _) {
-                  final nome = Nuvem.instancia.primeiroNome;
-                  return Text(
-                    nome != null
-                        ? '$saudacao, $nome'
-                        : kIsWeb
-                            ? saudacao
-                            : '$saudacao, Felipe',
-                    style: tema.headlineMedium,
-                  );
-                },
-              ),
-              const SizedBox(height: Spacing.sp4),
-              Text(dataLonga(data), style: tema.bodySmall),
+              const SizedBox(width: Spacing.sp14),
             ],
-          ),
-        ),
-        // Entrar ou sair da conta, no fim do cabeçalho: o convite para
-        // entrar mora aqui (e não mais na folha de ajustes), porque o estado
-        // da conta muda a saudação ao lado.
-        _BotaoDeConta(),
-        // Hoje não tem AppBar onde pendurar a ação, e sem isto os ajustes só
-        // seriam alcançáveis de duas das seis abas.
-        BotaoDeAjustes(estado: EscopoDoEstado.de(context)),
-      ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Quem entrou com a conta Google ganha o próprio nome na
+                  // saudação, em todas as plataformas: o botão de entrar mora
+                  // no fim desta mesma linha. Sem conta, fica só a saudação.
+                  Text(
+                    nome != null ? '$saudacao, $nome' : saudacao,
+                    style: tema.headlineMedium,
+                  ),
+                  const SizedBox(height: Spacing.sp4),
+                  Text(dataLonga(data), style: tema.bodySmall),
+                ],
+              ),
+            ),
+            // Entrar ou sair da conta, no fim do cabeçalho: o convite para
+            // entrar mora aqui (e não mais na folha de ajustes), porque o
+            // estado da conta muda a saudação ao lado.
+            _BotaoDeConta(),
+            // Hoje não tem AppBar onde pendurar a ação, e sem isto os ajustes
+            // só seriam alcançáveis de duas das seis abas.
+            BotaoDeAjustes(estado: EscopoDoEstado.de(context)),
+          ],
+        );
+      },
     );
   }
 }

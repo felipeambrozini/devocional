@@ -42,6 +42,11 @@ dependencies:
   firebase_core: ^4.13.0
   firebase_auth: ^6.5.7
   cloud_firestore: ^6.8.0
+  # Onde a foto de perfil escolhida na câmera ou galeria é hospedada, para
+  # virar a photoURL da conta (ver Nuvem.atualizarFoto em lib/data/nuvem.dart).
+  firebase_storage: ^13.0.6
+  # Escolher a foto de perfil da câmera ou da galeria (ver hoje.dart).
+  image_picker: ^1.2.0
   # Cada aba com o próprio caminho na URL, e Sobre e as conversas também
   # (ver lib/main.dart). Pacote da própria equipe do Flutter, não um clone de
   # terceiro.
