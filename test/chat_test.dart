@@ -141,7 +141,7 @@ void main() {
       );
     });
 
-    test('403 também vira mensagem amigável de limite gratuito', () async {
+    test('403 vira mensagem amigável de chave sem permissão', () async {
       final cliente = MockClient(
         (requisicao) async => http.Response('{"error": {}}', 403),
       );
@@ -157,7 +157,7 @@ void main() {
           isA<IaException>().having(
             (e) => e.mensagem,
             'mensagem',
-            contains('limite gratuito'),
+            contains('sem permissão'),
           ),
         ),
       );
