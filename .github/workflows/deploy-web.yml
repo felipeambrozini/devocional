@@ -28,26 +28,27 @@ jobs:
           flutter-version: 3.44.9
       - run: flutter pub get
       - run: flutter test
-      - run: flutter build web --release --base-href /devocional/ \
-    --dart-define=FIREBASE_API_KEY_WEB=${{ secrets.FIREBASE_API_KEY_WEB }} \
-    --dart-define=FIREBASE_API_KEY_ANDROID=${{ secrets.FIREBASE_API_KEY_ANDROID }} \
-    --dart-define=FIREBASE_API_KEY_IOS=${{ secrets.FIREBASE_API_KEY_IOS }} \
-    --dart-define=FIREBASE_APP_ID_WEB=${{ secrets.FIREBASE_APP_ID_WEB }} \
-    --dart-define=FIREBASE_APP_ID_ANDROID=${{ secrets.FIREBASE_APP_ID_ANDROID }} \
-    --dart-define=FIREBASE_APP_ID_IOS=${{ secrets.FIREBASE_APP_ID_IOS }} \
-    --dart-define=FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }} \
-    --dart-define=FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }} \
-    --dart-define=FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_AUTH_DOMAIN }} \
-    --dart-define=FIREBASE_STORAGE_BUCKET=${{ secrets.FIREBASE_STORAGE_BUCKET }} \
-    --dart-define=FIREBASE_MEASUREMENT_ID=${{ secrets.FIREBASE_MEASUREMENT_ID }} \
-    --dart-define=FIREBASE_IOS_CLIENT_ID=${{ secrets.FIREBASE_IOS_CLIENT_ID }} \
-    --dart-define=FIREBASE_IOS_BUNDLE_ID=${{ secrets.FIREBASE_IOS_BUNDLE_ID }} \
-    --dart-define=GEMINI_API_KEY_WEB=${{ secrets.GEMINI_API_KEY_WEB }} \
-    --dart-define=GEMINI_API_KEY_ANDROID=${{ secrets.GEMINI_API_KEY_ANDROID }} \
-    --dart-define=GEMINI_API_KEY_IOS=${{ secrets.GEMINI_API_KEY_IOS }} \
-    --dart-define=TTS_API_KEY_WEB=${{ secrets.TTS_API_KEY_WEB }} \
-    --dart-define=TTS_API_KEY_ANDROID=${{ secrets.TTS_API_KEY_ANDROID }} \
-    --dart-define=TTS_API_KEY_IOS=${{ secrets.TTS_API_KEY_IOS }}
+      - run: |
+    flutter build web --release --base-href /devocional/ \
+      --dart-define=FIREBASE_API_KEY_WEB=${{ secrets.FIREBASE_API_KEY_WEB }} \
+      --dart-define=FIREBASE_API_KEY_ANDROID=${{ secrets.FIREBASE_API_KEY_ANDROID }} \
+      --dart-define=FIREBASE_API_KEY_IOS=${{ secrets.FIREBASE_API_KEY_IOS }} \
+      --dart-define=FIREBASE_APP_ID_WEB=${{ secrets.FIREBASE_APP_ID_WEB }} \
+      --dart-define=FIREBASE_APP_ID_ANDROID=${{ secrets.FIREBASE_APP_ID_ANDROID }} \
+      --dart-define=FIREBASE_APP_ID_IOS=${{ secrets.FIREBASE_APP_ID_IOS }} \
+      --dart-define=FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }} \
+      --dart-define=FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }} \
+      --dart-define=FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_AUTH_DOMAIN }} \
+      --dart-define=FIREBASE_STORAGE_BUCKET=${{ secrets.FIREBASE_STORAGE_BUCKET }} \
+      --dart-define=FIREBASE_MEASUREMENT_ID=${{ secrets.FIREBASE_MEASUREMENT_ID }} \
+      --dart-define=FIREBASE_IOS_CLIENT_ID=${{ secrets.FIREBASE_IOS_CLIENT_ID }} \
+      --dart-define=FIREBASE_IOS_BUNDLE_ID=${{ secrets.FIREBASE_IOS_BUNDLE_ID }} \
+      --dart-define=GEMINI_API_KEY_WEB=${{ secrets.GEMINI_API_KEY_WEB }} \
+      --dart-define=GEMINI_API_KEY_ANDROID=${{ secrets.GEMINI_API_KEY_ANDROID }} \
+      --dart-define=GEMINI_API_KEY_IOS=${{ secrets.GEMINI_API_KEY_IOS }} \
+      --dart-define=TTS_API_KEY_WEB=${{ secrets.TTS_API_KEY_WEB }} \
+      --dart-define=TTS_API_KEY_ANDROID=${{ secrets.TTS_API_KEY_ANDROID }} \
+      --dart-define=TTS_API_KEY_IOS=${{ secrets.TTS_API_KEY_IOS }}
       # O Firebase Hosting serve da raiz do domínio; o app mora em /devocional/,
       # então o build vai para public/devocional (o base-href acima combina). O
       # 404.html também sobe à raiz do public: é lá que o Hosting procura a
