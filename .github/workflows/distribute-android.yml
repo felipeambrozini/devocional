@@ -58,7 +58,7 @@ jobs:
             --dart-define=TTS_API_KEY_IOS=${{ secrets.TTS_API_KEY_IOS }}
 
       - name: Write release notes
-        run: echo "Build ${{ github.sha }} - ${{ github.ref_name }}" > release-notes.txt
+        run: git log -1 --format=%B > release-notes.txt
 
       - name: Distribute to Firebase App Distribution
         uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15
