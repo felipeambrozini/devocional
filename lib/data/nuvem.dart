@@ -4,7 +4,8 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart' show ChangeNotifier;
+import 'package:flutter/foundation.dart' show ChangeNotifier, kIsWeb;
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../firebase_options.dart';
 import 'estado.dart';
@@ -15,10 +16,9 @@ final _espacos = RegExp(r'\s+');
 
 /// Se a conta na nuvem é uma opção nesta plataforma.
 ///
-/// Só web: é a única plataforma onde o navegador apaga o armazenamento
-/// sozinho (ver `_AvisoDePerda` em `lib/telas/notas.dart`). O Android já
-/// guarda tudo no aparelho e continua só com o exportar/importar por
-/// clipboard. Mesmo formato de `lembretesSuportados` em `lib/data/lembretes.dart`.
+/// Verdade em todas as plataformas do projeto (web, Android e iOS): todas
+/// têm configuração Firebase em `firebase_options.dart`. Mesmo formato de
+/// `lembretesSuportados` em `lib/data/lembretes.dart`.
 bool get nuvemSuportada => true;
 
 /// Liga o [Estado] a um depósito remoto sem que o Estado saiba disso.
@@ -163,8 +163,8 @@ class Sincronia {
 
 /// Conta Google e cópia na nuvem. Um valor só para o app inteiro, como
 /// `Lembretes.instancia` em `lib/data/lembretes.dart` — e pela mesma razão:
-/// o toque em "Entrar" e a folha de ajustes não têm como compartilhar uma
-/// instância sem um Provider inteiro só para isto.
+/// os botões de Entrar e Sair (Hoje e plano compartilhado) não têm como
+/// compartilhar uma instância sem um Provider inteiro só para isto.
 ///
 /// ponytail: um documento por usuário (`usuarios/{uid}`) com o mesmo mapa que
 /// `exportar()` já produz. `importar()` funde e nunca apaga, então uma
@@ -178,6 +178,14 @@ class Nuvem extends ChangeNotifier {
   static const _colecao = 'usuarios';
 
   Sincronia? _sincronia;
+
+  /// Se o `GoogleSignIn` do `google_sign_in` já foi inicializado neste
+  /// processo. A documentação do plugin pede uma única chamada de
+  /// `initialize`, e a primeira vez acontece no primeiro toque em "Entrar",
+  /// não na inicialização do app: fora da web não há sinal de que a conta
+  /// será pedida, e evitar a ida ao plugin nativo de graça mantém a abertura
+  /// do app independente dele.
+  bool _googlePronto = false;
 
   /// A segunda sincronia, só das conversas do chat. Vive no mesmo documento
   /// `usuarios/{uid}` que a cópia, no campo `conversas`, mas com serializador
@@ -294,8 +302,38 @@ class Nuvem extends ChangeNotifier {
   /// qualquer `await` antes do `signInWithPopup` consome esse gesto e a
   /// janela sai bloqueada. Quem chama trata `FirebaseAuthException` (o
   /// usuário fechou a janela, ou o navegador bloqueou o popup).
-  Future<void> entrar() =>
-      FirebaseAuth.instance.signInWithPopup(GoogleAuthProvider());
+  ///
+  /// Na web o login é popup do navegador; nas demais plataformas é o fluxo
+  /// nativo do `google_sign_in`, que devolve as credenciais para o
+  /// `signInWithCredential` do Firebase. Quem cancela fora da web sai sem
+  /// erro, como o popup fechado na web.
+  Future<void> entrar() async {
+    if (kIsWeb) {
+      await FirebaseAuth.instance.signInWithPopup(GoogleAuthProvider());
+      return;
+    }
+    if (!_googlePronto) {
+      await GoogleSignIn.instance.initialize();
+      _googlePronto = true;
+    }
+    final GoogleSignInAccount conta;
+    try {
+      conta = await GoogleSignIn.instance.authenticate();
+    } on GoogleSignInException catch (erro) {
+      // Cancelar não é erro: o gesto de "Entrar" foi interrompido, e o app
+      // continua deslogado sem aviso. O mesmo vale para o popup fechado na
+      // web, tratado por quem chama com FirebaseAuthException.
+      if (erro.code == GoogleSignInExceptionCode.canceled ||
+          erro.code == GoogleSignInExceptionCode.interrupted ||
+          erro.code == GoogleSignInExceptionCode.uiUnavailable) {
+        return;
+      }
+      rethrow;
+    }
+    await FirebaseAuth.instance.signInWithCredential(
+      GoogleAuthProvider.credential(idToken: conta.authentication.idToken),
+    );
+  }
 
   Future<void> sair() async {
     // Despeja o que ainda aguardava o debounce antes de derrubar a sessão:

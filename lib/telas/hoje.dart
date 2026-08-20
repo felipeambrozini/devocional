@@ -182,32 +182,64 @@ class _Cabecalho extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Na web, quem entrou com a conta Google ganha o próprio nome
-              // na saudação. O convite para entrar mora na folha de ajustes,
-              // alcançável de todas as abas; um segundo convite aqui competia
-              // com a engrenagem pelo lado direito do cabeçalho. Fora da web
-              // é sempre "Felipe", sem conta nenhuma.
-              kIsWeb
-                  ? ListenableBuilder(
-                      listenable: Nuvem.instancia,
-                      builder: (context, _) {
-                        final nome = Nuvem.instancia.primeiroNome;
-                        return Text(
-                          nome == null ? saudacao : '$saudacao, $nome',
-                          style: tema.headlineMedium,
-                        );
-                      },
-                    )
-                  : Text('$saudacao, Felipe', style: tema.headlineMedium),
+              // Quem entrou com a conta Google ganha o próprio nome na
+              // saudação, em todas as plataformas: o botão de entrar mora no
+              // fim desta mesma linha. Sem conta, na web, fica só a
+              // saudação; no aparelho, "Felipe".
+              ListenableBuilder(
+                listenable: Nuvem.instancia,
+                builder: (context, _) {
+                  final nome = Nuvem.instancia.primeiroNome;
+                  return Text(
+                    nome != null
+                        ? '$saudacao, $nome'
+                        : kIsWeb
+                            ? saudacao
+                            : '$saudacao, Felipe',
+                    style: tema.headlineMedium,
+                  );
+                },
+              ),
               const SizedBox(height: Spacing.sp4),
               Text(dataLonga(data), style: tema.bodySmall),
             ],
           ),
         ),
+        // Entrar ou sair da conta, no fim do cabeçalho: o convite para
+        // entrar mora aqui (e não mais na folha de ajustes), porque o estado
+        // da conta muda a saudação ao lado.
+        _BotaoDeConta(),
         // Hoje não tem AppBar onde pendurar a ação, e sem isto os ajustes só
         // seriam alcançáveis de duas das seis abas.
         BotaoDeAjustes(estado: EscopoDoEstado.de(context)),
       ],
+    );
+  }
+}
+
+/// Entrar ou sair da conta, no fim do cabeçalho da Hoje. Uma linha só para
+/// os dois estados, nunca os dois ao mesmo tempo: convite para entrar, ou o
+/// botão "Sair" de quem já entrou (o e-mail fica no Sobre, em "Conta e
+/// privacidade").
+class _BotaoDeConta extends StatelessWidget {
+  const _BotaoDeConta();
+
+  @override
+  Widget build(BuildContext context) {
+    final nuvem = Nuvem.instancia;
+    return ListenableBuilder(
+      listenable: nuvem,
+      builder: (context, _) => nuvem.logado
+          ? TextButton.icon(
+              onPressed: nuvem.sair,
+              icon: const Icon(Icons.logout, size: 18),
+              label: const Text('Sair'),
+            )
+          : OutlinedButton.icon(
+              onPressed: () => entrarNaConta(context, nuvem),
+              icon: const Icon(Icons.login, size: 18),
+              label: const Text('Entrar'),
+            ),
     );
   }
 }
@@ -502,9 +534,11 @@ class _CartaoLeituraProgresso extends StatelessWidget {
               Text('Progresso do ano', style: tema.labelMedium),
               const Spacer(),
               Text(
-                'de $total dias',
-                style: tema.bodyMedium?.copyWith(color: cor.primary),
+                '${estado.diasLidos}',
+                style: tema.titleMedium?.copyWith(color: cor.primary),
               ),
+              const SizedBox(width: Spacing.sp6),
+              Text('de $total dias', style: tema.bodySmall),
             ],
           ),
           const SizedBox(height: Spacing.sp8),

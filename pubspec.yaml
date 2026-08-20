@@ -37,9 +37,9 @@ dependencies:
   # sistema. Mesma família de pacotes do share_plus: mantido pela equipe do
   # Flutter, funciona igual em todas as plataformas sem ramificação.
   url_launcher: ^6.3.2
-  # Conta Google e cópia na nuvem, só na web (ver lib/data/nuvem.dart): o
-  # navegador é a única plataforma que apaga o armazenamento sozinho. Android
-  # não chama nada disto, mas os plugins entram no build dele.
+  # Conta Google e cópia na nuvem, em todas as plataformas (ver
+  # lib/data/nuvem.dart): o navegador é o caso que mais precisa, porque é a
+  # única plataforma que apaga o armazenamento sozinho.
   firebase_core: ^4.13.0
   firebase_auth: ^6.5.7
   cloud_firestore: ^6.8.0

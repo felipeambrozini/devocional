@@ -173,7 +173,8 @@ class _TelaSobreState extends State<TelaSobre> {
               subtitle: const Text('O cartão da primeira visita, de novo.'),
               onTap: () => _mostrarAjuda(context),
             ),
-            // Só na web: é onde existe conta na nuvem (ver nuvem.dart).
+            // A conta na nuvem existe em todas as plataformas (ver
+            // nuvem.dart); esta seção é a de privacidade e apagar dados.
             if (nuvemSuportada) ...[
               const SizedBox(height: Spacing.sp32),
               Text('Conta e privacidade', style: tema.headlineSmall),

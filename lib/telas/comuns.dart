@@ -408,9 +408,13 @@ class BotaoDeAjustes extends StatelessWidget {
 }
 
 /// Ajustes de leitura: tamanho do texto e claro ou escuro, a dica dos botões
-/// de conversa, lembretes, conta — e Sobre, que deixou de ser aba e voltou
+/// de conversa, lembretes — e Sobre, que deixou de ser aba e voltou
 /// para a folha quando a URL das conversas passou a ser refletida no
 /// navegador (ver `main.dart`, `optionURLReflectsImperativeAPIs`).
+///
+/// A conta saiu daqui: o botão de entrar mora no cabeçalho da Hoje
+/// (`hoje.dart`, `_BotaoDeConta`), onde a mudança de estado se vê na
+/// saudação ao lado.
 ///
 /// Fica numa folha acionada pela AppBar do leitor, e não numa tela de Ajustes,
 /// porque é onde o efeito se vê: muda o passo e o versículo atrás muda junto,
@@ -506,9 +510,6 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 // de sistema que o plugin de fato controla. Ver lembretes.dart.
                 if (lembretesSuportados)
                   ..._SecaoDeLembretes(estado: estado).montar(context),
-                // Só na web: Android já guarda tudo no aparelho. Ver
-                // nuvem.dart, mesma regra do lembretesSuportados acima.
-                if (nuvemSuportada) ..._secaoDaConta(context),
                 // Sobre no fim da folha: as escolhas do dia ficam na frente,
                 // e fontes, canais e privacidade esperam quem rola até o fim.
                 ListTile(
@@ -647,71 +648,13 @@ Future<void> reagendarLembretesSeNecessario(Estado estado) async {
   );
 }
 
-/// A seção "Conta" da folha de ajustes. Duas linhas possíveis, nunca as duas:
-/// convite para entrar, ou o e-mail de quem já entrou com o botão "Sair".
-List<Widget> _secaoDaConta(BuildContext context) {
-  final nuvem = Nuvem.instancia;
-  return [
-    Padding(
-      padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp24, Spacing.sp20, Spacing.sp4),
-      child: Text('Conta', style: Theme.of(context).textTheme.headlineSmall),
-    ),
-    ListenableBuilder(
-      listenable: nuvem,
-      builder: (context, _) => nuvem.logado
-          ? ListTile(
-              leading: const Icon(Icons.cloud_done_outlined),
-              title: Text(nuvem.email ?? 'Conectado'),
-              subtitle: Text(
-                nuvem.falhouAoEnviar
-                    ? 'Não foi possível salvar na conta agora. A próxima '
-                          'anotação tenta de novo.'
-                    : 'Favoritos, anotações e progresso sobem sozinhos.',
-              ),
-              trailing: TextButton(
-                onPressed: nuvem.sair,
-                child: const Text('Sair'),
-              ),
-            )
-          : Padding(
-              padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp4, Spacing.sp20, Spacing.sp8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Guarda favoritos, anotações e progresso na sua conta.',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: Spacing.sp10),
-                  // O "G" é o asset oficial do Google
-                  // (developers.google.com/identity/images/g-logo.png), do
-                  // jeito que as diretrizes de marca pedem: não redesenhado à
-                  // mão. `flutter_signin_button` foi tentado antes e
-                  // descartado — quebra em Flutter 3.44 porque `IconData`
-                  // virou uma classe `final`, e nenhuma versão do
-                  // `font_awesome_flutter` que ele usa por baixo resolve isso.
-                  OutlinedButton.icon(
-                    onPressed: () => entrarNaConta(context, nuvem),
-                    icon: Image.asset(
-                      'assets/images/google.webp',
-                      width: 18,
-                      height: 18,
-                    ),
-                    label: const Text('Entrar com Google'),
-                  ),
-                ],
-              ),
-            ),
-    ),
-  ];
-}
-
 /// Tenta o login e mostra o motivo quando não completa. Público porque dois
-/// botões chamam isto: o da seção "Conta" aqui e o convite compacto ao lado
-/// da saudação em `hoje.dart`. Quem chama precisa fazê-lo direto do `onTap`/
-/// `onPressed` (sem `await` antes): o navegador só deixa abrir a janela do
-/// login dentro do gesto do usuário, e qualquer espera antes do
-/// `signInWithPopup` consome esse gesto e a janela sai bloqueada.
+/// botões chamam isto: o do cabeçalho da Hoje (`hoje.dart`, `_BotaoDeConta`)
+/// e o cartão de plano compartilhado (`meu_plano.dart`). Quem chama precisa
+/// fazê-lo direto do `onTap`/`onPressed` (sem `await` antes): o navegador só
+/// deixa abrir a janela do login dentro do gesto do usuário, e qualquer
+/// espera antes do `signInWithPopup` consome esse gesto e a janela sai
+/// bloqueada.
 Future<void> entrarNaConta(BuildContext context, Nuvem nuvem) async {
   try {
     await nuvem.entrar();
