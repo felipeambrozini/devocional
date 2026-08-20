@@ -265,19 +265,11 @@ void main() {
       ),
       findsOneWidget,
     );
-    // O cartão de ajuda da primeira visita empurra a prévia de Promessas para
-    // baixo da área que a lista realiza; rolar até ela antes de conferir.
-    await tester.scrollUntilVisible(
-      find.text('Promessas de Deus'),
-      200,
-      scrollable: find.descendant(
-        of: find.byType(ListView),
-        matching: find.byType(Scrollable),
-      ),
-    );
-    expect(find.text('Promessas de Deus'), findsWidgets);
-    // Com o cartão de Promessas a tela ficou mais alta que a viewport do
-    // teste, então o progresso só é construído depois da rolagem.
+    // O cronograma some da lista tão logo o cartão saia da área que o
+    // ListView mantém em cache atrás do viewport; por isso as duas rolagens
+    // seguem a ordem real dos cartões (Progresso antes de Promessas) em vez
+    // de rolar para o mais distante primeiro e "voltar" para o mais próximo,
+    // que pode já ter sido descartado da árvore.
     await tester.scrollUntilVisible(
       find.text('Progresso do ano'),
       200,
@@ -295,6 +287,17 @@ void main() {
     // ano bissexto o cronograma o inclui como dia próprio. O finder guarda que
     // o antigo cartão de "dia de recuperação" não volte.
     expect(find.textContaining('29 de fevereiro'), findsNothing);
+    // O cartão de ajuda da primeira visita empurra a prévia de Promessas para
+    // baixo da área que a lista realiza; rolar até ela antes de conferir.
+    await tester.scrollUntilVisible(
+      find.text('Promessas de Deus'),
+      200,
+      scrollable: find.descendant(
+        of: find.byType(ListView),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    expect(find.text('Promessas de Deus'), findsWidgets);
   });
 
   testWidgets('Sobre abre da folha de ajustes e atualiza a URL', (
