@@ -502,7 +502,7 @@ class _CartaoLeituraProgresso extends StatelessWidget {
               Text('Progresso do ano', style: tema.labelMedium),
               const Spacer(),
               Text(
-                '${estado.diasLidos} de $total dias',
+                'de $total dias',
                 style: tema.bodyMedium?.copyWith(color: cor.primary),
               ),
             ],
