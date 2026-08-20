@@ -7,6 +7,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'canon.dart';
 import 'estado.dart';
 import 'planos.dart';
+import 'registro.dart';
 
 /// Falha de rede, regra ou login numa operação de plano compartilhado.
 class PlanosNaNuvemException implements Exception {
@@ -102,10 +103,11 @@ class PlanosNaNuvem {
           lidos: lidos,
         );
       }
-    } catch (_) {
+    } catch (erro, pilha) {
       // Sem rede ou sem permissão: o espelho local continua intacto, e a
       // próxima entrada na conta tenta de novo. Falhar aqui não pode
       // derrubar nada (mesma regra da sincronia da Nuvem).
+      Registro.erro('PlanosNaNuvem.sincronizar', erro, pilha);
     }
   }
 
@@ -130,7 +132,8 @@ class PlanosNaNuvem {
           usuario.uid: _entradaDoUsuario(usuario, const []),
         },
       });
-    } catch (_) {
+    } catch (erro, pilha) {
+      Registro.erro('PlanosNaNuvem.compartilhar', erro, pilha);
       throw const PlanosNaNuvemException(
         'Não foi possível compartilhar agora. Verifique a conexão e tente de novo.',
       );
@@ -152,7 +155,8 @@ class PlanosNaNuvem {
           .collection(_colecao)
           .doc(planoId)
           .update({'participantes.${usuario.uid}.lidos': lidos});
-    } catch (_) {
+    } catch (erro, pilha) {
+      Registro.erro('PlanosNaNuvem.gravarDias', erro, pilha);
       throw const PlanosNaNuvemException(
         'Não foi possível guardar. Verifique a conexão e tente de novo.',
       );
@@ -174,7 +178,8 @@ class PlanosNaNuvem {
           .collection(_colecao)
           .doc(planoId)
           .update({'participantes.${usuario.uid}': _entradaDoUsuario(usuario, const [])});
-    } catch (_) {
+    } catch (erro, pilha) {
+      Registro.erro('PlanosNaNuvem.entrar', erro, pilha);
       throw const PlanosNaNuvemException(
         'Plano não encontrado, ou sem conexão. Verifique o link e tente de novo.',
       );
@@ -191,7 +196,8 @@ class PlanosNaNuvem {
           .collection(_colecao)
           .doc(planoId)
           .update({'participantes.${usuario.uid}': FieldValue.delete()});
-    } catch (_) {
+    } catch (erro, pilha) {
+      Registro.erro('PlanosNaNuvem.sair', erro, pilha);
       throw const PlanosNaNuvemException(
         'Não foi possível sair agora. Verifique a conexão e tente de novo.',
       );
@@ -205,7 +211,8 @@ class PlanosNaNuvem {
           .collection(_colecao)
           .doc(planoId)
           .delete();
-    } catch (_) {
+    } catch (erro, pilha) {
+      Registro.erro('PlanosNaNuvem.excluir', erro, pilha);
       throw const PlanosNaNuvemException(
         'Não foi possível excluir agora. Verifique a conexão e tente de novo.',
       );

@@ -667,6 +667,12 @@ Future<void> entrarNaConta(BuildContext context, Nuvem nuvem) async {
           : 'Não foi possível entrar. Verifique se o navegador permite '
                 'janelas deste site.',
     );
+  } catch (_) {
+    // Qualquer outra falha (Firebase sem inicializar, sem rede, App Check
+    // recusando o token) não pode deixar o botão "Entrar" sem reação
+    // nenhuma: melhor um aviso genérico do que o toque parecer ignorado.
+    if (!context.mounted) return;
+    mostrarAviso(context, 'Não foi possível entrar. Tente novamente.');
   }
 }
 

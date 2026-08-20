@@ -10,6 +10,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 import '../firebase_options.dart';
 import 'estado.dart';
+import 'registro.dart';
 
 /// RegExp para separar por espaços em branco (evita warning de RegExp deprecated).
 // ignore: deprecated_member_use
@@ -94,14 +95,16 @@ class Sincronia {
     try {
       final remota = await puxar();
       if (remota != null) await _fundir(remota);
-    } on FormatException {
+    } on FormatException catch (erro, pilha) {
       // Cópia da conta ilegível (versão futura, ou gravada torta). O local
       // continua intacto e vai subir por cima; nunca o contrário.
-    } catch (_) {
+      Registro.erro('Nuvem.comecar', erro, pilha);
+    } catch (erro, pilha) {
       // Sem rede, ou o Firestore recusou o acesso: o local continua intacto,
       // a sincronia segue viva para os envios e a próxima mudança tenta
       // puxar de novo. Falhar aqui não pode derrubar nada (mesma regra de
       // `_enviar`).
+      Registro.erro('Nuvem.comecar', erro, pilha);
     }
     estado.addListener(_aoMudar);
     _aoMudar();
@@ -154,7 +157,8 @@ class Sincronia {
       await empurrar(copia).timeout(const Duration(seconds: 5));
       _ultimaCopia = copia;
       falhouAoEnviar = false;
-    } catch (_) {
+    } catch (erro, pilha) {
+      Registro.erro('Nuvem.despejar', erro, pilha);
       falhouAoEnviar = true;
     }
     aoMudarSituacao?.call();
@@ -165,9 +169,10 @@ class Sincronia {
       await empurrar(copia);
       _ultimaCopia = copia;
       falhouAoEnviar = false;
-    } catch (_) {
+    } catch (erro, pilha) {
       // Sem rede, ou regra recusou. O dado continua no aparelho e a próxima
       // mudança tenta de novo; falhar aqui não pode derrubar nada.
+      Registro.erro('Nuvem.enviar', erro, pilha);
       falhouAoEnviar = true;
     }
     aoMudarSituacao?.call();
@@ -230,7 +235,8 @@ class Nuvem extends ChangeNotifier {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
-    } catch (_) {
+    } catch (erro, pilha) {
+      Registro.erro('Nuvem.iniciar', erro, pilha);
       return;
     }
 
@@ -247,7 +253,9 @@ class Nuvem extends ChangeNotifier {
           // App Attest sozinho exige iOS 14+.
           providerApple: const AppleAppAttestWithDeviceCheckFallbackProvider(),
         );
-      } catch (_) {}
+      } catch (erro, pilha) {
+        Registro.erro('Nuvem.iniciar', erro, pilha);
+      }
     }
 
     _pronta = true;

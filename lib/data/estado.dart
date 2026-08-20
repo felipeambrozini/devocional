@@ -7,6 +7,7 @@ import 'canon.dart';
 import 'conversas.dart';
 import 'modelos.dart';
 import 'planos.dart';
+import 'registro.dart';
 
 /// Estado persistido do app: progresso de leitura, favoritos, notas e preferências.
 ///
@@ -111,8 +112,9 @@ class Estado extends ChangeNotifier {
           final marcacao = Marcacao.doJson(item as Map<String, dynamic>);
           _marcacoes[marcacao.chave] = marcacao;
         }
-      } catch (_) {
+      } catch (erro, pilha) {
         // Dado corrompido não deve impedir o app de abrir. Perde-se o índice, não a fé.
+        Registro.erro('Estado.lerTudo', erro, pilha);
         _marcacoes = {};
       }
     }
@@ -172,9 +174,10 @@ class Estado extends ChangeNotifier {
           for (final item in json.decode(planosCru) as List)
             PlanoDoUsuario.doJson(item as Map<String, dynamic>),
         ];
-      } catch (_) {
+      } catch (erro, pilha) {
         // Dado corrompido não deve impedir o app de abrir, mesma regra das
         // marcações.
+        Registro.erro('Estado.lerTudo', erro, pilha);
         _planos = [];
       }
     }
@@ -190,7 +193,8 @@ class Estado extends ChangeNotifier {
                 if (dia is int) dia,
             },
         };
-      } catch (_) {
+      } catch (erro, pilha) {
+        Registro.erro('Estado.lerTudo', erro, pilha);
         _planosLidos = {};
       }
     }

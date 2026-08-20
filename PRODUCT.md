@@ -19,9 +19,10 @@ falante de português brasileiro, que lê a Bíblia e devocionais diariamente.
 App devocional diário em português brasileiro com a Bíblia completa (tradução
 autoral BKJ 1611, 31.102 versículos, exatamente o canon), devocionais de
 Charles Spurgeon (Manhã e Noite, e Promessas de Deus), cronograma anual de
-leitura, introduções aos 66 livros na voz de Spurgeon, favoritos, notas e
-busca. Sucesso é a leitura devocional diária fiel: o texto certo, no ritmo
-certo, sem fricção.
+leitura e planos personalizados/compartilhados, introduções aos 66 livros na
+voz de Spurgeon, favoritos, notas, busca, leitura em voz alta e chat com IA
+(Spurgeon e Felipe). Sucesso é a leitura devocional diária fiel: o texto
+certo, no ritmo certo, sem fricção.
 
 ## Positioning
 
@@ -43,10 +44,18 @@ vitoriana dele, tratando o leitor por "tu".
 - Lembrete diário opcional (Android), com horários ajustáveis.
 - Cópia de segurança de favoritos, notas e progresso por exportar/importar
   (área de transferência); conta Google só na web, para espelhar na nuvem.
-- Navegação: abas Hoje, Bíblia, Devocional, Plano e Notas; Sobre (créditos,
-  canais e ajuda) mora na folha de ajustes. Na web cada aba tem URL própria;
-  `/sobre` e as conversas também, e links diretos no formato `?ler=joao.3.16`
-  abrem um versículo.
+- Navegação: abas Hoje, Bíblia, Devocional, Plano, Notas e Conversas; Sobre
+  (créditos, canais e ajuda) mora na folha de ajustes. Na web cada aba tem URL
+  própria; `/sobre` e cada conversa também, e links diretos no formato
+  `?ler=joao.3.16` abrem um versículo (`?plano=<id>` abre um plano
+  compartilhado).
+- Conversas com IA (Gemini): duas personas, Charles Spurgeon e Felipe
+  Ambrozini, com histórico salvo por conversa; aba no celular, balão flutuante
+  em telas largas.
+- Leitura em voz alta (Google Cloud Text-to-Speech): narra capítulos da
+  Bíblia, os dois devocionais, Promessas de Deus e as introduções.
+- Planos personalizados: escolher livros e a duração; compartilháveis por
+  link, com progresso de cada participante (exige conta Google).
 - Só em pt_BR; conteúdo vem de JSON locais em `assets/`, carregado sob demanda.
 
 ## Capabilities and Constraints
@@ -63,8 +72,9 @@ vitoriana dele, tratando o leitor por "tu".
   aspas curvas (só aspas retas); voz vitoriana de Spurgeon tratando o leitor
   por "tu"; citações bíblicas no registro BKJ do app.
 - Decisões recusadas de propósito (não reabrir sem motivo novo): streak de
-  dias, áudio, cores de marcação, widget na tela inicial, lembretes em web,
-  offline de verdade na web, sincronização fora da conta Google web.
+  dias, cores de marcação, widget na tela inicial, lembretes em web, offline
+  de verdade na web, sincronização fora da conta Google web. Áudio foi
+  recusado no início e revisto depois (ver Operating Context).
 - Flutter fixo na versão 3.44.9 (`.fvmrc` e `deploy-web.yml`).
 
 ## Brand Commitments

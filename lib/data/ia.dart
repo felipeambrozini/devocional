@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'google.dart';
 import 'modelos.dart';
 import 'personas.dart';
+import 'registro.dart';
 
 /// Cliente da Gemini API gratuita (sem cartão de crédito).
 ///
@@ -95,7 +96,8 @@ Future<String> perguntar({
           }),
         )
         .timeout(const Duration(seconds: 90));
-  } catch (_) {
+  } catch (erro, pilha) {
+    Registro.erro('Ia.responder', erro, pilha);
     throw const IaException(
       'Não foi possível falar agora. Verifique se há conexão e tente de novo.',
     );
@@ -108,9 +110,10 @@ Future<String> perguntar({
   final Map corpo;
   try {
     corpo = json.decode(utf8.decode(resposta.bodyBytes)) as Map;
-  } catch (_) {
+  } catch (erro, pilha) {
     // 200 com corpo ilegível (HTML de proxy, resposta truncada): a mesma
     // mensagem do serviço fora do ar, não uma exceção sem tratamento.
+    Registro.erro('Ia.responder', erro, pilha);
     throw const IaException(
       'A inteligência artificial não respondeu agora. Tente de novo em '
       'instantes.',

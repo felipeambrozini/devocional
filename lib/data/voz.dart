@@ -9,6 +9,7 @@ import 'package:just_audio/just_audio.dart';
 
 import 'google.dart';
 import 'modelos.dart';
+import 'registro.dart';
 
 /// A voz em que Spurgeon lê: um narrador masculino de barítono, timbre
 /// profundo e caloroso, solene e reverente. A chave TTS_API_KEY mora em
@@ -200,7 +201,8 @@ Future<Uint8List> _pedirAudio(
           }),
         )
         .timeout(const Duration(seconds: 90));
-  } catch (_) {
+  } catch (erro, pilha) {
+    Registro.erro('Voz.sintetizar', erro, pilha);
     throw const VozException(
       'Não foi possível preparar a voz agora. Verifique a conexão e tente '
       'de novo.',
@@ -214,9 +216,10 @@ Future<Uint8List> _pedirAudio(
   final Map corpo;
   try {
     corpo = json.decode(utf8.decode(resposta.bodyBytes)) as Map;
-  } catch (_) {
+  } catch (erro, pilha) {
     // 200 com corpo ilegível (HTML de proxy, resposta truncada): a mesma
     // mensagem do serviço fora do ar, não uma exceção sem tratamento.
+    Registro.erro('Voz.sintetizar', erro, pilha);
     throw const VozException('A voz não respondeu agora. Tente de novo em '
         'instantes.');
   }
@@ -509,7 +512,8 @@ class Voz extends ChangeNotifier {
           await _tocarTudo(partes, chave, versao: versao, de: de);
         } on VozException {
           rethrow;
-        } catch (_) {
+        } catch (erro, pilha) {
+          Registro.erro('Voz.tocar', erro, pilha);
           throw const VozException(
             'Não foi possível tocar o áudio. Tente de novo em instantes.',
           );
@@ -569,9 +573,10 @@ class Voz extends ChangeNotifier {
       }
     } on VozException {
       rethrow;
-    } catch (_) {
+    } catch (erro, pilha) {
       // Falha de plataforma ao tocar (codec, player): não há o que o usuário
       // consertar além de tentar de novo.
+      Registro.erro('Voz.tocar', erro, pilha);
       throw const VozException(
         'Não foi possível tocar o áudio. Tente de novo em instantes.',
       );
@@ -635,7 +640,8 @@ class Voz extends ChangeNotifier {
       await _tocarTudo(partes, chave, versao: versao, de: de);
     } on VozException {
       rethrow;
-    } catch (_) {
+    } catch (erro, pilha) {
+      Registro.erro('Voz.tocar', erro, pilha);
       throw const VozException(
         'Não foi possível tocar o áudio. Tente de novo em instantes.',
       );
@@ -668,7 +674,8 @@ class Voz extends ChangeNotifier {
         await _tocarTudo(partes, chave, versao: versao, de: de);
       } on VozException {
         rethrow;
-      } catch (_) {
+      } catch (erro, pilha) {
+        Registro.erro('Voz.tocar', erro, pilha);
         throw const VozException(
           'Não foi possível tocar o áudio. Tente de novo em instantes.',
         );
@@ -858,10 +865,11 @@ class Voz extends ChangeNotifier {
           );
         },
       );
-    } catch (_) {
+    } catch (erro, pilha) {
       // Um pedaço falhou depois de a leitura já ter começado: o que toca
       // deve parar — o erro volta para a tela, mas não deixa um áudio solto
       // tocando sem botão.
+      Registro.erro('Voz.tocar', erro, pilha);
       if (leituraComecou) {
         _versao++;
         await _silenciar();

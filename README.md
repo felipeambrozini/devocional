@@ -16,6 +16,17 @@ mesmo código).
   - Calendário para ver o devocional de qualquer data, passada ou futura.
 - **Cronograma de leitura anual**, 365 dias (366 em ano bissexto), agrupado por
   mês, com marcação de lido e barra de progresso do ano.
+- **Planos personalizados**: escolher um ou mais livros e em quantos dias, com
+  prévia antes de confirmar. Dá para compartilhar por link; cada participante
+  entra com a própria conta Google e o progresso de todos aparece junto (Meus
+  Planos).
+- **Leitura em voz alta**: botão Ouvir narra capítulos da Bíblia, Manhã e
+  Noite, Promessas de Deus e as introduções, numa só voz (barítono, Google
+  Cloud Text-to-Speech).
+- **Conversas com IA**: duas personas para conversar, Charles Spurgeon e
+  Felipe Ambrozini, cada uma com o próprio jeito de falar (Gemini). Histórico
+  salvo por conversa; aba própria no celular, balões flutuantes nas telas
+  largas.
 - **Introduções aos 66 livros**, na voz de Spurgeon, com título formal do livro
   vindo da BKJ 1611.
 - **Favoritos e notas**: qualquer versículo pode ser marcado, anotado, copiado ou
@@ -44,16 +55,18 @@ mesmo código).
 | Hoje | Saudação, prévia das três leituras do dia, leitura do cronograma, progresso do ano, atalho para continuar de onde parou |
 | Bíblia | Leitor por capítulo, os 66 livros, introdução de cada um |
 | Devocional | Manhã, Noite e Promessas de Deus, com calendário |
-| Plano | Cronograma anual por mês, com marcação de lido |
+| Plano | Cronograma anual por mês, com marcação de lido; Meus Planos (personalizados e compartilhados) |
 | Notas | Favoritos e anotações |
+| Conversas | Chat com Spurgeon e Felipe (IA); em tela larga vira balão flutuante no lugar da aba |
 
 Sobre (créditos, fonte da tradução, canais e ajuda) não é aba: mora no fim da
 folha de ajustes, com URL própria.
 
 Na web, cada aba tem a própria URL (`/hoje`, `/biblia`, `/devocional`,
-`/plano`, `/notas`) — dá para abrir, atualizar ou compartilhar qualquer uma
-direto; `/sobre` e as conversas também têm URL própria. `?ler=joao.3.16` na
-URL abre esse versículo por cima da aba.
+`/plano`, `/notas`, `/conversas`) — dá para abrir, atualizar ou compartilhar
+qualquer uma direto; `/sobre` e cada conversa (`/charles-spurgeon`,
+`/felipe-ambrozini`) também têm URL própria. `?ler=joao.3.16` na URL abre esse
+versículo por cima da aba, e `?plano=<id>` abre um plano compartilhado.
 
 ## Stack
 
@@ -70,6 +83,11 @@ URL abre esse versículo por cima da aba.
   como o `IndexedStack` antigo fazia).
 - `firebase_core` + `firebase_auth` + `cloud_firestore` para a conta na
   nuvem, só chamados quando `nuvemSuportada` (`lib/data/nuvem.dart`).
+- `http` fala direto com a Gemini API (`gemini-flash-latest`, tier gratuito)
+  para o chat das duas personas (`lib/data/ia.dart`) e com a Google Cloud
+  Text-to-Speech para a leitura em voz alta (`lib/data/voz.dart`); `just_audio`
+  toca o áudio sintetizado. Chaves em `lib/data/google.dart`, vindas do
+  `.env.json`.
 - Fontes empacotadas localmente (Cinzel e Montserrat), sem depender de rede na
   primeira execução.
 - Conteúdo (Bíblia, devocionais, introduções, cronograma) vem de arquivos JSON
@@ -80,7 +98,7 @@ URL abre esse versículo por cima da aba.
 ```
 lib/
   data/        modelos, canon (os 66 livros), leitura de conteúdo, estado persistido
-  telas/       uma tela por arquivo (hoje, bíblia, devocional, plano, notas, busca, sobre...)
+  telas/       uma tela por arquivo (hoje, bíblia, devocional, plano, notas, busca, conversas, sobre...)
   theme.dart   as duas paletas: marrom e dourada, pergaminho e bronze
   main.dart    navegação (barra/trilho), rotas e ponto de entrada
 assets/        Bíblia interna, devocionais, introduções, cronograma, imagens, fontes
@@ -148,7 +166,9 @@ motivo novo.
 
 - **Sequência de dias (streak)** — recusada de propósito: transformar um dia
   perdido em perda visível corta contra o espírito de um app devocional.
-- **Áudio** — recusado: voz sintética lendo Escritura mal é pior que não ter.
+- **Áudio** — recusado inicialmente: voz sintética lendo Escritura mal é pior
+  que não ter. Revisto em 17/08/2026 com a Google Cloud Text-to-Speech (voz de
+  barítono, qualidade de narrador), ver "Leitura em voz alta" acima.
 - **Cores de marcação** — mais taxonomia do que um leitor só precisa.
 - **Widget na tela inicial** — código nativo nas duas plataformas para pouco
   retorno.

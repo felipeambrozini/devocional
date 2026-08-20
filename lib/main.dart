@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -17,6 +18,7 @@ import 'data/modelos.dart';
 import 'data/nuvem.dart';
 import 'data/personas.dart';
 import 'data/planos_nuvem.dart';
+import 'data/registro.dart';
 import 'data/voz.dart';
 import 'telas/biblia.dart';
 import 'telas/chat.dart';
@@ -86,8 +88,25 @@ void _abrirPlanoDoLink(Estado estado) {
   );
 }
 
+/// Tudo dentro de uma zona só, para [Registro] pegar também o que escapa de
+/// um `try`/`catch` — inclusive o que os `unawaited(...)` abaixo derrubam
+/// depois do primeiro quadro, já fora da pilha de chamada do `main`.
 Future<void> main() async {
+  runZonedGuarded(_iniciar, (erro, pilha) => Registro.erro('Zona', erro, pilha));
+}
+
+Future<void> _iniciar() async {
   WidgetsFlutterBinding.ensureInitialized();
+  FlutterError.onError = (detalhes) {
+    Registro.erro('Flutter', detalhes.exception, detalhes.stack);
+    FlutterError.presentError(detalhes);
+  };
+  PlatformDispatcher.instance.onError = (erro, pilha) {
+    Registro.erro('Dispatcher', erro, pilha);
+    return true;
+  };
+  await Registro.inicializar();
+
   // Sem isto a web usa "/#/biblia" (estratégia padrão do Flutter): o # nunca
   // vai ao servidor, então nunca dá 404, mas também não é o link limpo que se
   // quer compartilhar. Com o caminho limpo, quem abre "/biblia" direto cai no

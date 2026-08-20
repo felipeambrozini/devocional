@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'modelos.dart';
 import 'personas.dart';
+import 'registro.dart';
 
 /// Histórico das conversas do chat: cada persona guarda quantas conversas
 /// quiser (ver `lib/data/modelos.dart`), com as lápides de exclusão e a fusão
@@ -113,7 +114,8 @@ class Conversas {
           lista.add(conversa);
         }
       }
-    } catch (_) {
+    } catch (erro, pilha) {
+      Registro.erro('Conversas.ler', erro, pilha);
       _conversas = {};
       _apagadas = {};
     }
@@ -425,8 +427,9 @@ class Conversas {
         _aoMudar();
         await _gravar();
       }
-    } catch (_) {
+    } catch (erro, pilha) {
       // Cópia ilegível: o local continua intacto e vai subir por cima.
+      Registro.erro('Conversas.fundirDaNuvem', erro, pilha);
     }
   }
 

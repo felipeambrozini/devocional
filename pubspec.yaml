@@ -57,6 +57,10 @@ dependencies:
   just_audio: ^0.10.6
   google_sign_in: ^7.2.0
   firebase_app_check: ^0.4.6
+  # Onde gravar o arquivo de registro de erros (ver lib/data/registro.dart).
+  # Já era dependência transitiva do Firebase; só promovida a direta para o
+  # código poder importar.
+  path_provider: ^2.1.6
 
 dev_dependencies:
   flutter_test:
