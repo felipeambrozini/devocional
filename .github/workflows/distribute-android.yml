@@ -28,6 +28,17 @@ jobs:
         run: |
           echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
 
+      - name: Diagnose Keystore (temporary)
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "Keystore file size: $(stat -c%s android/app/upload-keystore.jks) (expected 2760)"
+          echo "KEYSTORE_PASSWORD length: ${#KEYSTORE_PASSWORD} (expected 12)"
+          echo "KEY_PASSWORD length: ${#KEY_PASSWORD} (expected 12)"
+          head -c 4 android/app/upload-keystore.jks | od -An -tx1
+          keytool -list -keystore android/app/upload-keystore.jks -storepass "$KEYSTORE_PASSWORD" -alias upload || echo "KEYSTORE_PASSWORD FAILED"
+
       - name: Get dependencies
         run: flutter pub get
 
