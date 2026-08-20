@@ -18,8 +18,10 @@ import 'registro.dart';
 /// Nome fixo, não o alias `gemini-flash-latest`: o alias pode passar a
 /// apontar para um modelo fora do tier gratuito sem aviso, e a falha vira um
 /// 403 disfarçado de limite de cota. Flash-Lite é o mais barato da linha, se
-/// um dia sair do grátis (faturamento habilitado no projeto).
-const _modelo = 'gemini-2.5-flash-lite';
+/// um dia sair do grátis (faturamento habilitado no projeto). 2.5 foi
+/// descontinuado para novos usuários em favor do 3.5 (aviso 404 da própria
+/// API), então o nome fixo também precisa de olho na aposentadoria do Google.
+const _modelo = 'gemini-3.5-flash-lite';
 
 /// Cliente compartilhado do app. Um cliente por chamada deixaria uma conexão
 /// aberta a cada mensagem do chat; os testes injetam o próprio cliente falso.
