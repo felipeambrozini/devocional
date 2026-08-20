@@ -3,7 +3,6 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -15,6 +14,25 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 ///   options: DefaultFirebaseOptions.currentPlatform,
 /// );
 /// ```
+// As chaves chegam por `--dart-define` no build (GitHub Secrets no CI; o
+// .env.json local via --dart-define-from-file). Mesmo caminho das chaves
+// Gemini e TTS em lib/data/google.dart — e não por asset, que iria ao ar
+// junto com o bundle.
+const _firebaseApiKeyWeb = String.fromEnvironment('FIREBASE_API_KEY_WEB');
+const _firebaseApiKeyAndroid = String.fromEnvironment('FIREBASE_API_KEY_ANDROID');
+const _firebaseApiKeyIos = String.fromEnvironment('FIREBASE_API_KEY_IOS');
+const _firebaseAppIdWeb = String.fromEnvironment('FIREBASE_APP_ID_WEB');
+const _firebaseAppIdAndroid = String.fromEnvironment('FIREBASE_APP_ID_ANDROID');
+const _firebaseAppIdIos = String.fromEnvironment('FIREBASE_APP_ID_IOS');
+const _firebaseMessagingSenderId =
+    String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID');
+const _firebaseProjectId = String.fromEnvironment('FIREBASE_PROJECT_ID');
+const _firebaseAuthDomain = String.fromEnvironment('FIREBASE_AUTH_DOMAIN');
+const _firebaseStorageBucket = String.fromEnvironment('FIREBASE_STORAGE_BUCKET');
+const _firebaseMeasurementId = String.fromEnvironment('FIREBASE_MEASUREMENT_ID');
+const _firebaseIosClientId = String.fromEnvironment('FIREBASE_IOS_CLIENT_ID');
+const _firebaseIosBundleId = String.fromEnvironment('FIREBASE_IOS_BUNDLE_ID');
+
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
@@ -48,30 +66,30 @@ class DefaultFirebaseOptions {
   }
 
   static FirebaseOptions get web => FirebaseOptions(
-        apiKey: dotenv.env['FIREBASE_API_KEY_WEB']!,
-        appId: dotenv.env['FIREBASE_APP_ID_WEB']!,
-        messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID']!,
-        projectId: dotenv.env['FIREBASE_PROJECT_ID']!,
-        authDomain: dotenv.env['FIREBASE_AUTH_DOMAIN']!,
-        storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET']!,
-        measurementId: dotenv.env['FIREBASE_MEASUREMENT_ID']!,
+        apiKey: _firebaseApiKeyWeb,
+        appId: _firebaseAppIdWeb,
+        messagingSenderId: _firebaseMessagingSenderId,
+        projectId: _firebaseProjectId,
+        authDomain: _firebaseAuthDomain,
+        storageBucket: _firebaseStorageBucket,
+        measurementId: _firebaseMeasurementId,
       );
 
   static FirebaseOptions get android => FirebaseOptions(
-        apiKey: dotenv.env['FIREBASE_API_KEY_ANDROID']!,
-        appId: dotenv.env['FIREBASE_APP_ID_ANDROID']!,
-        messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID']!,
-        projectId: dotenv.env['FIREBASE_PROJECT_ID']!,
-        storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET']!,
+        apiKey: _firebaseApiKeyAndroid,
+        appId: _firebaseAppIdAndroid,
+        messagingSenderId: _firebaseMessagingSenderId,
+        projectId: _firebaseProjectId,
+        storageBucket: _firebaseStorageBucket,
       );
 
   static FirebaseOptions get ios => FirebaseOptions(
-        apiKey: dotenv.env['FIREBASE_API_KEY_IOS']!,
-        appId: dotenv.env['FIREBASE_APP_ID_IOS']!,
-        messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID']!,
-        projectId: dotenv.env['FIREBASE_PROJECT_ID']!,
-        storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET']!,
-        iosClientId: dotenv.env['FIREBASE_IOS_CLIENT_ID']!,
-        iosBundleId: dotenv.env['FIREBASE_IOS_BUNDLE_ID']!,
+        apiKey: _firebaseApiKeyIos,
+        appId: _firebaseAppIdIos,
+        messagingSenderId: _firebaseMessagingSenderId,
+        projectId: _firebaseProjectId,
+        storageBucket: _firebaseStorageBucket,
+        iosClientId: _firebaseIosClientId,
+        iosBundleId: _firebaseIosBundleId,
       );
 }

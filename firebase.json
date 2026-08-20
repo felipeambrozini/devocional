@@ -1,1 +1,119 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"devocional-15815","appId":"1:169480227109:android:286f46640a25846c3c72cc","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"devocional-15815","configurations":{"android":"1:169480227109:android:286f46640a25846c3c72cc","ios":"1:169480227109:ios:92036ffd7a2950673c72cc","web":"1:169480227109:web:5069341719b146783c72cc"}}}}},"firestore":{"rules":"firestore.rules"},"hosting":{"public":"public","ignore":["firebase.json","**/.*","**/node_modules/**"],"redirects":[{"source":"/","destination":"/devocional","type":301}],"rewrites":[{"source":"/devocional/**","destination":"/devocional/index.html"}]}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "devocional-15815",
+          "appId": "1:169480227109:android:286f46640a25846c3c72cc",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "devocional-15815",
+          "configurations": {
+            "android": "1:169480227109:android:286f46640a25846c3c72cc",
+            "ios": "1:169480227109:ios:92036ffd7a2950673c72cc",
+            "web": "1:169480227109:web:5069341719b146783c72cc"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "redirects": [
+      {
+        "source": "/",
+        "destination": "/devocional",
+        "type": 301
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "/devocional/**",
+        "destination": "/devocional/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "strict-origin-when-cross-origin"
+          },
+          {
+            "key": "Permissions-Policy",
+            "value": "geolocation=(), camera=(), microphone=(), payment=(), usb=()"
+          },
+          {
+            "key": "Content-Security-Policy",
+            "value": "frame-ancestors 'none'"
+          },
+          {
+            "key": "Strict-Transport-Security",
+            "value": "max-age=31536000; includeSubDomains"
+          }
+        ]
+      },
+      {
+        "source": "**/*.html",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "**/flutter_service_worker.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "**/flutter_bootstrap.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "**/assets/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
+        "source": "**/canvaskit/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      }
+    ]
+  }
+}

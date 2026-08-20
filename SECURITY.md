@@ -4,11 +4,11 @@ Este documento descreve as diretrizes e práticas de segurança aplicadas ao pro
 
 ## 1. Versões Suportadas
 
-Apenas a versão mais recente em execução no ambiente de produção (Web via GitHub Pages) e os builds oficiais do aplicativo Android recebem atualizações diretas de segurança.
+Apenas a versão mais recente em execução no ambiente de produção (Web via Firebase Hosting, em `https://www.felipeambrozini.com.br/devocional/`) e os builds oficiais do aplicativo Android recebem atualizações diretas de segurança.
 
 | Plataforma | Suporte a Correções de Segurança |
 | :--- | :--- |
-| Web (GitHub Pages) | :white_check_mark: Suportado (Versão Atual) |
+| Web (Firebase Hosting) | :white_check_mark: Suportado (Versão Atual) |
 | Android (APK / App) | :white_check_mark: Suportado (Versão Atual) |
 | Builds legados ou não oficiais | :x: Não suportado |
 
@@ -18,11 +18,14 @@ Apenas a versão mais recente em execução no ambiente de produção (Web via G
 
 O aplicativo foi projetado com o princípio de exposição mínima de dados e processamento prioritariamente local.
 
-### 2.1 Armazenamento Local
+### 2.1 Ausência de Cookies e Rastreamento
+O aplicativo **não grava nenhum cookie** e não embarca ferramenta de analítica ou rastreamento. Na web, as preferências e o progresso ficam no `localStorage` (via `shared_preferences`) e a sessão do Firebase Auth no `IndexedDB` — armazenamento estritamente necessário ao funcionamento, sob o domínio do próprio app. Por isso não há banner de consentimento de cookies: não existe cookie de terceiro nem finalidade de rastreamento que o exija sob a LGPD.
+
+### 2.2 Armazenamento Local
 - **Dispositivos Móveis (Android):** Os dados de progresso de leitura, anotações e versículos favoritos são salvos exclusivamente no armazenamento local do dispositivo por meio do `shared_preferences`. Não há comunicação automática com servidores de terceiros no Android para sincronização de dados pessoais.
 - **Exportação Manual:** A cópia de segurança no Android é realizada via área de transferência (Clipboard) em formato de texto estruturado, permitindo que o próprio usuário gerencie e transporte seus backups com total controle.
 
-### 2.2 Sincronização na Nuvem e Autenticação (Apenas Web)
+### 2.3 Sincronização na Nuvem e Autenticação (Apenas Web)
 - **Autenticação:** O login via Conta Google utiliza o método `signInWithPopup` fornecido pelo Firebase Auth. Não são utilizados *redirects* ou *iframes* de terceiros que possam sofrer com restrições de partição de armazenamento ou comprometer a sessão do usuário.
 - **Segurança no Firestore:** Cada usuário autenticado possui acesso exclusivo ao seu próprio documento localizado no caminho `usuarios/{uid}`.
 - **Regras de Acesso:** O acesso aos dados no Cloud Firestore é protegido por regras rígidas de segurança (`firestore.rules`), garantindo que apenas o proprietário autenticado (`request.auth.uid == userId`) possa ler ou escrever em seu respetivo documento. A remoção de dados locais não apaga registros na nuvem, atuando a sincronização por fusão (*merge*).
@@ -32,7 +35,7 @@ O aplicativo foi projetado com o princípio de exposição mínima de dados e pr
 ## 3. Gestão de Chaves de API e Segredos
 
 ### 3.1 Injeção de Variáveis em Tempo de Compilação
-As chaves de API necessárias para o funcionamento dos serviços integrados (Firebase, IA Gemini e Google Text-to-Speech) não são mantidas estáticas no código-fonte. Elas são injetadas exclusivamente em tempo de compilação via parâmetros `--dart-define`:
+As chaves de API necessárias para o funcionamento dos serviços integrados (Firebase, IA Gemini e Google Text-to-Speech) não são mantidas estáticas no código-fonte. Elas são injetadas exclusivamente em tempo de compilação via parâmetros `--dart-define`, lidos por `String.fromEnvironment` em `lib/data/google.dart` e `lib/firebase_options.dart`. Nenhuma chave trafega como *asset* do aplicativo — o arquivo local `.env.json` serve apenas ao `--dart-define-from-file` durante o desenvolvimento e nunca é empacotado no build:
 
 - `FIREBASE_API_KEY_WEB`, `FIREBASE_API_KEY_ANDROID`, `FIREBASE_API_KEY_IOS`
 - `GEMINI_API_KEY_WEB`, `GEMINI_API_KEY_ANDROID`, `GEMINI_API_KEY_IOS`
@@ -41,14 +44,24 @@ As chaves de API necessárias para o funcionamento dos serviços integrados (Fir
 ### 3.2 Proteção de Chaves Públicas
 Conforme a arquitetura padrão para aplicações no lado do cliente (Web e Mobile), as chaves do Firebase e do Google Cloud presentes nos artefatos de compilação são consideradas públicas por desenho. A segurança dos serviços é assegurada por:
 
-1. **Restrição de Origem no Google Cloud Console:** As chaves de API da Web são restritas aos domínios autorizados do projeto.
+1. **Restrição de Origem no Google Cloud Console:** As chaves de API da Web são restritas por referenciador HTTP ao domínio de produção (`https://www.felipeambrozini.com.br/*`) e ao domínio do próprio projeto Firebase. Como o cabeçalho de referenciador é forjável por um cliente fora do navegador, as APIs Gemini e Text-to-Speech contam ainda com cota diária e alerta de faturamento no projeto, que é o limite efetivo de abuso.
 2. **Restrição de Escopo de APIs:** As chaves do serviço de voz (Text-to-Speech) e de inteligência artificial possuem escopo limitado estritamente às APIs necessárias para a execução do app.
 3. **Regras do Banco de Dados:** O acesso aos dados no Firestore independe da chave de API, sendo controlado integralmente pelas regras de autenticação do backend do Firebase.
+
+### 3.3 Firebase App Check
+Além da chave, o app se identifica ao Firestore e ao Auth com uma prova de que o pedido vem do próprio aplicativo, não de um cliente forjado com a mesma chave pública copiada do bundle (ver `lib/data/nuvem.dart`, função `Sincronia.iniciar`):
+
+- **Web:** reCAPTCHA v3, com o *site key* também injetado por `--dart-define` (`RECAPTCHA_V3_SITE_KEY`).
+- **Android:** Play Integrity, por atestação do próprio Google Play — sem chave de app.
+- **iOS:** App Attest, com retorno a DeviceCheck em versões anteriores ao iOS 14 — sem chave de app.
+
+A falha em ativar o App Check (site key ausente durante a migração, domínio ainda não registrado no console) não impede o app de abrir; a sincronização e o login simplesmente continuam sem essa camada extra até a configuração ser concluída no console do Firebase.
 
 ---
 
 ## 4. Segurança do Pipeline de Integração e Implantação (CI/CD)
 
+- **Cabeçalhos de Segurança no Hosting:** O `firebase.json` define `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` negando geolocalização, câmera, microfone, pagamento e USB, e `Content-Security-Policy: frame-ancestors 'none'` (proteção contra *clickjacking*). O HTTPS e o `Strict-Transport-Security` são reforçados sobre o padrão do Firebase Hosting.
 - **Fixação de Commit SHA no GitHub Actions:** Todas as ações do GitHub Actions utilizadas no fluxo de *deploy* automatizado (`.github/workflows/deploy-web.yml`) estão fixadas pelo SHA completo do *commit*, prevenindo riscos associados a *tags* mutáveis.
 - **Versão Imutável do SDK:** A versão do SDK do Flutter é mantida fixa em `3.44.9` via `.fvmrc` e no pipeline de integração contínua, garantindo reproduzibilidade e prevenindo quebras não auditadas.
 - **Segredos do Repositório:** As chaves de compilação de produção são gerenciadas através dos *GitHub Secrets* e disponibilizadas exclusivamente durante o processo de compilação automatizada.

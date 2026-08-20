@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart' show ChangeNotifier, kIsWeb;
@@ -20,6 +21,18 @@ final _espacos = RegExp(r'\s+');
 /// têm configuração Firebase em `firebase_options.dart`. Mesmo formato de
 /// `lembretesSuportados` em `lib/data/lembretes.dart`.
 bool get nuvemSuportada => true;
+
+/// Chave do reCAPTCHA v3 que ativa o App Check na web (console do Firebase >
+/// App Check > registrar o app Web, e o site key vem do console do
+/// reCAPTCHA, https://www.google.com/recaptcha/admin). Mesmo caminho das
+/// demais chaves: `--dart-define` no build, GitHub Secrets no CI.
+///
+/// Ausente (string vazia) enquanto o registro não é feito — [iniciar] então
+/// não ativa o App Check, para não travar o app com uma chave inexistente
+/// no meio da migração. Só a web depende de chave: Android usa o Play
+/// Integrity e iOS o App Attest, ambos por atestação do sistema, sem chave
+/// de app nenhuma.
+const _recaptchaSiteKey = String.fromEnvironment('RECAPTCHA_V3_SITE_KEY');
 
 /// Liga o [Estado] a um depósito remoto sem que o Estado saiba disso.
 ///
@@ -220,6 +233,23 @@ class Nuvem extends ChangeNotifier {
     } catch (_) {
       return;
     }
+
+    // Prova ao Firestore e ao Auth que quem pede é o próprio app, não um
+    // cliente forjado com as mesmas chaves públicas. Erro aqui (chave errada,
+    // domínio ainda não liberado no console) não pode impedir o app de abrir
+    // — mesma regra do Firebase.initializeApp acima.
+    if (kIsWeb ? _recaptchaSiteKey.isNotEmpty : true) {
+      try {
+        await FirebaseAppCheck.instance.activate(
+          providerWeb: ReCaptchaV3Provider(_recaptchaSiteKey),
+          providerAndroid: const AndroidPlayIntegrityProvider(),
+          // Com fallback para DeviceCheck: o app aceita iOS 13 (Podfile), e
+          // App Attest sozinho exige iOS 14+.
+          providerApple: const AppleAppAttestWithDeviceCheckFallbackProvider(),
+        );
+      } catch (_) {}
+    }
+
     _pronta = true;
 
     _assinatura = FirebaseAuth.instance.authStateChanges().listen((usuario) {

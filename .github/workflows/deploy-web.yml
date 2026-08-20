@@ -48,7 +48,8 @@ jobs:
             --dart-define=GEMINI_API_KEY_IOS=${{ secrets.GEMINI_API_KEY_IOS }} \
             --dart-define=TTS_API_KEY_WEB=${{ secrets.TTS_API_KEY_WEB }} \
             --dart-define=TTS_API_KEY_ANDROID=${{ secrets.TTS_API_KEY_ANDROID }} \
-            --dart-define=TTS_API_KEY_IOS=${{ secrets.TTS_API_KEY_IOS }}
+            --dart-define=TTS_API_KEY_IOS=${{ secrets.TTS_API_KEY_IOS }} \
+            --dart-define=RECAPTCHA_V3_SITE_KEY=${{ secrets.RECAPTCHA_V3_SITE_KEY }}
       # O Firebase Hosting serve da raiz do domínio; o app mora em /devocional/,
       # então o build vai para public/devocional (o base-href acima combina). O
       # 404.html também sobe à raiz do public: é lá que o Hosting procura a
