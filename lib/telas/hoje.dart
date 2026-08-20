@@ -547,11 +547,11 @@ class _CartaoLeituraProgresso extends StatelessWidget {
             child: Container(
               height: 5,
               decoration: BoxDecoration(
-                // O trilho usa o metal do tema (outline) e não o
-                // surfaceContainerHighest: sobre o fundo do cartão aquele tom
-                // quase sumia, e a barra vazia parecia nem existir até o
-                // primeiro dia completo.
-                color: cor.outline,
+                // Trilho na cor da página (surface), com borda no outline do
+                // tema: mesmo se o cartão tiver o mesmo tom da página, a
+                // borda garante que o trilho não suma no fundo.
+                color: cor.surface,
+                border: Border.all(color: cor.outline),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: FractionallySizedBox(
