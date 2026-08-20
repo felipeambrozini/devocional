@@ -28,17 +28,6 @@ jobs:
         run: |
           echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
 
-      - name: Diagnose Keystore (temporary)
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: |
-          echo "Keystore file size: $(stat -c%s android/app/upload-keystore.jks) (expected 2760)"
-          echo "KEYSTORE_PASSWORD length: ${#KEYSTORE_PASSWORD} (expected 12)"
-          echo "KEY_PASSWORD length: ${#KEY_PASSWORD} (expected 12)"
-          head -c 4 android/app/upload-keystore.jks | od -An -tx1
-          keytool -list -keystore android/app/upload-keystore.jks -storepass "$KEYSTORE_PASSWORD" -alias upload || echo "KEYSTORE_PASSWORD FAILED"
-
       - name: Get dependencies
         run: flutter pub get
 
@@ -68,12 +57,12 @@ jobs:
             --dart-define=TTS_API_KEY_ANDROID=${{ secrets.TTS_API_KEY_ANDROID }} \
             --dart-define=TTS_API_KEY_IOS=${{ secrets.TTS_API_KEY_IOS }}
 
+      - name: Write release notes
+        run: echo "Build ${{ github.sha }} - ${{ github.ref_name }}" > release-notes.txt
+
       - name: Distribute to Firebase App Distribution
         uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15
         with:
-          args: appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk \
-            --app 1:169480227109:android:286f46640a25846c3c72cc \
-            --groups testadores \
-            --release-notes "Build ${{ github.sha }} (${{ github.ref_name }})"
+          args: appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk --app 1:169480227109:android:286f46640a25846c3c72cc --groups testadores --release-notes-file release-notes.txt
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
