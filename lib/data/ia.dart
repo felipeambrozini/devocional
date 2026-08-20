@@ -15,10 +15,11 @@ import 'registro.dart';
 /// Language API com a Cloud Text-to-Speech na mesma chave, então o chat usa a
 /// GEMINI_API_KEY e a voz usa a TTS_API_KEY.
 ///
-/// Alias estável da Google para o Flash atual: aponta para o modelo estável
-/// vigente, então o app não quebra quando a Google aposenta um modelo. Os
-/// Flash são a linha gratuita; os Pro saíram do tier grátis em 2026.
-const _modelo = 'gemini-flash-latest';
+/// Nome fixo, não o alias `gemini-flash-latest`: o alias pode passar a
+/// apontar para um modelo fora do tier gratuito sem aviso, e a falha vira um
+/// 403 disfarçado de limite de cota. Flash-Lite é o mais barato da linha, se
+/// um dia sair do grátis (faturamento habilitado no projeto).
+const _modelo = 'gemini-2.5-flash-lite';
 
 /// Cliente compartilhado do app. Um cliente por chamada deixaria uma conexão
 /// aberta a cada mensagem do chat; os testes injetam o próprio cliente falso.
@@ -104,6 +105,10 @@ Future<String> perguntar({
   }
 
   if (resposta.statusCode != 200) {
+    Registro.erro(
+      'Ia.responder',
+      'HTTP ${resposta.statusCode}: ${utf8.decode(resposta.bodyBytes)}',
+    );
     throw IaException(_mensagemDeErro(resposta));
   }
 
@@ -133,13 +138,20 @@ Future<String> perguntar({
   return texto.trim();
 }
 
-/// 429 é o teto do tier gratuito, que zera sozinho em até um dia; os outros
-/// códigos são serviço fora do ar. Não se envia o corpo da API ao usuário:
-/// é inglês técnico que não ajuda ninguém.
+/// 429 é o teto do tier gratuito, que zera sozinho em até um dia. 403 é outra
+/// coisa: a chave sem permissão para o modelo (não se resolve sozinho, e sem
+/// isso o usuário achava que era o mesmo limite e ficava esperando à toa). Os
+/// outros códigos são serviço fora do ar. Não se envia o corpo da API ao
+/// usuário: é inglês técnico que não ajuda ninguém; fica no registro.
 String _mensagemDeErro(http.Response resposta) {
-  if (resposta.statusCode == 429 || resposta.statusCode == 403) {
+  if (resposta.statusCode == 429) {
     return 'O limite gratuito da inteligência artificial foi atingido. '
         'Espere um pouco e tente de novo.';
+  }
+  if (resposta.statusCode == 403) {
+    return 'A inteligência artificial recusou o pedido (chave sem permissão '
+        'para este modelo). Isto não se resolve sozinho — avise quem mantém '
+        'o app.';
   }
   return 'A inteligência artificial não respondeu agora. Tente de novo em '
       'instantes.';
