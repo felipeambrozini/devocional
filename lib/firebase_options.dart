@@ -27,6 +27,14 @@ const _firebaseAppIdIos = String.fromEnvironment('FIREBASE_APP_ID_IOS');
 const _firebaseMessagingSenderId =
     String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID');
 const _firebaseProjectId = String.fromEnvironment('FIREBASE_PROJECT_ID');
+
+/// Tem que ser o domínio de produção (`www.felipeambrozini.com.br`), nunca o
+/// `*.firebaseapp.com` padrão do projeto: o Auth usa um iframe neste domínio
+/// para guardar a sessão, e um domínio diferente do app vira armazenamento de
+/// terceiros — bloqueado por padrão em navegadores atuais, então o login
+/// funciona mas não sobrevive a um F5. O Firebase Hosting já serve
+/// `/__/auth/*` na própria origem quando o domínio custom está conectado ao
+/// projeto, por isso apontar para cá funciona sem configuração extra.
 const _firebaseAuthDomain = String.fromEnvironment('FIREBASE_AUTH_DOMAIN');
 const _firebaseStorageBucket = String.fromEnvironment('FIREBASE_STORAGE_BUCKET');
 const _firebaseMeasurementId = String.fromEnvironment('FIREBASE_MEASUREMENT_ID');
