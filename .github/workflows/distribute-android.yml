@@ -1,0 +1,45 @@
+name: Distribute Android
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  distribute:
+    name: Build & Distribute Android
+    runs-on: ubuntu-latest
+    environment: github-pages
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: 3.44.9
+
+      - name: Decode Keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release --dart-define-from-file=.env.json
+
+      - name: Distribute to Firebase App Distribution
+        uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15
+        with:
+          args: appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk \
+            --app 1:169480227109:android:286f46640a25846c3c72cc \
+            --groups testadores \
+            --release-notes "Build ${{ github.sha }} (${{ github.ref_name }})"
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

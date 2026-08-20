@@ -1,0 +1,74 @@
+name: Distribute iOS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  distribute:
+    name: Build & Distribute iOS
+    runs-on: macos-latest
+    environment: github-pages
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: 3.44.9
+
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod install
+
+      - name: Decode & Import Certificate
+        env:
+          IOS_CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }}
+          IOS_CERT_PASSWORD: ${{ secrets.IOS_CERT_PASSWORD }}
+          IOS_PROVISIONING_PROFILE: ${{ secrets.IOS_PROVISIONING_PROFILE }}
+        run: |
+          # Create temp dir
+          mkdir -p ~/tmp_certs
+          
+          # Decode certificate (base64 -> .p12)
+          echo "$IOS_CERTIFICATE" | base64 --decode > ~/tmp_certs/cert.p12
+          
+          # Create keychain
+          security create-keychain -p "temp" ~/tmp_certs/build.keychain
+          security default-keychain -s ~/tmp_certs/build.keychain
+          security unlock-keychain -p "temp" ~/tmp_certs/build.keychain
+          
+          # Import certificate
+          security import ~/tmp_certs/cert.p12 -k ~/tmp_certs/build.keychain -P "$IOS_CERT_PASSWORD" -T /usr/bin/codesign
+          
+          # Decode provisioning profile
+          echo "$IOS_PROVISIONING_PROFILE" | base64 --decode > ~/tmp_certs/profile.mobileprovision
+          
+          # Install profile
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp ~/tmp_certs/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+          
+          # Verify
+          security find-identity -v -p codesigning ~/tmp_certs/build.keychain
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build IPA
+        run: flutter build ipa --release --dart-define-from-file=.env.json --export-options-plist=ios/ExportOptions.plist
+
+      - name: Distribute to Firebase App Distribution
+        uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15
+        with:
+          args: appdistribution:distribute build/ios/ipa/*.ipa \
+            --app 1:169480227109:ios:8f722638a506e0d83c72cc \
+            --groups testadores \
+            --release-notes "Build ${{ github.sha }} (${{ github.ref_name }})"
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
