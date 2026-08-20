@@ -44,6 +44,7 @@ android {
     signingConfigs {
         create("release") {
             storeFile = file("upload-keystore.jks")
+            storeType = "PKCS12"
             storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
             keyAlias = "upload"
             keyPassword = System.getenv("KEY_PASSWORD") ?: ""
