@@ -1,7 +1,3 @@
-plugins {
-    id("com.google.firebase.appdistribution") version "4.2.0" apply false
-}
-
 allprojects {
     repositories {
         google()

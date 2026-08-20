@@ -62,10 +62,6 @@ flutter {
     source = "../.."
 }
 
-firebaseAppDistribution {
-    appId = "1:169480227109:android:286f46640a25846c3c72cc"
-}
-
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
