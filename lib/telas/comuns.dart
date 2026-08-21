@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuthException;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../data/canon.dart';
 import '../data/conteudo.dart';
@@ -12,9 +13,62 @@ import '../data/modelos.dart';
 import '../data/nuvem.dart';
 import '../data/personas.dart';
 import '../data/planos_nuvem.dart';
+import '../data/recursos.dart';
 import '../data/voz.dart';
 import '../spacing.dart';
 import 'faixa.dart';
+
+/// Um [SelectionArea] com "Compartilhar" a mais no menu de seleção. O texto
+/// vira selecionável e copiável de fábrica (o próprio SelectionArea resolve
+/// isso), e o mesmo clique forte que hoje abre a seleção nativa passa a
+/// mostrar, junto com Copiar, um botão que compartilha o trecho escolhido —
+/// sem um gesto novo. Sem formatação de referência: o trecho selecionado
+/// pode ser parte de um versículo, um parágrafo do devocional ou da
+/// introdução, sem uma referência única por trás. Usada igual nas três
+/// telas de leitura (Bíblia, Devocional, Introdução).
+class AreaDeSelecaoComCompartilhar extends StatefulWidget {
+  const AreaDeSelecaoComCompartilhar({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<AreaDeSelecaoComCompartilhar> createState() =>
+      _AreaDeSelecaoComCompartilharState();
+}
+
+class _AreaDeSelecaoComCompartilharState
+    extends State<AreaDeSelecaoComCompartilhar> {
+  // SelectableRegionState não expõe o texto selecionado publicamente; captura
+  // aqui pelo onSelectionChanged, e o menu lê o valor mais recente ao montar.
+  String? _selecionado;
+
+  @override
+  Widget build(BuildContext context) {
+    return SelectionArea(
+      onSelectionChanged: (conteudo) => _selecionado = conteudo?.plainText,
+      contextMenuBuilder: (context, estado) {
+        final botoes = List.of(estado.contextMenuButtonItems);
+        final selecionado = _selecionado;
+        if (selecionado != null && selecionado.isNotEmpty) {
+          botoes.add(
+            ContextMenuButtonItem(
+              label: 'Compartilhar',
+              onPressed: () {
+                estado.hideToolbar();
+                SharePlus.instance.share(ShareParams(text: selecionado));
+              },
+            ),
+          );
+        }
+        return AdaptiveTextSelectionToolbar.buttonItems(
+          anchors: estado.contextMenuAnchors,
+          buttonItems: botoes,
+        );
+      },
+      child: widget.child,
+    );
+  }
+}
 
 /// Divulgação de que o chat responde por inteligência artificial. O mesmo
 /// texto em todo lugar em que uma IA fala: rodapé do chat, boas-vindas e
@@ -276,10 +330,7 @@ class AvisoVazio extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
-            if (acao != null) ...[
-              const SizedBox(height: Spacing.sp12),
-              acao!,
-            ],
+            if (acao != null) ...[const SizedBox(height: Spacing.sp12), acao!],
           ],
         ),
       ),
@@ -439,7 +490,12 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp8, Spacing.sp20, Spacing.sp12),
+                  padding: const EdgeInsets.fromLTRB(
+                    Spacing.sp20,
+                    Spacing.sp8,
+                    Spacing.sp20,
+                    Spacing.sp12,
+                  ),
                   child: Text('Tamanho do texto', style: tema.headlineSmall),
                 ),
                 Padding(
@@ -462,14 +518,24 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 // O efeito da escolha se vê antes de fechar a folha: o corpo
                 // de leitura escala com o tema, e a linha abaixo é a amostra.
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp12, Spacing.sp20, Spacing.sp4),
+                  padding: const EdgeInsets.fromLTRB(
+                    Spacing.sp20,
+                    Spacing.sp12,
+                    Spacing.sp20,
+                    Spacing.sp4,
+                  ),
                   child: Text(
                     'O texto de leitura fica deste tamanho.',
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp24, Spacing.sp20, Spacing.sp12),
+                  padding: const EdgeInsets.fromLTRB(
+                    Spacing.sp20,
+                    Spacing.sp24,
+                    Spacing.sp20,
+                    Spacing.sp12,
+                  ),
                   child: Text('Aparência', style: tema.headlineSmall),
                 ),
                 Padding(
@@ -489,7 +555,12 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp24, Spacing.sp20, Spacing.sp4),
+                  padding: const EdgeInsets.fromLTRB(
+                    Spacing.sp20,
+                    Spacing.sp24,
+                    Spacing.sp20,
+                    Spacing.sp4,
+                  ),
                   child: Text('Conversas', style: tema.headlineSmall),
                 ),
                 ListTile(
@@ -504,7 +575,10 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                   onTap: () async {
                     await estado.reexibirDicaDosBaloes();
                     if (!context.mounted) return;
-                    mostrarAviso(context, 'Dica dos botões de conversa reexibida.');
+                    mostrarAviso(
+                      context,
+                      'Dica dos botões de conversa reexibida.',
+                    );
                   },
                 ),
                 // Só em Android: é a única plataforma do projeto com um agendador
@@ -570,11 +644,7 @@ TimeOfDay _horaDe(int minutos) =>
 /// A mesma gramática do [BalaoDeChat] de `chat.dart`, sem a placa de nome nem
 /// a dica, que o nome da carta já nomeia.
 class RetratoDePersona extends StatelessWidget {
-  const RetratoDePersona({
-    super.key,
-    required this.persona,
-    this.tamanho = 38,
-  });
+  const RetratoDePersona({super.key, required this.persona, this.tamanho = 38});
 
   final Persona persona;
   final double tamanho;
@@ -806,7 +876,12 @@ class _SecaoDeLembretes {
     final tema = Theme.of(context).textTheme;
     return [
       Padding(
-        padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp24, Spacing.sp20, Spacing.sp4),
+        padding: const EdgeInsets.fromLTRB(
+          Spacing.sp20,
+          Spacing.sp24,
+          Spacing.sp20,
+          Spacing.sp4,
+        ),
         child: Text('Lembretes', style: tema.headlineSmall),
       ),
       SwitchListTile(
@@ -982,7 +1057,12 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                 ),
                 if (_aberta)
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(Spacing.sp16, 0, Spacing.sp16, Spacing.sp16),
+                    padding: const EdgeInsets.fromLTRB(
+                      Spacing.sp16,
+                      0,
+                      Spacing.sp16,
+                      Spacing.sp16,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1107,6 +1187,7 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
 
   @override
   Widget build(BuildContext context) {
+    if (!Recursos.ouvirTextos) return const SizedBox.shrink();
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     return ListenableBuilder(
@@ -1176,7 +1257,12 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
                         ? voz.parar
                         : () => _alternar(context, voz),
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(Spacing.sp6, Spacing.sp6, Spacing.sp16, Spacing.sp6),
+                      padding: const EdgeInsets.fromLTRB(
+                        Spacing.sp6,
+                        Spacing.sp6,
+                        Spacing.sp16,
+                        Spacing.sp6,
+                      ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -1293,11 +1379,7 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
 
   Future<void> _alternar(BuildContext context, Voz voz) async {
     try {
-      await voz.alternar(
-        widget.chave,
-        texto: widget.texto,
-        tipo: widget.tipo,
-      );
+      await voz.alternar(widget.chave, texto: widget.texto, tipo: widget.tipo);
     } on VozException catch (erro) {
       if (context.mounted) _avisarErro(context, voz, erro);
     }
@@ -1547,9 +1629,7 @@ class CartaoDeDia extends StatelessWidget {
                   Wrap(
                     spacing: Spacing.sp8,
                     runSpacing: Spacing.sp8,
-                    children: [
-                      for (final f in faixas) BotaoDeFaixa(faixa: f),
-                    ],
+                    children: [for (final f in faixas) BotaoDeFaixa(faixa: f)],
                   ),
                 ],
               ),

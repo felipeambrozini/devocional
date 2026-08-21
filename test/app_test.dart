@@ -6,6 +6,7 @@ import 'package:felipe_ambrozini/data/conteudo.dart';
 import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:felipe_ambrozini/data/personas.dart';
+import 'package:felipe_ambrozini/data/recursos.dart';
 import 'package:felipe_ambrozini/data/voz.dart';
 import 'package:felipe_ambrozini/main.dart';
 import 'package:felipe_ambrozini/telas/biblia.dart';
@@ -85,7 +86,14 @@ class _LeitorFalsoDoApp implements LeitorDeAudio {
 /// Sobe o app de verdade e confere o que aparece na tela, lendo os assets reais.
 /// É o substituto verificável de olhar o app rodando.
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    // O login de verdade nunca roda no ambiente de teste; sem isto, Conversas
+    // e os balões ficariam escondidos em todos os testes deste arquivo (ver
+    // Recursos.conversas).
+    Recursos.conversasForcado = true;
+  });
+  tearDown(() => Recursos.conversasForcado = null);
 
   Future<Estado> estadoLimpo() async =>
       Estado(await SharedPreferences.getInstance());

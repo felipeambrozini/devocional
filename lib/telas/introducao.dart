@@ -61,75 +61,81 @@ class _TelaIntroducaoState extends State<TelaIntroducao> {
               );
             }
 
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(
-                Spacing.sp20,
-                Spacing.sp16,
-                Spacing.sp20,
-                Spacing.sp40,
-              ),
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: Image.asset(
-                        capaBibliaSpurgeon(context),
-                        height: alturaCapa(context, 160),
-                        fit: BoxFit.cover,
-                        // Decorativa: o título ao lado já diz de onde o texto vem.
-                        excludeFromSemantics: true,
+            // Igual à Bíblia e ao Devocional: o texto vira selecionável e
+            // copiável, e "Compartilhar" entra no próprio menu de seleção.
+            // Ver AreaDeSelecaoComCompartilhar.
+            return AreaDeSelecaoComCompartilhar(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  Spacing.sp20,
+                  Spacing.sp16,
+                  Spacing.sp20,
+                  Spacing.sp40,
+                ),
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: Image.asset(
+                          capaBibliaSpurgeon(context),
+                          height: alturaCapa(context, 160),
+                          fit: BoxFit.cover,
+                          // Decorativa: o título ao lado já diz de onde o texto vem.
+                          excludeFromSemantics: true,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: Spacing.sp16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(introducao.livro, style: tema.displayMedium),
-                          const SizedBox(height: Spacing.sp4),
-                          Text(
-                            livroPorSlug(slug)!.tituloFormal,
-                            style: tema.bodySmall?.copyWith(
-                              fontStyle: FontStyle.italic,
-                              color: cor.onSurfaceVariant,
+                      const SizedBox(width: Spacing.sp16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(introducao.livro, style: tema.displayMedium),
+                            const SizedBox(height: Spacing.sp4),
+                            Text(
+                              livroPorSlug(slug)!.tituloFormal,
+                              style: tema.bodySmall?.copyWith(
+                                fontStyle: FontStyle.italic,
+                                color: cor.onSurfaceVariant,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: Spacing.sp8),
-                          Text('Introdução', style: tema.titleSmall),
-                        ],
+                            const SizedBox(height: Spacing.sp8),
+                            Text('Introdução', style: tema.titleSmall),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: Spacing.sp16),
-                const Filete(largura: 64),
-                const SizedBox(height: Spacing.sp14),
-                // A voz de Spurgeon lê a introdução inteira, do título à
-                // frase; tocar de novo para a leitura.
-                BotaoDeVoz(
-                  chave: 'introducao:$slug',
-                  texto: textoDeIntroducao(introducao),
-                  tipo: TipoConteudoAudio.introducao,
-                  referencia: 'Introdução de ${introducao.livro}',
-                ),
-                const SizedBox(height: Spacing.sp24),
-                for (final (titulo, corpo) in introducao.secoes) ...[
-                  Text(titulo, style: tema.headlineSmall),
-                  const SizedBox(height: Spacing.sp10),
-                  // Os parágrafos vêm separados por linha em branco no JSON.
-                  for (final paragrafo in corpo.split('\n\n')) ...[
-                    Text(
-                      paragrafo,
-                      style: tema.bodyLarge?.copyWith(height: 1.7),
-                    ),
-                    const SizedBox(height: Spacing.sp12),
-                  ],
+                    ],
+                  ),
                   const SizedBox(height: Spacing.sp16),
+                  const Filete(largura: 64),
+                  const SizedBox(height: Spacing.sp14),
+                  // A voz de Spurgeon lê a introdução inteira, do título à
+                  // frase; tocar de novo para a leitura.
+                  BotaoDeVoz(
+                    chave: 'introducao:$slug',
+                    texto: textoDeIntroducao(introducao),
+                    tipo: TipoConteudoAudio.introducao,
+                    referencia: 'Introdução de ${introducao.livro}',
+                  ),
+                  const SizedBox(height: Spacing.sp24),
+                  for (final (titulo, corpo) in introducao.secoes) ...[
+                    Text(titulo, style: tema.headlineSmall),
+                    const SizedBox(height: Spacing.sp10),
+                    // Os parágrafos vêm separados por linha em branco no JSON.
+                    for (final paragrafo in corpo.split('\n\n')) ...[
+                      Text(
+                        paragrafo,
+                        style: tema.bodyLarge?.copyWith(height: 1.7),
+                      ),
+                      const SizedBox(height: Spacing.sp12),
+                    ],
+                    const SizedBox(height: Spacing.sp16),
+                  ],
+                  if (introducao.frase.isNotEmpty)
+                    _Frase(introducao: introducao),
                 ],
-                if (introducao.frase.isNotEmpty) _Frase(introducao: introducao),
-              ],
+              ),
             );
           },
         ),

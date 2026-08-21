@@ -175,10 +175,7 @@ class _TelaDevocionalState extends State<TelaDevocional> {
             Spacing.sp32,
           ),
           children: [
-            _AlternadorDeLeitura(
-              atual: _leitura,
-              ao: (l) => _irPara(l, _data),
-            ),
+            _AlternadorDeLeitura(atual: _leitura, ao: (l) => _irPara(l, _data)),
             const SizedBox(height: Spacing.sp16),
             CarregaUmaVez<Devocional?>(
               chave:
@@ -330,71 +327,75 @@ class _CartaoDeLeitura extends StatelessWidget {
     );
     return Cartao(
       padding: const EdgeInsets.all(Spacing.sp20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (capa != null) ...[
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: Image.asset(
-                    capa!,
-                    height: alturaCapa(context, 130),
-                    fit: BoxFit.cover,
-                    excludeFromSemantics: true,
+      // Igual à Bíblia: o texto vira selecionável e copiável, e "Compartilhar"
+      // entra no próprio menu de seleção. Ver AreaDeSelecaoComCompartilhar.
+      child: AreaDeSelecaoComCompartilhar(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (capa != null) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: Image.asset(
+                      capa!,
+                      height: alturaCapa(context, 130),
+                      fit: BoxFit.cover,
+                      excludeFromSemantics: true,
+                    ),
+                  ),
+                  const SizedBox(width: Spacing.sp14),
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(titulo, style: tema.headlineMedium),
+                      // A citação vem alinhada embaixo do título, não embaixo da
+                      // capa, e o nome do livro fica ao lado do fim da citação
+                      // (não numa linha própria embaixo), como uma epígrafe
+                      // seguida da atribuição. Mais de uma linha no raro dia com
+                      // mais de um versículo-base.
+                      if (spans.isNotEmpty) ...[
+                        const SizedBox(height: Spacing.sp10),
+                        Text.rich(TextSpan(children: spans)),
+                      ],
+                    ],
                   ),
                 ),
-                const SizedBox(width: Spacing.sp14),
               ],
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(titulo, style: tema.headlineMedium),
-                    // A citação vem alinhada embaixo do título, não embaixo da
-                    // capa, e o nome do livro fica ao lado do fim da citação
-                    // (não numa linha própria embaixo), como uma epígrafe
-                    // seguida da atribuição. Mais de uma linha no raro dia com
-                    // mais de um versículo-base.
-                    if (spans.isNotEmpty) ...[
-                      const SizedBox(height: Spacing.sp10),
-                      Text.rich(TextSpan(children: spans)),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: Spacing.sp14),
-          // A linha dourada só separa a citação do comentário, por isso vem
-          // depois dela, não antes.
-          const Filete(),
-          const SizedBox(height: Spacing.sp14),
-          BotaoDeVoz(
-            chave: vozChave,
-            texto: vozTexto,
-            tipo: tipo,
-            referencia: vozReferencia,
-          ),
-          const SizedBox(height: Spacing.sp14),
-          Text(texto, style: tema.bodyLarge?.copyWith(height: 1.7)),
-          const SizedBox(height: Spacing.sp8),
-          Center(
-            child: Image.asset(
-              'assets/images/assinatura_spurgeon.webp',
-              height: 40,
-              semanticLabel: 'Assinatura de Charles Spurgeon',
-              // A imagem é tinta chapada num tom só, o próprio dourado claro do
-              // tema escuro, e sobre pergaminho ela sumiria. Como é de uma cor
-              // só, tingir o mesmo arquivo pelo tema resolve, e evita ter duas
-              // versões do asset para manter em sincronia.
-              color: cor.secondary,
-              colorBlendMode: BlendMode.srcIn,
             ),
-          ),
-        ],
+            const SizedBox(height: Spacing.sp14),
+            // A linha dourada só separa a citação do comentário, por isso vem
+            // depois dela, não antes.
+            const Filete(),
+            const SizedBox(height: Spacing.sp14),
+            BotaoDeVoz(
+              chave: vozChave,
+              texto: vozTexto,
+              tipo: tipo,
+              referencia: vozReferencia,
+            ),
+            const SizedBox(height: Spacing.sp14),
+            Text(texto, style: tema.bodyLarge?.copyWith(height: 1.7)),
+            const SizedBox(height: Spacing.sp8),
+            Center(
+              child: Image.asset(
+                'assets/images/assinatura_spurgeon.webp',
+                height: 40,
+                semanticLabel: 'Assinatura de Charles Spurgeon',
+                // A imagem é tinta chapada num tom só, o próprio dourado claro do
+                // tema escuro, e sobre pergaminho ela sumiria. Como é de uma cor
+                // só, tingir o mesmo arquivo pelo tema resolve, e evita ter duas
+                // versões do asset para manter em sincronia.
+                color: cor.secondary,
+                colorBlendMode: BlendMode.srcIn,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

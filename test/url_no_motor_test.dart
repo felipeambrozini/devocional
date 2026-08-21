@@ -1,5 +1,6 @@
 import 'package:felipe_ambrozini/data/conteudo.dart';
 import 'package:felipe_ambrozini/data/estado.dart';
+import 'package:felipe_ambrozini/data/recursos.dart';
 import 'package:felipe_ambrozini/main.dart';
 import 'package:felipe_ambrozini/telas/chat.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +14,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// (o que o motor web transforma em history.pushState/replaceState). Sem
 /// navegador, é a prova mais próxima de "a barra de endereço vai mudar?".
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    // O login de verdade nunca roda no ambiente de teste; sem isto, o balão
+    // que este teste toca ficaria escondido (ver Recursos.conversas).
+    Recursos.conversasForcado = true;
+  });
+  tearDown(() => Recursos.conversasForcado = null);
 
   Future<Estado> estadoLimpo() async =>
       Estado(await SharedPreferences.getInstance());

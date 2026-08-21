@@ -1,5 +1,6 @@
 import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/data/lembretes.dart';
+import 'package:felipe_ambrozini/data/recursos.dart';
 import 'package:felipe_ambrozini/main.dart';
 import 'package:felipe_ambrozini/telas/chat.dart';
 import 'package:felipe_ambrozini/telas/comuns.dart';
@@ -46,7 +47,12 @@ void main() {
       'baloes_tooltip_dispensado': true,
     });
     Lembretes.instancia = _LembretesFalsas();
+    // Estes testes exercitam o recurso em si, não a restrição por e-mail: o
+    // login de verdade nunca roda no ambiente de teste (ver Recursos).
+    Recursos.conversasForcado = true;
   });
+
+  tearDown(() => Recursos.conversasForcado = null);
 
   testWidgets(
     'contador sobe ao abrir a folha e continua ao abrir o seletor de horário',

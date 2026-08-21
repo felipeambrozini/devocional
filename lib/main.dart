@@ -18,6 +18,7 @@ import 'data/modelos.dart';
 import 'data/nuvem.dart';
 import 'data/personas.dart';
 import 'data/planos_nuvem.dart';
+import 'data/recursos.dart';
 import 'data/registro.dart';
 import 'data/voz.dart';
 import 'telas/biblia.dart';
@@ -240,6 +241,16 @@ final _escoposDasAbas = [
   for (final d in _destinos) FocusScopeNode(debugLabel: d.rotulo),
 ];
 
+/// Os destinos que aparecem na navegação nesta sessão: Conversas some
+/// enquanto o recurso estiver restrito (ver [Recursos.conversas]) e a conta
+/// aberta não for a autorizada. As rotas continuam existindo (ver
+/// [_router]) para quem chega direto por link — só a entrada pela barra e
+/// pelo trilho é que se esconde.
+List<_Destino> get _destinosVisiveis => [
+  for (final d in _destinos)
+    if (d.caminho != 'conversas' || Recursos.conversas) d,
+];
+
 /// Cada aba com o próprio caminho (`/hoje`, `/biblia`, `/devocional`,
 /// `/plano`, `/notas`, `/conversas`), para abrir direto por link e sobreviver
 /// a um F5 — o Firebase Hosting devolve o index.html para qualquer caminho sob
@@ -264,7 +275,18 @@ final _escoposDasAbas = [
 final _router = GoRouter(
   navigatorKey: navigatorKey,
   initialLocation: '/hoje',
-  redirect: (context, state) => state.uri.path == '/' ? '/hoje' : null,
+  redirect: (context, state) {
+    if (state.uri.path == '/') return '/hoje';
+    // Sem o recurso liberado, nem um link direto a Conversas ou a uma
+    // persona deve abrir o chat — a mesma restrição que esconde a aba e
+    // os balões.
+    const caminhosDeConversas = ['/conversas', '/charles-spurgeon', '/felipe-ambrozini'];
+    if (!Recursos.conversas &&
+        caminhosDeConversas.any((c) => state.uri.path.startsWith(c))) {
+      return '/hoje';
+    }
+    return null;
+  },
   observers: [_observadorDeCamadas, _observadorDaVoz],
   errorBuilder: (context, state) {
     // Rota desconhecida (link velho, digitado ou com caminho corrompido):
@@ -509,7 +531,17 @@ class Moldura extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Reage ao login: Conversas pode aparecer ou sumir da navegação assim
+    // que a conta autorizada entra ou sai, sem esperar uma troca de aba.
+    return ListenableBuilder(
+      listenable: Nuvem.instancia,
+      builder: (context, _) => _conteudo(context),
+    );
+  }
+
+  Widget _conteudo(BuildContext context) {
     final largo = MediaQuery.sizeOf(context).width >= 720;
+    final destinosVisiveis = _destinosVisiveis;
 
     // A LarguraDeLeitura não fica aqui. Envolvendo o shell inteiro, ela prendia
     // também a AppBar e a régua de meses do Plano numa faixa de 720 px no meio da
@@ -525,10 +557,13 @@ class Moldura extends StatelessWidget {
       return Scaffold(
         body: navigationShell,
         bottomNavigationBar: NavigationBar(
-          selectedIndex: navigationShell.currentIndex,
+          selectedIndex: navigationShell.currentIndex.clamp(
+            0,
+            destinosVisiveis.length - 1,
+          ),
           onDestinationSelected: _irParaAba,
           destinations: [
-            for (final d in _destinos)
+            for (final d in destinosVisiveis)
               NavigationDestination(
                 icon: Icon(d.icone),
                 selectedIcon: Icon(d.iconeAtivo),
@@ -542,7 +577,7 @@ class Moldura extends StatelessWidget {
     // Em telas largas os balões de conversa substituem a aba: o rail omite
     // Conversas para não duplicar a entrada do chat.
     final destinosDoRail = [
-      for (final d in _destinos)
+      for (final d in destinosVisiveis)
         if (d.mostrarNoRail) d,
     ];
 
@@ -639,9 +674,9 @@ class _ComBaloes extends StatelessWidget {
   Widget build(BuildContext context) {
     final estado = EscopoDoEstado.de(context);
     return ListenableBuilder(
-      listenable: camadasFlutuantes,
+      listenable: Listenable.merge([camadasFlutuantes, Nuvem.instancia]),
       builder: (context, _) {
-        if (!estado.baloesVisiveis) return child;
+        if (!estado.baloesVisiveis || !Recursos.conversas) return child;
         return LayoutBuilder(
           builder: (context, constraints) {
             // Tela estreita: os retratos estão na faixa da Moldura, não aqui.

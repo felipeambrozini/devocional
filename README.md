@@ -265,6 +265,20 @@ motivo novo.
   própria participação, para quem só entrou no plano de outra pessoa. Os dois
   ficam disponíveis pela lixeira no cartão de "Meus Planos" e pelo menu
   dentro do plano.
+- **Funcionalidades se ligam/desligam por uma constante, não por servidor de
+  configuração** (20/08/2026): `lib/data/recursos.dart` reúne os
+  interruptores — `planoPersonalizado` (aba "Meus planos"), `ouvirTextos`
+  (`BotaoDeVoz`, único ponto de entrada da leitura em voz alta) e `conversas`
+  (aba Conversas, os balões flutuantes e as rotas `/conversas`,
+  `/charles-spurgeon`, `/felipe-ambrozini`). Os dois primeiros são `const`;
+  `conversas` compara o e-mail da conta aberta (`Nuvem.email`) contra um
+  e-mail fixo, porque o chat chama a API paga do Gemini e abrir para todo
+  mundo antes da hora custaria sem controle. Sem `firebase_remote_config`:
+  editar um valor e reimplantar já é o "ligar/desligar" possível para um app
+  de usuário único. `Recursos.conversasForcado` (mesmo padrão de
+  `Lembretes.instancia`, mutável) existe só para teste — o login de verdade
+  nunca roda no ambiente de teste, e sem o override os testes de Conversas e
+  dos balões não veriam o recurso.
 - **`web/index.html` tem fundo marrom e um marcador de carregamento**, retirado
   no evento `flutter-first-frame` (o Flutter acrescenta a `flutter-view` ao
   body em vez de limpar). As duas cores do fundo são por
@@ -277,6 +291,17 @@ motivo novo.
   repositório. Fixado em `.fvmrc` e no `deploy-web.yml`
   (`subosito/flutter-action@v2`, `flutter-version: 3.44.9`). **Atualizar nos
   dois lugares ao mesmo tempo** e rodar a suíte local antes de comitar.
+- **`AreaDeSelecaoComCompartilhar` (`lib/telas/comuns.dart`, 20/08/2026)
+  envolve `SelectionArea` e acrescenta "Compartilhar" ao menu de seleção**,
+  usada igual na Bíblia, no Devocional e na Introdução: o texto vira
+  selecionável e copiável de fábrica, e o mesmo clique forte que abre a
+  seleção nativa ganha um botão a mais para compartilhar o trecho escolhido
+  (via `share_plus`, sem formatação de referência — a seleção pode não bater
+  com um versículo inteiro). `SelectableRegionState` não expõe o texto
+  selecionado publicamente; o widget captura pelo `onSelectionChanged` do
+  `SelectionArea` e lê o valor mais recente ao montar o menu. Não substitui a
+  folha de ações do versículo (Favoritar, Copiar, Compartilhar, Anotar; ver
+  abaixo), que continua no toque sobre a linha.
 
 ### Lembretes diários (Android)
 

@@ -392,7 +392,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
                       // continua sendo o caminho.
                       final corpoLeitura = _semGestoDeToque
                           ? leitor
-                          : SelectionArea(child: leitor);
+                          : AreaDeSelecaoComCompartilhar(child: leitor);
                       // Alça de arraste na borda esquerda (mobile): indica que
                       // deslizar horizontalmente troca de capítulo. O tooltip
                       // de primeiro uso só some quando o gesto acontece de
@@ -676,7 +676,10 @@ class _LinhaDeVersiculo extends StatelessWidget {
           // 12 e não 7: com bodyLarge em 17 e altura 1.6, um versículo de uma
           // linha ficava em cerca de 41 dp de alvo, abaixo dos 48 dp mínimos.
           // Os curtos são justamente os mais marcados.
-          padding: const EdgeInsets.symmetric(vertical: Spacing.sp12, horizontal: Spacing.sp6),
+          padding: const EdgeInsets.symmetric(
+            vertical: Spacing.sp12,
+            horizontal: Spacing.sp6,
+          ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             color: marcacao != null
@@ -769,7 +772,12 @@ Future<void> _abrirAcoesDoVersiculo(
             mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp20, Spacing.sp8, Spacing.sp20),
+                padding: const EdgeInsets.fromLTRB(
+                  Spacing.sp20,
+                  Spacing.sp20,
+                  Spacing.sp8,
+                  Spacing.sp20,
+                ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1055,40 +1063,45 @@ class _SeletorDeLivroState extends State<_SeletorDeLivro> {
           SingleChildScrollView(
             child: Column(
               children: [
-                  const SizedBox(height: Spacing.sp12),
-                  Text(
-                    escolhido == null ? 'Escolha o livro' : escolhido.nome,
-                    style: Theme.of(context).textTheme.headlineSmall,
+                const SizedBox(height: Spacing.sp12),
+                Text(
+                  escolhido == null ? 'Escolha o livro' : escolhido.nome,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: Spacing.sp8),
+                const Filete(),
+                // Busca só na etapa de livros: na grade de capítulos o texto
+                // já é o que se procura.
+                if (escolhido == null) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      Spacing.sp16,
+                      Spacing.sp10,
+                      Spacing.sp16,
+                      Spacing.sp4,
+                    ),
+                    child: TextField(
+                      controller: _controle,
+                      onChanged: (v) => setState(() => _filtro = v.trim()),
+                      decoration: const InputDecoration(
+                        hintText: 'Buscar livro',
+                        prefixIcon: Icon(Icons.search),
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: Spacing.sp8),
-                  const Filete(),
-                  // Busca só na etapa de livros: na grade de capítulos o texto
-                  // já é o que se procura.
-                  if (escolhido == null) ...[
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(Spacing.sp16, Spacing.sp10, Spacing.sp16, Spacing.sp4),
-                      child: TextField(
-                        controller: _controle,
-                        onChanged: (v) => setState(() => _filtro = v.trim()),
-                        decoration: const InputDecoration(
-                          hintText: 'Buscar livro',
-                          prefixIcon: Icon(Icons.search),
-                        ),
-                      ),
-                    ),
-                  ],
-                  if (escolhido != null)
-                    Padding(
-                      padding: const EdgeInsets.all(Spacing.sp8),
-                      child: TextButton.icon(
-                        onPressed: () => setState(() => _escolhido = null),
-                        icon: const Icon(Icons.arrow_back),
-                        label: const Text('Todos os livros'),
-                      ),
-                    ),
                 ],
-              ),
+                if (escolhido != null)
+                  Padding(
+                    padding: const EdgeInsets.all(Spacing.sp8),
+                    child: TextButton.icon(
+                      onPressed: () => setState(() => _escolhido = null),
+                      icon: const Icon(Icons.arrow_back),
+                      label: const Text('Todos os livros'),
+                    ),
+                  ),
+              ],
             ),
+          ),
           Expanded(
             child: escolhido == null
                 ? _ListaDeLivros(
@@ -1139,7 +1152,12 @@ class _ListaDeLivros extends StatelessWidget {
         children: [
           if (achados.isEmpty)
             Padding(
-              padding: const EdgeInsets.fromLTRB(Spacing.sp4, Spacing.sp24, Spacing.sp4, Spacing.sp8),
+              padding: const EdgeInsets.fromLTRB(
+                Spacing.sp4,
+                Spacing.sp24,
+                Spacing.sp4,
+                Spacing.sp8,
+              ),
               child: Text(
                 'Nenhum livro com "$filtro".',
                 style: Theme.of(context).textTheme.bodyMedium,
@@ -1170,7 +1188,12 @@ class _ListaDeLivros extends StatelessWidget {
   }
 
   Widget _tituloDeSecao(BuildContext context, String texto) => Padding(
-    padding: const EdgeInsets.fromLTRB(Spacing.sp4, Spacing.sp12, Spacing.sp4, Spacing.sp8),
+    padding: const EdgeInsets.fromLTRB(
+      Spacing.sp4,
+      Spacing.sp12,
+      Spacing.sp4,
+      Spacing.sp8,
+    ),
     child: Text(texto, style: Theme.of(context).textTheme.titleSmall),
   );
 
@@ -1275,7 +1298,10 @@ class _BarraDeCapitulo extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: Spacing.sp12, vertical: Spacing.sp4),
+        padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.sp12,
+          vertical: Spacing.sp4,
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [

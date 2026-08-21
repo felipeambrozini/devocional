@@ -69,6 +69,9 @@ vitoriana dele, tratando o leitor por "tu".
 - Favoritos, notas, copiar e compartilhar por versículo; busca em duas abas
   (Bíblia e devocionais); a busca das marcações filtra referência e nota, não
   o corpo do versículo (deliberado).
+- Texto selecionável e copiável na Bíblia, no Devocional e na Introdução; o
+  menu de seleção (o clique forte que já abre a seleção) ganha um botão de
+  Compartilhar para o trecho escolhido.
 - Layout responsivo: barra inferior no celular, trilho lateral a partir de
   720px; gesto de deslizar troca capítulo no celular, setas na web.
 - Lembretes inexatos (sem permissão de alarme exato), canal com importância

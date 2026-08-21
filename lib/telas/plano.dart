@@ -7,6 +7,7 @@ import '../data/estado.dart';
 import '../data/modelos.dart';
 import '../data/nuvem.dart';
 import '../data/planos.dart';
+import '../data/recursos.dart';
 import '../spacing.dart';
 import 'comuns.dart';
 import 'meu_plano.dart';
@@ -30,18 +31,30 @@ class _TelaPlanoState extends State<TelaPlano> {
   Widget build(BuildContext context) {
     final estado = EscopoDoEstado.de(context);
 
+    final acaoDeAjustes = IconButton(
+      tooltip: 'Tamanho do texto e aparência',
+      icon: const Icon(Icons.tune),
+      onPressed: () => ajustesDeLeitura(context, estado),
+    );
+
+    // Sem plano personalizado, a tela não tem o que dividir em abas: só o
+    // cronograma anual, igual a antes desta funcionalidade existir.
+    if (!Recursos.planoPersonalizado) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Plano'),
+          actions: [acaoDeAjustes],
+        ),
+        body: _AbaDoCronograma(hoje: widget.hoje),
+      );
+    }
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Plano'),
-          actions: [
-            IconButton(
-              tooltip: 'Tamanho do texto e aparência',
-              icon: const Icon(Icons.tune),
-              onPressed: () => ajustesDeLeitura(context, estado),
-            ),
-          ],
+          actions: [acaoDeAjustes],
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Cronograma'),
