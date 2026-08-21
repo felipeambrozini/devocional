@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuthException;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
@@ -14,6 +15,7 @@ import '../data/nuvem.dart';
 import '../data/personas.dart';
 import '../data/planos_nuvem.dart';
 import '../data/recursos.dart';
+import '../data/registro.dart';
 import '../data/voz.dart';
 import '../spacing.dart';
 import 'faixa.dart';
@@ -842,19 +844,29 @@ Future<bool> sairDoPlano(
 Future<void> entrarNaConta(BuildContext context, Nuvem nuvem) async {
   try {
     await nuvem.entrar();
-  } on FirebaseAuthException catch (erro) {
+  } on FirebaseAuthException catch (erro, pilha) {
+    if (erro.code == 'popup-closed-by-user') {
+      if (context.mounted) mostrarAviso(context, 'Login cancelado.');
+      return;
+    }
+    Registro.erro('entrarNaConta', erro, pilha);
     if (!context.mounted) return;
+    // "Navegador"/"janelas" só faz sentido no popup/redirect da web — no
+    // fluxo nativo (Android/iOS) o `FirebaseAuthException` vem de outra
+    // causa (credencial inválida, rede, App Check), e a mensagem de popup
+    // só confundiria.
     mostrarAviso(
       context,
-      erro.code == 'popup-closed-by-user'
-          ? 'Login cancelado.'
-          : 'Não foi possível entrar. Verifique se o navegador permite '
-                'janelas deste site.',
+      kIsWeb
+          ? 'Não foi possível entrar. Verifique se o navegador permite '
+                'janelas deste site.'
+          : 'Não foi possível entrar. Tente novamente.',
     );
-  } catch (_) {
+  } catch (erro, pilha) {
     // Qualquer outra falha (Firebase sem inicializar, sem rede, App Check
     // recusando o token) não pode deixar o botão "Entrar" sem reação
     // nenhuma: melhor um aviso genérico do que o toque parecer ignorado.
+    Registro.erro('entrarNaConta', erro, pilha);
     if (!context.mounted) return;
     mostrarAviso(context, 'Não foi possível entrar. Tente novamente.');
   }
