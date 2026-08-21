@@ -57,8 +57,14 @@ graphify-out/
 
 # Configuração local de agentes de IA (Claude Code, Copilot): skills, hooks e
 # debug config de máquina, não faz parte do app.
+#
+# Escopo em .github/hooks/ e .github/skills/, não a pasta toda: um `.github/`
+# solto também ignorava .github/workflows/ — arquivo de workflow novo ficava
+# invisível pro git, e só os que já existiam antes desta linha continuavam
+# rastreados.
 .claude/
-.github/
+.github/hooks/
+.github/skills/
 .agents/
 .codex/
 .impeccable/

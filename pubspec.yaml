@@ -27,10 +27,12 @@ dependencies:
   # Folha de compartilhar nativa. Android e web de uma vez, sem
   # ramificação de plataforma — mesma razão do shared_preferences acima.
   share_plus: ^13.3.0
-  # Lembrete diário. Só usado em Android (ver Lembretes em
-  # lib/data/lembretes.dart); na web o app nem chama o plugin.
-  flutter_local_notifications: ^22.3.0
-  timezone: ^0.11.1
+  # Lembrete diário (ver Lembretes em lib/data/lembretes.dart): token do
+  # aparelho para o push do servidor decidir quem avisar, e recebimento do
+  # push em si, em Android e web.
+  firebase_messaging: ^16.5.0
+  # Só para detectar o fuso do aparelho e gravar junto com o token — o
+  # cálculo de horário em si é todo do lado do servidor (tool/enviar_lembretes.dart).
   flutter_timezone: ^5.1.0
   # Abre o link do canal (YouTube, Instagram) na tela Sobre no navegador do
   # sistema. Mesma família de pacotes do share_plus: mantido pela equipe do
@@ -74,6 +76,13 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
   flutter_native_splash: ^2.4.8
+  # Autenticação da conta de serviço no script do push de lembretes
+  # (tool/enviar_lembretes.dart, rodado pelo GitHub Actions) — nunca importado
+  # pelo app, por isso dev_dependency.
+  googleapis_auth: ^2.3.3
+  # Usado por tool/enviar_lembretes.dart para calcular a hora local de cada
+  # fuso salvo; sem uso dentro do app em si (que só grava o nome do fuso).
+  timezone: ^0.11.1
 
 # Ícone do app e favicon, montados com a marca "Devocional" (fonte Cinzel,
 # mesmo estilo do web/og.png) sobre o marrom do tema. As fontes ficam em
@@ -86,9 +95,10 @@ flutter_launcher_icons:
   android: true
   ios: true
   remove_alpha_ios: true
-  # Nunca aparece: `icone_adaptativo.png` é opaco de ponta a ponta (a marca já
-  # carrega o próprio fundo escuro), então o Android nunca chega a desenhar
-  # esta cor por baixo. Mantido só porque o campo é obrigatório.
+  # `icone_adaptativo.png` é transparente (só o texto, em bronze); esta cor
+  # aparece por trás dela no tema claro. O tema escuro usa
+  # values-night/colors.xml e a camada dourada em drawable-night-*/, ambas
+  # geradas por tools/icones.py --corrigir.
   adaptive_icon_background: "#F7F1E3"
   adaptive_icon_foreground: assets/icone/icone_adaptativo.png
   web:

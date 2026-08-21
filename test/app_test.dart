@@ -75,6 +75,11 @@ class _LeitorFalsoDoApp implements LeitorDeAudio {
     encerrar();
   }
 
+  /// O botão de pausa manual: mesmo mecanismo da pausa de fora, só que
+  /// chamado pelo [Voz] em vez de simulado direto pelo teste.
+  @override
+  Future<void> pausar() async => pausarDeFora();
+
   @override
   Stream<Duration> get posicao => Stream<Duration>.value(Duration.zero);
 
@@ -1454,8 +1459,43 @@ void main() {
           matching: find.byTooltip('Encerrar a leitura'),
         ),
         findsOneWidget,
-        reason: 'tocando, a barra de cima vira o botão de parar',
+        reason: 'tocando, a barra de cima ganha o botão de parar de vez',
       );
+      expect(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.byTooltip('Pausar a leitura'),
+        ),
+        findsOneWidget,
+        reason: 'tocando, a barra de cima também oferece pausar, não só '
+            'parar',
+      );
+
+      // O anel da barra pausa como o botão da pílula: o mesmo mecanismo da
+      // pausa de fora, só que pedido daqui.
+      leitor.posicaoAtual = const Duration(minutes: 1);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.byTooltip('Pausar a leitura'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(Voz.instancia.pausado, isTrue,
+          reason: 'o anel de pausar leva ao mesmo estado "Pausado" da pílula');
+      expect(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.byTooltip('Retomar a leitura'),
+        ),
+        findsOneWidget,
+        reason: 'pausada pela barra, o anel volta a oferecer retomar',
+      );
+
+      // Retoma pela pílula para o resto do teste seguir como antes.
+      await tester.tap(find.text('Pausado. Toque para retomar.'));
+      await tester.pumpAndSettle();
+      expect(Voz.instancia.tocando, isTrue);
       expect(
         find.descendant(
           of: find.byType(BotaoDeVoz),

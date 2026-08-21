@@ -44,9 +44,10 @@ mesmo código).
 - **Busca** no texto da Bíblia e nos devocionais, em duas abas.
 - **Tamanho do texto** ajustável e **tema claro ou escuro**, pela barra do leitor
   ou do devocional. O padrão segue o aparelho, e dá para fixar um dos dois.
-- **Lembrete diário**, opcional, em Android: notificação de Manhã e
-  Promessas de Deus e outra de Noite, cada uma num horário ajustável, abrindo a
-  leitura certa ao ser tocada.
+- **Lembrete diário**, opcional, em Android e web: notificação de Manhã e
+  Promessas de Deus e outra de Noite, cada uma num horário ajustável, com o
+  versículo do dia no corpo da notificação, abrindo a leitura certa ao ser
+  tocada.
 - Layout responsivo: barra de navegação embaixo no celular, trilho lateral em
   janela larga (a partir de 720px), coluna de leitura com largura confortável
   e centralizada no desktop.
@@ -83,9 +84,11 @@ plano compartilhado.
   igual em todas as plataformas, sem banco. Na web, quem
   entra com a conta Google também espelha favoritos, notas e progresso num
   documento do Firestore — ver a conta na nuvem, acima.
-- `share_plus` para compartilhar um versículo. `flutter_local_notifications` +
-  `timezone` + `flutter_timezone` para o lembrete diário, só em Android
-  (ver `lembretesSuportados` em `lib/data/lembretes.dart`).
+- `share_plus` para compartilhar um versículo. `firebase_messaging` +
+  `flutter_timezone` para o lembrete diário, em Android e web — o horário é
+  decidido do lado do servidor, não agendado no aparelho (ver
+  `lembretesSuportados` em `lib/data/lembretes.dart` e a seção Lembretes
+  diários abaixo).
 - `go_router` para as rotas por aba, com `StatefulShellRoute.indexedStack` (a
   `Moldura` continua preservando a rolagem e o capítulo aberto de cada aba,
   como o `IndexedStack` antigo fazia).
@@ -183,8 +186,9 @@ motivo novo.
 - **Cores de marcação** — mais taxonomia do que um leitor só precisa.
 - **Widget na tela inicial** — código nativo nas duas plataformas para pouco
   retorno.
-- **Lembretes em web e desktop** — falta infraestrutura confiável para o app
-  fechado disparar algo (ver lembretes abaixo).
+- **Lembretes em iOS** — ainda não configurado: exigiria a chave APNs
+  cadastrada no Console do Firebase, que este projeto não tem. Android e web
+  já recebem lembrete por push (ver abaixo); só faltou esse terceiro.
 - **Offline de verdade na web** — investigado e recusado: o Flutter 3.44
   removeu o cache automático do service worker gerado e o CanvasKit carrega de
   CDN por padrão; fazer direito exigiria um service worker próprio contra um
@@ -304,35 +308,70 @@ motivo novo.
   nativas), e Compartilhar continua exclusivo da folha de ações do versículo
   (Favoritar, Copiar, Compartilhar, Anotar; ver abaixo), aberta pelo toque na
   linha.
+- **Os dois players de voz separam pausar de parar** (`BotaoDeVoz` e
+  `IndicadorDeVozNaBarra`, `lib/telas/comuns.dart`, 21/08/2026): tocando, a
+  pílula pausa pelo corpo (ícone de pausa) e encerra pelo X ao lado; o anel
+  da barra de cima (Bíblia, introdução e Sobre) faz o mesmo — pausa pelo anel
+  e encerra por um segundo ícone ao lado, sem anel. Antes só havia o parar, e
+  um toque no meio da leitura perdia a posição. Pausada (nos dois lugares),
+  tocar de novo retoma de onde parou: o botão de pausa manual (`Voz.pausar`)
+  usa o mesmo mecanismo já existente da pausa de fora (chamada, perda de foco
+  de áudio) — o player completa o `play()` pausado em vez de parado, e `Voz`
+  marca a sessão como "Pausado" sozinho, sem distinguir a origem. Corrigido
+  junto: `alternar()` e `retomarDaPausa()` retomavam sem limpar
+  `_posicaoDaPausa`, e um `parar()` logo depois (o deslize de capítulo, por
+  exemplo) lia a posição da pausa antiga em vez da posição real da leitura em
+  andamento.
 
-### Lembretes diários (Android)
+### Lembretes diários (Android e web)
 
-- Só em Android (`lembretesSuportados` em `lib/data/lembretes.dart`).
-- **Notificação inexata** (`AndroidScheduleMode.inexactAllowWhileIdle`), não
-  exata: exata exigiria `SCHEDULE_EXACT_ALARM`, que no Android 14 o usuário
-  precisa conceder à mão.
+Por push do servidor, não agendamento local — nem Android nem web têm um
+"app fechado" com agendador confiável e conteúdo dinâmico ao mesmo tempo (ver
+o comentário de `lembretesSuportados` em `lib/data/lembretes.dart`). O
+aparelho só grava token + horário; quem decide e dispara é
+`tool/enviar_lembretes.dart`, rodado a cada 5 min por
+`.github/workflows/lembretes-push.yml`.
+
 - **`Lembretes` é interface, não classe** (`Lembretes.instancia`, mutável), com
-  implementação real e falsa (`_LembretesFalsas` em `test/lembretes_test.dart`).
-- **`tz.local` é UTC por padrão** no pacote `timezone`; `flutter_timezone` +
-  `tz.setLocalLocation(...)` escolhem o fuso. Se a detecção falhar, cai em UTC
-  em vez de travar.
-- **O build do Android precisa de `isCoreLibraryDesugaringEnabled` e
-  `coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")`** — sem
-  isso o Gradle recusa o build.
-- **`ScheduledNotificationReceiver` é declarado à mão no manifesto** — desde a
-  v16 do plugin ele não é mais declarado pelo AAR, e sem o receptor o
-  `AlarmManager` agendava um `PendingIntent` para componente inexistente (sem
-  exceção, sem log). O `ScheduledNotificationBootReceiver` +
-  `RECEIVE_BOOT_COMPLETED` faz o lembrete sobreviver a reboot.
-- **Reagendar só se não houver nada pendente**: `main()` chamava
-  `reagendarLembretesSeNecessario` (`lib/telas/comuns.dart`, usa
-  `pendingNotificationRequests()`) — abrir o app perto do horário cancelava o
-  lembrete do dia, porque a entrega inexata pode levar minutos para disparar.
-- **Canal `lembretes_diarios` com importância alta**; a importância de um canal
-  trava na primeira notificação exibida — se o canal já tiver sido criado num
-  aparelho de teste antes do ajuste, é preciso desinstalar o app.
+  implementação real (`LembretesReais`, via `firebase_messaging`) e falsa
+  (`_LembretesFalsas` em `test/lembretes_test.dart`) — a interface não mudou
+  quando a implementação trocou de local para push, então os testes de
+  `comuns.dart`/`lembretes_test.dart` não precisaram mudar.
+- **Contrato do Firestore** (`lembretes/{token}`, id = o próprio token FCM):
+  `{token, minutosManha, minutosNoite, fuso}`. Sem login — o lembrete nunca
+  pediu conta — protegido por App Check (`request.app != null` em
+  `firestore.rules`) em vez de `request.auth`, já que não há uid de dono.
+- **`tool/enviar_lembretes.dart` não importa `lib/data/conteudo.dart`**:
+  `Conteudo` carrega assets via `rootBundle`, que precisa do engine do
+  Flutter (`dart:ui`), ausente num `dart run` puro. O script lê os mesmos
+  JSONs direto do disco e reaproveita só a análise de referência
+  (`lib/data/canon.dart`, Dart puro) — o resto é glue duplicada de propósito
+  para não criar uma costura maior do que o problema pede.
+- **Conteúdo dinâmico**: o corpo da notificação é o versículo do dia
+  (Manhã/Noite) ou `"título | versículo"` (Promessas), calculado uma vez por
+  disparo — só dá para fazer isso no servidor porque um agendamento local
+  nasce com o texto fixo (o motivo original de unificar Android e web no
+  mesmo push, em vez de manter dois caminhos).
+- **Sem exibição em primeiro plano**: o FCM mostra a notificação do sistema
+  sozinho em segundo plano/app fechado, mas não com o app aberto — ali a
+  mensagem chega a `onMessage`/`onBackgroundMessage` sem virar notificação
+  visível. Aceito como está: o caso comum de um lembrete de 6h/21h é o app
+  fechado; corrigir o caso raro voltaria a exigir um plugin de exibição só
+  para isso.
+- **`firebase-messaging-sw.js` tem placeholders**: a config do Firebase JS
+  (`__FIREBASE_API_KEY_WEB__` etc.) é preenchida no CI
+  (`.github/workflows/deploy-web.yml`, `sed` antes do `flutter build web`) —
+  um service worker é JS estático, não passa por `--dart-define`. Testar
+  localmente exige substituir à mão pelos valores do `.env.json`.
+- **Toque na notificação**: no Android, `Lembretes.chaveQueAbriuOApp`/
+  `onMessageOpenedApp` (SDK nativo do FCM). Na web, o service worker abre
+  `?lembrete=<chave>` e `main.dart` lê como qualquer outro parâmetro de link
+  (`_abrirLeituraDoLembreteDoLink`) — os dois caem em
+  `Leitura.values.byName(chave)`.
 - **`data/` não importa `telas/`**: `Lembretes` fala em `chave` (string), e é
   `main.dart` quem faz `Leitura.values.byName(chave)`.
+- **iOS de fora por ora**: `lembretesSuportados` só cobre `kIsWeb ||
+  android`; faltaria a chave APNs no Console.
 
 ### Web
 
@@ -368,6 +407,12 @@ motivo novo.
   Parâmetro de consulta, não caminho, porque o
   Pages devolveria 404. `alvoDoLink` e `linkDoVersiculo` em `lib/data/canon.dart`
   fazem a ida e volta.
+- **A aba "Meus planos" só existe para quem tem conta** (21/08/2026):
+  `TelaPlano` (`lib/telas/plano.dart`) escuta `Nuvem.instancia` e, sem login,
+  mostra só o cronograma anual, sem abas — criar e compartilhar um plano
+  depende da nuvem, então sem conta não há o que listar ali. Um link de plano
+  compartilhado aberto sem conta já pedia login antes disto (`_CartaoDeEntrar`
+  em `lib/telas/meu_plano.dart`); a mudança foi só a aba da lista.
 - **Link do plano compartilhado leva o título como slug** (20/08/2026),
   `?plano=<slug-do-titulo>-<id>` (`linkDoPlano` em `lib/data/planos_nuvem.dart`).
   O slug é só estética: quem abre busca pelo plano sempre pelo `id`, o último
@@ -456,13 +501,15 @@ motivo novo.
   `tools/icones.py --fontes`; os arquivos por plataforma saem de
   `dart run flutter_launcher_icons` e depois de `tools/icones.py --corrigir`
   (obrigatório: o gerador copia o ícone normal nos `Icon-maskable-*` sem
-  saber que o Chrome recorta o maskable em círculo, e não conhece o favicon
-  claro). Cinco fontes: `icone.png` (fundo `#2E1B10`) para o Android anterior
-  ao ícone adaptativo; `icone_adaptativo.png` (fundo opaco, a marca já carrega
-  o próprio fundo) para o ícone adaptativo do Android; `icone_mascaravel.png`
+  saber que o Chrome recorta o maskable em círculo, não conhece o favicon
+  claro, e não gera a camada noturna do ícone adaptativo — ver abaixo). Seis
+  fontes: `icone.png` (fundo `#2E1B10`) para o Android anterior ao ícone
+  adaptativo; `icone_adaptativo.png` (bronze, sem fundo) e
+  `icone_adaptativo_escuro.png` (dourado, sem fundo) para as duas camadas de
+  frente do ícone adaptativo do Android, uma por tema; `icone_mascaravel.png`
   (fundo chapado) para os `Icon-maskable-*` da web; `icone_claro.png`, pronta
-  para quando Android/iOS 18 tiverem variante clara configurada (ainda manual,
-  o `flutter_launcher_icons` 0.14.4 não gera isso); `icone_tingido.png`
+  para quando iOS 18 tiver variante clara configurada (ainda manual, o
+  `flutter_launcher_icons` 0.14.4 não gera isso); `icone_tingido.png`
   (silhueta transparente) para o ícone tingido do iOS 18.
 - **A splash também é a marca-texto "Devocional"** (mesma fonte, dourada no
   tema escuro e em bronze no claro — dourado sobre pergaminho é ilegível,
@@ -473,8 +520,9 @@ motivo novo.
 - **Tela de abertura e ícone do lançador são coisas diferentes, e só uma delas
   acompanha o tema em todo lugar.** A **splash** troca por tema nas duas
   plataformas (`image`/`image_dark` do `flutter_native_splash`, configurado no
-  `pubspec.yaml`). O **ícone** acompanha o tema no Android (qualificador
-  `-night` no fundo do ícone adaptativo; verificado num Galaxy; lançadores
+  `pubspec.yaml`). O **ícone** acompanha o tema no Android (fundo e camada de
+  frente do ícone adaptativo trocam por `-night`, a segunda copiada a mão por
+  `tools/icones.py --corrigir` já que o gerador só sabe da clara; lançadores
   guardam o ícone em cache, desinstalar para ver a mudança) e no favicon da web
   (por `prefers-color-scheme`); no PWA não, porque lê um arquivo só.
 - **O alternador das três leituras usa chips, não `SegmentedButton`** (ver
@@ -510,7 +558,11 @@ flutter build web --dart-define-from-file=.env.json
 ```
 (O `.env.json` deve conter todas as chaves: `FIREBASE_API_KEY_WEB`,
 `FIREBASE_API_KEY_ANDROID`, `FIREBASE_API_KEY_IOS`, `GEMINI_API_KEY_WEB`,
-`GEMINI_API_KEY_ANDROID`, `TTS_API_KEY_WEB`, `TTS_API_KEY_ANDROID`, etc.)
+`GEMINI_API_KEY_ANDROID`, `TTS_API_KEY_WEB`, `TTS_API_KEY_ANDROID`,
+`FCM_VAPID_KEY`, etc. Testar o lembrete web localmente também exige
+substituir à mão os placeholders de `web/firebase-messaging-sw.js` pelos
+mesmos valores — um service worker não lê `.env.json`, ver a seção Lembretes
+diários abaixo.)
 
 Ícone do app, favicon e tela de abertura são gerados a partir das fontes em
 `assets/icone/`; nunca editados à mão:
@@ -536,15 +588,22 @@ desinstalar antes de instalar de novo.
 ## Publicação na web
 
 O deploy é pelo GitHub Actions (`.github/workflows/deploy-web.yml`), com o
-Flutter fixo em 3.44.9, para o Firebase Hosting. O site mora em
+Flutter fixo em 3.44.9, para o Firebase Hosting — e junto, `firestore:rules`
+(`firebase deploy --only hosting,firestore:rules`), então uma mudança em
+`firestore.rules` só vale a partir do próximo deploy da web, não é preciso
+publicar à mão no console. O site mora em
 `www.felipeambrozini.com.br/devocional/` (um nível abaixo da raiz do domínio; o
 build vai para `public/devocional` e o rewrite em `firebase.json` cuida do
 SPA). O build usa `--base-href /devocional/` e as chaves de API vêm dos
-Secrets do repositório: `FIREBASE_API_KEY_WEB`, `GEMINI_API_KEY_WEB` e
-`TTS_API_KEY_WEB` (precisam estar cadastrados em Settings → Secrets and
-variables, no environment `github-pages`). O deploy usa
-`FIREBASE_SERVICE_ACCOUNT` (JSON da conta de serviço do Firebase). As actions
-estão fixadas em commit SHA completo, não em tag mutável.
+Secrets do repositório: `FIREBASE_API_KEY_WEB`, `GEMINI_API_KEY_WEB`,
+`TTS_API_KEY_WEB` e `FCM_VAPID_KEY` (lembrete web — Console do Firebase >
+Cloud Messaging > Web configuration > Generate key pair; precisam estar
+cadastrados em Settings → Secrets and variables, no environment
+`github-pages`). O deploy usa `FIREBASE_SERVICE_ACCOUNT` (JSON da conta de
+serviço do Firebase) — o mesmo secret que
+`.github/workflows/lembretes-push.yml` usa para autenticar o script de push
+dos lembretes. As actions estão fixadas em commit SHA completo, não em tag
+mutável.
 
 Além do build em `public/devocional`, o mesmo passo copia `404.html`,
 `robots.txt` e `llms.txt` para a raiz do `public` — o Hosting só olha esses

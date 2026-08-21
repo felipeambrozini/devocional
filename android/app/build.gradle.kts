@@ -1,10 +1,12 @@
-// Sem o plugin "com.google.gms.google-services" de propósito: a conta na
-// nuvem (lib/data/nuvem.dart) só existe na web, `nuvemSuportada => kIsWeb`.
-// `flutterfire configure` tinha registrado um app Android e gerado
-// google-services.json, mas o Android nunca chama Firebase.initializeApp — e
-// deixar o plugin exigiria manter esse arquivo em sincronia com o
-// applicationId (ele falha o build se o "package_name" não bater). Removido
-// junto com google-services.json.
+// O plugin "com.google.gms.google-services" lê google-services.json (neste
+// diretório) e injeta a configuração do Firebase no build do Android. É
+// necessário porque o Android também usa Firebase: `nuvemSuportada` em
+// lib/data/nuvem.dart é `true` em toda plataforma, não só na web, então
+// main.dart chama `Nuvem.instancia.iniciar(estado)` (Auth + Firestore) no
+// Android também; e `firebase_messaging` (lib/data/lembretes.dart) usa a
+// mesma configuração para o lembrete diário por push. O arquivo precisa
+// continuar em sincronia com o applicationId abaixo — o plugin falha o build
+// se o "package_name" dele não bater.
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -21,9 +23,9 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-        // flutter_local_notifications usa APIs de java.time por baixo, e o
-        // Gradle recusa o AAR sem isto ligado (checkDebugAarMetadata falha
-        // dizendo que a dependência exige desugaring da biblioteca core).
+        // Alguma dependência (Firebase incluso) usa APIs de java.time por
+        // baixo, e o Gradle recusa o AAR sem isto ligado (checkDebugAarMetadata
+        // falha dizendo que a dependência exige desugaring da biblioteca core).
         isCoreLibraryDesugaringEnabled = true
     }
 

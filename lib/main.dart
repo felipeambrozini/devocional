@@ -79,6 +79,16 @@ void _abrirLeituraDoLink() {
   );
 }
 
+/// Abre a leitura do parâmetro `lembrete` da URL (`?lembrete=manha`) — como o
+/// toque na notificação chega na web: o service worker
+/// (`web/firebase-messaging-sw.js`) abre essa URL ao ser tocado, em vez de
+/// passar pelo SDK nativo do FCM (que [Lembretes.chaveQueAbriuOApp] usa só no
+/// Android). Mesmo destino de [_abrirLeituraDoLembrete], só a origem muda.
+void _abrirLeituraDoLembreteDoLink() {
+  final chave = Uri.base.queryParameters['lembrete'];
+  if (chave != null) _abrirLeituraDoLembrete(chave);
+}
+
 /// Abre o plano compartilhado do parâmetro `plano` da URL — `?plano=<id>` ou
 /// `?plano=<slug-legível>-<id>`, ver [linkDoPlano] — para quem chega por um
 /// link divulgado por outra pessoa. Como [_abrirLeituraDoLink], é uma
@@ -149,15 +159,18 @@ Future<void> _iniciar() async {
       (_) => _abrirLeituraDoLembrete(chaveDeAbertura),
     );
   } else {
-    // Um link e um toque de notificação nunca chegam juntos: o link só existe
-    // na web, e lembrete só em Android. O `else` é só para não empurrar
-    // duas telas por cima uma da outra se algum dia os dois coincidirem. Um
-    // plano e uma leitura também não chegam juntos na URL; o plano vem
-    // primeiro, e a leitura abre só quando não há plano.
+    // `chaveDeAbertura` só cobre o toque via SDK nativo do FCM (Android); o
+    // toque na notificação da web chega como parâmetro de URL, então cai
+    // aqui, no mesmo grupo dos outros links. `?plano`, `?ler` e `?lembrete`
+    // não chegam juntos na mesma URL, mas a ordem importa se algum dia
+    // coincidirem: plano primeiro, leitura só quando não há plano.
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _abrirPlanoDoLink(estado),
     );
     WidgetsBinding.instance.addPostFrameCallback((_) => _abrirLeituraDoLink());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _abrirLeituraDoLembreteDoLink(),
+    );
   }
 }
 

@@ -37,18 +37,36 @@ class _TelaPlanoState extends State<TelaPlano> {
       onPressed: () => ajustesDeLeitura(context, estado),
     );
 
-    // Sem plano personalizado, a tela não tem o que dividir em abas: só o
-    // cronograma anual, igual a antes desta funcionalidade existir.
-    if (!Recursos.planoPersonalizado) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Plano'),
-          actions: [acaoDeAjustes],
-        ),
-        body: _AbaDoCronograma(hoje: widget.hoje),
-      );
-    }
+    // Sem plano personalizado, ou sem conta para guardá-lo na nuvem, a tela
+    // não tem o que dividir em abas: só o cronograma anual. A aba Meus
+    // Planos depende de conta porque compartilhar um plano depende dela.
+    return ListenableBuilder(
+      listenable: Nuvem.instancia,
+      builder: (context, _) {
+        if (!Recursos.planoPersonalizado || !Nuvem.instancia.logado) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Plano'),
+              actions: [acaoDeAjustes],
+            ),
+            body: _AbaDoCronograma(hoje: widget.hoje),
+          );
+        }
+        return _AbasDoPlano(hoje: widget.hoje, acaoDeAjustes: acaoDeAjustes);
+      },
+    );
+  }
+}
 
+/// As duas abas de quem tem conta: o cronograma anual e os planos próprios.
+class _AbasDoPlano extends StatelessWidget {
+  const _AbasDoPlano({required this.hoje, required this.acaoDeAjustes});
+
+  final DateTime? hoje;
+  final Widget acaoDeAjustes;
+
+  @override
+  Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -64,7 +82,7 @@ class _TelaPlanoState extends State<TelaPlano> {
         ),
         body: TabBarView(
           children: [
-            _AbaDoCronograma(hoje: widget.hoje),
+            _AbaDoCronograma(hoje: hoje),
             const _AbaDosMeusPlanos(),
           ],
         ),

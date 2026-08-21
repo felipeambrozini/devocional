@@ -1,5 +1,6 @@
 import 'package:felipe_ambrozini/data/conteudo.dart';
 import 'package:felipe_ambrozini/data/estado.dart';
+import 'package:felipe_ambrozini/data/nuvem.dart';
 import 'package:felipe_ambrozini/data/planos.dart';
 import 'package:felipe_ambrozini/telas/plano.dart';
 import 'package:flutter/material.dart';
@@ -321,6 +322,9 @@ void main() {
       // antes, senão a Future do FutureBuilder nunca completa no tempo falso.
       await tester.runAsync(() => Conteudo.instancia.plano(bissexto: false));
       final estado = Estado(await SharedPreferences.getInstance());
+      // A aba Meus Planos só existe com conta: ver plano.dart.
+      Nuvem.instancia.logadoForcado = true;
+      addTearDown(() => Nuvem.instancia.logadoForcado = null);
       await tester.pumpWidget(
         MaterialApp(
           home: EscopoDoEstado(
@@ -393,6 +397,8 @@ void main() {
         dias: 5,
       );
       await estado.marcarCompartilhado(plano.id);
+      Nuvem.instancia.logadoForcado = true;
+      addTearDown(() => Nuvem.instancia.logadoForcado = null);
 
       await tester.pumpWidget(
         MaterialApp(

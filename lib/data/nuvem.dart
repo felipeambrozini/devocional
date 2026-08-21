@@ -8,7 +8,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart'
-    show ChangeNotifier, TargetPlatform, defaultTargetPlatform, kIsWeb;
+    show
+        ChangeNotifier,
+        TargetPlatform,
+        defaultTargetPlatform,
+        kIsWeb,
+        visibleForTesting;
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../firebase_options.dart';
@@ -224,7 +229,14 @@ class Nuvem extends ChangeNotifier {
   StreamSubscription<User?>? _assinatura;
   bool _pronta = false;
 
-  bool get logado => _pronta && FirebaseAuth.instance.currentUser != null;
+  /// Só para testes de widget: força [logado] sem depender de um Firebase de
+  /// verdade, que os testes não inicializam. null (padrão) deixa a resposta
+  /// de verdade, vinda do Firebase.
+  @visibleForTesting
+  bool? logadoForcado;
+
+  bool get logado =>
+      logadoForcado ?? (_pronta && FirebaseAuth.instance.currentUser != null);
   String? get email => _pronta ? FirebaseAuth.instance.currentUser?.email : null;
 
   /// O uid de quem está com a conta aberta, para saber se é o criador de um

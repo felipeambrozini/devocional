@@ -503,6 +503,10 @@ class Voz extends ChangeNotifier {
       final partes = _cache[chave];
       if (partes != null) {
         final de = _posicaoDaPausa;
+        // Limpa aqui, não só no parar(): sem isto, um parar() entre a
+        // retomada e o fim da leitura leria a posição da pausa velha em vez
+        // da posição de verdade de onde a leitura está agora.
+        _posicaoDaPausa = null;
         final versao = ++_versao;
         _pausado = false;
         _tocando = true;
@@ -619,6 +623,29 @@ class Voz extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Pausa a leitura sem encerrar a sessão: ao contrário do [parar], a
+  /// posição fica guardada e o toque seguinte retoma dali em vez de começar
+  /// do zero. É o botão de pausa manual, ao lado do de parar — o mesmo
+  /// mecanismo da pausa de fora (chamada, perda de foco de áudio), só que
+  /// pedido pelo usuário: o player de verdade completa o [AudioPlayer.play]
+  /// pausado, e [_acompanharLeitura] marca a sessão como [pausado] sozinho.
+  Future<void> pausar() async {
+    if (!_tocando) return;
+    final leitor = _leitorDeAudio;
+    if (leitor != null) {
+      await leitor.pausar();
+      return;
+    }
+    final player = _player;
+    if (player == null) return;
+    try {
+      await player.pause();
+    } catch (_) {
+      // Sem plataforma de áudio (teste, navegador sem suporte): nada a
+      // pausar.
+    }
+  }
+
   /// Retoma a leitura de [chave] que o "Desfazer" do deslize devolveu: o
   /// áudio da memória volta a tocar de [de] (onde a leitura parou). Sem o
   /// áudio na cache não há o que tocar — [de] nulo é o preparo sem pausa,
@@ -665,6 +692,10 @@ class Voz extends ChangeNotifier {
     final de = _posicaoDaPausa;
     final partes = _cache[chave];
     if (partes != null) {
+      // Limpa aqui, não só no parar(): sem isto, um parar() entre a
+      // retomada e o fim da leitura leria a posição da pausa velha em vez
+      // da posição de verdade de onde a leitura está agora.
+      _posicaoDaPausa = null;
       final versao = ++_versao;
       _pausado = false;
       _tocando = true;
@@ -1006,6 +1037,12 @@ abstract class LeitorDeAudio {
   /// Para a leitura em andamento.
   Future<void> silenciar();
 
+  /// Pausa a leitura em andamento sem encerrá-la: como [silenciar], mas
+  /// marcando o fim como pausa ([pausadoDeFora]) em vez de interrupção — o
+  /// botão de pausa manual chama isto para usar o mesmo mecanismo da pausa
+  /// de fora.
+  Future<void> pausar();
+
   /// Posição da reprodução atual, para o progresso.
   Stream<Duration> get posicao;
 
@@ -1016,9 +1053,10 @@ abstract class LeitorDeAudio {
   /// daqui. Os leitores falsos guardam isto num campo que o teste ajusta.
   Duration? get posicaoAtual;
 
-  /// A última reprodução terminou por uma pausa de fora (chamada, perda de
-  /// foco de áudio)? O player de verdade completa o play() pausado, e é
-  /// assim que a pausa é marcada — o fim natural e a parada manual não.
+  /// A última reprodução terminou pausada — de fora (chamada, perda de foco
+  /// de áudio) ou pelo botão de pausar? O player de verdade completa o
+  /// play() pausado nos dois casos, e é assim que a pausa é marcada — o fim
+  /// natural e a parada manual não.
   bool get pausadoDeFora;
 
   /// A última reprodução terminou sozinha? O fim natural é o único caso que

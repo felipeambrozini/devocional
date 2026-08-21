@@ -28,6 +28,19 @@ jobs:
           flutter-version: 3.44.9
       - run: flutter pub get
       - run: flutter test
+      # Preenche os placeholders de web/firebase-messaging-sw.js com os mesmos
+      # secrets do Firebase usados no --dart-define abaixo — um service
+      # worker não lê --dart-define, só JS estático (ver o comentário no
+      # topo do arquivo).
+      - run: |
+          sed -i \
+            -e "s/__FIREBASE_API_KEY_WEB__/${{ secrets.FIREBASE_API_KEY_WEB }}/" \
+            -e "s/__FIREBASE_APP_ID_WEB__/${{ secrets.FIREBASE_APP_ID_WEB }}/" \
+            -e "s/__FIREBASE_MESSAGING_SENDER_ID__/${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}/" \
+            -e "s/__FIREBASE_PROJECT_ID__/${{ secrets.FIREBASE_PROJECT_ID }}/" \
+            -e "s/__FIREBASE_AUTH_DOMAIN__/${{ secrets.FIREBASE_AUTH_DOMAIN }}/" \
+            -e "s/__FIREBASE_STORAGE_BUCKET__/${{ secrets.FIREBASE_STORAGE_BUCKET }}/" \
+            web/firebase-messaging-sw.js
       - run: |
           flutter build web --release --base-href /devocional/ \
             --dart-define=FIREBASE_API_KEY_WEB=${{ secrets.FIREBASE_API_KEY_WEB }} \
@@ -49,7 +62,8 @@ jobs:
             --dart-define=TTS_API_KEY_WEB=${{ secrets.TTS_API_KEY_WEB }} \
             --dart-define=TTS_API_KEY_ANDROID=${{ secrets.TTS_API_KEY_ANDROID }} \
             --dart-define=TTS_API_KEY_IOS=${{ secrets.TTS_API_KEY_IOS }} \
-            --dart-define=RECAPTCHA_V3_SITE_KEY=${{ secrets.RECAPTCHA_V3_SITE_KEY }}
+            --dart-define=RECAPTCHA_V3_SITE_KEY=${{ secrets.RECAPTCHA_V3_SITE_KEY }} \
+            --dart-define=FCM_VAPID_KEY=${{ secrets.FCM_VAPID_KEY }}
       # O Firebase Hosting serve da raiz do domínio; o app mora em /devocional/,
       # então o build vai para public/devocional (o base-href acima combina). O
       # 404.html também sobe à raiz do public: é lá que o Hosting procura a
@@ -65,9 +79,13 @@ jobs:
           cp build/web/robots.txt public/robots.txt
           cp build/web/llms.txt public/llms.txt
           cp build/web/sitemap.xml public/sitemap.xml
+      # firestore:rules junto com hosting: sem isto, firestore.rules mudar no
+      # repositório não publicava nada — a coleção lembretes/{token} (ver
+      # lib/data/lembretes.dart) ficava bloqueada pela regra padrão do
+      # Firestore até alguém lembrar de publicar à mão.
       - uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15.27.0
         with:
-          args: deploy --only hosting
+          args: deploy --only hosting,firestore:rules
         env:
           # JSON da conta de serviço do Firebase (IAM → Service accounts → Create
           # key). Cadastrar no mesmo environment do workflow (github-pages).

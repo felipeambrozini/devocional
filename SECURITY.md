@@ -40,6 +40,7 @@ As chaves de API necessárias para o funcionamento dos serviços integrados (Fir
 - `FIREBASE_API_KEY_WEB`, `FIREBASE_API_KEY_ANDROID`, `FIREBASE_API_KEY_IOS`
 - `GEMINI_API_KEY_WEB`, `GEMINI_API_KEY_ANDROID`, `GEMINI_API_KEY_IOS`
 - `TTS_API_KEY_WEB`, `TTS_API_KEY_ANDROID`, `TTS_API_KEY_IOS`
+- `FCM_VAPID_KEY` (chave pública do Web Push, para o lembrete diário na web)
 
 ### 3.2 Proteção de Chaves Públicas
 Conforme a arquitetura padrão para aplicações no lado do cliente (Web e Mobile), as chaves do Firebase e do Google Cloud presentes nos artefatos de compilação são consideradas públicas por desenho. A segurança dos serviços é assegurada por:
@@ -57,6 +58,9 @@ Além da chave, o app se identifica ao Firestore e ao Auth com uma prova de que 
 
 A falha em ativar o App Check (site key ausente durante a migração, domínio ainda não registrado no console) não impede o app de abrir; a sincronização e o login simplesmente continuam sem essa camada extra até a configuração ser concluída no console do Firebase.
 
+### 3.4 Lembrete Diário — Acesso sem Autenticação
+A coleção `lembretes/{token}` do Firestore (token FCM do aparelho, horário e fuso) é gravável sem login, já que o lembrete nunca exigiu conta. A proteção contra escrita de terceiros é o App Check (`request.app != null` em `firestore.rules`), não `request.auth` — não há uid de dono para checar. O impacto de um token exposto é baixo por desenho: o único efeito possível é reagendar (ou apagar) o lembrete daquele próprio token, sem acesso a nenhum outro dado do usuário.
+
 ---
 
 ## 4. Segurança do Pipeline de Integração e Implantação (CI/CD)
@@ -65,6 +69,7 @@ A falha em ativar o App Check (site key ausente durante a migração, domínio a
 - **Fixação de Commit SHA no GitHub Actions:** Todas as ações do GitHub Actions utilizadas no fluxo de *deploy* automatizado (`.github/workflows/deploy-web.yml`) estão fixadas pelo SHA completo do *commit*, prevenindo riscos associados a *tags* mutáveis.
 - **Versão Imutável do SDK:** A versão do SDK do Flutter é mantida fixa em `3.44.9` via `.fvmrc` e no pipeline de integração contínua, garantindo reproduzibilidade e prevenindo quebras não auditadas.
 - **Segredos do Repositório:** As chaves de compilação de produção são gerenciadas através dos *GitHub Secrets* e disponibilizadas exclusivamente durante o processo de compilação automatizada.
+- **Job agendado do lembrete diário:** `.github/workflows/lembretes-push.yml` roda a cada 5 minutos e reutiliza o mesmo secret `FIREBASE_SERVICE_ACCOUNT` do deploy para autenticar a leitura do Firestore e o envio via FCM — nenhum segredo novo foi criado para esse fluxo.
 
 ---
 

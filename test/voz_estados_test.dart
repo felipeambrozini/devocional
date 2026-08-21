@@ -91,6 +91,11 @@ class LeitorFalso implements LeitorDeAudio {
     encerrar();
   }
 
+  /// O botão de pausa manual: mesmo mecanismo da pausa de fora, só que
+  /// chamado pelo [Voz] em vez de simulado direto pelo teste.
+  @override
+  Future<void> pausar() async => pausarDeFora();
+
   @override
   Stream<Duration> get posicao => const Stream.empty();
 
@@ -478,6 +483,62 @@ void main() {
       await leitura;
       await sub.cancel();
     });
+
+    test(
+      'o botão de pausa manual pausa a leitura, e o toque seguinte retoma '
+      'de onde parou',
+      () async {
+        final pedidos = <int>[];
+
+        final leitura = Voz.instancia.alternar(
+          'capitulo:l.13',
+          texto: 'Texto.',
+          cliente: clienteQueConta(pedidos),
+          chaveTts: 'teste',
+          tipo: TipoConteudoAudio.biblia,
+        );
+        await esperarAvisos();
+        expect(Voz.instancia.tocando, isTrue);
+
+        // O botão de pausa usa o mesmo mecanismo da pausa de fora: o player
+        // pausa no ponto em que estava, e a sessão vira "Pausado" em vez de
+        // encerrar.
+        leitor.posicaoAtual = const Duration(minutes: 2);
+        await Voz.instancia.pausar();
+        await esperarAvisos();
+
+        expect(Voz.instancia.tocando, isFalse);
+        expect(Voz.instancia.pausado, isTrue,
+            reason: 'a pausa manual vira o mesmo estado "Pausado"');
+        expect(Voz.instancia.tocandoChave, 'capitulo:l.13',
+            reason: 'a sessão pausada continua viva, esperando retomar');
+
+        // O toque na mesma chave retoma do áudio já na memória, de onde a
+        // pausa deixou — sem gastar a quota de novo.
+        final retomada = Voz.instancia.alternar(
+          'capitulo:l.13',
+          texto: 'Texto.',
+          cliente: clienteQueConta(pedidos),
+          chaveTts: 'teste',
+          tipo: TipoConteudoAudio.biblia,
+        );
+        await esperarAvisos();
+
+        expect(Voz.instancia.pausado, isFalse);
+        expect(Voz.instancia.tocando, isTrue);
+        expect(leitor.ultimoDe, const Duration(minutes: 2),
+            reason: 'a retomada volta de onde a pausa manual parou, não do '
+                'zero');
+        expect(pedidos, hasLength(1),
+            reason: 'a retomada usa o áudio da cache: a quota não é gasta de '
+                'novo');
+
+        leitor.encerrar();
+        await esperarAvisos();
+        await retomada;
+        await leitura;
+      },
+    );
 
     test('parar() encerra uma sessão pausada de vez', () async {
       final pedidos = <int>[];

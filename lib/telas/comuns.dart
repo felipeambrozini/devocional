@@ -581,8 +581,8 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                     );
                   },
                 ),
-                // Só em Android: é a única plataforma do projeto com um agendador
-                // de sistema que o plugin de fato controla. Ver lembretes.dart.
+                // Android e web recebem por push do servidor; iOS ainda não
+                // tem a chave APNs cadastrada. Ver lembretes.dart.
                 if (lembretesSuportados)
                   ..._SecaoDeLembretes(estado: estado).montar(context),
                 // Sobre no fim da folha: as escolhas do dia ficam na frente,
@@ -726,14 +726,14 @@ Future<void> aplicarHorarioDeLembrete(
   );
 }
 
-/// Reagenda os lembretes no início do app, só se não houver nenhum agendado.
+/// Reagenda os lembretes no início do app, só se não houver nenhum registro
+/// no Firestore para o token deste aparelho.
 ///
-/// Cobre o reboot do aparelho, que apaga os alarmes do sistema — mas só
-/// nesse caso. Chamar isto incondicionalmente a cada abertura do app faria
-/// `agendar` cancelar um lembrete do dia que ainda não disparou (a entrega é
-/// inexata, pode levar a janela toda) sempre que o app abrisse entre o
-/// horário marcado e a entrega de verdade — bem o que acontece ao abrir o
-/// app de manhã para ver se a notificação chegou.
+/// Cobre o caso de reinstalação (token novo, sem registro correspondente) —
+/// gravar de novo a cada abertura do app, sem essa checagem, não teria custo
+/// nenhum (a escrita é idempotente, não existe mais alarme do dia para
+/// cancelar), mas seria uma escrita no Firestore a cada abertura sem
+/// necessidade.
 Future<void> reagendarLembretesSeNecessario(Estado estado) async {
   if (!estado.lembretesAtivos) return;
   if (await Lembretes.instancia.agendados()) return;
@@ -1205,7 +1205,7 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
         // está lendo é uma pessoa, e o aviso completo vai no Semantics (o
         // rótulo visível é curto para caber na pílula em escala 2x).
         final rotulo = ativo
-            ? 'O pregador está lendo. Toque para encerrar a leitura.'
+            ? 'O pregador está lendo. Toque para pausar a leitura.'
             : pausado
             ? 'A leitura foi pausada. Toque para retomar.'
             : preparando
@@ -1222,7 +1222,7 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
           message: preparando
               ? 'Cancelar o preparo'
               : ativo
-              ? 'Encerrar a leitura'
+              ? 'Pausar a leitura'
               : pausado
               ? 'Retomar a leitura'
               : 'Ouvir na voz de Spurgeon',
@@ -1251,10 +1251,13 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
                     borderRadius: BorderRadius.circular(30),
                     // Durante o preparo o botão continua vivo: o toque cancela
                     // em vez de prender quem tocou o capítulo errado num
-                    // relógio de até 90 segundos. Pausada, a pílula é o
+                    // relógio de até 90 segundos. Tocando, o toque pausa (o
+                    // parar de vez mora no X ao lado); pausada, a pílula é o
                     // próprio retomar: o toque volta à leitura de onde parou.
                     onTap: preparando
                         ? voz.parar
+                        : ativo
+                        ? () => _pausar(context, voz)
                         : () => _alternar(context, voz),
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(
@@ -1303,7 +1306,7 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
                           ],
                           Icon(
                             ativo
-                                ? Icons.stop_rounded
+                                ? Icons.pause_rounded
                                 : preparando
                                 ? Icons.hourglass_top_rounded
                                 : Icons.play_arrow_rounded,
@@ -1330,18 +1333,21 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
                               ),
                             ),
                           ),
-                          // Uma sessão pausada precisa de um jeito de ser
-                          // encerrada sem trocar de página: sem o X, o sócio
-                          // pausado vira um invisital — e pausa que não se pode
+                          // Tocando ou pausada, a sessão precisa de um jeito
+                          // de ser encerrada de vez sem trocar de página: sem
+                          // o X, pausar (ou uma pausa já em curso) vira um
+                          // beco sem saída — e uma leitura que não se pode
                           // fechar é uma gaiola. O X mata a sessão; o corpo da
-                          // pílula continua retomando.
-                          if (pausado)
+                          // pílula continua pausando ou retomando.
+                          if (ativo || pausado)
                             Padding(
                               padding: const EdgeInsetsDirectional.only(
                                 start: 6,
                               ),
                               child: Tooltip(
-                                message: 'Encerrar a leitura pausada',
+                                message: pausado
+                                    ? 'Encerrar a leitura pausada'
+                                    : 'Encerrar a leitura',
                                 child: InkWell(
                                   borderRadius: BorderRadius.circular(30),
                                   onTap: voz.parar,
@@ -1385,6 +1391,14 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
     }
   }
 
+  Future<void> _pausar(BuildContext context, Voz voz) async {
+    try {
+      await voz.pausar();
+    } on VozException catch (erro) {
+      if (context.mounted) _avisarErro(context, voz, erro);
+    }
+  }
+
   /// O aviso de erro com um "Tentar de novo" à mão: um erro de rede ou de
   /// serviço é momentâneo na maioria das vezes, e sem a ação o usuário teria
   /// de descobrir sozinho que tocar de novo é o caminho.
@@ -1400,9 +1414,9 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
 
 /// O indicador "há leitura no ar" na barra de cima: aparece quando a chave
 /// desta tela está tocando ou se preparando, para quem rolou para longe do
-/// botão ainda saber que o toque pegou e poder encerrar (ou cancelar) a
-/// leitura. A mesma peça na Bíblia e na introdução: uma leitura não pode
-/// ficar sem o botão de parar à vista.
+/// botão ainda poder pausar, retomar, encerrar (ou cancelar o preparo) sem
+/// voltar ao topo. A mesma peça na Bíblia, na introdução e em Sobre: uma
+/// leitura não pode ficar sem os controles à vista.
 class IndicadorDeVozNaBarra extends StatelessWidget {
   const IndicadorDeVozNaBarra({super.key, required this.chave});
 
@@ -1459,54 +1473,65 @@ class IndicadorDeVozNaBarra extends StatelessWidget {
         final retomar = voz.pausado && !voz.tocando;
         // Tocando ou pausada, o ícone ganha um anel de progresso: quem rolou
         // para longe do botão continua sabendo quanto falta (ou onde a
-        // leitura parou) sem voltar ao topo.
+        // leitura parou) sem voltar ao topo. Tocando, um segundo ícone sem
+        // anel encerra de vez — o mesmo par pausar/parar da pílula, só que
+        // aqui pausar é o anel (a ação mais comum) e parar é o extra.
         return ExcludeSemantics(
-          child: StreamBuilder<Duration>(
-            stream: voz.posicao,
-            builder: (context, posicao) {
-              final agora = posicao.data ?? Duration.zero;
-              return StreamBuilder<Duration?>(
-                stream: voz.duracao,
-                builder: (context, duracao) {
-                  final total = duracao.data;
-                  // Sem duração conhecida o anel fica indeterminado (o
-                  // CircularProgressIndicator anima sozinho).
-                  final fracao = total == null || total.inMilliseconds == 0
-                      ? null
-                      : (agora.inMilliseconds / total.inMilliseconds).clamp(
-                          0.0,
-                          1.0,
-                        );
-                  return IconButton(
-                    tooltip: retomar
-                        ? 'Retomar a leitura'
-                        : 'Encerrar a leitura',
-                    icon: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        SizedBox(
-                          width: 28,
-                          height: 28,
-                          child: CircularProgressIndicator(
-                            value: fracao,
-                            strokeWidth: 2,
-                            color: cor.primary,
-                            backgroundColor: cor.surfaceContainerHighest,
-                          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              StreamBuilder<Duration>(
+                stream: voz.posicao,
+                builder: (context, posicao) {
+                  final agora = posicao.data ?? Duration.zero;
+                  return StreamBuilder<Duration?>(
+                    stream: voz.duracao,
+                    builder: (context, duracao) {
+                      final total = duracao.data;
+                      // Sem duração conhecida o anel fica indeterminado (o
+                      // CircularProgressIndicator anima sozinho).
+                      final fracao = total == null || total.inMilliseconds == 0
+                          ? null
+                          : (agora.inMilliseconds / total.inMilliseconds)
+                              .clamp(0.0, 1.0);
+                      return IconButton(
+                        tooltip: retomar
+                            ? 'Retomar a leitura'
+                            : 'Pausar a leitura',
+                        icon: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            SizedBox(
+                              width: 28,
+                              height: 28,
+                              child: CircularProgressIndicator(
+                                value: fracao,
+                                strokeWidth: 2,
+                                color: cor.primary,
+                                backgroundColor: cor.surfaceContainerHighest,
+                              ),
+                            ),
+                            Icon(
+                              retomar
+                                  ? Icons.play_circle_outline
+                                  : Icons.pause_circle_outline,
+                              size: 18,
+                            ),
+                          ],
                         ),
-                        Icon(
-                          retomar
-                              ? Icons.play_circle_outline
-                              : Icons.stop_circle_outlined,
-                          size: 18,
-                        ),
-                      ],
-                    ),
-                    onPressed: retomar ? voz.retomarDaPausa : voz.parar,
+                        onPressed: retomar ? voz.retomarDaPausa : voz.pausar,
+                      );
+                    },
                   );
                 },
-              );
-            },
+              ),
+              if (!retomar)
+                IconButton(
+                  tooltip: 'Encerrar a leitura',
+                  icon: const Icon(Icons.stop_rounded, size: 20),
+                  onPressed: voz.parar,
+                ),
+            ],
           ),
         );
       },

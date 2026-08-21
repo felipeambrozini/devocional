@@ -15,11 +15,14 @@ Icon-maskable-*, e o Chrome recorta o maskable em circulo. Ele tambem gera o
 favicon em 16px (embaralhado em tela de retina) e nao sabe da variante clara
 do favicon (favicon-claro.png).
 
-Sobre o icone que acompanha o tema: so o favicon da web troca hoje (por
-prefers-color-scheme, em web/index.html). `icone_claro.png` fica pronto em
-assets/icone/ para quando o Android/iOS 18 tiverem uma segunda aparencia
-configurada — o flutter_launcher_icons 0.14.4 nao gera variante clara/escura/
-tingida sozinho, entao essa parte ainda e' manual.
+Sobre o icone que acompanha o tema: o favicon da web troca por
+prefers-color-scheme (web/index.html). No Android, o icone adaptativo tambem
+troca — a camada de frente (icone_adaptativo.png/icone_adaptativo_escuro.png)
+fica transparente e so a cor de fundo por tras (values/values-night
+colors.xml) muda, entao o --corrigir precisa copiar a camada escura a mao para
+drawable-night-*/, ja que o flutter_launcher_icons 0.14.4 nao gera variante
+clara/escura sozinho. `icone_claro.png` fica pronto para quando o iOS 18
+tambem tiver uma segunda aparencia configurada.
 
 A splash, ao contrario, troca de cor nos dois temas (flutter_native_splash
 suporta `image_dark`), entao --splash gera quatro artes com fundo
@@ -85,12 +88,11 @@ def _cinza(im: Image.Image) -> Image.Image:
 def fontes() -> None:
     FONTES.mkdir(parents=True, exist_ok=True)
 
-    # Escuro: o fundo vai dentro da propria arte (opaco, quadro inteiro) nas
-    # camadas que nao podem depender da cor de fundo do sistema — adaptativo
-    # do Android e maskable da web — assim o fundo claro do pubspec nunca
-    # aparece por baixo do texto.
+    # Escuro opaco: o fundo vai dentro da propria arte (quadro inteiro) nas
+    # camadas que nao podem depender da cor de fundo do sistema — icone
+    # principal (Android <26, iOS, splash antigo) e maskable da web.
     escuro = _texto(DOURADO, FUNDO_ESCURO)
-    for nome in ('icone.png', 'icone_adaptativo.png', 'icone_mascaravel.png'):
+    for nome in ('icone.png', 'icone_mascaravel.png'):
         escuro.save(FONTES / nome)
         print(f'{nome}: {LADO}x{LADO}, fundo escuro')
 
@@ -101,19 +103,24 @@ def fontes() -> None:
     claro.save(FONTES / 'icone_claro.png')
     print(f'icone_claro.png: {LADO}x{LADO}, fundo claro')
 
+    # Adaptativo do Android: camada de frente transparente, uma por tema — o
+    # fundo (values/values-night colors.xml) e' quem muda de cor por tras, e
+    # o texto precisa trocar de dourado para bronze junto (dourado sobre
+    # pergaminho e' ilegivel, mesmo motivo do modulo lib/theme.dart).
+    _texto(BRONZE).save(FONTES / 'icone_adaptativo.png')
+    print('icone_adaptativo.png: {0}x{0}, bronze sem fundo (tema claro)'
+          .format(LADO))
+    _texto(DOURADO).save(FONTES / 'icone_adaptativo_escuro.png')
+    print('icone_adaptativo_escuro.png: {0}x{0}, dourado sem fundo (tema escuro)'
+          .format(LADO))
+
     tingido = _cinza(_texto(DOURADO))
     tingido.save(FONTES / 'icone_tingido.png')
     print(f'icone_tingido.png: {LADO}x{LADO}, cinza e sem fundo')
 
 
 def _fundo_do_icone_no_escuro() -> None:
-    """Variante escura do fundo do icone adaptativo do Android.
-
-    Sem efeito visivel hoje — `icone_adaptativo.png` agora e' opaco e cobre o
-    quadro inteiro, entao o fundo do pubspec nunca aparece — mas mantido pelo
-    mesmo motivo do original: se um dia o adaptativo voltar a ter
-    transparencia, e' aqui que o tema escuro dele mora.
-    """
+    """Variante escura do fundo do icone adaptativo do Android."""
     destino = RAIZ / 'android/app/src/main/res/values-night/colors.xml'
     destino.parent.mkdir(parents=True, exist_ok=True)
     cor = '#%02X%02X%02X' % FUNDO_ESCURO[:3]
@@ -142,8 +149,31 @@ def splash() -> None:
         print(f'{nome}.png / {nome}_android12.png: {LADO}x{LADO}, sem fundo')
 
 
+def _foreground_noturno() -> None:
+    """Copia a camada dourada em cada densidade para drawable-night-*/.
+
+    O flutter_launcher_icons so escreve a camada clara (drawable-*/); sem
+    isto o tema escuro do Android usaria o bronze errado por baixo do fundo
+    escuro.
+    """
+    escuro = Image.open(FONTES / 'icone_adaptativo_escuro.png').convert('RGBA')
+    base = RAIZ / 'android/app/src/main/res'
+    # list() antes do loop: sem isto, as pastas drawable-night-* recem-criadas
+    # entram na mesma varredura do glob e viram drawable-night-night-*.
+    for claro in list(base.glob('drawable-*/ic_launcher_foreground.png')):
+        if claro.parent.name.startswith('drawable-night-'):
+            continue
+        densidade = claro.parent.name.removeprefix('drawable-')
+        lado = Image.open(claro).size[0]
+        destino = base / f'drawable-night-{densidade}' / 'ic_launcher_foreground.png'
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        escuro.resize((lado, lado), Image.LANCZOS).save(destino)
+        print(f'{destino.relative_to(RAIZ)}: {lado}x{lado}')
+
+
 def corrigir() -> None:
     _fundo_do_icone_no_escuro()
+    _foreground_noturno()
 
     mascaravel = Image.open(FONTES / 'icone_mascaravel.png').convert('RGBA')
     for lado in (192, 512):
