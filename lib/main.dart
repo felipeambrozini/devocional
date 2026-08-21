@@ -135,32 +135,51 @@ Future<void> _iniciar() async {
 
   final estado = await Estado.abrir();
 
-  // Sem await: o firebase_core_web busca o SDK JS do gstatic, e esperar isso
-  // antes do runApp poria uma ida à rede na frente do primeiro quadro, num
-  // app que hoje abre sem depender de rede nenhuma. Fora da web não chama.
   if (nuvemSuportada) {
+    // Awaited, ao contrário do resto da Nuvem abaixo: `Lembretes.instancia`
+    // usa FirebaseMessaging.instance, que lança se chamado antes do app
+    // default do Firebase estar registrado. Sem isto, a linha de baixo
+    // quebra com "FirebaseException" toda vez — não uma corrida ocasional,
+    // já que ela roda sempre antes do unawaited abaixo terminar.
+    try {
+      await Nuvem.instancia.iniciarFirebase();
+    } catch (erro, pilha) {
+      Registro.erro('Nuvem.iniciar', erro, pilha);
+    }
+    // Sem await: o resto (App Check, listener de login) não bloqueia nada
+    // que dependa só do núcleo já pronto acima, e poria uma ida a mais à
+    // rede na frente do primeiro quadro.
     unawaited(Nuvem.instancia.iniciar(estado));
     unawaited(PlanosNaNuvem.instancia.iniciar(estado));
   }
 
-  await Lembretes.instancia.inicializar(
-    aoTocarNotificacao: _abrirLeituraDoLembrete,
-  );
-  // Sem await: desde a migração para FCM isto envolve rede (Firestore e
-  // getToken), e travar o primeiro quadro numa notificação que o usuário nem
-  // pediu ainda (só reagendando a de antes) é pior que atrasar por um
-  // instante o registro do novo token. Mesmo raciocínio do Nuvem acima.
-  unawaited(reagendarLembretesSeNecessario(estado));
-  // Precisa vir antes do runApp: depois dele o plugin já não sabe dizer que
-  // toque abriu o app, só qual chegou com o app já aberto.
-  final chaveDeAbertura = await Lembretes.instancia.chaveQueAbriuOApp();
+  // Numa zona só (comentário acima de `main`) uma falha aqui não impediria
+  // o `runApp` de rodar, mas o catch evita depender disso: mesma regra de
+  // nunca deixar o Firebase travar a abertura do app.
+  String? chaveDeAbertura;
+  try {
+    await Lembretes.instancia.inicializar(
+      aoTocarNotificacao: _abrirLeituraDoLembrete,
+    );
+    // Sem await: desde a migração para FCM isto envolve rede (Firestore e
+    // getToken), e travar o primeiro quadro numa notificação que o usuário
+    // nem pediu ainda (só reagendando a de antes) é pior que atrasar por um
+    // instante o registro do novo token.
+    unawaited(reagendarLembretesSeNecessario(estado));
+    // Precisa vir antes do runApp: depois dele o plugin já não sabe dizer que
+    // toque abriu o app, só qual chegou com o app já aberto.
+    chaveDeAbertura = await Lembretes.instancia.chaveQueAbriuOApp();
+  } catch (erro, pilha) {
+    Registro.erro('Lembretes.inicializar', erro, pilha);
+  }
 
   runApp(AppDevocional(estado: estado));
 
-  if (chaveDeAbertura != null) {
+  final chave = chaveDeAbertura;
+  if (chave != null) {
     // O Navigator só existe depois do primeiro quadro.
     WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _abrirLeituraDoLembrete(chaveDeAbertura),
+      (_) => _abrirLeituraDoLembrete(chave),
     );
   } else {
     // `chaveDeAbertura` só cobre o toque via SDK nativo do FCM (Android); o

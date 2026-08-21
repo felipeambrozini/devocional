@@ -256,6 +256,16 @@ class Nuvem extends ChangeNotifier {
   /// `_Cabecalho` em `hoje.dart`. null sem conta, ou sem foto no Google.
   String? get fotoUrl => _pronta ? FirebaseAuth.instance.currentUser?.photoURL : null;
 
+  /// Só o núcleo do Firebase (`Firebase.initializeApp`), sem o resto de
+  /// [iniciar] — para quem precisa do app default já registrado antes de
+  /// continuar, como `lib/data/lembretes.dart` (`FirebaseMessaging.instance`
+  /// lança se chamado sem isto). Idempotente: `Firebase.apps` vazio é o sinal
+  /// de que ainda não rodou; chamar de novo depois lançaria "app duplicado".
+  Future<void> iniciarFirebase() async {
+    if (Firebase.apps.isNotEmpty) return;
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  }
+
   /// Prepara o Firebase e liga a sincronização ao estado de login. Chamar uma
   /// vez, em `main.dart`, só quando [nuvemSuportada].
   ///
@@ -264,9 +274,7 @@ class Nuvem extends ChangeNotifier {
   /// o erro só é engolido, nunca propagado.
   Future<void> iniciar(Estado estado) async {
     try {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
+      await iniciarFirebase();
     } catch (erro, pilha) {
       Registro.erro('Nuvem.iniciar', erro, pilha);
       return;
