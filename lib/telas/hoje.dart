@@ -32,10 +32,23 @@ class _TelaHojeState extends State<TelaHoje> {
       body: SafeArea(
         child: LarguraDeLeitura(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(Spacing.sp16, Spacing.sp8, Spacing.sp16, Spacing.sp32),
+            padding: const EdgeInsets.fromLTRB(
+              Spacing.sp16,
+              Spacing.sp8,
+              Spacing.sp16,
+              Spacing.sp32,
+            ),
             children: [
               _Cabecalho(data: agora),
               const SizedBox(height: Spacing.sp20),
+              // Ajuda só para quem chega: um cartão curto na primeira visita,
+              // que some para sempre com "Entendi". Fica antes dos cards de
+              // leitura, para orientar quem não conhece o app antes de mostrar
+              // o conteúdo do dia.
+              if (!estado.ajudaDispensada) ...[
+                _CartaoDeAjuda(estado: estado),
+                const SizedBox(height: Spacing.sp16),
+              ],
               // A leitura do plano abre a tela, antes dos devocionais: é a
               // razão do app existir. A leitura da hora vem logo depois, no
               // cartão que ganha o filete; promessas mantém o cartão sem ele,
@@ -50,17 +63,7 @@ class _TelaHojeState extends State<TelaHoje> {
                 destaque: true,
               ),
               const SizedBox(height: Spacing.sp16),
-              _PreviaDaLeitura(
-                data: agora,
-                leitura: Leitura.promessas,
-              ),
-              // Ajuda só para quem chega: um cartão curto na primeira visita,
-              // que some para sempre com "Entendi". Fica depois das leituras
-              // do dia, para não competir com o que o visitante veio ler.
-              if (!estado.ajudaDispensada) ...[
-                const SizedBox(height: Spacing.sp16),
-                _CartaoDeAjuda(estado: estado),
-              ],
+              _PreviaDaLeitura(data: agora, leitura: Leitura.promessas),
             ],
           ),
         ),
@@ -128,10 +131,15 @@ String _saudacaoPelaHora(int hora) {
   return 'Boa noite';
 }
 
-/// Deixa escolher entre câmera e galeria, sobe a foto para o Storage e
-/// atualiza a conta — tudo num toque no avatar de `_Cabecalho`.
+/// As opções da folha de `_escolherFoto`: as duas fontes do `ImagePicker`
+/// mais "remover", que só faz sentido quando já existe uma foto.
+enum _AcaoDeFoto { camera, galeria, remover }
+
+/// Deixa escolher entre câmera, galeria ou remover a foto atual — tudo num
+/// toque no avatar de `_Cabecalho`.
 Future<void> _escolherFoto(BuildContext context) async {
-  final origem = await showModalBottomSheet<ImageSource>(
+  final temFoto = Nuvem.instancia.fotoUrl != null;
+  final acao = await showModalBottomSheet<_AcaoDeFoto>(
     context: context,
     builder: (folha) => SafeArea(
       child: Column(
@@ -140,21 +148,40 @@ Future<void> _escolherFoto(BuildContext context) async {
           ListTile(
             leading: const Icon(Icons.photo_camera),
             title: const Text('Câmera'),
-            onTap: () => Navigator.pop(folha, ImageSource.camera),
+            onTap: () => Navigator.pop(folha, _AcaoDeFoto.camera),
           ),
           ListTile(
             leading: const Icon(Icons.photo_library),
             title: const Text('Galeria'),
-            onTap: () => Navigator.pop(folha, ImageSource.gallery),
+            onTap: () => Navigator.pop(folha, _AcaoDeFoto.galeria),
           ),
+          if (temFoto)
+            ListTile(
+              leading: const Icon(Icons.delete_outline),
+              title: const Text('Remover foto'),
+              onTap: () => Navigator.pop(folha, _AcaoDeFoto.remover),
+            ),
         ],
       ),
     ),
   );
-  if (origem == null || !context.mounted) return;
+  if (acao == null || !context.mounted) return;
+
+  final mensageiro = ScaffoldMessenger.of(context);
+  if (acao == _AcaoDeFoto.remover) {
+    try {
+      await Nuvem.instancia.removerFoto();
+    } catch (erro, pilha) {
+      Registro.erro('_escolherFoto', erro, pilha);
+      mostrarAvisoNo(mensageiro, 'Não foi possível remover a foto.');
+    }
+    return;
+  }
 
   final arquivo = await ImagePicker().pickImage(
-    source: origem,
+    source: acao == _AcaoDeFoto.camera
+        ? ImageSource.camera
+        : ImageSource.gallery,
     // Foto de perfil não precisa da resolução da câmera; menor já poupa
     // banda no upload e no carregamento do avatar depois.
     maxWidth: 512,
@@ -162,7 +189,6 @@ Future<void> _escolherFoto(BuildContext context) async {
   );
   if (arquivo == null || !context.mounted) return;
 
-  final mensageiro = ScaffoldMessenger.of(context);
   try {
     await Nuvem.instancia.atualizarFoto(await arquivo.readAsBytes());
   } catch (erro, pilha) {
@@ -194,31 +220,19 @@ class _Cabecalho extends StatelessWidget {
             if (nuvem.logado) ...[
               GestureDetector(
                 onTap: () => _escolherFoto(context),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundImage: nuvem.fotoUrl != null ? NetworkImage(nuvem.fotoUrl!) : null,
-                      child: nuvem.fotoUrl == null
-                          ? Text(
-                              (nome ?? '?').substring(0, 1).toUpperCase(),
-                              style: tema.headlineMedium?.copyWith(color: cor.primary),
-                            )
-                          : null,
-                    ),
-                    // Único jeito de saber que o avatar aceita toque, já que
-                    // ele não parece um botão por si.
-                    Positioned(
-                      bottom: -2,
-                      right: -2,
-                      child: CircleAvatar(
-                        radius: 12,
-                        backgroundColor: cor.primary,
-                        child: Icon(Icons.camera_alt, size: 14, color: cor.onPrimary),
-                      ),
-                    ),
-                  ],
+                child: CircleAvatar(
+                  radius: 30,
+                  backgroundImage: nuvem.fotoUrl != null
+                      ? NetworkImage(nuvem.fotoUrl!)
+                      : null,
+                  child: nuvem.fotoUrl == null
+                      ? Text(
+                          (nome ?? '?').substring(0, 1).toUpperCase(),
+                          style: tema.headlineMedium?.copyWith(
+                            color: cor.primary,
+                          ),
+                        )
+                      : null,
                 ),
               ),
               const SizedBox(width: Spacing.sp14),
@@ -489,7 +503,11 @@ class _LeituraDeHoje extends StatelessWidget {
           return const _CartaoLeituraProgressoCarregando();
         }
         final dia = snap.data!;
-        return _CartaoLeituraProgresso(dia: dia, estado: estado, ano: data.year);
+        return _CartaoLeituraProgresso(
+          dia: dia,
+          estado: estado,
+          ano: data.year,
+        );
       },
     );
   }
@@ -540,11 +558,8 @@ class _CartaoLeituraProgresso extends StatelessWidget {
                   lido ? Icons.check_circle : Icons.radio_button_unchecked,
                   color: lido ? cor.secondary : cor.onSurfaceVariant,
                 ),
-                onPressed: () => alternarLidoComDesfazer(
-                  context,
-                  estado,
-                  dia.data,
-                ),
+                onPressed: () =>
+                    alternarLidoComDesfazer(context, estado, dia.data),
               ),
             ],
           ),

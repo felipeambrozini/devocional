@@ -34,6 +34,7 @@ import 'telas/notas.dart';
 import 'telas/plano.dart';
 import 'telas/privacidade.dart';
 import 'telas/sobre.dart';
+import 'telas/termos.dart';
 import 'theme.dart';
 
 /// De módulo, e não de um State: o toque numa notificação chega por um
@@ -97,7 +98,10 @@ void _abrirPlanoDoLink(Estado estado) {
 /// um `try`/`catch` — inclusive o que os `unawaited(...)` abaixo derrubam
 /// depois do primeiro quadro, já fora da pilha de chamada do `main`.
 Future<void> main() async {
-  runZonedGuarded(_iniciar, (erro, pilha) => Registro.erro('Zona', erro, pilha));
+  runZonedGuarded(
+    _iniciar,
+    (erro, pilha) => Registro.erro('Zona', erro, pilha),
+  );
 }
 
 Future<void> _iniciar() async {
@@ -150,7 +154,9 @@ Future<void> _iniciar() async {
     // duas telas por cima uma da outra se algum dia os dois coincidirem. Um
     // plano e uma leitura também não chegam juntos na URL; o plano vem
     // primeiro, e a leitura abre só quando não há plano.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _abrirPlanoDoLink(estado));
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _abrirPlanoDoLink(estado),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) => _abrirLeituraDoLink());
   }
 }
@@ -280,7 +286,11 @@ final _router = GoRouter(
     // Sem o recurso liberado, nem um link direto a Conversas ou a uma
     // persona deve abrir o chat — a mesma restrição que esconde a aba e
     // os balões.
-    const caminhosDeConversas = ['/conversas', '/charles-spurgeon', '/felipe-ambrozini'];
+    const caminhosDeConversas = [
+      '/conversas',
+      '/charles-spurgeon',
+      '/felipe-ambrozini',
+    ];
     if (!Recursos.conversas &&
         caminhosDeConversas.any((c) => state.uri.path.startsWith(c))) {
       return '/hoje';
@@ -342,14 +352,12 @@ final _router = GoRouter(
       // A URL própria continua valendo para F5 e link compartilhado.
       builder: (context, state) => const TelaSobre(),
     ),
-    GoRoute(
-      path: '/faq',
-      builder: (context, state) => const TelaFAQ(),
-    ),
+    GoRoute(path: '/faq', builder: (context, state) => const TelaFAQ()),
     GoRoute(
       path: '/privacidade',
       builder: (context, state) => const TelaPrivacidade(),
     ),
+    GoRoute(path: '/termos', builder: (context, state) => const TelaTermos()),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           Moldura(navigationShell: navigationShell),

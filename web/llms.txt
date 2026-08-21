@@ -16,6 +16,7 @@ artificial: Charles Spurgeon e Felipe Ambrozini, o criador do aplicativo.
 - [Sobre](https://www.felipeambrozini.com.br/devocional/sobre): fontes do texto, créditos e canais do criador
 - [Perguntas frequentes](https://www.felipeambrozini.com.br/devocional/faq)
 - [Política de privacidade](https://www.felipeambrozini.com.br/devocional/privacidade)
+- [Termos de serviço](https://www.felipeambrozini.com.br/devocional/termos)
 
 ## Notas
 - Conteúdo só em português brasileiro.

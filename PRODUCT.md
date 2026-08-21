@@ -45,9 +45,9 @@ vitoriana dele, tratando o leitor por "tu".
 - Cópia de segurança de favoritos, notas e progresso por exportar/importar
   (área de transferência); conta Google só na web, para espelhar na nuvem.
 - Navegação: abas Hoje, Bíblia, Devocional, Plano, Notas e Conversas; Sobre
-  (créditos, canais e ajuda), Perguntas frequentes e Política de privacidade
-  moram na folha de ajustes. Na web cada aba tem URL própria; `/sobre`, `/faq`,
-  `/privacidade` e cada conversa também, e links diretos no formato
+  (créditos, canais e ajuda), Perguntas frequentes, Política de privacidade e
+  Termos de serviço moram na folha de ajustes. Na web cada aba tem URL própria;
+  `/sobre`, `/faq`, `/privacidade`, `/termos` e cada conversa também, e links diretos no formato
   `?ler=joao.3.16` abrem um versículo (`?plano=<id>` abre um plano
   compartilhado).
 - Conversas com IA (Gemini): duas personas, Charles Spurgeon e Felipe

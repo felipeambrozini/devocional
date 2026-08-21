@@ -397,6 +397,21 @@ class Nuvem extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Volta ao avatar da inicial: apaga o arquivo do Storage (se houver — a
+  /// foto pode ter vindo direto da conta Google, sem nunca passar por
+  /// [atualizarFoto]) e limpa a photoURL da conta.
+  Future<void> removerFoto() async {
+    final usuario = FirebaseAuth.instance.currentUser;
+    if (usuario == null) return;
+    try {
+      await FirebaseStorage.instance.ref('fotos_de_perfil/${usuario.uid}.jpg').delete();
+    } on FirebaseException catch (erro) {
+      if (erro.code != 'object-not-found') rethrow;
+    }
+    await usuario.updatePhotoURL(null);
+    notifyListeners();
+  }
+
   Future<void> sair() async {
     // Despeja o que ainda aguardava o debounce antes de derrubar a sessão:
     // o signOut para a sincronia, e a última mudança não pode ficar presa no

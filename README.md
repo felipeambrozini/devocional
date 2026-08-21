@@ -64,13 +64,13 @@ mesmo código).
 | Notas | Favoritos e anotações |
 | Conversas | Chat com Spurgeon e Felipe (IA); em tela larga vira balão flutuante no lugar da aba |
 
-Sobre (créditos, fonte da tradução, canais e ajuda), Perguntas frequentes e
-Política de privacidade não são abas: moram no fim da folha de ajustes, com
-URL própria cada uma.
+Sobre (créditos, fonte da tradução, canais e ajuda), Perguntas frequentes,
+Política de privacidade e Termos de serviço não são abas: moram no fim da
+folha de ajustes, com URL própria cada uma.
 
 Na web, cada aba tem a própria URL (`/hoje`, `/biblia`, `/devocional`,
 `/plano`, `/notas`, `/conversas`) — dá para abrir, atualizar ou compartilhar
-qualquer uma direto; `/sobre`, `/faq`, `/privacidade` e cada conversa
+qualquer uma direto; `/sobre`, `/faq`, `/privacidade`, `/termos` e cada conversa
 (`/charles-spurgeon`, `/felipe-ambrozini`) também têm URL própria. `?ler=joao.3.16`
 na URL abre esse versículo por cima da aba, e `?plano=<id>` (ou
 `?plano=<slug>-<id>`, com o título do plano na frente só por estética) abre um
@@ -415,6 +415,11 @@ motivo novo.
   uma lacuna real: o resumo antigo dizia que só favoritos, anotações e dias
   lidos subiam, mas `Nuvem._empurrarConversas` (`lib/data/nuvem.dart`) também
   sincroniza o histórico do chat com IA para quem tem conta.
+- **Termos de serviço** (21/08/2026): `lib/telas/termos.dart`, rota própria
+  (`/termos`) e entrada na folha de ajustes ao lado de Sobre, com o mesmo
+  tratamento visual da política de privacidade. Criada para preencher o campo
+  de link de termos exigido pela tela de consentimento OAuth do Google Cloud
+  Console (`APIs & Services → OAuth consent screen → Edit app registration`).
 - **`web/robots.txt` e `web/llms.txt`** (20/08/2026): liberação de rastreamento
   padrão e um resumo do produto no formato `llms.txt` (llmstxt.org), com links
   para o app, Sobre, FAQ e privacidade. Nenhum dos dois existia antes; nenhuma

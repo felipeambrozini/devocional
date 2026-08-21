@@ -56,7 +56,12 @@ class _TelaSobreState extends State<TelaSobre> {
       ),
       body: LarguraDeLeitura(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp16, Spacing.sp20, Spacing.sp40),
+          padding: const EdgeInsets.fromLTRB(
+            Spacing.sp20,
+            Spacing.sp16,
+            Spacing.sp20,
+            Spacing.sp40,
+          ),
           children: [
             Text('Devocional', style: tema.displayMedium),
             const SizedBox(height: Spacing.sp8),
@@ -119,8 +124,7 @@ class _TelaSobreState extends State<TelaSobre> {
                     child: TextButton.icon(
                       icon: const Icon(Icons.refresh),
                       label: const Text('Tentar de novo'),
-                      onPressed: () =>
-                          setState(() => _tentativasDaDemo++),
+                      onPressed: () => setState(() => _tentativasDaDemo++),
                     ),
                   );
                 }
@@ -136,8 +140,8 @@ class _TelaSobreState extends State<TelaSobre> {
                 // encurte o áudio do capítulo completo na cache da Bíblia.
                 final trecho = [
                   capitulo.referencia,
-                  for (final (numero, texto)
-                      in capitulo.versiculos.take(3)) '$numero. $texto',
+                  for (final (numero, texto) in capitulo.versiculos.take(3))
+                    '$numero. $texto',
                 ].join(' ');
                 return BotaoDeVoz(
                   chave: 'trecho:${capitulo.livro}.${capitulo.numero}',
@@ -197,6 +201,12 @@ class _TelaSobreState extends State<TelaSobre> {
                 leading: Icon(Icons.privacy_tip_outlined, color: cor.primary),
                 title: const Text('Política de privacidade completa'),
                 onTap: () => GoRouter.of(context).push('/privacidade'),
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.description_outlined, color: cor.primary),
+                title: const Text('Termos de serviço'),
+                onTap: () => GoRouter.of(context).push('/termos'),
               ),
               const SizedBox(height: Spacing.sp8),
               ListenableBuilder(
