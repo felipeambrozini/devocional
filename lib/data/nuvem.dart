@@ -239,6 +239,15 @@ class Nuvem extends ChangeNotifier {
       logadoForcado ?? (_pronta && FirebaseAuth.instance.currentUser != null);
   String? get email => _pronta ? FirebaseAuth.instance.currentUser?.email : null;
 
+  /// Se [entrar] está em andamento, para os botões de "Entrar" mostrarem um
+  /// spinner e ficarem desabilitados — sem isto o toque parecia não fazer
+  /// nada enquanto o seletor de conta ou a troca de token com o Firebase
+  /// demoravam. Um flag só, e não um por botão: os três botões que chamam
+  /// [entrar] (ver `entrarNaConta` em `lib/telas/comuns.dart`) apontam para
+  /// a mesma instância, então todos refletem o mesmo login em andamento.
+  bool _entrando = false;
+  bool get entrando => _entrando;
+
   /// O uid de quem está com a conta aberta, para saber se é o criador de um
   /// plano compartilhado (ver `excluirPlano`/`sairDoPlano` em
   /// `lib/telas/comuns.dart`). null sem conta, ou antes de [iniciar].
@@ -392,40 +401,49 @@ class Nuvem extends ChangeNotifier {
   /// `signInWithCredential` do Firebase. Quem cancela fora da web sai sem
   /// erro, como o popup fechado na web.
   Future<void> entrar() async {
-    if (kIsWeb) {
-      final mobil =
-          defaultTargetPlatform == TargetPlatform.iOS ||
-          defaultTargetPlatform == TargetPlatform.android;
-      if (mobil) {
-        await FirebaseAuth.instance.signInWithRedirect(GoogleAuthProvider());
-      } else {
-        await FirebaseAuth.instance.signInWithPopup(GoogleAuthProvider());
-      }
-      return;
-    }
-    if (!_googlePronto) {
-      await GoogleSignIn.instance.initialize(
-        serverClientId: _googleServerClientId,
-      );
-      _googlePronto = true;
-    }
-    final GoogleSignInAccount conta;
+    // Síncrono até aqui (nenhum await acima) — não consome o gesto que abre
+    // o popup/seletor de conta logo adiante.
+    _entrando = true;
+    notifyListeners();
     try {
-      conta = await GoogleSignIn.instance.authenticate();
-    } on GoogleSignInException catch (erro) {
-      // Cancelar não é erro: o gesto de "Entrar" foi interrompido, e o app
-      // continua deslogado sem aviso. O mesmo vale para o popup fechado na
-      // web, tratado por quem chama com FirebaseAuthException.
-      if (erro.code == GoogleSignInExceptionCode.canceled ||
-          erro.code == GoogleSignInExceptionCode.interrupted ||
-          erro.code == GoogleSignInExceptionCode.uiUnavailable) {
+      if (kIsWeb) {
+        final mobil =
+            defaultTargetPlatform == TargetPlatform.iOS ||
+            defaultTargetPlatform == TargetPlatform.android;
+        if (mobil) {
+          await FirebaseAuth.instance.signInWithRedirect(GoogleAuthProvider());
+        } else {
+          await FirebaseAuth.instance.signInWithPopup(GoogleAuthProvider());
+        }
         return;
       }
-      rethrow;
+      if (!_googlePronto) {
+        await GoogleSignIn.instance.initialize(
+          serverClientId: _googleServerClientId,
+        );
+        _googlePronto = true;
+      }
+      final GoogleSignInAccount conta;
+      try {
+        conta = await GoogleSignIn.instance.authenticate();
+      } on GoogleSignInException catch (erro) {
+        // Cancelar não é erro: o gesto de "Entrar" foi interrompido, e o app
+        // continua deslogado sem aviso. O mesmo vale para o popup fechado na
+        // web, tratado por quem chama com FirebaseAuthException.
+        if (erro.code == GoogleSignInExceptionCode.canceled ||
+            erro.code == GoogleSignInExceptionCode.interrupted ||
+            erro.code == GoogleSignInExceptionCode.uiUnavailable) {
+          return;
+        }
+        rethrow;
+      }
+      await FirebaseAuth.instance.signInWithCredential(
+        GoogleAuthProvider.credential(idToken: conta.authentication.idToken),
+      );
+    } finally {
+      _entrando = false;
+      notifyListeners();
     }
-    await FirebaseAuth.instance.signInWithCredential(
-      GoogleAuthProvider.credential(idToken: conta.authentication.idToken),
-    );
   }
 
   /// Sobe a foto escolhida na câmera ou galeria (`_escolherFoto` em

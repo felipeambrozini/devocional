@@ -286,8 +286,14 @@ class _BotaoDeConta extends StatelessWidget {
               label: const Text('Sair'),
             )
           : OutlinedButton.icon(
-              onPressed: () => entrarNaConta(context, nuvem),
-              icon: const Icon(Icons.login, size: 18),
+              onPressed: nuvem.entrando ? null : () => entrarNaConta(context, nuvem),
+              icon: nuvem.entrando
+                  ? const SizedBox(
+                      width: Spacing.sp18,
+                      height: Spacing.sp18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.login, size: 18),
               label: const Text('Entrar'),
             ),
     );

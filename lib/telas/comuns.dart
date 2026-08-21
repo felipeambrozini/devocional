@@ -853,22 +853,26 @@ Future<void> entrarNaConta(BuildContext context, Nuvem nuvem) async {
     if (!context.mounted) return;
     // "Navegador"/"janelas" só faz sentido no popup/redirect da web — no
     // fluxo nativo (Android/iOS) o `FirebaseAuthException` vem de outra
-    // causa (credencial inválida, rede, App Check), e a mensagem de popup
-    // só confundiria.
+    // causa (credencial inválida, rede, App Check). Mostra `code`/`message`
+    // reais na tela (não só no registro.log), pra dar pra reportar sem
+    // precisar de `adb logcat` — ponytail: texto cru da exceção, sem
+    // tradução por código; se isto for pra produção com usuário final,
+    // trocar por mensagens específicas por `erro.code`.
     mostrarAviso(
       context,
       kIsWeb
           ? 'Não foi possível entrar. Verifique se o navegador permite '
                 'janelas deste site.'
-          : 'Não foi possível entrar. Tente novamente.',
+          : 'Não foi possível entrar (${erro.code}): ${erro.message}',
     );
   } catch (erro, pilha) {
     // Qualquer outra falha (Firebase sem inicializar, sem rede, App Check
     // recusando o token) não pode deixar o botão "Entrar" sem reação
-    // nenhuma: melhor um aviso genérico do que o toque parecer ignorado.
+    // nenhuma: melhor um aviso com o erro cru do que o toque parecer
+    // ignorado.
     Registro.erro('entrarNaConta', erro, pilha);
     if (!context.mounted) return;
-    mostrarAviso(context, 'Não foi possível entrar. Tente novamente.');
+    mostrarAviso(context, 'Não foi possível entrar: $erro');
   }
 }
 

@@ -765,13 +765,24 @@ class _CartaoDeEntrar extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: Spacing.sp16),
-                FilledButton.icon(
-                  onPressed: () async {
-                    await entrarNaConta(context, Nuvem.instancia);
-                    onEntrar();
-                  },
-                  icon: const Icon(Icons.login),
-                  label: const Text('Entrar com Google'),
+                ListenableBuilder(
+                  listenable: Nuvem.instancia,
+                  builder: (context, _) => FilledButton.icon(
+                    onPressed: Nuvem.instancia.entrando
+                        ? null
+                        : () async {
+                            await entrarNaConta(context, Nuvem.instancia);
+                            onEntrar();
+                          },
+                    icon: Nuvem.instancia.entrando
+                        ? const SizedBox(
+                            width: Spacing.sp18,
+                            height: Spacing.sp18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.login),
+                    label: const Text('Entrar com Google'),
+                  ),
                 ),
               ],
             ),
