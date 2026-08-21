@@ -69,9 +69,11 @@ vitoriana dele, tratando o leitor por "tu".
 - Favoritos, notas, copiar e compartilhar por versículo; busca em duas abas
   (Bíblia e devocionais); a busca das marcações filtra referência e nota, não
   o corpo do versículo (deliberado).
-- Texto selecionável e copiável na Bíblia, no Devocional e na Introdução; o
-  menu de seleção (o clique forte que já abre a seleção) ganha um botão de
-  Compartilhar para o trecho escolhido.
+- Texto selecionável e copiável na Bíblia, no Devocional e na Introdução. No
+  Devocional e na Introdução, o menu de seleção (o clique forte que já abre a
+  seleção) ganha um botão de Compartilhar para o trecho escolhido; na
+  Bíblia, Compartilhar continua só pelo toque no versículo (a mesma folha de
+  Favoritar, Copiar, Anotar).
 - Layout responsivo: barra inferior no celular, trilho lateral a partir de
   720px; gesto de deslizar troca capítulo no celular, setas na web.
 - Lembretes inexatos (sem permissão de alarme exato), canal com importância
@@ -95,6 +97,10 @@ vitoriana dele, tratando o leitor por "tu".
   `web/og.png`), sobre marrom `#2E1B10` (fundo claro `#F7F1E3` para as
   variantes que seguem o tema); montada por `tools/icones.py` e gerada nas
   plataformas por `flutter_launcher_icons`, nunca editada à mão.
+- Tela de abertura (splash): a mesma marca-texto "Devocional", sem foto,
+  dourada no escuro e em bronze no claro (rebrand de 21/08/2026); montada por
+  `tools/icones.py --splash` e gerada nas plataformas por
+  `flutter_native_splash`.
 - Fontes empacotadas localmente: Cinzel (títulos) e Montserrat (corpo),
   variáveis, pesadas via `fontVariations` em `lib/theme.dart`.
 - Duas paletas fixas: marrom e dourado no escuro, pergaminho e bronze no

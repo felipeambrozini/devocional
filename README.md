@@ -293,15 +293,17 @@ motivo novo.
   dois lugares ao mesmo tempo** e rodar a suíte local antes de comitar.
 - **`AreaDeSelecaoComCompartilhar` (`lib/telas/comuns.dart`, 20/08/2026)
   envolve `SelectionArea` e acrescenta "Compartilhar" ao menu de seleção**,
-  usada igual na Bíblia, no Devocional e na Introdução: o texto vira
-  selecionável e copiável de fábrica, e o mesmo clique forte que abre a
-  seleção nativa ganha um botão a mais para compartilhar o trecho escolhido
-  (via `share_plus`, sem formatação de referência — a seleção pode não bater
-  com um versículo inteiro). `SelectableRegionState` não expõe o texto
-  selecionado publicamente; o widget captura pelo `onSelectionChanged` do
-  `SelectionArea` e lê o valor mais recente ao montar o menu. Não substitui a
-  folha de ações do versículo (Favoritar, Copiar, Compartilhar, Anotar; ver
-  abaixo), que continua no toque sobre a linha.
+  usada no Devocional e na Introdução: o texto vira selecionável e copiável
+  de fábrica, e o mesmo clique forte que abre a seleção nativa ganha um botão
+  a mais para compartilhar o trecho escolhido (via `share_plus`, sem
+  formatação de referência — a seleção pode não bater com um parágrafo
+  inteiro). `SelectableRegionState` não expõe o texto selecionado
+  publicamente; o widget captura pelo `onSelectionChanged` do `SelectionArea`
+  e lê o valor mais recente ao montar o menu. **A Bíblia não usa esse
+  widget** — ali o `SelectionArea` continua puro (só seleção e cópia
+  nativas), e Compartilhar continua exclusivo da folha de ações do versículo
+  (Favoritar, Copiar, Compartilhar, Anotar; ver abaixo), aberta pelo toque na
+  linha.
 
 ### Lembretes diários (Android)
 
@@ -439,9 +441,15 @@ motivo novo.
   para quando Android/iOS 18 tiverem variante clara configurada (ainda manual,
   o `flutter_launcher_icons` 0.14.4 não gera isso); `icone_tingido.png`
   (silhueta transparente) para o ícone tingido do iOS 18.
+- **A splash também é a marca-texto "Devocional"** (mesma fonte, dourada no
+  tema escuro e em bronze no claro — dourado sobre pergaminho é ilegível,
+  mesmo motivo do favicon claro acima), não mais a foto do Felipe (rebrand de
+  21/08/2026). As artes ficam em `assets/icone/` (`splash.png`/
+  `splash_escuro.png` e as variantes `_android12`, recuadas para caber no
+  círculo que o Android 12+ recorta), montadas por `tools/icones.py --splash`.
 - **Tela de abertura e ícone do lançador são coisas diferentes, e só uma delas
   acompanha o tema em todo lugar.** A **splash** troca por tema nas duas
-  plataformas (`dart run flutter_native_splash:create`, configurado no
+  plataformas (`image`/`image_dark` do `flutter_native_splash`, configurado no
   `pubspec.yaml`). O **ícone** acompanha o tema no Android (qualificador
   `-night` no fundo do ícone adaptativo; verificado num Galaxy; lançadores
   guardam o ícone em cache, desinstalar para ver a mudança) e no favicon da web
@@ -488,6 +496,7 @@ flutter build web --dart-define-from-file=.env.json
 python tools/icones.py --fontes
 dart run flutter_launcher_icons
 python tools/icones.py --corrigir
+python tools/icones.py --splash
 dart run flutter_native_splash:create
 ```
 

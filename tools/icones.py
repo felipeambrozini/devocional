@@ -1,11 +1,14 @@
-"""Monta o icone do app a partir da marca "Devocional" — mesma fonte e cores
-do web/og.png — e corrige o que o flutter_launcher_icons deixa errado.
+"""Monta o icone e a splash do app a partir da marca "Devocional" — mesma
+fonte e cores do web/og.png — e corrige o que o flutter_launcher_icons deixa
+errado.
 
 Rodar da raiz do repositorio, nesta ordem:
 
     python tools/icones.py --fontes
     dart run flutter_launcher_icons
     python tools/icones.py --corrigir
+    python tools/icones.py --splash
+    fvm dart run flutter_native_splash:create
 
 O passo --corrigir e' obrigatorio: o gerador copia o icone normal nos
 Icon-maskable-*, e o Chrome recorta o maskable em circulo. Ele tambem gera o
@@ -17,6 +20,11 @@ prefers-color-scheme, em web/index.html). `icone_claro.png` fica pronto em
 assets/icone/ para quando o Android/iOS 18 tiverem uma segunda aparencia
 configurada — o flutter_launcher_icons 0.14.4 nao gera variante clara/escura/
 tingida sozinho, entao essa parte ainda e' manual.
+
+A splash, ao contrario, troca de cor nos dois temas (flutter_native_splash
+suporta `image_dark`), entao --splash gera quatro artes com fundo
+transparente — dourado para o tema escuro, bronze para o claro, cada uma em
+duas escalas (a base e a recuada para caber no circulo do Android 12+).
 """
 
 import argparse
@@ -42,19 +50,20 @@ TEXTO = 'Devocional'
 LARGURA_MAX = round(LADO * 0.62)
 
 
-def _texto(cor, fundo=None) -> Image.Image:
+def _texto(cor, fundo=None, largura_max=None) -> Image.Image:
     """"Devocional" centralizado num quadrado, no maior tamanho que cabe.
 
-    `fundo` None deixa transparente (icone tingido do iOS 18: o sistema pinta
-    a arte com a cor escolhida, entao so a silhueta importa).
+    `fundo` None deixa transparente (icone tingido do iOS 18 e splash: o
+    sistema/tema pinta a lona atras, entao so a silhueta importa).
     """
+    largura_max = largura_max or LARGURA_MAX
     lona = Image.new('RGBA', (LADO, LADO), fundo or (0, 0, 0, 0))
     desenho = ImageDraw.Draw(lona)
     tamanho = 400
     while True:
         fonte = ImageFont.truetype(str(FONTE_TTF), tamanho)
         caixa = desenho.textbbox((0, 0), TEXTO, font=fonte)
-        if caixa[2] - caixa[0] <= LARGURA_MAX:
+        if caixa[2] - caixa[0] <= largura_max:
             break
         tamanho -= 4
     # O anchor "mm" centraliza pela metrica da fonte (que reserva espaco para
@@ -119,6 +128,20 @@ def _fundo_do_icone_no_escuro() -> None:
     print(f'values-night/colors.xml: fundo do icone {cor} no tema escuro')
 
 
+def splash() -> None:
+    """Gera as artes da splash: fundo transparente, cor por tema.
+
+    A base usa a mesma folga do icone (LARGURA_MAX); a variante "_android12"
+    e' recuada para caber no circulo que o Android 12+ recorta por cima.
+    """
+    FONTES.mkdir(parents=True, exist_ok=True)
+    recuo_android12 = round(LADO * 0.45)
+    for nome, cor in (('splash', BRONZE), ('splash_escuro', DOURADO)):
+        _texto(cor).save(FONTES / f'{nome}.png')
+        _texto(cor, largura_max=recuo_android12).save(FONTES / f'{nome}_android12.png')
+        print(f'{nome}.png / {nome}_android12.png: {LADO}x{LADO}, sem fundo')
+
+
 def corrigir() -> None:
     _fundo_do_icone_no_escuro()
 
@@ -148,10 +171,14 @@ if __name__ == '__main__':
                     help='monta assets/icone/ a partir da marca "Devocional"')
     p.add_argument('--corrigir', action='store_true',
                     help='reescreve os maskable e os favicons depois do gerador')
+    p.add_argument('--splash', action='store_true',
+                    help='monta as artes da splash (dourado/bronze, sem fundo)')
     args = p.parse_args()
-    if not (args.fontes or args.corrigir):
-        p.error('escolha --fontes ou --corrigir')
+    if not (args.fontes or args.corrigir or args.splash):
+        p.error('escolha --fontes, --corrigir ou --splash')
     if args.fontes:
         fontes()
     if args.corrigir:
         corrigir()
+    if args.splash:
+        splash()

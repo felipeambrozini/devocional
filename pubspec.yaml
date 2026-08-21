@@ -97,7 +97,8 @@ flutter_launcher_icons:
     theme_color: "#C9A227"
 
 # Tela de abertura nativa, gerada por:
-#   dart run flutter_native_splash:create
+#   python tools/icones.py --splash
+#   fvm dart run flutter_native_splash:create
 #
 # Sem isto o Android usa o modelo padrão do Flutter e abre em branco no tema
 # claro e em preto no escuro, e nenhum dos dois é a cor do app. No Android 12+ o
@@ -105,17 +106,19 @@ flutter_launcher_icons:
 # ícone marrom aparecer sobre branco e parecer o ícone errado para o tema.
 #
 # Aqui, ao contrário do ícone do lançador, a troca por tema funciona em todas as
-# plataformas: a splash é desenhada com os recursos do próprio app.
+# plataformas: a splash é a marca "Devocional" sem fundo, dourada no escuro e
+# em bronze no claro (dourado sobre pergaminho é ilegível, mesmo motivo do
+# tools/icones.py), com a lona atrás em Cores.pergaminho/Cores.fundo.
 flutter_native_splash:
-  # Uma arte só, sem fundo, e duas cores. O rosto é o mesmo nos dois temas; quem
-  # muda é a lona atrás, Cores.pergaminho e Cores.fundo de lib/theme.dart.
   color: "#F7F1E3"
   color_dark: "#2E1B10"
   image: assets/icone/splash.png
+  image_dark: assets/icone/splash_escuro.png
   android_12:
     color: "#F7F1E3"
     color_dark: "#2E1B10"
     image: assets/icone/splash_android12.png
+    image_dark: assets/icone/splash_escuro_android12.png
   # A web já tem a própria abertura em web/index.html, com a cor por
   # prefers-color-scheme e um marcador retirado no flutter-first-frame. Deixar o
   # gerador mexer ali sobrescreveria isso.

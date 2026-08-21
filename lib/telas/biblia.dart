@@ -392,7 +392,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
                       // continua sendo o caminho.
                       final corpoLeitura = _semGestoDeToque
                           ? leitor
-                          : AreaDeSelecaoComCompartilhar(child: leitor);
+                          : SelectionArea(child: leitor);
                       // Alça de arraste na borda esquerda (mobile): indica que
                       // deslizar horizontalmente troca de capítulo. O tooltip
                       // de primeiro uso só some quando o gesto acontece de
