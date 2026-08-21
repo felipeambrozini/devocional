@@ -399,6 +399,13 @@ motivo novo.
   `exportar()` com a última enviada. Documento único por usuário no Firestore
   (`usuarios/{uid}`); **remoção não sincroniza** (importar funde e nunca apaga).
   Login por `signInWithPopup` na web; no Android/iOS usa `google_sign_in` nativo.
+- **Login web em navegador mobile usa `signInWithRedirect`** (21/08/2026): no
+  Chrome/Safari de iOS e Android o `signInWithPopup` abre a janela e deixa
+  escolher a conta, mas a troca de token com a janela original falha
+  (armazenamento particionado do navegador mobile) — daí `entrar()` em
+  `lib/data/nuvem.dart` checar `defaultTargetPlatform` (que reflete o
+  user-agent mesmo com `kIsWeb`) e usar redirect só nesse caso, mantendo popup
+  no desktop.
 - **`lib/firebase_options.dart` lê do `.env.json` via `flutter_dotenv`** (19/08/2026):
   não é mais gerado pelo `flutterfire configure`. As chaves ficam no `.env.json`
   (gitignored) e entram via `dotenv.env['CHAVE']` no `firebase_options.dart`.
@@ -420,14 +427,25 @@ motivo novo.
   tratamento visual da política de privacidade. Criada para preencher o campo
   de link de termos exigido pela tela de consentimento OAuth do Google Cloud
   Console (`APIs & Services → OAuth consent screen → Edit app registration`).
-- **`web/robots.txt` e `web/llms.txt`** (20/08/2026): liberação de rastreamento
-  padrão e um resumo do produto no formato `llms.txt` (llmstxt.org), com links
-  para o app, Sobre, FAQ e privacidade. Nenhum dos dois existia antes; nenhuma
-  `sitemap.xml` foi criada porque o site não tem uma. O domínio
-  `felipeambrozini.com.br` é hoje dedicado só a este app, então o passo de
-  deploy que já copiava `404.html` para a raiz do `public` (ver acima) também
-  copia estes dois: rastreador e ferramenta de IA olham a raiz do domínio, não
-  o subcaminho `/devocional/` onde o app mora.
+- **`web/robots.txt`, `web/llms.txt` e `web/sitemap.xml`** (20-21/08/2026):
+  liberação de rastreamento padrão, um resumo do produto no formato `llms.txt`
+  (llmstxt.org) e um sitemap estático com as rotas conhecidas (`/`, `/sobre`,
+  `/faq`, `/privacidade`, `/termos`), referenciado por uma linha `Sitemap:` no
+  `robots.txt`. O domínio `felipeambrozini.com.br` é hoje dedicado só a este
+  app, então o passo de deploy que já copiava `404.html` para a raiz do
+  `public` (ver acima) também copia estes três: rastreador e ferramenta de IA
+  olham a raiz do domínio, não o subcaminho `/devocional/` onde o app mora.
+- **Rodapé estático em `<noscript>` no `web/index.html`** (21/08/2026): o app
+  inteiro é pintado em canvas (CanvasKit), então nenhum rastreador lê texto de
+  dentro das telas Flutter, nem os links de "Onde me encontrar" da tela Sobre.
+  Um rodapé só em HTML, dentro de `<noscript>`, repete esses links (YouTube,
+  Instagram, FAQ, privacidade, termos) para rastreador e leitor de tela sem
+  JavaScript — sem aparecer para quem usa o app normalmente.
+- **Sem Google Analytics ou outra ferramenta de análise de terceiros, de
+  propósito** — o `llms.txt` declara publicamente "sem ferramenta de análise
+  de uso de terceiros"; adicionar uma quebraria essa promessa. Não reabrir sem
+  primeiro decidir remover essa linha do `llms.txt` e da política de
+  privacidade.
 
 ### Ícone, splash e fontes
 

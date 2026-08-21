@@ -292,6 +292,7 @@ class Conteudo {
   Future<List<AchadoDevocional>> buscarDevocionais(String termo) async {
     final alvo = _normalizar(termo);
     if (alvo.length < 3) return const [];
+    final expressao = _regexDePalavra(alvo);
 
     final devocionais = await _carregarDevocionais();
     final promessas = await _carregarPromessas();
@@ -300,8 +301,8 @@ class Conteudo {
     void conferir(String leitura, String data, Map<String, dynamic> entrada) {
       final titulo = entrada['titulo'] as String? ?? '';
       final texto = entrada['devocional'] as String? ?? '';
-      if (_normalizar(titulo).contains(alvo) ||
-          _normalizar(texto).contains(alvo)) {
+      if (expressao.hasMatch(_normalizar(titulo)) ||
+          expressao.hasMatch(_normalizar(texto))) {
         achados.add(
           AchadoDevocional(
             leitura: leitura,
@@ -359,6 +360,7 @@ class Conteudo {
   }) async* {
     final alvo = _normalizar(termo);
     if (alvo.length < 3) return;
+    final expressao = _regexDePalavra(alvo);
     var total = 0;
     for (final livro in canon) {
       final dados = await _carregarLivro(livro.slug);
@@ -370,7 +372,7 @@ class Conteudo {
         for (final entrada
             in (cap['versiculos'] as Map<String, dynamic>).entries) {
           final texto = entrada.value as String;
-          if (_normalizar(texto).contains(alvo)) {
+          if (expressao.hasMatch(_normalizar(texto))) {
             yield Achado(
               livro: livro.slug,
               capitulo: n,
@@ -388,6 +390,15 @@ class Conteudo {
   /// Pública porque a tela de busca usa a mesma normalização para realçar o termo
   /// no texto original; duas normalizações diferentes desalinhariam o destaque.
   static String normalizar(String valor) => _normalizar(valor);
+
+  /// Casa o termo só como palavra (ou expressão) inteira, não como pedaço de
+  /// outra: sem os limites `\b`, buscar "amor" também achava "amorreus".
+  /// Pública para a tela de busca usar a mesma regra ao grifar o termo achado.
+  static RegExp regexDePalavra(String alvoNormalizado) =>
+      _regexDePalavra(alvoNormalizado);
+
+  static RegExp _regexDePalavra(String alvoNormalizado) =>
+      RegExp(r'\b' + RegExp.escape(alvoNormalizado) + r'\b');
 
   static String _normalizar(String valor) {
     final minusculo = valor.toLowerCase();

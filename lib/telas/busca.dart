@@ -30,6 +30,7 @@ class _TelaBuscaState extends State<TelaBusca> {
   final _controle = TextEditingController();
   final _achados = <Achado>[];
   StreamSubscription<Achado>? _assinatura;
+  Timer? _debounce;
   bool _buscando = false;
   bool _erro = false;
   String _termoBuscado = '';
@@ -45,19 +46,35 @@ class _TelaBuscaState extends State<TelaBusca> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _assinatura?.cancel();
     _controle.dispose();
     super.dispose();
   }
 
-  void _buscar(Versao versao) {
+  /// Dispara a busca sozinha um instante depois que a digitação parar, em
+  /// vez de esperar clique no botão. O atraso evita buscar a cada tecla.
+  void _aoDigitar(Versao versao) {
+    setState(() {});
+    _debounce?.cancel();
+    _debounce = Timer(
+      const Duration(milliseconds: 400),
+      () => _buscar(versao, avisar: false),
+    );
+  }
+
+  void _buscar(Versao versao, {bool avisar = true}) {
+    _debounce?.cancel();
     final termo = _controle.text.trim();
-    // Menos de três letras devolveria meia Bíblia e não ajudaria ninguém.
-    // Sem este aviso a guarda falhava em silêncio: nada buscava e nada
-    // explicava por quê.
-    if (termo.isEmpty) return;
-    if (termo.length < 3) {
-      mostrarAviso(context, 'Escreva ao menos três letras para buscar.');
+    // Menos de três letras devolveria meia Bíblia e não ajudaria ninguém. Ao
+    // digitar, isso só limpa os resultados em silêncio; só o clique no botão
+    // ou o Enter avisam, senão a mensagem apareceria a cada letra digitada.
+    if (termo.isEmpty || termo.length < 3) {
+      if (avisar) {
+        mostrarAviso(context, 'Escreva ao menos três letras para buscar.');
+      } else {
+        _resetarResultados();
+      }
       return;
     }
 
@@ -115,11 +132,10 @@ class _TelaBuscaState extends State<TelaBusca> {
     }
   }
 
-  /// Esvazia a busca e devolve a tela ao estado inicial, em vez de pedir
-  /// para quem pesquisou apagar o termo letra por letra.
-  void _limpar() {
+  /// Devolve os resultados ao estado inicial sem tocar no texto digitado:
+  /// usado quando a digitação encolhe abaixo de três letras.
+  void _resetarResultados() {
     _assinatura?.cancel();
-    _controle.clear();
     setState(() {
       _achados.clear();
       _achadosDevocionais = [];
@@ -130,6 +146,14 @@ class _TelaBuscaState extends State<TelaBusca> {
       _termoBuscado = '';
       _referencia = null;
     });
+  }
+
+  /// Esvazia a busca e devolve a tela ao estado inicial, em vez de pedir
+  /// para quem pesquisou apagar o termo letra por letra.
+  void _limpar() {
+    _debounce?.cancel();
+    _controle.clear();
+    _resetarResultados();
   }
 
   @override
@@ -154,10 +178,9 @@ class _TelaBuscaState extends State<TelaBusca> {
                   controller: _controle,
                   autofocus: true,
                   textInputAction: TextInputAction.search,
-                  // Sem o onChanged não há rebuild quando o texto muda, e o
-                  // botão de limpar (que só aparece com texto) ficaria preso
-                  // ao estado do primeiro frame.
-                  onChanged: (_) => setState(() {}),
+                  // Além de atualizar o botão de limpar, dispara a busca
+                  // automaticamente um instante depois que a digitação parar.
+                  onChanged: (_) => _aoDigitar(versao),
                   onSubmitted: (_) => _buscar(versao),
                   decoration: InputDecoration(
                     hintText: 'Palavra, expressão ou referência',
@@ -560,19 +583,16 @@ TextSpan destacar(String texto, String termo, TextTheme tema, ColorScheme cor) {
   final base = tema.bodyMedium?.copyWith(height: 1.5);
   final forte = base?.copyWith(color: cor.secondary, fontWeight: FontWeight.w700);
   final textoSemAcento = Conteudo.normalizar(texto);
-  final termoSemAcento = Conteudo.normalizar(termo);
+  final expressao = Conteudo.regexDePalavra(Conteudo.normalizar(termo));
 
   final pedacos = <TextSpan>[];
   var cursor = 0;
-  while (true) {
-    final achou = textoSemAcento.indexOf(termoSemAcento, cursor);
-    if (achou < 0) break;
-    if (achou > cursor) {
-      pedacos.add(TextSpan(text: texto.substring(cursor, achou), style: base));
+  for (final acerto in expressao.allMatches(textoSemAcento)) {
+    if (acerto.start > cursor) {
+      pedacos.add(TextSpan(text: texto.substring(cursor, acerto.start), style: base));
     }
-    final fim = achou + termoSemAcento.length;
-    pedacos.add(TextSpan(text: texto.substring(achou, fim), style: forte));
-    cursor = fim;
+    pedacos.add(TextSpan(text: texto.substring(acerto.start, acerto.end), style: forte));
+    cursor = acerto.end;
   }
   if (cursor < texto.length) {
     pedacos.add(TextSpan(text: texto.substring(cursor), style: base));

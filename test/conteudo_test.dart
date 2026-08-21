@@ -225,6 +225,17 @@ void main() {
     });
   });
 
+  group('regexDePalavra', () {
+    test('não casa o termo como pedaço de outra palavra', () {
+      final regex = Conteudo.regexDePalavra(Conteudo.normalizar('amor'));
+      expect(
+        regex.hasMatch(Conteudo.normalizar('os amorreus habitavam a terra')),
+        isFalse,
+      );
+      expect(regex.hasMatch(Conteudo.normalizar('Deus é amor')), isTrue);
+    });
+  });
+
   group('buscarDevocionais', () {
     test('acha um termo de Manhã com a leitura e a data certas', () async {
       final achados = await Conteudo.instancia.buscarDevocionais(

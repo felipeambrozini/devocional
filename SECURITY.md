@@ -26,7 +26,7 @@ O aplicativo **não grava nenhum cookie** e não embarca ferramenta de analític
 - **Exportação Manual:** A cópia de segurança no Android é realizada via área de transferência (Clipboard) em formato de texto estruturado, permitindo que o próprio usuário gerencie e transporte seus backups com total controle.
 
 ### 2.3 Sincronização na Nuvem e Autenticação (Apenas Web)
-- **Autenticação:** O login via Conta Google utiliza o método `signInWithPopup` fornecido pelo Firebase Auth. Não são utilizados *redirects* ou *iframes* de terceiros que possam sofrer com restrições de partição de armazenamento ou comprometer a sessão do usuário.
+- **Autenticação:** O login via Conta Google utiliza o método `signInWithPopup` fornecido pelo Firebase Auth em navegadores desktop. Em navegadores mobile (iOS/Android), o próprio popup falha ao trocar o token com a janela original por causa do armazenamento particionado do navegador — nesses casos o app usa `signInWithRedirect`, aceitando ali o risco de partição que o popup evita no desktop.
 - **Segurança no Firestore:** Cada usuário autenticado possui acesso exclusivo ao seu próprio documento localizado no caminho `usuarios/{uid}`.
 - **Regras de Acesso:** O acesso aos dados no Cloud Firestore é protegido por regras rígidas de segurança (`firestore.rules`), garantindo que apenas o proprietário autenticado (`request.auth.uid == userId`) possa ler ou escrever em seu respetivo documento. A remoção de dados locais não apaga registros na nuvem, atuando a sincronização por fusão (*merge*).
 

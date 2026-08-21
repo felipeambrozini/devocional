@@ -55,15 +55,16 @@ jobs:
       # 404.html também sobe à raiz do public: é lá que o Hosting procura a
       # página de erro para rotas fora do rewrite (public/devocional/404.html,
       # que este copy também produz, fica inalcançável — o rewrite cobre tudo).
-      # robots.txt e llms.txt sobem pelo mesmo motivo: rastreador e ferramenta
-      # de IA olham a raiz do domínio, não um subcaminho, e o domínio é hoje
-      # dedicado só a este app.
+      # robots.txt, llms.txt e sitemap.xml sobem pelo mesmo motivo: rastreador
+      # e ferramenta de IA olham a raiz do domínio, não um subcaminho, e o
+      # domínio é hoje dedicado só a este app.
       - run: |
           mkdir -p public/devocional
           cp -r build/web/* public/devocional/
           cp build/web/404.html public/404.html
           cp build/web/robots.txt public/robots.txt
           cp build/web/llms.txt public/llms.txt
+          cp build/web/sitemap.xml public/sitemap.xml
       - uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15.27.0
         with:
           args: deploy --only hosting

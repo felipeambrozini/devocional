@@ -7,7 +7,8 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/foundation.dart' show ChangeNotifier, kIsWeb;
+import 'package:flutter/foundation.dart'
+    show ChangeNotifier, TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../firebase_options.dart';
@@ -352,13 +353,26 @@ class Nuvem extends ChangeNotifier {
   /// janela sai bloqueada. Quem chama trata `FirebaseAuthException` (o
   /// usuário fechou a janela, ou o navegador bloqueou o popup).
   ///
-  /// Na web o login é popup do navegador; nas demais plataformas é o fluxo
-  /// nativo do `google_sign_in`, que devolve as credenciais para o
+  /// Na web o login é popup do navegador, exceto em iOS/Android: aí o popup
+  /// abre, a conta é escolhida, e a troca de token entre a janela e a
+  /// original falha (armazenamento particionado do navegador mobile) — por
+  /// isso o redirect, mesmo abrindo mão da proteção contra partição que o
+  /// popup dá no desktop (ver SECURITY.md). `defaultTargetPlatform` já
+  /// reflete o user-agent do navegador mobile mesmo com `kIsWeb`, sem
+  /// depender de pacote novo. Nas demais plataformas é o fluxo nativo do
+  /// `google_sign_in`, que devolve as credenciais para o
   /// `signInWithCredential` do Firebase. Quem cancela fora da web sai sem
   /// erro, como o popup fechado na web.
   Future<void> entrar() async {
     if (kIsWeb) {
-      await FirebaseAuth.instance.signInWithPopup(GoogleAuthProvider());
+      final mobil =
+          defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.android;
+      if (mobil) {
+        await FirebaseAuth.instance.signInWithRedirect(GoogleAuthProvider());
+      } else {
+        await FirebaseAuth.instance.signInWithPopup(GoogleAuthProvider());
+      }
       return;
     }
     if (!_googlePronto) {

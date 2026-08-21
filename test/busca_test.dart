@@ -102,6 +102,20 @@ void main() {
     });
 
     testWidgets(
+      'digitar sozinho já busca, sem precisar tocar no botão',
+      (tester) async {
+        await abrir(tester);
+
+        await tester.enterText(find.byType(TextField), 'amor');
+        // Sem tap no botão: só o atraso do debounce deve disparar a busca.
+        await tester.pump(const Duration(milliseconds: 500));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('resultado'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
       'a aba Devocionais acha um termo só de Manhã/Noite ou Promessas',
       (tester) async {
         await abrir(tester);
@@ -163,6 +177,25 @@ void main() {
       final textos =
           ((resultado).children!).map((span) => (span as TextSpan).text).join();
       expect(textos, 'amor');
+    });
+
+    test('não destaca o termo dentro de outra palavra', () {
+      final tema = ThemeData.light().textTheme;
+      final cor = ThemeData.light().colorScheme;
+
+      final resultado = destacar(
+        'os amorreus habitavam a terra, mas Deus é amor',
+        'amor',
+        tema,
+        cor,
+      );
+
+      final destacados = resultado.children!
+          .cast<TextSpan>()
+          .where((span) => span.style?.fontWeight == FontWeight.w700)
+          .map((span) => span.text)
+          .toList();
+      expect(destacados, ['amor']);
     });
 
     test('retorna todos os caracteres quando o termo não aparece', () {

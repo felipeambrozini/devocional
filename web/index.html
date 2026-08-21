@@ -93,6 +93,24 @@
 </head>
 <body>
   <div id="carregando">Devocional</div>
+  <!--
+    O app inteiro é desenhado em canvas (CanvasKit): nenhum rastreador lê o
+    conteúdo das telas, nem os links de "Onde me encontrar" da tela Sobre.
+    Este rodapé só existe no HTML estático para dar a rastreadores e leitores
+    de tela sem JavaScript um jeito de achar os canais de contato.
+  -->
+  <noscript>
+    <footer>
+      <p>Devocional — Bíblia na tradução BKJ 1611, devocionais de Spurgeon e plano de leitura anual.</p>
+      <p>
+        <a href="https://www.youtube.com/@felipe_ambrozini">YouTube</a> ·
+        <a href="https://www.instagram.com/felipe_ambrozini/">Instagram</a> ·
+        <a href="faq">Perguntas frequentes</a> ·
+        <a href="privacidade">Política de privacidade</a> ·
+        <a href="termos">Termos de serviço</a>
+      </p>
+    </footer>
+  </noscript>
   <script>
     window.addEventListener('flutter-first-frame', function () {
       document.getElementById('carregando')?.remove();
