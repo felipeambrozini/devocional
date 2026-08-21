@@ -146,7 +146,11 @@ Future<void> _iniciar() async {
   await Lembretes.instancia.inicializar(
     aoTocarNotificacao: _abrirLeituraDoLembrete,
   );
-  await reagendarLembretesSeNecessario(estado);
+  // Sem await: desde a migração para FCM isto envolve rede (Firestore e
+  // getToken), e travar o primeiro quadro numa notificação que o usuário nem
+  // pediu ainda (só reagendando a de antes) é pior que atrasar por um
+  // instante o registro do novo token. Mesmo raciocínio do Nuvem acima.
+  unawaited(reagendarLembretesSeNecessario(estado));
   // Precisa vir antes do runApp: depois dele o plugin já não sabe dizer que
   // toque abriu o app, só qual chegou com o app já aberto.
   final chaveDeAbertura = await Lembretes.instancia.chaveQueAbriuOApp();
