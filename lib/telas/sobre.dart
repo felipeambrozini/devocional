@@ -8,6 +8,7 @@ import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
 import '../data/nuvem.dart';
+import '../data/recursos.dart';
 import '../data/voz.dart';
 import '../spacing.dart';
 import 'comuns.dart';
@@ -184,16 +185,35 @@ class _TelaSobreState extends State<TelaSobre> {
               const SizedBox(height: Spacing.sp32),
               Text('Conta e privacidade', style: tema.headlineSmall),
               const SizedBox(height: Spacing.sp10),
-              Text(
-                'Quem entra com a conta Google salva favoritos, anotações, '
-                'dias de leitura marcados e o histórico das conversas do '
-                'chat numa conta na nuvem, para não perdê-los se o '
-                'navegador limpar o armazenamento. Sobem só esses itens, '
-                'mais o e-mail e o identificador da conta, nunca o texto da '
-                'Bíblia ou do devocional que você lê; o tamanho da letra e o '
-                'tema continuam só no aparelho. Quem não entra usa o app do '
-                'mesmo jeito de sempre, sem nada saindo daqui.',
-                style: tema.bodyLarge?.copyWith(height: 1.7),
+              ListenableBuilder(
+                listenable: Nuvem.instancia,
+                // O histórico do chat só existe para quem tem acesso à
+                // função (ver Recursos.conversas); citá-lo para quem não
+                // pode usar o chat só confundiria.
+                builder: (context, _) => Text(
+                  Recursos.conversas
+                      ? 'Quem entra com a conta Google salva favoritos, '
+                            'anotações, dias de leitura marcados e o '
+                            'histórico das conversas do chat numa conta na '
+                            'nuvem, para não perdê-los se o navegador '
+                            'limpar o armazenamento. Sobem só esses itens, '
+                            'mais o e-mail e o identificador da conta, '
+                            'nunca o texto da Bíblia ou do devocional que '
+                            'você lê; o tamanho da letra e o tema continuam '
+                            'só no aparelho. Quem não entra usa o app do '
+                            'mesmo jeito de sempre, sem nada saindo daqui.'
+                      : 'Quem entra com a conta Google salva favoritos, '
+                            'anotações e dias de leitura marcados numa '
+                            'conta na nuvem, para não perdê-los se o '
+                            'navegador limpar o armazenamento. Sobem só '
+                            'esses itens, mais o e-mail e o identificador '
+                            'da conta, nunca o texto da Bíblia ou do '
+                            'devocional que você lê; o tamanho da letra e o '
+                            'tema continuam só no aparelho. Quem não entra '
+                            'usa o app do mesmo jeito de sempre, sem nada '
+                            'saindo daqui.',
+                  style: tema.bodyLarge?.copyWith(height: 1.7),
+                ),
               ),
               const SizedBox(height: Spacing.sp10),
               ListTile(

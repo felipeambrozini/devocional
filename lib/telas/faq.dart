@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../data/nuvem.dart';
+import '../data/recursos.dart';
 import '../spacing.dart';
 import 'comuns.dart';
 
@@ -16,23 +18,29 @@ class TelaFAQ extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Perguntas frequentes')),
       body: LarguraDeLeitura(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp16, Spacing.sp20, Spacing.sp40),
-          children: [
-            Text('Perguntas frequentes', style: tema.displayMedium),
-            const SizedBox(height: Spacing.sp8),
-            const Filete(largura: 64),
-            const SizedBox(height: Spacing.sp16),
-            for (final pergunta in _perguntas) _Pergunta(pergunta),
-            const SizedBox(height: Spacing.sp16),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.privacy_tip_outlined, color: Theme.of(context).colorScheme.primary),
-              title: const Text('Política de privacidade completa'),
-              subtitle: const Text('O que é guardado, onde e por quê.'),
-              onTap: () => context.push('/privacidade'),
-            ),
-          ],
+        // O chat só existe para quem tem acesso à função (ver
+        // Recursos.conversas); as perguntas sobre ele não fazem sentido
+        // para quem não pode usá-lo.
+        child: ListenableBuilder(
+          listenable: Nuvem.instancia,
+          builder: (context, _) => ListView(
+            padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp16, Spacing.sp20, Spacing.sp40),
+            children: [
+              Text('Perguntas frequentes', style: tema.displayMedium),
+              const SizedBox(height: Spacing.sp8),
+              const Filete(largura: 64),
+              const SizedBox(height: Spacing.sp16),
+              for (final pergunta in _perguntas(Recursos.conversas)) _Pergunta(pergunta),
+              const SizedBox(height: Spacing.sp16),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.privacy_tip_outlined, color: Theme.of(context).colorScheme.primary),
+                title: const Text('Política de privacidade completa'),
+                subtitle: const Text('O que é guardado, onde e por quê.'),
+                onTap: () => context.push('/privacidade'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -61,12 +69,18 @@ class _Pergunta extends StatelessWidget {
   }
 }
 
-const _perguntas = <(String, String)>[
+/// [chat] é [Recursos.conversas]: só quem tem acesso à função vê as
+/// perguntas que falam dela.
+List<(String, String)> _perguntas(bool chat) => [
   (
     'O aplicativo é gratuito?',
-    'Sim, por completo. A Bíblia, os dois devocionais de Spurgeon, o '
-        'cronograma de leitura, a leitura em voz alta e o chat com IA não '
-        'têm custo nem anúncio.',
+    chat
+        ? 'Sim, por completo. A Bíblia, os dois devocionais de Spurgeon, o '
+              'cronograma de leitura, a leitura em voz alta e o chat com '
+              'IA não têm custo nem anúncio.'
+        : 'Sim, por completo. A Bíblia, os dois devocionais de Spurgeon, o '
+              'cronograma de leitura e a leitura em voz alta não têm '
+              'custo nem anúncio.',
   ),
   (
     'Por que essa tradução da Bíblia?',
@@ -77,10 +91,15 @@ const _perguntas = <(String, String)>[
   ),
   (
     'Funciona sem internet?',
-    'A leitura da Bíblia e dos devocionais funciona sem internet, porque o '
-        'texto vem de arquivos dentro do próprio aplicativo. A leitura em '
-        'voz alta, o chat com IA e a sincronização da conta na nuvem '
-        'precisam de conexão.',
+    chat
+        ? 'A leitura da Bíblia e dos devocionais funciona sem internet, '
+              'porque o texto vem de arquivos dentro do próprio '
+              'aplicativo. A leitura em voz alta, o chat com IA e a '
+              'sincronização da conta na nuvem precisam de conexão.'
+        : 'A leitura da Bíblia e dos devocionais funciona sem internet, '
+              'porque o texto vem de arquivos dentro do próprio '
+              'aplicativo. A leitura em voz alta e a sincronização da '
+              'conta na nuvem precisam de conexão.',
   ),
   (
     'Preciso de uma conta para usar?',
@@ -100,13 +119,14 @@ const _perguntas = <(String, String)>[
     'No Android e em qualquer navegador, com a mesma experiência e o '
         'mesmo design nas duas plataformas.',
   ),
-  (
-    'Como funciona o chat com inteligência artificial?',
-    'São duas personas: Charles Spurgeon e Felipe Ambrozini, o criador do '
-        'aplicativo. As respostas são geradas por inteligência artificial, '
-        'e o histórico de cada conversa fica salvo para quem quiser '
-        'retomá-la depois.',
-  ),
+  if (chat)
+    (
+      'Como funciona o chat com inteligência artificial?',
+      'São duas personas: Charles Spurgeon e Felipe Ambrozini, o criador do '
+          'aplicativo. As respostas são geradas por inteligência artificial, '
+          'e o histórico de cada conversa fica salvo para quem quiser '
+          'retomá-la depois.',
+    ),
   (
     'Posso apagar meus dados?',
     'Sim. Quem tem conta pode apagar a cópia salva na nuvem na tela Sobre, '
