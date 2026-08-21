@@ -174,7 +174,12 @@ service cloud.firestore {
       }
 
       allow create, update: if request.app != null && valido();
-      allow read, delete: if request.app != null;
+      // get, não read: ninguém aqui tem como provar dono do próprio token, e
+      // sem 'list' negado explicitamente um cliente que passe o App Check
+      // conseguiria listar a coleção inteira e colher o token FCM de todo
+      // mundo. O app só faz .doc(token).get(), nunca lista.
+      allow get, delete: if request.app != null;
+      allow list: if false;
     }
   }
 }
