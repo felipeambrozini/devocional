@@ -15,6 +15,14 @@ import '../firebase_options.dart';
 import 'estado.dart';
 import 'registro.dart';
 
+/// Client ID Web do projeto (`client_type: 3` em `android/app/google-services.json`).
+/// Sem passar isto ao `GoogleSignIn.instance.initialize`, o token que volta no
+/// Android tem audiência do client Android, e o `signInWithCredential` do
+/// Firebase rejeita — mesma exigência no iOS. Não é segredo (é o mesmo ID já
+/// versionado no `google-services.json`), mas segue o padrão de
+/// `--dart-define` das outras chaves para ficar num só lugar.
+const _googleServerClientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
+
 /// RegExp para separar por espaços em branco (evita warning de RegExp deprecated).
 // ignore: deprecated_member_use
 final _espacos = RegExp(r'\s+');
@@ -376,7 +384,9 @@ class Nuvem extends ChangeNotifier {
       return;
     }
     if (!_googlePronto) {
-      await GoogleSignIn.instance.initialize();
+      await GoogleSignIn.instance.initialize(
+        serverClientId: _googleServerClientId,
+      );
       _googlePronto = true;
     }
     final GoogleSignInAccount conta;
