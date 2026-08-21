@@ -75,26 +75,20 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.4
   flutter_native_splash: ^2.4.8
 
-# Ícone do app e favicon, gerados da foto do Felipe recortada no rosto sobre o
-# marrom do tema. As fontes ficam em assets/icone/; os arquivos por plataforma
-# são gerados, não editados à mão:
+# Ícone do app e favicon, montados com a marca "Devocional" (fonte Cinzel,
+# mesmo estilo do web/og.png) sobre o marrom do tema. As fontes ficam em
+# assets/icone/; os arquivos por plataforma são gerados, não editados à mão:
+#   python tools/icones.py --fontes
 #   dart run flutter_launcher_icons
+#   python tools/icones.py --corrigir
 flutter_launcher_icons:
-  # Fundo escuro para quem lê um arquivo só: o Android anterior ao ícone
-  # adaptativo. O marrom se vira nos dois temas. No Android moderno quem manda
-  # são as duas camadas do adaptativo, logo abaixo.
   image_path: assets/icone/icone.png
   android: true
   ios: true
   remove_alpha_ios: true
-  # O Android recorta o ícone em círculo, folha ou pílula conforme o aparelho,
-  # então a camada de frente tem folga de sobra e o fundo é chapado.
-  #
-  # Claro aqui, e não marrom: este valor vira `@color/ic_launcher_background` em
-  # values/colors.xml, e a variante values-night/ com o marrom foi acrescentada
-  # à parte. É assim que o ícone do lançador segue o tema no
-  # Android, verificado num Galaxy. Não é mecanismo documentado pelo Android;
-  # se um dia parar, o ícone fica neste valor. Ver README.md.
+  # Nunca aparece: `icone_adaptativo.png` é opaco de ponta a ponta (a marca já
+  # carrega o próprio fundo escuro), então o Android nunca chega a desenhar
+  # esta cor por baixo. Mantido só porque o campo é obrigatório.
   adaptive_icon_background: "#F7F1E3"
   adaptive_icon_foreground: assets/icone/icone_adaptativo.png
   web:

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Variante escura do fundo do icone do launcher. Nao editar a mao. -->
+<!-- Gerado por tools/icones.py, passo corrigir. Nao editar a mao. -->
 <resources>
     <color name="ic_launcher_background">#2E1B10</color>
 </resources>

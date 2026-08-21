@@ -254,14 +254,15 @@ void main() {
     for (final rotulo in ['Hoje', 'Bíblia', 'Devocional', 'Plano', 'Notas']) {
       expect(find.text(rotulo), findsWidgets, reason: rotulo);
     }
-    // A saudação depende do relógio, então aceita as três formas.
+    // A saudação depende do relógio, então aceita as três formas. Sem conta
+    // (o caso deste teste), fica só a saudação — ver _Cabecalho em hoje.dart.
     expect(
       find.byWidgetPredicate(
         (w) =>
             w is Text &&
-            (w.data?.startsWith('Bom dia, Felipe') == true ||
-                w.data?.startsWith('Boa tarde, Felipe') == true ||
-                w.data?.startsWith('Boa noite, Felipe') == true),
+            (w.data == 'Bom dia' ||
+                w.data == 'Boa tarde' ||
+                w.data == 'Boa noite'),
       ),
       findsOneWidget,
     );
