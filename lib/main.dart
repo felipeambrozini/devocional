@@ -27,9 +27,11 @@ import 'telas/conversas.dart';
 import 'telas/devocional.dart';
 import 'telas/hoje.dart';
 import 'telas/historico.dart';
+import 'telas/faq.dart';
 import 'telas/meu_plano.dart';
 import 'telas/notas.dart';
 import 'telas/plano.dart';
+import 'telas/privacidade.dart';
 import 'telas/sobre.dart';
 import 'theme.dart';
 
@@ -317,6 +319,14 @@ final _router = GoRouter(
       // para os créditos fica no fim da folha de ajustes (ver comuns.dart).
       // A URL própria continua valendo para F5 e link compartilhado.
       builder: (context, state) => const TelaSobre(),
+    ),
+    GoRoute(
+      path: '/faq',
+      builder: (context, state) => const TelaFAQ(),
+    ),
+    GoRoute(
+      path: '/privacidade',
+      builder: (context, state) => const TelaPrivacidade(),
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>

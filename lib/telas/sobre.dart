@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -180,14 +181,22 @@ class _TelaSobreState extends State<TelaSobre> {
               Text('Conta e privacidade', style: tema.headlineSmall),
               const SizedBox(height: Spacing.sp10),
               Text(
-                'Quem entra com a conta Google salva favoritos, anotações e '
-                'dias de leitura marcados numa conta na nuvem, para não '
-                'perdê-los se o navegador limpar o armazenamento. Sobem só '
-                'esses três itens, mais o e-mail e o identificador da conta, nunca o que '
-                'você lê nem quando lê; o tamanho da letra e o tema continuam '
-                'só no aparelho. Quem não entra usa o app do mesmo jeito de '
-                'sempre, sem nada saindo daqui.',
+                'Quem entra com a conta Google salva favoritos, anotações, '
+                'dias de leitura marcados e o histórico das conversas do '
+                'chat numa conta na nuvem, para não perdê-los se o '
+                'navegador limpar o armazenamento. Sobem só esses itens, '
+                'mais o e-mail e o identificador da conta, nunca o texto da '
+                'Bíblia ou do devocional que você lê; o tamanho da letra e o '
+                'tema continuam só no aparelho. Quem não entra usa o app do '
+                'mesmo jeito de sempre, sem nada saindo daqui.',
                 style: tema.bodyLarge?.copyWith(height: 1.7),
+              ),
+              const SizedBox(height: Spacing.sp10),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.privacy_tip_outlined, color: cor.primary),
+                title: const Text('Política de privacidade completa'),
+                onTap: () => GoRouter.of(context).push('/privacidade'),
               ),
               const SizedBox(height: Spacing.sp8),
               ListenableBuilder(

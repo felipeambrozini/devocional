@@ -19,7 +19,9 @@ mesmo código).
 - **Planos personalizados**: escolher um ou mais livros e em quantos dias, com
   prévia antes de confirmar. Dá para compartilhar por link; cada participante
   entra com a própria conta Google e o progresso de todos aparece junto (Meus
-  Planos).
+  Planos). Quem criou pode excluir o plano (some para todos os participantes,
+  com o progresso de cada um); quem só participa pode sair, e some só o
+  próprio progresso.
 - **Leitura em voz alta**: botão Ouvir narra capítulos da Bíblia, Manhã e
   Noite, Promessas de Deus e as introduções, numa só voz (barítono, Google
   Cloud Text-to-Speech).
@@ -36,6 +38,9 @@ mesmo código).
 - **Conta Google (Web, Android e iOS)**: opcional — favoritos, notas e progresso sobem
   sozinhos para a conta de quem entrar, para não perder nada se o navegador
   limpar o armazenamento. O Android e iOS também sincronizam; ver `nuvemSuportada` em `lib/data/nuvem.dart`.
+  Quem entra vê o próprio avatar (foto da conta Google, ou a inicial do nome
+  sem foto) na saudação da aba Hoje, e pode trocar a foto tocando nele
+  (câmera ou galeria).
 - **Busca** no texto da Bíblia e nos devocionais, em duas abas.
 - **Tamanho do texto** ajustável e **tema claro ou escuro**, pela barra do leitor
   ou do devocional. O padrão segue o aparelho, e dá para fixar um dos dois.
@@ -59,14 +64,17 @@ mesmo código).
 | Notas | Favoritos e anotações |
 | Conversas | Chat com Spurgeon e Felipe (IA); em tela larga vira balão flutuante no lugar da aba |
 
-Sobre (créditos, fonte da tradução, canais e ajuda) não é aba: mora no fim da
-folha de ajustes, com URL própria.
+Sobre (créditos, fonte da tradução, canais e ajuda), Perguntas frequentes e
+Política de privacidade não são abas: moram no fim da folha de ajustes, com
+URL própria cada uma.
 
 Na web, cada aba tem a própria URL (`/hoje`, `/biblia`, `/devocional`,
 `/plano`, `/notas`, `/conversas`) — dá para abrir, atualizar ou compartilhar
-qualquer uma direto; `/sobre` e cada conversa (`/charles-spurgeon`,
-`/felipe-ambrozini`) também têm URL própria. `?ler=joao.3.16` na URL abre esse
-versículo por cima da aba, e `?plano=<id>` abre um plano compartilhado.
+qualquer uma direto; `/sobre`, `/faq`, `/privacidade` e cada conversa
+(`/charles-spurgeon`, `/felipe-ambrozini`) também têm URL própria. `?ler=joao.3.16`
+na URL abre esse versículo por cima da aba, e `?plano=<id>` (ou
+`?plano=<slug>-<id>`, com o título do plano na frente só por estética) abre um
+plano compartilhado.
 
 ## Stack
 
@@ -83,11 +91,14 @@ versículo por cima da aba, e `?plano=<id>` abre um plano compartilhado.
   como o `IndexedStack` antigo fazia).
 - `firebase_core` + `firebase_auth` + `cloud_firestore` para a conta na
   nuvem, só chamados quando `nuvemSuportada` (`lib/data/nuvem.dart`).
-- `http` fala direto com a Gemini API (`gemini-flash-latest`, tier gratuito)
-  para o chat das duas personas (`lib/data/ia.dart`) e com a Google Cloud
-  Text-to-Speech para a leitura em voz alta (`lib/data/voz.dart`); `just_audio`
-  toca o áudio sintetizado. Chaves em `lib/data/google.dart`, vindas do
-  `.env.json`.
+  `firebase_storage` guarda a foto de perfil trocada pelo avatar da Hoje;
+  `image_picker` escolhe a foto na câmera ou na galeria.
+- `http` fala direto com a Gemini API (`gemini-3.5-flash-lite`, tier gratuito;
+  nome fixo, não o alias `gemini-flash-latest`, que pode migrar para fora do
+  grátis sem aviso) para o chat das duas personas (`lib/data/ia.dart`) e com a
+  Google Cloud Text-to-Speech para a leitura em voz alta (`lib/data/voz.dart`);
+  `just_audio` toca o áudio sintetizado. Chaves em `lib/data/google.dart`,
+  vindas do `.env.json`.
 - Fontes empacotadas localmente (Cinzel e Montserrat), sem depender de rede na
   primeira execução.
 - Conteúdo (Bíblia, devocionais, introduções, cronograma) vem de arquivos JSON
@@ -241,6 +252,19 @@ motivo novo.
 - **A assinatura de Spurgeon é tinta dourada chapada (`#E3C567`)**, tingida
   pelo tema com `BlendMode.srcIn`, em vez de dois arquivos para manter em
   sincronia.
+- **O avatar da Hoje é a foto da conta Google de quem entrou, nunca uma
+  imagem fixa do app** (20/08/2026) — antes era a foto do Felipe embutida no
+  app, escondida na web. `Nuvem.fotoUrl` lê `FirebaseAuth.currentUser?.photoURL`;
+  sem conta ou sem foto, cai na inicial do nome. Tocar no avatar sobe uma
+  foto nova (câmera ou galeria, `image_picker`) para `fotos_de_perfil/{uid}.jpg`
+  no Firebase Storage (`storage.rules`: um arquivo por conta, só o dono
+  grava, leitura pública porque a URL vai direto num `NetworkImage`).
+- **Excluir um plano e sair dele são ações diferentes** (20/08/2026):
+  `excluirPlano` (`lib/telas/comuns.dart`) apaga o plano da nuvem para todos
+  os participantes, e só quem criou pode chamar; `sairDoPlano` apaga apenas a
+  própria participação, para quem só entrou no plano de outra pessoa. Os dois
+  ficam disponíveis pela lixeira no cartão de "Meus Planos" e pelo menu
+  dentro do plano.
 - **`web/index.html` tem fundo marrom e um marcador de carregamento**, retirado
   no evento `flutter-first-frame` (o Flutter acrescenta a `flutter-view` ao
   body em vez de limpar). As duas cores do fundo são por
@@ -317,6 +341,11 @@ motivo novo.
   Parâmetro de consulta, não caminho, porque o
   Pages devolveria 404. `alvoDoLink` e `linkDoVersiculo` em `lib/data/canon.dart`
   fazem a ida e volta.
+- **Link do plano compartilhado leva o título como slug** (20/08/2026),
+  `?plano=<slug-do-titulo>-<id>` (`linkDoPlano` em `lib/data/planos_nuvem.dart`).
+  O slug é só estética: quem abre busca pelo plano sempre pelo `id`, o último
+  trecho depois do último hífen (`idDoParametroDePlano`), que nunca tem hífen
+  dentro e por isso continua único mesmo com dois planos de mesmo título.
 - **Identidade neutra**: `<title>`, `apple-mobile-web-app-title` e
   `name`/`short_name` são "Devocional" (a foto e o nome do usuário saíram da
   web pública). `orientation` do manifesto é `any` (a trava em retrato
@@ -351,16 +380,40 @@ motivo novo.
   Firestore (`firestore.rules`, publicado à mão) e a lista de domínios autorizados.
 - **Nome do pacote** trocado para `com.felipeambrozini.devocional` (09/08/2026),
   refletido no `android/app/build.gradle.kts`.
+- **FAQ e Política de privacidade** (20/08/2026): `lib/telas/faq.dart` e
+  `lib/telas/privacidade.dart`, com rotas próprias (`/faq`, `/privacidade`) e
+  entradas na folha de ajustes, ao lado de Sobre. A política é a versão
+  completa e é a fonte da verdade sobre o que sobe para a nuvem; o resumo em
+  Sobre (seção Conta e privacidade) só linka para ela. Escrita para corrigir
+  uma lacuna real: o resumo antigo dizia que só favoritos, anotações e dias
+  lidos subiam, mas `Nuvem._empurrarConversas` (`lib/data/nuvem.dart`) também
+  sincroniza o histórico do chat com IA para quem tem conta.
+- **`web/robots.txt` e `web/llms.txt`** (20/08/2026): liberação de rastreamento
+  padrão e um resumo do produto no formato `llms.txt` (llmstxt.org), com links
+  para o app, Sobre, FAQ e privacidade. Nenhum dos dois existia antes; nenhuma
+  `sitemap.xml` foi criada porque o site não tem uma. O domínio
+  `felipeambrozini.com.br` é hoje dedicado só a este app, então o passo de
+  deploy que já copiava `404.html` para a raiz do `public` (ver acima) também
+  copia estes dois: rastreador e ferramenta de IA olham a raiz do domínio, não
+  o subcaminho `/devocional/` onde o app mora.
 
 ### Ícone, splash e fontes
 
-- **O ícone sai da foto, recortado no rosto.** As fontes ficam em `assets/icone/`
-  e os arquivos por plataforma são gerados por `dart run flutter_launcher_icons`,
-  nunca editados à mão. Quatro fontes: `icone.png` (rosto 88%, fundo `#2E1B10`)
-  para o Android anterior ao ícone adaptativo;
-  `icone_adaptativo.png` (60%, fundo transparente) para o ícone adaptativo do
-  Android; `icone_mascaravel.png` (60%, fundo chapado) para os `Icon-maskable-*`
-  da web.
+- **O ícone é a marca-texto "Devocional"** (fonte Cinzel, mesma composição do
+  `web/og.png`), não mais a foto do Felipe recortada no rosto (rebrand de
+  20/08/2026, junto com o nome do app no Android: `android:label` também
+  virou "Devocional"). As fontes ficam em `assets/icone/`, montadas por
+  `tools/icones.py --fontes`; os arquivos por plataforma saem de
+  `dart run flutter_launcher_icons` e depois de `tools/icones.py --corrigir`
+  (obrigatório: o gerador copia o ícone normal nos `Icon-maskable-*` sem
+  saber que o Chrome recorta o maskable em círculo, e não conhece o favicon
+  claro). Cinco fontes: `icone.png` (fundo `#2E1B10`) para o Android anterior
+  ao ícone adaptativo; `icone_adaptativo.png` (fundo opaco, a marca já carrega
+  o próprio fundo) para o ícone adaptativo do Android; `icone_mascaravel.png`
+  (fundo chapado) para os `Icon-maskable-*` da web; `icone_claro.png`, pronta
+  para quando Android/iOS 18 tiverem variante clara configurada (ainda manual,
+  o `flutter_launcher_icons` 0.14.4 não gera isso); `icone_tingido.png`
+  (silhueta transparente) para o ícone tingido do iOS 18.
 - **Tela de abertura e ícone do lançador são coisas diferentes, e só uma delas
   acompanha o tema em todo lugar.** A **splash** troca por tema nas duas
   plataformas (`dart run flutter_native_splash:create`, configurado no
@@ -407,10 +460,13 @@ flutter build web --dart-define-from-file=.env.json
 `assets/icone/`; nunca editados à mão:
 
 ```bash
+python tools/icones.py --fontes
 dart run flutter_launcher_icons
+python tools/icones.py --corrigir
 dart run flutter_native_splash:create
 ```
 
+O passo `--corrigir` é obrigatório (ver "Ícone, splash e fontes" acima).
 Depois de rodar `flutter_launcher_icons`, conferir se o `manifest.json` da web
 manteve `name` e `orientation` (o gerador reescreve o arquivo por completo).
 
@@ -432,4 +488,8 @@ Secrets do repositório: `FIREBASE_API_KEY_WEB`, `GEMINI_API_KEY_WEB` e
 variables, no environment `github-pages`). O deploy usa
 `FIREBASE_SERVICE_ACCOUNT` (JSON da conta de serviço do Firebase). As actions
 estão fixadas em commit SHA completo, não em tag mutável.
+
+Além do build em `public/devocional`, o mesmo passo copia `404.html`,
+`robots.txt` e `llms.txt` para a raiz do `public` — o Hosting só olha esses
+arquivos na raiz do domínio, nunca num subcaminho.
 

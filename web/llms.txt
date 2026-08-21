@@ -1,0 +1,23 @@
+# Devocional
+
+> Aplicativo devocional diário em português brasileiro: Bíblia completa na tradução autoral BKJ 1611 (31.102 versículos, mesmo canon do texto King James), devocionais de Charles Spurgeon e cronograma anual de leitura. Gratuito, sem anúncio, disponível na web e em Android.
+
+O texto da Bíblia é uma tradução autoral e inédita da King James 1611, feita
+diretamente do inglês em domínio público, com contagem de versículos
+idêntica ao canon. Os devocionais "Manhã e Noite" e "Promessas de Deus", de
+Charles Spurgeon, foram traduzidos na íntegra e mantêm a voz vitoriana do
+autor, tratando o leitor por "tu". Há também introduções aos 66 livros da
+Bíblia nessa mesma voz, um cronograma de leitura anual, favoritos, notas,
+busca, leitura em voz alta e conversas com duas personas de inteligência
+artificial: Charles Spurgeon e Felipe Ambrozini, o criador do aplicativo.
+
+## Páginas
+- [Aplicativo](https://www.felipeambrozini.com.br/devocional/): tela principal, com as abas Hoje, Bíblia, Devocional, Plano, Notas e Conversas
+- [Sobre](https://www.felipeambrozini.com.br/devocional/sobre): fontes do texto, créditos e canais do criador
+- [Perguntas frequentes](https://www.felipeambrozini.com.br/devocional/faq)
+- [Política de privacidade](https://www.felipeambrozini.com.br/devocional/privacidade)
+
+## Notas
+- Conteúdo só em português brasileiro.
+- Sem anúncio, sem venda de dados, sem ferramenta de análise de uso de terceiros.
+- Distribuído por link direto (GitHub Pages), sem listagem em loja de aplicativos.

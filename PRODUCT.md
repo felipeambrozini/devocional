@@ -45,8 +45,9 @@ vitoriana dele, tratando o leitor por "tu".
 - Cópia de segurança de favoritos, notas e progresso por exportar/importar
   (área de transferência); conta Google só na web, para espelhar na nuvem.
 - Navegação: abas Hoje, Bíblia, Devocional, Plano, Notas e Conversas; Sobre
-  (créditos, canais e ajuda) mora na folha de ajustes. Na web cada aba tem URL
-  própria; `/sobre` e cada conversa também, e links diretos no formato
+  (créditos, canais e ajuda), Perguntas frequentes e Política de privacidade
+  moram na folha de ajustes. Na web cada aba tem URL própria; `/sobre`, `/faq`,
+  `/privacidade` e cada conversa também, e links diretos no formato
   `?ler=joao.3.16` abrem um versículo (`?plano=<id>` abre um plano
   compartilhado).
 - Conversas com IA (Gemini): duas personas, Charles Spurgeon e Felipe
@@ -55,7 +56,11 @@ vitoriana dele, tratando o leitor por "tu".
 - Leitura em voz alta (Google Cloud Text-to-Speech): narra capítulos da
   Bíblia, os dois devocionais, Promessas de Deus e as introduções.
 - Planos personalizados: escolher livros e a duração; compartilháveis por
-  link, com progresso de cada participante (exige conta Google).
+  link, com progresso de cada participante (exige conta Google). Quem criou
+  pode excluir o plano para todos; quem só participa pode sair, afetando só
+  o próprio progresso.
+- Avatar da conta (foto do Google ou inicial do nome) na saudação da aba
+  Hoje, com foto trocável pela câmera ou galeria.
 - Só em pt_BR; conteúdo vem de JSON locais em `assets/`, carregado sob demanda.
 
 ## Capabilities and Constraints
@@ -79,12 +84,14 @@ vitoriana dele, tratando o leitor por "tu".
 
 ## Brand Commitments
 
-- Nome do produto: "Devocional". Identidade neutra na web pública: a foto e o
-  nome do Felipe saíram do site; título, manifest e Open Graph são
-  "Devocional".
-- Ícone do app: rosto do Felipe recortado da foto, sobre marrom `#2E1B10`
-  (fundo claro `#F7F1E3` para as variantes que seguem o tema); ícones gerados
-  por `flutter_launcher_icons`, nunca editados à mão.
+- Nome do produto: "Devocional". Identidade neutra em todas as plataformas
+  (rebrand de 20/08/2026, antes só a web pública era neutra): título,
+  manifest e Open Graph da web, ícone do app e `android:label` são
+  "Devocional", sem foto nem nome do Felipe.
+- Ícone do app: marca-texto "Devocional" (fonte Cinzel, mesma composição do
+  `web/og.png`), sobre marrom `#2E1B10` (fundo claro `#F7F1E3` para as
+  variantes que seguem o tema); montada por `tools/icones.py` e gerada nas
+  plataformas por `flutter_launcher_icons`, nunca editada à mão.
 - Fontes empacotadas localmente: Cinzel (títulos) e Montserrat (corpo),
   variáveis, pesadas via `fontVariations` em `lib/theme.dart`.
 - Duas paletas fixas: marrom e dourado no escuro, pergaminho e bronze no

@@ -528,6 +528,30 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                     roteador.push('/sobre');
                   },
                 ),
+                ListTile(
+                  leading: Icon(
+                    Icons.help_outline,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: const Text('Perguntas frequentes'),
+                  onTap: () {
+                    final roteador = GoRouter.of(folha);
+                    Navigator.pop(folha);
+                    roteador.push('/faq');
+                  },
+                ),
+                ListTile(
+                  leading: Icon(
+                    Icons.privacy_tip_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: const Text('Política de privacidade'),
+                  onTap: () {
+                    final roteador = GoRouter.of(folha);
+                    Navigator.pop(folha);
+                    roteador.push('/privacidade');
+                  },
+                ),
                 const SizedBox(height: Spacing.sp8),
               ],
             ),
