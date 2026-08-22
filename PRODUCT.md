@@ -150,3 +150,6 @@ vitoriana dele, tratando o leitor por "tu".
 - Tema claro e escuro completos, seguindo o aparelho por padrão.
 - Suporte à navegação por teclado no desktop (setas trocam capítulo, Ctrl+F
   abre a busca).
+- Os chevrons de capítulo no rodapé do leitor existem só na web e podem ser
+  escondidos na folha de ajustes; ao esconder, o app avisa que setas do
+  teclado, Enter ou espaço continuam virando o capítulo.

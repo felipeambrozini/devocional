@@ -68,6 +68,21 @@ dependencies:
   # Já era dependência transitiva do Firebase; só promovida a direta para o
   # código poder importar.
   path_provider: ^2.1.6
+  # Fallback local do lembrete diário em Android: se o push não chegar até
+  # 5 min depois do horário escolhido, um alarme do próprio aparelho avisa
+  # (e o handler de fundo usa este mesmo plugin para exibir o push data-only,
+  # ver lib/data/lembretes.dart). Fora da web — lá a exibição é do service
+  # worker (web/firebase-messaging-sw.js).
+  flutter_local_notifications: ^22.3.0
+  # Ligações tipadas às APIs do navegador. Usado pelo espelho do tema para
+  # notificações (lib/data/espelho_do_tema.dart): grava no Cache Storage,
+  # que o service worker lê para escolher o ícone da notificação. Já era
+  # transitiva dos plugins web; direta para o código poder importar.
+  web: ^1.1.0
+  # Cálculo de horário por fuso: o script do push usa para saber a hora local
+  # de cada cadastro (tool/enviar_lembretes.dart) e lib/data/lembretes.dart
+  # usa para armar o alarme local na hora certa do aparelho.
+  timezone: ^0.11.1
 
 dev_dependencies:
   flutter_test:
@@ -80,9 +95,6 @@ dev_dependencies:
   # (tool/enviar_lembretes.dart, rodado pelo GitHub Actions) — nunca importado
   # pelo app, por isso dev_dependency.
   googleapis_auth: ^2.3.3
-  # Usado por tool/enviar_lembretes.dart para calcular a hora local de cada
-  # fuso salvo; sem uso dentro do app em si (que só grava o nome do fuso).
-  timezone: ^0.11.1
 
 # Ícone do app e favicon, montados com a marca "Devocional" (fonte Cinzel,
 # mesmo estilo do web/og.png) sobre o marrom do tema. As fontes ficam em

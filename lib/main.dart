@@ -13,6 +13,7 @@ import 'package:go_router/go_router.dart';
 
 import 'data/canon.dart';
 import 'data/estado.dart';
+import 'data/espelho_do_tema.dart';
 import 'data/lembretes.dart';
 import 'data/modelos.dart';
 import 'data/nuvem.dart';
@@ -416,14 +417,20 @@ final _router = GoRouter(
                     return data == null ? '/$leitura' : '/$leitura?data=$data';
                   },
                 ),
+                // Sem transição entre as leituras: trocar /manha por
+                // /promessas é mudar de conteúdo na mesma aba, não empilhar
+                // uma tela sobre outra — a animação de push ficaria estranha.
                 for (final l in Leitura.values)
                   GoRoute(
                     path: '/${l.name}',
-                    builder: (context, state) => FocusScope(
-                      node: _escoposDasAbas[i],
-                      child: TelaDevocional(
-                        leituraInicial: l,
-                        dataInicial: _dataDaRota(state),
+                    pageBuilder: (context, state) => NoTransitionPage(
+                      key: state.pageKey,
+                      child: FocusScope(
+                        node: _escoposDasAbas[i],
+                        child: TelaDevocional(
+                          leituraInicial: l,
+                          dataInicial: _dataDaRota(state),
+                        ),
                       ),
                     ),
                   ),
@@ -464,7 +471,8 @@ class AppDevocional extends StatefulWidget {
   State<AppDevocional> createState() => _AppDevocionalState();
 }
 
-class _AppDevocionalState extends State<AppDevocional> {
+class _AppDevocionalState extends State<AppDevocional>
+    with WidgetsBindingObserver {
   late double _escala = widget.estado.escalaDeLeitura;
   late ModoDoTema _modo = widget.estado.modoDoTema;
 
@@ -476,12 +484,39 @@ class _AppDevocionalState extends State<AppDevocional> {
     // reporte de rota, no app e nos testes. Ver o comentário de [_router].
     GoRouter.optionURLReflectsImperativeAPIs = true;
     widget.estado.addListener(_conferirTema);
+    // Para [didChangePlatformBrightness]: no modo Automático, o sistema pode
+    // virar o tema com o app aberto, e o espelho do ícone de notificação
+    // (web) precisa acompanhar.
+    WidgetsBinding.instance.addObserver(this);
+    _espelharTema();
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    _espelharTema();
   }
 
   @override
   void dispose() {
     widget.estado.removeListener(_conferirTema);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  /// Manda ao Cache Storage o tema efetivo da interface, para o service
+  /// worker escolher o ícone da notificação (ver `espelho_do_tema.dart`).
+  void _espelharTema() {
+    unawaited(
+      espelharTemaParaNotificacoes(
+        escuro: switch (_modo) {
+          ModoDoTema.sistema =>
+            WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+                Brightness.dark,
+          ModoDoTema.escuro => true,
+          ModoDoTema.claro => false,
+        },
+      ),
+    );
   }
 
   /// O tema precisa ser refeito quando o tamanho do texto ou o modo mudam, mas o
@@ -495,6 +530,7 @@ class _AppDevocionalState extends State<AppDevocional> {
       _escala = estado.escalaDeLeitura;
       _modo = estado.modoDoTema;
     });
+    _espelharTema();
   }
 
   @override

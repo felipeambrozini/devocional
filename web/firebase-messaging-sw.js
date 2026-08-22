@@ -25,16 +25,43 @@ firebase.initializeApp({
 
 const mensageria = firebase.messaging();
 
+// Ícones por tema: a página espelha o tema efetivo do app no Cache Storage
+// (lib/data/espelho_do_tema.dart) — localStorage não serve, é invisível para
+// o service worker. Sem espelho (primeira visita, storage limpo), cai no
+// ícone fixo de sempre.
+const ICONE_PADRAO = '/devocional/icons/Icon-192.png';
+const ICONE_CLARO = '/devocional/icons/notificacao-tema-claro.png';
+const ICONE_ESCURO = '/devocional/icons/notificacao-tema-escuro.png';
+
+async function lerTemaEspelhado() {
+  try {
+    const cache = await caches.open('devocional-preferencias');
+    const resposta = await cache.match('/devocional/__modo-do-tema');
+    return resposta ? await resposta.text() : null;
+  } catch (_) {
+    return null;
+  }
+}
+
 // Sem exibição automática do navegador em segundo plano — por isso o
-// `showNotification` manual aqui. `data.chave` vem de tool/enviar_lembretes.dart
-// ("manha", "promessas" ou "noite"), o mesmo contrato do toque no Android.
-mensageria.onBackgroundMessage((mensagem) => {
-  const notificacao = mensagem.notification || {};
-  const chave = mensagem.data && mensagem.data.chave;
-  self.registration.showNotification(notificacao.title || 'Devocional', {
-    body: notificacao.body || '',
-    icon: '/devocional/icons/Icon-192.png',
-    data: { chave: chave },
+// `showNotification` manual aqui. A mensagem é data-only (o Android também
+// recebe data-only, para o handler de fundo exibir via notificação local —
+// ver lib/data/lembretes.dart), então título e corpo vêm em `data`, junto com
+// `chave` ("manha", "promessas" ou "noite") e `minutos`, o mesmo contrato do
+// toque no Android. Tudo vem de tool/enviar_lembretes.dart.
+mensageria.onBackgroundMessage(async (mensagem) => {
+  const dados = mensagem.data || {};
+  const tema = await lerTemaEspelhado();
+  const icone =
+    tema === 'escuro'
+      ? ICONE_ESCURO
+      : tema === 'claro'
+        ? ICONE_CLARO
+        : ICONE_PADRAO;
+  self.registration.showNotification(dados.titulo || 'Devocional', {
+    body: dados.corpo || '',
+    icon: icone,
+    data: { chave: dados.chave },
   });
 });
 

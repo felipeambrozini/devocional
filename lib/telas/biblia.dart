@@ -260,7 +260,8 @@ class _TelaBibliaState extends State<TelaBiblia> {
   /// acima da barra de navegação repetindo o que o dedo faz. Na web vale,
   /// porque ali quem usa só o mouse não tem gesto: arrastar com o botão
   /// apertado funciona, mas ninguém descobre isso, e as setas do teclado também
-  /// não se anunciam.
+  /// não se anunciam. Mesmo lá é escolha: quem navega pelo teclado esconde os
+  /// botões na folha de ajustes ([Estado.setasDoRodape]).
   ///
   /// É a única ramificação por plataforma do app, e existe porque a forma de
   /// apontar muda de verdade entre elas. A web pode estar num desktop sem
@@ -457,7 +458,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
                     },
                   ),
                 ),
-                if (_semGestoDeToque)
+                if (_semGestoDeToque && estado.setasDoRodape)
                   _BarraDeCapitulo(
                     podeVoltar: !(_livro == canon.first.slug && _capitulo == 1),
                     podeAvancar:

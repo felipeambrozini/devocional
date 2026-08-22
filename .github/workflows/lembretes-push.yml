@@ -2,10 +2,11 @@ name: Push de lembretes
 
 on:
   schedule:
-    # A cada 5 min — tool/enviar_lembretes.dart decide quem bate com o
-    # horário agora. GitHub roda com atraso variável, principalmente em
-    # horário de pico; alguns minutos de folga no horário do lembrete são
-    # esperados, mesma tolerância que o agendamento local já aceitava.
+    # A cada 5 min — tool/enviar_lembretes.dart decide quem venceu o horário.
+    # GitHub atrasa rotinas em 10-30 min (às vezes mais) e tira o disparo da
+    # grade; o script tolera até 60 min de atraso com envio único por dia,
+    # e o app tem alarme local de reserva para o que passar disso (ver
+    # lib/data/lembretes.dart).
     - cron: '*/5 * * * *'
   workflow_dispatch:
 

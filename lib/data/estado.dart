@@ -26,11 +26,15 @@ class Estado extends ChangeNotifier {
   static const _kVersao = 'versao_preferida';
   static const _kUltima = 'ultima_leitura';
   static const _kEscala = 'escala_de_leitura';
-  static const _kModoDoTema = 'modo_do_tema';
+  // Pública (as outras são privadas de propósito): a notificação do lembrete
+  // precisa ler o tema escolhido para escolher o ícone certo, mesmo com o
+  // app morto (ver _iconeDoTema em lib/data/lembretes.dart).
+  static const chaveModoDoTema = 'modo_do_tema';
   static const _kAjudaDispensada = 'ajuda_dispensada';
   static const _kBaloesVisiveis = 'baloes_visiveis';
   static const _kBaloesTooltipDispensado = 'baloes_tooltip_dispensado';
   static const _kSwipeTooltipDispensado = 'swipe_tooltip_dispensado';
+  static const _kSetasDoRodape = 'setas_do_rodape';
   static const _kLembretesAtivos = 'lembretes_ativos';
   static const _kMinutosLembreteManha = 'minutos_lembrete_manha';
   static const _kMinutosLembreteNoite = 'minutos_lembrete_noite';
@@ -74,6 +78,13 @@ class Estado extends ChangeNotifier {
 
   /// Se o tooltip de primeiro uso do deslize para trocar capítulo já foi dispensado.
   bool _swipeTooltipDispensado = false;
+
+  /// Se os chevrons de capítulo aparecem no rodapé do leitor. Padrão true:
+  /// na web são o caminho que quem só tem mouse descobre sem ler manual —
+  /// e, desde que os atalhos de teclado chegaram, é escolha: quem prefere
+  /// virar página por setas, Enter ou espaço esconde os botões na folha de
+  /// ajustes. Existe só para a web; no celular o rodapé nem existe.
+  bool _setasDoRodape = true;
 
   /// Se os três lembretes diários estão ligados. Padrão false: notificação é
   /// opt-in, nunca ligada sem o usuário pedir.
@@ -143,7 +154,7 @@ class Estado extends ChangeNotifier {
       _escalaDeLeitura = escala;
     }
 
-    final modo = _prefs.getString(_kModoDoTema);
+    final modo = _prefs.getString(chaveModoDoTema);
     _modoDoTema = ModoDoTema.values.firstWhere(
       (m) => m.chave == modo,
       orElse: () => ModoDoTema.sistema,
@@ -156,6 +167,8 @@ class Estado extends ChangeNotifier {
     _baloesTooltipDispensado = _prefs.getBool(_kBaloesTooltipDispensado) ?? false;
 
     _swipeTooltipDispensado = _prefs.getBool(_kSwipeTooltipDispensado) ?? false;
+
+    _setasDoRodape = _prefs.getBool(_kSetasDoRodape) ?? true;
 
     _lembretesAtivos = _prefs.getBool(_kLembretesAtivos) ?? false;
     _minutosLembreteManha = _minutosValidos(
@@ -214,7 +227,7 @@ class Estado extends ChangeNotifier {
     if (novo == _modoDoTema) return;
     _modoDoTema = novo;
     notifyListeners();
-    await _prefs.setString(_kModoDoTema, novo.chave);
+    await _prefs.setString(chaveModoDoTema, novo.chave);
   }
 
   // --- lembretes diários ---------------------------------------------------- //
@@ -292,6 +305,18 @@ class Estado extends ChangeNotifier {
     _swipeTooltipDispensado = true;
     notifyListeners();
     await _prefs.setBool(_kSwipeTooltipDispensado, true);
+  }
+
+  // --- setas do rodapé do leitor (web) -------------------------------------- //
+
+  bool get setasDoRodape => _setasDoRodape;
+
+  /// Só persiste; quem obedece é a barra de chevrons no leitor (`biblia.dart`).
+  Future<void> definirSetasDoRodape(bool novo) async {
+    if (novo == _setasDoRodape) return;
+    _setasDoRodape = novo;
+    notifyListeners();
+    await _prefs.setBool(_kSetasDoRodape, novo);
   }
 
   // --- tamanho do texto de leitura ----------------------------------------- //

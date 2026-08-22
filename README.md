@@ -52,7 +52,10 @@ mesmo código).
   janela larga (a partir de 720px), coluna de leitura com largura confortável
   e centralizada no desktop.
 - Navegação por gesto e por teclado: deslizar troca de capítulo no celular; na
-  web as setas passam de capítulo e `Ctrl+F` abre a busca.
+  web as setas passam de capítulo e `Ctrl+F` abre a busca. Os chevrons ‹ › do
+  rodapé do leitor são exclusivos da web e podem ser escondidos na folha de
+  ajustes (seção "Navegação") — ao esconder, o app avisa que setas, Enter ou
+  espaço continuam virando o capítulo.
 
 ## Telas
 
@@ -325,12 +328,42 @@ motivo novo.
 
 ### Lembretes diários (Android e web)
 
-Por push do servidor, não agendamento local — nem Android nem web têm um
-"app fechado" com agendador confiável e conteúdo dinâmico ao mesmo tempo (ver
-o comentário de `lembretesSuportados` em `lib/data/lembretes.dart`). O
+Por push do servidor, com alarme local de reserva — nem Android nem web têm
+um "app fechado" com agendador confiável e conteúdo dinâmico ao mesmo tempo
+(ver o comentário de `lembretesSuportados` em `lib/data/lembretes.dart`). O
 aparelho só grava token + horário; quem decide e dispara é
 `tool/enviar_lembretes.dart`, rodado a cada 5 min por
 `.github/workflows/lembretes-push.yml`.
+
+- **Híbrido push + alarme local**: o cron do GitHub Actions atrasa de 10 a 30
+  min e sai da grade de 5 min (medido em produção). O servidor tolera até
+  `toleranciaDeAtrasoMinutos` (60 min) depois do horário cadastrado e garante
+  um envio por dia com marcadores `ultimoEnvioManha`/`ultimoEnvioNoite` no
+  documento; se mesmo assim nada chegar em 5 min (`atrasoDoFallbackMinutos`
+  em `lib/data/lembretes.dart`), um alarme do próprio aparelho avisa com
+  texto estático. O alarme é de um tiro só (alarme recorrente não pode ser
+  cancelado para o dia sem matar os próximos): quem rearma é a abertura do
+  app (`reagendarLembretesSeNecessario`), troca de horário e renovação de
+  token — se o usuário não abrir o app por dias e o servidor ficar mudo,
+  a reserva cobre só o primeiro dia.
+- **Mensagem data-only**: título/corpo vão no campo `data` (não há payload
+  `notification`) porque a exibição é manual dos dois lados — no Android pelo
+  handler de fundo via `flutter_local_notifications` (que também cancela o
+  alarme de reserva do dia, evitando duplicata; um push mais de 5 min tarde
+  é suprimido pela mesma régua, ver `pushAindaVale`) e na web pelo service
+  worker. Data-only acorda o handler mesmo com o app morto — e, de quebra,
+  fez o lembrete aparecer também com o app aberto, caso que antes ficava sem
+  notificação nenhuma.
+- **Ícone da notificação segue o tema escolhido no app**. No Android: claro
+  usa glifo escuro (`ic_lembete_claro`), escuro usa claro
+  (`ic_lembete_escuro`); no "Automático" quem escolhe são os qualifiers
+  `drawable`/`drawable-night` de `ic_lembete` — o único jeito certo com o app
+  morto, quando não dá para ler a preferência gravada. Na web: a página
+  espelha o tema efetivo no Cache Storage (`lib/data/espelho_do_tema.dart`,
+  via `package:web`) — `localStorage` é invisível para o service worker — e
+  `firebase-messaging-sw.js` lê o espelho para escolher entre
+  `notificacao-tema-claro.png`/`notificacao-tema-escuro.png`, caindo no
+  ícone fixo de sempre se não houver espelho ainda.
 
 - **`Lembretes` é interface, não classe** (`Lembretes.instancia`, mutável), com
   implementação real (`LembretesReais`, via `firebase_messaging`) e falsa
@@ -338,9 +371,13 @@ aparelho só grava token + horário; quem decide e dispara é
   quando a implementação trocou de local para push, então os testes de
   `comuns.dart`/`lembretes_test.dart` não precisaram mudar.
 - **Contrato do Firestore** (`lembretes/{token}`, id = o próprio token FCM):
-  `{token, minutosManha, minutosNoite, fuso}`. Sem login — o lembrete nunca
-  pediu conta — protegido por App Check (`request.app != null` em
-  `firestore.rules`) em vez de `request.auth`, já que não há uid de dono.
+  `{token, minutosManha, minutosNoite, fuso}` escritos pelo app, mais
+  `ultimoEnvioManha`/`ultimoEnvioNoite` (data ISO do último push por slot),
+  escritos só pelo script — o `.set()` do app substitui o documento inteiro e
+  os apaga, o que é desejado (reagendar pode reenviar no mesmo dia de
+  propósito). Sem login — o lembrete nunca pediu conta — protegido por App
+  Check (`request.app != null` em `firestore.rules`) em vez de `request.auth`,
+  já que não há uid de dono.
 - **`tool/enviar_lembretes.dart` não importa `lib/data/conteudo.dart`**:
   `Conteudo` carrega assets via `rootBundle`, que precisa do engine do
   Flutter (`dart:ui`), ausente num `dart run` puro. O script lê os mesmos
@@ -352,12 +389,18 @@ aparelho só grava token + horário; quem decide e dispara é
   disparo — só dá para fazer isso no servidor porque um agendamento local
   nasce com o texto fixo (o motivo original de unificar Android e web no
   mesmo push, em vez de manter dois caminhos).
-- **Sem exibição em primeiro plano**: o FCM mostra a notificação do sistema
-  sozinho em segundo plano/app fechado, mas não com o app aberto — ali a
-  mensagem chega a `onMessage`/`onBackgroundMessage` sem virar notificação
-  visível. Aceito como está: o caso comum de um lembrete de 6h/21h é o app
-  fechado; corrigir o caso raro voltaria a exigir um plugin de exibição só
-  para isso.
+- **Sem exibição nativa em primeiro plano**: resolvido pelo híbrido — com o
+  app aberto, o push data-only chega a `onMessage` e é exibido como
+  notificação local igual aos outros casos. O texto antigo ("a mensagem
+  chega sem virar notificação visível") vale para versões publicadas antes
+  desta mudança.
+- **Alarme exato é best-effort**: no Android 12+ a permissão
+  `SCHEDULE_EXACT_ALARM` (declarada no manifesto) é concedida nas
+  Configurações, fora do app; sem ela, `canScheduleExactNotifications` faz
+  cair para alarme inexato, que o Doze pode atrasar alguns minutos. Fabricantes
+  agressivos (Xiaomi e afins) também matam alarmes sem o autostart habilitado —
+  nesses casos o push (que anda pela conexão do Play Services) continua sendo
+  o caminho principal.
 - **`firebase-messaging-sw.js` tem placeholders**: a config do Firebase JS
   (`__FIREBASE_API_KEY_WEB__` etc.) é preenchida no CI
   (`.github/workflows/deploy-web.yml`, `sed` antes do `flutter build web`) —

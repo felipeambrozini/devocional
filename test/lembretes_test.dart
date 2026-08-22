@@ -151,14 +151,14 @@ void main() {
       expect(falsas.agendamentos, hasLength(1));
     });
 
-    test('ligado e já agendado, não reagenda — abrir o app não cancela o '
-        'lembrete do dia que ainda não disparou', () async {
+    test('ligado, rearma sempre — os alarmes locais são de um tiro só, e '
+        'regravar atualiza o fuso de quem viajou', () async {
       await alternarLembretes(estado, true);
       falsas.agendamentos.clear();
 
       await reagendarLembretesSeNecessario(estado);
 
-      expect(falsas.agendamentos, isEmpty);
+      expect(falsas.agendamentos, hasLength(1));
     });
   });
 

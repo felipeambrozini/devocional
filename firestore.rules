@@ -157,10 +157,14 @@ service cloud.firestore {
     // dele — nenhum dado sensível aqui.
     //
     // Contrato do documento lembretes/{token}:
-    //   token         string — igual ao id do documento
-    //   minutosManha  int — minutos desde meia-noite, 0 a 1439
-    //   minutosNoite  int — minutos desde meia-noite, 0 a 1439
-    //   fuso          string — nome IANA (ex. "America/Sao_Paulo")
+    //   token              string — igual ao id do documento
+    //   minutosManha       int — minutos desde meia-noite, 0 a 1439
+    //   minutosNoite       int — minutos desde meia-noite, 0 a 1439
+    //   fuso               string — nome IANA (ex. "America/Sao_Paulo")
+    //   ultimoEnvioManha   string — data ISO do último push (só o script
+    //                      escreve, via conta de serviço que ignora estas
+    //                      regras; por isso fora do hasOnly abaixo)
+    //   ultimoEnvioNoite   string — idem, para o slot da noite
     match /lembretes/{token} {
       function valido() {
         let dados = request.resource.data;

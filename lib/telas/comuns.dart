@@ -587,6 +587,9 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 // tem a chave APNs cadastrada. Ver lembretes.dart.
                 if (lembretesSuportados)
                   ..._SecaoDeLembretes(estado: estado).montar(context),
+                // Setas de virar capítulo são assunto da web: no celular o
+                // rodapé nem existe.
+                if (kIsWeb) ..._SecaoDasSetas(estado: estado).montar(context),
                 // Sobre no fim da folha: as escolhas do dia ficam na frente,
                 // e fontes, canais e privacidade esperam quem rola até o fim.
                 ListTile(
@@ -728,17 +731,16 @@ Future<void> aplicarHorarioDeLembrete(
   );
 }
 
-/// Reagenda os lembretes no início do app, só se não houver nenhum registro
-/// no Firestore para o token deste aparelho.
+/// Rearma os lembretes no início do app, sempre que estiverem ligados.
 ///
-/// Cobre o caso de reinstalação (token novo, sem registro correspondente) —
-/// gravar de novo a cada abertura do app, sem essa checagem, não teria custo
-/// nenhum (a escrita é idempotente, não existe mais alarme do dia para
-/// cancelar), mas seria uma escrita no Firestore a cada abertura sem
-/// necessidade.
+/// Dois motivos para não pular quando já existe registro no Firestore: os
+/// alarmes locais de reserva são de um tiro só (horário + 5 min — ver
+/// `LembretesReais._armarReservas`), então sem rearmamento aqui eles cobriam
+/// apenas o primeiro dia sem abertura do app; e regravar o documento ainda
+/// atualiza o fuso, que ficava preso ao da primeira gravação em quem
+/// viajasse. A escrita é idempotente e barata.
 Future<void> reagendarLembretesSeNecessario(Estado estado) async {
   if (!estado.lembretesAtivos) return;
-  if (await Lembretes.instancia.agendados()) return;
   await Lembretes.instancia.agendar(
     manhaEPromessas: _horaDe(estado.minutosLembreteManha),
     noite: _horaDe(estado.minutosLembreteNoite),
@@ -961,6 +963,52 @@ class _SecaoDeLembretes {
         'aparelho para usar os lembretes.',
       );
     }
+  }
+}
+
+/// A seção "Navegação" da folha de ajustes: esconde (ou traz de volta) os
+/// chevrons de capítulo do rodapé do leitor. Só existe na web — no celular a
+/// barra nem é construída (`_semGestoDeToque`, em `biblia.dart`).
+///
+/// Ao esconder, avisa dos atalhos que ficam: as setas do teclado passam de
+/// capítulo e Enter/espaço apertam o botão em foco — ninguém pode perder o
+/// jeito de virar página por desligar um botão.
+class _SecaoDasSetas {
+  const _SecaoDasSetas({required this.estado});
+
+  final Estado estado;
+
+  List<Widget> montar(BuildContext context) {
+    final tema = Theme.of(context).textTheme;
+    return [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(
+          Spacing.sp20,
+          Spacing.sp24,
+          Spacing.sp20,
+          Spacing.sp4,
+        ),
+        child: Text('Navegação', style: tema.headlineSmall),
+      ),
+      SwitchListTile(
+        title: const Text('Setas para virar o capítulo'),
+        subtitle: const Text(
+          'Os botões ‹ › no rodapé da Bíblia. Sem elas, o teclado vira '
+          'o capítulo: setas esquerda e direita, Enter ou espaço.',
+        ),
+        value: estado.setasDoRodape,
+        onChanged: (novo) async {
+          await estado.definirSetasDoRodape(novo);
+          if (!novo && context.mounted) {
+            mostrarAviso(
+              context,
+              'Setas escondidas. Para virar o capítulo sem elas: setas do '
+              'teclado, Enter ou espaço.',
+            );
+          }
+        },
+      ),
+    ];
   }
 }
 

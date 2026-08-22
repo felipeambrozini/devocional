@@ -5,6 +5,7 @@ import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:felipe_ambrozini/main.dart';
 import 'package:felipe_ambrozini/telas/biblia.dart';
 import 'package:felipe_ambrozini/telas/busca.dart';
+import 'package:felipe_ambrozini/telas/comuns.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -100,6 +101,63 @@ void main() {
         expect(find.byIcon(Icons.chevron_left), findsNothing);
       });
     });
+  });
+
+  testWidgets('sem as setas do rodapé, o teclado continua virando', (
+    tester,
+  ) async {
+    await aquecer(tester);
+    SharedPreferences.setMockInitialValues({'setas_do_rodape': false});
+    final estado = Estado(await SharedPreferences.getInstance());
+    expect(estado.setasDoRodape, isFalse);
+    await tester.pumpWidget(
+      EscopoDoEstado(
+        estado: estado,
+        child: const MaterialApp(home: TelaBiblia()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // O escondimento dos chevrons é web-only e o teste roda fora da web, onde
+    // eles já não existem; a asserção cobre o Android, que é o lugar onde dá
+    // para simular a ausência. O que importa aqui é o teclado: esconder os
+    // botões nunca pode esconder o atalho.
+    expect(find.byIcon(Icons.chevron_right), findsNothing);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.pumpAndSettle();
+    expect(estado.ultimaLeitura, ('genesis', 2));
+  });
+
+  testWidgets('a seção Navegação só existe na web', (tester) async {
+    await aquecer(tester);
+    final estado = Estado(await SharedPreferences.getInstance());
+    await tester.pumpWidget(
+      EscopoDoEstado(
+        estado: estado,
+        child: MaterialApp(
+          home: Scaffold(
+            body: Center(child: BotaoDeAjustes(estado: estado)),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byType(BotaoDeAjustes));
+    await tester.pumpAndSettle();
+
+    // No ambiente de teste `kIsWeb` é falso — o mesmo Android do teste acima.
+    // Se um dia a seção vazar para fora do `if (kIsWeb)`, é aqui que falha.
+    expect(find.text('Navegação'), findsNothing);
+    expect(find.text('Setas para virar o capítulo'), findsNothing);
+  });
+
+  test('a preferência das setas nasce ligada e persiste desligada', () async {
+    final estado = Estado(await SharedPreferences.getInstance());
+    expect(estado.setasDoRodape, isTrue);
+
+    await estado.definirSetasDoRodape(false);
+
+    final reaberto = Estado(await SharedPreferences.getInstance());
+    expect(reaberto.setasDoRodape, isFalse);
   });
 
   testWidgets('Ctrl+F abre a busca', (tester) async {
