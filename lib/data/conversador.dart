@@ -24,6 +24,7 @@ class Conversador extends ChangeNotifier {
     required this.chamar,
     this.conversaId,
     this.duracaoDoErro = const Duration(seconds: 2),
+    this.intervaloMinimo = const Duration(seconds: 3),
   });
 
   final Persona persona;
@@ -57,6 +58,15 @@ class Conversador extends ChangeNotifier {
   /// usuário precise redigitar.
   String _ultimaPergunta = '';
 
+  /// Menor tempo entre dois [enviar]: a chave da Gemini é uma só para todo
+  /// mundo que usa o app (embutida no build, sem servidor por trás), e mandar
+  /// mensagens em sequência esgota a cota gratuita para todos os usuários, não
+  /// só para quem está mandando. Não protege contra alguém que fale direto
+  /// com a API por fora do app — só contra o próprio app sendo usado assim.
+  final Duration intervaloMinimo;
+
+  DateTime? _ultimoEnvio;
+
   /// A tela foi fechada antes de a resposta chegar; não notificar depois do
   /// dispose (erro em modo debug) nem tocar no que não existe mais.
   bool _descartado = false;
@@ -73,7 +83,18 @@ class Conversador extends ChangeNotifier {
   String? get id => _id ?? conversaId;
 
   /// Envia uma pergunta nova e espera a resposta.
+  ///
+  /// Chamadas em sequência mais rápida que [intervaloMinimo] são ignoradas em
+  /// silêncio: a tela já desabilita o campo enquanto [respondendo] é `true`,
+  /// então só se chega aqui de novo por um toque logo depois de uma resposta
+  /// chegar — o intervalo é a defesa contra isso virar spam de verdade.
   Future<void> enviar(String pergunta) async {
+    final agora = DateTime.now();
+    final ultimoEnvio = _ultimoEnvio;
+    if (ultimoEnvio != null && agora.difference(ultimoEnvio) < intervaloMinimo) {
+      return;
+    }
+    _ultimoEnvio = agora;
     final id = _id ??= await _novaConversa(pergunta);
     // Perguntas antigas que ficaram pendentes ficam para trás: quem envia
     // uma pergunta nova seguiu a vida, e só a mais nova interessa.
