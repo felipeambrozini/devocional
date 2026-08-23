@@ -8,6 +8,7 @@ import '../data/modelos.dart';
 import '../data/voz.dart';
 import '../spacing.dart';
 import 'biblia.dart';
+import 'busca.dart';
 import 'comuns.dart';
 
 /// As três leituras diárias, na ordem em que aparecem no alternador do topo.
@@ -107,6 +108,15 @@ class _TelaDevocionalState extends State<TelaDevocional> {
     if (escolhida != null) _irPara(_leitura, escolhida);
   }
 
+  /// A busca abre na aba de devocionais: quem pesquisa daqui procura
+  /// devocional, não versículo.
+  void _abrirBusca() => Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const TelaBusca(abaInicial: AbaDaBusca.devocionais),
+    ),
+  );
+
   /// Navega para a leitura com a data na URL (`/manha?data=AAAA-MM-DD`):
   /// o chip, o calendário e o "voltar para hoje" escrevem a URL, e a rota
   /// (main.dart) reconstrói a tela com `dataInicial`. A data de hoje não
@@ -150,14 +160,19 @@ class _TelaDevocionalState extends State<TelaDevocional> {
         ),
         actions: [
           IconButton(
-            tooltip: 'Tamanho do texto e aparência',
-            icon: const Icon(Icons.tune),
-            onPressed: () => ajustesDeLeitura(context, estado),
+            tooltip: 'Buscar',
+            icon: const Icon(Icons.search),
+            onPressed: _abrirBusca,
           ),
           IconButton(
             tooltip: 'Escolher data',
             icon: const Icon(Icons.calendar_month_outlined),
             onPressed: _escolherData,
+          ),
+          IconButton(
+            tooltip: 'Tamanho do texto e aparência',
+            icon: const Icon(Icons.tune),
+            onPressed: () => ajustesDeLeitura(context, estado),
           ),
           if (!ehHoje)
             IconButton(

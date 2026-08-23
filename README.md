@@ -427,9 +427,11 @@ documento (`ultimoEnvioManha`/`ultimoEnvioNoite`, escritos só pela Function).
   pessoa fechou o aviso).
 - **Tela Sobre completa**: `lib/telas/sobre.dart`, com dois links (YouTube e
   Instagram) abertos com `launchUrl` do `url_launcher`.
-- **`biblia.dart` e `busca.dart` se importam um ao outro** — import circular
-  entre dois arquivos é permitido em Dart, não é um erro: a busca abre o leitor
-  num versículo e o leitor abre a busca com `Ctrl+F`.
+- **`biblia.dart`, `devocional.dart` e `busca.dart` se importam em ciclo** —
+  import circular entre arquivos é permitido em Dart, não é um erro: a busca
+  abre o leitor num versículo ou num devocional, e os leitores abrem a busca
+  (`Ctrl+F` na Bíblia; lupa na barra do devocional, que abre direto na aba
+  "Devocionais" via `TelaBusca(abaInicial:)`).
 - **Conta Google e cópia na nuvem (Web, Android e iOS)** (19/08/2026): `Sincronia` em
   `lib/data/nuvem.dart` é um ouvinte de fora sobre o `ChangeNotifier` do
   `Estado` (que **não mudou nenhuma linha**), reaproveitando `exportar()`/

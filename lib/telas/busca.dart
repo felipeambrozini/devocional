@@ -18,8 +18,13 @@ import 'devocional.dart';
 /// por completo depois da primeira leitura (`Conteudo.buscarDevocionais`,
 /// bem mais barato que varrer a Bíblia), então essa aba não precisa de
 /// stream nem de teto de resultados.
+/// A aba da tela de busca que começa selecionada.
+enum AbaDaBusca { biblia, devocionais }
+
 class TelaBusca extends StatefulWidget {
-  const TelaBusca({super.key});
+  const TelaBusca({super.key, this.abaInicial = AbaDaBusca.biblia});
+
+  final AbaDaBusca abaInicial;
 
   @override
   State<TelaBusca> createState() => _TelaBuscaState();
@@ -159,6 +164,7 @@ class _TelaBuscaState extends State<TelaBusca> {
     // Scaffold, a própria AppBar ficava numa faixa de 720 px no meio da janela.
     return DefaultTabController(
       length: 2,
+      initialIndex: widget.abaInicial == AbaDaBusca.devocionais ? 1 : 0,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Buscar'),
