@@ -147,43 +147,5 @@ service cloud.firestore {
 
       allow delete: if google() && resource.data.criadoPor == request.auth.uid;
     }
-
-    // Lembrete diário do devocional (ver lib/data/lembretes.dart e
-    // tool/enviar_lembretes.dart). Sem login — o lembrete não pede conta, e
-    // por isso não há uid para checar dono. O id do documento é o próprio
-    // token do FCM deste aparelho, então a proteção contra escrita de
-    // terceiros é o App Check (ativado no app inteiro em Nuvem.iniciar), não
-    // request.auth. Um token roubado só permite reagendar o próprio lembrete
-    // dele — nenhum dado sensível aqui.
-    //
-    // Contrato do documento lembretes/{token}:
-    //   token              string — igual ao id do documento
-    //   minutosManha       int — minutos desde meia-noite, 0 a 1439
-    //   minutosNoite       int — minutos desde meia-noite, 0 a 1439
-    //   fuso               string — nome IANA (ex. "America/Sao_Paulo")
-    //   ultimoEnvioManha   string — data ISO do último push (só o script
-    //                      escreve, via conta de serviço que ignora estas
-    //                      regras; por isso fora do hasOnly abaixo)
-    //   ultimoEnvioNoite   string — idem, para o slot da noite
-    match /lembretes/{token} {
-      function valido() {
-        let dados = request.resource.data;
-        return dados.keys().hasOnly(['token', 'minutosManha', 'minutosNoite', 'fuso']) &&
-            dados.token == token &&
-            dados.minutosManha is int &&
-            dados.minutosManha >= 0 && dados.minutosManha < 1440 &&
-            dados.minutosNoite is int &&
-            dados.minutosNoite >= 0 && dados.minutosNoite < 1440 &&
-            dados.fuso is string && dados.fuso.size() < 100;
-      }
-
-      allow create, update: if request.app != null && valido();
-      // get, não read: ninguém aqui tem como provar dono do próprio token, e
-      // sem 'list' negado explicitamente um cliente que passe o App Check
-      // conseguiria listar a coleção inteira e colher o token FCM de todo
-      // mundo. O app só faz .doc(token).get(), nunca lista.
-      allow get, delete: if request.app != null;
-      allow list: if false;
-    }
   }
 }

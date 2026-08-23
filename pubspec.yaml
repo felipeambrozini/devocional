@@ -27,12 +27,11 @@ dependencies:
   # Folha de compartilhar nativa. Android e web de uma vez, sem
   # ramificação de plataforma — mesma razão do shared_preferences acima.
   share_plus: ^13.3.0
-  # Lembrete diário (ver Lembretes em lib/data/lembretes.dart): token do
-  # aparelho para o push do servidor decidir quem avisar, e recebimento do
-  # push em si, em Android e web.
-  firebase_messaging: ^16.5.0
-  # Só para detectar o fuso do aparelho e gravar junto com o token — o
-  # cálculo de horário em si é todo do lado do servidor (tool/enviar_lembretes.dart).
+  # Lembrete diário (ver Lembretes em lib/data/lembretes.dart): alarme
+  # agendado no próprio aparelho, exclusivo do Android. Sobrevive a
+  # reinicializações e não depende de rede nem de servidor.
+  flutter_local_notifications: ^22.3.0
+  # Detecta o fuso do aparelho e arma os alarmes na hora certa nele.
   flutter_timezone: ^5.1.0
   # Abre o link do canal (YouTube, Instagram) na tela Sobre no navegador do
   # sistema. Mesma família de pacotes do share_plus: mantido pela equipe do
@@ -68,20 +67,8 @@ dependencies:
   # Já era dependência transitiva do Firebase; só promovida a direta para o
   # código poder importar.
   path_provider: ^2.1.6
-  # Fallback local do lembrete diário em Android: se o push não chegar até
-  # 5 min depois do horário escolhido, um alarme do próprio aparelho avisa
-  # (e o handler de fundo usa este mesmo plugin para exibir o push data-only,
-  # ver lib/data/lembretes.dart). Fora da web — lá a exibição é do service
-  # worker (web/firebase-messaging-sw.js).
-  flutter_local_notifications: ^22.3.0
-  # Ligações tipadas às APIs do navegador. Usado pelo espelho do tema para
-  # notificações (lib/data/espelho_do_tema.dart): grava no Cache Storage,
-  # que o service worker lê para escolher o ícone da notificação. Já era
-  # transitiva dos plugins web; direta para o código poder importar.
-  web: ^1.1.0
-  # Cálculo de horário por fuso: o script do push usa para saber a hora local
-  # de cada cadastro (tool/enviar_lembretes.dart) e lib/data/lembretes.dart
-  # usa para armar o alarme local na hora certa do aparelho.
+  # Cálculo de horário por fuso para armar o alarme do lembrete na hora certa
+  # do aparelho (lib/data/lembretes.dart).
   timezone: ^0.11.1
 
 dev_dependencies:
@@ -91,10 +78,6 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
   flutter_native_splash: ^2.4.8
-  # Autenticação da conta de serviço no script do push de lembretes
-  # (tool/enviar_lembretes.dart, rodado pelo GitHub Actions) — nunca importado
-  # pelo app, por isso dev_dependency.
-  googleapis_auth: ^2.3.3
 
 # Ícone do app e favicon, montados com a marca "Devocional" (fonte Cinzel,
 # mesmo estilo do web/og.png) sobre o marrom do tema. As fontes ficam em

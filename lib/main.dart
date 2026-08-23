@@ -13,7 +13,6 @@ import 'package:go_router/go_router.dart';
 
 import 'data/canon.dart';
 import 'data/estado.dart';
-import 'data/espelho_do_tema.dart';
 import 'data/lembretes.dart';
 import 'data/modelos.dart';
 import 'data/nuvem.dart';
@@ -80,16 +79,6 @@ void _abrirLeituraDoLink() {
   );
 }
 
-/// Abre a leitura do parâmetro `lembrete` da URL (`?lembrete=manha`) — como o
-/// toque na notificação chega na web: o service worker
-/// (`web/firebase-messaging-sw.js`) abre essa URL ao ser tocado, em vez de
-/// passar pelo SDK nativo do FCM (que [Lembretes.chaveQueAbriuOApp] usa só no
-/// Android). Mesmo destino de [_abrirLeituraDoLembrete], só a origem muda.
-void _abrirLeituraDoLembreteDoLink() {
-  final chave = Uri.base.queryParameters['lembrete'];
-  if (chave != null) _abrirLeituraDoLembrete(chave);
-}
-
 /// Abre o plano compartilhado do parâmetro `plano` da URL — `?plano=<id>` ou
 /// `?plano=<slug-legível>-<id>`, ver [linkDoPlano] — para quem chega por um
 /// link divulgado por outra pessoa. Como [_abrirLeituraDoLink], é uma
@@ -137,11 +126,11 @@ Future<void> _iniciar() async {
   final estado = await Estado.abrir();
 
   if (nuvemSuportada) {
-    // Awaited, ao contrário do resto da Nuvem abaixo: `Lembretes.instancia`
-    // usa FirebaseMessaging.instance, que lança se chamado antes do app
-    // default do Firebase estar registrado. Sem isto, a linha de baixo
-    // quebra com "FirebaseException" toda vez — não uma corrida ocasional,
-    // já que ela roda sempre antes do unawaited abaixo terminar.
+    // Awaited, ao contrário do resto da Nuvem abaixo: Auth e Firestore lançam
+    // se chamados antes do app default do Firebase estar registrado. Sem
+    // isto, a sincronia quebra com "FirebaseException" toda vez — não uma
+    // corrida ocasional, já que ela roda sempre antes do unawaited abaixo
+    // terminar.
     try {
       await Nuvem.instancia.iniciarFirebase();
     } catch (erro, pilha) {
@@ -162,10 +151,9 @@ Future<void> _iniciar() async {
     await Lembretes.instancia.inicializar(
       aoTocarNotificacao: _abrirLeituraDoLembrete,
     );
-    // Sem await: desde a migração para FCM isto envolve rede (Firestore e
-    // getToken), e travar o primeiro quadro numa notificação que o usuário
-    // nem pediu ainda (só reagendando a de antes) é pior que atrasar por um
-    // instante o registro do novo token.
+    // Sem await: armar alarmes envolve ler fuso e preferências, e travar o
+    // primeiro quadro numa notificação que o usuário nem pediu ainda é pior
+    // que rearmar um instante depois.
     unawaited(reagendarLembretesSeNecessario(estado));
     // Precisa vir antes do runApp: depois dele o plugin já não sabe dizer que
     // toque abriu o app, só qual chegou com o app já aberto.
@@ -183,18 +171,13 @@ Future<void> _iniciar() async {
       (_) => _abrirLeituraDoLembrete(chave),
     );
   } else {
-    // `chaveDeAbertura` só cobre o toque via SDK nativo do FCM (Android); o
-    // toque na notificação da web chega como parâmetro de URL, então cai
-    // aqui, no mesmo grupo dos outros links. `?plano`, `?ler` e `?lembrete`
-    // não chegam juntos na mesma URL, mas a ordem importa se algum dia
-    // coincidirem: plano primeiro, leitura só quando não há plano.
+    // `?plano` e `?ler` não chegam juntos na mesma URL, mas a ordem importa
+    // se algum dia coincidirem: plano primeiro, leitura só quando não há
+    // plano.
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _abrirPlanoDoLink(estado),
     );
     WidgetsBinding.instance.addPostFrameCallback((_) => _abrirLeituraDoLink());
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _abrirLeituraDoLembreteDoLink(),
-    );
   }
 }
 
@@ -471,8 +454,7 @@ class AppDevocional extends StatefulWidget {
   State<AppDevocional> createState() => _AppDevocionalState();
 }
 
-class _AppDevocionalState extends State<AppDevocional>
-    with WidgetsBindingObserver {
+class _AppDevocionalState extends State<AppDevocional> {
   late double _escala = widget.estado.escalaDeLeitura;
   late ModoDoTema _modo = widget.estado.modoDoTema;
 
@@ -484,39 +466,12 @@ class _AppDevocionalState extends State<AppDevocional>
     // reporte de rota, no app e nos testes. Ver o comentário de [_router].
     GoRouter.optionURLReflectsImperativeAPIs = true;
     widget.estado.addListener(_conferirTema);
-    // Para [didChangePlatformBrightness]: no modo Automático, o sistema pode
-    // virar o tema com o app aberto, e o espelho do ícone de notificação
-    // (web) precisa acompanhar.
-    WidgetsBinding.instance.addObserver(this);
-    _espelharTema();
-  }
-
-  @override
-  void didChangePlatformBrightness() {
-    _espelharTema();
   }
 
   @override
   void dispose() {
     widget.estado.removeListener(_conferirTema);
-    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
-  }
-
-  /// Manda ao Cache Storage o tema efetivo da interface, para o service
-  /// worker escolher o ícone da notificação (ver `espelho_do_tema.dart`).
-  void _espelharTema() {
-    unawaited(
-      espelharTemaParaNotificacoes(
-        escuro: switch (_modo) {
-          ModoDoTema.sistema =>
-            WidgetsBinding.instance.platformDispatcher.platformBrightness ==
-                Brightness.dark,
-          ModoDoTema.escuro => true,
-          ModoDoTema.claro => false,
-        },
-      ),
-    );
   }
 
   /// O tema precisa ser refeito quando o tamanho do texto ou o modo mudam, mas o
@@ -530,7 +485,6 @@ class _AppDevocionalState extends State<AppDevocional>
       _escala = estado.escalaDeLeitura;
       _modo = estado.modoDoTema;
     });
-    _espelharTema();
   }
 
   @override

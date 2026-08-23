@@ -32,6 +32,9 @@ class _LembretesFalsas implements Lembretes {
   Future<void> cancelar() async {}
 
   @override
+  Future<bool> agendados() async => false;
+
+  @override
   String fusoAtual = 'America/Sao_Paulo';
 }
 

@@ -3,10 +3,10 @@
 // necessário porque o Android também usa Firebase: `nuvemSuportada` em
 // lib/data/nuvem.dart é `true` em toda plataforma, não só na web, então
 // main.dart chama `Nuvem.instancia.iniciar(estado)` (Auth + Firestore) no
-// Android também; e `firebase_messaging` (lib/data/lembretes.dart) usa a
-// mesma configuração para o lembrete diário por push. O arquivo precisa
-// continuar em sincronia com o applicationId abaixo — o plugin falha o build
-// se o "package_name" dele não bater.
+// Android também. O arquivo precisa continuar em sincronia com o
+// applicationId abaixo — o plugin falha o build se o "package_name" dele não
+// bater. (O lembrete diário, antes por push do FCM, hoje é alarme local e não
+// usa Firebase; ver lib/data/lembretes.dart.)
 plugins {
     id("com.android.application")
     id("kotlin-android")

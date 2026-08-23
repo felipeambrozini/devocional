@@ -557,8 +557,8 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                     );
                   },
                 ),
-                // Android e web recebem por push do servidor; iOS ainda não
-                // tem a chave APNs cadastrada. Ver lembretes.dart.
+                // Lembrete exclusivo do Android: alarme agendado no próprio
+                // aparelho (ver lembretes.dart). iOS e web ficam de fora.
                 if (lembretesSuportados)
                   ..._SecaoDeLembretes(estado: estado).montar(context),
                 // Sobre no fim da folha: as escolhas do dia ficam na frente,

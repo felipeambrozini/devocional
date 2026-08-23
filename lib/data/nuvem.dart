@@ -35,8 +35,7 @@ final _espacos = RegExp(r'\s+');
 /// Se a conta na nuvem é uma opção nesta plataforma.
 ///
 /// Verdade em todas as plataformas do projeto (web, Android e iOS): todas
-/// têm configuração Firebase em `firebase_options.dart`. Mesmo formato de
-/// `lembretesSuportados` em `lib/data/lembretes.dart`.
+/// têm configuração Firebase em `firebase_options.dart`.
 bool get nuvemSuportada => true;
 
 /// Chave do reCAPTCHA v3 que ativa o App Check na web (console do Firebase >
@@ -262,9 +261,9 @@ class Nuvem extends ChangeNotifier {
 
   /// Só o núcleo do Firebase (`Firebase.initializeApp`), sem o resto de
   /// [iniciar] — para quem precisa do app default já registrado antes de
-  /// continuar, como `lib/data/lembretes.dart` (`FirebaseMessaging.instance`
-  /// lança se chamado sem isto). Idempotente: `Firebase.apps` vazio é o sinal
-  /// de que ainda não rodou; chamar de novo depois lançaria "app duplicado".
+  /// continuar (Auth e Firestore lançam sem isto). Idempotente:
+  /// `Firebase.apps` vazio é o sinal de que ainda não rodou; chamar de novo
+  /// depois lançaria "app duplicado".
   Future<void> iniciarFirebase() async {
     if (Firebase.apps.isNotEmpty) return;
     await Firebase.initializeApp(

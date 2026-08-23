@@ -44,6 +44,11 @@ class _LembretesFalsas implements Lembretes {
     vezesCancelado++;
   }
 
+  bool agendadoSimulado = false;
+
+  @override
+  Future<bool> agendados() async => agendadoSimulado;
+
   @override
   String fusoAtual = 'America/Sao_Paulo';
 

@@ -87,9 +87,9 @@ plano compartilhado.
   igual em todas as plataformas, sem banco. Na web, quem
   entra com a conta Google também espelha favoritos, notas e progresso num
   documento do Firestore — ver a conta na nuvem, acima.
-- `share_plus` para compartilhar um versículo. `firebase_messaging` +
-  `flutter_timezone` para o lembrete diário, em Android e web — o horário é
-  decidido do lado do servidor, não agendado no aparelho (ver
+- `share_plus` para compartilhar um versículo. `flutter_local_notifications`
+  + `flutter_timezone` + `timezone` para o lembrete diário, só no Android —
+  alarmes agendados no próprio aparelho, no fuso detectado (ver
   `lembretesSuportados` em `lib/data/lembretes.dart` e a seção Lembretes
   diários abaixo).
 - `go_router` para as rotas por aba, com `StatefulShellRoute.indexedStack` (a
@@ -189,9 +189,10 @@ motivo novo.
 - **Cores de marcação** — mais taxonomia do que um leitor só precisa.
 - **Widget na tela inicial** — código nativo nas duas plataformas para pouco
   retorno.
-- **Lembretes em iOS** — ainda não configurado: exigiria a chave APNs
-  cadastrada no Console do Firebase, que este projeto não tem. Android e web
-  já recebem lembrete por push (ver abaixo); só faltou esse terceiro.
+- **Lembretes em iOS e web** — recusado por ora: o lembrete passou a ser
+  exclusivo do Android, agendado no próprio aparelho (ver acima); web exigiria
+  infraestrutura de push externa e iOS, a chave APNs que este projeto não
+  tem.
 - **Offline de verdade na web** — investigado e recusado: o Flutter 3.44
   removeu o cache automático do service worker gerado e o CanvasKit carrega de
   CDN por padrão; fazer direito exigiria um service worker próprio contra um
@@ -328,95 +329,49 @@ motivo novo.
   exemplo) lia a posição da pausa antiga em vez da posição real da leitura em
   andamento.
 
-### Lembretes diários (Android e web)
+### Lembretes diários (só Android)
 
-Por push do servidor, com alarme local de reserva — nem Android nem web têm
-um "app fechado" com agendador confiável e conteúdo dinâmico ao mesmo tempo
-(ver o comentário de `lembretesSuportados` em `lib/data/lembretes.dart`). O
-aparelho só grava token + horário; quem decide e dispara é
-`tool/enviar_lembretes.dart`, rodado a cada 5 min por
-`.github/workflows/lembretes-push.yml`.
+Agendados **no próprio aparelho** (`flutter_local_notifications`), sem
+servidor, sem FCM e sem cron de CI. A cadeia anterior (GitHub Actions →
+Firestore → FCM) nunca entregou com confiabilidade: o cron do GitHub atrasa
+10-30 min e sai da grade, e o envio ainda dependia de App Check, token e
+rede. Agora são alarmes locais (`zonedSchedule`) armados no fuso do aparelho
+para uma **janela de dois dias** (hoje, se ainda dá, e amanhã), rearmeda a
+cada abertura do app — é o que permite a referência do dia no corpo sem
+servidor. O receiver de boot do plugin resgata os alarmes persistidos após
+reinicialização do celular.
 
-- **Híbrido push + alarme local**: o cron do GitHub Actions atrasa de 10 a 30
-  min e sai da grade de 5 min (medido em produção). O servidor tolera até
-  `toleranciaDeAtrasoMinutos` (60 min) depois do horário cadastrado e garante
-  um envio por dia com marcadores `ultimoEnvioManha`/`ultimoEnvioNoite` no
-  documento; se mesmo assim nada chegar em 5 min (`atrasoDoFallbackMinutos`
-  em `lib/data/lembretes.dart`), um alarme do próprio aparelho avisa com
-  texto estático. O alarme é de um tiro só (alarme recorrente não pode ser
-  cancelado para o dia sem matar os próximos): quem rearma é a abertura do
-  app (`reagendarLembretesSeNecessario`), troca de horário e renovação de
-  token — se o usuário não abrir o app por dias e o servidor ficar mudo,
-  a reserva cobre só o primeiro dia.
-- **Mensagem data-only**: título/corpo vão no campo `data` (não há payload
-  `notification`) porque a exibição é manual dos dois lados — no Android pelo
-  handler de fundo via `flutter_local_notifications` (que também cancela o
-  alarme de reserva do dia, evitando duplicata; um push mais de 5 min tarde
-  é suprimido pela mesma régua, ver `pushAindaVale`) e na web pelo service
-  worker. Data-only acorda o handler mesmo com o app morto — e, de quebra,
-  fez o lembrete aparecer também com o app aberto, caso que antes ficava sem
-  notificação nenhuma.
-- **Ícone da notificação segue o tema escolhido no app**. No Android: claro
-  usa glifo escuro (`ic_lembrete_claro`), escuro usa claro
-  (`ic_lembrete_escuro`); no "Automático" quem escolhe são os qualifiers
-  `drawable`/`drawable-night` de `ic_lembrete` — o único jeito certo com o app
-  morto, quando não dá para ler a preferência gravada. Na web: a página
-  espelha o tema efetivo no Cache Storage (`lib/data/espelho_do_tema.dart`,
-  via `package:web`) — `localStorage` é invisível para o service worker — e
-  `firebase-messaging-sw.js` lê o espelho para escolher entre
-  `notificacao-tema-claro.png`/`notificacao-tema-escuro.png`, caindo no
-  ícone fixo de sempre se não houver espelho ainda.
-
-- **`Lembretes` é interface, não classe** (`Lembretes.instancia`, mutável), com
-  implementação real (`LembretesReais`, via `firebase_messaging`) e falsa
-  (`_LembretesFalsas` em `test/lembretes_test.dart`) — a interface não mudou
-  quando a implementação trocou de local para push, então os testes de
-  `comuns.dart`/`lembretes_test.dart` não precisaram mudar.
-- **Contrato do Firestore** (`lembretes/{token}`, id = o próprio token FCM):
-  `{token, minutosManha, minutosNoite, fuso}` escritos pelo app, mais
-  `ultimoEnvioManha`/`ultimoEnvioNoite` (data ISO do último push por slot),
-  escritos só pelo script — o `.set()` do app substitui o documento inteiro e
-  os apaga, o que é desejado (reagendar pode reenviar no mesmo dia de
-  propósito). Sem login — o lembrete nunca pediu conta — protegido por App
-  Check (`request.app != null` em `firestore.rules`) em vez de `request.auth`,
-  já que não há uid de dono.
-- **`tool/enviar_lembretes.dart` não importa `lib/data/conteudo.dart`**:
-  `Conteudo` carrega assets via `rootBundle`, que precisa do engine do
-  Flutter (`dart:ui`), ausente num `dart run` puro. O script lê os mesmos
-  JSONs direto do disco e reaproveita só a análise de referência
-  (`lib/data/canon.dart`, Dart puro) — o resto é glue duplicada de propósito
-  para não criar uma costura maior do que o problema pede.
-- **Conteúdo dinâmico**: o corpo da notificação é o versículo do dia
-  (Manhã/Noite) ou `"título | versículo"` (Promessas), calculado uma vez por
-  disparo — só dá para fazer isso no servidor porque um agendamento local
-  nasce com o texto fixo (o motivo original de unificar Android e web no
-  mesmo push, em vez de manter dois caminhos).
-- **Sem exibição nativa em primeiro plano**: resolvido pelo híbrido — com o
-  app aberto, o push data-only chega a `onMessage` e é exibido como
-  notificação local igual aos outros casos. O texto antigo ("a mensagem
-  chega sem virar notificação visível") vale para versões publicadas antes
-  desta mudança.
+- **Exclusivo do aplicativo Android**: web e iOS ficam de fora. A web não
+  dispara nada com a aba fechada sem infraestrutura externa (justamente o
+  que se queria evitar), e o iOS precisaria da chave APNs. Na folha de
+  ajustes, a seção Lembretes só existe onde `lembretesSuportados` é
+  verdadeiro.
+- **`Lembretes` é interface, não classe** (`Lembretes.instancia`, mutável),
+  com implementação real (`LembretesReais`) e falsa (`_LembretesFalsas` em
+  `test/lembretes_test.dart`). Os testes de `comuns.dart` sobreviveram às
+  duas trocas de implementação (local → push → local de novo) sem mudar,
+  porque falam só com a interface.
+- **Corpo com a referência do dia**: "Devocional da Manhã | Gênesis 1:2",
+  "Devocional da Noite | ..." e "Promessas de Deus | Título | Gênesis 3:15",
+  calculados dos assets ([Conteudo]) na hora de armar cada alarme — mesmo
+  formato de títulos/corpos que o push antigo usava. Se o conteúdo falhar,
+  cai num texto genérico. O toque abre a leitura certa pelo payload
+  (`manha`/`promessas`/`noite`). A manhã dispara duas notificações
+  (devocional + promessas), como antes.
+- **Limite da janela**: quem fica mais de dois dias sem abrir o app perde os
+  lembretes dos dias seguintes — aceito, pois abrir o devocional a cada dois
+  dias é o comportamento esperado de quem pediu um lembrete.
+- **Ícone segue o tema escolhido no app**: claro usa glifo escuro
+  (`ic_lembete_claro`), escuro usa claro (`ic_lembete_escuro`); no
+  "Automático" quem escolhe são os qualifiers `drawable`/`drawable-night`
+  de `ic_lembete`, lidos pelo sistema mesmo com o app morto.
 - **Alarme exato é best-effort**: no Android 12+ a permissão
   `SCHEDULE_EXACT_ALARM` (declarada no manifesto) é concedida nas
-  Configurações, fora do app; sem ela, `canScheduleExactNotifications` faz
-  cair para alarme inexato, que o Doze pode atrasar alguns minutos. Fabricantes
-  agressivos (Xiaomi e afins) também matam alarmes sem o autostart habilitado —
-  nesses casos o push (que anda pela conexão do Play Services) continua sendo
-  o caminho principal.
-- **`firebase-messaging-sw.js` tem placeholders**: a config do Firebase JS
-  (`__FIREBASE_API_KEY_WEB__` etc.) é preenchida no CI
-  (`.github/workflows/deploy-web.yml`, `sed` antes do `flutter build web`) —
-  um service worker é JS estático, não passa por `--dart-define`. Testar
-  localmente exige substituir à mão pelos valores do `.env.json`.
-- **Toque na notificação**: no Android, `Lembretes.chaveQueAbriuOApp`/
-  `onMessageOpenedApp` (SDK nativo do FCM). Na web, o service worker abre
-  `?lembrete=<chave>` e `main.dart` lê como qualquer outro parâmetro de link
-  (`_abrirLeituraDoLembreteDoLink`) — os dois caem em
-  `Leitura.values.byName(chave)`.
-- **`data/` não importa `telas/`**: `Lembretes` fala em `chave` (string), e é
-  `main.dart` quem faz `Leitura.values.byName(chave)`.
-- **iOS de fora por ora**: `lembretesSuportados` só cobre `kIsWeb ||
-  android`; faltaria a chave APNs no Console.
+  Configurações, fora do app; sem ela, `canScheduleExactNotifications`
+  cai para alarme inexato, que o Doze pode atrasar alguns minutos.
+  Fabricantes agressivos (Xiaomi e afins) também matam alarmes sem o
+  autostart habilitado — isso se resolve nas configurações do aparelho,
+  não há código que contorne.
 
 ### Web
 
@@ -603,11 +558,7 @@ flutter build web --dart-define-from-file=.env.json
 ```
 (O `.env.json` deve conter todas as chaves: `FIREBASE_API_KEY_WEB`,
 `FIREBASE_API_KEY_ANDROID`, `FIREBASE_API_KEY_IOS`, `GEMINI_API_KEY_WEB`,
-`GEMINI_API_KEY_ANDROID`, `TTS_API_KEY_WEB`, `TTS_API_KEY_ANDROID`,
-`FCM_VAPID_KEY`, etc. Testar o lembrete web localmente também exige
-substituir à mão os placeholders de `web/firebase-messaging-sw.js` pelos
-mesmos valores — um service worker não lê `.env.json`, ver a seção Lembretes
-diários abaixo.)
+`GEMINI_API_KEY_ANDROID`, `TTS_API_KEY_WEB`, `TTS_API_KEY_ANDROID`, etc.)
 
 Ícone do app, favicon e tela de abertura são gerados a partir das fontes em
 `assets/icone/`; nunca editados à mão:
@@ -640,15 +591,11 @@ publicar à mão no console. O site mora em
 `www.felipeambrozini.com.br/devocional/` (um nível abaixo da raiz do domínio; o
 build vai para `public/devocional` e o rewrite em `firebase.json` cuida do
 SPA). O build usa `--base-href /devocional/` e as chaves de API vêm dos
-Secrets do repositório: `FIREBASE_API_KEY_WEB`, `GEMINI_API_KEY_WEB`,
-`TTS_API_KEY_WEB` e `FCM_VAPID_KEY` (lembrete web — Console do Firebase >
-Cloud Messaging > Web configuration > Generate key pair; precisam estar
-cadastrados em Settings → Secrets and variables, no environment
-`github-pages`). O deploy usa `FIREBASE_SERVICE_ACCOUNT` (JSON da conta de
-serviço do Firebase) — o mesmo secret que
-`.github/workflows/lembretes-push.yml` usa para autenticar o script de push
-dos lembretes. As actions estão fixadas em commit SHA completo, não em tag
-mutável.
+Secrets do repositório: `FIREBASE_API_KEY_WEB`, `GEMINI_API_KEY_WEB` e
+`TTS_API_KEY_WEB` (precisam estar cadastrados em Settings → Secrets and
+variables, no environment `github-pages`). O deploy usa
+`FIREBASE_SERVICE_ACCOUNT` (JSON da conta de serviço do Firebase). As actions
+estão fixadas em commit SHA completo, não em tag mutável.
 
 Além do build em `public/devocional`, o mesmo passo copia `404.html`,
 `robots.txt` e `llms.txt` para a raiz do `public` — o Hosting só olha esses

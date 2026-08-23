@@ -41,8 +41,8 @@ vitoriana dele, tratando o leitor por "tu".
   com marcação de lido e progresso do ano.
 - Tema claro ou escuro (padrão segue o aparelho, dá para fixar) e escala do
   texto de leitura, pelas barras do leitor e do devocional.
-- Lembrete diário opcional (Android e web), com horários ajustáveis e o
-  versículo do dia no corpo da notificação.
+- Lembrete diário opcional (exclusivo do Android), com horários ajustáveis;
+  alarme agendado no próprio aparelho, sem depender de rede nem de servidor.
 - Cópia de segurança de favoritos, notas e progresso por exportar/importar
   (área de transferência); conta Google só na web, para espelhar na nuvem.
 - Navegação: abas Hoje, Bíblia, Devocional, Plano, Notas e Conversas; Sobre
@@ -79,15 +79,15 @@ vitoriana dele, tratando o leitor por "tu".
   Favoritar, Copiar, Anotar).
 - Layout responsivo: barra inferior no celular, trilho lateral a partir de
   720px; gesto de deslizar troca capítulo no celular, setas na web.
-- Lembretes por push do servidor (não agendamento local), em Android e web;
-  horário decidido a cada 5 min por um job do GitHub Actions, com o
-  versículo do dia no corpo — ver README.md.
+- Lembrete local no Android (agendamento no aparelho, sem servidor);
+  versículo no corpo da notificação recusado de propósito — ver README.md.
 - Regras de texto do produto: sem travessões em nenhum texto do app e sem
   aspas curvas (só aspas retas); voz vitoriana de Spurgeon tratando o leitor
   por "tu"; citações bíblicas no registro BKJ do app.
 - Decisões recusadas de propósito (não reabrir sem motivo novo): streak de
-  dias, cores de marcação, widget na tela inicial, lembretes em iOS (falta
-  chave APNs), offline de verdade na web, sincronização fora da conta Google
+  dias, cores de marcação, widget na tela inicial, lembretes em iOS e web
+  (o lembrete é exclusivo do Android), offline de verdade na web,
+  sincronização fora da conta Google
   web. Áudio foi recusado no início e revisto depois (ver Operating
   Context).
 - Flutter fixo na versão 3.44.9 (`.fvmrc` e `deploy-web.yml`).

@@ -58,8 +58,9 @@ Além da chave, o app se identifica ao Firestore e ao Auth com uma prova de que 
 
 A falha em ativar o App Check (site key ausente durante a migração, domínio ainda não registrado no console) não impede o app de abrir; a sincronização e o login simplesmente continuam sem essa camada extra até a configuração ser concluída no console do Firebase.
 
-### 3.4 Lembrete Diário — Acesso sem Autenticação
-A coleção `lembretes/{token}` do Firestore (token FCM do aparelho, horário e fuso) é gravável sem login, já que o lembrete nunca exigiu conta. A proteção contra escrita de terceiros é o App Check (`request.app != null` em `firestore.rules`), não `request.auth` — não há uid de dono para checar. O impacto de um token exposto é baixo por desenho: o único efeito possível é reagendar (ou apagar) o lembrete daquele próprio token, sem acesso a nenhum outro dado do usuário.
+### 3.4 Lembrete Diário — Sem Backend
+
+O lembrete diário é agendado no próprio aparelho (`flutter_local_notifications`), exclusivo do Android, e não trafega dado nenhum: não há coleção no Firestore, token remoto ou chamada de rede envolvidos. A superfície se resume às permissões locais do Android (POST_NOTIFICATIONS, concedida em runtime; SCHEDULE_EXACT_ALARM, concedida nas Configurações pelo usuário que quiser alarme exato).
 
 ---
 
