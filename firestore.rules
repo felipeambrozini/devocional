@@ -151,9 +151,11 @@ service cloud.firestore {
     // Lembrete diário do devocional (ver lib/data/lembretes.dart e
     // functions/src/index.ts). Sem login — o lembrete não pede conta, e por
     // isso não há uid para checar dono. O id do documento é o próprio token
-    // FCM deste aparelho; a proteção contra escrita de terceiros é o App
-    // Check (ativado no app inteiro em Nuvem.iniciar), não request.auth. Um
-    // token roubado só permite reagendar o lembrete dele — nada sensível.
+    // FCM deste aparelho; a proteção é o formato estrito de valido() mais a
+    // impossibilidade de listar a coleção (ver o comentário junto aos
+    // allows — App Check virou opcional aqui por causa de aparelhos sem
+    // Play Integrity). Um token roubado só permite reagendar o lembrete
+    // dele — nada sensível.
     //
     // Contrato do documento lembretes/{token}:
     //   token              string — igual ao id do documento
@@ -176,10 +178,17 @@ service cloud.firestore {
             dados.fuso is string && dados.fuso.size() < 100;
       }
 
-      allow create, update: if request.app != null && valido();
-      // get, não read: sem 'list', quem passe o App Check não colhe os
-      // tokens de todo mundo; o app só faz .doc(token).get().
-      allow get, delete: if request.app != null;
+      // App Check OPCIONAL nesta coleção, de propósito: aparelhos sem
+      // Play Integrity certificado (vários Xiaomi/Samsung) eram rejeitados
+      // e nunca conseguiam registrar o lembrete — o push nunca chegava. O
+      // dado aqui é o de menor risco do banco (token + horário; sem nada de
+      // usuário; token tem ~140 caracteres, inviável de adivinhar), então o
+      // teto de abuso — reescrever o lembrete de um token conhecido — é
+      // aceitável. Todas as outras coleções continuam exigindo App Check.
+      allow create, update: if valido();
+      // get, não read: sem 'list', quem passar por aqui não colhe os tokens
+      // de todo mundo; o app só faz .doc(token).get().
+      allow get, delete: if true;
       allow list: if false;
     }
   }
