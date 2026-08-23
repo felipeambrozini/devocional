@@ -246,7 +246,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
         _irPara(livroAnterior, capituloAnterior);
         if (chaveDaLeitura != null) {
           Voz.instancia.retomar(
-            'capitulo:$livroAnterior.$capituloAnterior',
+            chaveDeCapitulo(livroAnterior, capituloAnterior),
             de: Voz.instancia.desdeAParada,
           );
         }
@@ -314,7 +314,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
             ),
           ),
           actions: [
-            IndicadorDeVozNaBarra(chave: 'capitulo:$_livro.$_capitulo'),
+            IndicadorDeVozNaBarra(chave: chaveDeCapitulo(_livro, _capitulo)),
             IconButton(
               tooltip: 'Tamanho do texto e aparência',
               icon: const Icon(Icons.tune),
@@ -338,7 +338,6 @@ class _TelaBibliaState extends State<TelaBiblia> {
         body: Focus(
           autofocus: true,
           child: LarguraDeLeitura(
-            maxWidth: 720,
             child: Column(
               children: [
                 Expanded(
@@ -349,113 +348,8 @@ class _TelaBibliaState extends State<TelaBiblia> {
                       _livro,
                       _capitulo,
                     ),
-                    construir: (context, snap) {
-                      if (snap.hasError) return const AvisoDeErro();
-                      if (snap.connectionState != ConnectionState.done) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      final capitulo = snap.data!;
-                      if (capitulo.versiculos.isEmpty) {
-                        return const AvisoVazio(
-                          icone: Icons.menu_book_outlined,
-                          titulo: 'Capítulo não encontrado',
-                        );
-                      }
-                      // Quem chegou por link, nota ou busca pediu um versículo
-                      // exato; rolar até ele precisa de um frame depois do
-                      // capítulo montado.
-                      _rolarAteOAlvoSePreciso();
-                      // Arrastar na horizontal passa de capítulo. Vale na web
-                      // também: arrasto com o botão do mouse apertado
-                      // dispara o mesmo reconhecedor. Só que ninguém descobre
-                      // isso sem um dedo na tela, e é por isso que os chevrons
-                      // continuam lá embaixo em quem não tem toque. Ver
-                      // [_semGestoDeToque].
-                      final leitor = GestureDetector(
-                        onHorizontalDragEnd: _aoArrastarCapitulo,
-                        child: _Leitor(
-                          capitulo: capitulo,
-                          versao: Versao.bkj,
-                          rolagem: _rolagem,
-                          destacar: widget.destacar,
-                          alvoDeRolagem: widget.destacar?.$1,
-                          chaveDoAlvoDeRolagem: widget.destacar == null
-                              ? null
-                              : _chaveDoAlvoDeRolagem,
-                          aoAbrirCapitulos: _abrirGradeDeCapitulos,
-                        ),
-                      );
-                      // Só no toque o texto vira selecionável: por lá o dedo
-                      // escolhe com um toque e seleciona com pressão longa,
-                      // sem brigar com o deslize de capítulo. No mouse (web) a
-                      // seleção por arrasto disputaria a arena com o gesto de
-                      // capítulo, então lá Copiar pela folha do versículo
-                      // continua sendo o caminho.
-                      final corpoLeitura = _semGestoDeToque
-                          ? leitor
-                          : SelectionArea(child: leitor);
-                      // Alça de arraste na borda esquerda (mobile): indica que
-                      // deslizar horizontalmente troca de capítulo. O tooltip
-                      // de primeiro uso só some quando o gesto acontece de
-                      // verdade (ver `_passarCapituloComDesfazer`). A alça é
-                      // um indício, não um controle: quem desliza usa a tela
-                      // inteira como alvo de toque, muito maior que os 48px
-                      // mínimos, e um toque nela não faz nada.
-                      return ListenableBuilder(
-                        listenable: estado,
-                        builder: (context, _) {
-                          final primeiraVez = !estado.swipeTooltipDispensado;
-                          return Stack(
-                            children: [
-                              corpoLeitura,
-                              if (!kIsWeb)
-                                Positioned(
-                                  left: 0,
-                                  top: 0,
-                                  bottom: 0,
-                                  width: 24,
-                                  child: Tooltip(
-                                    message: primeiraVez
-                                        ? 'Arraste para trocar capítulo'
-                                        : '',
-                                    child: Semantics(
-                                      label: primeiraVez
-                                          ? 'Arraste para trocar capítulo'
-                                          : '',
-                                      child: Container(
-                                        width: 24,
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.centerLeft,
-                                            end: Alignment.centerRight,
-                                            colors: [
-                                              Theme.of(context)
-                                                  .colorScheme
-                                                  .primary
-                                                  .withValues(alpha: 0.12),
-                                              Colors.transparent,
-                                            ],
-                                          ),
-                                        ),
-                                        child: Center(
-                                          child: Icon(
-                                            Icons.drag_indicator,
-                                            size: 20,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary
-                                                .withValues(alpha: 0.5),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          );
-                        },
-                      );
-                    },
+                    construir: (context, snap) =>
+                        _corpoDoCapitulo(context, estado, snap),
                   ),
                 ),
                 if (_semGestoDeToque && estado.setasDoRodape)
@@ -471,6 +365,68 @@ class _TelaBibliaState extends State<TelaBiblia> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// O corpo do capítulo carregado: erro, espera, vazio, ou o leitor com o
+  /// gesto de deslize e a alça de arraste. Extraído do [build] para cada caso
+  /// ler direto, sem um método de duzentas linhas.
+  Widget _corpoDoCapitulo(
+    BuildContext context,
+    Estado estado,
+    AsyncSnapshot<Capitulo> snap,
+  ) {
+    if (snap.hasError) return const AvisoDeErro();
+    if (snap.connectionState != ConnectionState.done) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    final capitulo = snap.data!;
+    if (capitulo.versiculos.isEmpty) {
+      return const AvisoVazio(
+        icone: Icons.menu_book_outlined,
+        titulo: 'Capítulo não encontrado',
+      );
+    }
+    // Quem chegou por link, nota ou busca pediu um versículo exato; rolar até
+    // ele precisa de um frame depois do capítulo montado.
+    _rolarAteOAlvoSePreciso();
+    // Arrastar na horizontal passa de capítulo. Vale na web também: arrasto
+    // com o botão do mouse apertado dispara o mesmo reconhecedor. Só que
+    // ninguém descobre isso sem um dedo na tela, e é por isso que os chevrons
+    // continuam lá embaixo em quem não tem toque. Ver [_semGestoDeToque].
+    final leitor = GestureDetector(
+      onHorizontalDragEnd: _aoArrastarCapitulo,
+      child: _Leitor(
+        capitulo: capitulo,
+        versao: Versao.bkj,
+        rolagem: _rolagem,
+        destacar: widget.destacar,
+        alvoDeRolagem: widget.destacar?.$1,
+        chaveDoAlvoDeRolagem: widget.destacar == null
+            ? null
+            : _chaveDoAlvoDeRolagem,
+        aoAbrirCapitulos: _abrirGradeDeCapitulos,
+      ),
+    );
+    // Só no toque o texto vira selecionável: por lá o dedo escolhe com um
+    // toque e seleciona com pressão longa, sem brigar com o deslize de
+    // capítulo. No mouse (web) a seleção por arrasto disputaria a arena com o
+    // gesto de capítulo, então lá Copiar pela folha do versículo continua
+    // sendo o caminho.
+    final corpoLeitura = _semGestoDeToque
+        ? leitor
+        : SelectionArea(child: leitor);
+    return ListenableBuilder(
+      listenable: estado,
+      builder: (context, _) => Stack(
+        children: [
+          corpoLeitura,
+          // A alça é um indício de que dá para deslizar, não um controle:
+          // quem desliza usa a tela inteira como alvo de toque.
+          if (!kIsWeb)
+            _AlcaDeDeslize(primeiraVez: !estado.swipeTooltipDispensado),
+        ],
       ),
     );
   }
@@ -587,7 +543,7 @@ class _Leitor extends StatelessWidget {
               // versículo; tocar de novo para a leitura.
               const SizedBox(height: Spacing.sp14),
               BotaoDeVoz(
-                chave: 'capitulo:${capitulo.livro}.${capitulo.numero}',
+                chave: chaveDeCapitulo(capitulo.livro, capitulo.numero),
                 texto: textoDeCapitulo(capitulo),
                 tipo: TipoConteudoAudio.biblia,
               ),
@@ -747,6 +703,192 @@ class _LinhaDeVersiculo extends StatelessWidget {
   }
 }
 
+/// A folha de ações de um versículo: favoritar (com desfazer), copiar,
+/// compartilhar e anotar, mais o "Tela cheia" no cabeçalho. Um objeto por
+/// abertura: os closures das ações leem o snapshot da marcação feito antes da
+/// folha abrir — recalcular dentro dos itens mudaria o que se vê ao tocar.
+class _AcoesDoVersiculo {
+  const _AcoesDoVersiculo({
+    required this.estado,
+    required this.versao,
+    required this.livro,
+    required this.capituloNumero,
+    required this.referencia,
+    required this.numero,
+    required this.texto,
+    required this.marcacao,
+  });
+
+  final Estado estado;
+  final Versao versao;
+  final String livro;
+  final int capituloNumero;
+
+  /// Referência do capítulo ("João 3"), sem o número do versículo.
+  final String referencia;
+  final int numero;
+  final String texto;
+
+  /// A marcação como estava na hora em que a folha abriu.
+  final Marcacao? marcacao;
+
+  Widget folha(BuildContext contextoDaFolha) {
+    final cor = Theme.of(contextoDaFolha).colorScheme;
+    return SafeArea(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                Spacing.sp20,
+                Spacing.sp20,
+                Spacing.sp8,
+                Spacing.sp20,
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '$referencia:$numero',
+                          style: Theme.of(
+                            contextoDaFolha,
+                          ).textTheme.headlineSmall,
+                        ),
+                        const SizedBox(height: Spacing.sp8),
+                        Text(
+                          texto,
+                          style: Theme.of(contextoDaFolha).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                  // "Tela cheia" é a ação de quem está ao vivo, não uma das
+                  // rotinas do dia; mora no cabeçalho, e não na lista de
+                  // ações com o mesmo peso de Favoritar e Copiar.
+                  IconButton(
+                    tooltip: 'Tela cheia',
+                    icon: const Icon(Icons.fullscreen),
+                    onPressed: () {
+                      Navigator.pop(contextoDaFolha);
+                      Navigator.push(
+                        contextoDaFolha,
+                        MaterialPageRoute(
+                          builder: (_) => TelaApresentacao(
+                            texto: texto,
+                            referencia: '$referencia:$numero',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            _itemFavoritar(contextoDaFolha, cor),
+            // Copiar é o que mais se faz com um versículo, e não existia. Vem
+            // antes de anotar porque é a ação sem consequência das três.
+            _itemCopiar(contextoDaFolha, cor),
+            _itemCompartilhar(contextoDaFolha, cor),
+            _itemAnotar(contextoDaFolha),
+          ],
+        ),
+      ),
+    );
+  }
+
+  ListTile _itemFavoritar(BuildContext folha, ColorScheme cor) {
+    return ListTile(
+      leading: Icon(
+        marcacao != null ? Icons.bookmark : Icons.bookmark_outline,
+        color: cor.primary,
+      ),
+      title: Text(marcacao != null ? 'Remover dos favoritos' : 'Favoritar'),
+      onTap: () {
+        final eraFavorito = marcacao != null;
+        estado.alternarFavorito(versao, livro, capituloNumero, numero);
+        Navigator.pop(folha);
+        // Remover é a única ação da folha sem volta, e o mesmo toque que
+        // remove oferece o "Desfazer" (o padrão do deslize de capítulo). Com
+        // nota o alternarFavorito se recusa a remover (a nota manda, ver
+        // estado.dart), e nesse caso não há o que desfazer.
+        if (eraFavorito &&
+            !estado.ehFavorito(versao, livro, capituloNumero, numero)) {
+          final mensageiro = ScaffoldMessenger.of(folha);
+          mostrarAvisoNo(
+            mensageiro,
+            'Removido dos favoritos.',
+            rotuloDeAcao: 'Desfazer',
+            aoAgir: () =>
+                estado.alternarFavorito(versao, livro, capituloNumero, numero),
+          );
+        }
+      },
+    );
+  }
+
+  ListTile _itemCopiar(BuildContext folha, ColorScheme cor) {
+    return ListTile(
+      leading: Icon(Icons.content_copy_outlined, color: cor.primary),
+      title: const Text('Copiar'),
+      onTap: () async {
+        final mensageiro = ScaffoldMessenger.of(folha);
+        final navegador = Navigator.of(folha);
+        await Clipboard.setData(ClipboardData(text: _textoDoVersiculo));
+        navegador.pop();
+        mostrarAvisoNo(mensageiro, 'Versículo copiado.');
+      },
+    );
+  }
+
+  ListTile _itemCompartilhar(BuildContext folha, ColorScheme cor) {
+    return ListTile(
+      leading: Icon(Icons.ios_share_outlined, color: cor.primary),
+      title: const Text('Compartilhar'),
+      onTap: () async {
+        final navegador = Navigator.of(folha);
+        await SharePlus.instance.share(ShareParams(text: _textoDoVersiculo));
+        navegador.pop();
+      },
+    );
+  }
+
+  ListTile _itemAnotar(BuildContext folha) {
+    return ListTile(
+      leading: Icon(
+        Icons.edit_note,
+        color: Theme.of(folha).colorScheme.primary,
+      ),
+      title: Text(
+        marcacao?.nota.isNotEmpty == true ? 'Editar anotação' : 'Anotar',
+      ),
+      onTap: () async {
+        final nota = await editarNota(
+          folha,
+          referencia: '$referencia:$numero',
+          notaAtual: marcacao?.nota ?? '',
+        );
+        if (nota != null) {
+          await estado.definirNota(versao, livro, capituloNumero, numero, nota);
+        }
+        if (folha.mounted) Navigator.pop(folha);
+      },
+    );
+  }
+
+  /// O mesmo texto para Copiar e Compartilhar. O link vale em qualquer
+  /// plataforma, não só na web: é assim que quem recebe chega direto ao
+  /// versículo, mesmo copiado ou compartilhado do celular numa live.
+  String get _textoDoVersiculo =>
+      '"$texto"\n$referencia:$numero (${versao.sigla})\n'
+      '${linkDoVersiculo(livro, capituloNumero, numero)}';
+}
+
 Future<void> _abrirAcoesDoVersiculo(
   BuildContext context,
   Estado estado, {
@@ -758,6 +900,16 @@ Future<void> _abrirAcoesDoVersiculo(
   required String texto,
 }) async {
   final marcacao = estado.marcacaoDe(versao, livro, capituloNumero, numero);
+  final acoes = _AcoesDoVersiculo(
+    estado: estado,
+    versao: versao,
+    livro: livro,
+    capituloNumero: capituloNumero,
+    referencia: referencia,
+    numero: numero,
+    texto: texto,
+    marcacao: marcacao,
+  );
   await showModalBottomSheet<void>(
     context: context,
     // Quatro ações mais o cabeçalho passam da altura em telas baixas ou em
@@ -765,196 +917,57 @@ Future<void> _abrirAcoesDoVersiculo(
     // comuns.dart: isScrollControlled deixa a folha crescer, e o
     // SingleChildScrollView rola o que não couber em vez de estourar.
     isScrollControlled: true,
-    builder: (folha) {
-      final cor = Theme.of(folha).colorScheme;
-      return SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  Spacing.sp20,
-                  Spacing.sp20,
-                  Spacing.sp8,
-                  Spacing.sp20,
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '$referencia:$numero',
-                            style: Theme.of(folha).textTheme.headlineSmall,
-                          ),
-                          const SizedBox(height: Spacing.sp8),
-                          Text(
-                            texto,
-                            style: Theme.of(folha).textTheme.bodyMedium,
-                          ),
-                        ],
-                      ),
-                    ),
-                    // "Tela cheia" é a ação de quem está ao vivo, não uma das
-                    // rotinas do dia; mora no cabeçalho, e não na lista de
-                    // ações com o mesmo peso de Favoritar e Copiar.
-                    IconButton(
-                      tooltip: 'Tela cheia',
-                      icon: const Icon(Icons.fullscreen),
-                      onPressed: () {
-                        Navigator.pop(folha);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => TelaApresentacao(
-                              texto: texto,
-                              referencia: '$referencia:$numero',
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: Icon(
-                  marcacao != null ? Icons.bookmark : Icons.bookmark_outline,
-                  color: cor.primary,
-                ),
-                title: Text(
-                  marcacao != null ? 'Remover dos favoritos' : 'Favoritar',
-                ),
-                onTap: () {
-                  final eraFavorito = marcacao != null;
-                  estado.alternarFavorito(
-                    versao,
-                    livro,
-                    capituloNumero,
-                    numero,
-                  );
-                  Navigator.pop(folha);
-                  // Remover é a única ação da folha sem volta, e o mesmo
-                  // toque que remove oferece o "Desfazer" (o padrão do
-                  // deslize de capítulo). Com nota o alternarFavorito se
-                  // recusa a remover (a nota manda, ver estado.dart), e
-                  // nesse caso não há o que desfazer.
-                  if (eraFavorito &&
-                      !estado.ehFavorito(
-                        versao,
-                        livro,
-                        capituloNumero,
-                        numero,
-                      )) {
-                    final mensageiro = ScaffoldMessenger.of(folha);
-                    mostrarAvisoNo(
-                      mensageiro,
-                      'Removido dos favoritos.',
-                      rotuloDeAcao: 'Desfazer',
-                      aoAgir: () => estado.alternarFavorito(
-                        versao,
-                        livro,
-                        capituloNumero,
-                        numero,
-                      ),
-                    );
-                  }
-                },
-              ),
-              // Copiar é o que mais se faz com um versículo, e não existia. Vem
-              // antes de anotar porque é a ação sem consequência das três.
-              ListTile(
-                leading: Icon(Icons.content_copy_outlined, color: cor.primary),
-                title: const Text('Copiar'),
-                onTap: () async {
-                  final mensageiro = ScaffoldMessenger.of(folha);
-                  final navegador = Navigator.of(folha);
-                  await Clipboard.setData(
-                    ClipboardData(
-                      text: _textoDoVersiculo(
-                        referencia,
-                        numero,
-                        texto,
-                        versao,
-                        livro,
-                        capituloNumero,
-                      ),
-                    ),
-                  );
-                  navegador.pop();
-                  mostrarAvisoNo(mensageiro, 'Versículo copiado.');
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.ios_share_outlined, color: cor.primary),
-                title: const Text('Compartilhar'),
-                onTap: () async {
-                  final navegador = Navigator.of(folha);
-                  await SharePlus.instance.share(
-                    ShareParams(
-                      text: _textoDoVersiculo(
-                        referencia,
-                        numero,
-                        texto,
-                        versao,
-                        livro,
-                        capituloNumero,
-                      ),
-                    ),
-                  );
-                  navegador.pop();
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.edit_note, color: cor.primary),
-                title: Text(
-                  marcacao?.nota.isNotEmpty == true
-                      ? 'Editar anotação'
-                      : 'Anotar',
-                ),
-                onTap: () async {
-                  final nota = await editarNota(
-                    folha,
-                    referencia: '$referencia:$numero',
-                    notaAtual: marcacao?.nota ?? '',
-                  );
-                  if (nota != null) {
-                    await estado.definirNota(
-                      versao,
-                      livro,
-                      capituloNumero,
-                      numero,
-                      nota,
-                    );
-                  }
-                  if (folha.mounted) Navigator.pop(folha);
-                },
-              ),
-            ],
-          ),
-        ),
-      );
-    },
+    builder: acoes.folha,
   );
 }
 
-/// O mesmo texto para Copiar e Compartilhar, num lugar só. O link vale em
-/// qualquer plataforma, não só na web: é assim que quem recebe chega direto
-/// ao versículo, mesmo copiado ou compartilhado do celular numa live.
-String _textoDoVersiculo(
-  String referencia,
-  int numero,
-  String texto,
-  Versao versao,
-  String livro,
-  int capituloNumero,
-) =>
-    '"$texto"\n$referencia:$numero (${versao.sigla})\n'
-    '${linkDoVersiculo(livro, capituloNumero, numero)}';
+/// A alça de arraste na borda esquerda do leitor (mobile): o gradiente e o
+/// ícone indicam que deslizar horizontalmente troca de capítulo. O tooltip de
+/// primeiro uso só some quando o gesto acontece de verdade (ver
+/// `_passarCapituloComDesfazer`). Um toque nela não faz nada: quem desliza
+/// usa a tela inteira como alvo, muito maior que os 48px mínimos.
+class _AlcaDeDeslize extends StatelessWidget {
+  const _AlcaDeDeslize({required this.primeiraVez});
+
+  final bool primeiraVez;
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
+    return Positioned(
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: 24,
+      child: Tooltip(
+        message: primeiraVez ? 'Arraste para trocar capítulo' : '',
+        child: Semantics(
+          label: primeiraVez ? 'Arraste para trocar capítulo' : '',
+          child: Container(
+            width: 24,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  cor.primary.withValues(alpha: 0.12),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+            child: Center(
+              child: Icon(
+                Icons.drag_indicator,
+                size: 20,
+                color: cor.primary.withValues(alpha: 0.5),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 /// Tela cheia para compartilhar a tela numa live: o teto de 1,5x de
 /// [escalasDeLeitura] é pensado para ler no próprio aparelho, pequeno demais

@@ -620,7 +620,7 @@ class Moldura extends StatelessWidget {
   }
 
   Widget _conteudo(BuildContext context) {
-    final largo = MediaQuery.sizeOf(context).width >= 720;
+    final largo = telaLarga(context);
     final destinosVisiveis = _destinosVisiveis;
 
     // A LarguraDeLeitura não fica aqui. Envolvendo o shell inteiro, ela prendia
@@ -762,7 +762,7 @@ class _ComBaloes extends StatelessWidget {
             // Tela estreita: os retratos estão na faixa da Moldura, não aqui.
             // Este overlay só existe para as telas largas, onde os cantos de
             // baixo ficam vazios e o balão não tampa a leitura.
-            if (constraints.maxWidth < 720) return child;
+            if (constraints.maxWidth < larguraDeTelaLarga) return child;
             return Stack(
               children: [
                 child,

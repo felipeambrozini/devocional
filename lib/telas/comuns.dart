@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuthException;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -11,14 +10,21 @@ import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/lembretes.dart';
 import '../data/modelos.dart';
-import '../data/nuvem.dart';
 import '../data/personas.dart';
-import '../data/planos_nuvem.dart';
 import '../data/recursos.dart';
-import '../data/registro.dart';
 import '../data/voz.dart';
 import '../spacing.dart';
+import 'aviso.dart';
 import 'faixa.dart';
+import 'lembretes_acoes.dart';
+
+// Ações que tocam dados (planos na nuvem, conta Google) moram em módulos
+// próprios; os `export` mantêm o caminho de sempre (`telas/comuns.dart`)
+// funcionando para os importadores enquanto a migração não alcança todos.
+export 'aviso.dart';
+export 'conta_acoes.dart';
+export 'lembretes_acoes.dart';
+export 'planos_acoes.dart';
 
 /// Um [SelectionArea] com "Compartilhar" a mais no menu de seleção. O texto
 /// vira selecionável e copiável de fábrica (o próprio SelectionArea resolve
@@ -72,70 +78,14 @@ class _AreaDeSelecaoComCompartilharState
   }
 }
 
-/// Divulgação de que o chat responde por inteligência artificial. O mesmo
-/// texto em todo lugar em que uma IA fala: rodapé do chat, boas-vindas e
-/// histórico vazio — repetir é o que o torna um aviso, não um enfeite.
-const avisoDeIa = 'Respostas geradas por inteligência artificial';
+/// A largura (em px lógicos) a partir da qual a tela conta como larga: barra
+/// de navegação vira trilho lateral, a capa cresce e os balões de conversa
+/// existem. Um valor só em todo o app — o corte é onde seis rótulos deixam de
+/// caber com folga na horizontal (`main.dart`).
+const double larguraDeTelaLarga = 720;
 
-/// Quanto tempo um aviso de snackbar fica na tela antes de fechar sozinho. Um
-/// valor só em todo o projeto: se a duração mudar um dia, muda aqui.
-const duracaoDeAviso = Duration(seconds: 3);
-
-/// Mostra um aviso na snackbar e o fecha sozinho depois de [duracaoDeAviso].
-///
-/// O ScaffoldMessenger tem um timer próprio para isso, mas ele nunca nasce
-/// quando o SnackBar tem ação (bug do Flutter 3.44.9, reproduzido em teste):
-/// um "Desfazer" ou um "Tentar de novo" deixava o aviso na tela para sempre.
-/// Então o fechamento sai daqui, e o `closed` do aviso garante que um fechar
-/// tardio não leva junto um aviso mais novo mostrado no meio do caminho.
-///
-/// Quem mostra um aviso sempre passa por aqui: assim a duração é uma só, a de
-/// [duracaoDeAviso], e o comportamento é o mesmo em toda parte.
-void mostrarAviso(
-  BuildContext context,
-  String texto, {
-  String? rotuloDeAcao,
-  VoidCallback? aoAgir,
-}) => mostrarAvisoNo(
-  ScaffoldMessenger.of(context),
-  texto,
-  rotuloDeAcao: rotuloDeAcao,
-  aoAgir: aoAgir,
-);
-
-/// O mesmo que [mostrarAviso], mas com o messenger já em mãos — o caso das
-/// telas que capturam o messenger antes de um `await` e só mostram o aviso
-/// depois, quando o contexto pode não estar mais montado.
-void mostrarAvisoNo(
-  ScaffoldMessengerState mensageiro,
-  String texto, {
-  String? rotuloDeAcao,
-  VoidCallback? aoAgir,
-}) {
-  mensageiro.hideCurrentSnackBar();
-  final aviso = mensageiro.showSnackBar(
-    SnackBar(
-      content: Text(texto),
-      duration: duracaoDeAviso,
-      action: rotuloDeAcao == null
-          ? null
-          : SnackBarAction(
-              label: rotuloDeAcao,
-              onPressed: () {
-                aoAgir?.call();
-                mensageiro.hideCurrentSnackBar();
-              },
-            ),
-    ),
-  );
-  var fechou = false;
-  aviso.closed.whenComplete(() => fechou = true);
-  Future<void>.delayed(duracaoDeAviso, () {
-    if (!fechou) {
-      mensageiro.hideCurrentSnackBar();
-    }
-  });
-}
+bool telaLarga(BuildContext context) =>
+    MediaQuery.sizeOf(context).width >= larguraDeTelaLarga;
 
 /// As linhas do cartão "Como usar" da Hoje. A mesma ajuda reaparece em Sobre,
 /// porque quem dispensou o cartão na primeira visita não tem como vê-lo de
@@ -167,7 +117,7 @@ String capaBibliaSpurgeon(BuildContext context) {
 /// aumentada. Escala para cima quando a largura disponível passa de 600px.
 double alturaCapa(BuildContext context, double base) {
   final largura = MediaQuery.sizeOf(context).width;
-  return largura >= 720 ? base * 1.4 : base;
+  return largura >= larguraDeTelaLarga ? base * 1.4 : base;
 }
 
 /// Cartão com título em Cinzel na cor do tema. Repete em quase toda tela.
@@ -347,16 +297,13 @@ class AvisoVazio extends StatelessWidget {
 /// sem dizer o que houve. Girar é promessa de que algo vai chegar; quando não
 /// vai, a tela precisa dizer isso.
 class AvisoDeErro extends StatelessWidget {
-  const AvisoDeErro({super.key, this.detalhe});
-
-  final String? detalhe;
+  const AvisoDeErro({super.key});
 
   @override
   Widget build(BuildContext context) => AvisoVazio(
     icone: Icons.error_outline,
     titulo: 'Não foi possível carregar',
     detalhe:
-        detalhe ??
         'Feche e abra o aplicativo. Se continuar, pode faltar um arquivo de conteúdo.',
   );
 }
@@ -398,30 +345,14 @@ Future<bool> confirmarRemocao(
   BuildContext context, {
   required String referencia,
   required bool comNota,
-}) async {
-  final confirmou = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Remover dos favoritos?'),
-      content: Text(
-        comNota
-            ? '$referencia e a anotação serão removidos. Essa ação não pode ser desfeita.'
-            : '$referencia será removido dos favoritos. Essa ação não pode ser desfeita.',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancelar'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: const Text('Remover'),
-        ),
-      ],
-    ),
-  );
-  return confirmou ?? false;
-}
+}) => confirmar(
+  context,
+  titulo: 'Remover dos favoritos?',
+  conteudo: comNota
+      ? '$referencia e a anotação serão removidos. Essa ação não pode ser desfeita.'
+      : '$referencia será removido dos favoritos. Essa ação não pode ser desfeita.',
+  rotuloDaAcao: 'Remover',
+);
 
 /// Marca ou desmarca o dia como lido e oferece voltar no mesmo gesto.
 ///
@@ -592,44 +523,24 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 if (kIsWeb) ..._SecaoDasSetas(estado: estado).montar(context),
                 // Sobre no fim da folha: as escolhas do dia ficam na frente,
                 // e fontes, canais e privacidade esperam quem rola até o fim.
-                ListTile(
-                  leading: Icon(
-                    Icons.info_outline,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  title: const Text('Sobre'),
-                  subtitle: const Text('Fontes do texto, canais e privacidade'),
-                  onTap: () {
-                    // Sai da folha antes do push: uma rota sobre a folha
-                    // deixaria a folha embaixo da tela de Sobre no Android.
-                    final roteador = GoRouter.of(folha);
-                    Navigator.pop(folha);
-                    roteador.push('/sobre');
-                  },
+                _ItemDeNavegacaoDaFolha(
+                  folha: folha,
+                  icone: Icons.info_outline,
+                  titulo: 'Sobre',
+                  subtitulo: 'Fontes do texto, canais e privacidade',
+                  rota: '/sobre',
                 ),
-                ListTile(
-                  leading: Icon(
-                    Icons.help_outline,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  title: const Text('Perguntas frequentes'),
-                  onTap: () {
-                    final roteador = GoRouter.of(folha);
-                    Navigator.pop(folha);
-                    roteador.push('/faq');
-                  },
+                _ItemDeNavegacaoDaFolha(
+                  folha: folha,
+                  icone: Icons.help_outline,
+                  titulo: 'Perguntas frequentes',
+                  rota: '/faq',
                 ),
-                ListTile(
-                  leading: Icon(
-                    Icons.privacy_tip_outlined,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  title: const Text('Política de privacidade'),
-                  onTap: () {
-                    final roteador = GoRouter.of(folha);
-                    Navigator.pop(folha);
-                    roteador.push('/privacidade');
-                  },
+                _ItemDeNavegacaoDaFolha(
+                  folha: folha,
+                  icone: Icons.privacy_tip_outlined,
+                  titulo: 'Política de privacidade',
+                  rota: '/privacidade',
                 ),
                 const SizedBox(height: Spacing.sp8),
               ],
@@ -641,240 +552,99 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
   );
 }
 
-TimeOfDay _horaDe(int minutos) =>
-    TimeOfDay(hour: minutos ~/ 60, minute: minutos % 60);
+/// Uma entrada da folha de ajustes que abre uma tela com URL própria: sai da
+/// folha antes do push — uma rota sobre a folha a deixaria embaixo da tela
+/// nova no Android.
+class _ItemDeNavegacaoDaFolha extends StatelessWidget {
+  const _ItemDeNavegacaoDaFolha({
+    required this.folha,
+    required this.icone,
+    required this.titulo,
+    required this.rota,
+    this.subtitulo,
+  });
 
-/// O retrato de uma persona num anel do metal, para as entradas de conversa:
-/// a carta da aba Conversas (`telas/conversas.dart`) e o topo do histórico.
-/// A mesma gramática do [BalaoDeChat] de `chat.dart`, sem a placa de nome nem
-/// a dica, que o nome da carta já nomeia.
+  final BuildContext folha;
+  final IconData icone;
+  final String titulo;
+  final String? subtitulo;
+  final String rota;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(icone, color: Theme.of(context).colorScheme.primary),
+      title: Text(titulo),
+      subtitle: subtitulo == null ? null : Text(subtitulo!),
+      onTap: () {
+        final roteador = GoRouter.of(folha);
+        Navigator.pop(folha);
+        roteador.push(rota);
+      },
+    );
+  }
+}
+
+/// O retrato de uma persona num anel do metal — a gramática única dos três
+/// pontos que mostram quem fala: as entradas de conversa (a carta da aba
+/// Conversas e o topo do histórico), o botão de voz da leitura e o balão
+/// flutuante do chat (`chat.dart`). Anel de 1,5 na cor primária, folga entre
+/// o anel e a foto, e o corte alinhado ao topo que preserva o cabelo (a foto
+/// é mais alta que larga). Sem o asset, a inicial ocupa o lugar.
 class RetratoDePersona extends StatelessWidget {
-  const RetratoDePersona({super.key, required this.persona, this.tamanho = 38});
+  const RetratoDePersona({
+    super.key,
+    required this.persona,
+    this.tamanho = 38,
+    this.folga = Spacing.sp2,
+    this.decorativo = false,
+  });
 
   final Persona persona;
   final double tamanho;
 
+  /// A folga entre o anel dourado e a foto: sem ela a foto preenche o círculo
+  /// até a borda e o cabelo encosta no aro. As entradas de conversa usam a
+  /// apertada; botão de voz e balão usam [Spacing.sp3].
+  final double folga;
+
+  /// Dentro de um botão cujo rótulo já diz o que faz, a imagem é enfeite:
+  /// fora da árvore de semântica para o leitor de tela não ler duas vezes.
+  final bool decorativo;
+
   @override
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(color: cor.primary, width: 1.5),
       ),
-      padding: const EdgeInsets.all(Spacing.sp2),
-      child: ClipOval(
-        child: Image.asset(
-          persona.foto,
-          width: tamanho,
-          height: tamanho,
-          fit: BoxFit.cover,
-          // A foto é mais alta que larga e o cabelo encosta na borda
-          // superior; o corte alinhado ao topo preserva o cabelo.
-          alignment: Alignment.topCenter,
-          errorBuilder: (context, error, stackTrace) => Container(
-            color: cor.surfaceContainerHighest,
-            alignment: Alignment.center,
-            child: Text(
-              persona.nomeCurto.characters.first,
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                color: cor.primary,
-                fontSize: tamanho * 0.42,
+      child: Padding(
+        padding: EdgeInsets.all(folga),
+        child: ClipOval(
+          child: Image.asset(
+            persona.foto,
+            width: tamanho,
+            height: tamanho,
+            fit: BoxFit.cover,
+            excludeFromSemantics: decorativo,
+            alignment: Alignment.topCenter,
+            errorBuilder: (context, error, stackTrace) => Container(
+              color: cor.surfaceContainerHighest,
+              alignment: Alignment.center,
+              child: Text(
+                persona.nomeCurto.characters.first,
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  color: cor.primary,
+                  fontSize: tamanho * 0.42,
+                ),
               ),
             ),
           ),
         ),
       ),
     );
-  }
-}
-
-/// Liga ou desliga os três lembretes diários. Pede permissão antes de ligar;
-/// devolve false sem mudar nada se ela for negada.
-///
-/// Pública, e não escondida na folha de ajustes: é a mesma regra que
-/// `test/lembretes_test.dart` verifica com uma `Lembretes` falsa, sem precisar
-/// desmontar a UI para chegar nela.
-Future<bool> alternarLembretes(Estado estado, bool ligar) async {
-  if (!ligar) {
-    await estado.definirLembretesAtivos(false);
-    await Lembretes.instancia.cancelar();
-    return true;
-  }
-  final concedida = await Lembretes.instancia.pedirPermissao();
-  if (!concedida) return false;
-  await estado.definirLembretesAtivos(true);
-  await Lembretes.instancia.agendar(
-    manhaEPromessas: _horaDe(estado.minutosLembreteManha),
-    noite: _horaDe(estado.minutosLembreteNoite),
-  );
-  return true;
-}
-
-/// Grava o novo horário e reagenda de verdade — só se os lembretes estiverem
-/// ligados. O guard fica aqui, e não em quem chama: a folha de ajustes só
-/// mostra os campos de hora com o interruptor já ligado, mas essa função não
-/// deveria depender de a UI garantir isso por fora.
-Future<void> aplicarHorarioDeLembrete(
-  Estado estado, {
-  int? minutosManha,
-  int? minutosNoite,
-}) async {
-  await estado.definirHorariosDeLembrete(
-    minutosManha: minutosManha ?? estado.minutosLembreteManha,
-    minutosNoite: minutosNoite ?? estado.minutosLembreteNoite,
-  );
-  if (!estado.lembretesAtivos) return;
-  await Lembretes.instancia.agendar(
-    manhaEPromessas: _horaDe(estado.minutosLembreteManha),
-    noite: _horaDe(estado.minutosLembreteNoite),
-  );
-}
-
-/// Rearma os lembretes no início do app, sempre que estiverem ligados.
-///
-/// Dois motivos para não pular quando já existe registro no Firestore: os
-/// alarmes locais de reserva são de um tiro só (horário + 5 min — ver
-/// `LembretesReais._armarReservas`), então sem rearmamento aqui eles cobriam
-/// apenas o primeiro dia sem abertura do app; e regravar o documento ainda
-/// atualiza o fuso, que ficava preso ao da primeira gravação em quem
-/// viajasse. A escrita é idempotente e barata.
-Future<void> reagendarLembretesSeNecessario(Estado estado) async {
-  if (!estado.lembretesAtivos) return;
-  await Lembretes.instancia.agendar(
-    manhaEPromessas: _horaDe(estado.minutosLembreteManha),
-    noite: _horaDe(estado.minutosLembreteNoite),
-  );
-}
-
-/// Confirma e exclui um plano — o compartilhado some da nuvem para todos
-/// antes do espelho local sumir, o local só sai do espelho. Devolve se
-/// excluiu de fato, para quem chama (a tela do plano) saber se ainda pode
-/// sair dela.
-///
-/// Público porque a lixeira do cartão de "Meus Planos" (`plano.dart`) e o
-/// menu de opções dentro do plano (`meu_plano.dart`) levam à mesma exclusão.
-Future<bool> excluirPlano(
-  BuildContext context,
-  Estado estado,
-  String planoId, {
-  required bool compartilhado,
-}) async {
-  final confirmou = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Excluir plano?'),
-      content: Text(
-        compartilhado
-            ? 'O plano será apagado para todos os participantes, junto com o '
-                  'progresso de cada um. Essa ação não pode ser desfeita.'
-            : 'O plano e o progresso dele serão apagados. Essa ação não pode '
-                  'ser desfeita.',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancelar'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: const Text('Excluir'),
-        ),
-      ],
-    ),
-  );
-  if (confirmou != true) return false;
-  if (compartilhado) {
-    try {
-      await PlanosNaNuvem.instancia.excluir(planoId);
-    } on PlanosNaNuvemException catch (erro) {
-      if (context.mounted) mostrarAviso(context, erro.mensagem);
-      return false;
-    }
-  }
-  await estado.removerPlano(planoId);
-  return true;
-}
-
-/// Confirma e sai de um plano compartilhado: apaga só a própria participação
-/// na nuvem, e o plano some do espelho local — mas continua existindo para
-/// quem ficou. É o que a lixeira faz por quem não é o criador, que não tem o
-/// poder de [excluirPlano] para todos.
-Future<bool> sairDoPlano(
-  BuildContext context,
-  Estado estado,
-  String planoId,
-) async {
-  final confirmou = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Sair do plano?'),
-      content: const Text(
-        'Seu progresso deixa de aparecer para os outros; o plano continua '
-        'para quem permaneceu.',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancelar'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: const Text('Sair'),
-        ),
-      ],
-    ),
-  );
-  if (confirmou != true) return false;
-  try {
-    await PlanosNaNuvem.instancia.sair(planoId);
-  } on PlanosNaNuvemException catch (erro) {
-    if (context.mounted) mostrarAviso(context, erro.mensagem);
-    return false;
-  }
-  await estado.removerPlano(planoId);
-  return true;
-}
-
-/// Tenta o login e mostra o motivo quando não completa. Público porque dois
-/// botões chamam isto: o do cabeçalho da Hoje (`hoje.dart`, `_BotaoDeConta`)
-/// e o cartão de plano compartilhado (`meu_plano.dart`). Quem chama precisa
-/// fazê-lo direto do `onTap`/`onPressed` (sem `await` antes): o navegador só
-/// deixa abrir a janela do login dentro do gesto do usuário, e qualquer
-/// espera antes do `signInWithPopup` consome esse gesto e a janela sai
-/// bloqueada.
-Future<void> entrarNaConta(BuildContext context, Nuvem nuvem) async {
-  try {
-    await nuvem.entrar();
-  } on FirebaseAuthException catch (erro, pilha) {
-    if (erro.code == 'popup-closed-by-user') {
-      if (context.mounted) mostrarAviso(context, 'Login cancelado.');
-      return;
-    }
-    Registro.erro('entrarNaConta', erro, pilha);
-    if (!context.mounted) return;
-    // "Navegador"/"janelas" só faz sentido no popup/redirect da web — no
-    // fluxo nativo (Android/iOS) o `FirebaseAuthException` vem de outra
-    // causa (credencial inválida, rede, App Check). Mostra `code`/`message`
-    // reais na tela (não só no registro.log), pra dar pra reportar sem
-    // precisar de `adb logcat` — ponytail: texto cru da exceção, sem
-    // tradução por código; se isto for pra produção com usuário final,
-    // trocar por mensagens específicas por `erro.code`.
-    mostrarAviso(
-      context,
-      kIsWeb
-          ? 'Não foi possível entrar. Verifique se o navegador permite '
-                'janelas deste site.'
-          : 'Não foi possível entrar (${erro.code}): ${erro.message}',
-    );
-  } catch (erro, pilha) {
-    // Qualquer outra falha (Firebase sem inicializar, sem rede, App Check
-    // recusando o token) não pode deixar o botão "Entrar" sem reação
-    // nenhuma: melhor um aviso com o erro cru do que o toque parecer
-    // ignorado.
-    Registro.erro('entrarNaConta', erro, pilha);
-    if (!context.mounted) return;
-    mostrarAviso(context, 'Não foi possível entrar: $erro');
   }
 }
 
@@ -935,7 +705,7 @@ class _SecaoDeLembretes {
     required int minutos,
     required ValueChanged<int> aoEscolher,
   }) {
-    final hora = _horaDe(minutos);
+    final hora = horaDeMinutos(minutos);
     return ListTile(
       title: Text(titulo),
       trailing: TextButton(
@@ -1024,7 +794,7 @@ List<InlineSpan> spansDeCitacao(
   required TextStyle? estiloCitacao,
   required TextStyle? estiloReferencia,
 }) {
-  final pares = [(dev.referencia, dev.versiculo), ...dev.outrosVersiculos];
+  final pares = dev.paresDeVersiculos;
   final spans = <InlineSpan>[];
   for (final (referencia, versiculo) in pares) {
     if (referencia.isEmpty && versiculo.isEmpty) continue;
@@ -1135,7 +905,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                         // A voz de Spurgeon lê a introdução inteira, do
                         // título à frase; tocar de novo para a leitura.
                         BotaoDeVoz(
-                          chave: 'introducao:${widget.slug}',
+                          chave: chaveDaIntroducao(widget.slug),
                           texto: textoDeIntroducao(introducao),
                           tipo: TipoConteudoAudio.introducao,
                           referencia: 'Introdução de ${introducao.livro}',
@@ -1339,32 +1109,14 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
                           // não apresentação, e um sinal a menos deixa o
                           // estado falar mais alto.
                           if (!preparando && !ativo && !pausado) ...[
-                            // O mesmo retrato do chat: aro dourado, e o cabelo,
+                            // O mesmo retrato das entradas de conversa
+                            // ([RetratoDePersona]): aro dourado, e o cabelo,
                             // que encosta na borda de cima da foto, preservado
-                            // pelo corte alinhado ao topo (ver BalaoDeChat).
-                            DecoratedBox(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: cor.primary,
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(Spacing.sp3),
-                                child: ClipOval(
-                                  child: Image.asset(
-                                    'assets/images/spurgeon.webp',
-                                    width: 38,
-                                    height: 38,
-                                    fit: BoxFit.cover,
-                                    // Decorativa: o rótulo ao lado já diz o que
-                                    // o botão faz.
-                                    excludeFromSemantics: true,
-                                    alignment: Alignment.topCenter,
-                                  ),
-                                ),
-                              ),
+                            // pelo corte alinhado ao topo.
+                            RetratoDePersona(
+                              persona: personaSpurgeon,
+                              folga: Spacing.sp3,
+                              decorativo: true,
                             ),
                             const SizedBox(width: Spacing.sp10),
                           ],
@@ -1398,34 +1150,9 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
                             ),
                           ),
                           // Tocando ou pausada, a sessão precisa de um jeito
-                          // de ser encerrada de vez sem trocar de página: sem
-                          // o X, pausar (ou uma pausa já em curso) vira um
-                          // beco sem saída — e uma leitura que não se pode
-                          // fechar é uma gaiola. O X mata a sessão; o corpo da
-                          // pílula continua pausando ou retomando.
+                          // de ser encerrada de vez sem trocar de página.
                           if (ativo || pausado)
-                            Padding(
-                              padding: const EdgeInsetsDirectional.only(
-                                start: 6,
-                              ),
-                              child: Tooltip(
-                                message: pausado
-                                    ? 'Encerrar a leitura pausada'
-                                    : 'Encerrar a leitura',
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(30),
-                                  onTap: voz.parar,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(Spacing.sp4),
-                                    child: Icon(
-                                      Icons.close_rounded,
-                                      size: 18,
-                                      color: cor.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
+                            _BotaoDeEncerrar(voz: voz, pausado: pausado),
                         ],
                       ),
                     ),
@@ -1472,6 +1199,48 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
       erro.mensagem,
       rotuloDeAcao: 'Tentar de novo',
       aoAgir: () => _alternar(context, voz),
+    );
+  }
+}
+
+/// Fração da leitura decorrida (0,0 a 1,0), ou nulo enquanto a duração total
+/// ainda não é conhecida — é o nulo que deixa anel e faixa no modo
+/// indeterminado, o que se move é o que se espera.
+double? fracaoDeProgresso(Duration agora, Duration? total) =>
+    total == null || total.inMilliseconds == 0
+    ? null
+    : (agora.inMilliseconds / total.inMilliseconds).clamp(0.0, 1.0);
+
+/// O X da pílula de voz: encerra a sessão de vez sem trocar de página. Sem
+/// ele, pausar (ou uma pausa já em curso) vira um beco sem saída — e uma
+/// leitura que não se pode fechar é uma gaiola. O X mata a sessão; o corpo da
+/// pílula continua pausando ou retomando.
+class _BotaoDeEncerrar extends StatelessWidget {
+  const _BotaoDeEncerrar({required this.voz, required this.pausado});
+
+  final Voz voz;
+  final bool pausado;
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(start: 6),
+      child: Tooltip(
+        message: pausado ? 'Encerrar a leitura pausada' : 'Encerrar a leitura',
+        child: InkWell(
+          borderRadius: BorderRadius.circular(30),
+          onTap: voz.parar,
+          child: Padding(
+            padding: const EdgeInsets.all(Spacing.sp4),
+            child: Icon(
+              Icons.close_rounded,
+              size: 18,
+              color: cor.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1554,10 +1323,7 @@ class IndicadorDeVozNaBarra extends StatelessWidget {
                       final total = duracao.data;
                       // Sem duração conhecida o anel fica indeterminado (o
                       // CircularProgressIndicator anima sozinho).
-                      final fracao = total == null || total.inMilliseconds == 0
-                          ? null
-                          : (agora.inMilliseconds / total.inMilliseconds)
-                              .clamp(0.0, 1.0);
+                      final fracao = fracaoDeProgresso(agora, total);
                       return IconButton(
                         tooltip: retomar
                             ? 'Retomar a leitura'
@@ -1626,9 +1392,7 @@ class _ProgressoDeLeitura extends StatelessWidget {
             final total = duracao.data;
             // Sem duração conhecida não há o que preencher: a faixa fica
             // indeterminada (o LinearProgressIndicator anima sozinho).
-            final fracao = total == null || total.inMilliseconds == 0
-                ? null
-                : (agora.inMilliseconds / total.inMilliseconds).clamp(0.0, 1.0);
+            final fracao = fracaoDeProgresso(agora, total);
             return LinearProgressIndicator(
               value: fracao,
               minHeight: 3,
@@ -1742,7 +1506,11 @@ class CartaoDeDia extends StatelessWidget {
 /// de ponta a ponta numa janela larga. No celular a tela já é mais estreita
 /// que o limite, então nada muda.
 class LarguraDeLeitura extends StatelessWidget {
-  const LarguraDeLeitura({super.key, required this.child, this.maxWidth = 720});
+  const LarguraDeLeitura({
+    super.key,
+    required this.child,
+    this.maxWidth = larguraDeTelaLarga,
+  });
 
   final Widget child;
   final double maxWidth;

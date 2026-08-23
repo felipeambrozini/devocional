@@ -37,7 +37,7 @@ class _TelaIntroducaoState extends State<TelaIntroducao> {
         title: Text(nomeDoLivro(slug)),
         // A mesma barra da Bíblia: quem rolou a introdução até o fim ainda
         // vê a leitura no ar e pode encerrá-la (ou cancelar o preparo).
-        actions: [IndicadorDeVozNaBarra(chave: 'introducao:$slug')],
+        actions: [IndicadorDeVozNaBarra(chave: chaveDaIntroducao(slug))],
       ),
       body: LarguraDeLeitura(
         // CarregaUmaVez e não FutureBuilder: a tela lê o tema, e o tema agora
@@ -113,7 +113,7 @@ class _TelaIntroducaoState extends State<TelaIntroducao> {
                   // A voz de Spurgeon lê a introdução inteira, do título à
                   // frase; tocar de novo para a leitura.
                   BotaoDeVoz(
-                    chave: 'introducao:$slug',
+                    chave: chaveDaIntroducao(slug),
                     texto: textoDeIntroducao(introducao),
                     tipo: TipoConteudoAudio.introducao,
                     referencia: 'Introdução de ${introducao.livro}',

@@ -55,6 +55,15 @@ const _idExibidaNoite = 4002;
 
 const _canalLembretes = 'lembretes_devocional';
 
+/// Os nomes dos drawables do small icon da notificação, uma única fonte para
+/// o código e o `android/app/src/main/res/` concordarem: no tema fixo o app
+/// escolhe o par claro/escuro; no "Automático" (e como rede de segurança) o
+/// padrão vale, que o Android troca sozinho pela variante de
+/// `drawable-night/` — até com o app morto.
+const _iconeLembreteClaro = 'ic_lembrete_claro';
+const _iconeLembreteEscuro = 'ic_lembrete_escuro';
+const _iconeLembretePadrao = 'ic_lembrete';
+
 int _idDoAlarme(String chave) =>
     chave == 'noite' ? _idAlarmeNoite : _idAlarmeManha;
 
@@ -80,8 +89,8 @@ bool pushAindaVale({required int minutoAgora, required int minutoAlvo}) =>
 /// O small icon da notificação conforme o tema escolhido no app: no claro,
 /// um glifo escuro; no escuro, um claro. No "Automático" devolve null — e aí
 /// quem escolhe é o próprio Android pelos qualifiers `drawable`/
-/// `drawable-night` de `ic_lembete`, o único jeito de acertar quando o app
-/// está morto e ninguém pode ler a preferência.
+/// `drawable-night` de [_iconeLembretePadrao], o único jeito de acertar
+/// quando o app está morto e ninguém pode ler a preferência.
 ///
 /// Lê direto do `SharedPreferences`, não do [Estado]: o handler de fundo
 /// roda num isolate sem árvore de widgets nem instância de estado. Falhar
@@ -96,8 +105,8 @@ Future<String?> _iconeDoTema() async {
       orElse: () => ModoDoTema.sistema,
     );
     return switch (modo) {
-      ModoDoTema.claro => 'ic_lembete_claro',
-      ModoDoTema.escuro => 'ic_lembete_escuro',
+      ModoDoTema.claro => _iconeLembreteClaro,
+      ModoDoTema.escuro => _iconeLembreteEscuro,
       ModoDoTema.sistema => null,
     };
   } catch (_) {
@@ -159,7 +168,7 @@ Future<void> _mostrarPush(Map<String, dynamic> dados) async {
 Future<void> _prepararPlugin(FlutterLocalNotificationsPlugin locais) async {
   await locais.initialize(
     settings: const InitializationSettings(
-      android: AndroidInitializationSettings('ic_lembrete'),
+      android: AndroidInitializationSettings(_iconeLembretePadrao),
     ),
   );
 }
@@ -224,12 +233,6 @@ abstract class Lembretes {
 
   Future<void> cancelar();
 
-  /// Se já existe um registro deste aparelho no Firestore. Serve só para
-  /// diagnóstico (`test/lembretes_test.dart` usa a versão falsa para outros
-  /// fins) — o rearmamento dos alarmes locais acontece em todo
-  /// `reagendarLembretesSeNecessario`, independente desta resposta.
-  Future<bool> agendados();
-
   /// O fuso horário detectado neste aparelho (ex.: "America/Sao_Paulo"), o
   /// mesmo que vai para o Firestore em [agendar]. Só para depurar: se
   /// aparecer vazio depois de [agendar], a detecção falhou silenciosamente.
@@ -260,7 +263,8 @@ class LembretesReais implements Lembretes {
   TimeOfDay? _ultimaNoite;
   String _ultimoFuso = '';
 
-  String? _vapidKeyOuNulo() => kIsWeb && _vapidKey.isNotEmpty ? _vapidKey : null;
+  String? _vapidKeyOuNulo() =>
+      kIsWeb && _vapidKey.isNotEmpty ? _vapidKey : null;
 
   @override
   Future<void> inicializar({
@@ -289,7 +293,7 @@ class LembretesReais implements Lembretes {
     // app vivo. O toque com o app morto volta por [chaveQueAbriuOApp].
     await _locais.initialize(
       settings: const InitializationSettings(
-        android: AndroidInitializationSettings('ic_lembrete'),
+        android: AndroidInitializationSettings(_iconeLembretePadrao),
       ),
       onDidReceiveNotificationResponse: (resposta) {
         final chave = resposta.payload;
@@ -414,7 +418,8 @@ class LembretesReais implements Lembretes {
   /// inexato caso contrário, que o Doze pode atrasar alguns minutos. Melhor
   /// reserva imperfeita do que exceção travando o agendamento.
   Future<AndroidScheduleMode> _modoDeAlarme() async {
-    final pode = await _locais
+    final pode =
+        await _locais
             .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin
             >()
@@ -457,17 +462,6 @@ class LembretesReais implements Lembretes {
   }
 
   @override
-  Future<bool> agendados() async {
-    if (!lembretesSuportados) return false;
-    final token = await _mensageria.getToken(vapidKey: _vapidKeyOuNulo());
-    if (token == null) return false;
-    final doc = await FirebaseFirestore.instance
-        .collection(_colecao)
-        .doc(token)
-        .get();
-    return doc.exists;
-  }
-
-  @override
-  String get fusoAtual => _ultimoFuso.isEmpty ? 'ainda não detectado' : _ultimoFuso;
+  String get fusoAtual =>
+      _ultimoFuso.isEmpty ? 'ainda não detectado' : _ultimoFuso;
 }

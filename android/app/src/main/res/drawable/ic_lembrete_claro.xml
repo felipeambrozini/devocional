@@ -1,9 +1,8 @@
 <!-- Ícone pequeno da notificação do lembrete (lib/data/lembretes.dart):
      glifo escuro, para o tema claro. O sistema Android tinge o small icon
      com alpha; a cor aqui vale para versões antigas e para o contexto da
-     notificação. O par do tema escuro é ic_lembete_escuro.xml; o modo
-     "Automático" usa ic_lembete.xml, que tem variante em drawable-night/. -->
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
+     notificação. O par do tema escuro é ic_lembrete_escuro.xml; o modo
+     "Automático" usa ic_lembrete.xml, que tem variante em drawable-night/. --><vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"

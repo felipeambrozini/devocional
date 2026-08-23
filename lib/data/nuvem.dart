@@ -89,7 +89,6 @@ class Sincronia {
   /// é uma escrita, não cinco.
   final Duration atraso;
 
-  bool falhouAoEnviar = false;
   String? _ultimaCopia;
   Timer? _pendente;
 
@@ -111,15 +110,12 @@ class Sincronia {
     try {
       final remota = await puxar();
       if (remota != null) await _fundir(remota);
-    } on FormatException catch (erro, pilha) {
-      // Cópia da conta ilegível (versão futura, ou gravada torta). O local
-      // continua intacto e vai subir por cima; nunca o contrário.
-      Registro.erro('Nuvem.comecar', erro, pilha);
     } catch (erro, pilha) {
-      // Sem rede, ou o Firestore recusou o acesso: o local continua intacto,
-      // a sincronia segue viva para os envios e a próxima mudança tenta
-      // puxar de novo. Falhar aqui não pode derrubar nada (mesma regra de
-      // `_enviar`).
+      // Cópia da conta ilegível (FormatException: versão futura ou gravada
+      // torta), sem rede, ou o Firestore recusou o acesso: o local continua
+      // intacto e vai subir por cima; nunca o contrário. A sincronia segue
+      // viva para os envios e a próxima mudança tenta puxar de novo. Falhar
+      // aqui não pode derrubar nada (mesma regra de `_enviar`).
       Registro.erro('Nuvem.comecar', erro, pilha);
     }
     estado.addListener(_aoMudar);
@@ -172,10 +168,8 @@ class Sincronia {
     try {
       await empurrar(copia).timeout(const Duration(seconds: 5));
       _ultimaCopia = copia;
-      falhouAoEnviar = false;
     } catch (erro, pilha) {
       Registro.erro('Nuvem.despejar', erro, pilha);
-      falhouAoEnviar = true;
     }
     aoMudarSituacao?.call();
   }
@@ -184,12 +178,10 @@ class Sincronia {
     try {
       await empurrar(copia);
       _ultimaCopia = copia;
-      falhouAoEnviar = false;
     } catch (erro, pilha) {
       // Sem rede, ou regra recusou. O dado continua no aparelho e a próxima
       // mudança tenta de novo; falhar aqui não pode derrubar nada.
       Registro.erro('Nuvem.enviar', erro, pilha);
-      falhouAoEnviar = true;
     }
     aoMudarSituacao?.call();
   }
@@ -237,33 +229,36 @@ class Nuvem extends ChangeNotifier {
 
   bool get logado =>
       logadoForcado ?? (_pronta && FirebaseAuth.instance.currentUser != null);
-  String? get email => _pronta ? FirebaseAuth.instance.currentUser?.email : null;
+  String? get email =>
+      _pronta ? FirebaseAuth.instance.currentUser?.email : null;
 
   /// Se [entrar] está em andamento, para os botões de "Entrar" mostrarem um
   /// spinner e ficarem desabilitados — sem isto o toque parecia não fazer
   /// nada enquanto o seletor de conta ou a troca de token com o Firebase
   /// demoravam. Um flag só, e não um por botão: os três botões que chamam
-  /// [entrar] (ver `entrarNaConta` em `lib/telas/comuns.dart`) apontam para
+  /// [entrar] (ver `entrarNaConta` em `lib/telas/conta_acoes.dart`) apontam para
   /// a mesma instância, então todos refletem o mesmo login em andamento.
   bool _entrando = false;
   bool get entrando => _entrando;
 
   /// O uid de quem está com a conta aberta, para saber se é o criador de um
   /// plano compartilhado (ver `excluirPlano`/`sairDoPlano` em
-  /// `lib/telas/comuns.dart`). null sem conta, ou antes de [iniciar].
+  /// `lib/telas/planos_acoes.dart`). null sem conta, ou antes de [iniciar].
   String? get uid => _pronta ? FirebaseAuth.instance.currentUser?.uid : null;
-  bool get falhouAoEnviar => _sincronia?.falhouAoEnviar ?? false;
 
   /// Primeiro nome de quem entrou, para a saudação de `_Cabecalho` em
   /// `hoje.dart`. null sem conta, ou se a conta Google não devolveu nome.
   String? get primeiroNome {
-    final nome = _pronta ? FirebaseAuth.instance.currentUser?.displayName : null;
+    final nome = _pronta
+        ? FirebaseAuth.instance.currentUser?.displayName
+        : null;
     return nome?.trim().split(_espacos).firstOrNull;
   }
 
   /// Foto de perfil da conta Google de quem entrou, para o avatar de
   /// `_Cabecalho` em `hoje.dart`. null sem conta, ou sem foto no Google.
-  String? get fotoUrl => _pronta ? FirebaseAuth.instance.currentUser?.photoURL : null;
+  String? get fotoUrl =>
+      _pronta ? FirebaseAuth.instance.currentUser?.photoURL : null;
 
   /// Só o núcleo do Firebase (`Firebase.initializeApp`), sem o resto de
   /// [iniciar] — para quem precisa do app default já registrado antes de
@@ -272,7 +267,9 @@ class Nuvem extends ChangeNotifier {
   /// de que ainda não rodou; chamar de novo depois lançaria "app duplicado".
   Future<void> iniciarFirebase() async {
     if (Firebase.apps.isNotEmpty) return;
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
   }
 
   /// Prepara o Firebase e liga a sincronização ao estado de login. Chamar uma
@@ -453,8 +450,13 @@ class Nuvem extends ChangeNotifier {
   Future<void> atualizarFoto(Uint8List bytes) async {
     final usuario = FirebaseAuth.instance.currentUser;
     if (usuario == null) return;
-    final referencia = FirebaseStorage.instance.ref('fotos_de_perfil/${usuario.uid}.jpg');
-    await referencia.putData(bytes, SettableMetadata(contentType: 'image/jpeg'));
+    final referencia = FirebaseStorage.instance.ref(
+      'fotos_de_perfil/${usuario.uid}.jpg',
+    );
+    await referencia.putData(
+      bytes,
+      SettableMetadata(contentType: 'image/jpeg'),
+    );
     await usuario.updatePhotoURL(await referencia.getDownloadURL());
     notifyListeners();
   }
@@ -466,7 +468,9 @@ class Nuvem extends ChangeNotifier {
     final usuario = FirebaseAuth.instance.currentUser;
     if (usuario == null) return;
     try {
-      await FirebaseStorage.instance.ref('fotos_de_perfil/${usuario.uid}.jpg').delete();
+      await FirebaseStorage.instance
+          .ref('fotos_de_perfil/${usuario.uid}.jpg')
+          .delete();
     } on FirebaseException catch (erro) {
       if (erro.code != 'object-not-found') rethrow;
     }

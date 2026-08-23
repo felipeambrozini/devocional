@@ -17,7 +17,6 @@ class _LembretesFalsas implements Lembretes {
 
   final agendamentos = <(TimeOfDay manha, TimeOfDay noite)>[];
   int vezesCancelado = 0;
-  bool _agendado = false;
 
   @override
   Future<void> inicializar({
@@ -38,17 +37,12 @@ class _LembretesFalsas implements Lembretes {
     required TimeOfDay noite,
   }) async {
     agendamentos.add((manhaEPromessas, noite));
-    _agendado = true;
   }
 
   @override
   Future<void> cancelar() async {
     vezesCancelado++;
-    _agendado = false;
   }
-
-  @override
-  Future<bool> agendados() async => _agendado;
 
   @override
   String fusoAtual = 'America/Sao_Paulo';

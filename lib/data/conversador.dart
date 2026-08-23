@@ -33,7 +33,8 @@ class Conversador extends ChangeNotifier {
     required Persona persona,
     required List<Mensagem> historico,
     required String pergunta,
-  }) chamar;
+  })
+  chamar;
 
   /// A conversa em que este turno escreve. null enquanto é uma conversa nova
   /// que ainda não tem a primeira mensagem: o id nasce na primeira pergunta
@@ -72,6 +73,7 @@ class Conversador extends ChangeNotifier {
   bool _descartado = false;
 
   bool get respondendo => _respondendo;
+
   /// Quanto tempo o balão de erro fica na tela antes de sumir sozinho.
   final Duration duracaoDoErro;
 
@@ -91,7 +93,8 @@ class Conversador extends ChangeNotifier {
   Future<void> enviar(String pergunta) async {
     final agora = DateTime.now();
     final ultimoEnvio = _ultimoEnvio;
-    if (ultimoEnvio != null && agora.difference(ultimoEnvio) < intervaloMinimo) {
+    if (ultimoEnvio != null &&
+        agora.difference(ultimoEnvio) < intervaloMinimo) {
       return;
     }
     _ultimoEnvio = agora;
@@ -104,7 +107,7 @@ class Conversador extends ChangeNotifier {
       id,
       Mensagem(
         id: novoIdDeMensagem(),
-        papel: 'user',
+        papel: Mensagem.papelUsuario,
         texto: pergunta,
         momento: DateTime.now().millisecondsSinceEpoch,
         // Pendente até a resposta chegar: sair da tela no meio da geração
@@ -170,7 +173,7 @@ class Conversador extends ChangeNotifier {
         id,
         Mensagem(
           id: novoIdDeMensagem(),
-          papel: 'assistant',
+          papel: Mensagem.papelAssistente,
           texto: resposta,
           momento: DateTime.now().millisecondsSinceEpoch,
         ),

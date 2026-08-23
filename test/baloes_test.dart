@@ -32,9 +32,6 @@ class _LembretesFalsas implements Lembretes {
   Future<void> cancelar() async {}
 
   @override
-  Future<bool> agendados() async => false;
-
-  @override
   String fusoAtual = 'America/Sao_Paulo';
 }
 
@@ -43,9 +40,7 @@ void main() {
     // A dica de primeira visita já foi dada (o teste dela está no fim deste
     // arquivo): estes testes tratam da presença dos balões, e o tooltip
     // estável é o rótulo do balão.
-    SharedPreferences.setMockInitialValues({
-      'baloes_tooltip_dispensado': true,
-    });
+    SharedPreferences.setMockInitialValues({'baloes_tooltip_dispensado': true});
     Lembretes.instancia = _LembretesFalsas();
     // Estes testes exercitam o recurso em si, não a restrição por e-mail: o
     // login de verdade nunca roda no ambiente de teste (ver Recursos).

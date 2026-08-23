@@ -164,7 +164,8 @@ class Estado extends ChangeNotifier {
 
     _baloesVisiveis = _prefs.getBool(_kBaloesVisiveis) ?? true;
 
-    _baloesTooltipDispensado = _prefs.getBool(_kBaloesTooltipDispensado) ?? false;
+    _baloesTooltipDispensado =
+        _prefs.getBool(_kBaloesTooltipDispensado) ?? false;
 
     _swipeTooltipDispensado = _prefs.getBool(_kSwipeTooltipDispensado) ?? false;
 
@@ -267,16 +268,6 @@ class Estado extends ChangeNotifier {
   // --- balões de conversa ---------------------------------------------------- //
 
   bool get baloesVisiveis => _baloesVisiveis;
-
-  /// Só persiste; quem decide mostrar ou não os balões é o `_ComBaloes` do
-  /// `main.dart`. O default é true; a folha de ajustes não oferece mais o
-  /// interruptor (a aba Conversas é a entrada do chat).
-  Future<void> definirBaloesVisiveis(bool novo) async {
-    if (novo == _baloesVisiveis) return;
-    _baloesVisiveis = novo;
-    notifyListeners();
-    await _prefs.setBool(_kBaloesVisiveis, novo);
-  }
 
   bool get baloesTooltipDispensado => _baloesTooltipDispensado;
 

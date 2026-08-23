@@ -1,6 +1,5 @@
 <!-- Ícone pequeno da notificação do lembrete: glifo claro, para o tema
-     escuro (o par do tema claro é drawable/ic_lembete_claro.xml). -->
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
+     escuro (o par do tema claro é drawable/ic_lembrete_claro.xml). --><vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"

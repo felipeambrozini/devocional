@@ -348,26 +348,6 @@ void main() {
     );
   });
 
-  group('balões de conversa', () {
-    test('aparecem por padrão e podem ser escondidos de vez', () async {
-      final estado = await Estado.abrir();
-      expect(estado.baloesVisiveis, isTrue);
-
-      await estado.definirBaloesVisiveis(false);
-      expect(estado.baloesVisiveis, isFalse);
-
-      final relido = await reabrir();
-      expect(
-        relido.baloesVisiveis,
-        isFalse,
-        reason: 'a preferência sobrevive ao reabrir',
-      );
-
-      await relido.definirBaloesVisiveis(true);
-      expect((await reabrir()).baloesVisiveis, isTrue);
-    });
-  });
-
   group('conversas do chat', () {
     Mensagem mensagem(String id, String papel, String texto, int momento) =>
         Mensagem(id: id, papel: papel, texto: texto, momento: momento);

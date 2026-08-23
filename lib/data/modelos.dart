@@ -194,6 +194,14 @@ class Devocional {
   /// mais de uma passagem, como o de 12 de julho de Manhã e Noite, que abre
   /// citando Judas 1:1, 1 Coríntios 1:2 e 1 Pedro 1:2 em sequência.
   final List<(String referencia, String versiculo)> outrosVersiculos;
+
+  /// Todos os pares (referência, versículo) do dia, o principal primeiro. A
+  /// regra do que compõe a epígrafe vive aqui: a voz e a tela leem dela,
+  /// em vez de cada uma remontar a lista por conta própria.
+  List<(String referencia, String versiculo)> get paresDeVersiculos => [
+    (referencia, versiculo),
+    ...outrosVersiculos,
+  ];
 }
 
 enum Periodo {
@@ -398,15 +406,25 @@ class Conversa {
     'mensagens': [for (final m in mensagens) m.paraJson()],
   };
 
+  /// Corta do começo o que passar do [teto] e devolve a lista com se cortou.
+  /// A regra única do corte do histórico, usada por quem cresce a conversa
+  /// ([comMensagem] e [comMensagemDeTodas]).
+  static (List<Mensagem>, bool) _aplicarTeto(
+    List<Mensagem> mensagens,
+    int? teto,
+  ) {
+    var cortou = false;
+    if (teto != null && mensagens.length > teto) {
+      cortou = true;
+      mensagens.removeRange(0, mensagens.length - teto);
+    }
+    return (mensagens, cortou);
+  }
+
   /// Uma cópia com a mensagem nova no fim e o momento atualizado, para o
   /// histórico listar a conversa na posição de quem acabou de falar.
   Conversa comMensagem(Mensagem mensagem, {int? teto}) {
-    final novas = [...mensagens, mensagem];
-    var cortou = false;
-    if (teto != null && novas.length > teto) {
-      cortou = true;
-      novas.removeRange(0, novas.length - teto);
-    }
+    final (novas, cortou) = _aplicarTeto([...mensagens, mensagem], teto);
     return Conversa(
       id: id,
       titulo: titulo.isEmpty && mensagem.doUsuario ? mensagem.texto : titulo,
@@ -419,13 +437,10 @@ class Conversa {
   /// Uma cópia com várias mensagens fundidas, ordenadas por momento. Usada
   /// pela fusão com a nuvem, que pode trazer um lote inteiro de uma vez.
   Conversa comMensagemDeTodas(List<Mensagem> novas, {int? teto}) {
-    final todas = [...mensagens, ...novas]
-      ..sort((a, b) => a.momento.compareTo(b.momento));
-    var cortou = false;
-    if (teto != null && todas.length > teto) {
-      cortou = true;
-      todas.removeRange(0, todas.length - teto);
-    }
+    final (todas, cortou) = _aplicarTeto(
+      [...mensagens, ...novas]..sort((a, b) => a.momento.compareTo(b.momento)),
+      teto,
+    );
     final ultimo = todas.last.momento;
     return Conversa(
       id: id,
@@ -457,6 +472,13 @@ class Conversa {
 /// `AchadoDevocional`: o chat envia papéis ao Gemini como "user"/"model", e a
 /// UI lê "assistant" com [doUsuario] para saber de que lado desenhar o balão.
 class Mensagem {
+  /// Os papéis como o chat grava e lê: "user" fala, "assistant" responde.
+  /// Constantes e não literais soltos: um erro de digitação num papel não dá
+  /// erro de compilação — dá balão do lado errado. O vocabulário do Gemini
+  /// ("user"/"model") fica em `ia.dart`, que traduz na hora do pedido.
+  static const papelUsuario = 'user';
+  static const papelAssistente = 'assistant';
+
   const Mensagem({
     required this.id,
     required this.papel,
@@ -467,7 +489,7 @@ class Mensagem {
 
   factory Mensagem.doJson(Map<String, dynamic> json) => Mensagem(
     id: json['id'] as String? ?? '',
-    papel: json['papel'] as String? ?? 'assistant',
+    papel: json['papel'] as String? ?? papelAssistente,
     texto: json['texto'] as String? ?? '',
     momento: json['momento'] as int? ?? 0,
     pendente: json['pendente'] as bool? ?? false,
@@ -485,7 +507,7 @@ class Mensagem {
   /// reabrir, ao trocar de aparelho e à nuvem.
   final bool pendente;
 
-  bool get doUsuario => papel == 'user';
+  bool get doUsuario => papel == papelUsuario;
 
   Map<String, dynamic> paraJson() => {
     'id': id,

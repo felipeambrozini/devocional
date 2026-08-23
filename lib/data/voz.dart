@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart'
-    show AppLifecycleState, ChangeNotifier, WidgetsBinding, debugPrint;
+    show AppLifecycleState, ChangeNotifier, WidgetsBinding;
 import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
 
@@ -66,6 +66,14 @@ String textoDeCapitulo(Capitulo capitulo) {
   return partes.join(' ');
 }
 
+/// As chaves que identificam o que a voz toca ("capitulo:joao.3",
+/// "introducao:joao"): quem monta o botão e quem mostra o estado na barra
+/// precisam do mesmo formato, e um erro de digitação numa cópia quebraria o
+/// pareamento em silêncio. Por isso os dois construtores vivem aqui.
+String chaveDeCapitulo(String livro, int numero) => 'capitulo:$livro.$numero';
+
+String chaveDaIntroducao(String slug) => 'introducao:$slug';
+
 /// O texto que a voz lê para um devocional: o cabeçalho ("Devocional da
 /// manhã, 18 de agosto"), o título quando a leitura tem um (as Promessas),
 /// cada versículo falado com a referência — também os versículos extras do
@@ -74,8 +82,7 @@ String textoDeCapitulo(Capitulo capitulo) {
 String textoDeDevocional(Devocional dev, {required String cabecalho}) {
   final partes = <String>[cabecalho];
   if (dev.titulo.isNotEmpty) partes.add(dev.titulo);
-  final pares = [(dev.referencia, dev.versiculo), ...dev.outrosVersiculos];
-  for (final (referencia, versiculo) in pares) {
+  for (final (referencia, versiculo) in dev.paresDeVersiculos) {
     if (versiculo.isNotEmpty) partes.add('"$versiculo"');
     if (referencia.isNotEmpty) partes.add(referencia);
   }
@@ -103,15 +110,17 @@ const _limiteDeBytesDoPedaco = 2000;
 /// lugar para a voz respirar entre pedaços.
 final _fimDeFrase = RegExp(r'(?<=[.!?])\s+(?=[A-Z0-9"“])');
 
+/// Mensagem da falha ao tocar (codec, player, rede no meio do caminho): não
+/// há o que o usuário conserte além de tentar de novo.
+const _erroDeTocagem =
+    'Não foi possível tocar o áudio. Tente de novo em instantes.';
+
 /// Corta [texto] em pedaços que a API aceita — cada um com no máximo
 /// [limite] bytes de UTF-8 — sempre na fronteira de frases. Uma frase que
 /// sozinha estoure o teto (não existe nos capítulos) é cortada na fronteira
 /// de palavras. Quem toca em streaming usa um teto menor ([limite] abaixo do
 /// da API) para a primeira parte chegar mais cedo.
-List<String> _fatiar(
-  String texto, {
-  int limite = _limiteDeBytesDoTexto,
-}) {
+List<String> _fatiar(String texto, {int limite = _limiteDeBytesDoTexto}) {
   if (utf8.encode(texto).length <= limite) return [texto];
   final pedacos = <String>[];
   var atual = StringBuffer();
@@ -220,8 +229,10 @@ Future<Uint8List> _pedirAudio(
     // 200 com corpo ilegível (HTML de proxy, resposta truncada): a mesma
     // mensagem do serviço fora do ar, não uma exceção sem tratamento.
     Registro.erro('Voz.sintetizar', erro, pilha);
-    throw const VozException('A voz não respondeu agora. Tente de novo em '
-        'instantes.');
+    throw const VozException(
+      'A voz não respondeu agora. Tente de novo em '
+      'instantes.',
+    );
   }
   final audioDoPedaco = corpo['audioContent'];
   if (audioDoPedaco is! String || audioDoPedaco.isEmpty) {
@@ -305,34 +316,34 @@ Future<void> sintetizarEmPartes(
 }
 
 /// 403 é a chave sem a API ativada (configuração na nuvem): culpar o aparelho
-  /// do leitor mandaria a um conserto que não existe — a mensagem fala do
-  /// serviço e deixa o "Tentar de novo" agir. 400 é o pedido recusado; 429 é o
-  /// teto do tier gratuito. Não se envia o corpo da API ao usuário: é inglês
-  /// técnico que não ajuda ninguém, e a maioria dos leitores não tem o Cloud
-  /// Console. O detalhe técnico vai para o log, onde quem mantém o app procura.
-  String _mensagemDeErro(http.Response resposta) {
-    if (resposta.statusCode == 403) {
-      debugPrint(
-        'Voz: a Text-to-Speech recusou (${resposta.statusCode}): '
-        '${resposta.body}',
-      );
-      return 'O serviço de voz não está disponível agora. Tente de novo em '
-          'instantes.';
-    }
-    if (resposta.statusCode == 400) {
-      debugPrint(
-        'Voz: a Text-to-Speech recusou (${resposta.statusCode}): '
-        '${resposta.body}',
-      );
-      return 'A voz ainda não está pronta neste aparelho. Atualize o '
-          'aplicativo e tente de novo.';
-    }
-    if (resposta.statusCode == 429) {
-      return 'O limite gratuito da voz foi atingido. Espere um pouco e tente '
-          'de novo.';
-    }
-    return 'O serviço de voz não respondeu agora. Tente de novo em instantes.';
+/// do leitor mandaria a um conserto que não existe — a mensagem fala do
+/// serviço e deixa o "Tentar de novo" agir. 400 é o pedido recusado; 429 é o
+/// teto do tier gratuito. Não se envia o corpo da API ao usuário: é inglês
+/// técnico que não ajuda ninguém, e a maioria dos leitores não tem o Cloud
+/// Console. O detalhe técnico vai para o log, onde quem mantém o app procura.
+String _mensagemDeErro(http.Response resposta) {
+  if (resposta.statusCode == 403) {
+    Registro.erro(
+      'Voz.mensagemDeErro',
+      'A Text-to-Speech recusou (${resposta.statusCode}): ${resposta.body}',
+    );
+    return 'O serviço de voz não está disponível agora. Tente de novo em '
+        'instantes.';
   }
+  if (resposta.statusCode == 400) {
+    Registro.erro(
+      'Voz.mensagemDeErro',
+      'A Text-to-Speech recusou (${resposta.statusCode}): ${resposta.body}',
+    );
+    return 'A voz ainda não está pronta neste aparelho. Atualize o '
+        'aplicativo e tente de novo.';
+  }
+  if (resposta.statusCode == 429) {
+    return 'O limite gratuito da voz foi atingido. Espere um pouco e tente '
+        'de novo.';
+  }
+  return 'O serviço de voz não respondeu agora. Tente de novo em instantes.';
+}
 
 /// A voz do Spurgeon em uma sessão: sintetiza, toca e para.
 ///
@@ -512,22 +523,10 @@ class Voz extends ChangeNotifier {
         _tocando = true;
         _carregando = false;
         notifyListeners();
-        try {
-          await _tocarTudo(partes, chave, versao: versao, de: de);
-        } on VozException {
-          rethrow;
-        } catch (erro, pilha) {
-          Registro.erro('Voz.tocar', erro, pilha);
-          throw const VozException(
-            'Não foi possível tocar o áudio. Tente de novo em instantes.',
-          );
-        } finally {
-          if (versao == _versao) {
-            _carregando = false;
-            if (!_tocando && !_pausado) _tocandoChave = null;
-            notifyListeners();
-          }
-        }
+        await _tocarComGuarda(
+          versao,
+          () => _tocarTudo(partes, chave, versao: versao, de: de),
+        );
         return;
       }
       // A cache despejou a sessão pausada: o toque recomeça a leitura do
@@ -549,7 +548,7 @@ class Voz extends ChangeNotifier {
     // nova: o player é um só, e só ele precisa ser silenciado. Tocar em
     // "Preparando…" cancela com [parar], que zera esse estado.
     await _silenciar();
-    try {
+    await _tocarComGuarda(versao, () async {
       final guardado = _cache[chave];
       if (guardado != null) {
         // O áudio inteiro já está na memória (ouviu antes nesta sessão): toca
@@ -575,15 +574,26 @@ class Voz extends ChangeNotifier {
           versao: versao,
         );
       }
+    });
+  }
+
+  /// Toca com a guarda padrão das leituras: [VozException] passa como veio
+  /// (já é a mensagem certa), qualquer outra falha — de plataforma ao tocar
+  /// (codec, player), de rede no meio do caminho — vira [_erroDeTocagem], e o
+  /// fim (normal, erro ou cancelamento) limpa o preparo se esta sessão ainda
+  /// mandar. Uma sessão nova pode ter assumido no meio do caminho; aí quem
+  /// limpa o estado é ela.
+  Future<void> _tocarComGuarda(
+    int versao,
+    Future<void> Function() tocar,
+  ) async {
+    try {
+      await tocar();
     } on VozException {
       rethrow;
     } catch (erro, pilha) {
-      // Falha de plataforma ao tocar (codec, player): não há o que o usuário
-      // consertar além de tentar de novo.
       Registro.erro('Voz.tocar', erro, pilha);
-      throw const VozException(
-        'Não foi possível tocar o áudio. Tente de novo em instantes.',
-      );
+      throw const VozException(_erroDeTocagem);
     } finally {
       if (versao == _versao) {
         _carregando = false;
@@ -663,22 +673,10 @@ class Voz extends ChangeNotifier {
     // O áudio do capítulo antigo (se ainda houver um) para: o "Desfazer"
     // devolve a página e a leitura, e a sessão nova começa limpa.
     await _silenciar();
-    try {
-      await _tocarTudo(partes, chave, versao: versao, de: de);
-    } on VozException {
-      rethrow;
-    } catch (erro, pilha) {
-      Registro.erro('Voz.tocar', erro, pilha);
-      throw const VozException(
-        'Não foi possível tocar o áudio. Tente de novo em instantes.',
-      );
-    } finally {
-      if (versao == _versao) {
-        _carregando = false;
-        if (!_tocando && !_pausado) _tocandoChave = null;
-        notifyListeners();
-      }
-    }
+    await _tocarComGuarda(
+      versao,
+      () => _tocarTudo(partes, chave, versao: versao, de: de),
+    );
     return true;
   }
 
@@ -701,22 +699,10 @@ class Voz extends ChangeNotifier {
       _tocando = true;
       _carregando = false;
       notifyListeners();
-      try {
-        await _tocarTudo(partes, chave, versao: versao, de: de);
-      } on VozException {
-        rethrow;
-      } catch (erro, pilha) {
-        Registro.erro('Voz.tocar', erro, pilha);
-        throw const VozException(
-          'Não foi possível tocar o áudio. Tente de novo em instantes.',
-        );
-      } finally {
-        if (versao == _versao) {
-          _carregando = false;
-          if (!_tocando && !_pausado) _tocandoChave = null;
-          notifyListeners();
-        }
-      }
+      await _tocarComGuarda(
+        versao,
+        () => _tocarTudo(partes, chave, versao: versao, de: de),
+      );
       return true;
     }
     // A cache despejou a sessão: o retomar da barra não conhece o texto, mas
@@ -886,11 +872,9 @@ class Voz extends ChangeNotifier {
             de: null,
             aoFim: (fim) {
               unawaited(
-                _acompanharLeitura(fim, chave, versao: versao).whenComplete(
-                  () {
-                    if (!fimDaLeitura.isCompleted) fimDaLeitura.complete();
-                  },
-                ),
+                _acompanharLeitura(fim, chave, versao: versao).whenComplete(() {
+                  if (!fimDaLeitura.isCompleted) fimDaLeitura.complete();
+                }),
               );
             },
           );

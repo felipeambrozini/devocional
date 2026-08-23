@@ -164,7 +164,7 @@ void main() {
     });
 
     test(
-      'empurrar que falha marca falhouAoEnviar, e a próxima mudança tenta de novo',
+      'empurrar que falha não desiste: a próxima mudança tenta de novo',
       () async {
         final estado = await Estado.abrir();
         var tentativas = 0;
@@ -181,12 +181,11 @@ void main() {
 
         await estado.alternarFavorito(Versao.bkj, 'joao', 3, 16);
         await assentar();
-        expect(sincronia.falhouAoEnviar, isTrue);
+        expect(tentativas, 1);
 
         await estado.alternarFavorito(Versao.bkj, 'romanos', 8, 28);
         await assentar();
         expect(tentativas, 2);
-        expect(sincronia.falhouAoEnviar, isFalse);
       },
     );
 
@@ -282,11 +281,7 @@ void main() {
       await estado.definirModoDoTema(ModoDoTema.escuro);
       await assentar();
 
-      expect(
-        envios,
-        0,
-        reason: 'preferência de aparelho não é conversa',
-      );
+      expect(envios, 0, reason: 'preferência de aparelho não é conversa');
     });
 
     test('comecar() funde o histórico remoto sem apagar o local', () async {
@@ -304,7 +299,12 @@ void main() {
             'titulo': 'daqui',
             'momento': 2,
             'mensagens': [
-              {'id': 'remota', 'papel': 'assistant', 'texto': 'de la', 'momento': 2},
+              {
+                'id': 'remota',
+                'papel': 'assistant',
+                'texto': 'de la',
+                'momento': 2,
+              },
             ],
           },
         },

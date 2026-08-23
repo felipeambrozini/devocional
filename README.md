@@ -267,7 +267,7 @@ motivo novo.
   no Firebase Storage (`storage.rules`: um arquivo por conta, só o dono
   grava, leitura pública porque a URL vai direto num `NetworkImage`).
 - **Excluir um plano e sair dele são ações diferentes** (20/08/2026):
-  `excluirPlano` (`lib/telas/comuns.dart`) apaga o plano da nuvem para todos
+  `excluirPlano` (`lib/telas/planos_acoes.dart`) apaga o plano da nuvem para todos
   os participantes, e só quem criou pode chamar; `sairDoPlano` apaga apenas a
   própria participação, para quem só entrou no plano de outra pessoa. Os dois
   ficam disponíveis pela lixeira no cartão de "Meus Planos" e pelo menu
@@ -355,9 +355,9 @@ aparelho só grava token + horário; quem decide e dispara é
   fez o lembrete aparecer também com o app aberto, caso que antes ficava sem
   notificação nenhuma.
 - **Ícone da notificação segue o tema escolhido no app**. No Android: claro
-  usa glifo escuro (`ic_lembete_claro`), escuro usa claro
-  (`ic_lembete_escuro`); no "Automático" quem escolhe são os qualifiers
-  `drawable`/`drawable-night` de `ic_lembete` — o único jeito certo com o app
+  usa glifo escuro (`ic_lembrete_claro`), escuro usa claro
+  (`ic_lembrete_escuro`); no "Automático" quem escolhe são os qualifiers
+  `drawable`/`drawable-night` de `ic_lembrete` — o único jeito certo com o app
   morto, quando não dá para ler a preferência gravada. Na web: a página
   espelha o tema efetivo no Cache Storage (`lib/data/espelho_do_tema.dart`,
   via `package:web`) — `localStorage` é invisível para o service worker — e

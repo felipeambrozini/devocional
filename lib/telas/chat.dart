@@ -38,6 +38,13 @@ import 'comuns.dart';
 /// rotas em `main.dart` para folhas e diálogos, e a [TelaChat] para si mesma.
 final camadasFlutuantes = ValueNotifier<int>(0);
 
+/// O aviso de que o teto de mensagens cortou as falas mais antigas. O mesmo
+/// texto na snackbar do momento do corte e na nota quieta no topo da conversa:
+/// ajustar num lugar ajusta nos dois.
+const avisoDeCorte =
+    'As falas mais antigas saíram quando esta conversa '
+    'passou de ${Conversas.maxMensagensPorConversa} mensagens.';
+
 /// Balão circular com o retrato da persona, o botão flutuante do chat.
 ///
 /// Fica pendurado por cima de todas as telas (ver o `builder` em `main.dart`),
@@ -53,8 +60,11 @@ class BalaoDeChat extends StatelessWidget {
     final cor = Theme.of(context).colorScheme;
     // O mesmo retrato que serve o polegar no celular (52) se perde na janela
     // do navegador e no tablet: o balão cresce junto com a plataforma, no
-    // mesmo limiar largo (720) que o resto do app usa para trocar de moldura.
-    final tamanho = MediaQuery.sizeOf(context).width >= 720 ? 64.0 : 52.0;
+    // mesmo limiar largo ([larguraDeTelaLarga]) que o resto do app usa para
+    // trocar de moldura.
+    final tamanho = MediaQuery.sizeOf(context).width >= larguraDeTelaLarga
+        ? 64.0
+        : 52.0;
     return ListenableBuilder(
       listenable: EscopoDoEstado.de(context),
       builder: (context, _) {
@@ -84,30 +94,10 @@ class BalaoDeChat extends StatelessWidget {
                       }
                       onTap();
                     },
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: cor.primary, width: 1.5),
-                      ),
-                      // A folga entre o aro dourado e a foto, como no cabeçalho de
-                      // hoje.dart: sem ela a foto preenche o círculo até a borda e o
-                      // cabelo do Felipe encosta no aro. Com ela o aro fica limpo,
-                      // como o do Spurgeon, que tem folga própria na foto.
-                      child: Padding(
-                        padding: const EdgeInsets.all(Spacing.sp3),
-                        child: ClipOval(
-                          child: Image.asset(
-                            persona.foto,
-                            width: tamanho,
-                            height: tamanho,
-                            fit: BoxFit.cover,
-                            // A foto é mais alta que larga e o cabelo encosta na borda
-                            // superior: qualquer corte em cima corta o cabelo. Alinhada
-                            // ao topo, a sobra do BoxFit.cover cai toda na blusa.
-                            alignment: Alignment.topCenter,
-                          ),
-                        ),
-                      ),
+                    child: RetratoDePersona(
+                      persona: persona,
+                      tamanho: tamanho,
+                      folga: Spacing.sp3,
                     ),
                   ),
                 ),
@@ -134,10 +124,9 @@ class BalaoDeChat extends StatelessWidget {
                     ),
                     child: Text(
                       persona.nomeCurto,
-                      style: Theme.of(context)
-                          .textTheme
-                          .labelMedium
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -212,9 +201,9 @@ class _TelaChatState extends State<TelaChat> {
       // pergunta respondida pelo silêncio.
       _cortadaAnterior =
           widget.conversaId != null &&
-          (EscopoDoEstado.de(context)
-                  .conversaDe(widget.persona.id, widget.conversaId!)
-                  ?.cortada ??
+          (EscopoDoEstado.de(
+                context,
+              ).conversaDe(widget.persona.id, widget.conversaId!)?.cortada ??
               false);
       _conversador!.retomarInterrompida();
       // Reabrir cai na última fala, não no Filete: cada retomada começava
@@ -223,9 +212,9 @@ class _TelaChatState extends State<TelaChat> {
       // mede os extents de verdade (a primeira medida é por estimativa).
       final id = _conversador?.id ?? widget.conversaId;
       if (id != null &&
-          EscopoDoEstado.de(context)
-              .mensagensDe(widget.persona.id, id)
-              .isNotEmpty) {
+          EscopoDoEstado.de(
+            context,
+          ).mensagensDe(widget.persona.id, id).isNotEmpty) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!_rolagem.hasClients) return;
           _rolagem.jumpTo(_rolagem.position.maxScrollExtent);
@@ -264,16 +253,12 @@ class _TelaChatState extends State<TelaChat> {
     final id = _conversador?.id;
     final cortadaAgora =
         id != null &&
-        (EscopoDoEstado.de(context)
-                .conversaDe(widget.persona.id, id)
-                ?.cortada ??
+        (EscopoDoEstado.de(
+              context,
+            ).conversaDe(widget.persona.id, id)?.cortada ??
             false);
     if (cortadaAgora && !_cortadaAnterior) {
-      mostrarAviso(
-        context,
-        'As falas mais antigas saíram quando esta conversa passou de '
-        '${Conversas.maxMensagensPorConversa} mensagens.',
-      );
+      mostrarAviso(context, avisoDeCorte);
     }
     _cortadaAnterior = cortadaAgora;
     // A conversa nova acabou de ganhar o id; a URL precisa acompanhar, para
@@ -301,28 +286,16 @@ class _TelaChatState extends State<TelaChat> {
   Future<void> _limparConversa() async {
     final id = _conversador?.id;
     if (id == null) return;
-    final confirmou = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Apagar esta conversa?'),
-        content: const Text(
+    final confirmou = await confirmar(
+      context,
+      titulo: 'Apagar esta conversa?',
+      conteudo:
           'Só esta conversa será apagada deste aparelho, e da cópia na nuvem '
           'se houver. As outras conversas ficam. Essa ação não pode ser '
           'desfeita.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Apagar'),
-          ),
-        ],
-      ),
+      rotuloDaAcao: 'Apagar',
     );
-    if (confirmou != true || !mounted) return;
+    if (!confirmou || !mounted) return;
     await EscopoDoEstado.de(context).limparConversa(widget.persona.id, id);
     if (!mounted) return;
     Navigator.of(context).pop();
@@ -414,7 +387,12 @@ class _TelaChatState extends State<TelaChat> {
                 // O cabeçalho (o Filete) é o índice 0; as mensagens vêm depois.
                 return ListView.builder(
                   controller: _rolagem,
-                  padding: const EdgeInsets.fromLTRB(Spacing.sp16, Spacing.sp16, Spacing.sp16, Spacing.sp8),
+                  padding: const EdgeInsets.fromLTRB(
+                    Spacing.sp16,
+                    Spacing.sp16,
+                    Spacing.sp16,
+                    Spacing.sp8,
+                  ),
                   itemCount: mensagens.length + 1 + (cortada ? 1 : 0),
                   itemBuilder: (context, i) {
                     if (i == 0) {
@@ -442,7 +420,12 @@ class _TelaChatState extends State<TelaChat> {
           ),
           if (respondendo)
             Padding(
-              padding: const EdgeInsets.fromLTRB(Spacing.sp16, Spacing.sp4, Spacing.sp16, 0),
+              padding: const EdgeInsets.fromLTRB(
+                Spacing.sp16,
+                Spacing.sp4,
+                Spacing.sp16,
+                0,
+              ),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: _Bolha(
@@ -450,9 +433,7 @@ class _TelaChatState extends State<TelaChat> {
                   child: SizedBox(
                     width: Spacing.sp18,
                     height: Spacing.sp18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                    ),
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                 ),
               ),
@@ -466,7 +447,12 @@ class _TelaChatState extends State<TelaChat> {
           SafeArea(
             top: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(Spacing.sp12, Spacing.sp6, Spacing.sp12, Spacing.sp10),
+              padding: const EdgeInsets.fromLTRB(
+                Spacing.sp12,
+                Spacing.sp6,
+                Spacing.sp12,
+                Spacing.sp10,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -617,7 +603,10 @@ class _BalcaoDeMensagem extends StatelessWidget {
           Flexible(
             child: Container(
               constraints: const BoxConstraints(maxWidth: 460),
-              padding: const EdgeInsets.symmetric(horizontal: Spacing.sp14, vertical: Spacing.sp10),
+              padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.sp14,
+                vertical: Spacing.sp10,
+              ),
               decoration: BoxDecoration(
                 color: usuario
                     ? cor.surfaceContainer
@@ -672,7 +661,10 @@ class _Bolha extends StatelessWidget {
         ),
         const SizedBox(width: Spacing.sp8),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: Spacing.sp14, vertical: Spacing.sp12),
+          padding: const EdgeInsets.symmetric(
+            horizontal: Spacing.sp14,
+            vertical: Spacing.sp12,
+          ),
           decoration: BoxDecoration(
             color: cor.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(10),
@@ -710,8 +702,7 @@ class _AvisoDeCorte extends StatelessWidget {
           border: Border.all(color: cor.outline.withValues(alpha: 0.5)),
         ),
         child: Text(
-          'As falas mais antigas saíram quando esta conversa passou de '
-          '${Conversas.maxMensagensPorConversa} mensagens.',
+          avisoDeCorte,
           style: tema.bodySmall?.copyWith(
             color: cor.onSurfaceVariant,
             height: 1.5,
@@ -743,7 +734,12 @@ class _ErroDeResposta extends StatelessWidget {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(Spacing.sp16, Spacing.sp4, Spacing.sp16, 0),
+      padding: const EdgeInsets.fromLTRB(
+        Spacing.sp16,
+        Spacing.sp4,
+        Spacing.sp16,
+        0,
+      ),
       child: Align(
         alignment: Alignment.centerLeft,
         child: Row(
@@ -763,7 +759,12 @@ class _ErroDeResposta extends StatelessWidget {
             const SizedBox(width: Spacing.sp8),
             Flexible(
               child: Container(
-                padding: const EdgeInsets.fromLTRB(Spacing.sp14, Spacing.sp10, Spacing.sp8, Spacing.sp8),
+                padding: const EdgeInsets.fromLTRB(
+                  Spacing.sp14,
+                  Spacing.sp10,
+                  Spacing.sp8,
+                  Spacing.sp8,
+                ),
                 decoration: BoxDecoration(
                   color: cor.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(10),
@@ -786,7 +787,9 @@ class _ErroDeResposta extends StatelessWidget {
                       icon: const Icon(Icons.refresh, size: 18),
                       label: const Text('Tentar de novo'),
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: Spacing.sp8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: Spacing.sp8,
+                        ),
                       ),
                     ),
                   ],
