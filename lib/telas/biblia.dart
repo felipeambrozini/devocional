@@ -316,9 +316,9 @@ class _TelaBibliaState extends State<TelaBiblia> {
           actions: [
             IndicadorDeVozNaBarra(chave: chaveDeCapitulo(_livro, _capitulo)),
             IconButton(
-              tooltip: 'Tamanho do texto e aparência',
-              icon: const Icon(Icons.tune),
-              onPressed: () => ajustesDeLeitura(context, estado),
+              tooltip: 'Buscar',
+              icon: const Icon(Icons.search),
+              onPressed: _abrirBusca,
             ),
             IconButton(
               tooltip: 'Introdução de Spurgeon',
@@ -329,9 +329,9 @@ class _TelaBibliaState extends State<TelaBiblia> {
               ),
             ),
             IconButton(
-              tooltip: 'Buscar',
-              icon: const Icon(Icons.search),
-              onPressed: _abrirBusca,
+              tooltip: 'Tamanho do texto e aparência',
+              icon: const Icon(Icons.tune),
+              onPressed: () => ajustesDeLeitura(context, estado),
             ),
           ],
         ),
