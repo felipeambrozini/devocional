@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:felipe_ambrozini/data/canon.dart';
 import 'package:felipe_ambrozini/data/conteudo.dart';
 import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:felipe_ambrozini/data/estado.dart';
@@ -72,29 +71,23 @@ void main() {
   group('favoritos e notas', () {
     test('favorita, desfavorita e persiste', () async {
       final estado = await Estado.abrir();
-      expect(estado.ehFavorito(Versao.bkj, 'joao', 3, 16), isFalse);
+      expect(estado.ehFavorito('joao', 3, 16), isFalse);
 
-      await estado.alternarFavorito(Versao.bkj, 'joao', 3, 16);
-      expect(estado.ehFavorito(Versao.bkj, 'joao', 3, 16), isTrue);
-      expect((await reabrir()).ehFavorito(Versao.bkj, 'joao', 3, 16), isTrue);
+      await estado.alternarFavorito('joao', 3, 16);
+      expect(estado.ehFavorito('joao', 3, 16), isTrue);
+      expect((await reabrir()).ehFavorito('joao', 3, 16), isTrue);
 
-      await estado.alternarFavorito(Versao.bkj, 'joao', 3, 16);
-      expect(estado.ehFavorito(Versao.bkj, 'joao', 3, 16), isFalse);
+      await estado.alternarFavorito('joao', 3, 16);
+      expect(estado.ehFavorito('joao', 3, 16), isFalse);
       expect((await reabrir()).marcacoes, isEmpty);
     });
 
     test('nota sobrevive ao ciclo de gravacao', () async {
       final estado = await Estado.abrir();
-      await estado.definirNota(
-        Versao.bkj,
-        'salmos',
-        23,
-        1,
-        '  Pastor e provedor.  ',
-      );
+      await estado.definirNota('salmos', 23, 1, '  Pastor e provedor.  ');
 
       final relido = await reabrir();
-      final marcacao = relido.marcacaoDe(Versao.bkj, 'salmos', 23, 1);
+      final marcacao = relido.marcacaoDe('salmos', 23, 1);
       expect(marcacao, isNotNull);
       // A nota e gravada sem espaco em volta.
       expect(marcacao!.nota, 'Pastor e provedor.');
@@ -103,36 +96,30 @@ void main() {
 
     test('desfavoritar nao apaga uma nota escrita', () async {
       final estado = await Estado.abrir();
-      await estado.definirNota(
-        Versao.bkj,
-        'salmos',
-        23,
-        1,
-        'Anotacao importante',
-      );
+      await estado.definirNota('salmos', 23, 1, 'Anotacao importante');
 
       // O toque no favorito nao pode destruir texto que o usuario escreveu.
-      await estado.alternarFavorito(Versao.bkj, 'salmos', 23, 1);
+      await estado.alternarFavorito('salmos', 23, 1);
       expect(
-        estado.marcacaoDe(Versao.bkj, 'salmos', 23, 1)?.nota,
+        estado.marcacaoDe('salmos', 23, 1)?.nota,
         'Anotacao importante',
       );
     });
 
     test('nota vazia limpa o texto mas conserva o favorito', () async {
       final estado = await Estado.abrir();
-      await estado.definirNota(Versao.bkj, 'salmos', 23, 1, 'temporaria');
-      await estado.definirNota(Versao.bkj, 'salmos', 23, 1, '   ');
-      expect(estado.ehFavorito(Versao.bkj, 'salmos', 23, 1), isTrue);
+      await estado.definirNota('salmos', 23, 1, 'temporaria');
+      await estado.definirNota('salmos', 23, 1, '   ');
+      expect(estado.ehFavorito('salmos', 23, 1), isTrue);
       expect(estado.comNota, isEmpty);
     });
 
     test('marcacoes saem em ordem canonica, nao por ordem de clique', () async {
       final estado = await Estado.abrir();
-      await estado.alternarFavorito(Versao.bkj, 'apocalipse', 1, 1);
-      await estado.alternarFavorito(Versao.bkj, 'genesis', 1, 1);
-      await estado.alternarFavorito(Versao.bkj, 'salmos', 23, 6);
-      await estado.alternarFavorito(Versao.bkj, 'salmos', 23, 1);
+      await estado.alternarFavorito('apocalipse', 1, 1);
+      await estado.alternarFavorito('genesis', 1, 1);
+      await estado.alternarFavorito('salmos', 23, 6);
+      await estado.alternarFavorito('salmos', 23, 1);
 
       expect(
         estado.marcacoes.map((m) => '${m.livro}:${m.capitulo}:${m.versiculo}'),
@@ -142,7 +129,7 @@ void main() {
 
     test('remover apaga a marcacao inteira', () async {
       final estado = await Estado.abrir();
-      await estado.definirNota(Versao.bkj, 'joao', 1, 1, 'nota');
+      await estado.definirNota('joao', 1, 1, 'nota');
       await estado.removerMarcacao(estado.marcacoes.single);
       expect(estado.marcacoes, isEmpty);
       expect((await reabrir()).marcacoes, isEmpty);
@@ -150,11 +137,6 @@ void main() {
   });
 
   group('preferencias', () {
-    test('a traducao interna e BKJ', () async {
-      final estado = await Estado.abrir();
-      expect(estado.versao, Versao.bkj);
-    });
-
     test('ultima leitura persiste', () async {
       final estado = await Estado.abrir();
       expect(estado.ultimaLeitura, isNull);
@@ -220,8 +202,8 @@ void main() {
   group('copia de seguranca', () {
     test('exportar e importar leva favoritos, notas e progresso', () async {
       final origem = await Estado.abrir();
-      await origem.alternarFavorito(Versao.bkj, 'joao', 3, 16);
-      await origem.definirNota(Versao.bkj, 'romanos', 8, 28, 'para meditar');
+      await origem.alternarFavorito('joao', 3, 16);
+      await origem.definirNota('romanos', 8, 28, 'para meditar');
       await origem.alternarLido('01-01');
       await origem.alternarLido('15-03');
       final copia = origem.exportar();
@@ -234,9 +216,9 @@ void main() {
       final (marcacoes, dias) = await destino.importar(copia);
       expect(marcacoes, 2);
       expect(dias, 2);
-      expect(destino.ehFavorito(Versao.bkj, 'joao', 3, 16), isTrue);
+      expect(destino.ehFavorito('joao', 3, 16), isTrue);
       expect(
-        destino.marcacaoDe(Versao.bkj, 'romanos', 8, 28)?.nota,
+        destino.marcacaoDe('romanos', 8, 28)?.nota,
         'para meditar',
       );
       expect(destino.diasLidos, 2);
@@ -247,14 +229,14 @@ void main() {
 
     test('importar funde em vez de substituir, e nao apaga nota local', () async {
       final estado = await Estado.abrir();
-      await estado.definirNota(Versao.bkj, 'joao', 3, 16, 'nota daqui');
+      await estado.definirNota('joao', 3, 16, 'nota daqui');
       await estado.alternarLido('01-01');
 
       // Copia com o mesmo versiculo sem nota, mais um dia que nao existia aqui.
       final outra = await () async {
         SharedPreferences.setMockInitialValues({});
         final e = await Estado.abrir();
-        await e.alternarFavorito(Versao.bkj, 'joao', 3, 16);
+        await e.alternarFavorito('joao', 3, 16);
         await e.alternarLido('04-07');
         return e.exportar();
       }();
@@ -263,7 +245,7 @@ void main() {
       expect(dias, 1, reason: 'so o dia que faltava');
       expect(estado.diasLidos, 2, reason: '01-01 continua marcado');
       expect(
-        estado.marcacaoDe(Versao.bkj, 'joao', 3, 16)?.nota,
+        estado.marcacaoDe('joao', 3, 16)?.nota,
         'nota daqui',
         reason: 'a nota local nao pode ser apagada por um favorito sem nota',
       );
@@ -271,7 +253,7 @@ void main() {
 
     test('importar duas vezes nao duplica nada', () async {
       final estado = await Estado.abrir();
-      await estado.alternarFavorito(Versao.bkj, 'joao', 3, 16);
+      await estado.alternarFavorito('joao', 3, 16);
       await estado.alternarLido('01-01');
       final copia = estado.exportar();
 
@@ -308,7 +290,9 @@ void main() {
         '], "dias_lidos": []}',
       );
       expect(marcacoes, 1);
-      expect(estado.ehFavorito(Versao.bkj, 'joao', 3, 16), isTrue);
+      // Copias antigas traziam a versão em cada marcação; o campo extra é
+      // simplesmente ignorado na leitura.
+      expect(estado.ehFavorito('joao', 3, 16), isTrue);
     });
   });
 

@@ -64,7 +64,7 @@ class Conteudo {
     }
   }
 
-  Future<Capitulo> capitulo(Versao versao, String slug, int numero) async {
+  Future<Capitulo> capitulo(String slug, int numero) async {
     final livro = await _carregarLivro(slug);
     if (livro == null) {
       return Capitulo(
@@ -102,12 +102,11 @@ class Conteudo {
   /// Um único versículo, para mostrar o texto de um favorito ou de uma nota sem
   /// abrir o capítulo inteiro na tela.
   Future<String> versiculo(
-    Versao versao,
     String slug,
     int capitulo,
     int numero,
   ) async {
-    final cap = await this.capitulo(versao, slug, capitulo);
+    final cap = await this.capitulo(slug, capitulo);
     for (final (n, texto) in cap.versiculos) {
       if (n == numero) return texto;
     }
@@ -118,13 +117,12 @@ class Conteudo {
   /// espaço. Promessas de Deus às vezes cita dois versículos como uma só
   /// promessa ("Salmos 102:13-14"); buscar só o primeiro perderia metade dela.
   Future<String> versiculoOuFaixa(
-    Versao versao,
     String slug,
     int capitulo,
     int deVersiculo,
     int ateVersiculo,
   ) async {
-    final cap = await this.capitulo(versao, slug, capitulo);
+    final cap = await this.capitulo(slug, capitulo);
     final textos = [
       for (final (n, texto) in cap.versiculos)
         if (n >= deVersiculo && n <= ateVersiculo) texto,
@@ -181,44 +179,36 @@ class Conteudo {
   ///
   /// A referência do JSON vem abreviada ("Jo 6:37") e o versículo vem embutido
   /// no próprio texto do comentário. Aqui ela é trocada pelo nome do livro por
-  /// extenso ("João 6:37") e o versículo completo é buscado na BKJ, para o
-  /// cartão mostrar o mesmo formato de Promessas de Deus: versículo em
-  /// destaque, depois o livro, depois o comentário. A caixa alta de exibição
-  /// fica por conta da tela, que aplica o mesmo tratamento às duas leituras.
+  /// extenso ("João 6:37") e o versículo completo é buscado na tradução
+  /// interna, para o cartão mostrar o mesmo formato de Promessas de Deus:
+  /// versículo em destaque, depois o livro, depois o comentário. A caixa alta de
+  /// epígrafe fica por conta da tela, que aplica o mesmo tratamento às duas leituras.
   ///
   /// No raro dia cuja epígrafe encadeia mais de uma passagem, a referência do
   /// JSON traz todas separadas por vírgula ou "e"; cada uma é resolvida, e as
   /// que sobram do principal vão para [Devocional.outrosVersiculos].
   ///
   /// A tradução interna fornece o texto completo do versículo.
-  Future<Devocional?> devocional(
-    DateTime data,
-    Periodo periodo, {
-    Versao versao = Versao.bkj,
-  }) async {
+  Future<Devocional?> devocional(DateTime data, Periodo periodo) async {
     final dados = await _carregarDevocionais();
     final chave = chaveDoDia(data);
     final dia = dados[chave];
     if (dia == null) return null;
     final entrada = dia[periodo.chave] as Map<String, dynamic>?;
     if (entrada == null) return null;
-    return _comVersiculosResolvidos(Devocional.doJson(entrada), versao);
+    return _comVersiculosResolvidos(Devocional.doJson(entrada));
   }
 
-  /// Busca o(s) versículo(s)-base de [dev] na tradução [versao] e devolve uma
+  /// Busca o(s) versículo(s)-base de [dev] na tradução interna e devolve uma
   /// cópia com [Devocional.referencia]/[Devocional.versiculo] atualizados. Sem
   /// referência que resolva, devolve [dev] como veio do asset.
-  Future<Devocional> _comVersiculosResolvidos(
-    Devocional dev,
-    Versao versao,
-  ) async {
+  Future<Devocional> _comVersiculosResolvidos(Devocional dev) async {
     final resolvidos = faixasDaReferencia(dev.referencia);
     if (resolvidos.isEmpty) return dev;
 
     final pares = <(String, String)>[];
     for (final (livro, capitulo, deVersiculo, ateVersiculo) in resolvidos) {
       final texto = await versiculoOuFaixa(
-        versao,
         livro.slug,
         capitulo,
         deVersiculo,
@@ -267,26 +257,23 @@ class Conteudo {
     return _promessas;
   }
 
-  /// [versao] escolhe de qual tradução o versículo em destaque vem, do mesmo
-  /// jeito que em [devocional]; o texto da promessa em si é sempre o mesmo,
-  /// escrito na voz de Spurgeon, independente da tradução do versículo.
-  Future<Devocional?> promessa(
-    DateTime data, {
-    Versao versao = Versao.bkj,
-  }) async {
+  /// O versículo em destaque vem da tradução interna, do mesmo jeito que em
+  /// [devocional]; o texto da promessa em si é sempre o mesmo, escrito na voz
+  /// de Spurgeon.
+  Future<Devocional?> promessa(DateTime data) async {
     final dados = await _carregarPromessas();
     if (dados == null) return null;
     final chave = chaveDoDia(data);
     final dia = dados[chave];
     if (dia == null) return null;
-    return _comVersiculosResolvidos(Devocional.doJson(dia), versao);
+    return _comVersiculosResolvidos(Devocional.doJson(dia));
   }
 
   /// Busca nos devocionais de Spurgeon (Manhã, Noite e Promessas de Deus).
   ///
   /// Diferente de [buscar]: síncrona e sem teto. Os dois corpora somam 366 +
   /// 366 registros já cacheados por completo depois da primeira leitura —
-  /// 2 MB, não os 4,7 MB por versão da Bíblia — então uma varredura completa
+  /// 2 MB, não os 4,7 MB da Bíblia inteira — então uma varredura completa
   /// não pesa o bastante para precisar de stream nem de limite de resultados.
   /// ponytail: sem paginação; adicionar se um dia ficar lento de ver na tela.
   Future<List<AchadoDevocional>> buscarDevocionais(String termo) async {
@@ -342,7 +329,7 @@ class Conteudo {
     return introducao;
   }
 
-  /// Busca no texto de uma versão, emitindo os achados livro por livro.
+  /// Busca no texto da Bíblia, emitindo os achados livro por livro.
   ///
   /// ponytail: varredura sequencial, sem índice invertido. A primeira busca na Bíblia
   /// inteira lê cerca de 4 MB e leva uns segundos; depois tudo está em cache. Como é
@@ -354,7 +341,6 @@ class Conteudo {
   static const limiteDeBusca = 300;
 
   Stream<Achado> buscar(
-    Versao versao,
     String termo, {
     int limite = limiteDeBusca,
   }) async* {

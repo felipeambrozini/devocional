@@ -870,7 +870,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Introdução: ${livroPorSlug(widget.slug)!.tituloFormal}',
+                                tituloDaIntroducao(livroPorSlug(widget.slug)!),
                                 style: tema.titleLarge,
                               ),
                               const SizedBox(height: Spacing.sp4),

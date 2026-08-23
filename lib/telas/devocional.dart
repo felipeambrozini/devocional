@@ -128,11 +128,11 @@ class _TelaDevocionalState extends State<TelaDevocional> {
       '${d.year}-${d.month.toString().padLeft(2, '0')}-'
       '${d.day.toString().padLeft(2, '0')}';
 
-  Future<Devocional?> _carregar(Versao versao) {
+  Future<Devocional?> _carregar() {
     final periodo = _leitura.periodo;
     return periodo == null
-        ? Conteudo.instancia.promessa(_data, versao: versao)
-        : Conteudo.instancia.devocional(_data, periodo, versao: versao);
+        ? Conteudo.instancia.promessa(_data)
+        : Conteudo.instancia.devocional(_data, periodo);
   }
 
   @override
@@ -178,9 +178,8 @@ class _TelaDevocionalState extends State<TelaDevocional> {
             _AlternadorDeLeitura(atual: _leitura, ao: (l) => _irPara(l, _data)),
             const SizedBox(height: Spacing.sp16),
             CarregaUmaVez<Devocional?>(
-              chave:
-                  '${_leitura.name}/${estado.versao.pasta}/${_data.month}/${_data.day}',
-              carregar: () => _carregar(estado.versao),
+              chave: '${_leitura.name}/${_data.month}/${_data.day}',
+              carregar: _carregar,
               construir: (context, snap) {
                 if (snap.hasError) {
                   return const Padding(

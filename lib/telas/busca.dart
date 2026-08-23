@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import '../data/canon.dart';
 import '../data/conteudo.dart';
-import '../data/estado.dart';
 import '../data/modelos.dart';
 import '../spacing.dart';
 import 'biblia.dart';
@@ -54,16 +53,16 @@ class _TelaBuscaState extends State<TelaBusca> {
 
   /// Dispara a busca sozinha um instante depois que a digitação parar, em
   /// vez de esperar clique no botão. O atraso evita buscar a cada tecla.
-  void _aoDigitar(Versao versao) {
+  void _aoDigitar() {
     setState(() {});
     _debounce?.cancel();
     _debounce = Timer(
       const Duration(milliseconds: 400),
-      () => _buscar(versao, avisar: false),
+      () => _buscar(avisar: false),
     );
   }
 
-  void _buscar(Versao versao, {bool avisar = true}) {
+  void _buscar({bool avisar = true}) {
     _debounce?.cancel();
     final termo = _controle.text.trim();
     // Menos de três letras devolveria meia Bíblia e não ajudaria ninguém. Ao
@@ -91,9 +90,7 @@ class _TelaBuscaState extends State<TelaBusca> {
       _referencia = faixaDeVersiculoDaReferencia(termo);
     });
 
-    _assinatura = Conteudo.instancia
-        .buscar(versao, termo)
-        .listen(
+    _assinatura = Conteudo.instancia.buscar(termo).listen(
           (achado) {
             if (mounted) setState(() => _achados.add(achado));
           },
@@ -158,8 +155,6 @@ class _TelaBuscaState extends State<TelaBusca> {
 
   @override
   Widget build(BuildContext context) {
-    final versao = EscopoDoEstado.de(context).versao;
-
     // A LarguraDeLeitura fica no corpo, não em volta do Scaffold: envolvendo o
     // Scaffold, a própria AppBar ficava numa faixa de 720 px no meio da janela.
     return DefaultTabController(
@@ -180,8 +175,8 @@ class _TelaBuscaState extends State<TelaBusca> {
                   textInputAction: TextInputAction.search,
                   // Além de atualizar o botão de limpar, dispara a busca
                   // automaticamente um instante depois que a digitação parar.
-                  onChanged: (_) => _aoDigitar(versao),
-                  onSubmitted: (_) => _buscar(versao),
+                  onChanged: (_) => _aoDigitar(),
+                  onSubmitted: (_) => _buscar(),
                   decoration: InputDecoration(
                     hintText: 'Palavra, expressão ou referência',
                     prefixIcon: Icon(
@@ -192,7 +187,7 @@ class _TelaBuscaState extends State<TelaBusca> {
                         ? IconButton(
                             tooltip: 'Buscar',
                             icon: const Icon(Icons.arrow_forward),
-                            onPressed: () => _buscar(versao),
+                            onPressed: _buscar,
                           )
                         : Row(
                             mainAxisSize: MainAxisSize.min,
@@ -205,7 +200,7 @@ class _TelaBuscaState extends State<TelaBusca> {
                               IconButton(
                                 tooltip: 'Buscar',
                                 icon: const Icon(Icons.arrow_forward),
-                                onPressed: () => _buscar(versao),
+                                onPressed: _buscar,
                               ),
                             ],
                           ),
@@ -217,19 +212,18 @@ class _TelaBuscaState extends State<TelaBusca> {
                   children: [
                     _AbaBiblia(
                       termoBuscado: _termoBuscado,
-                      versao: versao,
                       referencia: _referencia,
                       achados: _achados,
                       buscando: _buscando,
                       erro: _erro,
-                      aoTentarDeNovo: () => _buscar(versao),
+                      aoTentarDeNovo: _buscar,
                     ),
                     _AbaDevocionais(
                       termoBuscado: _termoBuscado,
                       achados: _achadosDevocionais,
                       buscando: _buscandoDevocionais,
                       erro: _erroDevocionais,
-                      aoTentarDeNovo: () => _buscar(versao),
+                      aoTentarDeNovo: () => _buscar(),
                     ),
                   ],
                 ),
@@ -245,7 +239,6 @@ class _TelaBuscaState extends State<TelaBusca> {
 class _AbaBiblia extends StatelessWidget {
   const _AbaBiblia({
     required this.termoBuscado,
-    required this.versao,
     required this.referencia,
     required this.achados,
     required this.buscando,
@@ -254,7 +247,6 @@ class _AbaBiblia extends StatelessWidget {
   });
 
   final String termoBuscado;
-  final Versao versao;
   final (Livro, int, int, int)? referencia;
   final List<Achado> achados;
   final bool buscando;
@@ -277,7 +269,7 @@ class _AbaBiblia extends StatelessWidget {
       return AvisoVazio(
         icone: Icons.search_off,
         titulo: 'Nada encontrado',
-        detalhe: 'Nenhum versículo com "$termoBuscado" em ${versao.sigla}.',
+        detalhe: 'Nenhum versículo com "$termoBuscado".',
       );
     }
 
@@ -294,8 +286,8 @@ class _AbaBiblia extends StatelessWidget {
               Expanded(
                 child: Text(
                   achados.length >= Conteudo.limiteDeBusca
-                      ? 'Primeiros ${Conteudo.limiteDeBusca} resultados em ${versao.sigla}; há mais'
-                      : '${achados.length} ${achados.length == 1 ? 'resultado' : 'resultados'} em ${versao.sigla}',
+                      ? 'Primeiros ${Conteudo.limiteDeBusca} resultados; há mais'
+                      : '${achados.length} ${achados.length == 1 ? 'resultado' : 'resultados'}',
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
               ),

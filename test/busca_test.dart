@@ -55,7 +55,7 @@ void main() {
     Future<void> aquecer(WidgetTester tester) => tester.runAsync(() async {
       final c = Conteudo.instancia;
       for (final livro in canon) {
-        await c.capitulo(Versao.bkj, livro.slug, 1);
+        await c.capitulo(livro.slug, 1);
       }
       await c.buscarDevocionais('promessa');
     });

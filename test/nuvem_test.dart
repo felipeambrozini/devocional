@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:felipe_ambrozini/data/canon.dart';
 import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:felipe_ambrozini/data/nuvem.dart';
@@ -36,7 +35,7 @@ void main() {
         );
         await sincronia.comecar();
 
-        await estado.alternarFavorito(Versao.bkj, 'joao', 3, 16);
+        await estado.alternarFavorito('joao', 3, 16);
         await assentar();
 
         expect(envios, 1);
@@ -68,12 +67,12 @@ void main() {
 
     test('comecar() funde a cópia remota sem apagar a nota local', () async {
       final estado = await Estado.abrir();
-      await estado.definirNota(Versao.bkj, 'joao', 3, 16, 'nota daqui');
+      await estado.definirNota('joao', 3, 16, 'nota daqui');
 
       final remota = await () async {
         SharedPreferences.setMockInitialValues({});
         final outro = await Estado.abrir();
-        await outro.alternarFavorito(Versao.bkj, 'joao', 3, 16);
+        await outro.alternarFavorito('joao', 3, 16);
         await outro.alternarLido('04-07');
         return outro.exportar();
       }();
@@ -87,7 +86,7 @@ void main() {
       await sincronia.comecar();
 
       expect(
-        estado.marcacaoDe(Versao.bkj, 'joao', 3, 16)?.nota,
+        estado.marcacaoDe('joao', 3, 16)?.nota,
         'nota daqui',
         reason: 'a nota local não pode ser apagada por um favorito sem nota',
       );
@@ -179,11 +178,11 @@ void main() {
         );
         await sincronia.comecar();
 
-        await estado.alternarFavorito(Versao.bkj, 'joao', 3, 16);
+        await estado.alternarFavorito('joao', 3, 16);
         await assentar();
         expect(tentativas, 1);
 
-        await estado.alternarFavorito(Versao.bkj, 'romanos', 8, 28);
+        await estado.alternarFavorito('romanos', 8, 28);
         await assentar();
         expect(tentativas, 2);
       },
@@ -205,7 +204,7 @@ void main() {
       );
       await sincronia.comecar();
 
-      await estado.alternarFavorito(Versao.bkj, 'joao', 3, 16);
+      await estado.alternarFavorito('joao', 3, 16);
       expect(envios, 0, reason: 'ainda dentro do debounce');
 
       await sincronia.despejar();

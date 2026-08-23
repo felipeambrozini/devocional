@@ -46,44 +46,39 @@ void main() {
       .toList();
 
   group('assets de Biblia', () {
-    for (final versao in Versao.values) {
-      test(
-        '${versao.sigla}: nenhum capitulo faltando e nenhum versiculo vazio',
-        () {
-          for (final livro in livrosPresentes) {
-            final dados =
-                json.decode(
-                      File(
-                        'assets/biblia/${livro.slug}.json',
-                      ).readAsStringSync(),
-                    )
-                    as Map<String, dynamic>;
-            final capitulos = dados['capitulos'] as Map<String, dynamic>;
-            expect(capitulos.length, livro.capitulos, reason: livro.nome);
-            for (var n = 1; n <= livro.capitulos; n++) {
-              final cap = capitulos['$n'] as Map<String, dynamic>?;
-              expect(cap, isNotNull, reason: '${livro.nome} $n');
-              final versiculos = cap!['versiculos'] as Map<String, dynamic>;
-              expect(versiculos, isNotEmpty, reason: '${livro.nome} $n vazio');
-              // O versiculo 1 tem de existir sempre: foi assim que se descobriu que o
-              // texto do v.1 estava caindo no sobrescrito em alguns capitulos.
-              expect(
-                versiculos.containsKey('1'),
-                isTrue,
-                reason: '${livro.nome} $n:1',
-              );
-              for (final entrada in versiculos.entries) {
-                expect(
-                  (entrada.value as String).trim(),
-                  isNotEmpty,
-                  reason: '${livro.nome} $n:${entrada.key}',
-                );
-              }
-            }
+    test('nenhum capitulo faltando e nenhum versiculo vazio', () {
+      for (final livro in livrosPresentes) {
+        final dados =
+            json.decode(
+                  File(
+                    'assets/biblia/${livro.slug}.json',
+                  ).readAsStringSync(),
+                )
+                as Map<String, dynamic>;
+        final capitulos = dados['capitulos'] as Map<String, dynamic>;
+        expect(capitulos.length, livro.capitulos, reason: livro.nome);
+        for (var n = 1; n <= livro.capitulos; n++) {
+          final cap = capitulos['$n'] as Map<String, dynamic>?;
+          expect(cap, isNotNull, reason: '${livro.nome} $n');
+          final versiculos = cap!['versiculos'] as Map<String, dynamic>;
+          expect(versiculos, isNotEmpty, reason: '${livro.nome} $n vazio');
+          // O versiculo 1 tem de existir sempre: foi assim que se descobriu que o
+          // texto do v.1 estava caindo no sobrescrito em alguns capitulos.
+          expect(
+            versiculos.containsKey('1'),
+            isTrue,
+            reason: '${livro.nome} $n:1',
+          );
+          for (final entrada in versiculos.entries) {
+            expect(
+              (entrada.value as String).trim(),
+              isNotEmpty,
+              reason: '${livro.nome} $n:${entrada.key}',
+            );
           }
-        },
-      );
-    }
+        }
+      }
+    });
 
     test(
       'total exato de 31.102 versiculos',
@@ -300,15 +295,10 @@ void main() {
   group('versículo e faixa', () {
     test('versiculo devolve o texto pedido e vazio para número ausente',
         () async {
-      final texto = await Conteudo.instancia.versiculo(
-        Versao.bkj,
-        'joao',
-        3,
-        16,
-      );
+      final texto = await Conteudo.instancia.versiculo('joao', 3, 16);
       expect(texto, startsWith('Porque Deus amou o mundo'));
       expect(
-        await Conteudo.instancia.versiculo(Versao.bkj, 'joao', 3, 999),
+        await Conteudo.instancia.versiculo('joao', 3, 999),
         '',
       );
     });
@@ -316,14 +306,12 @@ void main() {
     test('versiculoOuFaixa une os versículos de uma faixa por espaço',
         () async {
       final faixa = await Conteudo.instancia.versiculoOuFaixa(
-        Versao.bkj,
         'salmos',
         102,
         13,
         14,
       );
       final soO13 = await Conteudo.instancia.versiculo(
-        Versao.bkj,
         'salmos',
         102,
         13,
@@ -338,7 +326,6 @@ void main() {
     test('faixa fora do capítulo devolve texto vazio', () async {
       expect(
         await Conteudo.instancia.versiculoOuFaixa(
-          Versao.bkj,
           'salmos',
           102,
           130,
@@ -350,11 +337,7 @@ void main() {
 
     test('capitulo de livro ausente devolve capítulo vazio, sem estourar',
         () async {
-      final cap = await Conteudo.instancia.capitulo(
-        Versao.bkj,
-        'livro-inexistente',
-        1,
-      );
+      final cap = await Conteudo.instancia.capitulo('livro-inexistente', 1);
       expect(cap.versiculos, isEmpty);
       expect(cap.numero, 1);
     });

@@ -252,6 +252,36 @@ Livro? livroPorSlug(String slug) => _porSlug[slug];
 /// que uma referência desconhecida apareça na tela em vez de sumir.
 String nomeDoLivro(String slug) => _porSlug[slug]?.nome ?? slug;
 
+const _contracoesDaPreposicaoA = <String, String>{
+  'O ': 'ao ',
+  'A ': 'à ',
+  'Os ': 'aos ',
+  'As ': 'às ',
+};
+
+/// Os dois títulos formais que não abrem com artigo precisam da contração à
+/// parte: "Cantares de Salomão" é masculino plural e "Primeira Carta...",
+/// feminino singular.
+const _contracoesSemArtigo = <String, String>{
+  'cantares': 'aos ',
+  '1corintios': 'à ',
+};
+
+/// Cabeçalho da Introdução, como "Introdução ao Livro de Josué": a crase
+/// marca direção — o texto conduz o leitor ao livro — e não posse, como
+/// teria "Introdução do livro". A contração vem do artigo que abre o
+/// [Livro.tituloFormal].
+String tituloDaIntroducao(Livro livro) {
+  final titulo = livro.tituloFormal;
+  for (final MapEntry(key: artigo, value: contracao)
+      in _contracoesDaPreposicaoA.entries) {
+    if (titulo.startsWith(artigo)) {
+      return 'Introdução $contracao${titulo.substring(artigo.length)}';
+    }
+  }
+  return 'Introdução ${_contracoesSemArtigo[livro.slug] ?? ''}$titulo';
+}
+
 /// Abreviações alternativas vistas nas fontes originais dos devocionais, que não
 /// batem com a abreviação oficial do canon: "Ex" sem acento para Êxodo, "Isa"
 /// de três letras para Isaías, e "Cantares" sem "de Salomão".
@@ -374,17 +404,6 @@ List<(Livro, int, int, int)> faixasDaReferencia(String referencia) {
     if (resolvido != null) resolvidos.add(resolvido);
   }
   return resolvidos;
-}
-
-/// A única tradução interna disponível no aplicativo.
-enum Versao {
-  bkj('bkj', 'King James 1611', 'BKJ');
-
-  const Versao(this.pasta, this.nome, this.sigla);
-
-  final String pasta;
-  final String nome;
-  final String sigla;
 }
 
 /// Onde o build web fica publicado. Usado para montar o link absoluto de um

@@ -1,4 +1,3 @@
-import 'package:felipe_ambrozini/data/canon.dart';
 import 'package:felipe_ambrozini/data/conteudo.dart';
 import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/data/modelos.dart';
@@ -21,10 +20,8 @@ void main() {
         await conteudo.devocional(agora, periodo);
       }
       await conteudo.promessa(agora);
-      for (final versao in Versao.values) {
-        await conteudo.capitulo(versao, 'genesis', 1);
-      }
-      await conteudo.capitulo(Versao.bkj, 'salmos', 119);
+      await conteudo.capitulo('genesis', 1);
+      await conteudo.capitulo('salmos', 119);
       await conteudo.introducao('genesis');
     });
   }

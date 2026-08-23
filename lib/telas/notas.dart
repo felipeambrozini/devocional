@@ -347,7 +347,7 @@ class _CartaoDeMarcacao extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      '${marcacao.referencia}  ·  ${marcacao.versao.sigla}',
+                      marcacao.referencia,
                       style: tema.titleSmall?.copyWith(color: cor.secondary),
                     ),
                   ),
@@ -362,7 +362,6 @@ class _CartaoDeMarcacao extends StatelessWidget {
                       );
                       if (nota != null) {
                         await estado.definirNota(
-                          marcacao.versao,
                           marcacao.livro,
                           marcacao.capitulo,
                           marcacao.versiculo,
@@ -391,7 +390,6 @@ class _CartaoDeMarcacao extends StatelessWidget {
               CarregaUmaVez<String>(
                 chave: marcacao.chave,
                 carregar: () => Conteudo.instancia.versiculo(
-                  marcacao.versao,
                   marcacao.livro,
                   marcacao.capitulo,
                   marcacao.versiculo,

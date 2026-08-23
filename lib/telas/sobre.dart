@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
@@ -114,7 +113,7 @@ class _TelaSobreState extends State<TelaSobre> {
             CarregaUmaVez<Capitulo>(
               chave: 'voz-demo-salmos-1-$_tentativasDaDemo',
               carregar: () =>
-                  Conteudo.instancia.capitulo(Versao.bkj, 'salmos', 1),
+                  Conteudo.instancia.capitulo('salmos', 1),
               construir: (context, snap) {
                 if (snap.hasError) {
                   // A demonstração não pode sumir em silêncio: quem a pediu

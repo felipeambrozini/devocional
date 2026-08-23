@@ -343,11 +343,8 @@ class _TelaBibliaState extends State<TelaBiblia> {
                 Expanded(
                   child: CarregaUmaVez<Capitulo>(
                     chave: '$_livro/$_capitulo',
-                    carregar: () => Conteudo.instancia.capitulo(
-                      Versao.bkj,
-                      _livro,
-                      _capitulo,
-                    ),
+                    carregar: () =>
+                        Conteudo.instancia.capitulo(_livro, _capitulo),
                     construir: (context, snap) =>
                         _corpoDoCapitulo(context, estado, snap),
                   ),
@@ -399,7 +396,6 @@ class _TelaBibliaState extends State<TelaBiblia> {
       onHorizontalDragEnd: _aoArrastarCapitulo,
       child: _Leitor(
         capitulo: capitulo,
-        versao: Versao.bkj,
         rolagem: _rolagem,
         destacar: widget.destacar,
         alvoDeRolagem: widget.destacar?.$1,
@@ -444,7 +440,6 @@ class _TelaBibliaState extends State<TelaBiblia> {
 class _Leitor extends StatelessWidget {
   const _Leitor({
     required this.capitulo,
-    required this.versao,
     required this.rolagem,
     this.destacar,
     this.alvoDeRolagem,
@@ -453,9 +448,6 @@ class _Leitor extends StatelessWidget {
   });
 
   final Capitulo capitulo;
-
-  /// A marcação é ligada explicitamente à tradução interna.
-  final Versao versao;
   final ScrollController rolagem;
   final (int, int)? destacar;
 
@@ -571,7 +563,6 @@ class _Leitor extends StatelessWidget {
           key: chaveDoAlvoDeRolagem != null && numero == alvoDeRolagem
               ? chaveDoAlvoDeRolagem
               : null,
-          versao: versao,
           livro: capitulo.livro,
           capituloNumero: capitulo.numero,
           referencia: capitulo.referencia,
@@ -585,13 +576,10 @@ class _Leitor extends StatelessWidget {
 }
 
 /// Um versículo: número, texto e, se houver, a nota. Usado tanto pelo leitor
-/// de uma coluna quanto por cada lado do leitor duplo — [versao] é sempre
-/// explícito porque no leitor duplo as duas colunas aparecem juntas, sem uma
-/// "versão atual" só.
+/// de uma coluna quanto por cada lado do leitor duplo.
 class _LinhaDeVersiculo extends StatelessWidget {
   const _LinhaDeVersiculo({
     super.key,
-    required this.versao,
     required this.livro,
     required this.capituloNumero,
     required this.referencia,
@@ -600,7 +588,6 @@ class _LinhaDeVersiculo extends StatelessWidget {
     required this.noRecorte,
   });
 
-  final Versao versao;
   final String livro;
   final int capituloNumero;
   final String referencia;
@@ -613,7 +600,7 @@ class _LinhaDeVersiculo extends StatelessWidget {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     final estado = EscopoDoEstado.de(context);
-    final marcacao = estado.marcacaoDe(versao, livro, capituloNumero, numero);
+    final marcacao = estado.marcacaoDe(livro, capituloNumero, numero);
 
     return Semantics(
       hint: 'Toque para favoritar, anotar ou copiar',
@@ -621,7 +608,6 @@ class _LinhaDeVersiculo extends StatelessWidget {
         onTap: () => _abrirAcoesDoVersiculo(
           context,
           estado,
-          versao: versao,
           livro: livro,
           capituloNumero: capituloNumero,
           referencia: referencia,
@@ -710,7 +696,6 @@ class _LinhaDeVersiculo extends StatelessWidget {
 class _AcoesDoVersiculo {
   const _AcoesDoVersiculo({
     required this.estado,
-    required this.versao,
     required this.livro,
     required this.capituloNumero,
     required this.referencia,
@@ -720,7 +705,6 @@ class _AcoesDoVersiculo {
   });
 
   final Estado estado;
-  final Versao versao;
   final String livro;
   final int capituloNumero;
 
@@ -811,21 +795,21 @@ class _AcoesDoVersiculo {
       title: Text(marcacao != null ? 'Remover dos favoritos' : 'Favoritar'),
       onTap: () {
         final eraFavorito = marcacao != null;
-        estado.alternarFavorito(versao, livro, capituloNumero, numero);
+        estado.alternarFavorito(livro, capituloNumero, numero);
         Navigator.pop(folha);
         // Remover é a única ação da folha sem volta, e o mesmo toque que
         // remove oferece o "Desfazer" (o padrão do deslize de capítulo). Com
         // nota o alternarFavorito se recusa a remover (a nota manda, ver
         // estado.dart), e nesse caso não há o que desfazer.
         if (eraFavorito &&
-            !estado.ehFavorito(versao, livro, capituloNumero, numero)) {
+            !estado.ehFavorito(livro, capituloNumero, numero)) {
           final mensageiro = ScaffoldMessenger.of(folha);
           mostrarAvisoNo(
             mensageiro,
             'Removido dos favoritos.',
             rotuloDeAcao: 'Desfazer',
             aoAgir: () =>
-                estado.alternarFavorito(versao, livro, capituloNumero, numero),
+                estado.alternarFavorito(livro, capituloNumero, numero),
           );
         }
       },
@@ -874,7 +858,7 @@ class _AcoesDoVersiculo {
           notaAtual: marcacao?.nota ?? '',
         );
         if (nota != null) {
-          await estado.definirNota(versao, livro, capituloNumero, numero, nota);
+          await estado.definirNota(livro, capituloNumero, numero, nota);
         }
         if (folha.mounted) Navigator.pop(folha);
       },
@@ -885,24 +869,22 @@ class _AcoesDoVersiculo {
   /// plataforma, não só na web: é assim que quem recebe chega direto ao
   /// versículo, mesmo copiado ou compartilhado do celular numa live.
   String get _textoDoVersiculo =>
-      '"$texto"\n$referencia:$numero (${versao.sigla})\n'
+      '"$texto"\n$referencia:$numero\n'
       '${linkDoVersiculo(livro, capituloNumero, numero)}';
 }
 
 Future<void> _abrirAcoesDoVersiculo(
   BuildContext context,
   Estado estado, {
-  required Versao versao,
   required String livro,
   required int capituloNumero,
   required String referencia,
   required int numero,
   required String texto,
 }) async {
-  final marcacao = estado.marcacaoDe(versao, livro, capituloNumero, numero);
+  final marcacao = estado.marcacaoDe(livro, capituloNumero, numero);
   final acoes = _AcoesDoVersiculo(
     estado: estado,
-    versao: versao,
     livro: livro,
     capituloNumero: capituloNumero,
     referencia: referencia,

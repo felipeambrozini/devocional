@@ -23,7 +23,6 @@ class Estado extends ChangeNotifier {
 
   static const _kLidos = 'dias_lidos';
   static const _kMarcacoes = 'marcacoes';
-  static const _kVersao = 'versao_preferida';
   static const _kUltima = 'ultima_leitura';
   static const _kEscala = 'escala_de_leitura';
   // Pública (as outras são privadas de propósito): a notificação do lembrete
@@ -54,8 +53,6 @@ class Estado extends ChangeNotifier {
 
   /// Favoritos e notas, indexados por [Marcacao.chave].
   Map<String, Marcacao> _marcacoes = {};
-
-  Versao _versao = Versao.bkj;
 
   /// Onde a leitura parou, para o botão "continuar".
   (String, int)? _ultimaLeitura;
@@ -129,12 +126,6 @@ class Estado extends ChangeNotifier {
         _marcacoes = {};
       }
     }
-
-    final versaoSalva = _prefs.getString(_kVersao);
-    _versao = Versao.values.firstWhere(
-      (v) => v.pasta == versaoSalva,
-      orElse: () => Versao.bkj,
-    );
 
     final ultima = _prefs.getString(_kUltima);
     if (ultima != null) {
@@ -333,17 +324,6 @@ class Estado extends ChangeNotifier {
     await _prefs.setBool(_kAjudaDispensada, true);
   }
 
-  // --- versão preferida ---------------------------------------------------- //
-
-  Versao get versao => _versao;
-
-  Future<void> definirVersao(Versao nova) async {
-    if (nova == _versao) return;
-    _versao = nova;
-    notifyListeners();
-    await _prefs.setString(_kVersao, nova.pasta);
-  }
-
   // --- progresso do cronograma --------------------------------------------- //
 
   int get diasLidos => _lidos.length;
@@ -393,24 +373,18 @@ class Estado extends ChangeNotifier {
   List<Marcacao> get comNota =>
       marcacoes.where((m) => m.nota.trim().isNotEmpty).toList();
 
-  Marcacao? marcacaoDe(
-    Versao versao,
-    String livro,
-    int capitulo,
-    int versiculo,
-  ) => _marcacoes['${versao.pasta}/$livro/$capitulo/$versiculo'];
+  Marcacao? marcacaoDe(String livro, int capitulo, int versiculo) =>
+      _marcacoes['$livro/$capitulo/$versiculo'];
 
-  bool ehFavorito(Versao versao, String livro, int capitulo, int versiculo) =>
-      _marcacoes.containsKey('${versao.pasta}/$livro/$capitulo/$versiculo');
+  bool ehFavorito(String livro, int capitulo, int versiculo) =>
+      _marcacoes.containsKey('$livro/$capitulo/$versiculo');
 
   Future<void> alternarFavorito(
-    Versao versao,
     String livro,
     int capitulo,
     int versiculo,
   ) async {
     final marcacao = Marcacao(
-      versao: versao,
       livro: livro,
       capitulo: capitulo,
       versiculo: versiculo,
@@ -430,14 +404,12 @@ class Estado extends ChangeNotifier {
   }
 
   Future<void> definirNota(
-    Versao versao,
     String livro,
     int capitulo,
     int versiculo,
     String nota,
   ) async {
     final base = Marcacao(
-      versao: versao,
       livro: livro,
       capitulo: capitulo,
       versiculo: versiculo,
@@ -624,9 +596,9 @@ class Estado extends ChangeNotifier {
 
   /// Tudo que o usuário escreveu ou marcou, num JSON legível.
   ///
-  /// Só favoritos, notas e dias lidos. A versão preferida e o tamanho da fonte
-  /// ficam de fora de propósito: são preferências do aparelho, e restaurar uma
-  /// cópia do celular no computador não deve mudar o tamanho da letra de lá.
+  /// Só favoritos, notas e dias lidos. O tamanho da fonte fica de fora de
+  /// propósito: é preferência do aparelho, e restaurar uma cópia do celular no
+  /// computador não deve mudar o tamanho da letra de lá.
   String exportar() => const JsonEncoder.withIndent('  ').convert({
     'versao': versaoDaCopia,
     'marcacoes': [for (final m in _marcacoes.values) m.paraJson()],

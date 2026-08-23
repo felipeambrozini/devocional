@@ -1,4 +1,3 @@
-import 'package:felipe_ambrozini/data/canon.dart';
 import 'package:felipe_ambrozini/data/conteudo.dart';
 import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/data/modelos.dart';
@@ -17,7 +16,7 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   Future<void> aquecer(WidgetTester tester) => tester.runAsync(() async {
-    await Conteudo.instancia.capitulo(Versao.bkj, 'salmos', 119);
+    await Conteudo.instancia.capitulo('salmos', 119);
   });
 
   Future<void> abrirComFaixa(WidgetTester tester, Faixa faixa) async {

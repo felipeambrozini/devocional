@@ -1,4 +1,3 @@
-import 'package:felipe_ambrozini/data/canon.dart';
 import 'package:felipe_ambrozini/data/conteudo.dart';
 import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/telas/notas.dart';
@@ -14,9 +13,9 @@ void main() {
 
   Future<void> aquecer(WidgetTester tester) => tester.runAsync(() async {
     final c = Conteudo.instancia;
-    await c.capitulo(Versao.bkj, 'joao', 3);
-    await c.capitulo(Versao.bkj, 'romanos', 8);
-    await c.capitulo(Versao.bkj, 'salmos', 23);
+    await c.capitulo('joao', 3);
+    await c.capitulo('romanos', 8);
+    await c.capitulo('salmos', 23);
   });
 
   Future<Estado> montar(WidgetTester tester, Estado estado) async {
@@ -33,8 +32,8 @@ void main() {
 
   testWidgets('sem termo, a lista mostra tudo', (tester) async {
     final estado = Estado(await SharedPreferences.getInstance());
-    await estado.alternarFavorito(Versao.bkj, 'joao', 3, 16);
-    await estado.alternarFavorito(Versao.bkj, 'romanos', 8, 28);
+    await estado.alternarFavorito('joao', 3, 16);
+    await estado.alternarFavorito('romanos', 8, 28);
     await montar(tester, estado);
 
     expect(find.text('Favoritos (2)'), findsOneWidget);
@@ -42,8 +41,8 @@ void main() {
 
   testWidgets('busca por trecho da referência filtra a lista', (tester) async {
     final estado = Estado(await SharedPreferences.getInstance());
-    await estado.alternarFavorito(Versao.bkj, 'joao', 3, 16);
-    await estado.alternarFavorito(Versao.bkj, 'romanos', 8, 28);
+    await estado.alternarFavorito('joao', 3, 16);
+    await estado.alternarFavorito('romanos', 8, 28);
     await montar(tester, estado);
 
     await tester.enterText(find.byType(TextField), 'joão');
@@ -56,7 +55,7 @@ void main() {
 
   testWidgets('a busca ignora acento e caixa', (tester) async {
     final estado = Estado(await SharedPreferences.getInstance());
-    await estado.alternarFavorito(Versao.bkj, 'joao', 3, 16);
+    await estado.alternarFavorito('joao', 3, 16);
     await montar(tester, estado);
 
     await tester.enterText(find.byType(TextField), 'JOAO');
@@ -69,9 +68,8 @@ void main() {
     tester,
   ) async {
     final estado = Estado(await SharedPreferences.getInstance());
-    await estado.definirNota(Versao.bkj, 'joao', 3, 16, 'o amor de Deus');
+    await estado.definirNota('joao', 3, 16, 'o amor de Deus');
     await estado.definirNota(
-      Versao.bkj,
       'salmos',
       23,
       1,
@@ -90,7 +88,7 @@ void main() {
 
   testWidgets('sem achado, mostra o aviso de nada encontrado', (tester) async {
     final estado = Estado(await SharedPreferences.getInstance());
-    await estado.alternarFavorito(Versao.bkj, 'joao', 3, 16);
+    await estado.alternarFavorito('joao', 3, 16);
     await montar(tester, estado);
 
     await tester.enterText(find.byType(TextField), 'apocalipse');
@@ -102,8 +100,8 @@ void main() {
 
   testWidgets('limpar a busca devolve a lista inteira', (tester) async {
     final estado = Estado(await SharedPreferences.getInstance());
-    await estado.alternarFavorito(Versao.bkj, 'joao', 3, 16);
-    await estado.alternarFavorito(Versao.bkj, 'romanos', 8, 28);
+    await estado.alternarFavorito('joao', 3, 16);
+    await estado.alternarFavorito('romanos', 8, 28);
     await montar(tester, estado);
 
     await tester.enterText(find.byType(TextField), 'joão');

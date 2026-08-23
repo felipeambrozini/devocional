@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
@@ -377,11 +376,11 @@ class _PreviaDaLeitura extends StatelessWidget {
     Leitura.promessas => Icons.auto_awesome_outlined,
   };
 
-  Future<Devocional?> _futuro(Versao versao) {
+  Future<Devocional?> _futuro() {
     final periodo = leitura.periodo;
     return periodo == null
-        ? Conteudo.instancia.promessa(data, versao: versao)
-        : Conteudo.instancia.devocional(data, periodo, versao: versao);
+        ? Conteudo.instancia.promessa(data)
+        : Conteudo.instancia.devocional(data, periodo);
   }
 
   void _abrir(BuildContext context) => Navigator.push(
@@ -407,11 +406,10 @@ class _PreviaDaLeitura extends StatelessWidget {
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
-    final versao = EscopoDoEstado.de(context).versao;
     return CarregaUmaVez<Devocional?>(
       // A chave inclui a leitura e a data para reaproveitar o resultado certo.
-      chave: '${leitura.name}/${versao.pasta}/${Conteudo.chaveDoDia(data)}',
-      carregar: () => _futuro(versao),
+      chave: '${leitura.name}/${Conteudo.chaveDoDia(data)}',
+      carregar: _futuro,
       construir: (context, snap) {
         // Os três casos precisam ser separados. `snap.data` é nulo tanto enquanto
         // carrega quanto quando não existe leitura para a data, e tratar os dois

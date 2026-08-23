@@ -1,4 +1,3 @@
-import 'package:felipe_ambrozini/data/canon.dart';
 import 'package:felipe_ambrozini/data/conteudo.dart';
 import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/data/modelos.dart';
@@ -30,10 +29,8 @@ void main() {
       await c.devocional(DateTime.now(), p);
     }
     await c.promessa(DateTime.now());
-    for (final v in Versao.values) {
-      await c.capitulo(v, 'genesis', 1);
-      await c.capitulo(v, 'genesis', 2);
-    }
+    await c.capitulo('genesis', 1);
+    await c.capitulo('genesis', 2);
     await c.introducao('genesis');
   });
 

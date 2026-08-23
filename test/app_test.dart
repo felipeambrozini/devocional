@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:felipe_ambrozini/data/canon.dart';
 import 'package:felipe_ambrozini/data/conteudo.dart';
 import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/data/modelos.dart';
@@ -123,13 +122,11 @@ void main() {
         await conteudo.devocional(agora, periodo);
       }
       await conteudo.promessa(agora);
-      for (final versao in Versao.values) {
-        await conteudo.capitulo(versao, 'genesis', 1);
-        for (final livro in livros) {
-          await conteudo.capitulo(versao, livro, 1);
-        }
+      await conteudo.capitulo('genesis', 1);
+      for (final livro in livros) {
+        await conteudo.capitulo(livro, 1);
       }
-      await conteudo.capitulo(Versao.bkj, 'salmos', 119);
+      await conteudo.capitulo('salmos', 119);
       await conteudo.introducao('genesis');
     });
   }
@@ -985,7 +982,7 @@ void main() {
     await tester.tap(find.text('Favoritar'));
     await tester.pumpAndSettle();
 
-    expect(estado.ehFavorito(Versao.bkj, 'genesis', 1, 1), isTrue);
+    expect(estado.ehFavorito('genesis', 1, 1), isTrue);
   });
 
   testWidgets(
@@ -1036,7 +1033,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         copiado,
-        '"No princípio, Deus criou os céus e a terra."\nGênesis 1:1 (BKJ)\n'
+        '"No princípio, Deus criou os céus e a terra."\nGênesis 1:1\n'
         'https://www.felipeambrozini.com.br/devocional/?ler=genesis.1.1',
       );
       // Deixa o aviso fechar sozinho, senão o timer dele fica pendente.
@@ -1172,10 +1169,7 @@ void main() {
     // Regressão: a referência em maiúsculas não pode impedir a introdução do
     // livro de aparecer entre o seletor e o texto do devocional, com o título
     // formal do livro ao lado.
-    expect(
-      find.text('Introdução: ${livroPorSlug('josue')!.tituloFormal}'),
-      findsOneWidget,
-    );
+    expect(find.text('Introdução ao Livro de Josué'), findsOneWidget);
   });
 
   testWidgets(
@@ -1856,10 +1850,8 @@ void main() {
     // (link, busca, nota) — e não só no primeiro quadro.
     await aquecerAssets(tester);
     await tester.runAsync(() async {
-      for (final v in Versao.values) {
-        await Conteudo.instancia.capitulo(v, 'genesis', 2);
-        await Conteudo.instancia.capitulo(v, 'genesis', 3);
-      }
+      await Conteudo.instancia.capitulo('genesis', 2);
+      await Conteudo.instancia.capitulo('genesis', 3);
     });
     final estado = await estadoLimpo();
     await estado.registrarLeitura('genesis', 2);
@@ -1885,5 +1877,4 @@ void main() {
     expect(find.text('Gênesis 3'), findsWidgets);
   });
 }
-
 

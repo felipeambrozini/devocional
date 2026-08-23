@@ -30,6 +30,41 @@ void main() {
       expect(nomeDoLivro('inexistente'), 'inexistente');
     });
 
+    test('cabecalho da introducao contrai a preposicao com o artigo', () {
+      expect(
+        tituloDaIntroducao(livroPorSlug('josue')!),
+        'Introdução ao Livro de Josué',
+      );
+      expect(
+        tituloDaIntroducao(livroPorSlug('romanos')!),
+        'Introdução à Carta do Apóstolo Paulo aos Romanos',
+      );
+      expect(
+        tituloDaIntroducao(livroPorSlug('atos')!),
+        'Introdução aos Atos dos Apóstolos',
+      );
+      expect(
+        tituloDaIntroducao(livroPorSlug('lamentacoes')!),
+        'Introdução às Lamentações de Jeremias',
+      );
+      expect(
+        tituloDaIntroducao(livroPorSlug('genesis')!),
+        'Introdução ao Primeiro Livro de Moisés, chamado Gênesis',
+      );
+    });
+
+    test('todo titulo formal gera cabecalho de introducao valido', () {
+      // Guarda: um livro novo cujo titulo formal não abre com artigo sairia
+      // sem contração ("Introdução Cantares...") se não fosse mapeado à parte.
+      for (final livro in canon) {
+        final titulo = tituloDaIntroducao(livro);
+        expect(titulo, startsWith('Introdução '), reason: livro.slug);
+        expect(titulo.substring('Introdução '.length),
+            matches(RegExp(r'^[àa]')));
+        expect(titulo.contains(':'), isFalse, reason: livro.slug);
+      }
+    });
+
     test('resolve livro a partir da referencia do devocional', () {
       expect(livroDaReferencia('Js 5:12')?.slug, 'josue');
       expect(livroDaReferencia('2Pe 3:18')?.slug, '2pedro');
