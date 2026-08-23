@@ -196,13 +196,13 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                 }
                 final dev = snap.data;
                 if (dev == null) {
-                  return Cartao(
-                    titulo: _leitura.rotulo,
-                    child: Text(
-                      _leitura == Leitura.promessas
-                          ? 'Ainda não há uma promessa cadastrada para esta data.'
-                          : 'Sem devocional para esta data.',
-                    ),
+                  // Os três corpora cobrem 366/366 dias (verificado pelos
+                  // testes de conteúdo) e falha de carga já virou o hasError
+                  // acima. Chegar aqui é asset corrompido ou incompleto:
+                  // falha de conteúdo, não dia vazio.
+                  return const Padding(
+                    padding: EdgeInsets.all(Spacing.sp32),
+                    child: AvisoDeErro(),
                   );
                 }
                 final referencias = [

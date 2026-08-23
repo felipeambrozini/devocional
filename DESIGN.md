@@ -255,6 +255,7 @@ Contidos e discretos: os controles existem para o texto passar. Nenhum component
 - **A Capa da Bíblia de Estudo Charles Haddon Spurgeon:** a capa do livro (duas variantes, clara e escura) em cantos quase retos (3–4px), abrindo o cartão de introdução e o cabeçalho do devocional. É a peça de ilustração do sistema — a única imagem além da foto do Felipe no app.
 - **O Cabeçalho do Leitor:** referência do capítulo em Cinzel displayMedium (28px w700), o título formal do livro em itálico discreto acima, e o Filete separando do texto. O capítulo abre como uma página de livro.
 - **A Caixa de Citação:** o versículo-base do devocional — citação em itálico na cor de destaque, referência em caixa alta (titleSmall), tudo num cartão surfaceContainerHighest com fio de metal de 3px à esquerda. É como o sistema mostra a Palavra dentro do comentário.
+- **A Faixa de Progresso (`ProgressoFino`):** trilho do tema com o fio do metal por cima, cantos quase retos de 3px e 6px de altura. Um só desenho para o progresso do ano e dos planos; a pílula de voz tem trilho próprio porque precisa contrastar com o fundo do comprimido, não com a página.
 
 ## Do's and Don'ts
 

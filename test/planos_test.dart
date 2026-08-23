@@ -371,11 +371,13 @@ void main() {
 
       // Cai na tela do plano, com o título padrão e o dia 1 marcável.
       expect(find.text('Gênesis em 30 dias'), findsOneWidget);
-      expect(find.text('0 de 30 dias concluídos'), findsOneWidget);
+      // O contador canônico mora no cabeçalho ("dias lidos"); o rótulo
+      // duplicado "dias concluídos" no meio da lista foi removido.
+      expect(find.text('0 de 30 dias lidos'), findsOneWidget);
 
       await tester.tap(find.byTooltip('Marcar como lido').first);
       await tester.pumpAndSettle();
-      expect(find.text('1 de 30 dias concluídos'), findsOneWidget);
+      expect(find.text('1 de 30 dias lidos'), findsOneWidget);
       expect(estado.diasLidosDoPlano(estado.planosDoUsuario.single.id), 1);
 
       // De volta à lista, o cartão mostra o progresso.

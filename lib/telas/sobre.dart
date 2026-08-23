@@ -284,28 +284,16 @@ Future<void> _mostrarAjuda(BuildContext context) {
 /// Confirma e apaga a cópia da conta. O "não pode ser desfeita" é literal:
 /// `Nuvem.apagarDados` remove o documento no Firestore e a conta em si.
 Future<void> _apagarDaNuvem(BuildContext context) async {
-  final confirmou = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Apagar dados da nuvem?'),
-      content: const Text(
+  final confirmou = await confirmar(
+    context,
+    titulo: 'Apagar dados da nuvem?',
+    conteudo:
         'Favoritos, anotações e progresso salvos na sua conta serão '
         'apagados. O que está neste navegador continua intacto. Essa ação '
         'não pode ser desfeita.',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancelar'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: const Text('Apagar'),
-        ),
-      ],
-    ),
+    rotuloDaAcao: 'Apagar',
   );
-  if (confirmou != true || !context.mounted) return;
+  if (!confirmou || !context.mounted) return;
 
   final mensageiro = ScaffoldMessenger.of(context);
   try {

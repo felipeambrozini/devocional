@@ -465,13 +465,6 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
                     totalDeDias: diaCount,
                   ),
                 ],
-                Padding(
-                  padding: const EdgeInsets.only(bottom: Spacing.sp6),
-                  child: Text(
-                    '$lidos de $diaCount dias concluídos',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                ),
               ],
             );
           }
@@ -523,13 +516,7 @@ class _CabecalhoDoPlano extends StatelessWidget {
               style: tema.labelMedium,
             ),
             const SizedBox(height: Spacing.sp6),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(3),
-              child: LinearProgressIndicator(
-                value: totalDeDias == 0 ? 0 : lidos / totalDeDias,
-                minHeight: 6,
-              ),
-            ),
+            ProgressoFino(valor: totalDeDias == 0 ? 0 : lidos / totalDeDias),
           ],
         ),
       ),

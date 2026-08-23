@@ -436,18 +436,17 @@ class _PreviaDaLeitura extends StatelessWidget {
       chave: '${leitura.name}/${Conteudo.chaveDoDia(data)}',
       carregar: _futuro,
       construir: (context, snap) {
-        // Os três casos precisam ser separados. `snap.data` é nulo tanto enquanto
-        // carrega quanto quando não existe leitura para a data, e tratar os dois
-        // como um só deixava o cartão dizendo "Carregando..." para sempre num dia
-        // sem devocional. É o mesmo guard que _LeituraDeHoje já usa logo abaixo.
-        if (snap.hasError) {
-          return _aviso(context, 'Não foi possível carregar esta leitura.');
-        }
+        // A ordem importa: `snap.data` é nulo enquanto carrega, e só depois
+        // de `done` é que nulo significa anomalia. Com os corpora completos
+        // (366/366 verificados nos testes), erro de carga e entrada ausente
+        // dizem a mesma coisa: conteúdo que devia estar ali não veio.
         if (snap.connectionState != ConnectionState.done) {
           return _aviso(context, 'Carregando...');
         }
         final dev = snap.data;
-        if (dev == null) return _aviso(context, 'Sem leitura para esta data.');
+        if (snap.hasError || dev == null) {
+          return _aviso(context, 'Não foi possível carregar esta leitura.');
+        }
 
         final spans = spansDeCitacao(
           dev,
@@ -635,15 +634,10 @@ class _CartaoLeituraProgresso extends StatelessWidget {
             ],
           ),
           const SizedBox(height: Spacing.sp8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progresso.clamp(0.0, 1.0),
-              minHeight: 5,
-              color: cor.primary,
-              backgroundColor: cor.outline,
-            ),
-          ),
+          // Trilho do tema, fio do metal por cima: o mesmo ProgressoFino do
+          // plano e do cronograma. O `outline` que vivia aqui era papel de
+          // borda, não de trilho.
+          ProgressoFino(valor: progresso.clamp(0.0, 1.0)),
         ],
       ),
     );

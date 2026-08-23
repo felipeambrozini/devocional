@@ -28,54 +28,30 @@ class TelaHistorico extends StatelessWidget {
       context.push('/${persona.slug}/conversa/${conversa.id}');
 
   Future<void> _apagarUma(BuildContext context, Conversa conversa) async {
-    final confirmou = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Apagar esta conversa?'),
-        content: const Text(
+    final confirmou = await confirmar(
+      context,
+      titulo: 'Apagar esta conversa?',
+      conteudo:
           'Só esta conversa será apagada deste aparelho, e da cópia na nuvem '
           'se houver. As outras conversas ficam. Essa ação não pode ser '
           'desfeita.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Apagar'),
-          ),
-        ],
-      ),
+      rotuloDaAcao: 'Apagar',
     );
-    if (confirmou != true || !context.mounted) return;
+    if (!confirmou || !context.mounted) return;
     await EscopoDoEstado.de(context).limparConversa(persona.id, conversa.id);
   }
 
   Future<void> _apagarTodas(BuildContext context) async {
-    final confirmou = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Apagar todas as conversas?'),
-        content: Text(
+    final confirmou = await confirmar(
+      context,
+      titulo: 'Apagar todas as conversas?',
+      conteudo:
           'Todas as conversas com ${persona.nome} serão apagadas deste '
           'aparelho, e da cópia na nuvem se houver. Essa ação não pode ser '
           'desfeita.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Apagar tudo'),
-          ),
-        ],
-      ),
+      rotuloDaAcao: 'Apagar tudo',
     );
-    if (confirmou != true || !context.mounted) return;
+    if (!confirmou || !context.mounted) return;
     await EscopoDoEstado.de(context).limparTodasDe(persona.id);
   }
 

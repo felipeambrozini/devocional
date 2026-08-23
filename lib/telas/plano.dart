@@ -476,13 +476,7 @@ class _CartaoDePlano extends StatelessWidget {
                 style: tema.labelMedium,
               ),
               const SizedBox(height: Spacing.sp6),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(3),
-                child: LinearProgressIndicator(
-                  value: dias == 0 ? 0 : lidos / dias,
-                  minHeight: 6,
-                ),
-              ),
+              ProgressoFino(valor: dias == 0 ? 0 : lidos / dias),
             ],
           ),
         ),

@@ -17,33 +17,47 @@ Future<void> entrarNaConta(BuildContext context, Nuvem nuvem) async {
   try {
     await nuvem.entrar();
   } on FirebaseAuthException catch (erro, pilha) {
-    if (erro.code == 'popup-closed-by-user') {
+    // Fechar a janela é decisão do usuário, não falha: aviso quieto.
+    if (erro.code == 'popup-closed-by-user' ||
+        erro.code == 'cancelled-popup-request') {
       if (context.mounted) mostrarAviso(context, 'Login cancelado.');
       return;
     }
     Registro.erro('entrarNaConta', erro, pilha);
     if (!context.mounted) return;
-    // "Navegador"/"janelas" só faz sentido no popup/redirect da web — no
-    // fluxo nativo (Android/iOS) o `FirebaseAuthException` vem de outra
-    // causa (credencial inválida, rede, App Check). Mostra `code`/`message`
-    // reais na tela (não só no registro.log), pra dar pra reportar sem
-    // precisar de `adb logcat` — ponytail: texto cru da exceção, sem
-    // tradução por código; se isto for pra produção com usuário final,
-    // trocar por mensagens específicas por `erro.code`.
     mostrarErro(
       context,
       kIsWeb
           ? 'Não foi possível entrar. Verifique se o navegador permite '
                 'janelas deste site.'
-          : 'Não foi possível entrar (${erro.code}): ${erro.message}',
+          : _motivoDeLogin(erro),
     );
   } catch (erro, pilha) {
     // Qualquer outra falha (Firebase sem inicializar, sem rede, App Check
     // recusando o token) não pode deixar o botão "Entrar" sem reação
-    // nenhuma: melhor um aviso com o erro cru do que o toque parecer
-    // ignorado.
+    // nenhuma: melhor um aviso de recuperação do que o toque parecer
+    // ignorado. O detalhe técnico fica no registro, não na tela.
     Registro.erro('entrarNaConta', erro, pilha);
     if (!context.mounted) return;
-    mostrarErro(context, 'Não foi possível entrar: $erro');
+    mostrarErro(context, 'Não foi possível entrar agora. Tente de novo.');
+  }
+}
+
+/// Mensagem humana para o fracasso do login no aparelho. Mapeia os códigos
+/// que acontecem de verdade em produção; o resto cai no texto genérico de
+/// recuperação, e a causa técnica fica no registro.log para quem dá suporte.
+String _motivoDeLogin(FirebaseAuthException erro) {
+  switch (erro.code) {
+    case 'network-request-failed':
+      return 'Sem conexão com a internet. Verifique a rede e tente de novo.';
+    case 'too-many-requests':
+      return 'Muitas tentativas seguidas. Espere um pouco e tente de novo.';
+    case 'operation-not-allowed':
+    case 'configuration-not-found':
+      return 'Entrar com a Google não está disponível agora.';
+    case 'user-disabled':
+      return 'Esta conta não pode entrar.';
+    default:
+      return 'Não foi possível entrar agora. Tente de novo.';
   }
 }
