@@ -47,8 +47,9 @@ void main() {
         expect(find.textContaining('TTS_API_KEY'), findsOneWidget);
         // O botão volta ao repouso: o erro não deixa o estado preso.
         expect(find.text('Ouvir'), findsOneWidget);
-        // Deixa o aviso fechar sozinho, senão o timer dele fica pendente.
-        await tester.pump(const Duration(seconds: 3));
+        // Deixa o aviso fechar sozinho, senão o timer dele fica pendente: é
+        // um erro, então vive duracaoDeErro, não os 3s de uma confirmação.
+        await tester.pump(duracaoDeErro);
         await tester.pumpAndSettle();
       },
     );
@@ -68,8 +69,9 @@ void main() {
       await tester.tap(find.text('Tentar de novo'));
       await tester.pumpAndSettle();
       expect(find.text('Tentar de novo'), findsOneWidget);
-      // Deixa o aviso fechar sozinho, senão o timer dele fica pendente.
-      await tester.pump(const Duration(seconds: 3));
+      // Deixa o aviso fechar sozinho, senão o timer dele fica pendente: é
+      // um erro, então vive duracaoDeErro, não os 3s de uma confirmação.
+      await tester.pump(duracaoDeErro);
       await tester.pumpAndSettle();
     });
   });

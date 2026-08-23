@@ -7,6 +7,7 @@ import '../data/estado.dart';
 import '../data/modelos.dart';
 import '../data/voz.dart';
 import '../spacing.dart';
+import 'biblia.dart';
 import 'comuns.dart';
 
 /// As três leituras diárias, na ordem em que aparecem no alternador do topo.
@@ -323,6 +324,19 @@ class _CartaoDeLeitura extends StatelessWidget {
         color: cor.secondary,
       ),
       estiloReferencia: tema.titleSmall?.copyWith(color: cor.secondary),
+      // A epígrafe é a porta do devocional para o texto da BKJ: tocar na
+      // referência abre o capítulo com os versículos citados em destaque.
+      aoAbrirReferencia: (livro, capitulo, deVersiculo, ateVersiculo) =>
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => TelaBiblia(
+                livroInicial: livro.slug,
+                capituloInicial: capitulo,
+                destacar: (deVersiculo, ateVersiculo),
+              ),
+            ),
+          ),
     );
     return Cartao(
       padding: const EdgeInsets.all(Spacing.sp20),

@@ -393,9 +393,14 @@ class BotaoDeAjustes extends StatelessWidget {
 }
 
 /// Ajustes de leitura: tamanho do texto e claro ou escuro, a dica dos botões
-/// de conversa, lembretes — e Sobre, que deixou de ser aba e voltou
+/// de conversa, lembretes - e Sobre, que deixou de ser aba e voltou
 /// para a folha quando a URL das conversas passou a ser refletida no
 /// navegador (ver `main.dart`, `optionURLReflectsImperativeAPIs`).
+///
+/// A folha fala dois assuntos e um Filete os divide: o que se ajusta na
+/// leitura (tamanho, aparência e, na web, as setas do rodapé) vem antes;
+/// o que é do app inteiro (conversas, lembretes, Sobre) vem depois. Quem
+/// abriu da AppBar do leitor encontra o assunto da leitura sem rolar.
 ///
 /// A conta saiu daqui: o botão de entrar mora no cabeçalho da Hoje
 /// (`hoje.dart`, `_BotaoDeConta`), onde a mudança de estado se vê na
@@ -487,6 +492,21 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                     ],
                   ),
                 ),
+                // Setas de virar capítulo são assunto da web: no celular o
+                // rodapé nem existe. Leitura é o assunto do bloco de cima,
+                // por isso as setas fecham este primeiro grupo.
+                if (kIsWeb) ..._SecaoDasSetas(estado: estado).montar(context),
+                // O Filete divide os dois assuntos da folha: o que se ajusta
+                // na leitura (acima) e o que é do app inteiro (abaixo).
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    Spacing.sp20,
+                    Spacing.sp24,
+                    Spacing.sp20,
+                    0,
+                  ),
+                  child: const Filete(largura: 64),
+                ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
                     Spacing.sp20,
@@ -518,9 +538,6 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 // tem a chave APNs cadastrada. Ver lembretes.dart.
                 if (lembretesSuportados)
                   ..._SecaoDeLembretes(estado: estado).montar(context),
-                // Setas de virar capítulo são assunto da web: no celular o
-                // rodapé nem existe.
-                if (kIsWeb) ..._SecaoDasSetas(estado: estado).montar(context),
                 // Sobre no fim da folha: as escolhas do dia ficam na frente,
                 // e fontes, canais e privacidade esperam quem rola até o fim.
                 _ItemDeNavegacaoDaFolha(
@@ -727,7 +744,7 @@ class _SecaoDeLembretes {
   Future<void> _alternar(BuildContext context, bool novo) async {
     final concedida = await alternarLembretes(estado, novo);
     if (!concedida && context.mounted) {
-      mostrarAviso(
+      mostrarErro(
         context,
         'Permissão de notificação negada. Ative em Configurações do '
         'aparelho para usar os lembretes.',
@@ -787,12 +804,21 @@ class _SecaoDasSetas {
 ///
 /// A maioria dos dias tem um só versículo-base. O raro dia cuja epígrafe
 /// encadeia mais de um, como o de 12 de julho (Judas 1:1, 1 Coríntios 1:2, 1
-/// Pedro 1:2), mostra uma linha para cada, na mesma ordem em que aparecem no
+/// Pedro 1:2), mostra uma linha para cada, na ordem em que aparecem no
 /// devocional original.
+///
+/// Com [aoAbrirReferencia], a referência que o canon resolve vira alvo de
+/// toque e devolve livro, capítulo e faixa de versículos já resolvidos — é a
+/// porta do devocional para o texto da BKJ. Referência que o canon não
+/// reconhece segue como texto morto, sem prometer o que não cumpre. O toque
+/// fica com quem chama (a navegação é de cada tela); aqui só se resolve o
+/// alvo, porque `biblia.dart` importa este arquivo e o contrário seria ciclo.
 List<InlineSpan> spansDeCitacao(
   Devocional dev, {
   required TextStyle? estiloCitacao,
   required TextStyle? estiloReferencia,
+  void Function(Livro livro, int capitulo, int deVersiculo, int ateVersiculo)?
+  aoAbrirReferencia,
 }) {
   final pares = dev.paresDeVersiculos;
   final spans = <InlineSpan>[];
@@ -803,12 +829,64 @@ List<InlineSpan> spansDeCitacao(
       spans.add(TextSpan(text: '"$versiculo" ', style: estiloCitacao));
     }
     if (referencia.isNotEmpty) {
-      spans.add(
-        TextSpan(text: referencia.toUpperCase(), style: estiloReferencia),
-      );
+      final faixa = aoAbrirReferencia == null
+          ? null
+          : faixasDaReferencia(referencia).firstOrNull;
+      if (faixa == null || aoAbrirReferencia == null) {
+        spans.add(
+          TextSpan(text: referencia.toUpperCase(), style: estiloReferencia),
+        );
+      } else {
+        final abrir = aoAbrirReferencia;
+        // WidgetSpan, e não recognizer no TextSpan: dentro do SelectionArea
+        // do devocional o recognizer não recebe o toque; um filho com gesto
+        // próprio vence a disputa e preserva a seleção no resto do texto.
+        spans.add(
+          WidgetSpan(
+            alignment: PlaceholderAlignment.baseline,
+            baseline: TextBaseline.alphabetic,
+            child: _ReferenciaDaCitacao(
+              rotulo: referencia.toUpperCase(),
+              estilo: estiloReferencia,
+              aoAbrir: () => abrir(faixa.$1, faixa.$2, faixa.$3, faixa.$4),
+            ),
+          ),
+        );
+      }
     }
   }
   return spans;
+}
+
+/// O alvo de toque da referência da epígrafe. Visual idêntico ao texto morto
+/// em repouso; a diferença mora no cursor clicável, no ripple contido e na
+/// semântica de botão para leitor de tela.
+class _ReferenciaDaCitacao extends StatelessWidget {
+  const _ReferenciaDaCitacao({
+    required this.rotulo,
+    required this.estilo,
+    required this.aoAbrir,
+  });
+
+  final String rotulo;
+  final TextStyle? estilo;
+  final VoidCallback aoAbrir;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Abrir $rotulo na Bíblia',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(4),
+        onTap: aoAbrir,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: Spacing.sp2),
+          child: Text(rotulo, style: estilo),
+        ),
+      ),
+    );
+  }
 }
 
 /// Abertura de um livro: a introdução de Spurgeon, recolhida por padrão.
@@ -890,78 +968,101 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                   ),
                 ),
                 if (_aberta)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      Spacing.sp16,
-                      0,
-                      Spacing.sp16,
-                      Spacing.sp16,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Filete(),
-                        const SizedBox(height: Spacing.sp16),
-                        // A voz de Spurgeon lê a introdução inteira, do
-                        // título à frase; tocar de novo para a leitura.
-                        BotaoDeVoz(
-                          chave: chaveDaIntroducao(widget.slug),
-                          texto: textoDeIntroducao(introducao),
-                          tipo: TipoConteudoAudio.introducao,
-                          referencia: 'Introdução de ${introducao.livro}',
-                        ),
-                        const SizedBox(height: Spacing.sp16),
-                        for (final (titulo, corpo) in introducao.secoes) ...[
-                          Text(titulo, style: tema.headlineSmall),
-                          const SizedBox(height: Spacing.sp8),
-                          for (final paragrafo in corpo.split('\n\n')) ...[
-                            Text(
-                              paragrafo,
-                              style: tema.bodyMedium?.copyWith(height: 1.7),
-                            ),
-                            const SizedBox(height: Spacing.sp10),
-                          ],
-                          const SizedBox(height: Spacing.sp12),
-                        ],
-                        if (introducao.frase.isNotEmpty)
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(Spacing.sp14),
-                            decoration: BoxDecoration(
-                              color: cor.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border(
-                                left: BorderSide(color: cor.primary, width: 3),
-                              ),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '"${introducao.frase}"',
-                                  style: tema.bodyMedium?.copyWith(
-                                    fontStyle: FontStyle.italic,
-                                    color: cor.secondary,
-                                    height: 1.6,
-                                  ),
-                                ),
-                                const SizedBox(height: Spacing.sp8),
-                                Text(
-                                  introducao.atribuicao,
-                                  style: tema.labelMedium,
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
+                  _IntroducaoAberta(slug: widget.slug, introducao: introducao),
               ],
             ),
           ),
         );
       },
     );
+  }
+}
+
+/// O corpo aberto do cartão de abertura: voz, seções e frase final, com o
+/// texto selecionável para copiar. Se já há uma área de seleção acima (o
+/// leitor da Bíblia no toque, o devocional), ela é reaproveitada — aninhar
+/// outra aqui truncaria a seleção que cruza a borda do cartão. Na web não há
+/// área acima: o leitor abre mão da seleção no mouse porque o arrasto disputa
+/// com o deslize de capítulo, então o corpo carrega a própria
+/// [AreaDeSelecaoComCompartilhar].
+class _IntroducaoAberta extends StatelessWidget {
+  const _IntroducaoAberta({required this.slug, required this.introducao});
+
+  final String slug;
+  final Introducao introducao;
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
+    final tema = Theme.of(context).textTheme;
+    final dentroDeAreaDeSelecao = SelectionContainer.maybeOf(context) != null;
+
+    final conteudo = Padding(
+      padding: const EdgeInsets.fromLTRB(
+        Spacing.sp16,
+        0,
+        Spacing.sp16,
+        Spacing.sp16,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Filete(),
+          const SizedBox(height: Spacing.sp16),
+          // A voz de Spurgeon lê a introdução inteira, do título à frase;
+          // tocar de novo para a leitura.
+          BotaoDeVoz(
+            chave: chaveDaIntroducao(slug),
+            texto: textoDeIntroducao(introducao),
+            tipo: TipoConteudoAudio.introducao,
+            referencia: 'Introdução de ${introducao.livro}',
+          ),
+          const SizedBox(height: Spacing.sp16),
+          for (final (titulo, corpo) in introducao.secoes) ...[
+            Text(titulo, style: tema.headlineSmall),
+            const SizedBox(height: Spacing.sp8),
+            for (final paragrafo in corpo.split('\n\n')) ...[
+              Text(
+                paragrafo,
+                style: tema.bodyMedium?.copyWith(height: 1.7),
+              ),
+              const SizedBox(height: Spacing.sp10),
+            ],
+            const SizedBox(height: Spacing.sp12),
+          ],
+          if (introducao.frase.isNotEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(Spacing.sp14),
+              decoration: BoxDecoration(
+                color: cor.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(10),
+                border: Border(
+                  left: BorderSide(color: cor.primary, width: 3),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '"${introducao.frase}"',
+                    style: tema.bodyMedium?.copyWith(
+                      fontStyle: FontStyle.italic,
+                      color: cor.secondary,
+                      height: 1.6,
+                    ),
+                  ),
+                  const SizedBox(height: Spacing.sp8),
+                  Text(introducao.atribuicao, style: tema.labelMedium),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+
+    if (dentroDeAreaDeSelecao) return conteudo;
+    return AreaDeSelecaoComCompartilhar(child: conteudo);
   }
 }
 
@@ -1194,7 +1295,7 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
   /// serviço é momentâneo na maioria das vezes, e sem a ação o usuário teria
   /// de descobrir sozinho que tocar de novo é o caminho.
   void _avisarErro(BuildContext context, Voz voz, VozException erro) {
-    mostrarAviso(
+    mostrarErro(
       context,
       erro.mensagem,
       rotuloDeAcao: 'Tentar de novo',
@@ -1231,12 +1332,17 @@ class _BotaoDeEncerrar extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(30),
           onTap: voz.parar,
-          child: Padding(
-            padding: const EdgeInsets.all(Spacing.sp4),
-            child: Icon(
-              Icons.close_rounded,
-              size: 18,
-              color: cor.onSurfaceVariant,
+          // Alvo de toque cheio de 48dp: o X encerra uma sessão de leitura de
+          // vinte minutos, e um alvo de 26dp no topo da tela pedia mira.
+          // O ícone continua pequeno dentro do quadrado centrado.
+          child: SizedBox.square(
+            dimension: Spacing.sp48,
+            child: Center(
+              child: Icon(
+                Icons.close_rounded,
+                size: 18,
+                color: cor.onSurfaceVariant,
+              ),
             ),
           ),
         ),

@@ -312,7 +312,7 @@ Future<void> _apagarDaNuvem(BuildContext context) async {
     await Nuvem.instancia.apagarDados();
     mostrarAvisoNo(mensageiro, 'Dados apagados da nuvem.');
   } catch (_) {
-    mostrarAvisoNo(mensageiro, 'Não foi possível apagar agora. Tente de novo.');
+    mostrarErroNo(mensageiro, 'Não foi possível apagar agora. Tente de novo.');
   }
 }
 

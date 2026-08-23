@@ -36,7 +36,7 @@ Future<bool> excluirPlano(
     try {
       await PlanosNaNuvem.instancia.excluir(planoId);
     } on PlanosNaNuvemException catch (erro) {
-      if (context.mounted) mostrarAviso(context, erro.mensagem);
+      if (context.mounted) mostrarErro(context, erro.mensagem);
       return false;
     }
   }
@@ -65,7 +65,7 @@ Future<bool> sairDoPlano(
   try {
     await PlanosNaNuvem.instancia.sair(planoId);
   } on PlanosNaNuvemException catch (erro) {
-    if (context.mounted) mostrarAviso(context, erro.mensagem);
+    if (context.mounted) mostrarErro(context, erro.mensagem);
     return false;
   }
   await estado.removerPlano(planoId);

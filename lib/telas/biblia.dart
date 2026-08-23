@@ -11,7 +11,6 @@ import '../data/voz.dart';
 import '../spacing.dart';
 import 'busca.dart';
 import 'comuns.dart';
-import 'introducao.dart';
 
 /// Leitor da Bíblia. Abre em Gênesis 1 ou onde a leitura parou.
 class TelaBiblia extends StatefulWidget {
@@ -299,7 +298,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Flexible com reticências porque a barra ganhou três ações e um
+                  // Flexible com reticências porque a barra tem duas ações e um
                   // livro de nome longo em celular estreito estouraria a linha.
                   Flexible(
                     child: Text(
@@ -319,14 +318,6 @@ class _TelaBibliaState extends State<TelaBiblia> {
               tooltip: 'Buscar',
               icon: const Icon(Icons.search),
               onPressed: _abrirBusca,
-            ),
-            IconButton(
-              tooltip: 'Introdução de Spurgeon',
-              icon: const Icon(Icons.article_outlined),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => TelaIntroducao(slug: _livro)),
-              ),
             ),
             IconButton(
               tooltip: 'Tamanho do texto e aparência',
@@ -479,8 +470,8 @@ class _Leitor extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // A introdução do livro fica disponível em todo capítulo, não só
-              // antes do primeiro, para não depender de abrir a tela pela AppBar.
+              // O cartão é o único caminho para a introdução, então fica
+              // disponível em todo capítulo, não só antes do primeiro.
               AberturaDeLivro(slug: capitulo.livro),
               // O título completo do livro só aparece no capítulo 1: é a
               // abertura do livro, não algo para repetir a cada capítulo.

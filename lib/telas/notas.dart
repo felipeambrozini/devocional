@@ -281,7 +281,7 @@ Future<void> _importar(BuildContext context, Estado estado) async {
           : 'Importado: $marcacoes favoritos, $dias dias de leitura.',
     );
   } on FormatException {
-    mostrarAvisoNo(
+    mostrarErroNo(
       mensageiro,
       'Cópia não reconhecida. Verifique se colou o texto inteiro exportado '
       'e tente de novo.',

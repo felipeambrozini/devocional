@@ -8,6 +8,7 @@ import '../data/modelos.dart';
 import '../data/nuvem.dart';
 import '../data/registro.dart';
 import '../spacing.dart';
+import 'biblia.dart';
 import 'comuns.dart';
 import 'devocional.dart';
 import 'faixa.dart';
@@ -172,7 +173,7 @@ Future<void> _escolherFoto(BuildContext context) async {
       await Nuvem.instancia.removerFoto();
     } catch (erro, pilha) {
       Registro.erro('_escolherFoto', erro, pilha);
-      mostrarAvisoNo(mensageiro, 'Não foi possível remover a foto.');
+      mostrarErroNo(mensageiro, 'Não foi possível remover a foto.');
     }
     return;
   }
@@ -192,7 +193,31 @@ Future<void> _escolherFoto(BuildContext context) async {
     await Nuvem.instancia.atualizarFoto(await arquivo.readAsBytes());
   } catch (erro, pilha) {
     Registro.erro('_escolherFoto', erro, pilha);
-    mostrarAvisoNo(mensageiro, 'Não foi possível atualizar a foto.');
+    mostrarErroNo(mensageiro, 'Não foi possível atualizar a foto.');
+  }
+}
+
+/// Confirma e executa o logout. Um toque no "Sair" não pode deslogar sem
+/// pergunta: na web, o espelho na nuvem é a proteção contra o navegador
+/// limpar o armazenamento local, e derrubar a sessão desarma essa proteção.
+Future<void> _sairDaConta(BuildContext context) async {
+  final confirmou = await confirmar(
+    context,
+    titulo: 'Sair da conta?',
+    conteudo:
+        'Favoritos, notas e progresso ficam neste aparelho, mas a cópia na '
+        'nuvem para de se atualizar. Na web, é ela que devolve os dados se o '
+        'navegador limpar o armazenamento.',
+    rotuloDaAcao: 'Sair',
+  );
+  if (!confirmou || !context.mounted) return;
+  final mensageiro = ScaffoldMessenger.of(context);
+  try {
+    await Nuvem.instancia.sair();
+    mostrarAvisoNo(mensageiro, 'Você saiu da conta.');
+  } catch (erro, pilha) {
+    Registro.erro('_sairDaConta', erro, pilha);
+    mostrarErroNo(mensageiro, 'Não foi possível sair agora. Tente de novo.');
   }
 }
 
@@ -280,7 +305,7 @@ class _BotaoDeConta extends StatelessWidget {
       listenable: nuvem,
       builder: (context, _) => nuvem.logado
           ? TextButton.icon(
-              onPressed: nuvem.sair,
+              onPressed: () => _sairDaConta(context),
               icon: const Icon(Icons.logout, size: 18),
               label: const Text('Sair'),
             )
@@ -432,6 +457,19 @@ class _PreviaDaLeitura extends StatelessWidget {
             color: cor.secondary,
           ),
           estiloReferencia: tema.titleSmall?.copyWith(color: cor.secondary),
+          // A prévia segue o cartão do devocional: a referência da epígrafe
+          // abre a Bíblia no versículo citado.
+          aoAbrirReferencia: (livro, capitulo, deVersiculo, ateVersiculo) =>
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => TelaBiblia(
+                    livroInicial: livro.slug,
+                    capituloInicial: capitulo,
+                    destacar: (deVersiculo, ateVersiculo),
+                  ),
+                ),
+              ),
         );
         return Cartao(
           titulo: _titulo,

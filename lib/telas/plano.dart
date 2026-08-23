@@ -441,27 +441,23 @@ class _CartaoDePlano extends StatelessWidget {
                     ),
                   // Lixeira direto no cartão: excluir (ou sair, para quem só
                   // participa) não deveria exigir abrir o plano e achar o
-                  // menu de três pontinhos lá dentro.
-                  SizedBox(
-                    width: 32,
-                    height: 32,
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      tooltip: souCriador ? 'Excluir plano' : 'Sair do plano',
-                      icon: Icon(
-                        Icons.delete_outline,
-                        size: 20,
-                        color: cor.onSurfaceVariant,
-                      ),
-                      onPressed: () => souCriador
-                          ? excluirPlano(
-                              context,
-                              estado,
-                              plano.id,
-                              compartilhado: plano.compartilhado,
-                            )
-                          : sairDoPlano(context, estado, plano.id),
+                  // menu de três pontinhos lá dentro. Sem caixa encolhedora:
+                  // o alvo de toque fica nos 48dp padrão do IconButton.
+                  IconButton(
+                    tooltip: souCriador ? 'Excluir plano' : 'Sair do plano',
+                    icon: Icon(
+                      Icons.delete_outline,
+                      size: 20,
+                      color: cor.onSurfaceVariant,
                     ),
+                    onPressed: () => souCriador
+                        ? excluirPlano(
+                            context,
+                            estado,
+                            plano.id,
+                            compartilhado: plano.compartilhado,
+                          )
+                        : sairDoPlano(context, estado, plano.id),
                   ),
                 ],
               ),

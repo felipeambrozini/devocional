@@ -227,7 +227,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
         // Devolve o espelho ao que o documento diz: sem rede a marcação não
         // aconteceu de verdade.
         await estado.substituirLidosDoPlano(widget.planoId, atual);
-        if (mounted) mostrarAviso(context, erro.mensagem);
+        if (mounted) mostrarErro(context, erro.mensagem);
       }
     } else {
       await estado.alternarLidoNoPlano(widget.planoId, dia);
@@ -251,7 +251,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
       });
       await _mostrarLink(context, link);
     } on PlanosNaNuvemException catch (erro) {
-      if (mounted) mostrarAviso(context, erro.mensagem);
+      if (mounted) mostrarErro(context, erro.mensagem);
     }
   }
 

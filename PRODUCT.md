@@ -70,6 +70,8 @@ vitoriana dele, tratando o leitor por "tu".
 - Favoritos, notas, copiar e compartilhar por versículo; busca em duas abas
   (Bíblia e devocionais); a busca das marcações filtra referência e nota, não
   o corpo do versículo (deliberado).
+- A referência da epígrafe do devocional (na Hoje e no Devocional) é um alvo
+  de toque: abre a Bíblia no capítulo citado, com os versículos destacados.
 - Texto selecionável e copiável na Bíblia, no Devocional e na Introdução. No
   Devocional e na Introdução, o menu de seleção (o clique forte que já abre a
   seleção) ganha um botão de Compartilhar para o trecho escolhido; na

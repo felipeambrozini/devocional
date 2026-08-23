@@ -300,21 +300,23 @@ motivo novo.
   dois lugares ao mesmo tempo** e rodar a suíte local antes de comitar.
 - **`AreaDeSelecaoComCompartilhar` (`lib/telas/comuns.dart`, 20/08/2026)
   envolve `SelectionArea` e acrescenta "Compartilhar" ao menu de seleção**,
-  usada no Devocional e na Introdução: o texto vira selecionável e copiável
+  usada no Devocional e, na web, no corpo aberto do cartão de introdução do
+  livro: o texto vira selecionável e copiável
   de fábrica, e o mesmo clique forte que abre a seleção nativa ganha um botão
   a mais para compartilhar o trecho escolhido (via `share_plus`, sem
   formatação de referência — a seleção pode não bater com um parágrafo
   inteiro). `SelectableRegionState` não expõe o texto selecionado
   publicamente; o widget captura pelo `onSelectionChanged` do `SelectionArea`
-  e lê o valor mais recente ao montar o menu. **A Bíblia não usa esse
+  e lê o valor mais recente ao montar o menu. **O leitor da Bíblia no toque
+  não usa esse
   widget** — ali o `SelectionArea` continua puro (só seleção e cópia
-  nativas), e Compartilhar continua exclusivo da folha de ações do versículo
+  nativas; o cartão de introdução herda a área do leitor), e Compartilhar continua exclusivo da folha de ações do versículo
   (Favoritar, Copiar, Compartilhar, Anotar; ver abaixo), aberta pelo toque na
   linha.
 - **Os dois players de voz separam pausar de parar** (`BotaoDeVoz` e
   `IndicadorDeVozNaBarra`, `lib/telas/comuns.dart`, 21/08/2026): tocando, a
   pílula pausa pelo corpo (ícone de pausa) e encerra pelo X ao lado; o anel
-  da barra de cima (Bíblia, introdução e Sobre) faz o mesmo — pausa pelo anel
+  da barra de cima (Bíblia e Sobre) faz o mesmo — pausa pelo anel
   e encerra por um segundo ícone ao lado, sem anel. Antes só havia o parar, e
   um toque no meio da leitura perdia a posição. Pausada (nos dois lugares),
   tocar de novo retoma de onde parou: o botão de pausa manual (`Voz.pausar`)

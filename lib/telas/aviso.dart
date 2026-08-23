@@ -13,16 +13,14 @@ const avisoDeIa = 'Respostas geradas por inteligência artificial';
 /// valor só em todo o projeto: se a duração mudar um dia, muda aqui.
 const duracaoDeAviso = Duration(seconds: 3);
 
-/// Mostra um aviso na snackbar e o fecha sozinho depois de [duracaoDeAviso].
-///
-/// O ScaffoldMessenger tem um timer próprio para isso, mas ele nunca nasce
-/// quando o SnackBar tem ação (bug do Flutter 3.44.9, reproduzido em teste):
-/// um "Desfazer" ou um "Tentar de novo" deixava o aviso na tela para sempre.
-/// Então o fechamento sai daqui, e o `closed` do aviso garante que um fechar
-/// tardio não leva junto um aviso mais novo mostrado no meio do caminho.
-///
-/// Quem mostra um aviso sempre passa por aqui: assim a duração é uma só, a de
-/// [duracaoDeAviso], e o comportamento é o mesmo em toda parte.
+/// Quanto tempo um aviso de erro fica na tela. Erro pede mais tempo que
+/// confirmação porque quem lê devagar precisa entender o problema (e ver o
+/// "Tentar de novo") antes de decidir; três segundos era o mesmo teto de um
+/// "Link copiado.".
+const duracaoDeErro = Duration(seconds: 8);
+
+/// Mostra um aviso de confirmação (ação completada, link copiado, dia lido).
+/// Para falhas, use [mostrarErro]: fica mais tempo na tela.
 void mostrarAviso(
   BuildContext context,
   String texto, {
@@ -43,12 +41,62 @@ void mostrarAvisoNo(
   String texto, {
   String? rotuloDeAcao,
   VoidCallback? aoAgir,
+}) => _mostrarNo(
+  mensageiro,
+  texto,
+  duracao: duracaoDeAviso,
+  rotuloDeAcao: rotuloDeAcao,
+  aoAgir: aoAgir,
+);
+
+/// Mostra um aviso de erro: fica na tela por [duracaoDeErro], não pelos 3s de
+/// uma confirmação. Aceita [rotuloDeAcao] de recuperação ("Tentar de novo").
+void mostrarErro(
+  BuildContext context,
+  String texto, {
+  String? rotuloDeAcao,
+  VoidCallback? aoAgir,
+}) => mostrarErroNo(
+  ScaffoldMessenger.of(context),
+  texto,
+  rotuloDeAcao: rotuloDeAcao,
+  aoAgir: aoAgir,
+);
+
+/// O mesmo que [mostrarErro], mas com o messenger já em mãos (ver
+/// [mostrarAvisoNo]).
+void mostrarErroNo(
+  ScaffoldMessengerState mensageiro,
+  String texto, {
+  String? rotuloDeAcao,
+  VoidCallback? aoAgir,
+}) => _mostrarNo(
+  mensageiro,
+  texto,
+  duracao: duracaoDeErro,
+  rotuloDeAcao: rotuloDeAcao,
+  aoAgir: aoAgir,
+);
+
+/// O corpo comum dos quatro avisos.
+///
+/// O ScaffoldMessenger tem um timer próprio para isso, mas ele nunca nasce
+/// quando o SnackBar tem ação (bug do Flutter 3.44.9, reproduzido em teste):
+/// um "Desfazer" ou um "Tentar de novo" deixava o aviso na tela para sempre.
+/// Então o fechamento sai daqui, e o `closed` do aviso garante que um fechar
+/// tardio não leva junto um aviso mais novo mostrado no meio do caminho.
+void _mostrarNo(
+  ScaffoldMessengerState mensageiro,
+  String texto, {
+  required Duration duracao,
+  String? rotuloDeAcao,
+  VoidCallback? aoAgir,
 }) {
   mensageiro.hideCurrentSnackBar();
   final aviso = mensageiro.showSnackBar(
     SnackBar(
       content: Text(texto),
-      duration: duracaoDeAviso,
+      duration: duracao,
       action: rotuloDeAcao == null
           ? null
           : SnackBarAction(
@@ -62,7 +110,7 @@ void mostrarAvisoNo(
   );
   var fechou = false;
   aviso.closed.whenComplete(() => fechou = true);
-  Future<void>.delayed(duracaoDeAviso, () {
+  Future<void>.delayed(duracao, () {
     if (!fechou) {
       mensageiro.hideCurrentSnackBar();
     }

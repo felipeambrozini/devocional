@@ -30,7 +30,7 @@ Future<void> entrarNaConta(BuildContext context, Nuvem nuvem) async {
     // precisar de `adb logcat` — ponytail: texto cru da exceção, sem
     // tradução por código; se isto for pra produção com usuário final,
     // trocar por mensagens específicas por `erro.code`.
-    mostrarAviso(
+    mostrarErro(
       context,
       kIsWeb
           ? 'Não foi possível entrar. Verifique se o navegador permite '
@@ -44,6 +44,6 @@ Future<void> entrarNaConta(BuildContext context, Nuvem nuvem) async {
     // ignorado.
     Registro.erro('entrarNaConta', erro, pilha);
     if (!context.mounted) return;
-    mostrarAviso(context, 'Não foi possível entrar: $erro');
+    mostrarErro(context, 'Não foi possível entrar: $erro');
   }
 }
