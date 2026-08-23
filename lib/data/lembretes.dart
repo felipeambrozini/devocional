@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:ui' show DartPluginRegistrant;
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart' show TimeOfDay;
@@ -14,40 +17,71 @@ import 'conteudo.dart';
 import 'modelos.dart' show Devocional, ModoDoTema, Periodo;
 import 'registro.dart';
 
-/// Se o aparelho tem como receber o lembrete: **só o aplicativo Android**.
+/// Chave pública do Web Push (Console do Firebase > Cloud Messaging > Web
+/// configuration > Generate key pair). Não é segredo — é a metade pública do
+/// par VAPID — mas segue o padrão `--dart-define` das outras chaves em
+/// `lib/data/nuvem.dart`. Vazia faz `getToken` falhar só na web.
+const _vapidKey = String.fromEnvironment('FCM_VAPID_KEY');
+
+/// Se o aparelho/ambiente tem como receber o lembrete: **Android e web**.
 ///
-/// O lembrete é agendado e disparado pelo próprio aparelho
-/// (`flutter_local_notifications`) — sem servidor, sem FCM, sem cron de CI.
-/// A web ficou de fora quando o push do servidor foi aposentado: um
-/// service worker não dispara nada com a aba fechada sem depender de
-/// infraestrutura externa, exatamente o que esta funcionalidade queria
-/// evitar. iOS exigiria os pods/permissões da Apple — também de fora.
+/// Híbrido: o push vem da Cloud Function agendada
+/// (`functions/src/index.ts`, infra do Google — sem os atrasos do cron do
+/// GitHub que matou a primeira versão) via FCM data-only, e cada lado exibe
+/// por conta própria — aqui no Android, notificação local deste arquivo; na
+/// web, o service worker (`web/firebase-messaging-sw.js`). No Android ainda
+/// há alarme local de reserva em T+5 min para o caso de a Function falhar.
+/// iOS fica de fora: precisaria da chave APNs cadastrada no Console.
 bool get lembretesSuportados =>
+    kIsWeb || defaultTargetPlatform == TargetPlatform.android;
+
+bool get _ehAndroid =>
     !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
 const _canalLembretes = 'lembretes_devocional';
 
-// Um id por notificação: 3 slots x 2 dias (hoje e amanhã). O slot da manhã
-// arma duas notificações (devocional + promessas), como o push antigo fazia.
-const _idManhaHoje = 1001;
-const _idManhaAmanha = 1002;
-const _idPromessasHoje = 1401;
-const _idPromessasAmanha = 1402;
-const _idNoiteHoje = 2001;
-const _idNoiteAmanha = 2002;
+/// Minutos entre o horário escolhido e o alarme local de reserva: se às 6h
+/// nada chegou do servidor, às 6h05 o próprio aparelho avisa. O mesmo valor
+/// é a régua anti-duplicata do outro lado — um push mais de
+/// [atrasoDoFallbackMinutos] atrasado já foi coberto pelo alarme e viraria
+/// segunda notificação (ver [pushAindaVale]).
+const atrasoDoFallbackMinutos = 5;
 
-const _todosOsIds = <int>[
-  _idManhaHoje,
-  _idManhaAmanha,
-  _idPromessasHoje,
-  _idPromessasAmanha,
-  _idNoiteHoje,
-  _idNoiteAmanha,
-];
+// Alarmes: 3 slots x 2 dias (janela rearmeda a cada abertura do app).
+// Exibidas pelo push: uma por slot. Os ids são base + deslocamento do dia.
+const _idAlarmeManhaHoje = 1101;
+const _idAlarmeManhaAmanha = 1102;
+const _idAlarmePromessasHoje = 1501;
+const _idAlarmePromessasAmanha = 1502;
+const _idAlarmeNoiteHoje = 2101;
+const _idAlarmeNoiteAmanha = 2102;
+
+int _idDaExibida(String chave) => switch (chave) {
+      'noite' => 3201,
+      'promessas' => 3401,
+      _ => 3101,
+    };
 
 /// Texto de reserva quando o conteúdo do dia não carrega (asset ausente,
 /// erro de leitura): melhor avisar genérico do que calar.
 const _corpoGenerico = 'Está na hora da leitura de hoje. Toque para abrir.';
+
+/// Minutos de atraso de [agoraMinuto] sobre [alvoMinuto], considerando a
+/// virada da meia-noite (alvo 23:55, agora 00:03 → 8). Réplica da função de
+/// mesmo papel em `functions/src/index.ts` — este arquivo importa Flutter, e
+/// a Function roda em Node, então não há como partilhar.
+int _atrasoEmMinutos(int agoraMinuto, int alvoMinuto) {
+  final diferenca = (agoraMinuto - alvoMinuto) % 1440;
+  return diferenca < 0 ? diferenca + 1440 : diferenca;
+}
+
+/// Se um push que chegou agora ainda deve ser exibido. Depois de
+/// [atrasoDoFallbackMinutos] do horário cadastrado, o alarme local de
+/// reserva já avisou o usuário — exibir o push tardio seria segunda
+/// notificação para a mesma leitura. Público para o teste poder cobrir a
+/// regra sem Firebase.
+bool pushAindaVale({required int minutoAgora, required int minutoAlvo}) =>
+    _atrasoEmMinutos(minutoAgora, minutoAlvo) <= atrasoDoFallbackMinutos;
 
 /// O small icon da notificação conforme o tema escolhido no app: no claro,
 /// um glifo escuro; no escuro, um claro. No "Automático" devolve null — e aí
@@ -55,9 +89,9 @@ const _corpoGenerico = 'Está na hora da leitura de hoje. Toque para abrir.';
 /// `drawable-night` de `ic_lembete`, o único jeito de acertar quando o app
 /// está morto e ninguém pode ler a preferência.
 ///
-/// Lê direto do `SharedPreferences`, não do [Estado]: o alarme dispara sem
-/// nenhuma instância de estado por perto. Falhar aqui custa só cair no ícone
-/// padrão — por isso engolido.
+/// Lê direto do `SharedPreferences`, não do [Estado]: o handler de fundo
+/// roda num isolate sem árvore de widgets nem instância de estado. Falhar
+/// aqui custa só cair no ícone padrão — por isso engolido.
 Future<String?> _iconeDoTema() async {
   try {
     final prefs = await SharedPreferences.getInstance();
@@ -77,49 +111,113 @@ Future<String?> _iconeDoTema() async {
 }
 
 NotificationDetails _detalhesLocais(String? icone) => NotificationDetails(
-  android: AndroidNotificationDetails(
-    _canalLembretes,
-    'Lembretes diários',
-    channelDescription: 'Aviso no horário escolhido para o devocional.',
-    // Nome do drawable; null usa o padrão do initialize, que é o par com
-    // qualifier -night.
-    icon: icone,
-    importance: Importance.high,
-    priority: Priority.high,
-  ),
-);
+      android: AndroidNotificationDetails(
+        _canalLembretes,
+        'Lembretes diários',
+        channelDescription: 'Aviso no horário escolhido para o devocional.',
+        // Nome do drawable; null usa o padrão do initialize, que é o par
+        // com qualifier -night.
+        icon: icone,
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+    );
 
-/// Agenda o lembrete diário no próprio aparelho e navega quando a notificação
-/// é tocada.
+/// Exibe o push data-only via notificação local e cancela os alarmes de
+/// reserva do slot — o push chegou, eles não servem mais. Roda nos dois
+/// mundos: no handler de fundo (isolate à parte, app morto) e com o app
+/// aberto (`onMessage`). Na web quem exibe é o service worker, não aqui.
+Future<void> _mostrarPush(Map<String, dynamic> dados) async {
+  if (!_ehAndroid) return;
+  final chave = dados['chave'] as String?;
+  final titulo = dados['titulo'] as String?;
+  final corpo = dados['corpo'] as String?;
+  if (chave == null || titulo == null || corpo == null) return;
+
+  final agora = DateTime.now();
+  final alvo = int.tryParse('${dados['minutos']}');
+  if (alvo != null &&
+      !pushAindaVale(
+        minutoAgora: agora.hour * 60 + agora.minute,
+        minutoAlvo: alvo,
+      )) {
+    return;
+  }
+
+  final locais = FlutterLocalNotificationsPlugin();
+  await locais.initialize(
+    settings: const InitializationSettings(
+      android: AndroidInitializationSettings('ic_lembete'),
+    ),
+  );
+  await locais.show(
+    id: _idDaExibida(chave),
+    title: titulo,
+    body: corpo,
+    notificationDetails: _detalhesLocais(await _iconeDoTema()),
+    payload: chave,
+  );
+  // Cancela os dois dias possíveis do slot: hoje e amanhã da janela.
+  final doSlot = switch (chave) {
+    'noite' => [_idAlarmeNoiteHoje, _idAlarmeNoiteAmanha],
+    'promessas' => [_idAlarmePromessasHoje, _idAlarmePromessasAmanha],
+    _ => [_idAlarmeManhaHoje, _idAlarmeManhaAmanha],
+  };
+  for (final id in doSlot) {
+    unawaited(locais.cancel(id: id));
+  }
+}
+
+/// Handler do push com o app morto ou em segundo plano. Precisa ser função
+/// de topo com entry-point: o plugin nativo chama direto, sem passar pela
+/// árvore do Flutter. O isolate nasce sem plugin nenhum registrado — o
+/// registrant dá acesso ao canal das notificações e ao SharedPreferences.
+@pragma('vm:entry-point')
+Future<void> _lembreteEmSegundoPlano(RemoteMessage mensagem) async {
+  DartPluginRegistrant.ensureInitialized();
+  try {
+    await _mostrarPush(mensagem.data);
+  } catch (_) {
+    // Exibir é melhor-esforço: se o isolate de fundo tropeçar, o alarme de
+    // reserva continua armado para cobrir 5 minutos depois. Engolir evita
+    // derrubar o serviço nativo do FCM em loop.
+  }
+}
+
+/// Agenda o lembrete diário no servidor e navega quando a notificação é
+/// tocada.
 ///
 /// Uma interface, e não só uma classe: a lógica de horário precisa de teste,
-/// e testá-la contra notificações de verdade exigiria canal de plataforma que
-/// o ambiente de teste não tem. `Lembretes.instancia` é trocável por uma
+/// e testá-la contra Firebase de verdade exigiria rede e conta configurada
+/// que o ambiente de teste não tem. `Lembretes.instancia` é trocável por uma
 /// implementação falsa no `setUp` do teste.
 abstract class Lembretes {
   static Lembretes instancia = LembretesReais();
 
-  /// Prepara o plugin de notificações e liga [aoTocarNotificacao] ao toque na
-  /// notificação. Chamar uma vez, no início do app. [aoTocarNotificacao]
-  /// recebe a chave da leitura — "manha", "promessas" ou "noite", o mesmo
-  /// nome de `Leitura.values.byName` em `lib/telas/devocional.dart`.
+  /// Prepara o recebimento do push (e do alarme de reserva) e liga
+  /// [aoTocarNotificacao] ao toque na notificação. Chamar uma vez, no início
+  /// do app. [aoTocarNotificacao] recebe a chave da leitura — "manha",
+  /// "promessas" ou "noite", o mesmo nome de `Leitura.values.byName` em
+  /// `lib/telas/devocional.dart`.
   Future<void> inicializar({
     required void Function(String chaveDaLeitura) aoTocarNotificacao,
   });
 
-  /// Se o app foi aberto por um toque na notificação (app fechado), a chave
-  /// da leitura tocada. null se o app abriu de outro jeito. Só vale
+  /// Se o app foi aberto por um toque numa notificação (app fechado), a
+  /// chave da leitura tocada. null se o app abriu de outro jeito. Só vale
   /// imediatamente após [inicializar], antes do primeiro quadro.
   Future<String?> chaveQueAbriuOApp();
 
-  /// Pede a permissão de notificação (Android 13+). false se negada ou se a
-  /// plataforma não suporta lembretes (ver [lembretesSuportados]).
+  /// Pede a permissão de notificação (Android 13+ / navegador). false se
+  /// negada ou se a plataforma não suporta lembretes (ver
+  /// [lembretesSuportados]).
   Future<bool> pedirPermissao();
 
-  /// Arma os alarmes locais nos horários escolhidos, com a referência do dia
-  /// no corpo (ex.: "Gênesis 1:2"; Promessas leva "Título | Gênesis 1:2").
-  /// Serve tanto para ligar quanto para mudar o horário: sempre substitui os
-  /// alarmes anteriores.
+  /// Grava no Firestore os horários escolhidos e o token deste aparelho — a
+  /// Cloud Function agendada (`functions/src/index.ts`) decide quem avisar —
+  /// e arma os alarmes locais de reserva (horário + 5 min, janela de dois
+  /// dias) com a referência do dia no corpo. Serve tanto para ligar quanto
+  /// para mudar o horário: sempre substitui o registro anterior.
   Future<void> agendar({
     required TimeOfDay manhaEPromessas,
     required TimeOfDay noite,
@@ -127,32 +225,40 @@ abstract class Lembretes {
 
   Future<void> cancelar();
 
-  /// Se algum dos alarmes diários está armado. Diagnóstico e teste.
+  /// Se já existe um registro deste aparelho no Firestore. Diagnóstico e
+  /// teste — o armamento dos alarmes acontece em toda [agendar].
   Future<bool> agendados();
 
   /// O fuso horário detectado neste aparelho (ex.: "America/Sao_Paulo"), o
-  /// mesmo usado para armar os alarmes em [agendar]. Só para depurar: se
-  /// aparecer vazio depois de [agendar], a detecção falhou silenciosamente.
+  /// mesmo que vai para o Firestore em [agendar] e que a Function usa para
+  /// calcular a hora local. Só para depurar: vazio depois de [agendar]
+  /// significa detecção falhada silenciosamente.
   String get fusoAtual;
 }
 
-/// Implementação real: alarmes de um tiro só armados no aparelho para uma
-/// janela de dois dias (hoje, se ainda dá, e amanhã), com o conteúdo do dia
-/// calculado dos assets ([Conteudo]) — "Devocional da Manhã | Gênesis 1:2",
-/// "Devocional da Noite | ...", "Promessas de Deus | Título | ...".
+/// Implementação real do híbrido: push data-only da Function agendada
+/// exibido via notificação local (handler de fundo ou app aberto), com
+/// alarme de reserva armado no aparelho para T+5 min.
 ///
-/// Por que janela de dois dias e não alarme recorrente: recorrente nasce com
-/// o texto congelado, e o corpo com a referência do dia é o ponto da
-/// funcionalidade. Quem rearma a janela é a abertura do app
-/// (`reagendarLembretesSeNecessario`), a troca de horário e o boot (receiver
-/// do plugin resgata os alarmes persistidos). Se o usuário ficar mais de dois
-/// dias sem abrir o app, os dias seguintes à janela ficam mudos — aceito:
-/// abrir o devocional a cada dois dias é o comportamento esperado de quem
-/// pediu um lembrete dele.
+/// Divisão de papéis: o servidor garante o horário certo com conteúdo do dia
+/// ("Devocional da Manhã | Gênesis 1:2"); o alarme cobre o pior caso
+/// (Function fora do ar, App Check falhando, silêncio além de 5 min) com o
+/// mesmo formato, calculado dos assets na hora de armar. Quem chega primeiro
+/// cancela o outro — sem duplicata nem buraco.
 class LembretesReais implements Lembretes {
+  static const _colecao = 'lembretes';
+
+  final _mensageria = FirebaseMessaging.instance;
   final _locais = FlutterLocalNotificationsPlugin();
 
+  /// Horários do último [agendar] bem-sucedido, para regravar o documento
+  /// com o token novo quando o FCM o troca (`onTokenRefresh`) — sem isto, o
+  /// lembrete silenciosamente para de chegar depois de uma renovação.
+  TimeOfDay? _ultimaManha;
+  TimeOfDay? _ultimaNoite;
   String _ultimoFuso = '';
+
+  String? _vapidKeyOuNulo() => kIsWeb && _vapidKey.isNotEmpty ? _vapidKey : null;
 
   @override
   Future<void> inicializar({
@@ -160,48 +266,69 @@ class LembretesReais implements Lembretes {
   }) async {
     if (!lembretesSuportados) return;
 
-    await _locais.initialize(
-      settings: const InitializationSettings(
-        android: AndroidInitializationSettings('ic_lembete'),
-      ),
-      onDidReceiveNotificationResponse: (resposta) {
-        final chave = resposta.payload;
-        if (chave != null) aoTocarNotificacao(chave);
-      },
-    );
-    await _locais
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.createNotificationChannel(
-          const AndroidNotificationChannel(
-            _canalLembretes,
-            'Lembretes diários',
-            description: 'Aviso no horário escolhido para o devocional.',
-            importance: Importance.high,
-          ),
-        );
+    // Push com o app ABERTO: data-only não vira bolha sozinho — exibimos por
+    // aqui (Android), com a mesma regra do handler de fundo.
+    FirebaseMessaging.onMessage.listen((mensagem) {
+      unawaited(_mostrarPush(mensagem.data));
+    });
+
+    // Push com o app morto/em fundo (Android): isolate à parte.
+    FirebaseMessaging.onBackgroundMessage(_lembreteEmSegundoPlano);
+
+    if (_ehAndroid) {
+      await _locais.initialize(
+        settings: const InitializationSettings(
+          android: AndroidInitializationSettings('ic_lembete'),
+        ),
+        onDidReceiveNotificationResponse: (resposta) {
+          final chave = resposta.payload;
+          if (chave != null) aoTocarNotificacao(chave);
+        },
+      );
+      await _locais
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(
+            const AndroidNotificationChannel(
+              _canalLembretes,
+              'Lembretes diários',
+              description: 'Aviso no horário escolhido para o devocional.',
+              importance: Importance.high,
+            ),
+          );
+    }
+
+    _mensageria.onTokenRefresh.listen((tokenNovo) {
+      final manha = _ultimaManha;
+      final noite = _ultimaNoite;
+      if (manha != null && noite != null) {
+        unawaited(_gravar(tokenNovo, manha, noite));
+      }
+    });
   }
 
   @override
   Future<String?> chaveQueAbriuOApp() async {
     if (!lembretesSuportados) return null;
-    final abertura = await _locais.getNotificationAppLaunchDetails();
-    if (abertura?.didNotificationLaunchApp != true) return null;
-    return abertura?.notificationResponse?.payload;
+    if (_ehAndroid) {
+      final abertura = await _locais.getNotificationAppLaunchDetails();
+      final chave = abertura?.notificationResponse?.payload;
+      if (abertura?.didNotificationLaunchApp == true && chave != null) {
+        return chave;
+      }
+    }
+    // Caminho legado: mensagens com bolha do sistema em trânsito de uma
+    // versão antiga continuam abrindo a leitura certa.
+    final mensagem = await _mensageria.getInitialMessage();
+    return mensagem?.data['chave'] as String?;
   }
 
   @override
   Future<bool> pedirPermissao() async {
     if (!lembretesSuportados) return false;
-    // Em versões anteriores ao Android 13 é no-op (null): notificação era
-    // concedida por padrão lá atrás, então tratar null como concedido.
-    final concedida = await _locais
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.requestNotificationsPermission();
-    return concedida != false;
+    final config = await _mensageria.requestPermission();
+    return config.authorizationStatus == AuthorizationStatus.authorized ||
+        config.authorizationStatus == AuthorizationStatus.provisional;
   }
 
   @override
@@ -210,76 +337,141 @@ class LembretesReais implements Lembretes {
     required TimeOfDay noite,
   }) async {
     if (!lembretesSuportados) return;
+    _ultimaManha = manhaEPromessas;
+    _ultimaNoite = noite;
+
+    await _armarReservas(manhaEPromessas, noite);
+
+    final token = await _mensageria.getToken(vapidKey: _vapidKeyOuNulo());
+    if (token == null) {
+      // Sem token (sem Play Services momentâneo), o estado fica inconsistente
+      // por esta sessão — mas o alarme de reserva já está armado acima, e a
+      // próxima abertura tenta de novo.
+      Registro.erro('Lembretes.token', StateError('getToken veio nulo'), StackTrace.current);
+      return;
+    }
+    try {
+      await _gravar(token, manhaEPromessas, noite);
+    } catch (erro, pilha) {
+      // Cadastro no Firestore falhou (rede/App Check): o alarme de reserva
+      // cobre o usuário desta rodada; a próxima abertura tenta de novo.
+      Registro.erro('Lembretes.gravar', erro, pilha);
+    }
+  }
+
+  /// Grava o cadastro que a Function consulta. O `.set()` substitui tudo —
+  /// inclusive apaga `ultimoEnvio*` da Function, o que é desejado: reagendar
+  /// vale um reenvio no mesmo dia.
+  Future<void> _gravar(String token, TimeOfDay manha, TimeOfDay noite) async {
+    final fuso = await FlutterTimezone.getLocalTimezone();
+    _ultimoFuso = fuso.identifier;
+    await FirebaseFirestore.instance.collection(_colecao).doc(token).set({
+      'token': token,
+      'minutosManha': manha.hour * 60 + manha.minute,
+      'minutosNoite': noite.hour * 60 + noite.minute,
+      'fuso': _ultimoFuso,
+    });
+  }
+
+  /// Arma os alarmes locais de reserva nos slots escolhidos + 5 min, janela
+  /// de dois dias (hoje, o que ainda não passou, e amanhã), com o conteúdo
+  /// do dia calculado dos assets ([Conteudo]) — o mesmo formato do push.
+  ///
+  /// Um tiro por ocorrência, de propósito: alarme recorrente não pode ser
+  /// cancelado para o dia atual sem matar os próximos, e é justamente o
+  /// cancelamento do dia que evita duplicata quando o push chega em cima do
+  /// horário. Falhas são isoladas por alarme e por conteúdo — nada aborta o
+  /// conjunto nem derruba o app.
+  Future<void> _armarReservas(TimeOfDay manhaEPromessas, TimeOfDay noite) async {
+    if (!_ehAndroid) return;
+    tz.Location? local;
+    tz.TZDateTime? agora;
     try {
       banco_de_fusos.initializeTimeZones();
       final nomeDoFuso = (await FlutterTimezone.getLocalTimezone()).identifier;
       _ultimoFuso = nomeDoFuso;
-      final local = tz.getLocation(nomeDoFuso);
-      final agora = tz.TZDateTime.now(local);
-
-      // Cancela tudo antes de armar: trocar horário não pode deixar alarme
-      // órfão do esquema anterior.
-      for (final id in _todosOsIds) {
-        unawaited(_locais.cancel(id: id));
-      }
-
-      // Janela de dois dias: hoje (só as ocorrências que ainda não passaram)
-      // e amanhã inteiro. Cada abertura do app rearma a janela com o
-      // conteúdo fresco dos dois dias.
-      for (var deslocamento = 0; deslocamento < 2; deslocamento++) {
-        final dia = DateTime(agora.year, agora.month, agora.day)
-            .add(Duration(days: deslocamento));
-        final ehHoje = deslocamento == 0;
-
-        tz.TZDateTime as(TimeOfDay hora) => tz.TZDateTime(
-          local,
-          dia.year,
-          dia.month,
-          dia.day,
-          hora.hour,
-          hora.minute,
-        );
-
-        // Manhã: devocional e promessas no mesmo horário, notificações
-        // separadas — mesmo contrato de títulos/corpos do push antigo.
-        final manha = as(manhaEPromessas);
-        if (!ehHoje || manha.isAfter(agora)) {
-          await _armar(
-            id: _idManhaHoje + deslocamento,
-            chave: 'manha',
-            titulo: 'Devocional da Manhã',
-            corpo: _corpoDe(
-              await Conteudo.instancia.devocional(dia, Periodo.manha),
-            ),
-            quando: manha,
-          );
-          await _armar(
-            id: _idPromessasHoje + deslocamento,
-            chave: 'promessas',
-            titulo: 'Promessas de Deus',
-            corpo: _corpoDaPromessa(await Conteudo.instancia.promessa(dia)),
-            quando: manha,
-          );
-        }
-
-        final noiteDeHoje = as(noite);
-        if (!ehHoje || noiteDeHoje.isAfter(agora)) {
-          await _armar(
-            id: _idNoiteHoje + deslocamento,
-            chave: 'noite',
-            titulo: 'Devocional da Noite',
-            corpo: _corpoDe(
-              await Conteudo.instancia.devocional(dia, Periodo.noite),
-            ),
-            quando: noiteDeHoje,
-          );
-        }
-      }
+      local = tz.getLocation(nomeDoFuso);
+      agora = tz.TZDateTime.now(local);
     } catch (erro, pilha) {
-      // Fuso estranho, asset faltando ou alarme bloqueado pelo fabricante
-      // não podem derrubar o app nem travar a folha de ajustes — o erro vai
-      // para o registro.
-      Registro.erro('Lembretes.agendar', erro, pilha);
+      Registro.erro('Lembretes.reserva/fuso', erro, pilha);
+      return;
+    }
+
+    // Limpa TODOS os alarmes pendentes do app antes de armar — inclusive os
+    // de versões anteriores (ids/recorrência antigos), que sobrevivem à
+    // atualização por cima e virariam fantasma disparando em duplicata.
+    // Seguro porque o plugin não é usado para nada além dos lembretes.
+    try {
+      await _locais.cancelAllPendingNotifications();
+    } catch (erro, pilha) {
+      Registro.erro('Lembretes.reserva/limpar', erro, pilha);
+    }
+
+    for (var deslocamento = 0; deslocamento < 2; deslocamento++) {
+      final dia = DateTime(agora.year, agora.month, agora.day)
+          .add(Duration(days: deslocamento));
+      final ehHoje = deslocamento == 0;
+
+      tz.TZDateTime as(TimeOfDay hora) => tz.TZDateTime(
+            local!,
+            dia.year,
+            dia.month,
+            dia.day,
+            hora.hour,
+            hora.minute + atrasoDoFallbackMinutos,
+          );
+
+      final manha = as(manhaEPromessas);
+      if (!ehHoje || manha.isAfter(agora)) {
+        await _armar(
+          id: _idAlarmeManhaHoje + deslocamento,
+          chave: 'manha',
+          titulo: 'Devocional da Manhã',
+          corpo: await _corpoSeguro(
+            () => Conteudo.instancia.devocional(dia, Periodo.manha),
+            _corpoDe,
+          ),
+          quando: manha,
+        );
+        await _armar(
+          id: _idAlarmePromessasHoje + deslocamento,
+          chave: 'promessas',
+          titulo: 'Promessas de Deus',
+          corpo: await _corpoSeguro(
+            () => Conteudo.instancia.promessa(dia),
+            _corpoDaPromessa,
+          ),
+          quando: manha,
+        );
+      }
+
+      final noiteDeHoje = as(noite);
+      if (!ehHoje || noiteDeHoje.isAfter(agora)) {
+        await _armar(
+          id: _idAlarmeNoiteHoje + deslocamento,
+          chave: 'noite',
+          titulo: 'Devocional da Noite',
+          corpo: await _corpoSeguro(
+            () => Conteudo.instancia.devocional(dia, Periodo.noite),
+            _corpoDe,
+          ),
+          quando: noiteDeHoje,
+        );
+      }
+    }
+  }
+
+  /// Carrega o conteúdo do dia isolando a falha: se o asset não abrir, cai
+  /// no corpo genérico em vez de abortar o armamento inteiro.
+  Future<String> _corpoSeguro(
+    Future<Devocional?> Function() carregar,
+    String Function(Devocional?) montar,
+  ) async {
+    try {
+      return montar(await carregar());
+    } catch (erro, pilha) {
+      Registro.erro('Lembretes.conteudo', erro, pilha);
+      return _corpoGenerico;
     }
   }
 
@@ -291,7 +483,7 @@ class LembretesReais implements Lembretes {
     return devocional.referencia;
   }
 
-  /// "Título | Gênesis 1:2" — o formato que as Promessas já usavam no push.
+  /// "Título | Gênesis 1:2" — o formato que as Promessas sempre usaram.
   String _corpoDaPromessa(Devocional? promessa) {
     if (promessa == null) return _corpoGenerico;
     if (promessa.titulo.isEmpty) return _corpoDe(promessa);
@@ -305,26 +497,31 @@ class LembretesReais implements Lembretes {
     required String corpo,
     required tz.TZDateTime quando,
   }) async {
-    await _locais.zonedSchedule(
-      id: id,
-      title: titulo,
-      body: corpo,
-      scheduledDate: quando,
-      notificationDetails: _detalhesLocais(await _iconeDoTema()),
-      payload: chave,
-      androidScheduleMode: await _modoDeAlarme(),
-    );
+    try {
+      await _locais.zonedSchedule(
+        id: id,
+        title: titulo,
+        body: corpo,
+        scheduledDate: quando,
+        notificationDetails: _detalhesLocais(await _iconeDoTema()),
+        payload: chave,
+        androidScheduleMode: await _modoDeAlarme(),
+      );
+    } catch (erro, pilha) {
+      // Um alarme recusado pelo sistema não pode abortar os irmãos — cada
+      // slot falha sozinho.
+      Registro.erro('Lembretes.armar/$chave', erro, pilha);
+    }
   }
 
-  /// Alarme exato quando o sistema deixa (Android 12+ pede permissão nas
-  /// Configurações — declarada no manifesto, concedida fora do app);
-  /// inexato caso contrário, que o Doze pode atrasar alguns minutos. Melhor
-  /// lembrete imperfeito do que exceção travando o agendamento.
+  /// Alarme exato quando o sistema deixa (Android 12+ pede nas Configurações
+  /// — declarada no manifesto, concedida fora do app); inexato caso
+  /// contrário, que o Doze pode atrasar alguns minutos. Melhor reserva
+  /// imperfeita do que exceção travando o agendamento.
   Future<AndroidScheduleMode> _modoDeAlarme() async {
     final pode = await _locais
             .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin
-            >()
+                AndroidFlutterLocalNotificationsPlugin>()
             ?.canScheduleExactNotifications() ??
         false;
     return pode
@@ -335,16 +532,35 @@ class LembretesReais implements Lembretes {
   @override
   Future<void> cancelar() async {
     if (!lembretesSuportados) return;
-    for (final id in _todosOsIds) {
-      unawaited(_locais.cancel(id: id));
+    _ultimaManha = null;
+    _ultimaNoite = null;
+    if (_ehAndroid) {
+      // Mesma limpeza total do armamento: não deixar alarme de nenhuma
+      // versão sobreviver a um "desligar lembretes".
+      try {
+        await _locais.cancelAllPendingNotifications();
+      } catch (erro, pilha) {
+        Registro.erro('Lembretes.cancelar', erro, pilha);
+      }
+      for (final id in [3101, 3201, 3401]) {
+        unawaited(_locais.cancel(id: id));
+      }
     }
+    final token = await _mensageria.getToken(vapidKey: _vapidKeyOuNulo());
+    if (token == null) return;
+    await FirebaseFirestore.instance.collection(_colecao).doc(token).delete();
   }
 
   @override
   Future<bool> agendados() async {
     if (!lembretesSuportados) return false;
-    final pendentes = await _locais.pendingNotificationRequests();
-    return pendentes.any((p) => _todosOsIds.contains(p.id));
+    final token = await _mensageria.getToken(vapidKey: _vapidKeyOuNulo());
+    if (token == null) return false;
+    final doc = await FirebaseFirestore.instance
+        .collection(_colecao)
+        .doc(token)
+        .get();
+    return doc.exists;
   }
 
   @override

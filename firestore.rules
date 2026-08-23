@@ -147,5 +147,40 @@ service cloud.firestore {
 
       allow delete: if google() && resource.data.criadoPor == request.auth.uid;
     }
+
+    // Lembrete diário do devocional (ver lib/data/lembretes.dart e
+    // functions/src/index.ts). Sem login — o lembrete não pede conta, e por
+    // isso não há uid para checar dono. O id do documento é o próprio token
+    // FCM deste aparelho; a proteção contra escrita de terceiros é o App
+    // Check (ativado no app inteiro em Nuvem.iniciar), não request.auth. Um
+    // token roubado só permite reagendar o lembrete dele — nada sensível.
+    //
+    // Contrato do documento lembretes/{token}:
+    //   token              string — igual ao id do documento
+    //   minutosManha       int — minutos desde meia-noite, 0 a 1439
+    //   minutosNoite       int — minutos desde meia-noite, 0 a 1439
+    //   fuso               string — nome IANA (ex. "America/Sao_Paulo")
+    //   ultimoEnvioManha   string — data ISO do último push (só a Function
+    //                      escreve, via Admin SDK que ignora estas regras;
+    //                      por isso fora do hasOnly abaixo)
+    //   ultimoEnvioNoite   string — idem, para o slot da noite
+    match /lembretes/{token} {
+      function valido() {
+        let dados = request.resource.data;
+        return dados.keys().hasOnly(['token', 'minutosManha', 'minutosNoite', 'fuso']) &&
+            dados.token == token &&
+            dados.minutosManha is int &&
+            dados.minutosManha >= 0 && dados.minutosManha < 1440 &&
+            dados.minutosNoite is int &&
+            dados.minutosNoite >= 0 && dados.minutosNoite < 1440 &&
+            dados.fuso is string && dados.fuso.size() < 100;
+      }
+
+      allow create, update: if request.app != null && valido();
+      // get, não read: sem 'list', quem passe o App Check não colhe os
+      // tokens de todo mundo; o app só faz .doc(token).get().
+      allow get, delete: if request.app != null;
+      allow list: if false;
+    }
   }
 }

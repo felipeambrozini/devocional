@@ -329,49 +329,42 @@ motivo novo.
   exemplo) lia a posição da pausa antiga em vez da posição real da leitura em
   andamento.
 
-### Lembretes diários (só Android)
+### Lembretes diários (Android e web)
 
-Agendados **no próprio aparelho** (`flutter_local_notifications`), sem
-servidor, sem FCM e sem cron de CI. A cadeia anterior (GitHub Actions →
-Firestore → FCM) nunca entregou com confiabilidade: o cron do GitHub atrasa
-10-30 min e sai da grade, e o envio ainda dependia de App Check, token e
-rede. Agora são alarmes locais (`zonedSchedule`) armados no fuso do aparelho
-para uma **janela de dois dias** (hoje, se ainda dá, e amanhã), rearmeda a
-cada abertura do app — é o que permite a referência do dia no corpo sem
-servidor. O receiver de boot do plugin resgata os alarmes persistidos após
-reinicialização do celular.
+Híbrido: **push da Cloud Function agendada** (`functions/src/index.ts`, a cada
+5 min na infra do Google) via FCM data-only + **alarme local de reserva** no
+Android em T+5 min (`flutter_local_notifications`). O cron do GitHub Actions
+da primeira versão atrasava 10-30 min e pulava a janela de 5 min — o
+scheduler do Google não; e mesmo assim sobrou tolerância: 60 min depois do
+horário cadastrado ainda envia, com um envio único por dia marcado no próprio
+documento (`ultimoEnvioManha`/`ultimoEnvioNoite`, escritos só pela Function).
 
-- **Exclusivo do aplicativo Android**: web e iOS ficam de fora. A web não
-  dispara nada com a aba fechada sem infraestrutura externa (justamente o
-  que se queria evitar), e o iOS precisaria da chave APNs. Na folha de
-  ajustes, a seção Lembretes só existe onde `lembretesSuportados` é
-  verdadeiro.
-- **`Lembretes` é interface, não classe** (`Lembretes.instancia`, mutável),
-  com implementação real (`LembretesReais`) e falsa (`_LembretesFalsas` em
-  `test/lembretes_test.dart`). Os testes de `comuns.dart` sobreviveram às
-  duas trocas de implementação (local → push → local de novo) sem mudar,
-  porque falam só com a interface.
-- **Corpo com a referência do dia**: "Devocional da Manhã | Gênesis 1:2",
-  "Devocional da Noite | ..." e "Promessas de Deus | Título | Gênesis 3:15",
-  calculados dos assets ([Conteudo]) na hora de armar cada alarme — mesmo
-  formato de títulos/corpos que o push antigo usava. Se o conteúdo falhar,
-  cai num texto genérico. O toque abre a leitura certa pelo payload
-  (`manha`/`promessas`/`noite`). A manhã dispara duas notificações
-  (devocional + promessas), como antes.
-- **Limite da janela**: quem fica mais de dois dias sem abrir o app perde os
-  lembretes dos dias seguintes — aceito, pois abrir o devocional a cada dois
-  dias é o comportamento esperado de quem pediu um lembrete.
-- **Ícone segue o tema escolhido no app**: claro usa glifo escuro
-  (`ic_lembete_claro`), escuro usa claro (`ic_lembete_escuro`); no
-  "Automático" quem escolhe são os qualifiers `drawable`/`drawable-night`
-  de `ic_lembete`, lidos pelo sistema mesmo com o app morto.
-- **Alarme exato é best-effort**: no Android 12+ a permissão
-  `SCHEDULE_EXACT_ALARM` (declarada no manifesto) é concedida nas
-  Configurações, fora do app; sem ela, `canScheduleExactNotifications`
-  cai para alarme inexato, que o Doze pode atrasar alguns minutos.
-  Fabricantes agressivos (Xiaomi e afins) também matam alarmes sem o
-  autostart habilitado — isso se resolve nas configurações do aparelho,
-  não há código que contorne.
+- **Formato das notificações**: "Devocional da Manhã | Josué 5:12",
+  "Devocional da Noite | Cantares 1:4" e "Promessas de Deus | Título |
+  Gênesis 3:15" — referência do dia, calculada dos assets. No Android quem
+  exibe é o handler Dart (data-only acorda o app morto); na web, o service
+  worker. A manhã dispara duas notificações (devocional + promessas).
+- **Reserva sem duplicata**: o alarme local dispara só se o push não chegou
+  até 5 min depois (`atrasoDoFallbackMinutos`); o push que chega cancela os
+  alarmes pendentes do slot, e um push mais tarde que isso é suprimido
+  (`pushAindaVale`) porque o alarme já avisou. Falhas são isoladas por
+  alarme/conteúdo — nenhuma derruba o conjunto.
+- **Contrato do Firestore** (`lembretes/{token}`, id = token FCM):
+  `{token, minutosManha, minutosNoite, fuso}` escritos pelo app protegidos
+  por App Check (`request.app != null`), mais `ultimoEnvio*` escritos só pela
+  Function (Admin SDK ignora as regras).
+- **Conteúdo da Function**: `functions/src/assets/conteudo-lembretes.json`
+  (37 KB, 366 dias) gerado dos JSONs do app só com referência/título.
+  Regenerar se o conteúdo anual mudar.
+- **Ícone segue o tema escolhido no app**: Android usa glifos
+  `ic_lembete_claro/escuro` (+ qualifiers `-night` para Automático); na web a
+  página espelha o tema efetivo no Cache Storage
+  (`lib/data/espelho_do_tema.dart`) e o service worker escolhe entre
+  `notificacao-tema-claro/escuro.png`.
+- **Deploy**: `deploy-web.yml` publica hosting + regras + functions juntos;
+  o primeiro deploy cria sozinho o job do Cloud Scheduler. Requer plano Blaze
+  (billing ativa; consumo fica dentro do free tier).
+- **iOS de fora por ora**: exigiria a chave APNs no Console.
 
 ### Web
 

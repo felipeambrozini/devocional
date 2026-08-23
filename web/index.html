@@ -115,6 +115,13 @@
     window.addEventListener('flutter-first-frame', function () {
       document.getElementById('carregando')?.remove();
     });
+    // Registro do service worker do lembrete diário (ver
+    // lib/data/lembretes.dart) — independente do flutter_service_worker.js
+    // que o build do Flutter gera e registra por conta própria via
+    // flutter_bootstrap.js abaixo; cada um cuida do próprio escopo de evento.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('firebase-messaging-sw.js');
+    }
   </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>

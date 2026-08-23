@@ -27,10 +27,20 @@ dependencies:
   # Folha de compartilhar nativa. Android e web de uma vez, sem
   # ramificação de plataforma — mesma razão do shared_preferences acima.
   share_plus: ^13.3.0
-  # Lembrete diário (ver Lembretes em lib/data/lembretes.dart): alarme
-  # agendado no próprio aparelho, exclusivo do Android. Sobrevive a
-  # reinicializações e não depende de rede nem de servidor.
+  # Lembrete diário híbrido (ver Lembretes em lib/data/lembretes.dart):
+  # push da Cloud Function agendada (functions/) via token FCM gravado no
+  # Firestore, em Android e web; no Android ainda há alarme local de reserva
+  # pelo flutter_local_notifications abaixo.
+  firebase_messaging: ^16.5.0
+  # Alarme local de reserva do lembrete no Android (horário + 5 min): se o
+  # push não chegar, o próprio aparelho avisa com o mesmo conteúdo. Fora da
+  # web — lá a exibição é do service worker.
   flutter_local_notifications: ^22.3.0
+  # Ligações tipadas às APIs do navegador. Usado pelo espelho do tema para
+  # notificações (lib/data/espelho_do_tema.dart): grava no Cache Storage,
+  # que o service worker lê para escolher o ícone da notificação. Já era
+  # transitiva dos plugins web; direta para o código poder importar.
+  web: ^1.1.0
   # Detecta o fuso do aparelho e arma os alarmes na hora certa nele.
   flutter_timezone: ^5.1.0
   # Abre o link do canal (YouTube, Instagram) na tela Sobre no navegador do
