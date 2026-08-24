@@ -8,11 +8,13 @@ import '../data/lembretes.dart';
 TimeOfDay horaDeMinutos(int minutos) =>
     TimeOfDay(hour: minutos ~/ 60, minute: minutos % 60);
 
-/// Agenda os dois horários de lembrete com os minutos gravados no [Estado].
+/// Agenda os quatro horários de lembrete com os minutos gravados no [Estado].
 /// Um lugar só para saber quais horas são: quem liga, quem troca o horário e
 /// quem rearma na abertura do app passam por aqui.
 Future<void> _agendarLembretes(Estado estado) => Lembretes.instancia.agendar(
-  manhaEPromessas: horaDeMinutos(estado.minutosLembreteManha),
+  manha: horaDeMinutos(estado.minutosLembreteManha),
+  promessas: horaDeMinutos(estado.minutosLembretePromessas),
+  leitura: horaDeMinutos(estado.minutosLembreteLeitura),
   noite: horaDeMinutos(estado.minutosLembreteNoite),
 );
 
@@ -42,10 +44,14 @@ Future<bool> alternarLembretes(Estado estado, bool ligar) async {
 Future<void> aplicarHorarioDeLembrete(
   Estado estado, {
   int? minutosManha,
+  int? minutosPromessas,
+  int? minutosLeitura,
   int? minutosNoite,
 }) async {
   await estado.definirHorariosDeLembrete(
     minutosManha: minutosManha ?? estado.minutosLembreteManha,
+    minutosPromessas: minutosPromessas ?? estado.minutosLembretePromessas,
+    minutosLeitura: minutosLeitura ?? estado.minutosLembreteLeitura,
     minutosNoite: minutosNoite ?? estado.minutosLembreteNoite,
   );
   if (!estado.lembretesAtivos) return;

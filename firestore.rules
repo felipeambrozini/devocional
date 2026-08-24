@@ -158,21 +158,32 @@ service cloud.firestore {
     // dele — nada sensível.
     //
     // Contrato do documento lembretes/{token}:
-    //   token              string — igual ao id do documento
-    //   minutosManha       int — minutos desde meia-noite, 0 a 1439
-    //   minutosNoite       int — minutos desde meia-noite, 0 a 1439
-    //   fuso               string — nome IANA (ex. "America/Sao_Paulo")
-    //   ultimoEnvioManha   string — data ISO do último push (só a Function
-    //                      escreve, via Admin SDK que ignora estas regras;
-    //                      por isso fora do hasOnly abaixo)
-    //   ultimoEnvioNoite   string — idem, para o slot da noite
+    //   token                string — igual ao id do documento
+    //   minutosManha         int — minutos desde meia-noite, 0 a 1439
+    //   minutosPromessas     int — idem, slot separado da Manhã
+    //   minutosLeitura       int — leitura do dia (cronograma)
+    //   minutosNoite         int — minutos desde meia-noite, 0 a 1439
+    //   fuso                 string — nome IANA (ex. "America/Sao_Paulo")
+    //   ultimoEnvioManha     string — data ISO do último push (só a Function
+    //                        escreve, via Admin SDK que ignora estas regras;
+    //                        por isso fora do hasOnly abaixo)
+    //   ultimoEnvioPromessas string — idem, slot Promessas
+    //   ultimoEnvioLeitura   string — idem, slot Leitura
+    //   ultimoEnvioNoite     string — idem, para o slot da noite
     match /lembretes/{token} {
       function valido() {
         let dados = request.resource.data;
-        return dados.keys().hasOnly(['token', 'minutosManha', 'minutosNoite', 'fuso']) &&
+        return dados.keys().hasOnly([
+          'token', 'minutosManha', 'minutosPromessas', 'minutosLeitura',
+          'minutosNoite', 'fuso'
+        ]) &&
             dados.token == token &&
             dados.minutosManha is int &&
             dados.minutosManha >= 0 && dados.minutosManha < 1440 &&
+            dados.minutosPromessas is int &&
+            dados.minutosPromessas >= 0 && dados.minutosPromessas < 1440 &&
+            dados.minutosLeitura is int &&
+            dados.minutosLeitura >= 0 && dados.minutosLeitura < 1440 &&
             dados.minutosNoite is int &&
             dados.minutosNoite >= 0 && dados.minutosNoite < 1440 &&
             dados.fuso is string && dados.fuso.size() < 100;

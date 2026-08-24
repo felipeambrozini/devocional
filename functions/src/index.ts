@@ -42,16 +42,24 @@ interface PromessaDia {
   r: string;
 }
 
-type DiaConteudo = {m?: string; n?: string; p?: PromessaDia};
+type DiaConteudo = {m?: string; n?: string; p?: PromessaDia; l?: string; lb?: string};
+
+function ehBissexto(ano: number): boolean {
+  return (ano % 4 === 0 && ano % 100 !== 0) || ano % 400 === 0;
+}
 
 const conteudoPorDia = conteudoJson as Record<string, DiaConteudo>;
 
 interface DadosDoLembrete {
   token: string;
   minutosManha: number;
+  minutosPromessas: number;
+  minutosLeitura: number;
   minutosNoite: number;
   fuso: string;
   ultimoEnvioManha?: string;
+  ultimoEnvioPromessas?: string;
+  ultimoEnvioLeitura?: string;
   ultimoEnvioNoite?: string;
 }
 
@@ -134,6 +142,12 @@ export const enviarLembretes = onSchedule(
 
     for (const doc of snap.docs) {
       const d = doc.data() as DadosDoLembrete;
+      // Compatibilidade: documentos antigos só tinham manha/noite; promessas
+      // e leitura herdam da manhã até o app reescrever com os 4 campos.
+      const minutosPromessas = typeof (d as any).minutosPromessas === "number"
+        ? (d as any).minutosPromessas as number : d.minutosManha;
+      const minutosLeitura = typeof (d as any).minutosLeitura === "number"
+        ? (d as any).minutosLeitura as number : d.minutosManha;
       if (
         typeof d.token !== "string" ||
         typeof d.minutosManha !== "number" ||
@@ -154,7 +168,7 @@ export const enviarLembretes = onSchedule(
       const conteudoDia = conteudoPorDia[local.diaChave];
       if (!conteudoDia) continue;
 
-      type Slot = "manha" | "promessas" | "noite";
+      type Slot = "manha" | "promessas" | "leitura" | "noite";
       const pendentes: {slot: Slot; message: Message}[] = [];
 
       if (deveEnviar(local.minutoDoDia, d.minutosManha, d.ultimoEnvioManha, local.diaISO)) {
@@ -165,6 +179,9 @@ export const enviarLembretes = onSchedule(
               conteudoDia.m, d.minutosManha),
           });
         }
+      }
+
+      if (deveEnviar(local.minutoDoDia, minutosPromessas, (d as any).ultimoEnvioPromessas, local.diaISO)) {
         if (conteudoDia.p?.r) {
           const corpo = conteudoDia.p.t
             ? `${conteudoDia.p.t} | ${conteudoDia.p.r}`
@@ -172,7 +189,21 @@ export const enviarLembretes = onSchedule(
           pendentes.push({
             slot: "promessas",
             message: mensagem(d.token, "promessas", "Promessas de Deus",
-              corpo, d.minutosManha),
+              corpo, minutosPromessas),
+          });
+        }
+      }
+
+      if (deveEnviar(local.minutoDoDia, minutosLeitura, (d as any).ultimoEnvioLeitura, local.diaISO)) {
+        const ano = Number(local.diaISO.slice(0, 4));
+        const leituraLabel = ehBissexto(ano)
+          ? (conteudoDia.lb ?? conteudoDia.l)
+          : conteudoDia.l;
+        if (leituraLabel) {
+          pendentes.push({
+            slot: "leitura",
+            message: mensagem(d.token, "leitura", "Leitura do Dia",
+              leituraLabel, minutosLeitura),
           });
         }
       }
@@ -220,10 +251,14 @@ export const enviarLembretes = onSchedule(
       }
 
       const atualizacao: Record<string, string> = {};
-      if (slotsOk.has("manha") || slotsOk.has("promessas")) {
-        if (d.ultimoEnvioManha !== local.diaISO) {
-          atualizacao.ultimoEnvioManha = local.diaISO;
-        }
+      if (slotsOk.has("manha") && d.ultimoEnvioManha !== local.diaISO) {
+        atualizacao.ultimoEnvioManha = local.diaISO;
+      }
+      if (slotsOk.has("promessas") && (d as any).ultimoEnvioPromessas !== local.diaISO) {
+        atualizacao.ultimoEnvioPromessas = local.diaISO;
+      }
+      if (slotsOk.has("leitura") && (d as any).ultimoEnvioLeitura !== local.diaISO) {
+        atualizacao.ultimoEnvioLeitura = local.diaISO;
       }
       if (slotsOk.has("noite") && d.ultimoEnvioNoite !== local.diaISO) {
         atualizacao.ultimoEnvioNoite = local.diaISO;

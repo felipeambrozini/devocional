@@ -303,17 +303,23 @@ void main() {
         final estado = await Estado.abrir();
         expect(estado.lembretesAtivos, isFalse);
         expect(estado.minutosLembreteManha, 6 * 60);
+        expect(estado.minutosLembretePromessas, 6 * 60);
+        expect(estado.minutosLembreteLeitura, 6 * 60);
         expect(estado.minutosLembreteNoite, 18 * 60);
 
         await estado.definirLembretesAtivos(true);
         await estado.definirHorariosDeLembrete(
           minutosManha: 7 * 60,
+          minutosPromessas: 7 * 60,
+          minutosLeitura: 7 * 60,
           minutosNoite: 21 * 60 + 30,
         );
 
         final relido = await reabrir();
         expect(relido.lembretesAtivos, isTrue);
         expect(relido.minutosLembreteManha, 7 * 60);
+        expect(relido.minutosLembretePromessas, 7 * 60);
+        expect(relido.minutosLembreteLeitura, 7 * 60);
         expect(relido.minutosLembreteNoite, 21 * 60 + 30);
       },
     );
@@ -323,10 +329,14 @@ void main() {
       () async {
         SharedPreferences.setMockInitialValues({
           'minutos_lembrete_manha': -1,
+          'minutos_lembrete_promessas': 24 * 60,
+          'minutos_lembrete_leitura': -5,
           'minutos_lembrete_noite': 24 * 60,
         });
         final estado = await Estado.abrir();
         expect(estado.minutosLembreteManha, 6 * 60);
+        expect(estado.minutosLembretePromessas, 6 * 60);
+        expect(estado.minutosLembreteLeitura, 6 * 60);
         expect(estado.minutosLembreteNoite, 18 * 60);
       },
     );

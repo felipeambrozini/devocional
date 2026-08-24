@@ -715,7 +715,7 @@ class _SecaoDeLembretes {
       SwitchListTile(
         title: const Text('Avisar no horário do devocional'),
         subtitle: const Text(
-          'Manhã e Promessas de Deus num horário, Noite noutro.',
+          'Quatro horários independentes.',
         ),
         value: estado.lembretesAtivos,
         onChanged: (novo) => _alternar(context, novo),
@@ -723,10 +723,24 @@ class _SecaoDeLembretes {
       if (estado.lembretesAtivos) ...[
         _linhaDeHorario(
           context,
-          titulo: 'Manhã e Promessas',
+          titulo: 'Manhã',
           minutos: estado.minutosLembreteManha,
           aoEscolher: (minutos) =>
               aplicarHorarioDeLembrete(estado, minutosManha: minutos),
+        ),
+        _linhaDeHorario(
+          context,
+          titulo: 'Promessas',
+          minutos: estado.minutosLembretePromessas,
+          aoEscolher: (minutos) =>
+              aplicarHorarioDeLembrete(estado, minutosPromessas: minutos),
+        ),
+        _linhaDeHorario(
+          context,
+          titulo: 'Leitura do Dia',
+          minutos: estado.minutosLembreteLeitura,
+          aoEscolher: (minutos) =>
+              aplicarHorarioDeLembrete(estado, minutosLeitura: minutos),
         ),
         _linhaDeHorario(
           context,

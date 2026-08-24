@@ -24,7 +24,9 @@ class _LembretesFalsas implements Lembretes {
 
   @override
   Future<void> agendar({
-    required TimeOfDay manhaEPromessas,
+    required TimeOfDay manha,
+    required TimeOfDay promessas,
+    required TimeOfDay leitura,
     required TimeOfDay noite,
   }) async {}
 

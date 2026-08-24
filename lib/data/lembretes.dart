@@ -14,7 +14,7 @@ import 'package:timezone/timezone.dart' as tz;
 
 import 'estado.dart';
 import 'conteudo.dart';
-import 'modelos.dart' show Devocional, ModoDoTema, Periodo;
+import 'modelos.dart' show Devocional, DiaDoPlano, ModoDoTema, Periodo;
 import 'registro.dart';
 
 /// Chave pública do Web Push (Console do Firebase > Cloud Messaging > Web
@@ -47,18 +47,21 @@ const _canalLembretes = 'lembretes_devocional';
 /// segunda notificação (ver [pushAindaVale]).
 const atrasoDoFallbackMinutos = 5;
 
-// Alarmes: 3 slots x 2 dias (janela rearmeda a cada abertura do app).
+// Alarmes: 4 slots x 2 dias (janela rearmeda a cada abertura do app).
 // Exibidas pelo push: uma por slot. Os ids são base + deslocamento do dia.
 const _idAlarmeManhaHoje = 1101;
 const _idAlarmeManhaAmanha = 1102;
 const _idAlarmePromessasHoje = 1501;
 const _idAlarmePromessasAmanha = 1502;
+const _idAlarmeLeituraHoje = 1701;
+const _idAlarmeLeituraAmanha = 1702;
 const _idAlarmeNoiteHoje = 2101;
 const _idAlarmeNoiteAmanha = 2102;
 
 int _idDaExibida(String chave) => switch (chave) {
       'noite' => 3201,
       'promessas' => 3401,
+      'leitura' => 3701,
       _ => 3101,
     };
 
@@ -161,6 +164,7 @@ Future<void> _mostrarPush(Map<String, dynamic> dados) async {
   final doSlot = switch (chave) {
     'noite' => [_idAlarmeNoiteHoje, _idAlarmeNoiteAmanha],
     'promessas' => [_idAlarmePromessasHoje, _idAlarmePromessasAmanha],
+    'leitura' => [_idAlarmeLeituraHoje, _idAlarmeLeituraAmanha],
     _ => [_idAlarmeManhaHoje, _idAlarmeManhaAmanha],
   };
   for (final id in doSlot) {
@@ -219,7 +223,9 @@ abstract class Lembretes {
   /// dias) com a referência do dia no corpo. Serve tanto para ligar quanto
   /// para mudar o horário: sempre substitui o registro anterior.
   Future<void> agendar({
-    required TimeOfDay manhaEPromessas,
+    required TimeOfDay manha,
+    required TimeOfDay promessas,
+    required TimeOfDay leitura,
     required TimeOfDay noite,
   });
 
@@ -255,6 +261,8 @@ class LembretesReais implements Lembretes {
   /// com o token novo quando o FCM o troca (`onTokenRefresh`) — sem isto, o
   /// lembrete silenciosamente para de chegar depois de uma renovação.
   TimeOfDay? _ultimaManha;
+  TimeOfDay? _ultimaPromessas;
+  TimeOfDay? _ultimaLeitura;
   TimeOfDay? _ultimaNoite;
   String _ultimoFuso = '';
 
@@ -300,9 +308,11 @@ class LembretesReais implements Lembretes {
 
     _mensageria.onTokenRefresh.listen((tokenNovo) {
       final manha = _ultimaManha;
+      final promessas = _ultimaPromessas;
+      final leitura = _ultimaLeitura;
       final noite = _ultimaNoite;
-      if (manha != null && noite != null) {
-        unawaited(_gravar(tokenNovo, manha, noite));
+      if (manha != null && promessas != null && leitura != null && noite != null) {
+        unawaited(_gravar(tokenNovo, manha, promessas, leitura, noite));
       }
     });
   }
@@ -333,28 +343,27 @@ class LembretesReais implements Lembretes {
 
   @override
   Future<void> agendar({
-    required TimeOfDay manhaEPromessas,
+    required TimeOfDay manha,
+    required TimeOfDay promessas,
+    required TimeOfDay leitura,
     required TimeOfDay noite,
   }) async {
     if (!lembretesSuportados) return;
-    _ultimaManha = manhaEPromessas;
+    _ultimaManha = manha;
+    _ultimaPromessas = promessas;
+    _ultimaLeitura = leitura;
     _ultimaNoite = noite;
 
-    await _armarReservas(manhaEPromessas, noite);
+    await _armarReservas(manha, promessas, leitura, noite);
 
     final token = await _mensageria.getToken(vapidKey: _vapidKeyOuNulo());
     if (token == null) {
-      // Sem token (sem Play Services momentâneo), o estado fica inconsistente
-      // por esta sessão — mas o alarme de reserva já está armado acima, e a
-      // próxima abertura tenta de novo.
       Registro.erro('Lembretes.token', StateError('getToken veio nulo'), StackTrace.current);
       return;
     }
     try {
-      await _gravar(token, manhaEPromessas, noite);
+      await _gravar(token, manha, promessas, leitura, noite);
     } catch (erro, pilha) {
-      // Cadastro no Firestore falhou (rede/App Check): o alarme de reserva
-      // cobre o usuário desta rodada; a próxima abertura tenta de novo.
       Registro.erro('Lembretes.gravar', erro, pilha);
     }
   }
@@ -362,12 +371,20 @@ class LembretesReais implements Lembretes {
   /// Grava o cadastro que a Function consulta. O `.set()` substitui tudo —
   /// inclusive apaga `ultimoEnvio*` da Function, o que é desejado: reagendar
   /// vale um reenvio no mesmo dia.
-  Future<void> _gravar(String token, TimeOfDay manha, TimeOfDay noite) async {
+  Future<void> _gravar(
+    String token,
+    TimeOfDay manha,
+    TimeOfDay promessas,
+    TimeOfDay leitura,
+    TimeOfDay noite,
+  ) async {
     final fuso = await FlutterTimezone.getLocalTimezone();
     _ultimoFuso = fuso.identifier;
     await FirebaseFirestore.instance.collection(_colecao).doc(token).set({
       'token': token,
       'minutosManha': manha.hour * 60 + manha.minute,
+      'minutosPromessas': promessas.hour * 60 + promessas.minute,
+      'minutosLeitura': leitura.hour * 60 + leitura.minute,
       'minutosNoite': noite.hour * 60 + noite.minute,
       'fuso': _ultimoFuso,
     });
@@ -382,7 +399,12 @@ class LembretesReais implements Lembretes {
   /// cancelamento do dia que evita duplicata quando o push chega em cima do
   /// horário. Falhas são isoladas por alarme e por conteúdo — nada aborta o
   /// conjunto nem derruba o app.
-  Future<void> _armarReservas(TimeOfDay manhaEPromessas, TimeOfDay noite) async {
+  Future<void> _armarReservas(
+    TimeOfDay manha,
+    TimeOfDay promessas,
+    TimeOfDay leitura,
+    TimeOfDay noite,
+  ) async {
     if (!_ehAndroid) return;
     tz.Location? local;
     tz.TZDateTime? agora;
@@ -421,8 +443,8 @@ class LembretesReais implements Lembretes {
             hora.minute + atrasoDoFallbackMinutos,
           );
 
-      final manha = as(manhaEPromessas);
-      if (!ehHoje || manha.isAfter(agora)) {
+      final manhaDt = as(manha);
+      if (!ehHoje || manhaDt.isAfter(agora)) {
         await _armar(
           id: _idAlarmeManhaHoje + deslocamento,
           chave: 'manha',
@@ -431,8 +453,12 @@ class LembretesReais implements Lembretes {
             () => Conteudo.instancia.devocional(dia, Periodo.manha),
             _corpoDe,
           ),
-          quando: manha,
+          quando: manhaDt,
         );
+      }
+
+      final promessasDt = as(promessas);
+      if (!ehHoje || promessasDt.isAfter(agora)) {
         await _armar(
           id: _idAlarmePromessasHoje + deslocamento,
           chave: 'promessas',
@@ -441,12 +467,26 @@ class LembretesReais implements Lembretes {
             () => Conteudo.instancia.promessa(dia),
             _corpoDaPromessa,
           ),
-          quando: manha,
+          quando: promessasDt,
         );
       }
 
-      final noiteDeHoje = as(noite);
-      if (!ehHoje || noiteDeHoje.isAfter(agora)) {
+      final leituraDt = as(leitura);
+      if (!ehHoje || leituraDt.isAfter(agora)) {
+        await _armar(
+          id: _idAlarmeLeituraHoje + deslocamento,
+          chave: 'leitura',
+          titulo: 'Leitura do Dia',
+          corpo: await _corpoSeguro(
+            () => Conteudo.instancia.diaDoPlano(dia),
+            _corpoDaLeitura,
+          ),
+          quando: leituraDt,
+        );
+      }
+
+      final noiteDt = as(noite);
+      if (!ehHoje || noiteDt.isAfter(agora)) {
         await _armar(
           id: _idAlarmeNoiteHoje + deslocamento,
           chave: 'noite',
@@ -455,7 +495,7 @@ class LembretesReais implements Lembretes {
             () => Conteudo.instancia.devocional(dia, Periodo.noite),
             _corpoDe,
           ),
-          quando: noiteDeHoje,
+          quando: noiteDt,
         );
       }
     }
@@ -463,9 +503,9 @@ class LembretesReais implements Lembretes {
 
   /// Carrega o conteúdo do dia isolando a falha: se o asset não abrir, cai
   /// no corpo genérico em vez de abortar o armamento inteiro.
-  Future<String> _corpoSeguro(
-    Future<Devocional?> Function() carregar,
-    String Function(Devocional?) montar,
+  Future<String> _corpoSeguro<T>(
+    Future<T?> Function() carregar,
+    String Function(T?) montar,
   ) async {
     try {
       return montar(await carregar());
@@ -488,6 +528,11 @@ class LembretesReais implements Lembretes {
     if (promessa == null) return _corpoGenerico;
     if (promessa.titulo.isEmpty) return _corpoDe(promessa);
     return '${promessa.titulo} | ${promessa.referencia}';
+  }
+
+  String _corpoDaLeitura(DiaDoPlano? dia) {
+    if (dia == null || dia.rotulo.isEmpty) return _corpoGenerico;
+    return dia.rotulo;
   }
 
   Future<void> _armar({
@@ -533,6 +578,8 @@ class LembretesReais implements Lembretes {
   Future<void> cancelar() async {
     if (!lembretesSuportados) return;
     _ultimaManha = null;
+    _ultimaPromessas = null;
+    _ultimaLeitura = null;
     _ultimaNoite = null;
     if (_ehAndroid) {
       // Mesma limpeza total do armamento: não deixar alarme de nenhuma
@@ -542,7 +589,7 @@ class LembretesReais implements Lembretes {
       } catch (erro, pilha) {
         Registro.erro('Lembretes.cancelar', erro, pilha);
       }
-      for (final id in [3101, 3201, 3401]) {
+      for (final id in [3101, 3201, 3401, 3701]) {
         unawaited(_locais.cancel(id: id));
       }
     }

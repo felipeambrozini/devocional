@@ -15,7 +15,8 @@ class _LembretesFalsas implements Lembretes {
   String? chaveDeAberturaSimulada;
   void Function(String)? _callback;
 
-  final agendamentos = <(TimeOfDay manha, TimeOfDay noite)>[];
+  final agendamentos =
+      <(TimeOfDay manha, TimeOfDay promessas, TimeOfDay leitura, TimeOfDay noite)>[];
   int vezesCancelado = 0;
 
   @override
@@ -33,10 +34,12 @@ class _LembretesFalsas implements Lembretes {
 
   @override
   Future<void> agendar({
-    required TimeOfDay manhaEPromessas,
+    required TimeOfDay manha,
+    required TimeOfDay promessas,
+    required TimeOfDay leitura,
     required TimeOfDay noite,
   }) async {
-    agendamentos.add((manhaEPromessas, noite));
+    agendamentos.add((manha, promessas, leitura, noite));
   }
 
   @override
@@ -74,8 +77,10 @@ void main() {
       expect(concedida, isTrue);
       expect(estado.lembretesAtivos, isTrue);
       expect(falsas.agendamentos, hasLength(1));
-      final (manha, noite) = falsas.agendamentos.single;
+      final (manha, promessas, leitura, noite) = falsas.agendamentos.single;
       expect(manha, const TimeOfDay(hour: 6, minute: 0));
+      expect(promessas, const TimeOfDay(hour: 6, minute: 0));
+      expect(leitura, const TimeOfDay(hour: 6, minute: 0));
       expect(noite, const TimeOfDay(hour: 18, minute: 0));
     });
 
@@ -115,10 +120,12 @@ void main() {
 
         expect(estado.minutosLembreteManha, 7 * 60 + 30);
         expect(falsas.agendamentos, hasLength(1));
-        final (manha, noite) = falsas.agendamentos.single;
+        final (manha, promessas, leitura, noite) = falsas.agendamentos.single;
         expect(manha, const TimeOfDay(hour: 7, minute: 30));
-        // A noite não mudou nesta chamada, mas o reagendamento leva os dois
-        // horários juntos: agendar() sempre substitui os três.
+        // Os outros horários não mudaram nesta chamada, mas o reagendamento
+        // leva os quatro juntos: agendar() sempre substitui todos.
+        expect(promessas, const TimeOfDay(hour: 6, minute: 0));
+        expect(leitura, const TimeOfDay(hour: 6, minute: 0));
         expect(noite, const TimeOfDay(hour: 18, minute: 0));
       },
     );
@@ -129,8 +136,10 @@ void main() {
 
       await aplicarHorarioDeLembrete(estado, minutosNoite: 21 * 60);
 
-      final (manha, noite) = falsas.agendamentos.single;
+      final (manha, promessas, leitura, noite) = falsas.agendamentos.single;
       expect(manha, const TimeOfDay(hour: 6, minute: 0));
+      expect(promessas, const TimeOfDay(hour: 6, minute: 0));
+      expect(leitura, const TimeOfDay(hour: 6, minute: 0));
       expect(noite, const TimeOfDay(hour: 21, minute: 0));
     });
   });
@@ -231,7 +240,9 @@ void main() {
         expect(falsas.agendamentos, hasLength(1));
         // E a UI reflete: os campos de horário aparecem só com o interruptor
         // ligado.
-        expect(find.text('Manhã e Promessas'), findsOneWidget);
+        expect(find.text('Manhã'), findsOneWidget);
+        expect(find.text('Promessas'), findsOneWidget);
+        expect(find.text('Leitura do Dia'), findsOneWidget);
         expect(find.text('Noite'), findsOneWidget);
       });
     });

@@ -46,9 +46,13 @@ import 'theme.dart';
 final navigatorKey = GlobalKey<NavigatorState>();
 
 /// Abre a leitura da notificação por cima do que estiver na tela, igual ao
-/// "Continuar leitura" da tela Hoje. `chave` é "manha", "promessas" ou
-/// "noite" — ver o contrato em `lib/data/lembretes.dart`.
+/// "Continuar leitura" da tela Hoje. `chave` é "manha", "promessas", "leitura"
+/// ou "noite" — ver o contrato em `lib/data/lembretes.dart`.
 void _abrirLeituraDoLembrete(String chave) {
+  if (chave == 'leitura') {
+    _router.go('/plano');
+    return;
+  }
   final leitura = Leitura.values.where((l) => l.name == chave).firstOrNull;
   if (leitura == null) return;
   navigatorKey.currentState?.push(

@@ -36,6 +36,8 @@ class Estado extends ChangeNotifier {
   static const _kSetasDoRodape = 'setas_do_rodape';
   static const _kLembretesAtivos = 'lembretes_ativos';
   static const _kMinutosLembreteManha = 'minutos_lembrete_manha';
+  static const _kMinutosLembretePromessas = 'minutos_lembrete_promessas';
+  static const _kMinutosLembreteLeitura = 'minutos_lembrete_leitura';
   static const _kMinutosLembreteNoite = 'minutos_lembrete_noite';
   static const _kPlanos = 'planos_do_usuario';
   static const _kPlanosLidos = 'planos_lidos';
@@ -44,6 +46,8 @@ class Estado extends ChangeNotifier {
   /// `TimeOfDay`: `estado.dart` não importa `material.dart`, e um `int` grava
   /// direto no `SharedPreferences` sem serialização própria.
   static const minutosPadraoManha = 6 * 60;
+  static const minutosPadraoPromessas = 6 * 60;
+  static const minutosPadraoLeitura = 6 * 60;
   static const minutosPadraoNoite = 18 * 60;
 
   final SharedPreferences _prefs;
@@ -88,6 +92,8 @@ class Estado extends ChangeNotifier {
   bool _lembretesAtivos = false;
 
   int _minutosLembreteManha = minutosPadraoManha;
+  int _minutosLembretePromessas = minutosPadraoPromessas;
+  int _minutosLembreteLeitura = minutosPadraoLeitura;
   int _minutosLembreteNoite = minutosPadraoNoite;
 
   /// Planos de leitura do usuário, do mais novo ao mais antigo.
@@ -167,6 +173,14 @@ class Estado extends ChangeNotifier {
       _prefs.getInt(_kMinutosLembreteManha),
       minutosPadraoManha,
     );
+    _minutosLembretePromessas = _minutosValidos(
+      _prefs.getInt(_kMinutosLembretePromessas),
+      minutosPadraoPromessas,
+    );
+    _minutosLembreteLeitura = _minutosValidos(
+      _prefs.getInt(_kMinutosLembreteLeitura),
+      minutosPadraoLeitura,
+    );
     _minutosLembreteNoite = _minutosValidos(
       _prefs.getInt(_kMinutosLembreteNoite),
       minutosPadraoNoite,
@@ -229,6 +243,8 @@ class Estado extends ChangeNotifier {
   /// Minutos desde meia-noite. Some ao aparelho quem lê a UI; o `Estado` só
   /// guarda o número.
   int get minutosLembreteManha => _minutosLembreteManha;
+  int get minutosLembretePromessas => _minutosLembretePromessas;
+  int get minutosLembreteLeitura => _minutosLembreteLeitura;
   int get minutosLembreteNoite => _minutosLembreteNoite;
 
   /// Só liga/desliga e persiste; quem agenda de verdade no plugin é a tela que
@@ -243,16 +259,24 @@ class Estado extends ChangeNotifier {
 
   Future<void> definirHorariosDeLembrete({
     required int minutosManha,
+    required int minutosPromessas,
+    required int minutosLeitura,
     required int minutosNoite,
   }) async {
     if (minutosManha == _minutosLembreteManha &&
+        minutosPromessas == _minutosLembretePromessas &&
+        minutosLeitura == _minutosLembreteLeitura &&
         minutosNoite == _minutosLembreteNoite) {
       return;
     }
     _minutosLembreteManha = minutosManha;
+    _minutosLembretePromessas = minutosPromessas;
+    _minutosLembreteLeitura = minutosLeitura;
     _minutosLembreteNoite = minutosNoite;
     notifyListeners();
     await _prefs.setInt(_kMinutosLembreteManha, minutosManha);
+    await _prefs.setInt(_kMinutosLembretePromessas, minutosPromessas);
+    await _prefs.setInt(_kMinutosLembreteLeitura, minutosLeitura);
     await _prefs.setInt(_kMinutosLembreteNoite, minutosNoite);
   }
 

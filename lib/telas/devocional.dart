@@ -169,17 +169,17 @@ class _TelaDevocionalState extends State<TelaDevocional> {
             icon: const Icon(Icons.calendar_month_outlined),
             onPressed: _escolherData,
           ),
-          IconButton(
-            tooltip: 'Tamanho do texto e aparência',
-            icon: const Icon(Icons.tune),
-            onPressed: () => ajustesDeLeitura(context, estado),
-          ),
           if (!ehHoje)
             IconButton(
               tooltip: 'Voltar para hoje',
               icon: const Icon(Icons.today_outlined),
               onPressed: () => _irPara(_leitura, DateTime.now()),
             ),
+          IconButton(
+            tooltip: 'Tamanho do texto e aparência',
+            icon: const Icon(Icons.tune),
+            onPressed: () => ajustesDeLeitura(context, estado),
+          ),
         ],
       ),
       body: LarguraDeLeitura(
