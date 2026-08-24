@@ -723,6 +723,13 @@ class _SecaoDeLembretes {
       if (estado.lembretesAtivos) ...[
         _linhaDeHorario(
           context,
+          titulo: 'Leitura do Dia',
+          minutos: estado.minutosLembreteLeitura,
+          aoEscolher: (minutos) =>
+              aplicarHorarioDeLembrete(estado, minutosLeitura: minutos),
+        ),
+        _linhaDeHorario(
+          context,
           titulo: 'Manhã',
           minutos: estado.minutosLembreteManha,
           aoEscolher: (minutos) =>
@@ -734,13 +741,6 @@ class _SecaoDeLembretes {
           minutos: estado.minutosLembretePromessas,
           aoEscolher: (minutos) =>
               aplicarHorarioDeLembrete(estado, minutosPromessas: minutos),
-        ),
-        _linhaDeHorario(
-          context,
-          titulo: 'Leitura do Dia',
-          minutos: estado.minutosLembreteLeitura,
-          aoEscolher: (minutos) =>
-              aplicarHorarioDeLembrete(estado, minutosLeitura: minutos),
         ),
         _linhaDeHorario(
           context,
