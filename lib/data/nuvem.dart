@@ -14,10 +14,12 @@ import 'package:flutter/foundation.dart'
         defaultTargetPlatform,
         kIsWeb,
         visibleForTesting;
+import 'package:flutter/material.dart' show TimeOfDay;
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../firebase_options.dart';
 import 'estado.dart';
+import 'lembretes.dart';
 import 'registro.dart';
 
 /// Client ID Web do projeto (`client_type: 3` em `android/app/google-services.json`).
@@ -217,6 +219,7 @@ class Nuvem extends ChangeNotifier {
   /// próprio (`serializarConversas`): o histórico não entra na cópia de
   /// segurança que `exportar()` produz. Ver o comentário daquele método.
   Sincronia? _sincroniaDeConversas;
+  Sincronia? _sincroniaDeLembretes;
   StreamSubscription<User?>? _assinatura;
   bool _pronta = false;
 
@@ -310,6 +313,8 @@ class Nuvem extends ChangeNotifier {
       _sincronia = null;
       _sincroniaDeConversas?.parar();
       _sincroniaDeConversas = null;
+      _sincroniaDeLembretes?.parar();
+      _sincroniaDeLembretes = null;
       notifyListeners();
       if (usuario == null) return;
 
@@ -332,6 +337,28 @@ class Nuvem extends ChangeNotifier {
       );
       _sincroniaDeConversas = sincroniaDeConversas;
       unawaited(sincroniaDeConversas.comecar());
+
+      final sincroniaDeLembretes = Sincronia(
+        estado: estado,
+        serializar: estado.serializarLembretes,
+        fundir: (remota) async {
+          final mudou = await estado.fundirLembretes(remota);
+          if (mudou && estado.lembretesAtivos) {
+            TimeOfDay hora(int m) => TimeOfDay(hour: m ~/ 60, minute: m % 60);
+            await Lembretes.instancia.agendar(
+              manha: hora(estado.minutosLembreteManha),
+              promessas: hora(estado.minutosLembretePromessas),
+              leitura: hora(estado.minutosLembreteLeitura),
+              noite: hora(estado.minutosLembreteNoite),
+            );
+          }
+        },
+        puxar: () => _puxarLembretes(usuario.uid),
+        empurrar: (copia) => _empurrarLembretes(usuario.uid, copia),
+        aoMudarSituacao: notifyListeners,
+      );
+      _sincroniaDeLembretes = sincroniaDeLembretes;
+      unawaited(sincroniaDeLembretes.comecar());
     });
   }
 
@@ -352,6 +379,7 @@ class Nuvem extends ChangeNotifier {
     _assinatura?.cancel();
     _sincronia?.parar();
     _sincroniaDeConversas?.parar();
+    _sincroniaDeLembretes?.parar();
     super.dispose();
   }
 
@@ -377,6 +405,22 @@ class Nuvem extends ChangeNotifier {
   Future<void> _empurrarConversas(String uid, String copiaJson) =>
       FirebaseFirestore.instance.collection(_colecao).doc(uid).set({
         'conversas': json.decode(copiaJson),
+        'atualizadoEm': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+  Future<String?> _puxarLembretes(String uid) async {
+    final doc = await FirebaseFirestore.instance
+        .collection(_colecao)
+        .doc(uid)
+        .get();
+    final lembretes = doc.data()?['lembretes'];
+    if (lembretes == null) return null;
+    return json.encode(lembretes);
+  }
+
+  Future<void> _empurrarLembretes(String uid, String copiaJson) =>
+      FirebaseFirestore.instance.collection(_colecao).doc(uid).set({
+        'lembretes': json.decode(copiaJson),
         'atualizadoEm': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
@@ -483,6 +527,7 @@ class Nuvem extends ChangeNotifier {
     // timer. [despejar] tem teto de espera, então o logout nunca trava.
     await _sincronia?.despejar();
     await _sincroniaDeConversas?.despejar();
+    await _sincroniaDeLembretes?.despejar();
     await FirebaseAuth.instance.signOut();
   }
 

@@ -612,6 +612,61 @@ class Estado extends ChangeNotifier {
   Future<void> fundirConversas(String remota) =>
       conversas.fundirConversas(remota);
 
+  // --- lembretes (horários sincronizados quando logado) --------------------- //
+
+  String serializarLembretes() => json.encode({
+        'ativo': _lembretesAtivos,
+        'manha': _minutosLembreteManha,
+        'promessas': _minutosLembretePromessas,
+        'leitura': _minutosLembreteLeitura,
+        'noite': _minutosLembreteNoite,
+      });
+
+  /// Funde horários remotos vindos da nuvem. Retorna true se algo mudou
+  /// e o chamador deve rearmar os alarmes / regravar o token.
+  Future<bool> fundirLembretes(String remota) async {
+    try {
+      final mapa = json.decode(remota) as Map<String, dynamic>;
+      final ativo = mapa['ativo'] as bool? ?? _lembretesAtivos;
+      final manha = _minutosValidos(
+        mapa['manha'] as int?,
+        minutosPadraoManha,
+      );
+      final promessas = _minutosValidos(
+        mapa['promessas'] as int?,
+        minutosPadraoPromessas,
+      );
+      final leitura = _minutosValidos(
+        mapa['leitura'] as int?,
+        minutosPadraoLeitura,
+      );
+      final noite = _minutosValidos(
+        mapa['noite'] as int?,
+        minutosPadraoNoite,
+      );
+      final mudou = ativo != _lembretesAtivos ||
+          manha != _minutosLembreteManha ||
+          promessas != _minutosLembretePromessas ||
+          leitura != _minutosLembreteLeitura ||
+          noite != _minutosLembreteNoite;
+      if (!mudou) return false;
+      _lembretesAtivos = ativo;
+      _minutosLembreteManha = manha;
+      _minutosLembretePromessas = promessas;
+      _minutosLembreteLeitura = leitura;
+      _minutosLembreteNoite = noite;
+      notifyListeners();
+      await _prefs.setBool(_kLembretesAtivos, ativo);
+      await _prefs.setInt(_kMinutosLembreteManha, manha);
+      await _prefs.setInt(_kMinutosLembretePromessas, promessas);
+      await _prefs.setInt(_kMinutosLembreteLeitura, leitura);
+      await _prefs.setInt(_kMinutosLembreteNoite, noite);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   // --- cópia de segurança --------------------------------------------------- //
 
   /// Versão do formato da cópia. Existe para que uma cópia velha ainda possa ser
