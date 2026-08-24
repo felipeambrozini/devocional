@@ -121,6 +121,8 @@ function mensagem(
 }
 
 export const enviarLembretes = onSchedule(
+  // O runtime (nodejs22) vem do "engines.node" do package.json — na v7 das
+  // functions não se define runtime por aqui.
   {schedule: "every 5 minutes", timeZone: "Etc/UTC"},
   async () => {
     const db = getFirestore();

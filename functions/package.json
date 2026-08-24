@@ -3,7 +3,7 @@
   "description": "Push de lembretes diários do devocional (Android e web)",
   "private": true,
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "main": "lib/index.js",
   "scripts": {
@@ -17,7 +17,7 @@
   ],
   "dependencies": {
     "firebase-admin": "^12.7.0",
-    "firebase-functions": "^6.1.0"
+    "firebase-functions": "^7.3.2"
   },
   "devDependencies": {
     "typescript": "^5.6.0"
