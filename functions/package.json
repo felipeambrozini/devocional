@@ -7,14 +7,14 @@
   },
   "main": "lib/index.js",
   "scripts": {
-    "build": "tsc",
+    // O CLI do Firebase auto-executa este script no deploy SEM instalar
+    // dependências antes (o predeploy do firebase.json não existe neste
+    // projeto) — por isso o ci entra aqui: num checkout limpo de CI, o tsc
+    // só existe depois de instalar as devDependencies.
+    "build": "npm ci --include=dev && tsc",
     "build:watch": "tsc --watch",
     "logs": "firebase functions:log"
   },
-  "predeploy": [
-    "npm --prefix \"$RESOURCE_DIR\" ci --include=dev",
-    "npm --prefix \"$RESOURCE_DIR\" run build"
-  ],
   "dependencies": {
     "firebase-admin": "^12.7.0",
     "firebase-functions": "^7.3.2"
