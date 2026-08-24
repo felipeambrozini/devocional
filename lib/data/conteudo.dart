@@ -223,11 +223,19 @@ class Conteudo {
     if (pares.isEmpty) return dev;
 
     final (referenciaPrincipal, versiculoPrincipal) = pares.first;
+    // Quando o JSON traz um trecho (com ...), respeita o trecho com reticências
+    // como no livro físico: primeira/última frase sem ... na borda, meio com
+    // ...texto..., trecho final com ponto. O JSON já vem corrigido para ser
+    // exatamente igual à tradução interna; se for trecho, o texto do JSON é
+    // o que deve aparecer no cartão, não o versículo completo buscado.
+    final versiculoParaMostrar = dev.versiculo.isNotEmpty
+        ? dev.versiculo
+        : versiculoPrincipal;
     return Devocional(
       referencia: referenciaPrincipal,
       texto: dev.texto,
       titulo: dev.titulo,
-      versiculo: versiculoPrincipal,
+      versiculo: versiculoParaMostrar,
       outrosVersiculos: pares.skip(1).toList(),
     );
   }
