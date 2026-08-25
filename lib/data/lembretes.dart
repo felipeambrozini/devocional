@@ -4,7 +4,12 @@ import 'dart:ui' show DartPluginRegistrant;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform, kIsWeb;
+    show
+        TargetPlatform,
+        debugPrint,
+        defaultTargetPlatform,
+        kDebugMode,
+        kIsWeb;
 import 'package:flutter/material.dart' show TimeOfDay;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -131,6 +136,9 @@ NotificationDetails _detalhesLocais(String? icone) => NotificationDetails(
 /// mundos: no handler de fundo (isolate à parte, app morto) e com o app
 /// aberto (`onMessage`). Na web quem exibe é o service worker, não aqui.
 Future<void> _mostrarPush(Map<String, dynamic> dados) async {
+  if (kDebugMode) {
+    debugPrint('Lembretes.push recebido: $dados');
+  }
   if (!_ehAndroid) return;
   final chave = dados['chave'] as String?;
   final titulo = dados['titulo'] as String?;
