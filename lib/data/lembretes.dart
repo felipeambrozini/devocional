@@ -13,12 +13,13 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart' show TimeOfDay;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as banco_de_fusos;
 import 'package:timezone/timezone.dart' as tz;
 
-import 'estado.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'conteudo.dart';
+import 'estado.dart';
 import 'modelos.dart' show Devocional, DiaDoPlano, ModoDoTema, Periodo;
 import 'registro.dart';
 
@@ -91,16 +92,7 @@ int _atrasoEmMinutos(int agoraMinuto, int alvoMinuto) {
 bool pushAindaVale({required int minutoAgora, required int minutoAlvo}) =>
     _atrasoEmMinutos(minutoAgora, minutoAlvo) <= atrasoDoFallbackMinutos;
 
-/// O small icon da notificação conforme o tema escolhido no app: no claro,
-/// um glifo escuro; no escuro, um claro. No "Automático" devolve null — e aí
-/// quem escolhe é o próprio Android pelos qualifiers `drawable`/
-/// `drawable-night` de `ic_lembete`, o único jeito de acertar quando o app
-/// está morto e ninguém pode ler a preferência.
-///
-/// Lê direto do `SharedPreferences`, não do [Estado]: o handler de fundo
-/// roda num isolate sem árvore de widgets nem instância de estado. Falhar
-/// aqui custa só cair no ícone padrão — por isso engolido.
-Future<String?> _iconeDoTema() async {
+Future<String> _iconeDoTema() async {
   try {
     final prefs = await SharedPreferences.getInstance();
     final gravado = prefs.getString(Estado.chaveModoDoTema);
@@ -111,20 +103,18 @@ Future<String?> _iconeDoTema() async {
     return switch (modo) {
       ModoDoTema.claro => 'ic_lembete_claro',
       ModoDoTema.escuro => 'ic_lembete_escuro',
-      ModoDoTema.sistema => null,
+      ModoDoTema.sistema => 'ic_lembete',
     };
   } catch (_) {
-    return null;
+    return '@mipmap/ic_launcher';
   }
 }
 
-NotificationDetails _detalhesLocais(String? icone) => NotificationDetails(
+NotificationDetails _detalhesLocais(String icone) => NotificationDetails(
       android: AndroidNotificationDetails(
         _canalLembretes,
         'Lembretes diários',
         channelDescription: 'Aviso no horário escolhido para o devocional.',
-        // Nome do drawable; null usa o padrão do initialize, que é o par
-        // com qualifier -night.
         icon: icone,
         importance: Importance.high,
         priority: Priority.high,
@@ -161,13 +151,24 @@ Future<void> _mostrarPush(Map<String, dynamic> dados) async {
       android: AndroidInitializationSettings('ic_lembete'),
     ),
   );
-  await locais.show(
-    id: _idDaExibida(chave),
-    title: titulo,
-    body: corpo,
-    notificationDetails: _detalhesLocais(await _iconeDoTema()),
-    payload: chave,
-  );
+  final icone = await _iconeDoTema();
+  try {
+    await locais.show(
+      id: _idDaExibida(chave),
+      title: titulo,
+      body: corpo,
+      notificationDetails: _detalhesLocais(icone),
+      payload: chave,
+    );
+  } catch (_) {
+    await locais.show(
+      id: _idDaExibida(chave),
+      title: titulo,
+      body: corpo,
+      notificationDetails: _detalhesLocais('@mipmap/ic_launcher'),
+      payload: chave,
+    );
+  }
   // Cancela os dois dias possíveis do slot: hoje e amanhã da janela.
   final doSlot = switch (chave) {
     'noite' => [_idAlarmeNoiteHoje, _idAlarmeNoiteAmanha],
@@ -538,11 +539,9 @@ class LembretesReais implements Lembretes {
     return devocional.referencia;
   }
 
-  /// "Título | Gênesis 1:2" — o formato que as Promessas sempre usaram.
   String _corpoDaPromessa(Devocional? promessa) {
-    if (promessa == null) return _corpoGenerico;
-    if (promessa.titulo.isEmpty) return _corpoDe(promessa);
-    return '${promessa.titulo} | ${promessa.referencia}';
+    if (promessa == null || promessa.referencia.isEmpty) return _corpoGenerico;
+    return 'Venha ler a Promessa de Deus para o seu dia em ${promessa.referencia}';
   }
 
   String _corpoDaLeitura(DiaDoPlano? dia) {
@@ -558,15 +557,28 @@ class LembretesReais implements Lembretes {
     required tz.TZDateTime quando,
   }) async {
     try {
-      await _locais.zonedSchedule(
-        id: id,
-        title: titulo,
-        body: corpo,
-        scheduledDate: quando,
-        notificationDetails: _detalhesLocais(await _iconeDoTema()),
-        payload: chave,
-        androidScheduleMode: await _modoDeAlarme(),
-      );
+      final iconeArmar = await _iconeDoTema();
+      try {
+        await _locais.zonedSchedule(
+          id: id,
+          title: titulo,
+          body: corpo,
+          scheduledDate: quando,
+          notificationDetails: _detalhesLocais(iconeArmar),
+          payload: chave,
+          androidScheduleMode: await _modoDeAlarme(),
+        );
+      } catch (_) {
+        await _locais.zonedSchedule(
+          id: id,
+          title: titulo,
+          body: corpo,
+          scheduledDate: quando,
+          notificationDetails: _detalhesLocais('@mipmap/ic_launcher'),
+          payload: chave,
+          androidScheduleMode: await _modoDeAlarme(),
+        );
+      }
     } catch (erro, pilha) {
       // Um alarme recusado pelo sistema não pode abortar os irmãos — cada
       // slot falha sozinho.

@@ -183,13 +183,10 @@ export const enviarLembretes = onSchedule(
 
       if (deveEnviar(local.minutoDoDia, minutosPromessas, (d as any).ultimoEnvioPromessas, local.diaISO)) {
         if (conteudoDia.p?.r) {
-          const corpo = conteudoDia.p.t
-            ? `${conteudoDia.p.t} | ${conteudoDia.p.r}`
-            : conteudoDia.p.r;
           pendentes.push({
             slot: "promessas",
             message: mensagem(d.token, "promessas", "Promessas de Deus",
-              corpo, minutosPromessas),
+              `Venha ler a Promessa de Deus para o seu dia em ${conteudoDia.p.r}`, minutosPromessas),
           });
         }
       }
