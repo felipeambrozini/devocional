@@ -166,12 +166,17 @@ void main() {
       await tester.pumpAndSettle();
 
       // A aba Conversas é a entrada do chat; o interruptor que escondia os
-      // balões saiu da folha junto com a função dele.
+      // balões saiu da folha junto com a função dele, e a dica
+      // "Toque em Spurgeon para conversar..." foi removida (ver "Remoção da
+      // dica confusa"): a folha não tem mais nada da seção Conversas.
       expect(
         find.widgetWithText(SwitchListTile, 'Mostrar botões de conversa'),
         findsNothing,
       );
-      expect(find.text('Reexibir dica dos botões de conversa'), findsOneWidget);
+      expect(
+        find.text('Reexibir dica dos botões de conversa'),
+        findsNothing,
+      );
 
       Navigator.of(tester.element(find.text('Tamanho do texto'))).pop();
       await tester.pumpAndSettle();
