@@ -71,9 +71,7 @@ class BalaoDeChat extends StatelessWidget {
         final estado = EscopoDoEstado.de(context);
         final primeiraVez = !estado.baloesTooltipDispensado;
         return Tooltip(
-          message: primeiraVez
-              ? 'Toque em ${persona.nome} para conversar sobre o capítulo'
-              : 'Conversas com ${persona.nome}',
+          message: 'Conversas com ${persona.nome}',
           child: Semantics(
             button: true,
             label: 'Abrir histórico de conversas com ${persona.nome}',

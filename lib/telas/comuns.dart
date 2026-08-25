@@ -530,33 +530,6 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                   ),
                   child: const Filete(largura: 64),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    Spacing.sp20,
-                    Spacing.sp24,
-                    Spacing.sp20,
-                    Spacing.sp4,
-                  ),
-                  child: Text('Conversas', style: tema.headlineSmall),
-                ),
-                ListTile(
-                  leading: Icon(
-                    Icons.tips_and_updates_outlined,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  title: const Text('Reexibir dica dos botões de conversa'),
-                  subtitle: const Text(
-                    'Mostra novamente a dica "Toque em Spurgeon para conversar sobre o capítulo".',
-                  ),
-                  onTap: () async {
-                    await estado.reexibirDicaDosBaloes();
-                    if (!context.mounted) return;
-                    mostrarAviso(
-                      context,
-                      'Dica dos botões de conversa reexibida.',
-                    );
-                  },
-                ),
                 // Lembrete exclusivo do Android: alarme agendado no próprio
                 // aparelho (ver lembretes.dart). iOS e web ficam de fora.
                 if (lembretesSuportados)
@@ -714,9 +687,7 @@ class _SecaoDeLembretes {
       ),
       SwitchListTile(
         title: const Text('Avisar no horário do devocional'),
-        subtitle: const Text(
-          'Quatro horários independentes.',
-        ),
+        subtitle: const Text('Quatro horários independentes.'),
         value: estado.lembretesAtivos,
         onChanged: (novo) => _alternar(context, novo),
       ),
@@ -1059,10 +1030,7 @@ class _IntroducaoAberta extends StatelessWidget {
             Text(titulo, style: tema.headlineSmall),
             const SizedBox(height: Spacing.sp8),
             for (final paragrafo in corpo.split('\n\n')) ...[
-              Text(
-                paragrafo,
-                style: tema.bodyMedium?.copyWith(height: 1.7),
-              ),
+              Text(paragrafo, style: tema.bodyMedium?.copyWith(height: 1.7)),
               const SizedBox(height: Spacing.sp10),
             ],
             const SizedBox(height: Spacing.sp12),
@@ -1074,9 +1042,7 @@ class _IntroducaoAberta extends StatelessWidget {
               decoration: BoxDecoration(
                 color: cor.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(10),
-                border: Border(
-                  left: BorderSide(color: cor.primary, width: 3),
-                ),
+                border: Border(left: BorderSide(color: cor.primary, width: 3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
