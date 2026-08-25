@@ -7,6 +7,7 @@ import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
 import '../data/nuvem.dart';
+import '../data/personas.dart';
 import '../data/recursos.dart';
 import '../data/voz.dart';
 import '../spacing.dart';
@@ -151,6 +152,44 @@ class _TelaSobreState extends State<TelaSobre> {
                   // terminou foi o trecho, não o capítulo.
                 );
               },
+            ),
+            const SizedBox(height: Spacing.sp32),
+            Text('Sobre mim', style: tema.headlineSmall),
+            const SizedBox(height: Spacing.sp12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const RetratoDePersona(
+                  persona: personaFelipe,
+                  tamanho: 72,
+                  folga: Spacing.sp3,
+                ),
+                const SizedBox(width: Spacing.sp14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Felipe Ambrozini', style: tema.titleMedium),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Criador do app',
+                        style: tema.labelMedium?.copyWith(
+                          color: cor.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: Spacing.sp12),
+            Text(
+              'Sou cristão, criador de conteúdo e desenvolvedor. Criei este '
+              'app para meu uso diário de leitura bíblica e dos devocionais '
+              'de Spurgeon e o abri para quem quiser usar também. Aqui reúno '
+              'ensino bíblico, devocionais e ferramentas simples de leitura, '
+              'sempre apontando para Cristo.',
+              style: tema.bodyLarge?.copyWith(height: 1.7),
             ),
             const SizedBox(height: Spacing.sp32),
             Text('Onde me encontrar', style: tema.headlineSmall),
