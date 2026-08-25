@@ -235,6 +235,13 @@ abstract class Lembretes {
   /// teste — o armamento dos alarmes acontece em toda [agendar].
   Future<bool> agendados();
 
+  /// Mostra uma notificação de teste imediatamente e devolve o diagnóstico do
+  /// caminho de exibição: permissão do app, estado do canal, alarme exato e
+  /// quantos alarmes de reserva estão armados. Para o botão "Testar" da folha
+  /// de ajustes — é o que separa "o aparelho bloqueou" de "o servidor não
+  /// mandou" sem depender de adb.
+  Future<String> diagnosticar();
+
   /// O fuso horário detectado neste aparelho (ex.: "America/Sao_Paulo"), o
   /// mesmo que vai para o Firestore em [agendar] e que a Function usa para
   /// calcular a hora local. Só para depurar: vazio depois de [agendar]
@@ -608,6 +615,71 @@ class LembretesReais implements Lembretes {
         .doc(token)
         .get();
     return doc.exists;
+  }
+
+  @override
+  Future<String> diagnosticar() async {
+    if (!_ehAndroid) return 'Diagnóstico disponível só no Android.';
+    final partes = <String>[];
+    final androidPlugin = _locais
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+
+    final notificacoesOk =
+        await androidPlugin?.areNotificationsEnabled() ?? false;
+    partes.add(
+      notificacoesOk
+          ? 'Permissão do app: OK'
+          : 'Permissão do app: BLOQUEADA (Configurações > Notificações)',
+    );
+
+    try {
+      final canais = await androidPlugin?.getNotificationChannels() ?? const [];
+      AndroidNotificationChannel? canal;
+      for (final c in canais) {
+        if (c.id == _canalLembretes) canal = c;
+      }
+      partes.add(
+        canal == null
+            ? 'Canal "Lembretes diários": NÃO EXISTE'
+            : 'Canal "Lembretes diários": importância ${canal.importance.name}'
+                '${canal.importance == Importance.none ? ' — BLOQUEADO, reative em Configurações > Notificações > categoria' : ''}',
+      );
+    } catch (erro) {
+      partes.add('Canal: não deu para ler ($erro)');
+    }
+
+    final exato =
+        await androidPlugin?.canScheduleExactNotifications() ?? false;
+    partes.add(
+      exato
+          ? 'Alarme exato (reserva T+5): OK'
+          : 'Alarme exato: indisponível — reserva pode atrasar',
+    );
+
+    var pendentes = -1;
+    try {
+      pendentes = (await _locais.pendingNotificationRequests()).length;
+    } catch (_) {}
+    partes.add(
+      pendentes > 0
+          ? 'Alarmes de reserva armados: $pendentes'
+          : 'Alarmes de reserva armados: NENHUM (abra o app com lembretes ligados)',
+    );
+
+    try {
+      await _locais.show(
+        id: 9999,
+        title: 'Teste do Devocional',
+        body: 'Se você está lendo isto, o canal de notificações funciona.',
+        notificationDetails: _detalhesLocais(await _iconeDoTema()),
+        payload: 'manha',
+      );
+      partes.add('Notificação de teste: ENVIADA — procure na gaveta.');
+    } catch (erro) {
+      partes.add('Notificação de teste: FALHOU — $erro');
+    }
+    return partes.join('\n');
   }
 
   @override

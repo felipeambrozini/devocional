@@ -749,6 +749,14 @@ class _SecaoDeLembretes {
           aoEscolher: (minutos) =>
               aplicarHorarioDeLembrete(estado, minutosNoite: minutos),
         ),
+        ListTile(
+          leading: const Icon(Icons.bug_report_outlined),
+          title: const Text('Testar notificação agora'),
+          subtitle: const Text(
+            'Mostra uma notificação de teste e o diagnóstico do aparelho.',
+          ),
+          onTap: () => _diagnosticar(context),
+        ),
       ],
     ];
   }
@@ -787,6 +795,27 @@ class _SecaoDeLembretes {
         'aparelho para usar os lembretes.',
       );
     }
+  }
+
+  /// Dispara a notificação de teste e mostra o diagnóstico do aparelho num
+  /// diálogo — o que separa "o aparelho bloqueou o canal" de "o servidor não
+  /// mandou" sem precisar de adb.
+  Future<void> _diagnosticar(BuildContext context) async {
+    final resultado = await Lembretes.instancia.diagnosticar();
+    if (!context.mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Diagnóstico das notificações'),
+        content: Text(resultado),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 }
 

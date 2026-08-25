@@ -53,6 +53,9 @@ class _LembretesFalsas implements Lembretes {
   Future<bool> agendados() async => agendadoSimulado;
 
   @override
+  Future<String> diagnosticar() async => 'diagnóstico de teste';
+
+  @override
   String fusoAtual = 'America/Sao_Paulo';
 
   /// Simula o toque numa notificação com o app já aberto.
