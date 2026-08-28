@@ -101,11 +101,7 @@ class Conteudo {
 
   /// Um único versículo, para mostrar o texto de um favorito ou de uma nota sem
   /// abrir o capítulo inteiro na tela.
-  Future<String> versiculo(
-    String slug,
-    int capitulo,
-    int numero,
-  ) async {
+  Future<String> versiculo(String slug, int capitulo, int numero) async {
     final cap = await this.capitulo(slug, capitulo);
     for (final (n, texto) in cap.versiculos) {
       if (n == numero) return texto;
@@ -165,7 +161,7 @@ class Conteudo {
     final cacheado = _devocionais;
     if (cacheado != null) return cacheado;
     final cru = await rootBundle.loadString(
-      'assets/devotionals/manha_e_noite.json',
+      'assets/devocionais/manha_e_noite.json',
     );
     final dados = (json.decode(cru) as Map<String, dynamic>).map(
       (chave, valor) => MapEntry(chave, valor as Map<String, dynamic>),
@@ -253,7 +249,7 @@ class Conteudo {
       _tentouPromessas = true;
       try {
         final cru = await rootBundle.loadString(
-          'assets/devotionals/promessas_de_deus.json',
+          'assets/devocionais/promessas_de_deus.json',
         );
         _promessas = (json.decode(cru) as Map<String, dynamic>).map(
           (chave, valor) => MapEntry(chave, valor as Map<String, dynamic>),
@@ -348,10 +344,7 @@ class Conteudo {
   /// ocorrências na Bíblia inteira, e a pessoa não tinha como saber que faltava.
   static const limiteDeBusca = 300;
 
-  Stream<Achado> buscar(
-    String termo, {
-    int limite = limiteDeBusca,
-  }) async* {
+  Stream<Achado> buscar(String termo, {int limite = limiteDeBusca}) async* {
     final alvo = _normalizar(termo);
     if (alvo.length < 3) return;
     final expressao = _regexDePalavra(alvo);

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:felipe_ambrozini/data/conteudo.dart';
 import 'package:felipe_ambrozini/data/estado.dart';
@@ -18,8 +17,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Leitor de áudio sem plataforma, para o teste do fluxo de voz: o teste
@@ -44,15 +41,39 @@ class _LeitorFalsoDoApp implements LeitorDeAudio {
   bool pausadoDeFora = false;
 
   Completer<void>? _fim;
+  Completer<void>? _iniciado;
+
+  /// Quando true, o próximo [tocar] não inicia sozinho — fica esperando
+  /// [simularInicio], para o teste exercitar o estado "carregando" na tela.
+  /// Fora isso (o padrão), o leitor inicia de imediato, como o original.
+  bool atrasarProximoInicio = false;
 
   @override
-  Future<void> tocar(Uint8List bytes, {Duration? de}) {
+  Future<void> tocar(
+    Uint8List bytes, {
+    Duration? de,
+    required void Function(Future<void> fim) aoFim,
+  }) {
     pausadoDeFora = false;
     toques++;
     ultimoDe = de;
     final fim = Completer<void>();
     _fim = fim;
-    return fim.future;
+    aoFim(fim.future);
+    if (atrasarProximoInicio) {
+      atrasarProximoInicio = false;
+      final iniciado = Completer<void>();
+      _iniciado = iniciado;
+      return iniciado.future;
+    }
+    return Future<void>.value();
+  }
+
+  /// Simula o preparo terminando e a leitura realmente começando a tocar —
+  /// só tem efeito depois de [atrasarProximoInicio].
+  void simularInicio() {
+    final iniciado = _iniciado;
+    if (iniciado != null && !iniciado.isCompleted) iniciado.complete();
   }
 
   @override
@@ -96,8 +117,12 @@ void main() {
     // e os balões ficariam escondidos em todos os testes deste arquivo (ver
     // Recursos.conversas).
     Recursos.conversasForcado = true;
+    Voz.baseUrlForTest = 'https://test.audio';
   });
-  tearDown(() => Recursos.conversasForcado = null);
+  tearDown(() {
+    Recursos.conversasForcado = null;
+    Voz.baseUrlForTest = null;
+  });
 
   Future<Estado> estadoLimpo() async =>
       Estado(await SharedPreferences.getInstance());
@@ -1413,16 +1438,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // A leitura começa; o preparo é lento (o cliente só responde quando o
+      // A leitura começa; o preparo é lento (o leitor só "inicia" quando o
       // teste deixa) e a barra de cima tem de mostrá-lo — senão quem rolou
       // não saberia que o toque pegou nem como cancelar.
-      final resposta = Completer<http.Response>();
-      final cliente = MockClient((_) => resposta.future);
+      leitor.atrasarProximoInicio = true;
       final leitura = Voz.instancia.alternar(
         'capitulo:genesis.1',
         texto: 'No princípio.',
-        cliente: cliente,
-        chaveTts: 'teste',
         tipo: TipoConteudoAudio.biblia,
       );
       await tester.pump();
@@ -1436,15 +1458,10 @@ void main() {
         reason: 'o preparo não pode ser invisível na barra de cima',
       );
 
-      resposta.complete(
-        http.Response(
-          json.encode({'audioContent': base64.encode([1, 2, 3])}),
-          200,
-        ),
-      );
-      // Deixa o fluxo da resposta chegar ao tocar. pumpEventQueue não serve
-      // aqui: em testWidgets o relógio é falso, e o Future.delayed dele é um
-      // timer que nunca dispara sem pump.
+      // Simula o preparo terminando: só agora a leitura "começa" de verdade.
+      // pumpEventQueue não serve aqui: em testWidgets o relógio é falso, e o
+      // Future.delayed dele é um timer que nunca dispara sem pump.
+      leitor.simularInicio();
       await tester.pumpAndSettle();
       expect(Voz.instancia.tocando, isTrue);
       expect(
@@ -1549,21 +1566,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final resposta = Completer<http.Response>();
-      final cliente = MockClient((_) => resposta.future);
       final leitura = Voz.instancia.alternar(
         'capitulo:genesis.2',
         texto: 'No princípio.',
-        cliente: cliente,
-        chaveTts: 'teste',
         tipo: TipoConteudoAudio.biblia,
-      );
-      await tester.pump();
-      resposta.complete(
-        http.Response(
-          json.encode({'audioContent': base64.encode([1, 2, 3])}),
-          200,
-        ),
       );
       await tester.pumpAndSettle();
       expect(Voz.instancia.tocando, isTrue);
@@ -1697,34 +1703,27 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final resposta = Completer<http.Response>();
-      final cliente = MockClient((_) => resposta.future);
+      leitor.atrasarProximoInicio = true;
       final leitura = Voz.instancia.alternar(
         'capitulo:genesis.4',
         texto: 'No princípio.',
-        cliente: cliente,
-        chaveTts: 'teste',
         tipo: TipoConteudoAudio.biblia,
       );
       await tester.pump();
       expect(Voz.instancia.carregando, isTrue);
 
-      // O deslize troca de capítulo (4→5) com a síntese ainda no ar: o Desfazer
-      // tem de devolver a voz, não só a página — e a síntese não pode ser
-      // engolida pelo novo capítulo (ele cai no discard por versão, mas entra
-      // na cache: a quota não se perde).
+      // O deslize troca de capítulo (4→5) com o preparo ainda no ar: o
+      // Desfazer tem de devolver a voz, não só a página — e o preparo velho
+      // não pode vazar por cima do capítulo novo (ele cai no discard por
+      // versão).
       await tester.fling(find.byType(ListView), const Offset(-300, 0), 800);
       await tester.pumpAndSettle();
       expect(estado.ultimaLeitura, ('genesis', 5));
 
-      // A síntese conclui DENTRO da janela do Desfazer (3s): o áudio está na
-      // cache, e o Desfazer retoma — não morre no silêncio do preparo.
-      resposta.complete(
-        http.Response(
-          json.encode({'audioContent': base64.encode([1, 2, 3])}),
-          200,
-        ),
-      );
+      // O preparo velho "inicia" DENTRO da janela do Desfazer (3s), mas já
+      // foi descartado por versão — o Desfazer é quem manda numa leitura
+      // nova, não morre no silêncio do preparo velho.
+      leitor.simularInicio();
       await tester.pumpAndSettle();
       await tester.tap(find.text('Desfazer'));
       await tester.pumpAndSettle();

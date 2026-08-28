@@ -1,22 +1,30 @@
 // Lembretes diários do devocional — o servidor que decide quem avisar.
 //
-// Roda a cada 5 minutos (Cloud Scheduler, infra do Google — sem os atrasos
-// de 10-30 min do cron do GitHub Actions que matou a versão anterior).
+// Roda a cada minuto (Cloud Scheduler, infra do Google — sem os atrasos de
+// 10-30 min do cron do GitHub Actions que matou a versão anterior). É o
+// único caminho de lembrete na web — `flutter_local_notifications_web` não
+// implementa `zonedSchedule` (lança `UnsupportedError`), então lá não existe
+// reserva local — por isso a cadência apertada: cada minuto de atraso aqui é
+// um minuto de atraso na única notificação que a web recebe.
 // Lê a coleção `lembretes` no Firestore ({token, minutosManha, minutosNoite,
 // fuso}, gravada pelo app; ver lib/data/lembretes.dart) e envia via FCM uma
 // mensagem **data-only** para quem venceu o horário:
 //
 //   - data-only acorda o handler Dart com o app morto no Android, que exibe
-//     via notificação local e cancela o alarme de reserva de T+5 min;
+//     via notificação local (o lembrete local recorrente de reserva do
+//     Android continua rodando por conta própria, sem cancelamento cruzado —
+//     ver `LembretesReais._armarReservas` em lib/data/lembretes.dart);
 //   - na web, o service worker (firebase-messaging-sw.js) lê os mesmos dados
 //     e exibe por conta própria;
-//   - `minutos` vai junto para o app saber suprimir um push tardio que o
-//     alarme de reserva já cobriu.
+//   - `minutos` vai junto para o app saber suprimir um push muito tardio (ver
+//     `pushAindaVale`).
 //
 // Confiabilidade: tolerância de 60 min depois do horário cadastrado + um
 // envio único por dia marcado no próprio documento
-// (`ultimoEnvioManha`/`ultimoEnvioNoite`, escritos só aqui). O cron do GitHub
-// pulava lembrete quase todo dia porque exigia minuto exato; isto aqui não.
+// (`ultimoEnvioManha`/`ultimoEnvioNoite`, escritos só aqui) — uma falha
+// transitória (rede, cota) tem 60 tentativas antes de desistir do dia, não
+// 12. O cron do GitHub pulava lembrete quase todo dia porque exigia minuto
+// exato; isto aqui não.
 //
 // Conteúdo: assets/conteudo-lembretes.json — gerado dos JSONs do app
 // (manha_e_noite/promessas_de_deus) só com referência e título, que é tudo
@@ -130,8 +138,10 @@ function mensagem(
 
 export const enviarLembretes = onSchedule(
   // O runtime (nodejs22) vem do "engines.node" do package.json — na v7 das
-  // functions não se define runtime por aqui.
-  {schedule: "every 5 minutes", timeZone: "Etc/UTC"},
+  // functions não se define runtime por aqui. Cron unix, não "every X
+  // minutes": esse atalho não tem forma de dizer "1" (singular quebra o
+  // parser do Scheduler).
+  {schedule: "* * * * *", timeZone: "Etc/UTC"},
   async () => {
     const db = getFirestore();
     const snap = await db.collection(COLECAO).get();

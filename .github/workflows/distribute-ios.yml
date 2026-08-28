@@ -80,9 +80,7 @@ jobs:
             --dart-define=GEMINI_API_KEY_WEB=${{ secrets.GEMINI_API_KEY_WEB }} \
             --dart-define=GEMINI_API_KEY_ANDROID=${{ secrets.GEMINI_API_KEY_ANDROID }} \
             --dart-define=GEMINI_API_KEY_IOS=${{ secrets.GEMINI_API_KEY_IOS }} \
-            --dart-define=TTS_API_KEY_WEB=${{ secrets.TTS_API_KEY_WEB }} \
-            --dart-define=TTS_API_KEY_ANDROID=${{ secrets.TTS_API_KEY_ANDROID }} \
-            --dart-define=TTS_API_KEY_IOS=${{ secrets.TTS_API_KEY_IOS }}
+            --dart-define=AUDIO_BASE_URL=${{ secrets.AUDIO_BASE_URL }}
 
       - name: Distribute to Firebase App Distribution
         uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15

@@ -23,8 +23,9 @@ mesmo código).
   com o progresso de cada um); quem só participa pode sair, e some só o
   próprio progresso.
 - **Leitura em voz alta**: botão Ouvir narra capítulos da Bíblia, Manhã e
-  Noite, Promessas de Deus e as introduções, numa só voz (barítono, Google
-  Cloud Text-to-Speech).
+  Noite, Promessas de Deus e as introduções, na voz clonada do Felipe, em MP3
+  pré-gerado (hospedado em `AUDIO_BASE_URL`). Fora da web dá para baixar por
+  categoria e ouvir offline, nos Ajustes ("Áudio offline").
 - **Conversas com IA**: duas personas para conversar, Charles Spurgeon e
   Felipe Ambrozini, cada uma com o próprio jeito de falar (Gemini). Histórico
   salvo por conversa; aba própria no celular, balões flutuantes nas telas
@@ -101,10 +102,13 @@ plano compartilhado.
   `image_picker` escolhe a foto na câmera ou na galeria.
 - `http` fala direto com a Gemini API (`gemini-3.5-flash-lite`, tier gratuito;
   nome fixo, não o alias `gemini-flash-latest`, que pode migrar para fora do
-  grátis sem aviso) para o chat das duas personas (`lib/data/ia.dart`) e com a
-  Google Cloud Text-to-Speech para a leitura em voz alta (`lib/data/voz.dart`);
-  `just_audio` toca o áudio sintetizado. Chaves em `lib/data/google.dart`,
-  vindas do `.env.json`.
+  grátis sem aviso) para o chat das duas personas (`lib/data/ia.dart`). Chave
+  em `lib/data/google.dart`, vinda do `.env.json`.
+- `just_audio` toca os MP3 pré-gerados da leitura em voz alta
+  (`lib/data/voz.dart`), servidos a partir de `AUDIO_BASE_URL`
+  (`lib/data/audio_config.dart`); `AudioOffline`
+  (`lib/data/audio_offline.dart`) baixa e cacheia esses arquivos em disco
+  fora da web, para ouvir sem internet.
 - Fontes empacotadas localmente (Cinzel e Montserrat), sem depender de rede na
   primeira execução.
 - Conteúdo (Bíblia, devocionais, introduções, cronograma) vem de arquivos JSON
@@ -136,7 +140,7 @@ repositório: a BKJ e os devocionais não serão traduzidos de novo.
 | Cronograma anual | 365 dias (366 em ano bissexto), 449 faixas |
 | 66 introduções | Completas, com as frases aplicadas e o tom calibrado (56,3 "!" por 10 mil palavras) |
 
-Regras que valem para os assets anuais (`assets/devotionals/*.json` e
+Regras que valem para os assets anuais (`assets/devocionais/*.json` e
 `assets/reading_plan*.json`):
 
 - **Chave de data é DD-MM**, dia primeiro, como se escreve a data em português.
@@ -185,7 +189,10 @@ motivo novo.
   perdido em perda visível corta contra o espírito de um app devocional.
 - **Áudio** — recusado inicialmente: voz sintética lendo Escritura mal é pior
   que não ter. Revisto em 17/08/2026 com a Google Cloud Text-to-Speech (voz de
-  barítono, qualidade de narrador), ver "Leitura em voz alta" acima.
+  barítono, qualidade de narrador). Revisto de novo em 26/08/2026: trocado por
+  MP3 pré-gerados com a voz clonada do Felipe, mais natural que TTS em tempo
+  real, com download opcional para uso offline — ver "Leitura em voz alta"
+  acima.
 - **Cores de marcação** — mais taxonomia do que um leitor só precisa.
 - **Widget na tela inicial** — código nativo nas duas plataformas para pouco
   retorno.
@@ -332,23 +339,36 @@ motivo novo.
 ### Lembretes diários (Android e web)
 
 Híbrido: **push da Cloud Function agendada** (`functions/src/index.ts`, a cada
-5 min na infra do Google) via FCM data-only + **alarme local de reserva** no
-Android em T+5 min (`flutter_local_notifications`). O cron do GitHub Actions
-da primeira versão atrasava 10-30 min e pulava a janela de 5 min — o
-scheduler do Google não; e mesmo assim sobrou tolerância: 60 min depois do
-horário cadastrado ainda envia, com um envio único por dia marcado no próprio
-documento (`ultimoEnvioManha`/`ultimoEnvioNoite`, escritos só pela Function).
+minuto na infra do Google — o único caminho de lembrete na web, sem reserva
+local possível ali) via FCM data-only + **lembrete local recorrente de
+reserva**, só no Android, em T+5 min, todo dia (`flutter_local_notifications`,
+`matchDateTimeComponents`). O cron do GitHub Actions da primeira versão
+atrasava 10-30 min e pulava a janela de 5 min — o scheduler do Google não; e
+mesmo assim sobrou tolerância: 60 min depois do horário cadastrado ainda
+envia (60 tentativas na cadência de 1 min, não 12), com um envio único por
+dia marcado no próprio documento (`ultimoEnvioManha`/`ultimoEnvioNoite`,
+escritos só pela Function). Cadência de 1 min em vez de 5: mais leituras no
+Firestore (uma por lembrete cadastrado, por minuto — folga de sobra dentro do
+free tier para o número de usuários deste app; reavaliar se crescer muito).
 
-- **Formato das notificações**: "Devocional da Manhã | Josué 5:12",
+- **Formato das notificações do push**: "Devocional da Manhã | Josué 5:12",
   "Devocional da Noite | Cantares 1:4" e "Promessas de Deus | Título |
   Gênesis 3:15" — referência do dia, calculada dos assets. No Android quem
   exibe é o handler Dart (data-only acorda o app morto); na web, o service
-  worker. A manhã dispara duas notificações (devocional + promessas).
-- **Reserva sem duplicata**: o alarme local dispara só se o push não chegou
-  até 5 min depois (`atrasoDoFallbackMinutos`); o push que chega cancela os
-  alarmes pendentes do slot, e um push mais tarde que isso é suprimido
-  (`pushAindaVale`) porque o alarme já avisou. Falhas são isoladas por
-  alarme/conteúdo — nenhuma derruba o conjunto.
+  worker. A manhã dispara duas notificações (devocional + promessas). O
+  lembrete local de reserva usa um corpo genérico fixo, sem a referência do
+  dia (ver bullet abaixo).
+- **Reserva permanente, sem exato**: o lembrete local dispara todo dia às
+  horário+5min (`atrasoDoFallbackMinutos`), sempre inexato — sem pedir a
+  permissão "Alarmes e lembretes" do Android, que é assustadora e
+  desnecessária para o que é, no fim, só uma notificação. Recorrente de
+  propósito (o Android reagenda a ocorrência de amanhã ao disparar a de
+  hoje, sem o app rodar); não é cancelado quando o push chega, porque
+  cancelar mataria a recorrência para os próximos dias — o preço é o
+  aviso genérico da reserva poder aparecer também nos dias em que o push
+  funciona. `flutter_local_notifications_web` não implementa `zonedSchedule`,
+  então a web fica só com o push mesmo. Falhas são isoladas por
+  slot/conteúdo — nenhuma derruba o conjunto.
 - **Contrato do Firestore** (`lembretes/{token}`, id = token FCM):
   `{token, minutosManha, minutosNoite, fuso}` escritos pelo app protegidos
   por App Check (`request.app != null`), mais `ultimoEnvio*` escritos só pela
@@ -553,7 +573,7 @@ flutter build web --dart-define-from-file=.env.json
 ```
 (O `.env.json` deve conter todas as chaves: `FIREBASE_API_KEY_WEB`,
 `FIREBASE_API_KEY_ANDROID`, `FIREBASE_API_KEY_IOS`, `GEMINI_API_KEY_WEB`,
-`GEMINI_API_KEY_ANDROID`, `TTS_API_KEY_WEB`, `TTS_API_KEY_ANDROID`, etc.)
+`GEMINI_API_KEY_ANDROID`, `AUDIO_BASE_URL`, etc.)
 
 Ícone do app, favicon e tela de abertura são gerados a partir das fontes em
 `assets/icone/`; nunca editados à mão:
@@ -587,7 +607,7 @@ publicar à mão no console. O site mora em
 build vai para `public/devocional` e o rewrite em `firebase.json` cuida do
 SPA). O build usa `--base-href /devocional/` e as chaves de API vêm dos
 Secrets do repositório: `FIREBASE_API_KEY_WEB`, `GEMINI_API_KEY_WEB` e
-`TTS_API_KEY_WEB` (precisam estar cadastrados em Settings → Secrets and
+`AUDIO_BASE_URL` (precisam estar cadastrados em Settings → Secrets and
 variables, no environment `github-pages`). O deploy usa
 `FIREBASE_SERVICE_ACCOUNT` (JSON da conta de serviço do Firebase). As actions
 estão fixadas em commit SHA completo, não em tag mutável.

@@ -50,9 +50,7 @@ void main() {
       for (final livro in livrosPresentes) {
         final dados =
             json.decode(
-                  File(
-                    'assets/biblia/${livro.slug}.json',
-                  ).readAsStringSync(),
+                  File('assets/biblia/${livro.slug}.json').readAsStringSync(),
                 )
                 as Map<String, dynamic>;
         final capitulos = dados['capitulos'] as Map<String, dynamic>;
@@ -160,7 +158,7 @@ void main() {
       final dados =
           json.decode(
                 File(
-                  'assets/devotionals/manha_e_noite.json',
+                  'assets/devocionais/manha_e_noite.json',
                 ).readAsStringSync(),
               )
               as Map<String, dynamic>;
@@ -199,7 +197,7 @@ void main() {
       final dados =
           json.decode(
                 File(
-                  'assets/devotionals/manha_e_noite.json',
+                  'assets/devocionais/manha_e_noite.json',
                 ).readAsStringSync(),
               )
               as Map<String, dynamic>;
@@ -275,7 +273,7 @@ void main() {
       // Promessas de Deus agora também busca o versículo ao vivo, para a pessoa
       // resolver a referência; e ela às vezes é uma faixa de dois versículos
       // ("Salmos 102:13-14"), não só um único versículo.
-      final arquivo = File('assets/devotionals/promessas_de_deus.json');
+      final arquivo = File('assets/devocionais/promessas_de_deus.json');
       if (!arquivo.existsSync()) return;
       final dados =
           json.decode(arquivo.readAsStringSync()) as Map<String, dynamic>;
@@ -293,53 +291,47 @@ void main() {
   });
 
   group('versículo e faixa', () {
-    test('versiculo devolve o texto pedido e vazio para número ausente',
-        () async {
-      final texto = await Conteudo.instancia.versiculo('joao', 3, 16);
-      expect(texto, startsWith('Porque Deus amou o mundo'));
-      expect(
-        await Conteudo.instancia.versiculo('joao', 3, 999),
-        '',
-      );
-    });
+    test(
+      'versiculo devolve o texto pedido e vazio para número ausente',
+      () async {
+        final texto = await Conteudo.instancia.versiculo('joao', 3, 16);
+        expect(texto, startsWith('Porque Deus amou o mundo'));
+        expect(await Conteudo.instancia.versiculo('joao', 3, 999), '');
+      },
+    );
 
-    test('versiculoOuFaixa une os versículos de uma faixa por espaço',
-        () async {
-      final faixa = await Conteudo.instancia.versiculoOuFaixa(
-        'salmos',
-        102,
-        13,
-        14,
-      );
-      final soO13 = await Conteudo.instancia.versiculo(
-        'salmos',
-        102,
-        13,
-      );
-      // A promessa inteira é o 13 mais o 14, unidos por espaço, não só o
-      // primeiro (o caso comentado em conteudo.dart: "Salmos 102:13-14").
-      expect(faixa, startsWith(soO13));
-      expect(faixa, isNot(equals(soO13)));
-      expect(faixa, contains(' '));
-    });
+    test(
+      'versiculoOuFaixa une os versículos de uma faixa por espaço',
+      () async {
+        final faixa = await Conteudo.instancia.versiculoOuFaixa(
+          'salmos',
+          102,
+          13,
+          14,
+        );
+        final soO13 = await Conteudo.instancia.versiculo('salmos', 102, 13);
+        // A promessa inteira é o 13 mais o 14, unidos por espaço, não só o
+        // primeiro (o caso comentado em conteudo.dart: "Salmos 102:13-14").
+        expect(faixa, startsWith(soO13));
+        expect(faixa, isNot(equals(soO13)));
+        expect(faixa, contains(' '));
+      },
+    );
 
     test('faixa fora do capítulo devolve texto vazio', () async {
       expect(
-        await Conteudo.instancia.versiculoOuFaixa(
-          'salmos',
-          102,
-          130,
-          140,
-        ),
+        await Conteudo.instancia.versiculoOuFaixa('salmos', 102, 130, 140),
         '',
       );
     });
 
-    test('capitulo de livro ausente devolve capítulo vazio, sem estourar',
-        () async {
-      final cap = await Conteudo.instancia.capitulo('livro-inexistente', 1);
-      expect(cap.versiculos, isEmpty);
-      expect(cap.numero, 1);
-    });
+    test(
+      'capitulo de livro ausente devolve capítulo vazio, sem estourar',
+      () async {
+        final cap = await Conteudo.instancia.capitulo('livro-inexistente', 1);
+        expect(cap.versiculos, isEmpty);
+        expect(cap.numero, 1);
+      },
+    );
   });
 }

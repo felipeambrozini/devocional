@@ -60,7 +60,7 @@ A falha em ativar o App Check (site key ausente durante a migração, domínio a
 
 ### 3.4 Lembrete Diário — Sem Backend
 
-O lembrete diário é agendado no próprio aparelho (`flutter_local_notifications`), exclusivo do Android, e não trafega dado nenhum: não há coleção no Firestore, token remoto ou chamada de rede envolvidos. A superfície se resume às permissões locais do Android (POST_NOTIFICATIONS, concedida em runtime; SCHEDULE_EXACT_ALARM, concedida nas Configurações pelo usuário que quiser alarme exato).
+O lembrete diário roda em `flutter_local_notifications`, exclusivo do Android. A superfície de permissão local se resume a POST_NOTIFICATIONS, concedida em runtime — sem pedir a permissão especial de alarme exato: o agendamento local é só a reserva de T+5 min, sempre inexato de propósito (ver `lib/data/lembretes.dart`).
 
 ---
 

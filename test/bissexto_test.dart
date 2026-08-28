@@ -64,11 +64,11 @@ void main() {
         // extra; o cronograma de leitura em ano comum tem 365 entradas e não o
         // prevê. O ano bissexto usa a variante própria, testada abaixo.
         expect(
-          ler('assets/devotionals/manha_e_noite.json').containsKey('29-02'),
+          ler('assets/devocionais/manha_e_noite.json').containsKey('29-02'),
           isTrue,
         );
         expect(
-          ler('assets/devotionals/promessas_de_deus.json').containsKey('29-02'),
+          ler('assets/devocionais/promessas_de_deus.json').containsKey('29-02'),
           isTrue,
         );
 

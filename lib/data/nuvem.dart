@@ -343,15 +343,21 @@ class Nuvem extends ChangeNotifier {
         serializar: estado.serializarLembretes,
         fundir: (remota) async {
           final mudou = await estado.fundirLembretes(remota);
-          if (mudou && estado.lembretesAtivos) {
-            TimeOfDay hora(int m) => TimeOfDay(hour: m ~/ 60, minute: m % 60);
-            await Lembretes.instancia.agendar(
-              manha: hora(estado.minutosLembreteManha),
-              promessas: hora(estado.minutosLembretePromessas),
-              leitura: hora(estado.minutosLembreteLeitura),
-              noite: hora(estado.minutosLembreteNoite),
-            );
-          }
+          if (!mudou || !estado.lembretesAtivos) return;
+          // O horário ligado veio de outro aparelho — este pode nunca ter
+          // pedido a permissão de notificação. Sem checar aqui, agendar()
+          // roda no vácuo: grava o horário mas nada aparece neste aparelho.
+          // Não desliga `lembretesAtivos` aqui: é a preferência compartilhada
+          // entre aparelhos, e derrubá-la também desligaria os que já têm
+          // permissão — a falta de permissão é só deste aparelho.
+          if (!await Lembretes.instancia.pedirPermissao()) return;
+          TimeOfDay hora(int m) => TimeOfDay(hour: m ~/ 60, minute: m % 60);
+          await Lembretes.instancia.agendar(
+            manha: hora(estado.minutosLembreteManha),
+            promessas: hora(estado.minutosLembretePromessas),
+            leitura: hora(estado.minutosLembreteLeitura),
+            noite: hora(estado.minutosLembreteNoite),
+          );
         },
         puxar: () => _puxarLembretes(usuario.uid),
         empurrar: (copia) => _empurrarLembretes(usuario.uid, copia),

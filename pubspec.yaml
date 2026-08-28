@@ -146,7 +146,7 @@ flutter:
   # Os 66 livros da tradução interna são carregados sob demanda pelo slug.
   assets:
     - assets/biblia/
-    - assets/devotionals/
+    - assets/devocionais/
     - assets/introducao/
     - assets/images/
     - assets/reading_plan.json

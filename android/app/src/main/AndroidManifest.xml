@@ -52,10 +52,6 @@
          precisa de permissão declarada aqui, o image_picker usa o seletor de
          fotos do sistema. -->
     <uses-permission android:name="android.permission.CAMERA"/>
-    <!-- Alarme exato do lembrete diário (Android 12+ pede ao usuário nas
-         Configurações; sem a concessão, o app cai para alarme inexato, que o
-         Doze pode atrasar alguns minutos — ver lib/data/lembretes.dart). -->
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <!-- Lembrete diário no Android 13+: permissão de notificação pedida em
          runtime por lib/data/lembretes.dart; sem esta declaração nem o
          diálogo aparece. Antes vinha embutida pelo merge do manifesto do

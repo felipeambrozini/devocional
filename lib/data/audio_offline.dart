@@ -1,0 +1,283 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+
+import 'audio_config.dart';
+import 'canon.dart';
+import 'voz.dart';
+
+/// Gerencia o download dos MP3 pré-gerados para uso offline.
+///
+/// Ordem pedida pelo usuário: Bíblia, Introdução, Manhã e Noite, Promessas.
+/// Cada categoria é um lote de arquivos em `lib/data/voz.dart` (`_urlParaChave`).
+/// Web não tem sistema de arquivos: todos os métodos viram no-op.
+class AudioOffline extends ChangeNotifier {
+  AudioOffline._();
+  static final AudioOffline instancia = AudioOffline._();
+
+  bool _baixando = false;
+  String? _categoriaAtiva; // biblia, introducao, manha_noite, promessas
+  double _progresso = 0; // 0..1 do lote atual
+  int _baixadosNoLote = 0;
+  int _totalNoLote = 0;
+  String? _erro;
+
+  bool get baixando => _baixando;
+  String? get categoriaAtiva => _categoriaAtiva;
+  double get progresso => _progresso;
+  int get baixadosNoLote => _baixadosNoLote;
+  int get totalNoLote => _totalNoLote;
+  String? get erro => _erro;
+
+  bool get _suportado => !kIsWeb;
+
+  Future<Directory> _dirBase() async {
+    final base = await getApplicationDocumentsDirectory();
+    return Directory('${base.path}/audio_offline');
+  }
+
+  String _caminhoLocalParaChave(String chave) {
+    // Espelha a estrutura de Voz._urlParaChave mas em disco.
+    if (chave.startsWith('capitulo:')) {
+      final resto = chave.substring('capitulo:'.length);
+      final partes = resto.split('.');
+      return 'biblia/${partes[0]}/${partes[1]}.mp3';
+    }
+    if (chave.startsWith('introducao:')) {
+      return 'introducao/${chave.substring('introducao:'.length)}.mp3';
+    }
+    if (chave.startsWith('devocional:')) {
+      final resto = chave.substring('devocional:'.length);
+      final idx = resto.indexOf(':');
+      final leitura = resto.substring(0, idx);
+      final data = resto.substring(idx + 1).replaceAll('/', '-');
+      if (leitura == 'promessas') return 'promessas/$data.mp3';
+      return 'devocional/$leitura/$data.mp3';
+    }
+    return '${chave.replaceAll(':', '_').replaceAll('/', '-')}.mp3';
+  }
+
+  Future<File> _arquivoLocal(String chave) async {
+    final dir = await _dirBase();
+    return File('${dir.path}/${_caminhoLocalParaChave(chave)}');
+  }
+
+  /// Se o arquivo offline já existe para [chave].
+  Future<bool> temOffline(String chave) async {
+    if (!_suportado) return false;
+    final f = await _arquivoLocal(chave);
+    return f.exists();
+  }
+
+  /// Retorna o caminho do arquivo offline se existir, senão null.
+  Future<String?> caminhoOffline(String chave) async {
+    if (!_suportado) return null;
+    final f = await _arquivoLocal(chave);
+    return f.existsSync() ? f.path : null;
+  }
+
+  List<String> _chavesDaCategoria(String categoria) {
+    switch (categoria) {
+      case 'biblia':
+        return [
+          for (final l in canon)
+            for (var c = 1; c <= l.capitulos; c++) chaveDeCapitulo(l.slug, c),
+        ];
+      case 'introducao':
+        return [for (final l in canon) chaveDaIntroducao(l.slug)];
+      case 'manha_noite':
+        // Gera todas as datas DD-MM, 01-01 a 31-12 via 366 dias (ano bissexto).
+        final chaves = <String>[];
+        for (var m = 1; m <= 12; m++) {
+          final dias = DateTime(2024, m + 1, 0).day;
+          for (var d = 1; d <= dias; d++) {
+            final dd = d.toString().padLeft(2, '0');
+            final mm = m.toString().padLeft(2, '0');
+            chaves.add('devocional:manha:$d/$m');
+            // Promessas usa formato DD-MM no offline, mas devocional usa D/M.
+            // O _caminhoLocal normaliza / para -.
+            chaves.add('devocional:noite:$d/$m');
+            // Nota: o map acima usa D/M, o arquivo salva como D-M. Tanto faz.
+            // Para compatibilidade, também geramos com DD-MM.
+            chaves.add('devocional:manha:$dd-$mm');
+            chaves.add('devocional:noite:$dd-$mm');
+          }
+        }
+        // Remove duplicatas e mantém só 732 únicos: filtra para 01-01..31-12.
+        // Simplifica: retorna 366*2 com DD-MM.
+        final unicas = <String>{};
+        for (var m = 1; m <= 12; m++) {
+          final dias = DateTime(2024, m + 1, 0).day;
+          for (var d = 1; d <= dias; d++) {
+            final dd = d.toString().padLeft(2, '0');
+            final mm = m.toString().padLeft(2, '0');
+            unicas.add('devocional:manha:$dd-$mm');
+            unicas.add('devocional:noite:$dd-$mm');
+          }
+        }
+        // Remove o set duplicado anterior
+        return unicas.toList()..sort();
+      case 'promessas':
+        final chaves = <String>[];
+        for (var m = 1; m <= 12; m++) {
+          final dias = DateTime(2024, m + 1, 0).day;
+          for (var d = 1; d <= dias; d++) {
+            final dd = d.toString().padLeft(2, '0');
+            final mm = m.toString().padLeft(2, '0');
+            chaves.add('devocional:promessas:$dd-$mm');
+          }
+        }
+        return chaves;
+      default:
+        return [];
+    }
+  }
+
+  /// Baixa todos os arquivos de [categoria] (biblia, introducao, manha_noite, promessas).
+  /// Se AUDIO_BASE_URL não estiver configurada, não faz nada.
+  Future<void> baixarCategoria(String categoria, {http.Client? cliente}) async {
+    if (!_suportado) return;
+    if (_baixando) return;
+    final base = audioBaseUrl;
+    if (base.isEmpty) {
+      _erro = 'AUDIO_BASE_URL não configurada no build.';
+      notifyListeners();
+      return;
+    }
+    final chaves = _chavesDaCategoria(categoria);
+    _baixando = true;
+    _categoriaAtiva = categoria;
+    _baixadosNoLote = 0;
+    _totalNoLote = chaves.length;
+    _progresso = 0;
+    _erro = null;
+    notifyListeners();
+
+    final httpClient = cliente ?? http.Client();
+    var falhou = false;
+    for (var i = 0; i < chaves.length; i++) {
+      final chave = chaves[i];
+      final url = _urlParaChaveHttp(chave, base);
+      if (url == null) continue;
+      final arquivo = await _arquivoLocal(chave);
+      if (await arquivo.exists()) {
+        _baixadosNoLote++;
+        _progresso = _baixadosNoLote / _totalNoLote;
+        notifyListeners();
+        continue;
+      }
+      try {
+        final resp = await httpClient.get(Uri.parse(url));
+        if (resp.statusCode == 200) {
+          await arquivo.parent.create(recursive: true);
+          await arquivo.writeAsBytes(resp.bodyBytes);
+        } else {
+          falhou = true;
+          _erro = 'Falha em $chave: ${resp.statusCode}';
+        }
+      } catch (e) {
+        falhou = true;
+        _erro = 'Erro em $chave: $e';
+      }
+      _baixadosNoLote++;
+      _progresso = _baixadosNoLote / _totalNoLote;
+      notifyListeners();
+      // Evita sobrecarregar a rede/storage.
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+    _baixando = false;
+    _categoriaAtiva = null;
+    if (!falhou) _erro = null;
+    notifyListeners();
+  }
+
+  String? _urlParaChaveHttp(String chave, String base) {
+    final b = base.endsWith('/') ? base.substring(0, base.length - 1) : base;
+    if (chave.startsWith('capitulo:')) {
+      final resto = chave.substring('capitulo:'.length);
+      final partes = resto.split('.');
+      if (partes.length != 2) return null;
+      return '$b/biblia/${partes[0]}/${partes[1]}.mp3';
+    }
+    if (chave.startsWith('introducao:')) {
+      return '$b/introducao/${chave.substring('introducao:'.length)}.mp3';
+    }
+    if (chave.startsWith('devocional:')) {
+      final resto = chave.substring('devocional:'.length);
+      final idx = resto.indexOf(':');
+      if (idx == -1) return null;
+      final leitura = resto.substring(0, idx);
+      final data = resto.substring(idx + 1).replaceAll('/', '-');
+      if (leitura == 'promessas') return '$b/promessas/$data.mp3';
+      return '$b/devocional/$leitura/$data.mp3';
+    }
+    return null;
+  }
+
+  /// Apaga todos os arquivos offline de [categoria].
+  Future<void> apagarCategoria(String categoria) async {
+    if (!_suportado) return;
+    final dir = await _dirBase();
+    final sub = switch (categoria) {
+      'biblia' => 'biblia',
+      'introducao' => 'introducao',
+      'manha_noite' => 'devocional',
+      'promessas' => 'promessas',
+      _ => null,
+    };
+    if (sub == null) return;
+    final alvo = Directory('${dir.path}/$sub');
+    if (await alvo.exists()) await alvo.delete(recursive: true);
+    notifyListeners();
+  }
+
+  /// Apaga tudo.
+  Future<void> apagarTudo() async {
+    if (!_suportado) return;
+    final dir = await _dirBase();
+    if (await dir.exists()) await dir.delete(recursive: true);
+    notifyListeners();
+  }
+
+  /// Tamanho em bytes do offline atual.
+  Future<int> tamanhoEmBytes() async {
+    if (!_suportado) return 0;
+    final dir = await _dirBase();
+    if (!await dir.exists()) return 0;
+    var total = 0;
+    await for (final e in dir.list(recursive: true)) {
+      if (e is File) total += await e.length();
+    }
+    return total;
+  }
+
+  /// Conta quantos arquivos offline já existem por categoria.
+  Future<Map<String, int>> contarPorCategoria() async {
+    if (!_suportado) return {};
+    final dir = await _dirBase();
+    final out = <String, int>{
+      'biblia': 0,
+      'introducao': 0,
+      'manha_noite': 0,
+      'promessas': 0,
+    };
+    if (!await dir.exists()) return out;
+    await for (final e in dir.list(recursive: true)) {
+      if (e is! File) continue;
+      final p = e.path;
+      if (p.contains('/biblia/')) {
+        out['biblia'] = out['biblia']! + 1;
+      } else if (p.contains('/introducao/')) {
+        out['introducao'] = out['introducao']! + 1;
+      } else if (p.contains('/promessas/')) {
+        out['promessas'] = out['promessas']! + 1;
+      } else if (p.contains('/devocional/')) {
+        out['manha_noite'] = out['manha_noite']! + 1;
+      }
+    }
+    return out;
+  }
+}

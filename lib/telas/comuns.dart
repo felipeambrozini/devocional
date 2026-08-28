@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../data/audio_offline.dart';
 import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
@@ -534,6 +535,9 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 // aparelho (ver lembretes.dart). iOS e web ficam de fora.
                 if (lembretesSuportados)
                   ..._SecaoDeLembretes(estado: estado).montar(context),
+                // Áudio offline: download dos MP3 pré-gerados para uso sem rede.
+                // Ordem pedida: Bíblia, Introdução, Manhã e Noite, Promessas.
+                if (!kIsWeb) ..._SecaoAudioOffline().montar(context),
                 // Sobre no fim da folha: as escolhas do dia ficam na frente,
                 // e fontes, canais e privacidade esperam quem rola até o fim.
                 _ItemDeNavegacaoDaFolha(
@@ -758,6 +762,116 @@ class _SecaoDeLembretes {
         'aparelho para usar os lembretes.',
       );
     }
+  }
+}
+
+/// Áudio offline: baixa os MP3 pré-gerados para ouvir sem rede.
+/// Ordem fixa pedida: Bíblia, Introdução, Manhã e Noite, Promessas.
+class _SecaoAudioOffline {
+  List<Widget> montar(BuildContext context) {
+    final tema = Theme.of(context).textTheme;
+    return [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(
+          Spacing.sp20,
+          Spacing.sp24,
+          Spacing.sp20,
+          Spacing.sp4,
+        ),
+        child: Text('Áudio offline', style: tema.headlineSmall),
+      ),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: Spacing.sp20),
+        child: Text(
+          'Baixe para ouvir sem internet. Na ordem: Bíblia, Introdução, Manhã e Noite, Promessas. O player usa o arquivo local quando existir, senão baixa da nuvem.',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ),
+      const SizedBox(height: Spacing.sp8),
+      ListenableBuilder(
+        listenable: AudioOffline.instancia,
+        builder: (context, _) {
+          final off = AudioOffline.instancia;
+          const ordem = ['biblia', 'introducao', 'manha_noite', 'promessas'];
+          const rotulos = {
+            'biblia': 'Bíblia (1.189 capítulos)',
+            'introducao': 'Introduções (66 livros)',
+            'manha_noite': 'Manhã e Noite (732)',
+            'promessas': 'Promessas de Deus (366)',
+          };
+          return Column(
+            children: [
+              for (final cat in ordem)
+                FutureBuilder<Map<String, int>>(
+                  future: off.contarPorCategoria(),
+                  builder: (context, snap) {
+                    final cont = snap.data ?? {};
+                    final baixados = cont[cat] ?? 0;
+                    final total = cat == 'biblia'
+                        ? 1189
+                        : cat == 'introducao'
+                        ? 66
+                        : cat == 'manha_noite'
+                        ? 732
+                        : 366;
+                    final pronto = baixados >= total && total > 0;
+                    final baixandoEste =
+                        off.baixando && off.categoriaAtiva == cat;
+                    return ListTile(
+                      title: Text(rotulos[cat]!),
+                      subtitle: baixandoEste
+                          ? LinearProgressIndicator(value: off.progresso)
+                          : Text(pronto ? 'Baixado' : '$baixados/$total'),
+                      trailing: pronto
+                          ? IconButton(
+                              icon: const Icon(Icons.delete_outline),
+                              tooltip: 'Apagar',
+                              onPressed: off.baixando
+                                  ? null
+                                  : () => off.apagarCategoria(cat),
+                            )
+                          : FilledButton(
+                              onPressed: off.baixando
+                                  ? null
+                                  : () => off.baixarCategoria(cat),
+                              child: Text(
+                                baixados > 0 && baixados < total
+                                    ? 'Continuar'
+                                    : 'Baixar',
+                              ),
+                            ),
+                    );
+                  },
+                ),
+              if (off.erro != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: Spacing.sp20),
+                  child: Text(
+                    off.erro!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+              FutureBuilder<int>(
+                future: off.tamanhoEmBytes(),
+                builder: (context, snap) {
+                  final bytes = snap.data ?? 0;
+                  final mb = (bytes / (1024 * 1024)).toStringAsFixed(1);
+                  return ListTile(
+                    title: Text('Armazenamento: $mb MB'),
+                    trailing: TextButton(
+                      onPressed: off.baixando ? null : () => off.apagarTudo(),
+                      child: const Text('Apagar tudo'),
+                    ),
+                  );
+                },
+              ),
+            ],
+          );
+        },
+      ),
+    ];
   }
 }
 
@@ -1191,11 +1305,14 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
                     // em vez de prender quem tocou o capítulo errado num
                     // relógio de até 90 segundos. Tocando, o toque pausa (o
                     // parar de vez mora no X ao lado); pausada, a pílula é o
-                    // próprio retomar: o toque volta à leitura de onde parou.
+                    // próprio retomar: o toque volta à leitura de onde parou
+                    // sem recarregar da rede (seek+play).
                     onTap: preparando
                         ? voz.parar
                         : ativo
                         ? () => _pausar(context, voz)
+                        : pausado
+                        ? () => _retomar(context, voz)
                         : () => _alternar(context, voz),
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(
@@ -1289,6 +1406,23 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
   Future<void> _pausar(BuildContext context, Voz voz) async {
     try {
       await voz.pausar();
+    } on VozException catch (erro) {
+      if (context.mounted) _avisarErro(context, voz, erro);
+    }
+  }
+
+  Future<void> _retomar(BuildContext context, Voz voz) async {
+    try {
+      // Pausado tem caminho sem recarregar: seek+play quando a source ainda
+      // está carregada (arquivo) ou da cache (TTS em memória).
+      final retomou = await voz.retomarDaPausa();
+      if (!retomou) {
+        await voz.alternar(
+          widget.chave,
+          texto: widget.texto,
+          tipo: widget.tipo,
+        );
+      }
     } on VozException catch (erro) {
       if (context.mounted) _avisarErro(context, voz, erro);
     }

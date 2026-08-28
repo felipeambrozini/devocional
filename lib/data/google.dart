@@ -17,14 +17,6 @@ import 'package:google_api_headers/google_api_headers.dart';
 /// * chaveIos: criada no Google Cloud Console, restrita ao app iOS
 ///   (`com.felipeambrozini.devocional` Bundle ID) e às APIs que o app usa.
 ///
-/// São três pares de chave porque o console do Cloud não deixa juntar certas
-/// APIs na mesma chave: a restrição da Generative Language API não combina com
-/// a da Cloud Text-to-Speech. Então:
-///
-/// * [chaveGemini] (GEMINI_API_KEY): o chat (`lib/data/ia.dart`).
-/// * [chaveTts] (TTS_API_KEY): a voz (`lib/data/voz.dart`), com as mesmas
-///   restrições de origem da outra.
-///
 /// Não é segredo de servidor: a Google desenha este caminho para apps
 /// client-side, com CORS aberto (conferido em OPTIONS) e limite por projeto.
 /// As chaves chegam por `--dart-define` no build (GitHub Secrets no CI).
@@ -41,24 +33,6 @@ String get chaveGemini {
       return chaveGeminiIos;
     case TargetPlatform.android:
       return chaveGeminiAndroid;
-    default:
-      return '';
-  }
-}
-
-const chaveTtsWeb = String.fromEnvironment('TTS_API_KEY_WEB');
-
-const chaveTtsAndroid = String.fromEnvironment('TTS_API_KEY_ANDROID');
-
-const chaveTtsIos = String.fromEnvironment('TTS_API_KEY_IOS');
-
-String get chaveTts {
-  if (kIsWeb) return chaveTtsWeb;
-  switch (defaultTargetPlatform) {
-    case TargetPlatform.iOS:
-      return chaveTtsIos;
-    case TargetPlatform.android:
-      return chaveTtsAndroid;
     default:
       return '';
   }

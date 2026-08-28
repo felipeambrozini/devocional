@@ -16,7 +16,14 @@ class _LembretesFalsas implements Lembretes {
   void Function(String)? _callback;
 
   final agendamentos =
-      <(TimeOfDay manha, TimeOfDay promessas, TimeOfDay leitura, TimeOfDay noite)>[];
+      <
+        (
+          TimeOfDay manha,
+          TimeOfDay promessas,
+          TimeOfDay leitura,
+          TimeOfDay noite,
+        )
+      >[];
   int vezesCancelado = 0;
 
   @override
@@ -51,9 +58,6 @@ class _LembretesFalsas implements Lembretes {
 
   @override
   Future<bool> agendados() async => agendadoSimulado;
-
-  @override
-  Future<String> diagnosticar() async => 'diagnóstico de teste';
 
   @override
   String fusoAtual = 'America/Sao_Paulo';
@@ -162,15 +166,17 @@ void main() {
       expect(falsas.agendamentos, hasLength(1));
     });
 
-    test('ligado, rearma sempre — os alarmes locais são de um tiro só, e '
-        'regravar atualiza o fuso de quem viajou', () async {
-      await alternarLembretes(estado, true);
-      falsas.agendamentos.clear();
+    test(
+      'ligado, rearma sempre — regravar atualiza o fuso de quem viajou',
+      () async {
+        await alternarLembretes(estado, true);
+        falsas.agendamentos.clear();
 
-      await reagendarLembretesSeNecessario(estado);
+        await reagendarLembretesSeNecessario(estado);
 
-      expect(falsas.agendamentos, hasLength(1));
-    });
+        expect(falsas.agendamentos, hasLength(1));
+      },
+    );
   });
 
   group('toque na notificação', () {

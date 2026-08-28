@@ -37,9 +37,6 @@ class _LembretesFalsas implements Lembretes {
   Future<bool> agendados() async => false;
 
   @override
-  Future<String> diagnosticar() async => 'diagnóstico de teste';
-
-  @override
   String fusoAtual = 'America/Sao_Paulo';
 }
 
@@ -173,10 +170,7 @@ void main() {
         find.widgetWithText(SwitchListTile, 'Mostrar botões de conversa'),
         findsNothing,
       );
-      expect(
-        find.text('Reexibir dica dos botões de conversa'),
-        findsNothing,
-      );
+      expect(find.text('Reexibir dica dos botões de conversa'), findsNothing);
 
       Navigator.of(tester.element(find.text('Tamanho do texto'))).pop();
       await tester.pumpAndSettle();

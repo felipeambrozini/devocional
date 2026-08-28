@@ -20,5 +20,12 @@ service firebase.storage {
           request.resource.size < 5 * 1024 * 1024 &&
           request.resource.contentType == 'image/jpeg';
     }
+    // Áudios pré-gerados da voz (Bíblia, devocional, introduções) — ver
+    // lib/data/voz.dart (Voz._urlParaChave). Leitura pública, escrita só
+    // via deploy / Admin SDK; nunca pelo app.
+    match /audio/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
   }
 }
