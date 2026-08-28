@@ -55,11 +55,11 @@ void main() {
     });
 
     testWidgets(
-      'com base configurada mas o arquivo ainda não gerado (fora do '
-      'manifesto), o botão não aparece',
+      'com base configurada mas o arquivo ainda não gerado (HEAD não '
+      'encontra), o botão não aparece',
       (tester) async {
-        Voz.manifestoParaTeste = {};
-        addTearDown(() => Voz.manifestoParaTeste = null);
+        Voz.disponibilidadeRemotaParaTeste = false;
+        addTearDown(() => Voz.disponibilidadeRemotaParaTeste = null);
         await tester.pumpWidget(montar());
         await tester.pump(const Duration(milliseconds: 500));
 
@@ -68,9 +68,9 @@ void main() {
     );
 
     testWidgets('o erro de leitura oferece "Tentar de novo"', (tester) async {
-      // Disponível na checagem (manifesto default de teste = tudo
-      // disponível), mas sem base real pra tocar de fato — simula o
-      // arquivo ter sumido do Storage entre a checagem e o toque.
+      // Disponível na checagem (default de teste = tudo disponível), mas
+      // sem base real pra tocar de fato — simula o arquivo ter sumido do
+      // Storage entre a checagem e o toque.
       await tester.pumpWidget(montar());
       await tester.pump(const Duration(milliseconds: 500));
       Voz.baseUrlForTest = '';

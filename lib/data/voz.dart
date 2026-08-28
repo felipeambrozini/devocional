@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io' show File;
 import 'dart:typed_data';
 
@@ -212,60 +211,29 @@ class Voz extends ChangeNotifier {
   /// Se há um arquivo de áudio para [chave] (base configurada e chave conhecida).
   bool temArquivoParaChave(String chave) => _urlParaChave(chave) != null;
 
-  /// Os caminhos relativos (ver [caminhoRelativoParaChave]) que já existem no
-  /// Storage — sem isso o botão de ouvir apareceria para áudio que ainda não
-  /// foi gerado (a geração roda aos poucos, em lotes, por semanas). Carregado
-  /// uma vez de "$AUDIO_BASE_URL/manifesto.json" e mantido em memória.
-  Set<String>? _manifesto;
-  Future<Set<String>>? _carregandoManifesto;
-
-  Future<Set<String>> _garantirManifesto() {
-    final pronto = _manifesto;
-    if (pronto != null) return Future.value(pronto);
-    return _carregandoManifesto ??= _buscarManifesto().then((m) {
-      _manifesto = m;
-      return m;
-    });
-  }
-
-  Future<Set<String>> _buscarManifesto() async {
-    final baseRaw = baseUrlForTest ?? audioBaseUrl;
-    if (baseRaw.isEmpty) return {};
-    final base = baseRaw.endsWith('/')
-        ? baseRaw.substring(0, baseRaw.length - 1)
-        : baseRaw;
-    try {
-      final resp = await http.get(Uri.parse('$base/manifesto.json'));
-      if (resp.statusCode != 200) return {};
-      return (jsonDecode(resp.body) as List).cast<String>().toSet();
-    } catch (_) {
-      return {};
-    }
-  }
-
-  /// Override para testes: quando não nulo, [arquivoDisponivelRemoto] usa
-  /// este conjunto em vez de buscar "manifesto.json" de verdade. Com
-  /// [baseUrlForTest] setado e este continuando nulo, assume tudo disponível
-  /// (mesma lógica relaxada de [_livroExisteNaChave] em modo de teste) — a
-  /// maioria dos testes de voz não é sobre disponibilidade de arquivo.
-  static Set<String>? manifestoParaTeste;
+  /// Override para testes: quando não nulo, [arquivoDisponivelRemoto] retorna
+  /// isso direto, sem bater na rede. Com [baseUrlForTest] setado e este
+  /// continuando nulo, assume disponível — a maioria dos testes de voz não é
+  /// sobre disponibilidade de arquivo.
+  static bool? disponibilidadeRemotaParaTeste;
 
   /// Se [chave] já tem áudio publicado no Storage agora — não confunde com
-  /// [temArquivoParaChave], que só valida o formato da chave. É assíncrono
-  /// (uma requisição de rede na primeira chamada, cacheada depois); quem
-  /// mostra o botão de ouvir deve esconder até a resposta chegar, em vez de
-  /// mostrar um "Ouvir" que falharia ao tocar.
+  /// [temArquivoParaChave], que só valida o formato da chave. Confere na
+  /// hora com um HEAD no arquivo (sem manifesto/lista para manter
+  /// atualizado): a geração roda aos poucos, em lotes, por semanas, e sem
+  /// essa checagem o botão de ouvir apareceria para áudio que ainda não
+  /// existe. É assíncrono; quem mostra o botão deve esconder até a resposta
+  /// chegar, em vez de mostrar um "Ouvir" que falharia ao tocar.
   Future<bool> arquivoDisponivelRemoto(String chave) async {
-    final relativo = caminhoRelativoParaChave(chave);
-    if (relativo == null) return false;
-    final baseRaw = baseUrlForTest ?? audioBaseUrl;
-    if (baseRaw.isEmpty) return false;
-    if (baseUrlForTest != null) {
-      final paraTeste = manifestoParaTeste;
-      return paraTeste == null || paraTeste.contains(relativo);
+    final url = _urlParaChave(chave);
+    if (url == null) return false;
+    if (baseUrlForTest != null) return disponibilidadeRemotaParaTeste ?? true;
+    try {
+      final resp = await http.head(Uri.parse(url));
+      return resp.statusCode == 200;
+    } catch (_) {
+      return false;
     }
-    final manifesto = await _garantirManifesto();
-    return manifesto.contains(relativo);
   }
 
   /// Há um áudio tocando agora (a leitura começou e não terminou).
@@ -523,22 +491,8 @@ class Voz extends ChangeNotifier {
   }
 
   String _caminhoLocalParaChave(String chave) {
-    if (chave.startsWith('capitulo:')) {
-      final resto = chave.substring('capitulo:'.length);
-      final partes = resto.split('.');
-      return 'audio_offline/biblia/${partes[0]}/${partes[1]}.mp3';
-    }
-    if (chave.startsWith('introducao:')) {
-      return 'audio_offline/introducao/${chave.substring('introducao:'.length)}.mp3';
-    }
-    if (chave.startsWith('devocional:')) {
-      final resto = chave.substring('devocional:'.length);
-      final idx = resto.indexOf(':');
-      final leitura = resto.substring(0, idx);
-      final data = resto.substring(idx + 1).replaceAll('/', '-');
-      if (leitura == 'promessas') return 'audio_offline/promessas/$data.mp3';
-      return 'audio_offline/devocional/$leitura/$data.mp3';
-    }
+    final relativo = caminhoRelativoParaChave(chave);
+    if (relativo != null) return 'audio_offline/$relativo';
     return 'audio_offline/${chave.replaceAll(':', '_').replaceAll('/', '-')}.mp3';
   }
 
