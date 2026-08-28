@@ -1,6 +1,8 @@
 import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/data/lembretes.dart';
-import 'package:felipe_ambrozini/telas/comuns.dart';
+import 'package:felipe_ambrozini/funcoes/aviso.dart';
+import 'package:felipe_ambrozini/funcoes/lembretes_acoes.dart';
+import 'package:felipe_ambrozini/widgets/widgets.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

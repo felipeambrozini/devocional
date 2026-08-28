@@ -54,8 +54,9 @@ vitoriana dele, tratando o leitor por "tu".
 - Conversas com IA (Gemini): duas personas, Charles Spurgeon e Felipe
   Ambrozini, com histórico salvo por conversa; aba no celular, balão flutuante
   em telas largas.
-- Leitura em voz alta (Google Cloud Text-to-Speech): narra capítulos da
-  Bíblia, os dois devocionais, Promessas de Deus e as introduções.
+- Leitura em voz alta (MP3 pré-gerados, voz clonada do Felipe): narra
+  capítulos da Bíblia, os dois devocionais, Promessas de Deus e as
+  introduções; download opcional para ouvir offline fora da web.
 - Planos personalizados: escolher livros e a duração; compartilháveis por
   link, com progresso de cada participante (exige conta Google). Quem criou
   pode excluir o plano para todos; quem só participa pode sair, afetando só
@@ -107,7 +108,7 @@ vitoriana dele, tratando o leitor por "tu".
   `tools/icones.py --splash` e gerada nas plataformas por
   `flutter_native_splash`.
 - Fontes empacotadas localmente: Cinzel (títulos) e Montserrat (corpo),
-  variáveis, pesadas via `fontVariations` em `lib/theme.dart`.
+  variáveis, pesadas via `fontVariations` em `lib/estilo/theme.dart`.
 - Duas paletas fixas: marrom e dourado no escuro, pergaminho e bronze no
   claro; o destaque do claro é o metal escurecido (bronze) porque o dourado
   sobre pergaminho dá 2,1:1. As telas leem tudo do `ColorScheme`, nunca de

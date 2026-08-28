@@ -11,9 +11,8 @@ import 'registro.dart';
 /// Cliente da Gemini API gratuita (sem cartão de crédito).
 ///
 /// A chave mora em `lib/data/google.dart`, junto do cabeçalho de identidade do
-/// apk e da chave da voz: o console do Cloud não deixa combinar a Generative
-/// Language API com a Cloud Text-to-Speech na mesma chave, então o chat usa a
-/// GEMINI_API_KEY e a voz usa a TTS_API_KEY.
+/// apk. A leitura em voz alta não usa mais essa chave nem TTS: os áudios são
+/// MP3 pré-gerados (ver `lib/data/voz.dart`).
 ///
 /// Nome fixo, não o alias `gemini-flash-latest`: o alias pode passar a
 /// apontar para um modelo fora do tier gratuito sem aviso, e a falha vira um

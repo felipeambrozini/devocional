@@ -8,9 +8,11 @@ import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
 import '../data/voz.dart';
-import '../spacing.dart';
+import '../estilo/spacing.dart';
+import '../funcoes/aviso.dart';
+import '../funcoes/dialogos.dart';
+import '../widgets/widgets.dart';
 import 'busca.dart';
-import 'comuns.dart';
 
 /// Leitor da Bíblia. Abre em Gênesis 1 ou onde a leitura parou.
 class TelaBiblia extends StatefulWidget {
@@ -149,7 +151,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
     final livro = _livroAtual;
     final capitulo = await showModalBottomSheet<int>(
       context: context,
-      builder: (_) => _FolhaDeCapitulos(livro: livro),
+      builder: (_) => FolhaDeCapitulos(livro: livro),
     );
     if (capitulo != null && mounted) _irPara(livro.slug, capitulo);
   }
@@ -422,7 +424,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
     final destino = await showModalBottomSheet<(String, int)>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => _SeletorDeLivro(livroAtual: _livro),
+      builder: (_) => SeletorDeLivro(livroAtual: _livro),
     );
     if (destino != null && mounted) _irPara(destino.$1, destino.$2);
   }
@@ -527,8 +529,6 @@ class _Leitor extends StatelessWidget {
               const SizedBox(height: Spacing.sp14),
               BotaoDeVoz(
                 chave: chaveDeCapitulo(capitulo.livro, capitulo.numero),
-                texto: textoDeCapitulo(capitulo),
-                tipo: TipoConteudoAudio.biblia,
               ),
               if (capitulo.titulo.isNotEmpty) ...[
                 const SizedBox(height: Spacing.sp12),
@@ -721,45 +721,17 @@ class _AcoesDoVersiculo {
                 Spacing.sp8,
                 Spacing.sp20,
               ),
-              child: Row(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '$referencia:$numero',
-                          style: Theme.of(
-                            contextoDaFolha,
-                          ).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: Spacing.sp8),
-                        Text(
-                          texto,
-                          style: Theme.of(contextoDaFolha).textTheme.bodyMedium,
-                        ),
-                      ],
-                    ),
+                  Text(
+                    '$referencia:$numero',
+                    style: Theme.of(contextoDaFolha).textTheme.headlineSmall,
                   ),
-                  // "Tela cheia" é a ação de quem está ao vivo, não uma das
-                  // rotinas do dia; mora no cabeçalho, e não na lista de
-                  // ações com o mesmo peso de Favoritar e Copiar.
-                  IconButton(
-                    tooltip: 'Tela cheia',
-                    icon: const Icon(Icons.fullscreen),
-                    onPressed: () {
-                      Navigator.pop(contextoDaFolha);
-                      Navigator.push(
-                        contextoDaFolha,
-                        MaterialPageRoute(
-                          builder: (_) => TelaApresentacao(
-                            texto: texto,
-                            referencia: '$referencia:$numero',
-                          ),
-                        ),
-                      );
-                    },
+                  const SizedBox(height: Spacing.sp8),
+                  Text(
+                    texto,
+                    style: Theme.of(contextoDaFolha).textTheme.bodyMedium,
                   ),
                 ],
               ),
@@ -887,7 +859,7 @@ Future<void> _abrirAcoesDoVersiculo(
     context: context,
     // Quatro ações mais o cabeçalho passam da altura em telas baixas ou em
     // paisagem — mesmo motivo e mesma solução de ajustesDeLeitura, em
-    // comuns.dart: isScrollControlled deixa a folha crescer, e o
+    // widgets/folha_de_ajustes.dart: isScrollControlled deixa a folha crescer, e o
     // SingleChildScrollView rola o que não couber em vez de estourar.
     isScrollControlled: true,
     builder: acoes.folha,
@@ -937,326 +909,6 @@ class _AlcaDeDeslize extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Tela cheia para compartilhar a tela numa live: o teto de 1,5x de
-/// [escalasDeLeitura] é pensado para ler no próprio aparelho, pequeno demais
-/// numa transmissão. Por isso não usa `Estado.escalaDeLeitura`: o
-/// `FittedBox` ocupa o espaço disponível sozinho, sem precisar de um
-/// controle de tamanho novo.
-///
-/// Fecha só pelo botão de fechar, não por qualquer toque: durante uma
-/// transmissão, um toque acidental encerraria um momento deliberado de
-/// leitura.
-class TelaApresentacao extends StatelessWidget {
-  const TelaApresentacao({
-    super.key,
-    required this.texto,
-    required this.referencia,
-  });
-
-  final String texto;
-  final String referencia;
-
-  @override
-  Widget build(BuildContext context) {
-    final cor = Theme.of(context).colorScheme;
-    final tema = Theme.of(context).textTheme;
-    return Scaffold(
-      backgroundColor: cor.surface,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(Spacing.sp32),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        texto,
-                        textAlign: TextAlign.center,
-                        style: tema.displayLarge?.copyWith(
-                          color: cor.onSurface,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: Spacing.sp24),
-                  Text(
-                    referencia,
-                    style: tema.headlineSmall?.copyWith(color: cor.secondary),
-                  ),
-                ],
-              ),
-            ),
-            Positioned(
-              top: 8,
-              right: 8,
-              child: IconButton(
-                tooltip: 'Fechar',
-                icon: const Icon(Icons.close),
-                color: cor.primary,
-                onPressed: () => Navigator.pop(context),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Seletor em duas etapas: escolhe o livro, depois o capítulo numa grade.
-class _SeletorDeLivro extends StatefulWidget {
-  const _SeletorDeLivro({required this.livroAtual});
-
-  final String livroAtual;
-
-  @override
-  State<_SeletorDeLivro> createState() => _SeletorDeLivroState();
-}
-
-class _SeletorDeLivroState extends State<_SeletorDeLivro> {
-  Livro? _escolhido;
-  final _controle = TextEditingController();
-  String _filtro = '';
-
-  @override
-  void dispose() {
-    _controle.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final altura = MediaQuery.sizeOf(context).height * 0.75;
-    final escolhido = _escolhido;
-
-    return SizedBox(
-      height: altura,
-      child: Column(
-        children: [
-          // Cabeçalho com altura própria: num Column, um Flexible (flex 1)
-          // dividiria o espaço da folha ao meio com a lista embaixo, e o
-          // vão não usado pelo cabeçalho sobraria em branco no fim da folha.
-          // Fora do flex, ele ocupa só o que precisa e a lista fica com todo
-          // o resto.
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                const SizedBox(height: Spacing.sp12),
-                Text(
-                  escolhido == null ? 'Escolha o livro' : escolhido.nome,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: Spacing.sp8),
-                const Filete(),
-                // Busca só na etapa de livros: na grade de capítulos o texto
-                // já é o que se procura.
-                if (escolhido == null) ...[
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      Spacing.sp16,
-                      Spacing.sp10,
-                      Spacing.sp16,
-                      Spacing.sp4,
-                    ),
-                    child: TextField(
-                      controller: _controle,
-                      onChanged: (v) => setState(() => _filtro = v.trim()),
-                      decoration: const InputDecoration(
-                        hintText: 'Buscar livro',
-                        prefixIcon: Icon(Icons.search),
-                      ),
-                    ),
-                  ),
-                ],
-                if (escolhido != null)
-                  Padding(
-                    padding: const EdgeInsets.all(Spacing.sp8),
-                    child: TextButton.icon(
-                      onPressed: () => setState(() => _escolhido = null),
-                      icon: const Icon(Icons.arrow_back),
-                      label: const Text('Todos os livros'),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: escolhido == null
-                ? _ListaDeLivros(
-                    atual: widget.livroAtual,
-                    filtro: _filtro,
-                    ao: (l) => l.capitulos == 1
-                        ? Navigator.pop(context, (l.slug, 1))
-                        : setState(() => _escolhido = l),
-                  )
-                : _GradeDeCapitulos(
-                    livro: escolhido,
-                    ao: (c) => Navigator.pop(context, (escolhido.slug, c)),
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ListaDeLivros extends StatelessWidget {
-  const _ListaDeLivros({
-    required this.atual,
-    required this.ao,
-    this.filtro = '',
-  });
-
-  final String atual;
-  final ValueChanged<Livro> ao;
-  final String filtro;
-
-  @override
-  Widget build(BuildContext context) {
-    if (filtro.isNotEmpty) {
-      // A busca é a porta de entrada para quem não quer escanear 66 chips:
-      // Miqueias e Hebreus deixam de pedir duas telas de varredura. Nome e
-      // abreviação, sem acento e sem caixa, como a busca de versículos.
-      final alvo = Conteudo.normalizar(filtro);
-      final achados = canon
-          .where(
-            (l) =>
-                Conteudo.normalizar(l.nome).contains(alvo) ||
-                Conteudo.normalizar(l.abrev).contains(alvo),
-          )
-          .toList();
-      return ListView(
-        padding: const EdgeInsets.symmetric(horizontal: Spacing.sp16),
-        children: [
-          if (achados.isEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                Spacing.sp4,
-                Spacing.sp24,
-                Spacing.sp4,
-                Spacing.sp8,
-              ),
-              child: Text(
-                'Nenhum livro com "$filtro".',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            )
-          else
-            _grade(achados),
-          const SizedBox(height: Spacing.sp16),
-        ],
-      );
-    }
-
-    final antigo = canon
-        .where((l) => l.testamento == Testamento.antigo)
-        .toList();
-    final novo = canon.where((l) => l.testamento == Testamento.novo).toList();
-
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: Spacing.sp16),
-      children: [
-        _tituloDeSecao(context, 'Antigo Testamento'),
-        _grade(antigo),
-        _tituloDeSecao(context, 'Novo Testamento'),
-        _grade(novo),
-        const SizedBox(height: Spacing.sp16),
-      ],
-    );
-  }
-
-  Widget _tituloDeSecao(BuildContext context, String texto) => Padding(
-    padding: const EdgeInsets.fromLTRB(
-      Spacing.sp4,
-      Spacing.sp12,
-      Spacing.sp4,
-      Spacing.sp8,
-    ),
-    child: Text(texto, style: Theme.of(context).textTheme.titleSmall),
-  );
-
-  Widget _grade(List<Livro> livros) => Wrap(
-    spacing: Spacing.sp8,
-    runSpacing: Spacing.sp8,
-    children: [
-      for (final l in livros)
-        ChoiceChip(
-          label: Text(l.nome),
-          selected: l.slug == atual,
-          onSelected: (_) => ao(l),
-        ),
-    ],
-  );
-}
-
-/// Folha com só a grade de capítulos do livro aberto: o atalho de um passo
-/// para quem já está lendo. Ver `_abrirGradeDeCapitulos`.
-class _FolhaDeCapitulos extends StatelessWidget {
-  const _FolhaDeCapitulos({required this.livro});
-
-  final Livro livro;
-
-  @override
-  Widget build(BuildContext context) {
-    final altura = MediaQuery.sizeOf(context).height * 0.55;
-    return SizedBox(
-      height: altura,
-      child: Column(
-        children: [
-          const SizedBox(height: Spacing.sp12),
-          Text(
-            'Capítulo de ${livro.nome}',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: Spacing.sp8),
-          const Filete(),
-          const SizedBox(height: Spacing.sp8),
-          Expanded(
-            child: _GradeDeCapitulos(
-              livro: livro,
-              ao: (c) => Navigator.pop(context, c),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _GradeDeCapitulos extends StatelessWidget {
-  const _GradeDeCapitulos({required this.livro, required this.ao});
-
-  final Livro livro;
-  final ValueChanged<int> ao;
-
-  @override
-  Widget build(BuildContext context) {
-    final cor = Theme.of(context).colorScheme;
-    return GridView.builder(
-      padding: const EdgeInsets.all(Spacing.sp16),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 64,
-        childAspectRatio: 1,
-        crossAxisSpacing: Spacing.sp8,
-        mainAxisSpacing: Spacing.sp8,
-      ),
-      itemCount: livro.capitulos,
-      itemBuilder: (context, i) => OutlinedButton(
-        onPressed: () => ao(i + 1),
-        style: OutlinedButton.styleFrom(
-          padding: EdgeInsets.zero,
-          side: BorderSide(color: cor.outline.withValues(alpha: 0.6)),
-        ),
-        child: Text('${i + 1}', style: Theme.of(context).textTheme.bodyMedium),
       ),
     );
   }

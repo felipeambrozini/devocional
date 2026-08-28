@@ -121,9 +121,18 @@ plano compartilhado.
 
 ```
 lib/
-  data/        modelos, canon (os 66 livros), leitura de conteúdo, estado persistido
+  data/        serviços (estado, voz, nuvem, lembretes...), canon (os 66 livros),
+               leitura de conteúdo; modelos/ tem os tipos de dado, um domínio
+               por arquivo (bíblia, cronograma, devocional, marcações, busca,
+               chat, áudio, preferências de leitura), reunidos no barril
+               `data/modelos.dart`
   telas/       uma tela por arquivo (hoje, bíblia, devocional, plano, notas, busca, conversas, sobre...)
-  theme.dart   as duas paletas: marrom e dourada, pergaminho e bronze
+  widgets/     widgets compartilhados entre telas, um por arquivo, reunidos no
+               barril `widgets/widgets.dart`
+  funcoes/     funções livres sem widget próprio (avisos, diálogos, ações que
+               tocam dados, formatação de data e afins)
+  estilo/      spacing.dart (ritmo de espaçamento) e theme.dart (as duas
+               paletas: marrom e dourada, pergaminho e bronze)
   main.dart    navegação (barra/trilho), rotas e ponto de entrada
 assets/        Bíblia interna, devocionais, introduções, cronograma, imagens, fontes
 test/          testes de unidade e de widget
@@ -234,7 +243,7 @@ motivo novo.
   "Promessas de Deus" nunca cabe num celular.
 - **O peso das fontes vem de `fontVariations`, não do `weight` do pubspec**:
   Cinzel e Montserrat são variáveis, e declarar `weight:` só rotula o arquivo.
-  `lib/theme.dart` põe `FontVariation('wght', N)` em todo estilo. Guardado por
+  `lib/estilo/theme.dart` põe `FontVariation('wght', N)` em todo estilo. Guardado por
   dois testes (`test/tema_test.dart` e `test/fontes_test.dart`, que mede o
   texto de verdade).
 - **Há dois temas, e nenhuma tela lê a paleta direto**: `Cores` tem as duas
@@ -254,8 +263,8 @@ motivo novo.
   para não empurrar a barra de baixo nem quebrar o cabeçalho. O `Estado`
   recusa valores fora de `escalasDeLeitura`.
 - **Toda tela distingue carregando, erro e vazio** (`AvisoDeErro` em
-  `lib/telas/comuns.dart`); o padrão antigo confundia os três e deixava o
-  spinner girando para sempre.
+  `lib/widgets/aviso_vazio.dart`); o padrão antigo confundia os três e
+  deixava o spinner girando para sempre.
 - **A cópia de segurança das notas vai pela área de transferência**, não por
   arquivo, para não ramificar por plataforma. Importar **funde**, nunca
   substitui; em conflito vence quem tem nota.
@@ -278,7 +287,7 @@ motivo novo.
   no Firebase Storage (`storage.rules`: um arquivo por conta, só o dono
   grava, leitura pública porque a URL vai direto num `NetworkImage`).
 - **Excluir um plano e sair dele são ações diferentes** (20/08/2026):
-  `excluirPlano` (`lib/telas/planos_acoes.dart`) apaga o plano da nuvem para todos
+  `excluirPlano` (`lib/funcoes/planos_acoes.dart`) apaga o plano da nuvem para todos
   os participantes, e só quem criou pode chamar; `sairDoPlano` apaga apenas a
   própria participação, para quem só entrou no plano de outra pessoa. Os dois
   ficam disponíveis pela lixeira no cartão de "Meus Planos" e pelo menu
@@ -309,7 +318,7 @@ motivo novo.
   repositório. Fixado em `.fvmrc` e no `deploy-web.yml`
   (`subosito/flutter-action@v2`, `flutter-version: 3.44.9`). **Atualizar nos
   dois lugares ao mesmo tempo** e rodar a suíte local antes de comitar.
-- **`AreaDeSelecaoComCompartilhar` (`lib/telas/comuns.dart`, 20/08/2026)
+- **`AreaDeSelecaoComCompartilhar` (`lib/widgets/area_de_selecao.dart`, 20/08/2026)
   envolve `SelectionArea` e acrescenta "Compartilhar" ao menu de seleção**,
   usada no Devocional e, na web, no corpo aberto do cartão de introdução do
   livro: o texto vira selecionável e copiável
@@ -325,7 +334,7 @@ motivo novo.
   (Favoritar, Copiar, Compartilhar, Anotar; ver abaixo), aberta pelo toque na
   linha.
 - **Os dois players de voz separam pausar de parar** (`BotaoDeVoz` e
-  `IndicadorDeVozNaBarra`, `lib/telas/comuns.dart`, 21/08/2026): tocando, a
+  `IndicadorDeVozNaBarra`, `lib/widgets/botao_de_voz.dart`, 21/08/2026): tocando, a
   pílula pausa pelo corpo (ícone de pausa) e encerra pelo X ao lado; o anel
   da barra de cima (Bíblia e Sobre) faz o mesmo — pausa pelo anel
   e encerra por um segundo ícone ao lado, sem anel. Antes só havia o parar, e
@@ -440,10 +449,6 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
   contradizia o trilho lateral e a coluna dupla).
   **Cuidado ao regenerar ícones**: `dart run flutter_launcher_icons` reescreve
   `manifest.json` por completo; conferir se `name` e `orientation` sobreviveram.
-- **Modo apresentação**: `TelaApresentacao` em `lib/telas/biblia.dart`, tela
-  cheia, o versículo num `FittedBox(BoxFit.scaleDown)` (de propósito não usa
-  `Estado.escalaDeLeitura`). Fecha ao tocar em qualquer lugar. Entra pela folha
-  de ações do versículo, entre Compartilhar e Anotar.
 - **Aviso de perda de notas na web**: faixa fixa no topo de `TelaNotas`, só
   quando `kIsWeb`, chamando a mesma `_exportar` do menu (sem `Dismissible` de
   propósito: o risco do `localStorage` ser limpo não desaparece porque a

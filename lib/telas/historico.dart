@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
 import '../data/personas.dart';
-import '../spacing.dart';
-import 'comuns.dart';
+import '../estilo/spacing.dart';
+import '../funcoes/aviso.dart';
+import '../funcoes/datas.dart';
+import '../widgets/widgets.dart';
 
 /// O histórico de conversas com uma persona: a lista de todas as conversas,
 /// da mais recente à mais antiga, com o título (a primeira pergunta) e a data

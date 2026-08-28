@@ -8,9 +8,10 @@ import 'package:felipe_ambrozini/data/personas.dart';
 import 'package:felipe_ambrozini/data/recursos.dart';
 import 'package:felipe_ambrozini/data/voz.dart';
 import 'package:felipe_ambrozini/main.dart';
+import 'package:felipe_ambrozini/funcoes/datas.dart';
 import 'package:felipe_ambrozini/telas/biblia.dart';
 import 'package:felipe_ambrozini/telas/chat.dart';
-import 'package:felipe_ambrozini/telas/comuns.dart';
+import 'package:felipe_ambrozini/widgets/widgets.dart';
 import 'package:felipe_ambrozini/telas/devocional.dart';
 import 'package:felipe_ambrozini/telas/hoje.dart';
 import 'package:felipe_ambrozini/telas/plano.dart';
@@ -1094,64 +1095,6 @@ void main() {
     },
   );
 
-  testWidgets('Tela cheia abre o versículo e fecha pelo botão de fechar', (
-    tester,
-  ) async {
-    await aquecerAssets(tester);
-    await tester.pumpWidget(
-      MaterialApp(
-        home: EscopoDoEstado(
-          estado: await estadoLimpo(),
-          child: const TelaBiblia(),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(
-      find.byWidgetPredicate(
-        (w) =>
-            w is RichText &&
-            w.text.toPlainText().contains('No princípio, Deus criou'),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byTooltip('Tela cheia'));
-    await tester.pumpAndSettle();
-
-    expect(
-      find.text('No princípio, Deus criou os céus e a terra.'),
-      findsOneWidget,
-    );
-    expect(find.text('Gênesis 1:1'), findsOneWidget);
-
-    // Um toque no texto não fecha: durante uma transmissão, um toque
-    // acidental não pode encerrar a apresentação. Fecha só pelo botão.
-    await tester.tap(find.text('No princípio, Deus criou os céus e a terra.'));
-    await tester.pumpAndSettle();
-    expect(find.text('Gênesis 1:1'), findsOneWidget);
-
-    await tester.tap(find.byTooltip('Fechar'));
-    await tester.pumpAndSettle();
-
-    // De volta ao leitor: lá o versículo é RichText, não Text (ver o find
-    // acima, no início do teste), então a apresentação já não está na tela.
-    expect(find.text('Gênesis 1:1'), findsNothing);
-    expect(
-      find.text('No princípio, Deus criou os céus e a terra.'),
-      findsNothing,
-    );
-    expect(
-      find.byWidgetPredicate(
-        (w) =>
-            w is RichText &&
-            w.text.toPlainText().contains('No princípio, Deus criou'),
-      ),
-      findsOneWidget,
-    );
-  });
-
   testWidgets(
     'o devocional tem as três abas e Promessas traz o versículo da BKJ',
     (tester) async {
@@ -1471,8 +1414,6 @@ void main() {
       leitor.atrasarProximoInicio = true;
       final leitura = Voz.instancia.alternar(
         'capitulo:genesis.1',
-        texto: 'No princípio.',
-        tipo: TipoConteudoAudio.biblia,
       );
       await tester.pump();
       expect(Voz.instancia.carregando, isTrue);
@@ -1595,8 +1536,6 @@ void main() {
 
       final leitura = Voz.instancia.alternar(
         'capitulo:genesis.2',
-        texto: 'No princípio.',
-        tipo: TipoConteudoAudio.biblia,
       );
       await tester.pumpAndSettle();
       expect(Voz.instancia.tocando, isTrue);
@@ -1733,8 +1672,6 @@ void main() {
       leitor.atrasarProximoInicio = true;
       final leitura = Voz.instancia.alternar(
         'capitulo:genesis.4',
-        texto: 'No princípio.',
-        tipo: TipoConteudoAudio.biblia,
       );
       await tester.pump();
       expect(Voz.instancia.carregando, isTrue);

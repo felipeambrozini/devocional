@@ -5,7 +5,7 @@ import '../data/planos_nuvem.dart';
 import 'aviso.dart';
 
 /// Ações de plano que tocam a nuvem antes do espelho local, com a confirmação
-/// destrutiva na frente. Moram fora de `comuns.dart` para a biblioteca de
+/// destrutiva na frente. Moram fora de `widgets/widgets.dart` para a biblioteca de
 /// widgets não acumular regra de negócio.
 
 /// Confirma e exclui um plano — o compartilhado some da nuvem para todos

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../data/nuvem.dart';
 import '../data/recursos.dart';
-import '../spacing.dart';
-import 'comuns.dart';
+import '../estilo/spacing.dart';
+import '../widgets/widgets.dart';
 
 /// Política de privacidade completa: a versão longa do resumo que já vive em
 /// Sobre, com URL própria para quem chega por um link direto ou por exigência

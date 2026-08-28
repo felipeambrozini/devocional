@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:felipe_ambrozini/data/voz.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -92,13 +91,9 @@ void main() {
       final sub = Voz.instancia.conclusoes.listen(recebidas.add);
       final primeiro = Voz.instancia.alternar(
         'capitulo:a.1',
-        texto: 'Texto.',
-        tipo: TipoConteudoAudio.biblia,
       );
       await Voz.instancia.alternar(
         'capitulo:a.1',
-        texto: 'Texto.',
-        tipo: TipoConteudoAudio.biblia,
       );
       await primeiro;
       await esperarAvisos();
@@ -116,13 +111,9 @@ void main() {
       final sub = Voz.instancia.conclusoes.listen(recebidas.add);
       final primeira = Voz.instancia.alternar(
         'capitulo:b.2',
-        texto: 'Texto.',
-        tipo: TipoConteudoAudio.biblia,
       );
       final segunda = Voz.instancia.alternar(
         'capitulo:c.3',
-        texto: 'Texto.',
-        tipo: TipoConteudoAudio.biblia,
       );
       expect(Voz.instancia.carregando, isTrue);
       expect(Voz.instancia.tocandoChave, 'capitulo:c.3');
@@ -141,8 +132,6 @@ void main() {
       final sub = Voz.instancia.conclusoes.listen(recebidas.add);
       final pendente = Voz.instancia.alternar(
         'capitulo:d.4',
-        texto: 'Texto.',
-        tipo: TipoConteudoAudio.biblia,
       );
       await Voz.instancia.parar();
       await pendente;
@@ -161,16 +150,12 @@ void main() {
 
       final natural = Voz.instancia.alternar(
         'capitulo:e.5',
-        texto: 'Texto.',
-        tipo: TipoConteudoAudio.biblia,
       );
       leitor.encerrar();
       await natural;
 
       final interrompida = Voz.instancia.alternar(
         'capitulo:f.6',
-        texto: 'Texto.',
-        tipo: TipoConteudoAudio.biblia,
       );
       leitor.concluida = false;
       leitor.encerrar();
@@ -178,8 +163,6 @@ void main() {
 
       final manual = Voz.instancia.alternar(
         'capitulo:g.7',
-        texto: 'Texto.',
-        tipo: TipoConteudoAudio.biblia,
       );
       await Voz.instancia.parar();
       await manual;
@@ -195,16 +178,12 @@ void main() {
 
       final primeira = Voz.instancia.alternar(
         'capitulo:h.8',
-        texto: 'Texto.',
-        tipo: TipoConteudoAudio.biblia,
       );
       leitor.encerrar();
       await primeira;
 
       final segunda = Voz.instancia.alternar(
         'capitulo:h.8',
-        texto: 'Texto.',
-        tipo: TipoConteudoAudio.biblia,
       );
       await pumpEventQueue();
       await Voz.instancia.parar();
@@ -212,8 +191,6 @@ void main() {
 
       final terceira = Voz.instancia.alternar(
         'capitulo:h.8',
-        texto: 'Texto.',
-        tipo: TipoConteudoAudio.biblia,
       );
       await terceira;
       await esperarAvisos();
@@ -229,8 +206,6 @@ void main() {
 
       final primeira = Voz.instancia.alternar(
         'capitulo:i.9',
-        texto: 'Texto.',
-        tipo: TipoConteudoAudio.biblia,
       );
       leitor.encerrar();
       await primeira;
@@ -264,8 +239,6 @@ void main() {
     test('alternar com posição pula o áudio para onde a leitura parou', () async {
       final leitura = Voz.instancia.alternar(
         'capitulo:k.11',
-        texto: 'Texto.',
-        tipo: TipoConteudoAudio.biblia,
       );
       await esperarAvisos();
       expect(Voz.instancia.tocando, isTrue);
@@ -277,8 +250,6 @@ void main() {
 
       final retomada = Voz.instancia.alternar(
         'capitulo:k.11',
-        texto: 'Texto.',
-        tipo: TipoConteudoAudio.biblia,
       );
       leitor.encerrar();
       await retomada;
@@ -297,8 +268,6 @@ void main() {
 
       final leitura = Voz.instancia.alternar(
         'capitulo:l.12',
-        texto: 'Texto.',
-        tipo: TipoConteudoAudio.biblia,
       );
       await esperarAvisos();
       expect(Voz.instancia.tocando, isTrue);
@@ -315,8 +284,6 @@ void main() {
 
       final retomada = Voz.instancia.alternar(
         'capitulo:l.12',
-        texto: 'Texto.',
-        tipo: TipoConteudoAudio.biblia,
       );
       await esperarAvisos();
 
@@ -336,8 +303,6 @@ void main() {
     test('o botão de pausa manual pausa a leitura, e o toque seguinte retoma de onde parou', () async {
       final leitura = Voz.instancia.alternar(
         'capitulo:l.13',
-        texto: 'Texto.',
-        tipo: TipoConteudoAudio.biblia,
       );
       await esperarAvisos();
       expect(Voz.instancia.tocando, isTrue);
@@ -352,8 +317,6 @@ void main() {
 
       final retomada = Voz.instancia.alternar(
         'capitulo:l.13',
-        texto: 'Texto.',
-        tipo: TipoConteudoAudio.biblia,
       );
       await esperarAvisos();
 
@@ -373,8 +336,6 @@ void main() {
 
       final leitura = Voz.instancia.alternar(
         'capitulo:m.13',
-        texto: 'Texto.',
-        tipo: TipoConteudoAudio.biblia,
       );
       await esperarAvisos();
       leitor.pausarDeFora();
@@ -398,8 +359,6 @@ void main() {
 
       final leitura = Voz.instancia.alternar(
         'capitulo:n.14',
-        texto: 'Texto.',
-        tipo: TipoConteudoAudio.biblia,
       );
       await esperarAvisos();
 
@@ -413,8 +372,6 @@ void main() {
       Voz.instancia.primeiroPlanoParaTestes = true;
       final segunda = Voz.instancia.alternar(
         'capitulo:n.14',
-        texto: 'Texto.',
-        tipo: TipoConteudoAudio.biblia,
       );
       leitor.encerrar();
       await segunda;
@@ -428,8 +385,6 @@ void main() {
     test('trocar de chave durante a leitura: o preparo novo não herda "tocando", e o retry não vira parar', () async {
       final primeira = Voz.instancia.alternar(
         'capitulo:o.15',
-        texto: 'A.',
-        tipo: TipoConteudoAudio.biblia,
       );
       await esperarAvisos();
       expect(Voz.instancia.tocando, isTrue);
@@ -437,8 +392,6 @@ void main() {
       // Simula troca rápida: segunda chave assume
       final segunda = Voz.instancia.alternar(
         'capitulo:p.16',
-        texto: 'B.',
-        tipo: TipoConteudoAudio.biblia,
       );
       await esperarAvisos();
 
@@ -458,8 +411,6 @@ void main() {
 
       final retry = Voz.instancia.alternar(
         'capitulo:p.16',
-        texto: 'B.',
-        tipo: TipoConteudoAudio.biblia,
       );
       leitor.encerrar();
       await retry;

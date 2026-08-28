@@ -3,8 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../data/nuvem.dart';
 import '../data/recursos.dart';
-import '../spacing.dart';
-import 'comuns.dart';
+import '../estilo/spacing.dart';
+import '../widgets/widgets.dart';
 
 /// Perguntas frequentes: dúvidas reais de quem ainda decide se fica, não um
 /// roteiro de vendas. Nada aqui é exclusivo desta tela, é o que já está

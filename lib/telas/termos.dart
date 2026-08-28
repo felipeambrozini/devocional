@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../data/nuvem.dart';
 import '../data/recursos.dart';
-import '../spacing.dart';
-import 'comuns.dart';
+import '../estilo/spacing.dart';
+import '../widgets/widgets.dart';
 
 /// Termos de serviço: URL própria exigida por integrações que pedem um link
 /// de termos (ex.: tela de consentimento OAuth do Google), com o mesmo

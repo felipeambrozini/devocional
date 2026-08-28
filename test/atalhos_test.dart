@@ -4,7 +4,7 @@ import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:felipe_ambrozini/main.dart';
 import 'package:felipe_ambrozini/telas/biblia.dart';
 import 'package:felipe_ambrozini/telas/busca.dart';
-import 'package:felipe_ambrozini/telas/comuns.dart';
+import 'package:felipe_ambrozini/widgets/widgets.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

@@ -4,8 +4,9 @@ import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/planos.dart';
-import '../spacing.dart';
-import 'comuns.dart';
+import '../estilo/spacing.dart';
+import '../funcoes/aviso.dart';
+import '../widgets/widgets.dart';
 
 /// Formulário de um novo plano de leitura: nome opcional, um ou mais livros
 /// e em quantos dias. Monta o plano na hora ([montarPlanoDeLeitura]) e mostra

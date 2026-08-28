@@ -6,9 +6,11 @@ import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
 import '../data/nuvem.dart';
-import '../spacing.dart';
+import '../estilo/spacing.dart';
+import '../funcoes/aviso.dart';
+import '../funcoes/dialogos.dart';
+import '../widgets/widgets.dart';
 import 'biblia.dart';
-import 'comuns.dart';
 
 /// Favoritos e anotações, em duas abas, com busca.
 class TelaNotas extends StatefulWidget {

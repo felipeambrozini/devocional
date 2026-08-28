@@ -5,11 +5,13 @@ import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
-import '../data/voz.dart';
-import '../spacing.dart';
+import '../estilo/spacing.dart';
+import '../funcoes/capa_biblia.dart';
+import '../funcoes/citacao.dart';
+import '../funcoes/datas.dart';
+import '../widgets/widgets.dart';
 import 'biblia.dart';
 import 'busca.dart';
-import 'comuns.dart';
 
 /// As três leituras diárias, na ordem em que aparecem no alternador do topo.
 ///
@@ -38,14 +40,6 @@ enum Leitura {
     Leitura.manha => Periodo.manha,
     Leitura.noite => Periodo.noite,
     Leitura.promessas => null,
-  };
-
-  /// O tipo de conteúdo da voz ([TipoConteudoAudio]): todos leem na mesma
-  /// voz, com o ritmo de cada um.
-  TipoConteudoAudio get tipoDeVoz => switch (this) {
-    Leitura.manha => TipoConteudoAudio.devocionalManha,
-    Leitura.noite => TipoConteudoAudio.devocionalNoite,
-    Leitura.promessas => TipoConteudoAudio.promessasDeDeus,
   };
 
   String get capa => this == Leitura.promessas
@@ -238,18 +232,11 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                       dev: dev,
                       texto: dev.texto,
                       capa: _leitura.capa,
-                      tipo: _leitura.tipoDeVoz,
                       // A chave leva a leitura junto: Manhã e Noite do mesmo
                       // dia são leituras diferentes, e a cache não pode
                       // confundi-las numa só.
                       vozChave:
                           'devocional:${_leitura.name}:${_data.month}/${_data.day}',
-                      vozTexto: textoDeDevocional(
-                        dev,
-                        cabecalho: _leitura == Leitura.promessas
-                            ? 'Promessa para ${dataLonga(_data)}'
-                            : '${_leitura.tituloCompleto}, ${dataLonga(_data)}',
-                      ),
                       vozReferencia: dev.referencia.isNotEmpty
                           ? dev.referencia
                           : _leitura.rotulo,
@@ -303,9 +290,7 @@ class _CartaoDeLeitura extends StatelessWidget {
     required this.dev,
     required this.texto,
     this.capa,
-    required this.tipo,
     required this.vozChave,
-    required this.vozTexto,
     required this.vozReferencia,
   });
 
@@ -318,13 +303,8 @@ class _CartaoDeLeitura extends StatelessWidget {
   /// Capa do livro de onde a leitura vem, para dar identidade ao cartão.
   final String? capa;
 
-  /// O tipo de conteúdo da leitura ([TipoConteudoAudio]): todos usam a mesma
-  /// voz, e é o que o botão de ouvir usa no ritmo da síntese.
-  final TipoConteudoAudio tipo;
-
-  /// O que a voz de Spurgeon lê: chave do áudio, texto e referência.
+  /// O que a voz de Spurgeon lê: chave do áudio e referência.
   final String vozChave;
-  final String vozTexto;
   final String vozReferencia;
 
   @override
@@ -402,8 +382,6 @@ class _CartaoDeLeitura extends StatelessWidget {
             const SizedBox(height: Spacing.sp14),
             BotaoDeVoz(
               chave: vozChave,
-              texto: vozTexto,
-              tipo: tipo,
               referencia: vozReferencia,
             ),
             const SizedBox(height: Spacing.sp14),

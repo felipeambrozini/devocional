@@ -238,14 +238,14 @@ class Nuvem extends ChangeNotifier {
   /// spinner e ficarem desabilitados — sem isto o toque parecia não fazer
   /// nada enquanto o seletor de conta ou a troca de token com o Firebase
   /// demoravam. Um flag só, e não um por botão: os três botões que chamam
-  /// [entrar] (ver `entrarNaConta` em `lib/telas/conta_acoes.dart`) apontam para
+  /// [entrar] (ver `entrarNaConta` em `lib/funcoes/conta_acoes.dart`) apontam para
   /// a mesma instância, então todos refletem o mesmo login em andamento.
   bool _entrando = false;
   bool get entrando => _entrando;
 
   /// O uid de quem está com a conta aberta, para saber se é o criador de um
   /// plano compartilhado (ver `excluirPlano`/`sairDoPlano` em
-  /// `lib/telas/planos_acoes.dart`). null sem conta, ou antes de [iniciar].
+  /// `lib/funcoes/planos_acoes.dart`). null sem conta, ou antes de [iniciar].
   String? get uid => _pronta ? FirebaseAuth.instance.currentUser?.uid : null;
 
   /// Primeiro nome de quem entrou, para a saudação de `_Cabecalho` em

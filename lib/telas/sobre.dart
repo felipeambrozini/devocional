@@ -10,8 +10,10 @@ import '../data/nuvem.dart';
 import '../data/personas.dart';
 import '../data/recursos.dart';
 import '../data/voz.dart';
-import '../spacing.dart';
-import 'comuns.dart';
+import '../estilo/spacing.dart';
+import '../funcoes/aviso.dart';
+import '../funcoes/linhas_de_ajuda.dart';
+import '../widgets/widgets.dart';
 
 /// Créditos das traduções, da fonte dos devocionais e o link dos canais.
 class TelaSobre extends StatefulWidget {
@@ -96,30 +98,28 @@ class _TelaSobreState extends State<TelaSobre> {
             const SizedBox(height: Spacing.sp10),
             Text(
               'O retrato de Spurgeon nas telas de leitura lê o texto em voz '
-              'alta: um narrador masculino de barítono, sintetizado na nuvem '
-              'do Google, lendo devagar e em tom grave. A leitura precisa da '
-              'rede, e o limite gratuito de um milhão de caracteres por mês '
-              'cobre o uso de sobra. A demonstração abaixo toca só os três '
-              'primeiros versículos do Salmo 1.',
+              'alta: MP3 pré-gravados na voz clonada do Felipe, mais '
+              'natural que uma síntese em tempo real. Fora da web dá para '
+              'baixar por categoria e ouvir offline, nos Ajustes. A '
+              'demonstração abaixo toca o Salmo 23.',
               style: tema.bodyLarge?.copyWith(height: 1.7),
             ),
             const SizedBox(height: Spacing.sp16),
             // A demonstração no próprio lugar da explicação: quem descobre a
             // voz aqui ouve na hora, sem caçar um capítulo para testar.
             Text(
-              'Ouça um trecho:',
+              'Ouça uma amostra:',
               style: tema.labelLarge?.copyWith(color: cor.onSurfaceVariant),
             ),
             const SizedBox(height: Spacing.sp10),
             CarregaUmaVez<Capitulo>(
-              chave: 'voz-demo-salmos-1-$_tentativasDaDemo',
-              carregar: () =>
-                  Conteudo.instancia.capitulo('salmos', 1),
+              chave: 'voz-demo-salmos-23-$_tentativasDaDemo',
+              carregar: () => Conteudo.instancia.capitulo('salmos', 23),
               construir: (context, snap) {
                 if (snap.hasError) {
                   // A demonstração não pode sumir em silêncio: quem a pediu
-                  // precisa saber que o trecho não veio, e de um jeito de
-                  // pedir de novo.
+                  // precisa saber que ela não veio, e de um jeito de pedir de
+                  // novo.
                   return Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton.icon(
@@ -134,22 +134,12 @@ class _TelaSobreState extends State<TelaSobre> {
                     snap.connectionState != ConnectionState.done) {
                   return const SizedBox.shrink();
                 }
-                // A demonstração toca só os três primeiros versículos, não o
-                // capítulo inteiro: o que se promete aqui é um trecho, e a
-                // pílula não deve gastar a quota de um Salmo 1 completo. A
-                // chave própria ("trecho:...") também impede que o trecho
-                // encurte o áudio do capítulo completo na cache da Bíblia.
-                final trecho = [
-                  capitulo.referencia,
-                  for (final (numero, texto) in capitulo.versiculos.take(3))
-                    '$numero. $texto',
-                ].join(' ');
+                // O Salmo 23 tem só seis versículos: curto o bastante para
+                // servir de amostra tocando o capítulo inteiro, com a mesma
+                // chave (e o mesmo arquivo) que o leitor usa.
                 return BotaoDeVoz(
-                  chave: 'trecho:${capitulo.livro}.${capitulo.numero}',
-                  texto: trecho,
-                  tipo: TipoConteudoAudio.biblia,
-                  // Sem referência: "Leitura concluída." basta — o que
-                  // terminou foi o trecho, não o capítulo.
+                  chave: chaveDeCapitulo(capitulo.livro, capitulo.numero),
+                  referencia: capitulo.referencia,
                 );
               },
             ),

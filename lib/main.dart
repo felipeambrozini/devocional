@@ -22,21 +22,22 @@ import 'data/planos_nuvem.dart';
 import 'data/recursos.dart';
 import 'data/registro.dart';
 import 'data/voz.dart';
+import 'estilo/theme.dart';
+import 'funcoes/lembretes_acoes.dart';
 import 'telas/biblia.dart';
 import 'telas/chat.dart';
-import 'telas/comuns.dart';
 import 'telas/conversas.dart';
 import 'telas/devocional.dart';
-import 'telas/hoje.dart';
-import 'telas/historico.dart';
 import 'telas/faq.dart';
+import 'telas/historico.dart';
+import 'telas/hoje.dart';
 import 'telas/meu_plano.dart';
 import 'telas/notas.dart';
 import 'telas/plano.dart';
 import 'telas/privacidade.dart';
 import 'telas/sobre.dart';
 import 'telas/termos.dart';
-import 'theme.dart';
+import 'widgets/widgets.dart';
 
 /// De módulo, e não de um State: o toque numa notificação chega por um
 /// callback do plugin que não tem `BuildContext` de tela nenhuma, e pode
@@ -387,7 +388,8 @@ final _router = GoRouter(
     GoRoute(
       path: '/sobre',
       // Sobre não é aba: a navegação inferior tem seis destinos, e o caminho
-      // para os créditos fica no fim da folha de ajustes (ver comuns.dart).
+      // para os créditos fica no fim da folha de ajustes (ver
+      // widgets/folha_de_ajustes.dart).
       // A URL própria continua valendo para F5 e link compartilhado.
       builder: (context, state) => const TelaSobre(),
     ),

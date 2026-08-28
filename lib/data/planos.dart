@@ -94,7 +94,7 @@ class PlanoDoUsuario {
 
   /// O uid de quem criou, só em plano compartilhado — é quem tem o poder de
   /// excluir para todos; os demais só podem sair (ver `excluirPlano` e
-  /// `sairDoPlano` em `lib/telas/planos_acoes.dart`).
+  /// `sairDoPlano` em `lib/funcoes/planos_acoes.dart`).
   final String? criadoPor;
 
   List<DiaDePlanoDoUsuario> get diasDoPlano =>

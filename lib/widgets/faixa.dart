@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/modelos.dart';
-import 'biblia.dart';
+import '../telas/biblia.dart';
 
 /// Botão que abre a Bíblia numa faixa do cronograma.
 ///

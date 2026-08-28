@@ -8,8 +8,10 @@ import '../data/modelos.dart';
 import '../data/nuvem.dart';
 import '../data/planos.dart';
 import '../data/recursos.dart';
-import '../spacing.dart';
-import 'comuns.dart';
+import '../estilo/spacing.dart';
+import '../funcoes/datas.dart';
+import '../funcoes/planos_acoes.dart';
+import '../widgets/widgets.dart';
 import 'meu_plano.dart';
 import 'novo_plano.dart';
 

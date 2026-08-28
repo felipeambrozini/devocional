@@ -1,7 +1,7 @@
 import 'package:felipe_ambrozini/data/audio_offline.dart';
-import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:felipe_ambrozini/data/voz.dart';
-import 'package:felipe_ambrozini/telas/comuns.dart';
+import 'package:felipe_ambrozini/funcoes/aviso.dart';
+import 'package:felipe_ambrozini/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -22,8 +22,6 @@ void main() {
     home: Scaffold(
       body: BotaoDeVoz(
         chave: chave,
-        texto: 'No princípio.',
-        tipo: TipoConteudoAudio.biblia,
       ),
     ),
   );

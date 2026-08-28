@@ -11,7 +11,6 @@ import 'package:path_provider/path_provider.dart';
 
 import 'audio_config.dart';
 import 'canon.dart';
-import 'modelos.dart';
 import 'registro.dart';
 
 /// Áudios pré-gerados em MP3 (voz clonada do usuário). Sem TTS em tempo real:
@@ -26,33 +25,6 @@ class VozException implements Exception {
 
   @override
   String toString() => mensagem;
-}
-
-/// O texto que a voz lê para uma introdução: o título, as seções na ordem e,
-/// quando a frase tem fonte comprovada, a citação com a atribuição — o mesmo
-/// conteúdo da tela, da primeira linha à última.
-String textoDeIntroducao(Introducao introducao) {
-  final partes = <String>['Introdução de ${introducao.livro}.'];
-  for (final (titulo, corpo) in introducao.secoes) {
-    partes.add(titulo);
-    partes.addAll(corpo.split('\n\n'));
-  }
-  if (introducao.frase.isNotEmpty) {
-    partes.add('"${introducao.frase}" ${introducao.atribuicao}');
-  }
-  return partes.join(' ');
-}
-
-/// O texto que a voz lê para um capítulo: a referência ("João 3"), o
-/// sobrescrito quando há (os Salmos) e cada versículo sem número falado —
-/// o número fica só na tela, a voz lê o texto corrido com pausa natural.
-String textoDeCapitulo(Capitulo capitulo) {
-  final partes = <String>[capitulo.referencia];
-  if (capitulo.titulo.isNotEmpty) partes.add(capitulo.titulo);
-  for (final (_, texto) in capitulo.versiculos) {
-    partes.add(texto);
-  }
-  return partes.join(' ');
 }
 
 /// As chaves que identificam o que a voz toca ("capitulo:joao.3",
@@ -90,22 +62,6 @@ String? caminhoRelativoParaChave(String chave) {
     return 'devocionais/manha_e_noite/$leitura/$data.mp3';
   }
   return null;
-}
-
-/// O texto que a voz lê para um devocional: o cabeçalho ("Devocional da
-/// manhã, 18 de agosto"), o título quando a leitura tem um (as Promessas),
-/// cada versículo falado com a referência — também os versículos extras do
-/// dia raro — e o comentário inteiro: o mesmo conteúdo da tela, da primeira
-/// linha à última, como nas introduções e nos capítulos.
-String textoDeDevocional(Devocional dev, {required String cabecalho}) {
-  final partes = <String>[cabecalho];
-  if (dev.titulo.isNotEmpty) partes.add(dev.titulo);
-  for (final (referencia, versiculo) in dev.paresDeVersiculos) {
-    if (versiculo.isNotEmpty) partes.add('"$versiculo"');
-    if (referencia.isNotEmpty) partes.add(referencia);
-  }
-  if (dev.texto.isNotEmpty) partes.add(dev.texto);
-  return partes.join(' ');
 }
 
 /// Mensagem da falha ao tocar (codec, player, rede no meio do caminho): não
@@ -282,19 +238,10 @@ class Voz extends ChangeNotifier {
 
   final StreamController<String> _conclusoes = StreamController.broadcast();
 
-  /// Toca [texto] na voz de [tipo] de conteúdo, ou para se ele já estiver
-  /// tocando. Agora todo áudio vem de arquivo MP3 pré-gerado (local offline
-  /// ou remoto). [texto] e [tipo] são mantidos na assinatura para
-  /// compatibilidade, mas não são usados para síntese.
-  Future<void> alternar(
-    String chave, {
-    required String texto,
-    required TipoConteudoAudio tipo,
-    // ignore: avoid_unused_constructor_parameters
-    dynamic cliente,
-    // ignore: avoid_unused_constructor_parameters
-    String? chaveTts,
-  }) async {
+  /// Toca o áudio de [chave], ou para se ele já estiver tocando. Todo áudio
+  /// vem de arquivo MP3 pré-gerado (local offline ou remoto): [chave] sozinha
+  /// resolve o arquivo, ver [caminhoRelativoParaChave].
+  Future<void> alternar(String chave) async {
     final relogio = _relogioDaParada;
     if (_ultimaChaveParada == chave &&
         relogio != null &&

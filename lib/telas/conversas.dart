@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/personas.dart';
-import '../spacing.dart';
-import 'comuns.dart';
+import '../estilo/spacing.dart';
+import '../widgets/widgets.dart';
 
 /// A aba Conversas: a porta de entrada do chat no celular e no computador.
 ///

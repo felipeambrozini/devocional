@@ -7,11 +7,16 @@ import '../data/estado.dart';
 import '../data/modelos.dart';
 import '../data/nuvem.dart';
 import '../data/registro.dart';
-import '../spacing.dart';
+import '../estilo/spacing.dart';
+import '../funcoes/alternar_lido.dart';
+import '../funcoes/aviso.dart';
+import '../funcoes/citacao.dart';
+import '../funcoes/conta_acoes.dart';
+import '../funcoes/datas.dart';
+import '../funcoes/linhas_de_ajuda.dart';
+import '../widgets/widgets.dart';
 import 'biblia.dart';
-import 'comuns.dart';
 import 'devocional.dart';
-import 'faixa.dart';
 
 /// Tela de abertura: quem sou, o devocional da hora, a leitura do dia e o progresso.
 class TelaHoje extends StatefulWidget {

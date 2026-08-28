@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/modelos.dart';
-import '../spacing.dart';
+import '../estilo/spacing.dart';
+import '../funcoes/aviso.dart';
+import '../funcoes/datas.dart';
+import '../widgets/widgets.dart';
 import 'biblia.dart';
-import 'comuns.dart';
 import 'devocional.dart';
 
 /// Busca no texto da Bíblia e nos devocionais de Spurgeon, em duas abas.

@@ -8,8 +8,11 @@ import '../data/estado.dart';
 import '../data/nuvem.dart';
 import '../data/planos.dart';
 import '../data/planos_nuvem.dart';
-import '../spacing.dart';
-import 'comuns.dart';
+import '../estilo/spacing.dart';
+import '../funcoes/aviso.dart';
+import '../funcoes/conta_acoes.dart';
+import '../funcoes/planos_acoes.dart';
+import '../widgets/widgets.dart';
 
 /// A tela de um plano do usuário: o que se lê dia a dia, o progresso
 /// próprio e, num plano compartilhado, o progresso de cada participante.

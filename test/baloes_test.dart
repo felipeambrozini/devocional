@@ -3,7 +3,7 @@ import 'package:felipe_ambrozini/data/lembretes.dart';
 import 'package:felipe_ambrozini/data/recursos.dart';
 import 'package:felipe_ambrozini/main.dart';
 import 'package:felipe_ambrozini/telas/chat.dart';
-import 'package:felipe_ambrozini/telas/comuns.dart';
+import 'package:felipe_ambrozini/widgets/widgets.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
