@@ -39,34 +39,23 @@ class AudioOffline extends ChangeNotifier {
     return Directory('${base.path}/audio_offline');
   }
 
-  String _caminhoLocalParaChave(String chave) {
-    // Espelha a estrutura de Voz._urlParaChave mas em disco.
-    if (chave.startsWith('capitulo:')) {
-      final resto = chave.substring('capitulo:'.length);
-      final partes = resto.split('.');
-      return 'biblia/${partes[0]}/${partes[1]}.mp3';
-    }
-    if (chave.startsWith('introducao:')) {
-      return 'introducao/${chave.substring('introducao:'.length)}.mp3';
-    }
-    if (chave.startsWith('devocional:')) {
-      final resto = chave.substring('devocional:'.length);
-      final idx = resto.indexOf(':');
-      final leitura = resto.substring(0, idx);
-      final data = resto.substring(idx + 1).replaceAll('/', '-');
-      if (leitura == 'promessas') return 'promessas/$data.mp3';
-      return 'devocional/$leitura/$data.mp3';
-    }
-    return '${chave.replaceAll(':', '_').replaceAll('/', '-')}.mp3';
-  }
+  String _caminhoLocalParaChave(String chave) =>
+      caminhoRelativoParaChave(chave) ??
+      '${chave.replaceAll(':', '_').replaceAll('/', '-')}.mp3';
 
   Future<File> _arquivoLocal(String chave) async {
     final dir = await _dirBase();
     return File('${dir.path}/${_caminhoLocalParaChave(chave)}');
   }
 
+  /// Override para testes: evita bater no path_provider de verdade (sem
+  /// plugin registrado em teste de widget). Null usa o caminho real.
+  static bool Function(String chave)? temOfflineParaTeste;
+
   /// Se o arquivo offline já existe para [chave].
   Future<bool> temOffline(String chave) async {
+    final paraTeste = temOfflineParaTeste;
+    if (paraTeste != null) return paraTeste(chave);
     if (!_suportado) return false;
     final f = await _arquivoLocal(chave);
     return f.exists();
@@ -195,26 +184,10 @@ class AudioOffline extends ChangeNotifier {
   }
 
   String? _urlParaChaveHttp(String chave, String base) {
+    final relativo = caminhoRelativoParaChave(chave);
+    if (relativo == null) return null;
     final b = base.endsWith('/') ? base.substring(0, base.length - 1) : base;
-    if (chave.startsWith('capitulo:')) {
-      final resto = chave.substring('capitulo:'.length);
-      final partes = resto.split('.');
-      if (partes.length != 2) return null;
-      return '$b/biblia/${partes[0]}/${partes[1]}.mp3';
-    }
-    if (chave.startsWith('introducao:')) {
-      return '$b/introducao/${chave.substring('introducao:'.length)}.mp3';
-    }
-    if (chave.startsWith('devocional:')) {
-      final resto = chave.substring('devocional:'.length);
-      final idx = resto.indexOf(':');
-      if (idx == -1) return null;
-      final leitura = resto.substring(0, idx);
-      final data = resto.substring(idx + 1).replaceAll('/', '-');
-      if (leitura == 'promessas') return '$b/promessas/$data.mp3';
-      return '$b/devocional/$leitura/$data.mp3';
-    }
-    return null;
+    return '$b/$relativo';
   }
 
   /// Apaga todos os arquivos offline de [categoria].
@@ -224,8 +197,8 @@ class AudioOffline extends ChangeNotifier {
     final sub = switch (categoria) {
       'biblia' => 'biblia',
       'introducao' => 'introducao',
-      'manha_noite' => 'devocional',
-      'promessas' => 'promessas',
+      'manha_noite' => 'devocionais/manha_e_noite',
+      'promessas' => 'devocionais/promessas_de_deus',
       _ => null,
     };
     if (sub == null) return;
@@ -272,9 +245,9 @@ class AudioOffline extends ChangeNotifier {
         out['biblia'] = out['biblia']! + 1;
       } else if (p.contains('/introducao/')) {
         out['introducao'] = out['introducao']! + 1;
-      } else if (p.contains('/promessas/')) {
+      } else if (p.contains('/promessas_de_deus/')) {
         out['promessas'] = out['promessas']! + 1;
-      } else if (p.contains('/devocional/')) {
+      } else if (p.contains('/manha_e_noite/')) {
         out['manha_noite'] = out['manha_noite']! + 1;
       }
     }

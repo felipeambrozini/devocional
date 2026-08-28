@@ -108,7 +108,11 @@ plano compartilhado.
   (`lib/data/voz.dart`), servidos a partir de `AUDIO_BASE_URL`
   (`lib/data/audio_config.dart`); `AudioOffline`
   (`lib/data/audio_offline.dart`) baixa e cacheia esses arquivos em disco
-  fora da web, para ouvir sem internet.
+  fora da web, para ouvir sem internet. A geração dos MP3 é em lotes (roda por
+  semanas fora deste repo, ver `audio_gen/`), então o botão de ouvir só
+  aparece quando o áudio já existe: `Voz.arquivoDisponivelRemoto` confere
+  `$AUDIO_BASE_URL/manifesto.json` (a lista do que já foi publicado, gerada
+  por `audio_gen/gerar_manifesto.py`) além do cache offline.
 - Fontes empacotadas localmente (Cinzel e Montserrat), sem depender de rede na
   primeira execução.
 - Conteúdo (Bíblia, devocionais, introduções, cronograma) vem de arquivos JSON

@@ -1216,6 +1216,10 @@ class BotaoDeVoz extends StatefulWidget {
 class _BotaoDeVozState extends State<BotaoDeVoz> {
   StreamSubscription<String>? _conclusoes;
 
+  // Null enquanto ainda não sabe se o áudio existe: o botão fica escondido
+  // até a resposta chegar, nunca mostra um "Ouvir" que falharia ao tocar.
+  bool? _disponivel;
+
   @override
   void initState() {
     super.initState();
@@ -1229,6 +1233,36 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
             : 'Leitura concluída: $referencia.',
       );
     });
+    _checarDisponibilidade();
+  }
+
+  Future<void> _checarDisponibilidade() async {
+    // Local e remoto são checados um sem depender do outro: uma exceção de
+    // plataforma num (ex: path_provider sem registro em teste de widget) não
+    // pode esconder a resposta do outro.
+    var offline = false;
+    try {
+      offline = await AudioOffline.instancia.temOffline(widget.chave);
+    } catch (_) {}
+    var disponivel = offline;
+    if (!disponivel) {
+      try {
+        disponivel = await Voz.instancia.arquivoDisponivelRemoto(widget.chave);
+      } catch (_) {}
+    }
+    if (mounted) setState(() => _disponivel = disponivel);
+  }
+
+  @override
+  void didUpdateWidget(covariant BotaoDeVoz oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // O mesmo State pode ser reaproveitado com outra chave (ex: navegação
+    // entre capítulos sem remontar o widget) — sem isso o botão continuaria
+    // mostrando a disponibilidade do capítulo anterior.
+    if (widget.chave != oldWidget.chave) {
+      _disponivel = null;
+      _checarDisponibilidade();
+    }
   }
 
   @override
@@ -1240,6 +1274,7 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
   @override
   Widget build(BuildContext context) {
     if (!Recursos.ouvirTextos) return const SizedBox.shrink();
+    if (_disponivel != true) return const SizedBox.shrink();
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     return ListenableBuilder(

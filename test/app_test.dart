@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:felipe_ambrozini/data/audio_offline.dart';
 import 'package:felipe_ambrozini/data/conteudo.dart';
 import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/data/modelos.dart';
@@ -118,10 +119,15 @@ void main() {
     // Recursos.conversas).
     Recursos.conversasForcado = true;
     Voz.baseUrlForTest = 'https://test.audio';
+    // Evita bater no path_provider de verdade: sem plugin registrado em
+    // teste de widget, o botão de ouvir (BotaoDeVoz) ficaria escondido pra
+    // sempre esperando essa checagem nunca resolver.
+    AudioOffline.temOfflineParaTeste = (_) => false;
   });
   tearDown(() {
     Recursos.conversasForcado = null;
     Voz.baseUrlForTest = null;
+    AudioOffline.temOfflineParaTeste = null;
   });
 
   Future<Estado> estadoLimpo() async =>
@@ -360,10 +366,31 @@ void main() {
     expect(find.text('Fontes do texto'), findsOneWidget);
     // O parágrafo de créditos e o da voz empurram os canais para fora da
     // área que a lista realiza de saída; sem rolar até eles, o finder não
-    // os encontra.
-    await tester.scrollUntilVisible(find.text('YouTube'), 200);
+    // os encontra. `scrollable` explícito, e não o padrão de
+    // `scrollUntilVisible`: o conteúdo acima (demonstração da voz) muda de
+    // altura conforme a disponibilidade do áudio resolve, e o finder padrão
+    // não convergia com a lista mais curta.
+    final listaDeSobre = find.descendant(
+      of: find.byType(ListView),
+      matching: find.byType(Scrollable),
+    );
+    await tester.scrollUntilVisible(
+      find.text('YouTube'),
+      200,
+      scrollable: listaDeSobre,
+    );
     expect(find.text('YouTube'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Instagram'), 200);
+    // Assentamento extra: cada BotaoDeVoz da tela checa disponibilidade do
+    // áudio de forma assíncrona (local e remoto) antes de decidir se aparece;
+    // sem esperar essa checagem terminar, o resto da lista (Instagram em
+    // diante) ainda não tinha acabado de montar quando a rolagem seguinte
+    // rodava.
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Instagram'),
+      200,
+      scrollable: listaDeSobre,
+    );
     expect(find.text('Instagram'), findsOneWidget);
     expect(
       GoRouter.of(tester.element(find.byType(Scaffold).first)).state.uri.path,

@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io' show File;
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/widgets.dart'
     show AppLifecycleState, ChangeNotifier, WidgetsBinding;
+import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -61,6 +63,35 @@ String textoDeCapitulo(Capitulo capitulo) {
 String chaveDeCapitulo(String livro, int numero) => 'capitulo:$livro.$numero';
 
 String chaveDaIntroducao(String slug) => 'introducao:$slug';
+
+/// O caminho relativo do mp3 pré-gerado para [chave] (sem base nem barra
+/// inicial): "biblia/joao/3.mp3", "introducao/joao.mp3",
+/// "devocionais/manha_e_noite/manha/8-19.mp3",
+/// "devocionais/promessas_de_deus/8-19.mp3" — o mesmo nome dos arquivos em
+/// `assets/`. Null se a chave não tiver um desses formatos. Único
+/// lugar que conhece essa estrutura de pastas (a mesma que `audio_gen/*.py`
+/// escreve) — [Voz] (remoto) e [AudioOffline] (disco) só chamam, em vez de
+/// cada um adivinhar a estrutura por conta própria.
+String? caminhoRelativoParaChave(String chave) {
+  if (chave.startsWith('capitulo:')) {
+    final partes = chave.substring('capitulo:'.length).split('.');
+    if (partes.length != 2) return null;
+    return 'biblia/${partes[0]}/${partes[1]}.mp3';
+  }
+  if (chave.startsWith('introducao:')) {
+    return 'introducao/${chave.substring('introducao:'.length)}.mp3';
+  }
+  if (chave.startsWith('devocional:')) {
+    final resto = chave.substring('devocional:'.length);
+    final idx = resto.indexOf(':');
+    if (idx == -1) return null;
+    final leitura = resto.substring(0, idx);
+    final data = resto.substring(idx + 1).replaceAll('/', '-');
+    if (leitura == 'promessas') return 'devocionais/promessas_de_deus/$data.mp3';
+    return 'devocionais/manha_e_noite/$leitura/$data.mp3';
+  }
+  return null;
+}
 
 /// O texto que a voz lê para um devocional: o cabeçalho ("Devocional da
 /// manhã, 18 de agosto"), o título quando a leitura tem um (as Promessas),
@@ -156,38 +187,86 @@ class Voz extends ChangeNotifier {
   String? _urlParaChave(String chave) {
     final baseRaw = baseUrlForTest ?? audioBaseUrl;
     if (baseRaw.isEmpty) return null;
+    if (baseUrlForTest == null && !_livroExisteNaChave(chave)) return null;
+    final relativo = caminhoRelativoParaChave(chave);
+    if (relativo == null) return null;
     final base = baseRaw.endsWith('/')
         ? baseRaw.substring(0, baseRaw.length - 1)
         : baseRaw;
+    return '$base/$relativo';
+  }
+
+  /// Guarda contra chave com livro que não existe (dado corrompido/de teste
+  /// sem override): "capitulo:xyz.3" ou "introducao:xyz" nunca tem áudio.
+  bool _livroExisteNaChave(String chave) {
     if (chave.startsWith('capitulo:')) {
-      final resto = chave.substring('capitulo:'.length);
-      final partes = resto.split('.');
-      if (partes.length != 2) return null;
-      if (baseUrlForTest == null && livroPorSlug(partes[0]) == null) {
-        return null;
-      }
-      return '$base/biblia/${partes[0]}/${partes[1]}.mp3';
+      final slug = chave.substring('capitulo:'.length).split('.').first;
+      return livroPorSlug(slug) != null;
     }
     if (chave.startsWith('introducao:')) {
-      final slug = chave.substring('introducao:'.length);
-      if (baseUrlForTest == null && livroPorSlug(slug) == null) return null;
-      return '$base/introducao/$slug.mp3';
+      return livroPorSlug(chave.substring('introducao:'.length)) != null;
     }
-    if (chave.startsWith('devocional:')) {
-      final resto = chave.substring('devocional:'.length);
-      final idx = resto.indexOf(':');
-      if (idx == -1) return null;
-      final leitura = resto.substring(0, idx);
-      final data = resto.substring(idx + 1);
-      final dataNorm = data.replaceAll('/', '-');
-      if (leitura == 'promessas') return '$base/promessas/$dataNorm.mp3';
-      return '$base/devocional/$leitura/$dataNorm.mp3';
-    }
-    return null;
+    return true;
   }
 
   /// Se há um arquivo de áudio para [chave] (base configurada e chave conhecida).
   bool temArquivoParaChave(String chave) => _urlParaChave(chave) != null;
+
+  /// Os caminhos relativos (ver [caminhoRelativoParaChave]) que já existem no
+  /// Storage — sem isso o botão de ouvir apareceria para áudio que ainda não
+  /// foi gerado (a geração roda aos poucos, em lotes, por semanas). Carregado
+  /// uma vez de "$AUDIO_BASE_URL/manifesto.json" e mantido em memória.
+  Set<String>? _manifesto;
+  Future<Set<String>>? _carregandoManifesto;
+
+  Future<Set<String>> _garantirManifesto() {
+    final pronto = _manifesto;
+    if (pronto != null) return Future.value(pronto);
+    return _carregandoManifesto ??= _buscarManifesto().then((m) {
+      _manifesto = m;
+      return m;
+    });
+  }
+
+  Future<Set<String>> _buscarManifesto() async {
+    final baseRaw = baseUrlForTest ?? audioBaseUrl;
+    if (baseRaw.isEmpty) return {};
+    final base = baseRaw.endsWith('/')
+        ? baseRaw.substring(0, baseRaw.length - 1)
+        : baseRaw;
+    try {
+      final resp = await http.get(Uri.parse('$base/manifesto.json'));
+      if (resp.statusCode != 200) return {};
+      return (jsonDecode(resp.body) as List).cast<String>().toSet();
+    } catch (_) {
+      return {};
+    }
+  }
+
+  /// Override para testes: quando não nulo, [arquivoDisponivelRemoto] usa
+  /// este conjunto em vez de buscar "manifesto.json" de verdade. Com
+  /// [baseUrlForTest] setado e este continuando nulo, assume tudo disponível
+  /// (mesma lógica relaxada de [_livroExisteNaChave] em modo de teste) — a
+  /// maioria dos testes de voz não é sobre disponibilidade de arquivo.
+  static Set<String>? manifestoParaTeste;
+
+  /// Se [chave] já tem áudio publicado no Storage agora — não confunde com
+  /// [temArquivoParaChave], que só valida o formato da chave. É assíncrono
+  /// (uma requisição de rede na primeira chamada, cacheada depois); quem
+  /// mostra o botão de ouvir deve esconder até a resposta chegar, em vez de
+  /// mostrar um "Ouvir" que falharia ao tocar.
+  Future<bool> arquivoDisponivelRemoto(String chave) async {
+    final relativo = caminhoRelativoParaChave(chave);
+    if (relativo == null) return false;
+    final baseRaw = baseUrlForTest ?? audioBaseUrl;
+    if (baseRaw.isEmpty) return false;
+    if (baseUrlForTest != null) {
+      final paraTeste = manifestoParaTeste;
+      return paraTeste == null || paraTeste.contains(relativo);
+    }
+    final manifesto = await _garantirManifesto();
+    return manifesto.contains(relativo);
+  }
 
   /// Há um áudio tocando agora (a leitura começou e não terminou).
   bool get tocando => _tocando;

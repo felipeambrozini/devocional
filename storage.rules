@@ -12,10 +12,12 @@ service firebase.storage {
     // Leitura pública porque o link de `getDownloadURL()` vai direto num
     // `NetworkImage` no app (`_Cabecalho` em hoje.dart), sem token de auth
     // por trás; a foto em si não é dado sensível.
-    match /fotos_de_perfil/{uid}.jpg {
+    // A linguagem de regras não aceita wildcard + sufixo literal no mesmo
+    // segmento ("{uid}.jpg" não compila) — captura o nome inteiro e compara.
+    match /fotos_de_perfil/{arquivo} {
       allow read: if true;
       allow write: if request.auth != null &&
-          request.auth.uid == uid &&
+          arquivo == request.auth.uid + '.jpg' &&
           request.auth.token.firebase.sign_in_provider == 'google.com' &&
           request.resource.size < 5 * 1024 * 1024 &&
           request.resource.contentType == 'image/jpeg';
