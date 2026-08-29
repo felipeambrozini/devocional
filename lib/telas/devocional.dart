@@ -5,6 +5,7 @@ import '../data/canon.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
+import '../data/voz.dart';
 import '../estilo/spacing.dart';
 import '../funcoes/capa_biblia.dart';
 import '../funcoes/citacao.dart';
@@ -235,8 +236,11 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                       // A chave leva a leitura junto: Manhã e Noite do mesmo
                       // dia são leituras diferentes, e a cache não pode
                       // confundi-las numa só.
-                      vozChave:
-                          'devocional:${_leitura.name}:${_data.month}/${_data.day}',
+                      vozChave: chaveDeDevocional(
+                        _leitura.name,
+                        _data.day,
+                        _data.month,
+                      ),
                       vozReferencia: dev.referencia.isNotEmpty
                           ? dev.referencia
                           : _leitura.rotulo,

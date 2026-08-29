@@ -78,45 +78,22 @@ class AudioOffline extends ChangeNotifier {
       case 'introducao':
         return [for (final l in canon) chaveDaIntroducao(l.slug)];
       case 'manha_noite':
-        // Gera todas as datas DD-MM, 01-01 a 31-12 via 366 dias (ano bissexto).
+        // Todas as datas do ano, 366 dias (ano bissexto) x manhã/noite.
         final chaves = <String>[];
         for (var m = 1; m <= 12; m++) {
           final dias = DateTime(2024, m + 1, 0).day;
           for (var d = 1; d <= dias; d++) {
-            final dd = d.toString().padLeft(2, '0');
-            final mm = m.toString().padLeft(2, '0');
-            chaves.add('devocional:manha:$d/$m');
-            // Promessas usa formato DD-MM no offline, mas devocional usa D/M.
-            // O _caminhoLocal normaliza / para -.
-            chaves.add('devocional:noite:$d/$m');
-            // Nota: o map acima usa D/M, o arquivo salva como D-M. Tanto faz.
-            // Para compatibilidade, também geramos com DD-MM.
-            chaves.add('devocional:manha:$dd-$mm');
-            chaves.add('devocional:noite:$dd-$mm');
+            chaves.add(chaveDeDevocional('manha', d, m));
+            chaves.add(chaveDeDevocional('noite', d, m));
           }
         }
-        // Remove duplicatas e mantém só 732 únicos: filtra para 01-01..31-12.
-        // Simplifica: retorna 366*2 com DD-MM.
-        final unicas = <String>{};
-        for (var m = 1; m <= 12; m++) {
-          final dias = DateTime(2024, m + 1, 0).day;
-          for (var d = 1; d <= dias; d++) {
-            final dd = d.toString().padLeft(2, '0');
-            final mm = m.toString().padLeft(2, '0');
-            unicas.add('devocional:manha:$dd-$mm');
-            unicas.add('devocional:noite:$dd-$mm');
-          }
-        }
-        // Remove o set duplicado anterior
-        return unicas.toList()..sort();
+        return chaves;
       case 'promessas':
         final chaves = <String>[];
         for (var m = 1; m <= 12; m++) {
           final dias = DateTime(2024, m + 1, 0).day;
           for (var d = 1; d <= dias; d++) {
-            final dd = d.toString().padLeft(2, '0');
-            final mm = m.toString().padLeft(2, '0');
-            chaves.add('devocional:promessas:$dd-$mm');
+            chaves.add(chaveDeDevocional('promessas', d, m));
           }
         }
         return chaves;

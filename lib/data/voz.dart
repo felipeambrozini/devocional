@@ -35,6 +35,16 @@ String chaveDeCapitulo(String livro, int numero) => 'capitulo:$livro.$numero';
 
 String chaveDaIntroducao(String slug) => 'introducao:$slug';
 
+/// A chave da voz para um devocional ("devocional:manha:19-08",
+/// "devocional:promessas:01-01"): [dia] e [mes] sempre com dois dígitos, na
+/// ordem DD-MM — o mesmo formato que `audio_gen` grava os mp3 (ver
+/// gerar_manha_noite.py / gerar_promessas.py). Um formato feito à mão aqui
+/// (ex: "$mes/$dia" sem zero à esquerda) já causou o botão de ouvir nunca
+/// achar o arquivo.
+String chaveDeDevocional(String leitura, int dia, int mes) =>
+    'devocional:$leitura:'
+    '${dia.toString().padLeft(2, '0')}-${mes.toString().padLeft(2, '0')}';
+
 /// O caminho relativo do mp3 pré-gerado para [chave] (sem base nem barra
 /// inicial): "biblia/joao/3.mp3", "introducao/joao.mp3",
 /// "devocionais/manha_e_noite/manha/8-19.mp3",
