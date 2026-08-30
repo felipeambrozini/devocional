@@ -26,8 +26,8 @@ class Estado extends ChangeNotifier {
   static const _kUltima = 'ultima_leitura';
   static const _kEscala = 'escala_de_leitura';
   // Pública (as outras são privadas de propósito): a notificação do lembrete
-  // precisa ler o tema escolhido para escolher o ícone certo, mesmo com o
-  // app morto (ver _iconeDoTema em lib/data/lembretes.dart).
+  // precisa ler o tema escolhido para colorir o destaque no Android, mesmo
+  // com o app morto (ver `_corDoTema` em lib/data/lembretes.dart).
   static const chaveModoDoTema = 'modo_do_tema';
   static const _kAjudaDispensada = 'ajuda_dispensada';
   static const _kBaloesVisiveis = 'baloes_visiveis';
@@ -615,12 +615,12 @@ class Estado extends ChangeNotifier {
   // --- lembretes (horários sincronizados quando logado) --------------------- //
 
   String serializarLembretes() => json.encode({
-        'ativo': _lembretesAtivos,
-        'manha': _minutosLembreteManha,
-        'promessas': _minutosLembretePromessas,
-        'leitura': _minutosLembreteLeitura,
-        'noite': _minutosLembreteNoite,
-      });
+    'ativo': _lembretesAtivos,
+    'manha': _minutosLembreteManha,
+    'promessas': _minutosLembretePromessas,
+    'leitura': _minutosLembreteLeitura,
+    'noite': _minutosLembreteNoite,
+  });
 
   /// Funde horários remotos vindos da nuvem. Retorna true se algo mudou
   /// e o chamador deve rearmar os alarmes / regravar o token.
@@ -628,10 +628,7 @@ class Estado extends ChangeNotifier {
     try {
       final mapa = json.decode(remota) as Map<String, dynamic>;
       final ativo = mapa['ativo'] as bool? ?? _lembretesAtivos;
-      final manha = _minutosValidos(
-        mapa['manha'] as int?,
-        minutosPadraoManha,
-      );
+      final manha = _minutosValidos(mapa['manha'] as int?, minutosPadraoManha);
       final promessas = _minutosValidos(
         mapa['promessas'] as int?,
         minutosPadraoPromessas,
@@ -640,11 +637,9 @@ class Estado extends ChangeNotifier {
         mapa['leitura'] as int?,
         minutosPadraoLeitura,
       );
-      final noite = _minutosValidos(
-        mapa['noite'] as int?,
-        minutosPadraoNoite,
-      );
-      final mudou = ativo != _lembretesAtivos ||
+      final noite = _minutosValidos(mapa['noite'] as int?, minutosPadraoNoite);
+      final mudou =
+          ativo != _lembretesAtivos ||
           manha != _minutosLembreteManha ||
           promessas != _minutosLembretePromessas ||
           leitura != _minutosLembreteLeitura ||

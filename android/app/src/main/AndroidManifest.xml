@@ -54,9 +54,15 @@
     <uses-permission android:name="android.permission.CAMERA"/>
     <!-- Lembrete diário no Android 13+: permissão de notificação pedida em
          runtime por lib/data/lembretes.dart; sem esta declaração nem o
-         diálogo aparece. Antes vinha embutida pelo merge do manifesto do
-         firebase_messaging, aposentado junto com o push do servidor. -->
+         diálogo aparece. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Sem isto o RebootBroadcastReceiver acima nunca é chamado: o Android
+         não entrega BOOT_COMPLETED/QUICKBOOT_POWERON a quem não declara esta
+         permissão, mesmo com o <receiver> registrado. O lembrete local de
+         reserva sobrevivia à reabertura do app, mas sumia num reboot até
+         alguém abrir o app de novo — a declaração sozinha do receiver nunca
+         foi suficiente. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.

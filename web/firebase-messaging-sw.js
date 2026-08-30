@@ -54,7 +54,7 @@ mensageria.onBackgroundMessage(async (mensagem) => {
   const tema = await lerTemaEspelhado();
   const icone =
     tema === 'escuro'
-      ? ICONE_ESCUO
+      ? ICONE_ESCURO
       : tema === 'claro'
         ? ICONE_CLARO
         : ICONE_PADRAO;

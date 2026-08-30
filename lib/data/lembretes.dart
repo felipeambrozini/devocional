@@ -1,17 +1,16 @@
 import 'dart:async';
-import 'dart:ui' show DartPluginRegistrant;
+import 'dart:ui' show DartPluginRegistrant, PlatformDispatcher;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart'
     show TargetPlatform, debugPrint, defaultTargetPlatform, kDebugMode, kIsWeb;
-import 'package:flutter/material.dart' show TimeOfDay;
+import 'package:flutter/material.dart' show Brightness, Color, TimeOfDay;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as banco_de_fusos;
 import 'package:timezone/timezone.dart' as tz;
-
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'estado.dart';
 import 'modelos.dart' show ModoDoTema;
@@ -86,7 +85,26 @@ int _atrasoEmMinutos(int agoraMinuto, int alvoMinuto) {
 bool pushAindaVale({required int minutoAgora, required int minutoAlvo}) =>
     _atrasoEmMinutos(minutoAgora, minutoAlvo) <= atrasoDoFallbackMinutos;
 
-Future<String> _iconeDoTema() async {
+/// Nome do drawable único do ícone pequeno da notificação. Um só arquivo,
+/// sem variante clara/escura: desde o Android 5 (API 21) o ícone da barra de
+/// status é tratado como máscara alfa — a cor do PNG é sempre descartada e
+/// repintada pelo sistema — então trocar de arquivo por tema não muda nada
+/// visível e só era uma fonte a mais de `PlatformException(invalid_icon)`.
+const _iconeLembrete = 'ic_lembete';
+
+/// Mesmo par de destaque de `lib/estilo/theme.dart` (`Cores.dourado`/
+/// `Cores.bronze`), duplicado aqui em vez de importado: `lib/data` não
+/// depende do pacote de estilo, e são só dois inteiros — a duplicação vale
+/// menos que o acoplamento entre camadas.
+const _douradoDoTemaEscuro = Color(0xFFC9A227);
+const _bronzeDoTemaClaro = Color(0xFF7A5C12);
+
+/// Cor do círculo de destaque atrás do ícone na gaveta de notificações
+/// expandida (`AndroidNotificationDetails.color`). Ao contrário do ícone,
+/// não é um recurso de drawable — é só um inteiro ARGB, então não tem como
+/// falhar com "recurso não encontrado"; pode variar por tema com segurança.
+/// Falha ao ler a preferência cai no dourado do tema escuro, o padrão do app.
+Future<Color> _corDoTema() async {
   try {
     final prefs = await SharedPreferences.getInstance();
     final gravado = prefs.getString(Estado.chaveModoDoTema);
@@ -94,26 +112,30 @@ Future<String> _iconeDoTema() async {
       (m) => m.chave == gravado,
       orElse: () => ModoDoTema.sistema,
     );
-    return switch (modo) {
-      ModoDoTema.claro => 'ic_lembete_claro',
-      ModoDoTema.escuro => 'ic_lembete_escuro',
-      ModoDoTema.sistema => 'ic_lembete',
+    final ehClaro = switch (modo) {
+      ModoDoTema.claro => true,
+      ModoDoTema.escuro => false,
+      ModoDoTema.sistema =>
+        PlatformDispatcher.instance.platformBrightness == Brightness.light,
     };
+    return ehClaro ? _bronzeDoTemaClaro : _douradoDoTemaEscuro;
   } catch (_) {
-    return '@mipmap/ic_launcher';
+    return _douradoDoTemaEscuro;
   }
 }
 
-NotificationDetails _detalhesLocais(String icone) => NotificationDetails(
-  android: AndroidNotificationDetails(
-    _canalLembretes,
-    'Lembretes diários',
-    channelDescription: 'Aviso no horário escolhido para o devocional.',
-    icon: icone,
-    importance: Importance.high,
-    priority: Priority.high,
-  ),
-);
+NotificationDetails _detalhesLocais(String icone, Color cor) =>
+    NotificationDetails(
+      android: AndroidNotificationDetails(
+        _canalLembretes,
+        'Lembretes diários',
+        channelDescription: 'Aviso no horário escolhido para o devocional.',
+        icon: icone,
+        color: cor,
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+    );
 
 /// Exibe o push data-only via notificação local. Não cancela o lembrete
 /// local recorrente do slot — ele é permanente, de propósito (ver
@@ -143,18 +165,29 @@ Future<void> _mostrarPush(Map<String, dynamic> dados) async {
   }
 
   final locais = FlutterLocalNotificationsPlugin();
-  await locais.initialize(
-    settings: const InitializationSettings(
-      android: AndroidInitializationSettings('ic_lembete'),
-    ),
-  );
-  final icone = await _iconeDoTema();
+  try {
+    await locais.initialize(
+      settings: const InitializationSettings(
+        android: AndroidInitializationSettings(_iconeLembrete),
+      ),
+    );
+  } catch (erro, pilha) {
+    // Ícone de inicialização ausente/corrompido não pode calar a notificação
+    // inteira — mesma rede de segurança do `.show()` logo abaixo.
+    Registro.erro('Lembretes.push/initialize', erro, pilha);
+    await locais.initialize(
+      settings: const InitializationSettings(
+        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      ),
+    );
+  }
+  final cor = await _corDoTema();
   try {
     await locais.show(
       id: _idDaExibida(chave),
       title: titulo,
       body: corpo,
-      notificationDetails: _detalhesLocais(icone),
+      notificationDetails: _detalhesLocais(_iconeLembrete, cor),
       payload: chave,
     );
   } catch (_) {
@@ -162,7 +195,7 @@ Future<void> _mostrarPush(Map<String, dynamic> dados) async {
       id: _idDaExibida(chave),
       title: titulo,
       body: corpo,
-      notificationDetails: _detalhesLocais('@mipmap/ic_launcher'),
+      notificationDetails: _detalhesLocais('@mipmap/ic_launcher', cor),
       payload: chave,
     );
   }
@@ -284,15 +317,32 @@ class LembretesReais implements Lembretes {
     FirebaseMessaging.onBackgroundMessage(_lembreteEmSegundoPlano);
 
     if (_ehAndroid) {
-      await _locais.initialize(
-        settings: const InitializationSettings(
-          android: AndroidInitializationSettings('ic_lembete'),
-        ),
-        onDidReceiveNotificationResponse: (resposta) {
-          final chave = resposta.payload;
-          if (chave != null) aoTocarNotificacao(chave);
-        },
-      );
+      void aoReceberResposta(NotificationResponse resposta) {
+        final chave = resposta.payload;
+        if (chave != null) aoTocarNotificacao(chave);
+      }
+
+      try {
+        await _locais.initialize(
+          settings: const InitializationSettings(
+            android: AndroidInitializationSettings(_iconeLembrete),
+          ),
+          onDidReceiveNotificationResponse: aoReceberResposta,
+        );
+      } catch (erro, pilha) {
+        // Ícone de inicialização ausente/corrompido não pode travar o
+        // agendamento inteiro — mesma rede de segurança do `.show()`/
+        // `.zonedSchedule()` em outros pontos deste arquivo. Sem isto, uma
+        // falha aqui aborta antes de criar o canal e antes de
+        // `reagendarLembretesSeNecessario` armar a reserva local.
+        Registro.erro('Lembretes.inicializar/icone', erro, pilha);
+        await _locais.initialize(
+          settings: const InitializationSettings(
+            android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+          ),
+          onDidReceiveNotificationResponse: aoReceberResposta,
+        );
+      }
       await _locais
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
@@ -480,14 +530,14 @@ class LembretesReais implements Lembretes {
   }) async {
     const corpo = _corpoGenerico;
     try {
-      final iconeArmar = await _iconeDoTema();
+      final cor = await _corDoTema();
       try {
         await _locais.zonedSchedule(
           id: id,
           title: titulo,
           body: corpo,
           scheduledDate: quando,
-          notificationDetails: _detalhesLocais(iconeArmar),
+          notificationDetails: _detalhesLocais(_iconeLembrete, cor),
           payload: chave,
           // Sempre inexato, de propósito: é só a reserva, e exato pede a
           // permissão "Alarmes e lembretes" nas Configurações — assustadora
@@ -505,7 +555,7 @@ class LembretesReais implements Lembretes {
           title: titulo,
           body: corpo,
           scheduledDate: quando,
-          notificationDetails: _detalhesLocais('@mipmap/ic_launcher'),
+          notificationDetails: _detalhesLocais('@mipmap/ic_launcher', cor),
           payload: chave,
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
           matchDateTimeComponents: DateTimeComponents.time,

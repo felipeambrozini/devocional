@@ -388,10 +388,20 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
 - **Conteúdo da Function**: `functions/src/assets/conteudo-lembretes.json`
   (37 KB, 366 dias) gerado dos JSONs do app só com referência/título.
   Regenerar se o conteúdo anual mudar.
-- **Ícone segue o tema escolhido no app**: Android usa glifos
-  `ic_lembete_claro/escuro` (+ qualifiers `-night` para Automático); na web a
-  página espelha o tema efetivo no Cache Storage
-  (`lib/data/espelho_do_tema.dart`) e o service worker escolhe entre
+- **Ícone único no Android, tema só na cor de destaque**: um só drawable
+  (`ic_lembete`) para a notificação inteira — desde o Android 5 (API 21) o
+  ícone pequeno da barra de status é máscara alfa, a cor do PNG é sempre
+  descartada e repintada pelo sistema, então variar o arquivo por tema não
+  mudava nada visível e só era mais uma fonte de
+  `PlatformException(invalid_icon)`. O que ainda varia por tema é a cor do
+  círculo de destaque atrás do ícone na gaveta expandida
+  (`AndroidNotificationDetails.color`, calculada em `_corDoTema()`
+  em `lib/data/lembretes.dart`) — dourado no tema escuro, bronze no claro,
+  mesmo par de `Cores.dourado`/`Cores.bronze` de `lib/estilo/theme.dart`
+  (duplicado como constante, não importado — `lib/data` não depende do
+  pacote de estilo). Na web, que renderiza o ícone em cor cheia de verdade
+  (sem máscara), a página continua espelhando o tema efetivo no Cache
+  Storage (`lib/data/espelho_do_tema.dart`) e o service worker escolhe entre
   `notificacao-tema-claro/escuro.png`.
 - **Deploy**: `deploy-web.yml` publica hosting + regras + functions juntos;
   o primeiro deploy cria sozinho o job do Cloud Scheduler. Requer plano Blaze
