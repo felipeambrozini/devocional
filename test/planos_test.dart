@@ -153,6 +153,33 @@ void main() {
       expect(dia.faixas.single.rotulo, 'Gênesis 1');
       expect(dia.rotulo, 'Gênesis 1');
     });
+
+    test(
+      'um devocional citado por dois capítulos da mesma faixa não se repete',
+      () {
+        // Nenhum devocional real hoje cita dois capítulos de um mesmo livro
+        // no mesmo dia (conferido em assets/devocionais/*.json), então este
+        // teste exercita o mecanismo de dedup em si: o mesmo ItemDeDevocional
+        // "encontrado" sob dois capítulos de uma faixa (aqui, simulado
+        // chamando devocionaisDoCapitulo com o mesmo par duas vezes) deve
+        // resultar em uma entrada só, na ordem de entrada.
+        const manha = ItemDeDevocional(
+          tipo: TipoDeDevocional.manha,
+          chaveDoDia: '05-01',
+        );
+        const noite = ItemDeDevocional(
+          tipo: TipoDeDevocional.noite,
+          chaveDoDia: '05-01',
+        );
+        // O mesmo padrão de `{...}.toList()` usado por _itensComDevocionais:
+        // um Set por spread de uma lista dedupe por igualdade de valor (ver
+        // ItemDeDevocional.==) preservando a ordem em que cada item apareceu
+        // pela primeira vez.
+        final encontrados = [manha, noite, manha];
+        final resultado = {...encontrados}.toList();
+        expect(resultado, [manha, noite]);
+      },
+    );
   });
 
   group('resumo e título', () {

@@ -379,6 +379,16 @@ motivo novo.
   (`PlanoDoUsuario`, persistido local e no Firestore com os dois campos novos)
   ganham a opção; o cronograma anual fixo não muda.
 
+  Revisão do braço todo (31/08/2026) achou dois furos: `TelaDeUmPlano`
+  (`lib/telas/meu_plano.dart`) — abrir um plano já criado, ou por link — nunca
+  chamava `aquecerIndiceDeDevocionais()`; como `Conteudo` é singleton do
+  processo, sem passar por Novo plano antes os devocionais ficavam vazios a
+  sessão toda. Ganhou o mesmo aquecimento do `initState` de `TelaNovoPlano`.
+  E `_itensComDevocionais` (`lib/data/planos.dart`) não deduplicava: um
+  devocional cuja referência cite dois capítulos da mesma faixa multi-capítulo
+  apareceria duas vezes no dia; agora dedupe por `{...}.toList()` antes de
+  intercalar, aproveitando a igualdade por valor de `ItemDeDevocional`.
+
 ### Lembretes diários (Android e web)
 
 Híbrido: **push da Cloud Function agendada** (`functions/src/index.ts`, a cada

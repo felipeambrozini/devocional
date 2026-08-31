@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 
+import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/nuvem.dart';
 import '../data/planos.dart';
@@ -68,6 +69,13 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
     // quando aberta por link no Navigator raiz: sem este listener, marcar um
     // dia gravava mas a tela não redesenhava o contador nem o visto do cartão.
     widget.estado.addListener(_aoMudarEstado);
+    // Único jeito de abrir um plano sem passar por Novo plano — o caso comum
+    // de reabrir o próprio ou de entrar por link — então sem isto os
+    // devocionais nunca aparecem: [Conteudo] é um singleton, e sem essa
+    // chamada aqui nada mais aquece o índice fora da tela de criação.
+    Conteudo.instancia.aquecerIndiceDeDevocionais().then((_) {
+      if (mounted) setState(() {});
+    });
     _iniciar();
   }
 

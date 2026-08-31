@@ -223,10 +223,14 @@ List<DiaDePlanoDoUsuario> montarPlanoDeLeitura({
 List<ItemDoDia> _itensComDevocionais(List<Faixa> faixas, bool antes) {
   final itens = <ItemDoDia>[];
   for (final faixa in faixas) {
-    final devocionais = [
+    // Um devocional cuja referência cita mais de um capítulo da mesma faixa
+    // (raro, mas possível) seria encontrado uma vez por capítulo citado; o
+    // Set dedupe antes de intercalar, preservando a ordem de entrada — que
+    // importa aqui (manhã antes de noite, por exemplo).
+    final devocionais = {
       for (final capitulo in faixa.capitulos)
         ...Conteudo.instancia.devocionaisDoCapitulo(faixa.livro, capitulo),
-    ];
+    }.toList();
     if (antes) itens.addAll(devocionais);
     itens.add(ItemDeCapitulo(faixa));
     if (!antes) itens.addAll(devocionais);
