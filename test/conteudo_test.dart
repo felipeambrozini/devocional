@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:felipe_ambrozini/data/canon.dart';
 import 'package:felipe_ambrozini/data/conteudo.dart';
+import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Estes testes leem os assets do disco. Não são um teste de widget: são a garantia
@@ -333,5 +334,32 @@ void main() {
         expect(cap.numero, 1);
       },
     );
+  });
+
+  group('índice de devocionais por capítulo', () {
+    test('Gênesis 1 encontra os devocionais de 05-01 (manhã e noite)', () async {
+      await Conteudo.instancia.aquecerIndiceDeDevocionais();
+      final achados = Conteudo.instancia.devocionaisDoCapitulo('genesis', 1);
+
+      expect(
+        achados,
+        containsAll([
+          const ItemDeDevocional(
+            tipo: TipoDeDevocional.manha,
+            chaveDoDia: '05-01',
+          ),
+          const ItemDeDevocional(
+            tipo: TipoDeDevocional.noite,
+            chaveDoDia: '05-01',
+          ),
+        ]),
+      );
+    });
+
+    test('capítulo sem nenhum devocional devolve lista vazia', () async {
+      await Conteudo.instancia.aquecerIndiceDeDevocionais();
+      // Números não é citado por nenhum devocional nos assets atuais.
+      expect(Conteudo.instancia.devocionaisDoCapitulo('numeros', 36), isEmpty);
+    });
   });
 }

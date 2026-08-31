@@ -273,6 +273,70 @@ class Conteudo {
     return _comVersiculosResolvidos(Devocional.doJson(dia));
   }
 
+  Map<String, List<ItemDeDevocional>>? _indiceDeDevocionais;
+  Future<void>? _carregandoIndiceDeDevocionais;
+
+  /// Garante que o índice livro+capítulo → devocionais está carregado.
+  /// Idempotente: chamadas repetidas reaproveitam o mesmo carregamento, do
+  /// mesmo jeito que [_carregarLivro] cacheia por slug.
+  Future<void> aquecerIndiceDeDevocionais() =>
+      _carregandoIndiceDeDevocionais ??= _montarIndiceDeDevocionais();
+
+  Future<void> _montarIndiceDeDevocionais() async {
+    final indice = <String, List<ItemDeDevocional>>{};
+
+    final devocionais = await _carregarDevocionais();
+    for (final MapEntry(key: chave, value: dia) in devocionais.entries) {
+      for (final periodo in Periodo.values) {
+        final entrada = dia[periodo.chave] as Map<String, dynamic>?;
+        if (entrada == null) continue;
+        _indexarReferencia(
+          indice,
+          entrada['referencia'] as String? ?? '',
+          periodo == Periodo.manha
+              ? TipoDeDevocional.manha
+              : TipoDeDevocional.noite,
+          chave,
+        );
+      }
+    }
+
+    final promessas = await _carregarPromessas();
+    if (promessas != null) {
+      for (final MapEntry(key: chave, value: entrada) in promessas.entries) {
+        _indexarReferencia(
+          indice,
+          entrada['referencia'] as String? ?? '',
+          TipoDeDevocional.promessa,
+          chave,
+        );
+      }
+    }
+
+    _indiceDeDevocionais = indice;
+  }
+
+  void _indexarReferencia(
+    Map<String, List<ItemDeDevocional>> indice,
+    String referencia,
+    TipoDeDevocional tipo,
+    String chaveDoDia,
+  ) {
+    for (final (livro, capitulo, _, _) in faixasDaReferencia(referencia)) {
+      final chaveIndice = '${livro.slug}-$capitulo';
+      (indice[chaveIndice] ??= []).add(
+        ItemDeDevocional(tipo: tipo, chaveDoDia: chaveDoDia),
+      );
+    }
+  }
+
+  /// Os devocionais (Manhã, Noite, Promessas) cuja referência cita este
+  /// capítulo. Vazio se [aquecerIndiceDeDevocionais] ainda não terminou, ou
+  /// se nenhum devocional cita este capítulo — os dois casos são o mesmo
+  /// "nada a mostrar" para quem monta um plano (ver [montarPlanoDeLeitura]).
+  List<ItemDeDevocional> devocionaisDoCapitulo(String livroSlug, int capitulo) =>
+      _indiceDeDevocionais?['$livroSlug-$capitulo'] ?? const [];
+
   /// Busca nos devocionais de Spurgeon (Manhã, Noite e Promessas de Deus).
   ///
   /// Diferente de [buscar]: síncrona e sem teto. Os dois corpora somam 366 +
