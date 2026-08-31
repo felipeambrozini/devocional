@@ -28,6 +28,16 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
 
   /// Slugs escolhidos, na ordem canônica (a ordem do seletor).
   final List<String> _livros = [];
+  bool _incluirDevocionais = false;
+  bool _devocionalAntes = true;
+
+  @override
+  void initState() {
+    super.initState();
+    Conteudo.instancia.aquecerIndiceDeDevocionais().then((_) {
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   void dispose() {
@@ -47,6 +57,8 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
   List<DiaDePlanoDoUsuario> get _previa => montarPlanoDeLeitura(
     livros: _livros,
     dias: int.tryParse(_dias.text) ?? 0,
+    incluirDevocionais: _incluirDevocionais,
+    devocionalAntes: _devocionalAntes,
   );
 
   Future<void> _escolherLivros() async {
@@ -69,6 +81,8 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
       titulo: _titulo.text,
       livros: _livros,
       dias: int.parse(_dias.text),
+      incluirDevocionais: _incluirDevocionais,
+      devocionalAntes: _devocionalAntes,
     );
     if (!mounted) return;
     Navigator.pop(context, plano);
@@ -160,6 +174,31 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
                   border: const OutlineInputBorder(),
                 ),
               ),
+              const SizedBox(height: Spacing.sp20),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                title: const Text('Incluir devocionais dos livros'),
+                subtitle: const Text(
+                  'Junto de cada capítulo, os devocionais de Manhã, Noite e '
+                  'Promessas de Deus que citam aquele texto.',
+                ),
+                value: _incluirDevocionais,
+                onChanged: (marcado) =>
+                    setState(() => _incluirDevocionais = marcado ?? false),
+              ),
+              if (_incluirDevocionais) ...[
+                const SizedBox(height: Spacing.sp8),
+                SegmentedButton<bool>(
+                  segments: const [
+                    ButtonSegment(value: true, label: Text('Antes do capítulo')),
+                    ButtonSegment(value: false, label: Text('Depois do capítulo')),
+                  ],
+                  selected: {_devocionalAntes},
+                  onSelectionChanged: (novo) =>
+                      setState(() => _devocionalAntes = novo.first),
+                ),
+              ],
               if (_previa.isNotEmpty) ...[
                 const SizedBox(height: Spacing.sp20),
                 Card(

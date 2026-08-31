@@ -3,6 +3,7 @@ import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:felipe_ambrozini/data/nuvem.dart';
 import 'package:felipe_ambrozini/data/planos.dart';
+import 'package:felipe_ambrozini/telas/novo_plano.dart';
 import 'package:felipe_ambrozini/telas/plano.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -488,8 +489,22 @@ void main() {
       expect(find.text('Dia 1 · Gênesis 1-2'), findsOneWidget);
 
       // O formulário ficou mais alto que a viewport do teste: rola até o
-      // botão de criar antes de tocar, como um dedo faria.
-      await tester.ensureVisible(find.widgetWithText(FilledButton, 'Criar plano'));
+      // botão de criar antes de tocar, como um dedo faria. O botão só é
+      // montado na árvore depois que a rolagem o traz para perto da
+      // viewport (ListView não constrói filhos muito além dela).
+      await tester.scrollUntilVisible(
+        find.widgetWithText(FilledButton, 'Criar plano'),
+        200,
+        // .first: as duas TextFormField (título e dias) têm cada uma um
+        // Scrollable interno do EditableText; o da própria ListView vem
+        // primeiro na árvore.
+        scrollable: find
+            .descendant(
+              of: find.byType(ListView),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(FilledButton, 'Criar plano'));
       await tester.pumpAndSettle();
@@ -542,6 +557,67 @@ void main() {
       expect(find.text('Gênesis em 5 dias'), findsOneWidget);
       expect(find.text('5 dias · 50 capítulos'), findsOneWidget);
       expect(find.byIcon(Icons.group_outlined), findsOneWidget);
+    });
+
+    testWidgets('checkbox de devocionais mostra o seletor e cria o plano '
+        'com os 2 campos', (tester) async {
+      await tester.runAsync(() async {
+        await Conteudo.instancia.plano(bissexto: false);
+        await Conteudo.instancia.aquecerIndiceDeDevocionais();
+      });
+      final estado = Estado(await SharedPreferences.getInstance());
+      Nuvem.instancia.logadoForcado = true;
+      addTearDown(() => Nuvem.instancia.logadoForcado = null);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EscopoDoEstado(estado: estado, child: TelaNovoPlano(estado: estado)),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Escolher livros'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.byType(TextField),
+        ),
+        'Gênesis',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(CheckboxListTile, 'Gênesis'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Confirmar'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Incluir devocionais dos livros'), findsOneWidget);
+      // Sem marcar o checkbox, o seletor antes/depois não aparece.
+      expect(find.text('Antes do capítulo'), findsNothing);
+
+      await tester.tap(find.text('Incluir devocionais dos livros'));
+      await tester.pumpAndSettle();
+      expect(find.text('Antes do capítulo'), findsOneWidget);
+      expect(find.text('Depois do capítulo'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.widgetWithText(FilledButton, 'Criar plano'),
+        200,
+        // .first: as duas TextFormField (título e dias) têm cada uma um
+        // Scrollable interno do EditableText; o da própria ListView vem
+        // primeiro na árvore.
+        scrollable: find
+            .descendant(
+              of: find.byType(ListView),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Criar plano'));
+      await tester.pumpAndSettle();
+
+      expect(estado.planosDoUsuario.single.incluirDevocionais, isTrue);
+      expect(estado.planosDoUsuario.single.devocionalAntes, isTrue);
     });
   });
 }
