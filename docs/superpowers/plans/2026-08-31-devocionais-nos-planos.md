@@ -266,7 +266,7 @@ Expected: PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-git add lib/data/conteudo.dart lib/data/modelos/cronograma.dart test/conteudo_test.dart
+git add lib/data/conteudo.dart test/conteudo_test.dart
 git commit -m "Indexa devocionais por livro+capítulo em Conteudo"
 ```
 
