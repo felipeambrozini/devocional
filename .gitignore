@@ -68,9 +68,12 @@ graphify-out/
 .agents/
 .codex/
 .impeccable/
+docs/
 
 *.jks
 
 # Cloud Functions (lembretes): dependências e build do TypeScript
 functions/node_modules/
 functions/lib/
+
+
