@@ -61,6 +61,12 @@ mensageria.onBackgroundMessage(async (mensagem) => {
   self.registration.showNotification(dados.titulo || 'Devocional', {
     body: dados.corpo || '',
     icon: icone,
+    // Tag por slot, não fixa: uma reentrega do mesmo lembrete (o FCM garante
+    // "pelo menos uma vez", duplicata acontece) substitui a anterior em vez
+    // de empilhar, mas os 4 slots do dia continuam independentes — a manhã
+    // dispara dois avisos de propósito (devocional + promessas), e uma tag
+    // única faria o segundo apagar o primeiro antes do usuário ver.
+    tag: dados.chave || 'lembrete-devocional',
     data: { chave: dados.chave },
   });
 });
@@ -76,14 +82,22 @@ self.addEventListener('notificationclick', (evento) => {
     : '/devocional/hoje';
 
   evento.waitUntil(
-    self.clients.matchAll({ type: 'window' }).then((janelas) => {
-      const aberta = janelas[0];
-      if (aberta && 'navigate' in aberta) {
-        return aberta.navigate(url).then((janelaNavegada) =>
-          janelaNavegada ? janelaNavegada.focus() : self.clients.openWindow(url)
-        );
-      }
-      return self.clients.openWindow(url);
-    })
+    // includeUncontrolled: sem isto, uma aba aberta antes deste service
+    // worker assumir o controle (comum com várias abas, ou logo após o SW
+    // atualizar) fica de fora do matchAll — e o código abriria uma aba nova
+    // em vez de reaproveitar a existente.
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((janelas) => {
+        const aberta = janelas[0];
+        if (aberta && 'navigate' in aberta) {
+          return aberta.navigate(url).then((janelaNavegada) =>
+            janelaNavegada
+              ? janelaNavegada.focus()
+              : self.clients.openWindow(url)
+          );
+        }
+        return self.clients.openWindow(url);
+      })
   );
 });

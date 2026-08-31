@@ -390,9 +390,18 @@ class LembretesReais implements Lembretes {
   @override
   Future<bool> pedirPermissao() async {
     if (!lembretesSuportados) return false;
-    final config = await _mensageria.requestPermission();
-    return config.authorizationStatus == AuthorizationStatus.authorized ||
-        config.authorizationStatus == AuthorizationStatus.provisional;
+    try {
+      final config = await _mensageria.requestPermission();
+      return config.authorizationStatus == AuthorizationStatus.authorized ||
+          config.authorizationStatus == AuthorizationStatus.provisional;
+    } catch (erro, pilha) {
+      // Na web, sobretudo em Safari, o navegador pode rejeitar a inscrição
+      // no Push API (VAPID, gesto do usuário, iOS fora do modo instalado) e
+      // lançar em vez de simplesmente negar — sem isto, o interruptor da
+      // folha de ajustes parava sem nenhum aviso.
+      Registro.erro('Lembretes.pedirPermissao', erro, pilha);
+      return false;
+    }
   }
 
   @override
@@ -410,7 +419,10 @@ class LembretesReais implements Lembretes {
 
     await _armarReservas(manha, promessas, leitura, noite);
 
-    final token = await _mensageria.getToken(vapidKey: _vapidKeyOuNulo());
+    // _tokenOuNulo() já registra o erro se getToken() lançar (comum na web,
+    // sobretudo Safari) — aqui só falta o caso "devolveu nulo sem lançar". A
+    // reserva local já foi armada acima; perder só o registro no servidor.
+    final token = await _tokenOuNulo();
     if (token == null) {
       Registro.erro(
         'Lembretes.token',
@@ -587,7 +599,7 @@ class LembretesReais implements Lembretes {
         unawaited(_locais.cancel(id: id));
       }
     }
-    final token = await _mensageria.getToken(vapidKey: _vapidKeyOuNulo());
+    final token = await _tokenOuNulo();
     if (token == null) return;
     await FirebaseFirestore.instance.collection(_colecao).doc(token).delete();
   }
@@ -595,13 +607,27 @@ class LembretesReais implements Lembretes {
   @override
   Future<bool> agendados() async {
     if (!lembretesSuportados) return false;
-    final token = await _mensageria.getToken(vapidKey: _vapidKeyOuNulo());
+    final token = await _tokenOuNulo();
     if (token == null) return false;
     final doc = await FirebaseFirestore.instance
         .collection(_colecao)
         .doc(token)
         .get();
     return doc.exists;
+  }
+
+  /// `getToken()` sem exceção: na web (sobretudo Safari) o navegador pode
+  /// lançar em vez de devolver nulo — mesmo motivo do try/catch em
+  /// [pedirPermissao] e [agendar]. `null` aqui já é um caso tratado por todo
+  /// chamador, então engolir a exceção e devolver `null` reaproveita esse
+  /// caminho em vez de duplicar tratamento em cada método.
+  Future<String?> _tokenOuNulo() async {
+    try {
+      return await _mensageria.getToken(vapidKey: _vapidKeyOuNulo());
+    } catch (erro, pilha) {
+      Registro.erro('Lembretes.token', erro, pilha);
+      return null;
+    }
   }
 
   @override

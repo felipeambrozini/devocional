@@ -33,6 +33,13 @@
   <meta name="twitter:card" content="summary_large_image">
 
   <!-- iOS meta tags & icons -->
+  <!-- A variante sem prefixo (acima seria "mobile-web-app-capable" sozinho)
+       é a que o Chrome/Android passou a aceitar; o Safari/iOS historicamente
+       só reconhece a com prefixo "apple-", necessária para instalar como
+       app standalone e ganhar Web Push (iOS 16.4+ exige isso — sem instalar
+       na tela de início, notificação não funciona em Safari no iPhone/iPad,
+       e isso não tem solução em código). -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Devocional">

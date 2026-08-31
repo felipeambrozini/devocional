@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../data/canon.dart';
 import '../data/conteudo.dart';
@@ -118,11 +119,19 @@ class _TelaDevocionalState extends State<TelaDevocional> {
   /// aparece na URL de propósito, para o link continuar limpo.
   void _irPara(Leitura leitura, DateTime data) {
     if (leitura == _leitura && _mesmoDia(data, _data)) return;
-    final hoje = DateTime.now();
-    final ehHoje = _mesmoDia(data, hoje);
-    final parametro = ehHoje ? '' : '?data=${_formatoDeData(data)}';
-    GoRouter.of(context).go('/${leitura.name}$parametro');
+    GoRouter.of(context).go('/${leitura.name}${_parametroDeData(data)}');
   }
+
+  /// `?data=AAAA-MM-DD`, ou vazio no dia de hoje — para a URL de hoje
+  /// continuar limpa, na navegação (`_irPara`) e no link de [_linkDaLeitura].
+  static String _parametroDeData(DateTime data) =>
+      _mesmoDia(data, DateTime.now()) ? '' : '?data=${_formatoDeData(data)}';
+
+  /// Link absoluto da leitura atual, o mesmo caminho que main.dart declara
+  /// para cada leitura (`/manha`, `/noite`, `/promessas`): quem abre o link
+  /// cai direto nela. Vai no texto de Compartilhar do cartão.
+  String _linkDaLeitura() =>
+      '$enderecoDoSite${_leitura.name}${_parametroDeData(_data)}';
 
   /// O ano entra na comparação: a data da URL é completa, e "19 de agosto"
   /// de um ano não é o mesmo dia de outro. Sem ele, escolher no calendário o
@@ -244,6 +253,7 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                       vozReferencia: dev.referencia.isNotEmpty
                           ? dev.referencia
                           : _leitura.rotulo,
+                      link: _linkDaLeitura(),
                     ),
                   ],
                 );
@@ -296,6 +306,7 @@ class _CartaoDeLeitura extends StatelessWidget {
     this.capa,
     required this.vozChave,
     required this.vozReferencia,
+    required this.link,
   });
 
   final String titulo;
@@ -310,6 +321,10 @@ class _CartaoDeLeitura extends StatelessWidget {
   /// O que a voz de Spurgeon lê: chave do áudio e referência.
   final String vozChave;
   final String vozReferencia;
+
+  /// Link absoluto da leitura, para o fim do texto de Compartilhar — é como
+  /// quem recebe chega direto nela, mesmo fora do app.
+  final String link;
 
   @override
   Widget build(BuildContext context) {
@@ -384,9 +399,18 @@ class _CartaoDeLeitura extends StatelessWidget {
             // depois dela, não antes.
             const Filete(),
             const SizedBox(height: Spacing.sp14),
-            BotaoDeVoz(
-              chave: vozChave,
-              referencia: vozReferencia,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                BotaoDeVoz(chave: vozChave, referencia: vozReferencia),
+                IconButton(
+                  tooltip: 'Compartilhar',
+                  icon: const Icon(Icons.ios_share_outlined),
+                  onPressed: () => SharePlus.instance.share(
+                    ShareParams(text: _textoParaCompartilhar),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: Spacing.sp14),
             Text(texto, style: tema.bodyLarge?.copyWith(height: 1.7)),
@@ -409,4 +433,13 @@ class _CartaoDeLeitura extends StatelessWidget {
       ),
     );
   }
+
+  /// Título, citação e comentário do cartão, terminando no link da leitura —
+  /// o mesmo texto que a tela mostra, pronto para sair do app.
+  String get _textoParaCompartilhar => [
+    titulo,
+    textoDeCitacao(dev),
+    texto,
+    link,
+  ].where((parte) => parte.isNotEmpty).join('\n\n');
 }

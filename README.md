@@ -23,9 +23,10 @@ mesmo código).
   com o progresso de cada um); quem só participa pode sair, e some só o
   próprio progresso.
 - **Leitura em voz alta**: botão Ouvir narra capítulos da Bíblia, Manhã e
-  Noite, Promessas de Deus e as introduções, na voz clonada do Felipe, em MP3
-  pré-gerado (hospedado em `AUDIO_BASE_URL`). Fora da web dá para baixar por
-  categoria e ouvir offline, nos Ajustes ("Áudio offline").
+  Noite, Promessas de Deus e as introduções, numa voz que remete ao tom de
+  Charles Spurgeon (não é clone da voz do Felipe), em MP3 pré-gerado
+  (hospedado em `AUDIO_BASE_URL`). Fora da web dá para baixar por categoria e
+  ouvir offline, nos Ajustes ("Áudio offline").
 - **Conversas com IA**: duas personas para conversar, Charles Spurgeon e
   Felipe Ambrozini, cada uma com o próprio jeito de falar (Gemini). Histórico
   salvo por conversa; aba própria no celular, balões flutuantes nas telas
@@ -202,9 +203,9 @@ motivo novo.
 - **Áudio** — recusado inicialmente: voz sintética lendo Escritura mal é pior
   que não ter. Revisto em 17/08/2026 com a Google Cloud Text-to-Speech (voz de
   barítono, qualidade de narrador). Revisto de novo em 26/08/2026: trocado por
-  MP3 pré-gerados com a voz clonada do Felipe, mais natural que TTS em tempo
-  real, com download opcional para uso offline — ver "Leitura em voz alta"
-  acima.
+  MP3 pré-gerados numa voz que remete ao tom de Charles Spurgeon, mais natural
+  que TTS em tempo real, com download opcional para uso offline — ver
+  "Leitura em voz alta" acima.
 - **Cores de marcação** — mais taxonomia do que um leitor só precisa.
 - **Widget na tela inicial** — código nativo nas duas plataformas para pouco
   retorno.
@@ -333,6 +334,15 @@ motivo novo.
   nativas; o cartão de introdução herda a área do leitor), e Compartilhar continua exclusivo da folha de ações do versículo
   (Favoritar, Copiar, Compartilhar, Anotar; ver abaixo), aberta pelo toque na
   linha.
+- **O cartão do Devocional tem um botão de Compartilhar próprio** (`_CartaoDeLeitura`
+  em `lib/telas/devocional.dart`, 31/08/2026), ao lado do `BotaoDeVoz`: manda
+  título, citação (`textoDeCitacao`, extraído de `lib/funcoes/citacao.dart`
+  para reuso sem os spans de toque de `spansDeCitacao`) e o comentário do dia,
+  terminando no link da leitura (`$enderecoDoSite/{manha,noite,promessas}`,
+  com `?data=` só fora de hoje — o mesmo caminho que `main.dart` já declara
+  para cada leitura, sem overlay de parâmetro como o de versículo/plano).
+  Diferente da seleção de texto (`AreaDeSelecaoComCompartilhar`, acima), não
+  exige selecionar nada antes.
 - **Os dois players de voz separam pausar de parar** (`BotaoDeVoz` e
   `IndicadorDeVozNaBarra`, `lib/widgets/botao_de_voz.dart`, 21/08/2026): tocando, a
   pílula pausa pelo corpo (ícone de pausa) e encerra pelo X ao lado; o anel

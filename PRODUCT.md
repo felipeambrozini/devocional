@@ -54,9 +54,9 @@ vitoriana dele, tratando o leitor por "tu".
 - Conversas com IA (Gemini): duas personas, Charles Spurgeon e Felipe
   Ambrozini, com histórico salvo por conversa; aba no celular, balão flutuante
   em telas largas.
-- Leitura em voz alta (MP3 pré-gerados, voz clonada do Felipe): narra
-  capítulos da Bíblia, os dois devocionais, Promessas de Deus e as
-  introduções; download opcional para ouvir offline fora da web.
+- Leitura em voz alta (MP3 pré-gerados, voz que remete ao tom de Charles
+  Spurgeon): narra capítulos da Bíblia, os dois devocionais, Promessas de
+  Deus e as introduções; download opcional para ouvir offline fora da web.
 - Planos personalizados: escolher livros e a duração; compartilháveis por
   link, com progresso de cada participante (exige conta Google). Quem criou
   pode excluir o plano para todos; quem só participa pode sair, afetando só
@@ -77,7 +77,9 @@ vitoriana dele, tratando o leitor por "tu".
   Devocional e na Introdução, o menu de seleção (o clique forte que já abre a
   seleção) ganha um botão de Compartilhar para o trecho escolhido; na
   Bíblia, Compartilhar continua só pelo toque no versículo (a mesma folha de
-  Favoritar, Copiar, Anotar).
+  Favoritar, Copiar, Anotar). No Devocional (Manhã, Noite e Promessas de
+  Deus), um botão de Compartilhar no cartão manda título, citação e
+  comentário do dia com um link que reabre a mesma leitura.
 - Layout responsivo: barra inferior no celular, trilho lateral a partir de
   720px; gesto de deslizar troca capítulo no celular, setas na web.
 - Lembrete local no Android (agendamento no aparelho, sem servidor);

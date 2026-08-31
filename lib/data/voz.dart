@@ -13,7 +13,8 @@ import 'audio_config.dart';
 import 'canon.dart';
 import 'registro.dart';
 
-/// Áudios pré-gerados em MP3 (voz clonada do usuário). Sem TTS em tempo real:
+/// Áudios pré-gerados em MP3 (voz que remete ao tom de Spurgeon). Sem TTS em
+/// tempo real:
 /// todo áudio vem de arquivo remoto (`AUDIO_BASE_URL`) ou do cache offline
 /// (`AudioOffline` em `audio_offline.dart`).
 

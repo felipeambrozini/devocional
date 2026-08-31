@@ -63,6 +63,18 @@ List<InlineSpan> spansDeCitacao(
   return spans;
 }
 
+/// A citação de [spansDeCitacao] em texto puro, uma linha por versículo-base
+/// na mesma ordem. Usada no texto de Compartilhar do devocional, que não tem
+/// widget nem contexto de toque para os spans.
+String textoDeCitacao(Devocional dev) => [
+  for (final (referencia, versiculo) in dev.paresDeVersiculos)
+    if (referencia.isNotEmpty || versiculo.isNotEmpty)
+      [
+        if (versiculo.isNotEmpty) '"$versiculo"',
+        if (referencia.isNotEmpty) referencia.toUpperCase(),
+      ].join(' '),
+].join('\n');
+
 /// O alvo de toque da referência da epígrafe. Visual idêntico ao texto morto
 /// em repouso; a diferença mora no cursor clicável, no ripple contido e na
 /// semântica de botão para leitor de tela.

@@ -98,8 +98,9 @@ class _TelaSobreState extends State<TelaSobre> {
             const SizedBox(height: Spacing.sp10),
             Text(
               'O retrato de Spurgeon nas telas de leitura lê o texto em voz '
-              'alta: MP3 pré-gravados na voz clonada do Felipe, mais '
-              'natural que uma síntese em tempo real. Fora da web dá para '
+              'alta: MP3 pré-gravados numa voz que remete ao tom de Charles '
+              'Spurgeon, mais natural que uma síntese em tempo real. Fora '
+              'da web dá para '
               'baixar por categoria e ouvir offline, nos Ajustes. A '
               'demonstração abaixo toca o Salmo 23.',
               style: tema.bodyLarge?.copyWith(height: 1.7),
