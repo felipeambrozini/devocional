@@ -14,7 +14,7 @@ class CartaoDeDia extends StatelessWidget {
     super.key,
     required this.numero,
     required this.rotulo,
-    required this.faixas,
+    required this.itens,
     required this.lido,
     required this.aoAlternar,
     this.destacar = false,
@@ -22,7 +22,7 @@ class CartaoDeDia extends StatelessWidget {
 
   final int numero;
   final String rotulo;
-  final List<Faixa> faixas;
+  final List<ItemDoDia> itens;
   final bool lido;
 
   /// Borda dourada plena, para o dia de hoje se achar de relance dentro de
@@ -77,7 +77,18 @@ class CartaoDeDia extends StatelessWidget {
                   Wrap(
                     spacing: Spacing.sp8,
                     runSpacing: Spacing.sp8,
-                    children: [for (final f in faixas) BotaoDeFaixa(faixa: f)],
+                    children: [
+                      for (final item in itens)
+                        switch (item) {
+                          ItemDeCapitulo(:final faixa) =>
+                            BotaoDeFaixa(faixa: faixa),
+                          ItemDeDevocional(:final tipo, :final chaveDoDia) =>
+                            BotaoDeDevocional(
+                              tipo: tipo,
+                              chaveDoDia: chaveDoDia,
+                            ),
+                        },
+                    ],
                   ),
                 ],
               ),

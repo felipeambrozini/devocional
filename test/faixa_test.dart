@@ -5,6 +5,7 @@ import 'package:felipe_ambrozini/telas/biblia.dart';
 import 'package:felipe_ambrozini/widgets/faixa.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// O botão do cronograma que abre a Bíblia na faixa pedida.
@@ -68,5 +69,36 @@ void main() {
     expect(find.byType(TelaBiblia), findsOneWidget);
     // Aparece na barra do leitor e no cabeçalho do capítulo.
     expect(find.text('Salmos 119'), findsWidgets);
+  });
+
+  testWidgets('BotaoDeDevocional mostra o nome do tipo e navega para a rota '
+      'e data certas', (tester) async {
+    final roteador = GoRouter(
+      initialLocation: '/inicio',
+      routes: [
+        GoRoute(
+          path: '/inicio',
+          builder: (context, state) => const Scaffold(
+            body: BotaoDeDevocional(
+              tipo: TipoDeDevocional.noite,
+              chaveDoDia: '25-12',
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/noite',
+          builder: (context, state) =>
+              Text('data=${state.uri.queryParameters['data']}'),
+        ),
+      ],
+    );
+    await tester.pumpWidget(MaterialApp.router(routerConfig: roteador));
+
+    expect(find.text('Noite'), findsOneWidget);
+    await tester.tap(find.byType(BotaoDeDevocional));
+    await tester.pumpAndSettle();
+
+    final ano = DateTime.now().year;
+    expect(find.text('data=$ano-12-25'), findsOneWidget);
   });
 }

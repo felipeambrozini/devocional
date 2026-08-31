@@ -475,7 +475,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
           return CartaoDeDia(
             numero: dia.numero,
             rotulo: dia.rotulo,
-            faixas: dia.faixas,
+            itens: dia.itens,
             lido: _meusLidos().contains(dia.numero),
             aoAlternar: () => _alternarDia(dia.numero),
           );

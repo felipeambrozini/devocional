@@ -274,7 +274,7 @@ class _AbaDoCronogramaState extends State<_AbaDoCronograma>
                       key: ehHoje ? _chaveDeHoje : null,
                       numero: dia.dia,
                       rotulo: dia.rotulo,
-                      faixas: dia.faixas,
+                      itens: [for (final f in dia.faixas) ItemDeCapitulo(f)],
                       lido: estado.foiLido(dia.data),
                       destacar: ehHoje,
                       aoAlternar: () => estado.alternarLido(dia.data),
