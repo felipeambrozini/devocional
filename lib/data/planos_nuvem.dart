@@ -126,6 +126,8 @@ class PlanosNaNuvem {
         'titulo': plano.titulo,
         'livros': plano.livros,
         'dias': plano.dias,
+        'incluirDevocionais': plano.incluirDevocionais,
+        'devocionalAntes': plano.devocionalAntes,
         'criadoPor': usuario.uid,
         'criadoEm': FieldValue.serverTimestamp(),
         'participantes': {

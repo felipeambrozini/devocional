@@ -481,6 +481,8 @@ class Estado extends ChangeNotifier {
     required String titulo,
     required List<String> livros,
     required int dias,
+    bool incluirDevocionais = false,
+    bool devocionalAntes = true,
   }) async {
     final plano = PlanoDoUsuario(
       id: novoIdDePlano(),
@@ -490,6 +492,8 @@ class Estado extends ChangeNotifier {
       livros: livros,
       dias: dias,
       criadoEm: DateTime.now(),
+      incluirDevocionais: incluirDevocionais,
+      devocionalAntes: devocionalAntes,
     );
     _planos.insert(0, plano);
     notifyListeners();

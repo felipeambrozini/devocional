@@ -412,6 +412,24 @@ void main() {
       expect((await reabrir()).planosDoUsuario.single.compartilhado, isTrue);
     });
 
+    test('criarPlano aceita e persiste incluirDevocionais/devocionalAntes', () async {
+      final estado = await Estado.abrir();
+      final plano = await estado.criarPlano(
+        titulo: '',
+        livros: ['genesis'],
+        dias: 30,
+        incluirDevocionais: true,
+        devocionalAntes: false,
+      );
+      expect(plano.incluirDevocionais, isTrue);
+      expect(plano.devocionalAntes, isFalse);
+
+      final relido = await reabrir();
+      final planoRelido = relido.planosDoUsuario.single;
+      expect(planoRelido.incluirDevocionais, isTrue);
+      expect(planoRelido.devocionalAntes, isFalse);
+    });
+
     test('armazenamento corrompido não impede o app de abrir', () async {
       SharedPreferences.setMockInitialValues({
         'planos_do_usuario': 'isto não é json {',
