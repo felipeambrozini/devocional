@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'canon.dart';
+import 'conteudo.dart';
 import 'modelos.dart';
 
 int _contadorIdPlano = 0;
@@ -10,12 +11,20 @@ int _contadorIdPlano = 0;
 /// Diferente de [DiaDoPlano], não tem data: o plano do usuário é uma
 /// sequência de 1 a N dias, e não um calendário.
 class DiaDePlanoDoUsuario {
-  const DiaDePlanoDoUsuario({required this.numero, required this.faixas});
+  const DiaDePlanoDoUsuario({required this.numero, required this.itens});
 
   /// Posição do dia no plano, de 1 em diante. É a chave de progresso.
   final int numero;
 
-  final List<Faixa> faixas;
+  final List<ItemDoDia> itens;
+
+  /// Só as faixas de capítulo do dia, na ordem, sem os devocionais
+  /// intercalados — o que a maioria do código precisa (rótulo, contagem de
+  /// capítulos, o botão que abre a Bíblia).
+  List<Faixa> get faixas => [
+    for (final item in itens)
+      if (item is ItemDeCapitulo) item.faixa,
+  ];
 
   String get rotulo => faixas.map((f) => f.rotulo).join(', ');
 }
@@ -153,6 +162,8 @@ String novoIdDePlano() {
 List<DiaDePlanoDoUsuario> montarPlanoDeLeitura({
   required List<String> livros,
   required int dias,
+  bool incluirDevocionais = false,
+  bool devocionalAntes = true,
 }) {
   final capitulos = <(String, int)>[];
   for (final slug in livros) {
@@ -171,14 +182,33 @@ List<DiaDePlanoDoUsuario> montarPlanoDeLeitura({
     final de = (dia * porDia).round();
     final ate = ((dia + 1) * porDia).round();
     if (ate <= de) continue;
+    final faixas = _agruparEmFaixas(capitulos.sublist(de, ate));
     plano.add(
       DiaDePlanoDoUsuario(
         numero: plano.length + 1,
-        faixas: _agruparEmFaixas(capitulos.sublist(de, ate)),
+        itens: incluirDevocionais
+            ? _itensComDevocionais(faixas, devocionalAntes)
+            : [for (final f in faixas) ItemDeCapitulo(f)],
       ),
     );
   }
   return plano;
+}
+
+/// Para cada faixa, busca os devocionais de cada capítulo que ela cobre e os
+/// intercala antes ou depois do [ItemDeCapitulo] correspondente.
+List<ItemDoDia> _itensComDevocionais(List<Faixa> faixas, bool antes) {
+  final itens = <ItemDoDia>[];
+  for (final faixa in faixas) {
+    final devocionais = [
+      for (final capitulo in faixa.capitulos)
+        ...Conteudo.instancia.devocionaisDoCapitulo(faixa.livro, capitulo),
+    ];
+    if (antes) itens.addAll(devocionais);
+    itens.add(ItemDeCapitulo(faixa));
+    if (!antes) itens.addAll(devocionais);
+  }
+  return itens;
 }
 
 /// Capítulos consecutivos do mesmo livro viram uma faixa; a troca de livro

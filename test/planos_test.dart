@@ -1,5 +1,6 @@
 import 'package:felipe_ambrozini/data/conteudo.dart';
 import 'package:felipe_ambrozini/data/estado.dart';
+import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:felipe_ambrozini/data/nuvem.dart';
 import 'package:felipe_ambrozini/data/planos.dart';
 import 'package:felipe_ambrozini/telas/plano.dart';
@@ -8,6 +9,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUpAll(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    await Conteudo.instancia.aquecerIndiceDeDevocionais();
+  });
+
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   /// Reabre o estado a partir do mesmo armazenamento, provando que o dado
@@ -97,6 +103,54 @@ void main() {
       expect(segundo.faixas.first.rotulo, 'Gênesis 31-50');
       expect(segundo.faixas.last.rotulo, 'Êxodo 1-10');
       expect(dias[2].faixas.single.rotulo, 'Êxodo 11-40');
+    });
+
+    test('sem incluirDevocionais, itens são só ItemDeCapitulo', () {
+      final dia = montarPlanoDeLeitura(livros: ['genesis'], dias: 50)[0];
+      expect(dia.itens, [isA<ItemDeCapitulo>()]);
+    });
+
+    test('incluirDevocionais=true intercala os devocionais do capítulo, '
+        'na posição pedida', () {
+      // Dia 1 é só Gênesis 1 (50 capítulos em 50 dias). Vários devocionais do
+      // ano citam Gênesis 1 (ex. 05-01, manhã e noite, citando Gênesis 1:4 —
+      // ver test/conteudo_test.dart); não importa quantos são ao todo, só que
+      // entram todos e na posição certa em relação ao capítulo.
+      final antes = montarPlanoDeLeitura(
+        livros: ['genesis'],
+        dias: 50,
+        incluirDevocionais: true,
+      )[0];
+      expect(antes.itens.last, isA<ItemDeCapitulo>());
+      expect(
+        antes.itens.whereType<ItemDeDevocional>(),
+        contains(
+          isA<ItemDeDevocional>()
+              .having((i) => i.tipo, 'tipo', TipoDeDevocional.manha)
+              .having((i) => i.chaveDoDia, 'chaveDoDia', '05-01'),
+        ),
+      );
+
+      final depois = montarPlanoDeLeitura(
+        livros: ['genesis'],
+        dias: 50,
+        incluirDevocionais: true,
+        devocionalAntes: false,
+      )[0];
+      expect(depois.itens.first, isA<ItemDeCapitulo>());
+      // Mesmo conjunto de devocionais, só muda de lado do capítulo.
+      expect(depois.itens.length, antes.itens.length);
+    });
+
+    test('faixas continua exposto e ignora os itens de devocional', () {
+      final dia = montarPlanoDeLeitura(
+        livros: ['genesis'],
+        dias: 50,
+        incluirDevocionais: true,
+      )[0];
+      expect(dia.faixas, hasLength(1));
+      expect(dia.faixas.single.rotulo, 'Gênesis 1');
+      expect(dia.rotulo, 'Gênesis 1');
     });
   });
 
