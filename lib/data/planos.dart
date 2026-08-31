@@ -48,6 +48,8 @@ class PlanoDoUsuario {
     required this.criadoEm,
     this.compartilhado = false,
     this.criadoPor,
+    this.incluirDevocionais = false,
+    this.devocionalAntes = true,
   });
 
   factory PlanoDoUsuario.doJson(Map<String, dynamic> json) => PlanoDoUsuario(
@@ -63,6 +65,8 @@ class PlanoDoUsuario {
     ),
     compartilhado: json['compartilhado'] as bool? ?? false,
     criadoPor: json['criadoPor'] as String?,
+    incluirDevocionais: json['incluirDevocionais'] as bool? ?? false,
+    devocionalAntes: json['devocionalAntes'] as bool? ?? true,
   );
 
   /// De um documento `planos/{id}` do Firestore, cujo esquema é outro (ver
@@ -83,6 +87,8 @@ class PlanoDoUsuario {
     criadoEm: criadoEm,
     compartilhado: true,
     criadoPor: json['criadoPor'] as String?,
+    incluirDevocionais: json['incluirDevocionais'] as bool? ?? false,
+    devocionalAntes: json['devocionalAntes'] as bool? ?? true,
   );
 
   /// Identidade estável do plano, e o id do documento na nuvem quando
@@ -106,8 +112,21 @@ class PlanoDoUsuario {
   /// `sairDoPlano` em `lib/funcoes/planos_acoes.dart`).
   final String? criadoPor;
 
-  List<DiaDePlanoDoUsuario> get diasDoPlano =>
-      montarPlanoDeLeitura(livros: livros, dias: dias);
+  /// Se o plano intercala os devocionais dos livros entre os capítulos —
+  /// ver [montarPlanoDeLeitura]. Escolhido na criação do plano
+  /// (`lib/telas/novo_plano.dart`), não editável depois.
+  final bool incluirDevocionais;
+
+  /// Só relevante com [incluirDevocionais]: se o devocional do capítulo
+  /// aparece antes ou depois dele no dia.
+  final bool devocionalAntes;
+
+  List<DiaDePlanoDoUsuario> get diasDoPlano => montarPlanoDeLeitura(
+    livros: livros,
+    dias: dias,
+    incluirDevocionais: incluirDevocionais,
+    devocionalAntes: devocionalAntes,
+  );
 
   int get totalDeCapitulos {
     var total = 0;
@@ -125,6 +144,8 @@ class PlanoDoUsuario {
     criadoEm: criadoEm,
     compartilhado: novo,
     criadoPor: criadoPor,
+    incluirDevocionais: incluirDevocionais,
+    devocionalAntes: devocionalAntes,
   );
 
   Map<String, dynamic> paraJson() => {
@@ -135,6 +156,8 @@ class PlanoDoUsuario {
     'criadoEm': criadoEm.millisecondsSinceEpoch,
     if (compartilhado) 'compartilhado': true,
     if (criadoPor != null) 'criadoPor': criadoPor,
+    'incluirDevocionais': incluirDevocionais,
+    'devocionalAntes': devocionalAntes,
   };
 }
 

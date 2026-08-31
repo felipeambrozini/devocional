@@ -259,6 +259,59 @@ void main() {
         reason: 'a mesma receita monta os mesmos dias toda vez',
       );
     });
+
+    test('incluirDevocionais/devocionalAntes por padrão são false/true, '
+        'e paraJson/doJson preservam quando setados', () {
+      final padrao = PlanoDoUsuario(
+        id: 'a',
+        titulo: '',
+        livros: ['genesis'],
+        dias: 30,
+        criadoEm: DateTime(2027),
+      );
+      expect(padrao.incluirDevocionais, isFalse);
+      expect(padrao.devocionalAntes, isTrue);
+
+      final comDevocionais = PlanoDoUsuario(
+        id: 'b',
+        titulo: '',
+        livros: ['genesis'],
+        dias: 30,
+        criadoEm: DateTime(2027),
+        incluirDevocionais: true,
+        devocionalAntes: false,
+      );
+      final lido = PlanoDoUsuario.doJson(comDevocionais.paraJson());
+      expect(lido.incluirDevocionais, isTrue);
+      expect(lido.devocionalAntes, isFalse);
+    });
+
+    test('doJson sem os campos novos (plano antigo) cai no padrão', () {
+      final plano = PlanoDoUsuario.doJson({
+        'id': 'x',
+        'titulo': 'X',
+        'livros': ['genesis'],
+        'dias': 10,
+        'criadoEm': 0,
+      });
+      expect(plano.incluirDevocionais, isFalse);
+      expect(plano.devocionalAntes, isTrue);
+    });
+
+    test('diasDoPlano com incluirDevocionais monta itens intercalados', () {
+      final plano = PlanoDoUsuario(
+        id: 'a',
+        titulo: '',
+        livros: ['genesis'],
+        dias: 50,
+        criadoEm: DateTime(2027),
+        incluirDevocionais: true,
+      );
+      expect(
+        plano.diasDoPlano[0].itens.whereType<ItemDeDevocional>(),
+        isNotEmpty,
+      );
+    });
   });
 
   test('novoIdDePlano gera ids únicos', () {
