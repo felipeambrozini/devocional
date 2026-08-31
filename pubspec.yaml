@@ -61,7 +61,7 @@ dependencies:
   # Cada aba com o próprio caminho na URL, e Sobre e as conversas também
   # (ver lib/main.dart). Pacote da própria equipe do Flutter, não um clone de
   # terceiro.
-  go_router: ^17.5.0
+  go_router: ^18.0.0
   # Número da versão na tela Sobre (ver lib/telas/sobre.dart). Já entra no
   # build pela google_api_headers, dependência transitiva do Firebase; listar
   # aqui o promove a dependência direta para o código poder importar.
