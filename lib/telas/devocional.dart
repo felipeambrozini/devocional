@@ -405,7 +405,7 @@ class _CartaoDeLeitura extends StatelessWidget {
                 BotaoDeVoz(chave: vozChave, referencia: vozReferencia),
                 IconButton(
                   tooltip: 'Compartilhar',
-                  icon: const Icon(Icons.ios_share_outlined),
+                  icon: Icon(Icons.ios_share_outlined, color: cor.primary),
                   onPressed: () => SharePlus.instance.share(
                     ShareParams(text: _textoParaCompartilhar),
                   ),
