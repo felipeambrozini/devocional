@@ -358,6 +358,27 @@ motivo novo.
   exemplo) lia a posição da pausa antiga em vez da posição real da leitura em
   andamento.
 
+- **Devocionais dentro do plano personalizado** (31/08/2026): `Conteudo` ganhou
+  `aquecerIndiceDeDevocionais()`/`devocionaisDoCapitulo(livro, capítulo)`, um
+  índice livro+capítulo → devocionais (Manhã, Noite, Promessas de Deus)
+  construído reaproveitando `faixasDaReferencia()` sobre a citação já existente
+  de cada devocional. `DiaDePlanoDoUsuario` trocou `faixas: List<Faixa>` por
+  `itens: List<ItemDoDia>` (`lib/data/modelos/cronograma.dart`), um sealed
+  class com `ItemDeCapitulo` e `ItemDeDevocional` (tipo + data-chave do
+  calendário); `faixas` virou getter derivado, então nada que lia `.faixas`
+  quebrou. `montarPlanoDeLeitura` ganhou `incluirDevocionais`/`devocionalAntes`
+  (padrão preserva o comportamento de hoje), intercalando o devocional
+  correspondente antes ou depois do(s) capítulo(s) do dia. `CartaoDeDia`
+  (cartão compartilhado do cronograma e dos planos) passou a renderizar uma
+  lista de `ItemDoDia`, despachando para `BotaoDeFaixa` (capítulo) ou o novo
+  `BotaoDeDevocional`, que abre a tela do devocional (`/manha`, `/noite` ou
+  `/promessas`) na data em que ele foi publicado originalmente. `TelaNovoPlano`
+  ganhou a caixa "Incluir devocionais dos livros" (desmarcada por padrão) e,
+  quando marcada, um seletor segmentado de antes/depois, os dois já refletidos
+  na prévia ao vivo e na criação do plano. Só planos criados pelo usuário
+  (`PlanoDoUsuario`, persistido local e no Firestore com os dois campos novos)
+  ganham a opção; o cronograma anual fixo não muda.
+
 ### Lembretes diários (Android e web)
 
 Híbrido: **push da Cloud Function agendada** (`functions/src/index.ts`, a cada

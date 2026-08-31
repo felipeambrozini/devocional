@@ -60,7 +60,11 @@ vitoriana dele, tratando o leitor por "tu".
 - Planos personalizados: escolher livros e a duração; compartilháveis por
   link, com progresso de cada participante (exige conta Google). Quem criou
   pode excluir o plano para todos; quem só participa pode sair, afetando só
-  o próprio progresso.
+  o próprio progresso. Ao criar o plano, uma caixa de marcar (desmarcada por
+  padrão) inclui junto os devocionais (Manhã, Noite, Promessas de Deus) cujo
+  versículo citado cai no capítulo do dia, antes ou depois dele, à escolha
+  de quem cria; a prévia do plano já mostra o resultado. Só vale para planos
+  do usuário, não para o cronograma anual fixo.
 - Avatar da conta (foto do Google ou inicial do nome) na saudação da aba
   Hoje, com foto trocável pela câmera ou galeria.
 - Só em pt_BR; conteúdo vem de JSON locais em `assets/`, carregado sob demanda.
