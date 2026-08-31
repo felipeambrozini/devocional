@@ -67,3 +67,50 @@ class DiaDoPlano {
   int get mes => int.parse(data.substring(3, 5));
   int get dia => int.parse(data.substring(0, 2));
 }
+
+/// As três leituras diárias que podem ser citadas por um capítulo do plano.
+/// `rota` bate com o path que `main.dart` declara para cada uma (`/manha`,
+/// `/noite`, `/promessas`) e com `Leitura.name` em `lib/telas/devocional.dart`.
+enum TipoDeDevocional {
+  manha('manha', 'Manhã'),
+  noite('noite', 'Noite'),
+  promessa('promessas', 'Promessa');
+
+  const TipoDeDevocional(this.rota, this.nome);
+
+  final String rota;
+  final String nome;
+}
+
+/// Um item do dia de um plano do usuário: um capítulo, ou um devocional cujo
+/// versículo citado cai dentro de um capítulo do dia (ver
+/// [Conteudo.devocionaisDoCapitulo] e [montarPlanoDeLeitura]).
+sealed class ItemDoDia {
+  const ItemDoDia();
+}
+
+/// Um capítulo (ou faixa de capítulos) do dia.
+final class ItemDeCapitulo extends ItemDoDia {
+  const ItemDeCapitulo(this.faixa);
+
+  final Faixa faixa;
+}
+
+/// Um devocional citado por um capítulo do dia. [chaveDoDia] é a chave
+/// 'DD-MM' do devocional em si — não tem relação com a posição do dia no
+/// plano do usuário, que não tem data.
+final class ItemDeDevocional extends ItemDoDia {
+  const ItemDeDevocional({required this.tipo, required this.chaveDoDia});
+
+  final TipoDeDevocional tipo;
+  final String chaveDoDia;
+
+  @override
+  bool operator ==(Object other) =>
+      other is ItemDeDevocional &&
+      other.tipo == tipo &&
+      other.chaveDoDia == chaveDoDia;
+
+  @override
+  int get hashCode => Object.hash(tipo, chaveDoDia);
+}
