@@ -402,7 +402,14 @@ class _CartaoDeLeitura extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                BotaoDeVoz(chave: vozChave, referencia: vozReferencia),
+                // Flexible, não solto: sem largura limitada, a barra de
+                // progresso do botão (que preenche a largura disponível
+                // durante a leitura) tenta se esticar ao infinito numa Row, e
+                // o layout quebra — sumindo com o botão de voz e o de
+                // compartilhar ao lado.
+                Flexible(
+                  child: BotaoDeVoz(chave: vozChave, referencia: vozReferencia),
+                ),
                 IconButton(
                   tooltip: 'Compartilhar',
                   icon: Icon(Icons.ios_share_outlined, color: cor.primary),
