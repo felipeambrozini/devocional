@@ -220,6 +220,12 @@ class Nuvem extends ChangeNotifier {
   /// segurança que `exportar()` produz. Ver o comentário daquele método.
   Sincronia? _sincroniaDeConversas;
   Sincronia? _sincroniaDeLembretes;
+
+  /// Planos de leitura do usuário (criados no celular/web). Vivem no mesmo
+  /// documento `usuarios/{uid}` no campo `planos`, com serializador próprio
+  /// (`serializarPlanos`): sem isto um plano criado no celular nunca aparecia
+  /// na web, mesmo com a mesma conta — era só local.
+  Sincronia? _sincroniaDePlanos;
   StreamSubscription<User?>? _assinatura;
   bool _pronta = false;
 
@@ -315,6 +321,8 @@ class Nuvem extends ChangeNotifier {
       _sincroniaDeConversas = null;
       _sincroniaDeLembretes?.parar();
       _sincroniaDeLembretes = null;
+      _sincroniaDePlanos?.parar();
+      _sincroniaDePlanos = null;
       notifyListeners();
       if (usuario == null) return;
 
@@ -365,6 +373,17 @@ class Nuvem extends ChangeNotifier {
       );
       _sincroniaDeLembretes = sincroniaDeLembretes;
       unawaited(sincroniaDeLembretes.comecar());
+
+      final sincroniaDePlanos = Sincronia(
+        estado: estado,
+        serializar: estado.serializarPlanos,
+        fundir: estado.fundirPlanos,
+        puxar: () => _puxarPlanos(usuario.uid),
+        empurrar: (copia) => _empurrarPlanos(usuario.uid, copia),
+        aoMudarSituacao: notifyListeners,
+      );
+      _sincroniaDePlanos = sincroniaDePlanos;
+      unawaited(sincroniaDePlanos.comecar());
     });
   }
 
@@ -386,6 +405,7 @@ class Nuvem extends ChangeNotifier {
     _sincronia?.parar();
     _sincroniaDeConversas?.parar();
     _sincroniaDeLembretes?.parar();
+    _sincroniaDePlanos?.parar();
     super.dispose();
   }
 
@@ -427,6 +447,22 @@ class Nuvem extends ChangeNotifier {
   Future<void> _empurrarLembretes(String uid, String copiaJson) =>
       FirebaseFirestore.instance.collection(_colecao).doc(uid).set({
         'lembretes': json.decode(copiaJson),
+        'atualizadoEm': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+  Future<String?> _puxarPlanos(String uid) async {
+    final doc = await FirebaseFirestore.instance
+        .collection(_colecao)
+        .doc(uid)
+        .get();
+    final planos = doc.data()?['planos'];
+    if (planos == null) return null;
+    return json.encode(planos);
+  }
+
+  Future<void> _empurrarPlanos(String uid, String copiaJson) =>
+      FirebaseFirestore.instance.collection(_colecao).doc(uid).set({
+        'planos': json.decode(copiaJson),
         'atualizadoEm': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
@@ -534,6 +570,7 @@ class Nuvem extends ChangeNotifier {
     await _sincronia?.despejar();
     await _sincroniaDeConversas?.despejar();
     await _sincroniaDeLembretes?.despejar();
+    await _sincroniaDePlanos?.despejar();
     await FirebaseAuth.instance.signOut();
   }
 

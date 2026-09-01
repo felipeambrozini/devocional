@@ -11,6 +11,9 @@ rules_version = '2';
 //   copia       mapa — a cópia de segurança que exportar() produz, com o
 //               esquema fixo {versao: int, marcacoes: list, dias_lidos: list}
 //   conversas   mapa — o histórico dos chats, serializado à parte
+//   lembretes   mapa — horários do lembrete, serializado à parte
+//   planos      mapa — planos do usuário (sem precisar compartilhar), com
+//               {planos: list, planos_lidos: map}
 //   atualizadoEm timestamp do servidor, gravado em toda escrita
 // O documento pode nascer só com copia ou só com conversas (cada sincronia
 // escreve os próprios campos com merge), por isso os campos opcionais são
@@ -66,15 +69,24 @@ service cloud.firestore {
             l.noite is int && l.noite >= 0 && l.noite < 1440;
       }
 
+      function planosValidos() {
+        let p = request.resource.data.planos;
+        return p is map &&
+            p.keys().hasOnly(['planos', 'planos_lidos']) &&
+            p.planos is list && p.planos.size() < 5000 &&
+            p.planos_lidos is map && p.planos_lidos.size() < 5000;
+      }
+
       // Forma e tipo do documento, para um cliente torto não gravar lixo no
       // próprio documento nem inflar o projeto com campos fora do contrato.
       function valido() {
         let dados = request.resource.data;
-        let soOsCampos = dados.keys().hasOnly(['copia', 'conversas', 'lembretes', 'atualizadoEm']);
+        let soOsCampos = dados.keys().hasOnly(['copia', 'conversas', 'lembretes', 'planos', 'atualizadoEm']);
         let copiaOk = !('copia' in dados) || copiaValida();
         let conversasOk = !('conversas' in dados) || conversasValidas();
         let lembretesOk = !('lembretes' in dados) || lembretesValidos();
-        return soOsCampos && copiaOk && conversasOk && lembretesOk &&
+        let planosOk = !('planos' in dados) || planosValidos();
+        return soOsCampos && copiaOk && conversasOk && lembretesOk && planosOk &&
             dados.atualizadoEm is timestamp;
       }
 
@@ -84,7 +96,7 @@ service cloud.firestore {
       allow create: if dono() && valido();
       allow update: if dono() && valido() &&
           request.resource.data.diff(resource.data).affectedKeys()
-              .hasOnly(['copia', 'conversas', 'lembretes', 'atualizadoEm']);
+              .hasOnly(['copia', 'conversas', 'lembretes', 'planos', 'atualizadoEm']);
       allow delete: if dono();
       allow read: if dono();
     }

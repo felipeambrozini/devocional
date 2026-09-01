@@ -666,6 +666,112 @@ class Estado extends ChangeNotifier {
     }
   }
 
+  // --- planos (sincronizados quando logado, mesmo sem compartilhar) --------- //
+
+  /// O que a cópia na nuvem recebe para os planos. Vai num campo próprio
+  /// (`planos`) no documento `usuarios/{uid}`, separado da cópia manual de
+  /// favoritos/notas: planos já viviam só no aparelho e por isso um plano
+  /// criado no celular nunca aparecia na web — agora sobem sozinhos quando
+  /// há conta, sem precisar compartilhar por link.
+  String serializarPlanos() => json.encode({
+    'planos': [for (final p in _planos) p.paraJson()],
+    'planos_lidos': {
+      for (final MapEntry(key: id, value: dias) in _planosLidos.entries)
+        id: dias.toList()..sort(),
+    },
+  });
+
+  /// Funde planos remotos com os locais, por id e por dias lidos.
+  ///
+  /// Funde, não substitui: criar planos em dois aparelhos offline e depois
+  /// conectar não perde nenhum. O mesmo vale para os dias marcados: a união
+  /// dos dois lados é o que fica. Remoção não sincroniza (mesma limitação da
+  /// cópia de favoritos em `importar()`): apagar num aparelho e o plano
+  /// continua no outro até ser apagado lá também — o caminho para lápides é
+  /// análogo ao do chat, mas ainda não é necessário para o bug de criação.
+  Future<void> fundirPlanos(String remota) async {
+    try {
+      final mapa = json.decode(remota) as Map<String, dynamic>;
+      final planosRemotos = mapa['planos'] as List? ?? const [];
+      final lidosRemotos =
+          mapa['planos_lidos'] as Map<String, dynamic>? ?? const {};
+
+      var mudou = false;
+      final idsLocais = {for (final p in _planos) p.id};
+
+      for (final item in planosRemotos) {
+        if (item is! Map<String, dynamic>) continue;
+        final PlanoDoUsuario plano;
+        try {
+          plano = PlanoDoUsuario.doJson(item);
+        } catch (_) {
+          continue;
+        }
+        if (plano.id.isEmpty) continue;
+        if (idsLocais.contains(plano.id)) {
+          // Mesmo id já existe: se o remoto marcou como compartilhado e o
+          // local ainda não, promove. Título/livros/dias são imutáveis após
+          // criação, então não há o que mesclar além do flag.
+          final idx = _planos.indexWhere((p) => p.id == plano.id);
+          final local = _planos[idx];
+          if (!local.compartilhado && plano.compartilhado) {
+            _planos[idx] = local.compartilhadoComo(true);
+            mudou = true;
+          } else if (local.criadoPor == null && plano.criadoPor != null) {
+            _planos[idx] = PlanoDoUsuario(
+              id: local.id,
+              titulo: local.titulo,
+              livros: local.livros,
+              dias: local.dias,
+              criadoEm: local.criadoEm,
+              compartilhado: local.compartilhado,
+              criadoPor: plano.criadoPor,
+              incluirDevocionais: local.incluirDevocionais,
+              devocionalAntes: local.devocionalAntes,
+            );
+            mudou = true;
+          }
+          continue;
+        }
+        _planos.add(plano);
+        idsLocais.add(plano.id);
+        mudou = true;
+      }
+
+      if (mudou) {
+        // Mantém a ordem "mais novo primeiro", que é a da lista de Meus Planos.
+        _planos.sort((a, b) => b.criadoEm.compareTo(a.criadoEm));
+      }
+
+      for (final entry in lidosRemotos.entries) {
+        final id = entry.key;
+        final dias = entry.value;
+        if (dias is! List) continue;
+        final remotos = {
+          for (final d in dias)
+            if (d is int) d,
+        };
+        if (remotos.isEmpty) continue;
+        final locais = _planosLidos[id];
+        if (locais == null) {
+          _planosLidos[id] = remotos;
+          mudou = true;
+        } else {
+          final antes = locais.length;
+          locais.addAll(remotos);
+          if (locais.length != antes) mudou = true;
+        }
+      }
+
+      if (!mudou) return;
+      notifyListeners();
+      await _gravarPlanos();
+      await _gravarPlanosLidos();
+    } catch (erro, pilha) {
+      Registro.erro('Estado.fundirPlanos', erro, pilha);
+    }
+  }
+
   // --- cópia de segurança --------------------------------------------------- //
 
   /// Versão do formato da cópia. Existe para que uma cópia velha ainda possa ser

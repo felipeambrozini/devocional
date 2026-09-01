@@ -49,6 +49,7 @@ class PlanosNaNuvem {
   static const _colecao = 'planos';
 
   Estado? _estado;
+  // ignore: unused_field
   StreamSubscription<User?>? _assinatura;
 
   bool get pronta => _pronta;
@@ -63,11 +64,7 @@ class PlanosNaNuvem {
     _estado = estado;
     _pronta = true;
     _assinatura = FirebaseAuth.instance.authStateChanges().listen((usuario) {
-      if (usuario == null) {
-        // Sem conta a sincronia fica parada; o próximo login re-assina.
-        _assinatura?.cancel();
-        return;
-      }
+      if (usuario == null) return;
       unawaited(_puxarOsMeus(usuario.uid));
     });
   }

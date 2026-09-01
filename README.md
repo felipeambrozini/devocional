@@ -37,9 +37,10 @@ mesmo código).
   compartilhado; tela própria lista os favoritos e os que têm anotação, com
   busca por referência ou por texto da nota, e exporta uma cópia de segurança
   de tudo (favoritos, notas e progresso) para reimportar em outro aparelho.
-- **Conta Google (Web, Android e iOS)**: opcional — favoritos, notas e progresso sobem
-  sozinhos para a conta de quem entrar, para não perder nada se o navegador
-  limpar o armazenamento. O Android e iOS também sincronizam; ver `nuvemSuportada` em `lib/data/nuvem.dart`.
+- **Conta Google (Web, Android e iOS)**: opcional — favoritos, notas, progresso e
+  planos sobem sozinhos para a conta de quem entrar, para não perder nada se o
+  navegador limpar o armazenamento e para o mesmo plano aparecer no celular e
+  na web. O Android e iOS também sincronizam; ver `nuvemSuportada` em `lib/data/nuvem.dart`.
   Quem entra vê o próprio avatar (foto da conta Google, ou a inicial do nome
   sem foto) na saudação da aba Hoje, e pode trocar a foto tocando nele
   (câmera ou galeria).
@@ -85,10 +86,10 @@ plano compartilhado.
 ## Stack
 
 - Flutter (Dart), `flutter_localizations` para `pt_BR`.
-- `shared_preferences` é o armazenamento local (progresso, favoritos e notas),
-  igual em todas as plataformas, sem banco. Na web, quem
-  entra com a conta Google também espelha favoritos, notas e progresso num
-  documento do Firestore — ver a conta na nuvem, acima.
+- `shared_preferences` é o armazenamento local (progresso, favoritos, notas e
+  planos), igual em todas as plataformas, sem banco. Na web, quem entra com a
+  conta Google também espelha favoritos, notas, progresso e planos num documento
+  do Firestore — ver a conta na nuvem, acima.
 - `share_plus` para compartilhar um versículo. `flutter_local_notifications`
   + `flutter_timezone` + `timezone` para o lembrete diário, só no Android —
   alarmes agendados no próprio aparelho, no fuso detectado (ver
@@ -513,11 +514,14 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
   "Devocionais" via `TelaBusca(abaInicial:)`).
 - **Conta Google e cópia na nuvem (Web, Android e iOS)** (19/08/2026): `Sincronia` em
   `lib/data/nuvem.dart` é um ouvinte de fora sobre o `ChangeNotifier` do
-  `Estado` (que **não mudou nenhuma linha**), reaproveitando `exportar()`/
-  `importar()`. O filtro contra ruído e contra loop é comparar a string de
-  `exportar()` com a última enviada. Documento único por usuário no Firestore
-  (`usuarios/{uid}`); **remoção não sincroniza** (importar funde e nunca apaga).
-  Login por `signInWithPopup` na web; no Android/iOS usa `google_sign_in` nativo.
+  `Estado`, reaproveitando `exportar()`/`importar()` para favoritos/notas e
+  `serializarConversas`/`serializarPlanos`/`serializarLembretes` para os
+  demais domínios. O filtro contra ruído e contra loop é comparar a string
+  serializada com a última enviada. Documento único por usuário no Firestore
+  (`usuarios/{uid}`) com campos `copia`, `conversas`, `planos` e `lembretes`;
+  **remoção não sincroniza** (funde e nunca apaga) nos domínios de cópia e
+  planos. Login por `signInWithPopup` na web; no Android/iOS usa
+  `google_sign_in` nativo.
 - **Login web em navegador mobile usa `signInWithRedirect`** (21/08/2026): no
   Chrome/Safari de iOS e Android o `signInWithPopup` abre a janela e deixa
   escolher a conta, mas a troca de token com a janela original falha
