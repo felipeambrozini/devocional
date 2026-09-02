@@ -14,4 +14,11 @@ void main() {
       expect(linha, contains('registro_test.dart'));
     });
   });
+
+  test(
+    'envioRemotoPermitido começa desligado — nada de Sentry sem aceite',
+    () {
+      expect(Registro.envioRemotoPermitido, isFalse);
+    },
+  );
 }

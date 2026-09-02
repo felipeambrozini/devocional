@@ -18,29 +18,37 @@ Apenas a versão mais recente em execução no ambiente de produção (Web via F
 
 O aplicativo foi projetado com o princípio de exposição mínima de dados e processamento prioritariamente local.
 
-### 2.1 Ausência de Cookies e Rastreamento
-O aplicativo **não grava nenhum cookie** e não embarca ferramenta de analítica ou rastreamento. Na web, as preferências e o progresso ficam no `localStorage` (via `shared_preferences`) e a sessão do Firebase Auth no `IndexedDB` — armazenamento estritamente necessário ao funcionamento, sob o domínio do próprio app. Por isso não há banner de consentimento de cookies: não existe cookie de terceiro nem finalidade de rastreamento que o exija sob a LGPD.
+### 2.1 Ausência de Cookies e Publicidade
+O aplicativo **não grava nenhum cookie**, não tem anúncio e não vende nem compartilha dados com terceiros para fins de publicidade. Na web, as preferências e o progresso ficam no `localStorage` (via `shared_preferences`) e a sessão do Firebase Auth no `IndexedDB` — armazenamento estritamente necessário ao funcionamento, sob o domínio do próprio app. Por isso não há banner de consentimento de cookies: não existe cookie de terceiro nem finalidade de rastreamento que o exija sob a LGPD. A coleta remota opcional (erro e uso anônimo) é descrita em 2.4, à parte, porque depende de aceite explícito do usuário.
 
 ### 2.2 Armazenamento Local
-- **Dispositivos Móveis (Android):** Os dados de progresso de leitura, anotações e versículos favoritos são salvos exclusivamente no armazenamento local do dispositivo por meio do `shared_preferences`. Não há comunicação automática com servidores de terceiros no Android para sincronização de dados pessoais.
-- **Exportação Manual:** A cópia de segurança no Android é realizada via área de transferência (Clipboard) em formato de texto estruturado, permitindo que o próprio usuário gerencie e transporte seus backups com total controle.
+Progresso de leitura, anotações e versículos favoritos são salvos localmente por meio do `shared_preferences` em todas as plataformas (Android, iOS e web). Quem não entra com conta usa o app inteiro assim, sem nada saindo do aparelho.
 
-### 2.3 Sincronização na Nuvem e Autenticação (Apenas Web)
-- **Autenticação:** O login via Conta Google utiliza o método `signInWithPopup` fornecido pelo Firebase Auth em navegadores desktop. Em navegadores mobile (iOS/Android), o próprio popup falha ao trocar o token com a janela original por causa do armazenamento particionado do navegador — nesses casos o app usa `signInWithRedirect`, aceitando ali o risco de partição que o popup evita no desktop.
+### 2.3 Sincronização na Nuvem e Autenticação
+- **Plataformas:** A sincronização com a nuvem (Firebase) está disponível em Android, iOS e web — `nuvemSuportada` (`lib/data/nuvem.dart`) não distingue plataforma. O login nativo (Android/iOS) usa `GoogleSignIn.instance.authenticate()` mais `signInWithCredential`; a web usa `signInWithPopup` em desktop e `signInWithRedirect` em navegador mobile, onde o popup falha ao trocar o token com a janela original por causa do armazenamento particionado do navegador.
 - **Segurança no Firestore:** Cada usuário autenticado possui acesso exclusivo ao seu próprio documento localizado no caminho `usuarios/{uid}`.
-- **Regras de Acesso:** O acesso aos dados no Cloud Firestore é protegido por regras rígidas de segurança (`firestore.rules`), garantindo que apenas o proprietário autenticado (`request.auth.uid == userId`) possa ler ou escrever em seu respetivo documento. A remoção de dados locais não apaga registros na nuvem, atuando a sincronização por fusão (*merge*).
+- **Regras de Acesso:** O acesso aos dados no Cloud Firestore é protegido por regras rígidas de segurança (`firestore.rules`), garantindo que apenas o proprietário autenticado (`request.auth.uid == userId`) possa ler ou escrever em seu respetivo documento. A remoção de dados locais não apaga registros na nuvem, atuando a sincronização por fusão (*merge*). Apagar a conta (Sobre → Conta e privacidade) remove também a foto de perfil e a participação em planos compartilhados, além do documento e da própria conta.
+
+### 2.4 Coleta Remota Opcional (Sentry e Analytics)
+Na primeira abertura, o app pergunta se o usuário autoriza o envio de dois tipos de informação sem identificação: erro técnico (Sentry, web e Android) e uso anônimo por tela (Firebase Analytics). As duas ficam desligadas por padrão — `Registro.envioRemotoPermitido` começa `false` e o `beforeSend` do Sentry descarta qualquer evento até a resposta chegar (`lib/main.dart`); a aplicação da escolha aos dois SDKs vive em `lib/data/coleta.dart`, único ponto que liga Firebase Analytics à decisão do usuário. A resposta pode ser revista a qualquer momento em Sobre. Nenhum dos dois canais recebe o texto lido, escrito ou de conversas.
 
 ---
 
 ## 3. Gestão de Chaves de API e Segredos
 
 ### 3.1 Injeção de Variáveis em Tempo de Compilação
-As chaves de API necessárias para o funcionamento dos serviços integrados (Firebase, IA Gemini e Google Text-to-Speech) não são mantidas estáticas no código-fonte. Elas são injetadas exclusivamente em tempo de compilação via parâmetros `--dart-define`, lidos por `String.fromEnvironment` em `lib/data/google.dart` e `lib/firebase_options.dart`. Nenhuma chave trafega como *asset* do aplicativo — o arquivo local `.env.json` serve apenas ao `--dart-define-from-file` durante o desenvolvimento e nunca é empacotado no build:
+As chaves e parâmetros necessários para o funcionamento dos serviços integrados (Firebase, IA Gemini, Sentry) não são mantidos estáticos no código-fonte. Eles são injetados exclusivamente em tempo de compilação via parâmetros `--dart-define`, lidos por `String.fromEnvironment` em `lib/data/google.dart`, `lib/firebase_options.dart` e nos poucos outros pontos que os usam diretamente. Nenhum trafega como *asset* do aplicativo — o arquivo local `.env.json` serve apenas ao `--dart-define-from-file` durante o desenvolvimento e nunca é empacotado no build:
 
 - `FIREBASE_API_KEY_WEB`, `FIREBASE_API_KEY_ANDROID`, `FIREBASE_API_KEY_IOS`
 - `GEMINI_API_KEY_WEB`, `GEMINI_API_KEY_ANDROID`, `GEMINI_API_KEY_IOS`
-- `TTS_API_KEY_WEB`, `TTS_API_KEY_ANDROID`, `TTS_API_KEY_IOS`
 - `FCM_VAPID_KEY` (chave pública do Web Push, para o lembrete diário na web)
+- `AUDIO_BASE_URL` (origem dos MP3 pré-gerados da leitura em voz alta)
+- `RECAPTCHA_V3_SITE_KEY` (App Check na web, ver 3.3)
+- `EMAILS_COM_CONVERSAS` (allowlist do chat com IA, ver `lib/data/recursos.dart` — nenhum e-mail fica versionado no repositório)
+- `SENTRY_DSN` (destino do reporte de erro remoto, ver 2.4 — vazio localiza o SDK em modo no-op)
+- `EMAIL_DE_CONTATO` (destino de "Relatar um problema" em Sobre; vazio esconde o item)
+
+Não há mais chave de Text-to-Speech: o áudio virou MP3 pré-gerado (ver `lib/data/voz.dart`), e as antigas `TTS_API_KEY_*` devem ser revogadas no Google Cloud Console, já que nenhum `String.fromEnvironment` no código as lê mais.
 
 ### 3.2 Proteção de Chaves Públicas
 Conforme a arquitetura padrão para aplicações no lado do cliente (Web e Mobile), as chaves do Firebase e do Google Cloud presentes nos artefatos de compilação são consideradas públicas por desenho. A segurança dos serviços é assegurada por:
@@ -58,9 +66,9 @@ Além da chave, o app se identifica ao Firestore e ao Auth com uma prova de que 
 
 A falha em ativar o App Check (site key ausente durante a migração, domínio ainda não registrado no console) não impede o app de abrir; a sincronização e o login simplesmente continuam sem essa camada extra até a configuração ser concluída no console do Firebase.
 
-### 3.4 Lembrete Diário — Sem Backend
+### 3.4 Lembrete Diário — Push com Reserva Local no Android
 
-O lembrete diário roda em `flutter_local_notifications`, exclusivo do Android. A superfície de permissão local se resume a POST_NOTIFICATIONS, concedida em runtime — sem pedir a permissão especial de alarme exato: o agendamento local é só a reserva de T+5 min, sempre inexato de propósito (ver `lib/data/lembretes.dart`).
+O lembrete diário é híbrido: uma Cloud Function agendada (`functions/src/index.ts`, `enviarLembretes`) lê a coleção `lembretes` do Firestore a cada minuto e envia push via FCM em Android e web; no Android, `flutter_local_notifications` ainda arma uma reserva local em T+5 min, para o caso de o push não chegar. A superfície de permissão local se resume a POST_NOTIFICATIONS, concedida em runtime — sem pedir a permissão especial de alarme exato: o agendamento local é sempre inexato de propósito (ver `lib/data/lembretes.dart`).
 
 ---
 
@@ -70,7 +78,7 @@ O lembrete diário roda em `flutter_local_notifications`, exclusivo do Android. 
 - **Fixação de Commit SHA no GitHub Actions:** Todas as ações do GitHub Actions utilizadas no fluxo de *deploy* automatizado (`.github/workflows/deploy-web.yml`) estão fixadas pelo SHA completo do *commit*, prevenindo riscos associados a *tags* mutáveis.
 - **Versão Imutável do SDK:** A versão do SDK do Flutter é mantida fixa em `3.44.9` via `.fvmrc` e no pipeline de integração contínua, garantindo reproduzibilidade e prevenindo quebras não auditadas.
 - **Segredos do Repositório:** As chaves de compilação de produção são gerenciadas através dos *GitHub Secrets* e disponibilizadas exclusivamente durante o processo de compilação automatizada.
-- **Job agendado do lembrete diário:** `.github/workflows/lembretes-push.yml` roda a cada 5 minutos e reutiliza o mesmo secret `FIREBASE_SERVICE_ACCOUNT` do deploy para autenticar a leitura do Firestore e o envio via FCM — nenhum segredo novo foi criado para esse fluxo.
+- **Job agendado do lembrete diário:** não é um workflow do GitHub Actions — é a Cloud Function `enviarLembretes` (`functions/src/index.ts`), publicada por `deploy-web.yml` junto com `hosting` e `firestore:rules` (`firebase deploy --only hosting,firestore:rules,functions`), autenticada com o mesmo `FIREBASE_SERVICE_ACCOUNT` do deploy — nenhum segredo novo para esse fluxo.
 
 ---
 

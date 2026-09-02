@@ -64,6 +64,24 @@ int _idDaExibida(String chave) => switch (chave) {
   _ => 3101,
 };
 
+/// Mesma família de `_idDaExibida`, mas para o alarme de reserva — precisa
+/// mapear de volta da chave para o id correndo em [_pularReservaDeHoje].
+int? _idDoAlarme(String chave) => switch (chave) {
+  'manha' => _idAlarmeManha,
+  'promessas' => _idAlarmePromessas,
+  'leitura' => _idAlarmeLeitura,
+  'noite' => _idAlarmeNoite,
+  _ => null,
+};
+
+String? _tituloDoAlarme(String chave) => switch (chave) {
+  'manha' => 'Devocional da Manhã',
+  'promessas' => 'Promessas de Deus',
+  'leitura' => 'Leitura do Dia',
+  'noite' => 'Devocional da Noite',
+  _ => null,
+};
+
 /// Texto de reserva quando o conteúdo do dia não carrega (asset ausente,
 /// erro de leitura): melhor avisar genérico do que calar.
 const _corpoGenerico = 'Está na hora da leitura de hoje. Toque para abrir.';
@@ -137,13 +155,12 @@ NotificationDetails _detalhesLocais(String icone, Color cor) =>
       ),
     );
 
-/// Exibe o push data-only via notificação local. Não cancela o lembrete
-/// local recorrente do slot — ele é permanente, de propósito (ver
-/// `_armarReservas`), e cancelar mataria a recorrência para os próximos
-/// dias, não só a de hoje. Custo aceito: nos dias em que o push funciona,
-/// pode aparecer também o aviso genérico da reserva. Roda nos dois mundos:
-/// no handler de fundo (isolate à parte, app morto) e com o app aberto
-/// (`onMessage`). Na web quem exibe é o service worker, não aqui.
+/// Exibe o push data-only via notificação local e, se a reserva de hoje
+/// ainda não disparou, empurra só a ocorrência de hoje daquele slot para
+/// amanhã (ver [_pularReservaDeHoje]) — sem isso, o slot avisaria duas
+/// vezes nos dias em que o push funciona. Roda nos dois mundos: no handler
+/// de fundo (isolate à parte, app morto) e com o app aberto (`onMessage`).
+/// Na web quem exibe é o service worker, não aqui.
 Future<void> _mostrarPush(Map<String, dynamic> dados) async {
   if (kDebugMode) {
     debugPrint('Lembretes.push recebido: $dados');
@@ -198,6 +215,53 @@ Future<void> _mostrarPush(Map<String, dynamic> dados) async {
       notificationDetails: _detalhesLocais('@mipmap/ic_launcher', cor),
       payload: chave,
     );
+  }
+  if (alvo != null) unawaited(_pularReservaDeHoje(locais, chave, alvo, cor));
+}
+
+/// Reagenda só a ocorrência de hoje da reserva de [chave] para amanhã no
+/// mesmo horário — pula o disparo de hoje sem tocar na recorrência dos
+/// próximos dias. `zonedSchedule` substitui qualquer agendamento pendente
+/// com o mesmo `id` (ver `_armar`), e é o único jeito de "pular hoje" sem
+/// mexer em código nativo: o plugin não expõe cancelar só a próxima
+/// ocorrência de um alarme recorrente. Falhar aqui (fuso indisponível,
+/// plugin não registrado neste isolate) só devolve o comportamento de hoje
+/// — a notificação da reserva já agendada continua valendo, no pior caso
+/// como duplicata do push que acabou de mostrar; nunca "sem lembrete".
+Future<void> _pularReservaDeHoje(
+  FlutterLocalNotificationsPlugin locais,
+  String chave,
+  int alvoMinutos,
+  Color cor,
+) async {
+  final id = _idDoAlarme(chave);
+  final titulo = _tituloDoAlarme(chave);
+  if (id == null || titulo == null) return;
+  try {
+    banco_de_fusos.initializeTimeZones();
+    final nomeDoFuso = (await FlutterTimezone.getLocalTimezone()).identifier;
+    final local = tz.getLocation(nomeDoFuso);
+    final amanha = tz.TZDateTime.now(local).add(const Duration(days: 1));
+    final quando = tz.TZDateTime(
+      local,
+      amanha.year,
+      amanha.month,
+      amanha.day,
+      alvoMinutos ~/ 60,
+      alvoMinutos % 60 + atrasoDoFallbackMinutos,
+    );
+    await locais.zonedSchedule(
+      id: id,
+      title: titulo,
+      body: _corpoGenerico,
+      scheduledDate: quando,
+      notificationDetails: _detalhesLocais(_iconeLembrete, cor),
+      payload: chave,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  } catch (erro, pilha) {
+    Registro.erro('Lembretes.push/pularReserva', erro, pilha);
   }
 }
 
@@ -279,10 +343,10 @@ abstract class Lembretes {
 /// ("Devocional da Manhã | Gênesis 1:2"); a reserva cobre o pior caso
 /// (Function fora do ar, App Check falhando, silêncio além de 5 min) com um
 /// aviso genérico — sem conteúdo do dia, porque uma notificação recorrente
-/// nativa não é recalculada pelo Dart a cada disparo. Não há cancelamento
-/// cruzado: a reserva dispara todo dia, funcione o push ou não, porque
-/// cancelá-la mataria a recorrência para os próximos dias — o preço é uma
-/// notificação a mais nos dias em que o push também funciona.
+/// nativa não é recalculada pelo Dart a cada disparo. Quando o push chega a
+/// tempo, [_pularReservaDeHoje] empurra só a ocorrência de hoje da reserva
+/// daquele slot para amanhã — sem isso, o slot avisaria duas vezes nos dias
+/// em que o push também funciona.
 class LembretesReais implements Lembretes {
   static const _colecao = 'lembretes';
 

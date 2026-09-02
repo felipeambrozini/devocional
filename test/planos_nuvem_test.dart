@@ -45,4 +45,16 @@ void main() {
       expect(idDoParametroDePlano(parametro), 'hlj2pu6uw801b99b');
     });
   });
+
+  group('nomeDoParticipante', () {
+    test('usa o nome do perfil quando existe', () {
+      expect(nomeDoParticipante('Felipe Ambrozini'), 'Felipe Ambrozini');
+    });
+
+    test('sem nome, cai em "Participante" — nunca no e-mail', () {
+      expect(nomeDoParticipante(null), 'Participante');
+      expect(nomeDoParticipante(''), 'Participante');
+      expect(nomeDoParticipante('   '), 'Participante');
+    });
+  });
 }

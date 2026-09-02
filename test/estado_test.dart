@@ -841,4 +841,25 @@ void main() {
       expect(apagadas['conv-b'], 3);
     });
   });
+
+  group('aceite de coleta remota', () {
+    test('null até o usuário responder — nada de Sentry ou Analytics antes disso', () async {
+      final estado = await Estado.abrir();
+      expect(estado.aceiteDeColeta, isNull);
+    });
+
+    test('aceitar persiste true', () async {
+      final estado = await Estado.abrir();
+      await estado.definirAceiteDeColeta(true);
+      expect(estado.aceiteDeColeta, isTrue);
+      expect((await reabrir()).aceiteDeColeta, isTrue);
+    });
+
+    test('recusar persiste false — não volta a null', () async {
+      final estado = await Estado.abrir();
+      await estado.definirAceiteDeColeta(false);
+      expect(estado.aceiteDeColeta, isFalse);
+      expect((await reabrir()).aceiteDeColeta, isFalse);
+    });
+  });
 }

@@ -8,8 +8,8 @@ import '../widgets/widgets.dart';
 /// Política de privacidade completa: a versão longa do resumo que já vive em
 /// Sobre, com URL própria para quem chega por um link direto ou por exigência
 /// de uma conta Google. Todo item aqui espelha o que o código de fato faz
-/// (`lib/data/nuvem.dart` e `lib/data/conversas.dart`), não uma promessa
-/// separada do comportamento real.
+/// (`lib/data/nuvem.dart`, `lib/data/conversas.dart` e `lib/data/coleta.dart`),
+/// não uma promessa separada do comportamento real.
 class TelaPrivacidade extends StatelessWidget {
   const TelaPrivacidade({super.key});
 
@@ -34,10 +34,12 @@ class TelaPrivacidade extends StatelessWidget {
                 const Filete(largura: 64),
                 const SizedBox(height: Spacing.sp16),
                 Text(
-                  'Este aplicativo não tem anúncio, não usa ferramenta de '
-                  'análise de uso e não vende nem compartilha dados com '
-                  'terceiros para fins de publicidade. O que segue é a lista '
-                  'completa do que é guardado, onde e por quê.',
+                  'Este aplicativo não tem anúncio e não vende nem '
+                  'compartilha dados com terceiros para fins de '
+                  'publicidade. Com sua permissão, ele pode enviar erro '
+                  'técnico e uso anônimo por tela — ver "Uso anônimo e '
+                  'erro técnico" abaixo. O que segue é a lista completa do '
+                  'que é guardado, onde e por quê.',
                   style: tema.bodyLarge?.copyWith(height: 1.7),
                 ),
                 const _Secao(
@@ -95,10 +97,26 @@ class TelaPrivacidade extends StatelessWidget {
                 const _Secao(
                   titulo: 'Leitura em voz alta',
                   texto:
-                      'O texto do capítulo ou devocional pedido em voz é '
-                      'enviado ao serviço de síntese de voz da nuvem do Google '
-                      'para gerar o áudio reproduzido na hora. O áudio não fica '
-                      'guardado depois de tocado.',
+                      'O áudio de cada capítulo, devocional e introdução é '
+                      'gravado com antecedência e servido pronto — nenhum '
+                      'texto é enviado a um serviço de voz na hora de tocar. '
+                      'Quem baixa uma categoria para ouvir sem internet '
+                      '(em Ajustes) guarda esses arquivos de áudio no próprio '
+                      'aparelho, e pode apagá-los a qualquer momento na '
+                      'mesma tela.',
+                ),
+                const _Secao(
+                  titulo: 'Uso anônimo e erro técnico',
+                  texto:
+                      'Na primeira vez que abre o app, você escolhe se '
+                      'autoriza o envio de dois tipos de informação sem '
+                      'identificar você: erros técnicos (com o Sentry), '
+                      'para achar e corrigir falhas, e uso anônimo por tela '
+                      '(com o Google Analytics), para saber onde as pessoas '
+                      'travam ou desistem. As duas ficam desligadas até '
+                      'você responder, e nenhuma delas manda o texto que '
+                      'você lê ou escreve. Dá para mudar de ideia depois '
+                      'em Sobre.',
                 ),
                 const _Secao(
                   titulo: 'Verificação de app genuíno',
@@ -113,14 +131,16 @@ class TelaPrivacidade extends StatelessWidget {
                   texto: chat
                       ? 'Quem tem conta pode apagar a cópia salva na nuvem em '
                             'Sobre, na seção Conta e privacidade: o botão remove '
-                            'favoritos, anotações, progresso e conversas sincronizados '
-                            'e a própria conta, sem tocar no que está no aparelho ou '
-                            'navegador. Para apagar o que ficou só localmente, basta '
-                            'limpar os dados do aplicativo ou do site pelo próprio '
-                            'sistema ou navegador.'
+                            'favoritos, anotações, progresso e conversas sincronizados, '
+                            'a foto de perfil, a participação em planos '
+                            'compartilhados e a própria conta, sem tocar no que está '
+                            'no aparelho ou navegador. Para apagar o que ficou só '
+                            'localmente, basta limpar os dados do aplicativo ou do '
+                            'site pelo próprio sistema ou navegador.'
                       : 'Quem tem conta pode apagar a cópia salva na nuvem em '
                             'Sobre, na seção Conta e privacidade: o botão remove '
-                            'favoritos, anotações e progresso sincronizados e a '
+                            'favoritos, anotações e progresso sincronizados, a foto '
+                            'de perfil, a participação em planos compartilhados e a '
                             'própria conta, sem tocar no que está no aparelho ou '
                             'navegador. Para apagar o que ficou só localmente, basta '
                             'limpar os dados do aplicativo ou do site pelo próprio '
@@ -130,7 +150,8 @@ class TelaPrivacidade extends StatelessWidget {
                   titulo: 'Contato',
                   texto:
                       'Dúvidas sobre esta política podem ser enviadas pelos '
-                      'canais listados em Sobre, YouTube e Instagram.',
+                      'canais listados em Sobre — YouTube, Instagram e, '
+                      'quando disponível, "Relatar um problema".',
                 ),
               ],
             );

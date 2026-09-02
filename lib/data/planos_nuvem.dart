@@ -203,6 +203,31 @@ class PlanosNaNuvem {
     }
   }
 
+  /// Remove a participação do usuário em todos os planos compartilhados de
+  /// que ele faz parte — só usado na exclusão de conta ([Nuvem.apagarDados]).
+  /// Sem isto, nome e progresso continuariam visíveis aos outros
+  /// participantes depois de a conta desaparecer, e as regras não permitem
+  /// uma limpeza depois disso (exigem o próprio uid autenticado).
+  Future<void> sairDeTodosOsPlanos(String uid) async {
+    try {
+      final resultados = await FirebaseFirestore.instance
+          .collection(_colecao)
+          .where('participantes.$uid', isNotEqualTo: null)
+          .get();
+      if (resultados.docs.isEmpty) return;
+      final lote = FirebaseFirestore.instance.batch();
+      for (final doc in resultados.docs) {
+        lote.update(doc.reference, {'participantes.$uid': FieldValue.delete()});
+      }
+      await lote.commit();
+    } catch (erro, pilha) {
+      Registro.erro('PlanosNaNuvem.sairDeTodosOsPlanos', erro, pilha);
+      throw const PlanosNaNuvemException(
+        'Não foi possível limpar os planos compartilhados. Verifique a conexão e tente de novo.',
+      );
+    }
+  }
+
   /// O criador apaga o plano para todos.
   Future<void> excluir(String planoId) async {
     try {
@@ -224,19 +249,19 @@ class PlanosNaNuvem {
       FirebaseFirestore.instance.collection(_colecao).doc(planoId).snapshots();
 
   Map<String, dynamic> _entradaDoUsuario(User usuario, List<int> lidos) => {
-    'nome': _nomeDoUsuario(usuario),
+    'nome': nomeDoParticipante(usuario.displayName),
     'lidos': lidos,
   };
+}
 
-  /// Primeiro nome para a lista de participantes; sem nome no perfil Google,
-  /// o que aparece é o endereço de e-mail, para a pessoa não virar um "—".
-  String _nomeDoUsuario(User usuario) {
-    final nome = usuario.displayName?.trim();
-    if (nome != null && nome.isNotEmpty) return nome;
-    final email = usuario.email;
-    if (email != null && email.isNotEmpty) return email;
-    return 'Participante';
-  }
+/// Nome para a lista de participantes; sem nome no perfil Google, cai em
+/// "Participante" — nunca no e-mail, que os outros participantes também
+/// leem nesse mesmo campo. Extraído à parte (não recebe [User] inteiro) para
+/// dar para testar sem precisar de uma conta Firebase de verdade.
+String nomeDoParticipante(String? displayName) {
+  final nome = displayName?.trim();
+  if (nome != null && nome.isNotEmpty) return nome;
+  return 'Participante';
 }
 
 /// Acentos comuns do português, para o slug do link não sair cheio de `%C3%A3`

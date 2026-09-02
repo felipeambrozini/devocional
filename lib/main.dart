@@ -10,10 +10,13 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 // propósito: no-op fora da web, implementação de verdade só nela.
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'data/canon.dart';
+import 'data/coleta.dart';
 import 'data/estado.dart';
 import 'data/espelho_do_tema.dart';
+import 'data/eventos.dart';
 import 'data/lembretes.dart';
 import 'data/modelos.dart';
 import 'data/nuvem.dart';
@@ -24,6 +27,7 @@ import 'data/registro.dart';
 import 'data/voz.dart';
 import 'estilo/theme.dart';
 import 'funcoes/lembretes_acoes.dart';
+import 'telas/aceite_de_coleta.dart';
 import 'telas/biblia.dart';
 import 'telas/chat.dart';
 import 'telas/conversas.dart';
@@ -38,6 +42,10 @@ import 'telas/privacidade.dart';
 import 'telas/sobre.dart';
 import 'telas/termos.dart';
 import 'widgets/widgets.dart';
+
+/// DSN do Sentry (ver Registro.erro e o `beforeSend` abaixo). Vazio localiza
+/// o SDK em modo no-op — mesmo padrão de [audioBaseUrl].
+const _sentryDsn = String.fromEnvironment('SENTRY_DSN');
 
 /// De módulo, e não de um State: o toque numa notificação chega por um
 /// callback do plugin que não tem `BuildContext` de tela nenhuma, e pode
@@ -103,10 +111,27 @@ void _abrirPlanoDoLink(Estado estado) {
 /// Tudo dentro de uma zona só, para [Registro] pegar também o que escapa de
 /// um `try`/`catch` — inclusive o que os `unawaited(...)` abaixo derrubam
 /// depois do primeiro quadro, já fora da pilha de chamada do `main`.
+///
+/// O SDK do Sentry precisa estar de pé antes de qualquer erro poder
+/// acontecer, então envolve tudo — mas sem DSN (`_sentryDsn` vazio, build
+/// local sem `--dart-define`) ele mesmo vira no-op. O portão de verdade
+/// (usuário aceitou ou não) é o `beforeSend`: sem ele, um erro na tela de
+/// aceite antes da resposta chegaria ao Sentry mesmo sem permissão.
 Future<void> main() async {
-  runZonedGuarded(
-    _iniciar,
-    (erro, pilha) => Registro.erro('Zona', erro, pilha),
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = _sentryDsn;
+      // Só erro, sem rastreamento de performance: não é o que este app
+      // precisa, e cobraria cota por engano.
+      options.tracesSampleRate = 0;
+      options.sendDefaultPii = false;
+      options.beforeSend = (event, hint) =>
+          Registro.envioRemotoPermitido ? event : null;
+    },
+    appRunner: () => runZonedGuarded(
+      _iniciar,
+      (erro, pilha) => Registro.erro('Zona', erro, pilha),
+    ),
   );
 }
 
@@ -131,6 +156,13 @@ Future<void> _iniciar() async {
 
   final estado = await Estado.abrir();
 
+  // Aplica a resposta já salva (ou a ausência dela) ao Sentry antes de mais
+  // nada: `Registro.envioRemotoPermitido` é quem o `beforeSend` de `main()`
+  // consulta, e um erro pode acontecer a qualquer momento daqui em diante.
+  // O lado do Analytics ainda não faz nada aqui — sem Firebase inicializado,
+  // `aplicarAceiteDeColeta` só ajusta essa flag e volta.
+  unawaited(aplicarAceiteDeColeta(estado.aceiteDeColeta));
+
   if (nuvemSuportada) {
     // Awaited, ao contrário do resto da Nuvem abaixo: Auth e Firestore lançam
     // se chamados antes do app default do Firebase estar registrado. Sem
@@ -139,6 +171,9 @@ Future<void> _iniciar() async {
     // terminar.
     try {
       await Nuvem.instancia.iniciarFirebase();
+      // Com o Firebase de pé, repete a chamada: agora sim dá para ligar (ou
+      // manter desligada) a coleta do Analytics de verdade.
+      unawaited(aplicarAceiteDeColeta(estado.aceiteDeColeta));
     } catch (erro, pilha) {
       Registro.erro('Nuvem.iniciar', erro, pilha);
     }
@@ -190,6 +225,14 @@ Future<void> _iniciar() async {
       (_) => _abrirLeituraDoLembreteDoLink(),
     );
   }
+
+  // Por último, depois de qualquer link ou notificação já ter aberto a
+  // leitura certa: o diálogo de aceite (TelaDeAceiteDeColeta) não deve
+  // competir com o destino que o usuário pediu ao tocar.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final context = navigatorKey.currentState?.context;
+    if (context != null) unawaited(mostrarAceiteDeColetaSeNecessario(context));
+  });
 }
 
 /// Abre a leitura do parâmetro `lembrete` da URL (`?lembrete=manha`) — como o
@@ -337,7 +380,7 @@ final _router = GoRouter(
     }
     return null;
   },
-  observers: [_observadorDeCamadas, _observadorDaVoz],
+  observers: [_observadorDeCamadas, _observadorDaVoz, _observadorDeTelas],
   errorBuilder: (context, state) {
     // Rota desconhecida (link velho, digitado ou com caminho corrompido):
     // voltar para a primeira aba em vez da tela de erro padrão do go_router.
@@ -735,6 +778,27 @@ class _ObservadorDaVoz extends NavigatorObserver {
 }
 
 final _observadorDaVoz = _ObservadorDaVoz();
+
+/// Loga `screen_view` a cada troca de rota (ver [registrarTelaVista]), para
+/// saber em que tela alguém travou — o go_router já preenche
+/// `route.settings.name` com o caminho completo da rota (`/biblia`,
+/// `/plano`...), sem precisar declarar `name:` em cada `GoRoute`.
+class _ObservadorDeTelas extends NavigatorObserver {
+  void _registrar(Route<Object?> route) {
+    final nome = route.settings.name;
+    if (nome != null && nome.isNotEmpty) unawaited(registrarTelaVista(nome));
+  }
+
+  @override
+  void didPush(Route route, Route? previousRoute) => _registrar(route);
+
+  @override
+  void didReplace({Route? newRoute, Route? oldRoute}) {
+    if (newRoute != null) _registrar(newRoute);
+  }
+}
+
+final _observadorDeTelas = _ObservadorDeTelas();
 
 /// Pendura os dois balões de conversa por cima das telas largas: Spurgeon à
 /// esquerda, Felipe à direita.

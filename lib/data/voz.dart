@@ -28,6 +28,13 @@ class VozException implements Exception {
   String toString() => mensagem;
 }
 
+/// Resultado de [Voz.disponibilidadeRemota]: [naoExiste] é confirmado (HEAD
+/// respondeu, só que não 200 — o áudio dessa chave ainda não foi publicado)
+/// e permanente; [semRede] é "não deu para saber" (timeout, DNS, sem
+/// internet) e pode voltar a funcionar sozinho. O botão de ouvir trata os
+/// dois de formas diferentes — ver `lib/widgets/botao_de_voz.dart`.
+enum DisponibilidadeRemota { existe, naoExiste, semRede }
+
 /// As chaves que identificam o que a voz toca ("capitulo:joao.3",
 /// "introducao:joao"): quem monta o botão e quem mostra o estado na barra
 /// precisam do mesmo formato, e um erro de digitação numa cópia quebraria o
@@ -178,11 +185,27 @@ class Voz extends ChangeNotifier {
   /// Se há um arquivo de áudio para [chave] (base configurada e chave conhecida).
   bool temArquivoParaChave(String chave) => _urlParaChave(chave) != null;
 
-  /// Override para testes: quando não nulo, [arquivoDisponivelRemoto] retorna
-  /// isso direto, sem bater na rede. Com [baseUrlForTest] setado e este
-  /// continuando nulo, assume disponível — a maioria dos testes de voz não é
-  /// sobre disponibilidade de arquivo.
+  /// Override para testes: quando não nulo, [disponibilidadeRemota] retorna
+  /// [DisponibilidadeRemota.existe]/[DisponibilidadeRemota.naoExiste] direto,
+  /// sem bater na rede. Com [baseUrlForTest] setado e este continuando nulo,
+  /// assume disponível — a maioria dos testes de voz não é sobre
+  /// disponibilidade de arquivo.
   static bool? disponibilidadeRemotaParaTeste;
+
+  /// Override para testes: quando `true`, [disponibilidadeRemota] devolve
+  /// [DisponibilidadeRemota.semRede] direto — para testar o botão
+  /// desabilitado sem precisar simular um HEAD que nunca resolve.
+  static bool semRedeParaTeste = false;
+
+  /// Sem isto, um HEAD que nunca responde (rede instável, não necessariamente
+  /// caída) prendia a checagem indefinidamente e o botão nunca saía do
+  /// "ainda não sei" — pior que aparecer cedo demais como [semRede].
+  Duration get _timeoutDaChecagem => const Duration(seconds: 8);
+
+  /// Por chave: um HEAD só por sessão do app, não um por navegação de
+  /// capítulo. Só guarda resultado confirmado ([existe]/[naoExiste]) —
+  /// [semRede] nunca entra aqui, porque a causa pode ser passageira.
+  final Map<String, DisponibilidadeRemota> _cacheDeDisponibilidade = {};
 
   /// Se [chave] já tem áudio publicado no Storage agora — não confunde com
   /// [temArquivoParaChave], que só valida o formato da chave. Confere na
@@ -191,15 +214,29 @@ class Voz extends ChangeNotifier {
   /// essa checagem o botão de ouvir apareceria para áudio que ainda não
   /// existe. É assíncrono; quem mostra o botão deve esconder até a resposta
   /// chegar, em vez de mostrar um "Ouvir" que falharia ao tocar.
-  Future<bool> arquivoDisponivelRemoto(String chave) async {
+  Future<DisponibilidadeRemota> disponibilidadeRemota(String chave) async {
     final url = _urlParaChave(chave);
-    if (url == null) return false;
-    if (baseUrlForTest != null) return disponibilidadeRemotaParaTeste ?? true;
+    if (url == null) return DisponibilidadeRemota.naoExiste;
+    if (semRedeParaTeste) return DisponibilidadeRemota.semRede;
+    if (baseUrlForTest != null) {
+      final forcado = disponibilidadeRemotaParaTeste;
+      return forcado == false
+          ? DisponibilidadeRemota.naoExiste
+          : DisponibilidadeRemota.existe;
+    }
+    final emCache = _cacheDeDisponibilidade[chave];
+    if (emCache != null) return emCache;
     try {
-      final resp = await http.head(Uri.parse(url));
-      return resp.statusCode == 200;
+      final resp = await http
+          .head(Uri.parse(url))
+          .timeout(_timeoutDaChecagem);
+      final resultado = resp.statusCode == 200
+          ? DisponibilidadeRemota.existe
+          : DisponibilidadeRemota.naoExiste;
+      _cacheDeDisponibilidade[chave] = resultado;
+      return resultado;
     } catch (_) {
-      return false;
+      return DisponibilidadeRemota.semRede;
     }
   }
 

@@ -3,9 +3,9 @@ rules_version = '2';
 // Regras do Storage para a foto de perfil da conta na nuvem. Ver
 // Nuvem.atualizarFoto em lib/data/nuvem.dart para o código que grava aqui.
 //
-// Publicadas à mão no console do Firebase (Storage > Regras), ou com
-// `firebase deploy --only storage`. Este arquivo é a fonte da verdade; não
-// editar o console e este arquivo em separado.
+// Publicadas junto com firestore.rules a cada push na main
+// (.github/workflows/deploy-web.yml, `--only ...,storage:rules,...`). Este
+// arquivo é a fonte da verdade; não editar o console em separado.
 service firebase.storage {
   match /b/{bucket}/o {
     // Um arquivo por conta, nomeado pelo próprio uid — só o dono grava.

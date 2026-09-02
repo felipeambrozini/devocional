@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 // ScrollCacheExtent ainda não é reexportado por material.dart nesta versão.
 import 'package:flutter/rendering.dart';
 
 import '../data/conteudo.dart';
 import '../data/estado.dart';
+import '../data/eventos.dart';
 import '../data/modelos.dart';
 import '../data/nuvem.dart';
 import '../data/planos.dart';
@@ -277,7 +280,11 @@ class _AbaDoCronogramaState extends State<_AbaDoCronograma>
                       itens: [for (final f in dia.faixas) ItemDeCapitulo(f)],
                       lido: estado.foiLido(dia.data),
                       destacar: ehHoje,
-                      aoAlternar: () => estado.alternarLido(dia.data),
+                      aoAlternar: () {
+                        final estavaLido = estado.foiLido(dia.data);
+                        estado.alternarLido(dia.data);
+                        if (!estavaLido) unawaited(registrarDiaMarcado());
+                      },
                     );
                   },
                 );

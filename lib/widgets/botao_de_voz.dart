@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../data/audio_offline.dart';
+import '../data/eventos.dart';
 import '../data/personas.dart';
 import '../data/recursos.dart';
 import '../data/voz.dart';
@@ -38,6 +39,11 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
   // até a resposta chegar, nunca mostra um "Ouvir" que falharia ao tocar.
   bool? _disponivel;
 
+  // true só quando a checagem falhou por rede (não por o áudio realmente
+  // não existir) — o que muda entre o botão sumir para sempre ou aparecer
+  // desabilitado com a dica de tentar de novo. Ver [DisponibilidadeRemota].
+  bool _semRede = false;
+
   @override
   void initState() {
     super.initState();
@@ -62,13 +68,25 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
     try {
       offline = await AudioOffline.instancia.temOffline(widget.chave);
     } catch (_) {}
-    var disponivel = offline;
-    if (!disponivel) {
-      try {
-        disponivel = await Voz.instancia.arquivoDisponivelRemoto(widget.chave);
-      } catch (_) {}
+    if (offline) {
+      if (mounted) {
+        setState(() {
+          _disponivel = true;
+          _semRede = false;
+        });
+      }
+      return;
     }
-    if (mounted) setState(() => _disponivel = disponivel);
+    var remoto = DisponibilidadeRemota.semRede;
+    try {
+      remoto = await Voz.instancia.disponibilidadeRemota(widget.chave);
+    } catch (_) {}
+    if (mounted) {
+      setState(() {
+        _disponivel = remoto == DisponibilidadeRemota.existe;
+        _semRede = remoto == DisponibilidadeRemota.semRede;
+      });
+    }
   }
 
   @override
@@ -79,6 +97,7 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
     // mostrando a disponibilidade do capítulo anterior.
     if (widget.chave != oldWidget.chave) {
       _disponivel = null;
+      _semRede = false;
       _checarDisponibilidade();
     }
   }
@@ -92,7 +111,12 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
   @override
   Widget build(BuildContext context) {
     if (!Recursos.ouvirTextos) return const SizedBox.shrink();
-    if (_disponivel != true) return const SizedBox.shrink();
+    if (_disponivel != true) {
+      // Sem rede: o áudio pode existir de verdade, só não deu para checar —
+      // aparece desabilitado com uma dica, em vez de sumir como se a leitura
+      // em voz não existisse (ver DisponibilidadeRemota em lib/data/voz.dart).
+      return _semRede ? _botaoSemRede(context) : const SizedBox.shrink();
+    }
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     return ListenableBuilder(
@@ -248,10 +272,66 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
     );
   }
 
+  /// Pílula compacta e desabilitada para quando a checagem de disponibilidade
+  /// falhou por rede — não porque o áudio confirmadamente não existe. O
+  /// toque tenta checar de novo, já que a causa costuma ser passageira.
+  Widget _botaoSemRede(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
+    final tema = Theme.of(context).textTheme;
+    return Tooltip(
+      message: 'Sem conexão para checar o áudio. Toque para tentar de novo.',
+      child: Semantics(
+        button: true,
+        label: 'Ouvir na voz de Spurgeon, indisponível sem conexão',
+        child: Material(
+          color: cor.surfaceContainerHighest,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(30),
+            onTap: _checarDisponibilidade,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.sp10,
+                vertical: Spacing.sp6,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.wifi_off_rounded,
+                    size: 20,
+                    color: cor.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: Spacing.sp6),
+                  Text(
+                    'Sem conexão',
+                    style: tema.labelLarge?.copyWith(
+                      color: cor.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _alternar(BuildContext context, Voz voz) async {
+    // [Voz.alternar] tanto inicia quanto para, conforme o estado atual: só
+    // conta como "iniciada" quando este toque não está prestes a parar uma
+    // leitura já em andamento na mesma chave.
+    final vaiParar =
+        voz.tocandoChave == widget.chave && (voz.tocando || voz.carregando);
+    if (!vaiParar) unawaited(registrarOuvirIniciado());
     try {
       await voz.alternar(widget.chave);
     } on VozException catch (erro) {
+      if (!vaiParar) unawaited(registrarOuvirFalhou());
       if (context.mounted) _avisarErro(context, voz, erro);
     }
   }

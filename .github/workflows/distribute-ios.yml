@@ -80,7 +80,10 @@ jobs:
             --dart-define=GEMINI_API_KEY_WEB=${{ secrets.GEMINI_API_KEY_WEB }} \
             --dart-define=GEMINI_API_KEY_ANDROID=${{ secrets.GEMINI_API_KEY_ANDROID }} \
             --dart-define=GEMINI_API_KEY_IOS=${{ secrets.GEMINI_API_KEY_IOS }} \
-            --dart-define=AUDIO_BASE_URL=${{ secrets.AUDIO_BASE_URL }}
+            --dart-define=AUDIO_BASE_URL=${{ secrets.AUDIO_BASE_URL }} \
+            --dart-define=EMAILS_COM_CONVERSAS=${{ secrets.EMAILS_COM_CONVERSAS }} \
+            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }} \
+            --dart-define=EMAIL_DE_CONTATO=${{ secrets.EMAIL_DE_CONTATO }}
 
       - name: Distribute to Firebase App Distribution
         uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15

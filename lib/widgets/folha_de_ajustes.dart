@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/audio_offline.dart';
 import '../data/estado.dart';
+import '../data/eventos.dart';
 import '../data/lembretes.dart';
 import '../data/modelos.dart';
 import '../funcoes/aviso.dart';
@@ -45,6 +48,13 @@ class BotaoDeAjustes extends StatelessWidget {
 /// muda o tema e a página inteira vira embaixo da folha. Uma tela separada
 /// obrigaria a sair da leitura para escolher e voltar para conferir.
 Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
+  // Varre o disco (contagem e tamanho) e amostra o MB estimado uma vez, ao
+  // abrir — não a cada notificação de progresso do download, que é o que
+  // travava a folha (ver AudioOffline.atualizarContagens/estimarTamanhos).
+  if (!kIsWeb) {
+    unawaited(AudioOffline.instancia.atualizarContagens());
+    unawaited(AudioOffline.instancia.estimarTamanhos());
+  }
   return showModalBottomSheet<void>(
     context: context,
     // Sem isScrollControlled a folha fica limitada a ~9/16 da tela: com ele, o
@@ -314,6 +324,15 @@ class _SecaoDeLembretes {
 
 /// Áudio offline: baixa os MP3 pré-gerados para ouvir sem rede.
 /// Ordem fixa pedida: Bíblia, Introdução, Manhã e Noite, Promessas.
+/// Baixa a categoria e registra os dois eventos de uso ao redor do download
+/// real (`AudioOffline.baixarCategoria` não sabe de Analytics — ver o
+/// limite entre dado e coleta em lib/data/eventos.dart).
+Future<void> _baixarComEvento(AudioOffline off, String categoria) async {
+  unawaited(registrarDownloadIniciado(categoria));
+  await off.baixarCategoria(categoria);
+  if (off.erro == null) unawaited(registrarDownloadConcluido(categoria));
+}
+
 class _SecaoAudioOffline {
   List<Widget> montar(BuildContext context) {
     final tema = Theme.of(context).textTheme;
@@ -346,24 +365,32 @@ class _SecaoAudioOffline {
             'manha_noite': 'Manhã e Noite (732)',
             'promessas': 'Promessas de Deus (366)',
           };
+          const totais = {
+            'biblia': 1189,
+            'introducao': 66,
+            'manha_noite': 732,
+            'promessas': 366,
+          };
+          // Contagem, tamanho total e a amostra de MB já vêm prontos do
+          // ListenableBuilder acima (AudioOffline.atualizarContagens/
+          // estimarTamanhos rodam uma vez só, ao abrir a folha) — nenhuma
+          // leitura de disco nem HEAD acontece durante o build.
           return Column(
             children: [
               for (final cat in ordem)
-                FutureBuilder<Map<String, int>>(
-                  future: off.contarPorCategoria(),
-                  builder: (context, snap) {
-                    final cont = snap.data ?? {};
-                    final baixados = cont[cat] ?? 0;
-                    final total = cat == 'biblia'
-                        ? 1189
-                        : cat == 'introducao'
-                        ? 66
-                        : cat == 'manha_noite'
-                        ? 732
-                        : 366;
+                Builder(
+                  builder: (context) {
+                    final baixados = off.contagemPorCategoria[cat] ?? 0;
+                    final total = totais[cat]!;
                     final pronto = baixados >= total && total > 0;
                     final baixandoEste =
                         off.baixando && off.categoriaAtiva == cat;
+                    final mediaBytes = off.tamanhoMedioPorCategoria[cat];
+                    final faltam = total - baixados;
+                    final estimativaMb = mediaBytes == null || faltam <= 0
+                        ? null
+                        : (mediaBytes * faltam / (1024 * 1024))
+                              .toStringAsFixed(1);
                     return ListTile(
                       title: Text(rotulos[cat]!),
                       subtitle: baixandoEste
@@ -377,14 +404,23 @@ class _SecaoAudioOffline {
                                   ? null
                                   : () => off.apagarCategoria(cat),
                             )
+                          : baixandoEste
+                          ? OutlinedButton(
+                              onPressed: off.cancelar,
+                              child: const Text('Parar'),
+                            )
                           : FilledButton(
                               onPressed: off.baixando
                                   ? null
-                                  : () => off.baixarCategoria(cat),
+                                  : () => _baixarComEvento(off, cat),
                               child: Text(
-                                baixados > 0 && baixados < total
-                                    ? 'Continuar'
-                                    : 'Baixar',
+                                [
+                                  baixados > 0 && baixados < total
+                                      ? 'Continuar'
+                                      : 'Baixar',
+                                  if (estimativaMb != null)
+                                    '(~$estimativaMb MB)',
+                                ].join(' '),
                               ),
                             ),
                     );
@@ -400,11 +436,10 @@ class _SecaoAudioOffline {
                     ),
                   ),
                 ),
-              FutureBuilder<int>(
-                future: off.tamanhoEmBytes(),
-                builder: (context, snap) {
-                  final bytes = snap.data ?? 0;
-                  final mb = (bytes / (1024 * 1024)).toStringAsFixed(1);
+              Builder(
+                builder: (context) {
+                  final mb = (off.tamanhoTotalBytes / (1024 * 1024))
+                      .toStringAsFixed(1);
                   return ListTile(
                     title: Text('Armazenamento: $mb MB'),
                     trailing: TextButton(

@@ -62,6 +62,9 @@ jobs:
             --dart-define=GEMINI_API_KEY_ANDROID=${{ secrets.GEMINI_API_KEY_ANDROID }} \
             --dart-define=GEMINI_API_KEY_IOS=${{ secrets.GEMINI_API_KEY_IOS }} \
             --dart-define=AUDIO_BASE_URL=${{ secrets.AUDIO_BASE_URL }} \
+            --dart-define=EMAILS_COM_CONVERSAS=${{ secrets.EMAILS_COM_CONVERSAS }} \
+            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }} \
+            --dart-define=EMAIL_DE_CONTATO=${{ secrets.EMAIL_DE_CONTATO }} \
             --dart-define=RECAPTCHA_V3_SITE_KEY=${{ secrets.RECAPTCHA_V3_SITE_KEY }} \
             --dart-define=FCM_VAPID_KEY=${{ secrets.FCM_VAPID_KEY }}
       # O Firebase Hosting serve da raiz do domínio; o app mora em /devocional/,
@@ -79,12 +82,13 @@ jobs:
           cp build/web/robots.txt public/robots.txt
           cp build/web/llms.txt public/llms.txt
           cp build/web/sitemap.xml public/sitemap.xml
-      # firestore:rules junto com hosting: sem isto, firestore.rules mudar no
-      # repositório não publicava nada — as regras ficavam bloqueadas pela
-      # regra padrão do Firestore até alguém lembrar de publicar à mão.
+      # firestore:rules e storage:rules junto com hosting: sem isto, uma
+      # mudança em firestore.rules ou storage.rules no repositório não
+      # publicava nada — as regras ficavam divergentes do repo até alguém
+      # lembrar de publicar à mão (storage.rules vivia só nesse "à mão").
       - uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15.27.0
         with:
-          args: deploy --only hosting,firestore:rules,functions
+          args: deploy --only hosting,firestore:rules,storage:rules,functions
         env:
           # JSON da conta de serviço do Firebase (IAM → Service accounts → Create
           # key). Cadastrar no mesmo environment do workflow (github-pages).

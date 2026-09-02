@@ -20,6 +20,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../firebase_options.dart';
 import 'estado.dart';
 import 'lembretes.dart';
+import 'planos_nuvem.dart';
 import 'registro.dart';
 
 /// Client ID Web do projeto (`client_type: 3` em `android/app/google-services.json`).
@@ -576,9 +577,16 @@ class Nuvem extends ChangeNotifier {
 
   /// Apaga o documento da conta e a conta em si. O que está no navegador não
   /// é tocado — só o que subiu para a nuvem.
+  ///
+  /// Antes do documento e da conta, limpa os dois rastros que ficariam para
+  /// trás: a foto de perfil (pública no Storage) e a própria participação em
+  /// planos compartilhados (nome e progresso ficariam visíveis aos outros
+  /// participantes, sem chance de limpeza depois de a conta sumir).
   Future<void> apagarDados() async {
     final usuario = FirebaseAuth.instance.currentUser;
     if (usuario == null) return;
+    await removerFoto();
+    await PlanosNaNuvem.instancia.sairDeTodosOsPlanos(usuario.uid);
     await FirebaseFirestore.instance
         .collection(_colecao)
         .doc(usuario.uid)

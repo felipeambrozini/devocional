@@ -30,6 +30,7 @@ class Estado extends ChangeNotifier {
   // com o app morto (ver `_corDoTema` em lib/data/lembretes.dart).
   static const chaveModoDoTema = 'modo_do_tema';
   static const _kAjudaDispensada = 'ajuda_dispensada';
+  static const _kAceiteDeColeta = 'aceite_de_coleta';
   static const _kBaloesVisiveis = 'baloes_visiveis';
   static const _kBaloesTooltipDispensado = 'baloes_tooltip_dispensado';
   static const _kSwipeTooltipDispensado = 'swipe_tooltip_dispensado';
@@ -69,6 +70,10 @@ class Estado extends ChangeNotifier {
 
   /// A primeira visita ainda não dispensou o cartão "Como usar" da Hoje.
   bool _ajudaDispensada = false;
+
+  /// `null` = ainda não respondeu (ver TelaDeAceiteDeColeta); `true`/`false`
+  /// é a resposta já dada.
+  bool? _aceiteDeColeta;
 
   /// Se os balões de conversa aparecem nas bordas das telas. Padrão true: o
   /// chat só é descoberto pelos retratos, escondê-los esconde o caminho.
@@ -158,6 +163,7 @@ class Estado extends ChangeNotifier {
     );
 
     _ajudaDispensada = _prefs.getBool(_kAjudaDispensada) ?? false;
+    _aceiteDeColeta = _prefs.getBool(_kAceiteDeColeta);
 
     _baloesVisiveis = _prefs.getBool(_kBaloesVisiveis) ?? true;
 
@@ -346,6 +352,21 @@ class Estado extends ChangeNotifier {
     _ajudaDispensada = true;
     notifyListeners();
     await _prefs.setBool(_kAjudaDispensada, true);
+  }
+
+  // --- aceite de coleta remota --------------------------------------------- //
+
+  /// `null` enquanto o usuário não respondeu ao diálogo de aceite — é o sinal
+  /// para [mostrarAceiteDeColetaSeNecessario] mostrá-lo. Só grava a escolha;
+  /// quem liga ou desliga o Sentry e o Analytics de verdade é
+  /// `aplicarAceiteDeColeta` (lib/data/coleta.dart), que este arquivo não
+  /// importa de propósito — `Estado` não conhece Firebase.
+  bool? get aceiteDeColeta => _aceiteDeColeta;
+
+  Future<void> definirAceiteDeColeta(bool aceito) async {
+    _aceiteDeColeta = aceito;
+    notifyListeners();
+    await _prefs.setBool(_kAceiteDeColeta, aceito);
   }
 
   // --- progresso do cronograma --------------------------------------------- //

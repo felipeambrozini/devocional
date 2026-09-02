@@ -161,12 +161,23 @@ class PlanoDoUsuario {
   };
 }
 
+/// Gerador criptográfico: o id de um plano compartilhado é o único controle
+/// de acesso a ele (ver firestore.rules, `planos/{planoId}`) — quem o
+/// conhece entra. Um `Random()` comum (não semeado por entropia do sistema)
+/// não é o bastante para isso.
+final _aleatorioSeguro = Random.secure();
+
 /// Um id novo de plano: instante em base 36 mais contador + aleatório.
-/// O contador garante unicidade mesmo em laços apertados; o aleatório torna
-/// o id de um link compartilhado difícil de adivinhar.
+/// O contador garante unicidade mesmo em laços apertados; os 32 bits
+/// aleatórios (8 dígitos hex) são o que torna o id de um link
+/// compartilhado difícil de adivinhar — 16 bits era pouco para o único
+/// controle de acesso ao plano.
 String novoIdDePlano() {
   _contadorIdPlano++;
-  final aleatorio = Random().nextInt(0x10000).toRadixString(16).padLeft(4, '0');
+  final aleatorio = _aleatorioSeguro
+      .nextInt(0x100000000)
+      .toRadixString(16)
+      .padLeft(8, '0');
   return '${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}${_contadorIdPlano.toRadixString(36).padLeft(2, '0')}$aleatorio';
 }
 

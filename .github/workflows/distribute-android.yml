@@ -33,12 +33,21 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      # O mesmo gate de qualidade do dart.yml, mas aqui, antes do build: sem
+      # isto, um teste vermelho não impedia o APK de sair para os
+      # testadores, porque os dois workflows disparam em paralelo no mesmo
+      # push e não dependem um do outro.
+      - name: Analyze
+        run: flutter analyze
+      - name: Test
+        run: flutter test
+
       - name: Build APK
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          flutter build apk --release \
+          flutter build apk --release --split-per-abi \
             --dart-define=FIREBASE_API_KEY_WEB=${{ secrets.FIREBASE_API_KEY_WEB }} \
             --dart-define=FIREBASE_API_KEY_ANDROID=${{ secrets.FIREBASE_API_KEY_ANDROID }} \
             --dart-define=FIREBASE_API_KEY_IOS=${{ secrets.FIREBASE_API_KEY_IOS }} \
@@ -56,14 +65,22 @@ jobs:
             --dart-define=GEMINI_API_KEY_WEB=${{ secrets.GEMINI_API_KEY_WEB }} \
             --dart-define=GEMINI_API_KEY_ANDROID=${{ secrets.GEMINI_API_KEY_ANDROID }} \
             --dart-define=GEMINI_API_KEY_IOS=${{ secrets.GEMINI_API_KEY_IOS }} \
-            --dart-define=AUDIO_BASE_URL=${{ secrets.AUDIO_BASE_URL }}
+            --dart-define=AUDIO_BASE_URL=${{ secrets.AUDIO_BASE_URL }} \
+            --dart-define=EMAILS_COM_CONVERSAS=${{ secrets.EMAILS_COM_CONVERSAS }} \
+            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }} \
+            --dart-define=EMAIL_DE_CONTATO=${{ secrets.EMAIL_DE_CONTATO }}
 
       - name: Write release notes
         run: git log -1 --format=%B > release-notes.txt
 
+      # --split-per-abi gera um APK por arquitetura em vez do universal (que
+      # empacotava arm64-v8a, armeabi-v7a e x86_64 juntos — 66 MB, dos quais
+      # ~21 MB eram x86_64, que só emulador usa). arm64-v8a cobre o parque de
+      # aparelhos reais atual; quem tiver um Android antigo em armeabi-v7a
+      # (raro nos últimos anos) fica de fora deste grupo de teste por ora.
       - name: Distribute to Firebase App Distribution
         uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15
         with:
-          args: appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk --app 1:169480227109:android:286f46640a25846c3c72cc --groups testadores --release-notes-file release-notes.txt
+          args: appdistribution:distribute build/app/outputs/flutter-apk/app-arm64-v8a-release.apk --app 1:169480227109:android:286f46640a25846c3c72cc --groups testadores --release-notes-file release-notes.txt
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

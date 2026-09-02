@@ -65,6 +65,20 @@ void main() {
       },
     );
 
+    testWidgets(
+      'sem rede para checar (não sem áudio), o botão aparece desabilitado '
+      'em vez de sumir',
+      (tester) async {
+        Voz.semRedeParaTeste = true;
+        addTearDown(() => Voz.semRedeParaTeste = false);
+        await tester.pumpWidget(montar());
+        await tester.pump(const Duration(milliseconds: 500));
+
+        expect(find.text('Sem conexão'), findsOneWidget);
+        expect(find.text('Ouvir'), findsNothing);
+      },
+    );
+
     testWidgets('o erro de leitura oferece "Tentar de novo"', (tester) async {
       // Disponível na checagem (default de teste = tudo disponível), mas
       // sem base real pra tocar de fato — simula o arquivo ter sumido do

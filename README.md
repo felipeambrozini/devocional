@@ -87,14 +87,15 @@ plano compartilhado.
 
 - Flutter (Dart), `flutter_localizations` para `pt_BR`.
 - `shared_preferences` é o armazenamento local (progresso, favoritos, notas e
-  planos), igual em todas as plataformas, sem banco. Na web, quem entra com a
-  conta Google também espelha favoritos, notas, progresso e planos num documento
-  do Firestore — ver a conta na nuvem, acima.
-- `share_plus` para compartilhar um versículo. `flutter_local_notifications`
-  + `flutter_timezone` + `timezone` para o lembrete diário, só no Android —
-  alarmes agendados no próprio aparelho, no fuso detectado (ver
-  `lembretesSuportados` em `lib/data/lembretes.dart` e a seção Lembretes
-  diários abaixo).
+  planos), igual em todas as plataformas, sem banco. Quem entra com a
+  conta Google (Android, iOS ou web) também espelha favoritos, notas, progresso
+  e planos num documento do Firestore — ver a conta na nuvem, acima.
+- `share_plus` para compartilhar um versículo. O lembrete diário é híbrido,
+  Android e web (ver `lembretesSuportados` em `lib/data/lembretes.dart`):
+  push de uma Cloud Function agendada via `firebase_messaging`, mais
+  `flutter_local_notifications` + `flutter_timezone` + `timezone` para o
+  alarme local de reserva no Android, no fuso detectado — ver a seção
+  Lembretes diários abaixo.
 - `go_router` para as rotas por aba, com `StatefulShellRoute.indexedStack` (a
   `Moldura` continua preservando a rolagem e o capítulo aberto de cada aba,
   como o `IndexedStack` antigo fazia).
@@ -112,8 +113,9 @@ plano compartilhado.
   (`lib/data/audio_offline.dart`) baixa e cacheia esses arquivos em disco
   fora da web, para ouvir sem internet. A geração dos MP3 é em lotes (roda por
   semanas fora deste repo, ver `audio_gen/`), então o botão de ouvir só
-  aparece quando o áudio já existe: `Voz.arquivoDisponivelRemoto` faz um HEAD
-  no arquivo do Storage, além de checar o cache offline.
+  aparece quando o áudio já existe: `Voz.disponibilidadeRemota` faz um HEAD
+  no arquivo do Storage (com cache por chave e timeout, para não repetir o
+  HEAD a cada navegação nem travar sem rede), além de checar o cache offline.
 - Fontes empacotadas localmente (Cinzel e Montserrat), sem depender de rede na
   primeira execução.
 - Conteúdo (Bíblia, devocionais, introduções, cronograma) vem de arquivos JSON
@@ -210,10 +212,9 @@ motivo novo.
 - **Cores de marcação** — mais taxonomia do que um leitor só precisa.
 - **Widget na tela inicial** — código nativo nas duas plataformas para pouco
   retorno.
-- **Lembretes em iOS e web** — recusado por ora: o lembrete passou a ser
-  exclusivo do Android, agendado no próprio aparelho (ver acima); web exigiria
-  infraestrutura de push externa e iOS, a chave APNs que este projeto não
-  tem.
+- **Lembretes em iOS** — recusado por ora: o lembrete híbrido (push + reserva
+  local) já cobre Android e web (ver acima e "Lembretes diários" abaixo);
+  iOS exigiria a chave APNs que este projeto não tem cadastrada no Console.
 - **Offline de verdade na web** — investigado e recusado: o Flutter 3.44
   removeu o cache automático do service worker gerado e o CanvasKit carrega de
   CDN por padrão; fazer direito exigiria um service worker próprio contra um
@@ -300,9 +301,12 @@ motivo novo.
   (`BotaoDeVoz`, único ponto de entrada da leitura em voz alta) e `conversas`
   (aba Conversas, os balões flutuantes e as rotas `/conversas`,
   `/charles-spurgeon`, `/felipe-ambrozini`). Os dois primeiros são `const`;
-  `conversas` compara o e-mail da conta aberta (`Nuvem.email`) contra um
-  e-mail fixo, porque o chat chama a API paga do Gemini e abrir para todo
-  mundo antes da hora custaria sem controle. Sem `firebase_remote_config`:
+  `conversas` compara o e-mail da conta aberta (`Nuvem.email`) contra uma
+  allowlist vinda de `--dart-define=EMAILS_COM_CONVERSAS` (separada por
+  vírgula, normalizada por `allowlistDeEmails`), porque o chat chama a API
+  paga do Gemini e abrir para todo mundo antes da hora custaria sem
+  controle — convidar alguém é mudar o secret do build e reimplantar, sem
+  versionar e-mail nenhum no repositório. Sem `firebase_remote_config`:
   editar um valor e reimplantar já é o "ligar/desligar" possível para um app
   de usuário único. `Recursos.conversasForcado` (mesmo padrão de
   `Lembretes.instancia`, mutável) existe só para teste — o login de verdade
@@ -417,12 +421,18 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
   permissão "Alarmes e lembretes" do Android, que é assustadora e
   desnecessária para o que é, no fim, só uma notificação. Recorrente de
   propósito (o Android reagenda a ocorrência de amanhã ao disparar a de
-  hoje, sem o app rodar); não é cancelado quando o push chega, porque
-  cancelar mataria a recorrência para os próximos dias — o preço é o
-  aviso genérico da reserva poder aparecer também nos dias em que o push
-  funciona. `flutter_local_notifications_web` não implementa `zonedSchedule`,
-  então a web fica só com o push mesmo. Falhas são isoladas por
-  slot/conteúdo — nenhuma derruba o conjunto.
+  hoje, sem o app rodar). Quando o push chega a tempo, `_mostrarPush` não
+  cancela a reserva do slot (cancelar mataria a recorrência dos próximos
+  dias) — em vez disso, `_pularReservaDeHoje` reagenda só a ocorrência de
+  hoje daquele slot para amanhã, chamando `zonedSchedule` de novo com o
+  mesmo `id` (que substitui qualquer agendamento pendente): a recorrência
+  segue intacta, e o slot não avisa duas vezes no mesmo dia. Se esse
+  reagendamento falhar (fuso indisponível, plugin não registrado no
+  isolate de fundo), a reserva original permanece e dispara normalmente —
+  no pior caso, volta a ser a duplicata de antes, nunca "sem lembrete".
+  `flutter_local_notifications_web` não implementa `zonedSchedule`, então a
+  web fica só com o push mesmo. Falhas são isoladas por slot/conteúdo —
+  nenhuma derruba o conjunto.
 - **Contrato do Firestore** (`lembretes/{token}`, id = token FCM):
   `{token, minutosManha, minutosNoite, fuso}` escritos pelo app protegidos
   por App Check (`request.app != null`), mais `ultimoEnvio*` escritos só pela
@@ -636,7 +646,9 @@ flutter build web --dart-define-from-file=.env.json
 ```
 (O `.env.json` deve conter todas as chaves: `FIREBASE_API_KEY_WEB`,
 `FIREBASE_API_KEY_ANDROID`, `FIREBASE_API_KEY_IOS`, `GEMINI_API_KEY_WEB`,
-`GEMINI_API_KEY_ANDROID`, `AUDIO_BASE_URL`, etc.)
+`GEMINI_API_KEY_ANDROID`, `AUDIO_BASE_URL`, `EMAILS_COM_CONVERSAS`,
+`SENTRY_DSN`, `EMAIL_DE_CONTATO`, etc. — ver SECURITY.md §3.1 para a lista
+completa e o motivo de cada uma.)
 
 Ícone do app, favicon e tela de abertura são gerados a partir das fontes em
 `assets/icone/`; nunca editados à mão:

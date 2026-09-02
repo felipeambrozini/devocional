@@ -1,8 +1,11 @@
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../data/coleta.dart';
 import '../data/conteudo.dart';
 import '../data/estado.dart';
 import '../data/modelos.dart';
@@ -14,6 +17,13 @@ import '../estilo/spacing.dart';
 import '../funcoes/aviso.dart';
 import '../funcoes/linhas_de_ajuda.dart';
 import '../widgets/widgets.dart';
+
+/// E-mail que recebe "Relatar um problema" — mesmo padrão de
+/// `--dart-define` das outras chaves, para não versionar um endereço
+/// pessoal no repositório (ver o que já foi tirado de `Recursos`). Vazio
+/// esconde o item: sem endereço configurado, um mailto: sem destino só
+/// confundiria.
+const _emailDeContato = String.fromEnvironment('EMAIL_DE_CONTATO');
 
 /// Créditos das traduções, da fonte dos devocionais e o link dos canais.
 class TelaSobre extends StatefulWidget {
@@ -208,6 +218,39 @@ class _TelaSobreState extends State<TelaSobre> {
               subtitle: const Text('O cartão da primeira visita, de novo.'),
               onTap: () => _mostrarAjuda(context),
             ),
+            if (_emailDeContato.isNotEmpty)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.mail_outline, color: cor.primary),
+                title: const Text('Relatar um problema'),
+                subtitle: const Text(
+                  'Abre um e-mail com a versão do app já preenchida.',
+                ),
+                onTap: _relatarProblema,
+              ),
+            // O aceite (ver TelaDeAceiteDeColeta) só pergunta uma vez; este
+            // switch é como a política de privacidade promete "mudar de
+            // ideia depois" sem exigir apagar dados do app inteiro.
+            ListenableBuilder(
+              listenable: EscopoDoEstado.de(context),
+              builder: (context, _) {
+                final estado = EscopoDoEstado.de(context);
+                return SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  secondary: Icon(Icons.insights_outlined, color: cor.primary),
+                  title: const Text('Erro técnico e uso anônimo'),
+                  subtitle: const Text(
+                    'Sentry (erro) e Analytics (uso por tela), sem '
+                    'identificar você — ver Política de privacidade.',
+                  ),
+                  value: estado.aceiteDeColeta ?? false,
+                  onChanged: (permitido) async {
+                    await estado.definirAceiteDeColeta(permitido);
+                    await aplicarAceiteDeColeta(permitido);
+                  },
+                );
+              },
+            ),
             // A conta na nuvem existe em todas as plataformas (ver
             // nuvem.dart); esta seção é a de privacidade e apagar dados.
             if (nuvemSuportada) ...[
@@ -309,6 +352,32 @@ Future<void> _mostrarAjuda(BuildContext context) {
       ],
     ),
   );
+}
+
+/// Abre o cliente de e-mail com assunto e corpo já preenchidos — versão e
+/// plataforma, para o testador não precisar descobrir e digitar isso
+/// sozinho. Só é chamado quando [_emailDeContato] não está vazio (ver o
+/// `if` no `ListTile`).
+Future<void> _relatarProblema() async {
+  final info = await PackageInfo.fromPlatform();
+  final plataforma = kIsWeb
+      ? 'Web'
+      : switch (defaultTargetPlatform) {
+          TargetPlatform.android => 'Android',
+          TargetPlatform.iOS => 'iOS',
+          final outra => outra.name,
+        };
+  final uri = Uri(
+    scheme: 'mailto',
+    path: _emailDeContato,
+    queryParameters: {
+      'subject': 'Devocional: relatar um problema',
+      'body':
+          'Versão ${info.version}+${info.buildNumber} — $plataforma\n\n'
+          'Descreva o que aconteceu:\n',
+    },
+  );
+  await launchUrl(uri);
 }
 
 /// Confirma e apaga a cópia da conta. O "não pode ser desfeita" é literal:
