@@ -3,8 +3,15 @@ name: Deploy web
 on:
   push:
     branches: [main]
+    # Ignora mudanças que só afetam Android/iOS — este workflow builda e
+    # publica o site e as regras/functions do Firebase, não usa nada
+    # específico das plataformas nativas.
     paths-ignore:
       - "**.md"
+      - "android/**"
+      - "ios/**"
+      - ".github/workflows/distribute-android.yml"
+      - ".github/workflows/distribute-ios.yml"
   workflow_dispatch:
 
 permissions:
@@ -82,13 +89,18 @@ jobs:
           cp build/web/robots.txt public/robots.txt
           cp build/web/llms.txt public/llms.txt
           cp build/web/sitemap.xml public/sitemap.xml
-      # firestore:rules e storage:rules junto com hosting: sem isto, uma
+      # firestore:rules e storage junto com hosting: sem isto, uma
       # mudança em firestore.rules ou storage.rules no repositório não
       # publicava nada — as regras ficavam divergentes do repo até alguém
       # lembrar de publicar à mão (storage.rules vivia só nesse "à mão").
+      # "storage" e não "storage:rules": diferente do Firestore, no Storage
+      # o CLI trata o que vem depois de ":" como nome de deploy target
+      # (firebase target:apply), não como seletor de recurso — como o
+      # firebase.json não define target, "storage:rules" falhava com
+      # "Could not find rules for the following storage targets: rules".
       - uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15.27.0
         with:
-          args: deploy --only hosting,firestore:rules,storage:rules,functions
+          args: deploy --only hosting,firestore:rules,storage,functions
         env:
           # JSON da conta de serviço do Firebase (IAM → Service accounts → Create
           # key). Cadastrar no mesmo environment do workflow (github-pages).

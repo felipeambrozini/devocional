@@ -3,8 +3,19 @@ name: Distribute Android
 on:
   push:
     branches: [main]
+    # Ignora mudanças que só afetam o deploy web/Firebase — este workflow
+    # builda e distribui o APK, não usa nada do site nem das regras/config
+    # do Firebase por trás dele.
     paths-ignore:
       - "**.md"
+      - "web/**"
+      - "public/**"
+      - "firestore.rules"
+      - "storage.rules"
+      - "firebase.json"
+      - ".firebaserc"
+      - ".github/workflows/deploy-web.yml"
+      - ".github/workflows/distribute-ios.yml"
   workflow_dispatch:
 
 permissions:
