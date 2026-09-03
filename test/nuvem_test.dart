@@ -48,7 +48,10 @@ void main() {
       var envios = 0;
       final sincronia = Sincronia(
         estado: estado,
-        puxar: () async => null,
+        // Conta em dia: com ela vazia, o próprio comecar() já subiria o que
+        // só existe neste aparelho (ver 'plano que já existia no aparelho'
+        // mais abaixo), e o envio a medir aqui não seria o do tema.
+        puxar: () async => estado.exportar(),
         empurrar: (_) async => envios++,
         atraso: Duration.zero,
       );
@@ -217,7 +220,8 @@ void main() {
       var envios = 0;
       final sincronia = Sincronia(
         estado: estado,
-        puxar: () async => null,
+        // Conta em dia: nada para o comecar() deixar pendente.
+        puxar: () async => estado.exportar(),
         empurrar: (_) async => envios++,
         atraso: const Duration(seconds: 30),
       );
@@ -271,7 +275,8 @@ void main() {
         estado: estado,
         serializar: estado.serializarConversas,
         fundir: estado.fundirConversas,
-        puxar: () async => null,
+        // Conta em dia, pela mesma razão do teste de tema lá em cima.
+        puxar: () async => estado.serializarConversas(),
         empurrar: (_) async => envios++,
         atraso: Duration.zero,
       );
@@ -373,4 +378,117 @@ void main() {
       );
     });
   });
+
+  group('Sincronia de planos', () {
+    test(
+      'plano que já existia no aparelho sobe no primeiro login, mesmo com a nuvem vazia',
+      () async {
+        final estado = await Estado.abrir();
+        await estado.criarPlano(
+          titulo: 'Gênesis em 10 dias',
+          livros: ['genesis'],
+          dias: 10,
+        );
+
+        var envios = 0;
+        String? enviado;
+        final sincronia = Sincronia(
+          estado: estado,
+          serializar: estado.serializarPlanos,
+          fundir: estado.fundirPlanos,
+          puxar: () async => null,
+          empurrar: (copia) async {
+            envios++;
+            enviado = copia;
+          },
+          atraso: Duration.zero,
+        );
+        await sincronia.comecar();
+        await assentar();
+
+        expect(
+          envios,
+          1,
+          reason:
+              'sem isto o plano criado antes de entrar na conta nunca sobe, e a web nunca o vê',
+        );
+        expect(enviado, estado.serializarPlanos());
+      },
+    );
+
+    test('plano que só existe na conta aparece neste aparelho', () async {
+      final remota = await () async {
+        SharedPreferences.setMockInitialValues({});
+        final outro = await Estado.abrir();
+        final plano = await outro.criarPlano(
+          titulo: 'Salmos em 30 dias',
+          livros: ['salmos'],
+          dias: 30,
+        );
+        await outro.alternarLidoNoPlano(plano.id, 1);
+        return outro.serializarPlanos();
+      }();
+
+      SharedPreferences.setMockInitialValues({});
+      final estado = await Estado.abrir();
+      final sincronia = Sincronia(
+        estado: estado,
+        serializar: estado.serializarPlanos,
+        fundir: estado.fundirPlanos,
+        puxar: () async => remota,
+        empurrar: (_) async {},
+        atraso: Duration.zero,
+      );
+      await sincronia.comecar();
+
+      expect(
+        estado.planosDoUsuario.map((p) => p.titulo),
+        ['Salmos em 30 dias'],
+        reason: 'é assim que o plano criado no celular chega à web',
+      );
+      expect(estado.diasLidosDoPlano(estado.planosDoUsuario.first.id), 1);
+    });
+
+    test(
+      'conta em dia não vira escrita, mesmo com as chaves em outra ordem',
+      () async {
+        final estado = await Estado.abrir();
+        await estado.criarPlano(
+          titulo: 'Gênesis em 10 dias',
+          livros: ['genesis'],
+          dias: 10,
+        );
+
+        var envios = 0;
+        final sincronia = Sincronia(
+          estado: estado,
+          serializar: estado.serializarPlanos,
+          fundir: estado.fundirPlanos,
+          // O Firestore devolve os campos de um mapa em outra ordem que a de
+          // quem gravou; comparar as strings acusaria diferença e mandaria
+          // uma escrita à toa a cada entrada na conta.
+          puxar: () async => _comChavesOrdenadas(estado.serializarPlanos()),
+          empurrar: (_) async => envios++,
+          atraso: Duration.zero,
+        );
+        await sincronia.comecar();
+        await assentar();
+
+        expect(envios, 0);
+      },
+    );
+  });
 }
+
+/// A mesma cópia com as chaves de todo mapa em ordem alfabética — como o
+/// Firestore devolve o que guardou.
+String _comChavesOrdenadas(String copia) =>
+    json.encode(_ordenar(json.decode(copia)));
+
+dynamic _ordenar(dynamic valor) => switch (valor) {
+  Map<String, dynamic> mapa => {
+    for (final chave in mapa.keys.toList()..sort()) chave: _ordenar(mapa[chave]),
+  },
+  List lista => [for (final item in lista) _ordenar(item)],
+  _ => valor,
+};

@@ -22,6 +22,19 @@ import 'registro.dart';
 /// `lib/data/nuvem.dart`. Vazia faz `getToken` falhar só na web.
 const _vapidKey = String.fromEnvironment('FCM_VAPID_KEY');
 
+/// Service worker que o SDK do FCM usa para receber o push na web.
+///
+/// Precisa ser passado à mão: sem ele o SDK registra por conta própria
+/// `/firebase-messaging-sw.js` **na raiz do domínio**, e o app mora em
+/// `/devocional/` — na raiz o Hosting devolve a página 404 em HTML, o
+/// registro falha por tipo MIME e `getToken` lança. Resultado: nenhum token
+/// web chegava ao Firestore, e a Function não tinha para quem enviar.
+///
+/// Relativo de propósito: resolve contra o `<base href>` de `web/index.html`,
+/// o mesmo caminho que o registro manual de lá já usa — então o navegador
+/// reaproveita aquele registro em vez de criar um segundo.
+const _caminhoDoServiceWorker = 'firebase-messaging-sw.js';
+
 /// Se o aparelho/ambiente tem como receber o lembrete: **Android e web**.
 ///
 /// Híbrido: o push vem da Cloud Function agendada
@@ -365,6 +378,8 @@ class LembretesReais implements Lembretes {
   String? _vapidKeyOuNulo() =>
       kIsWeb && _vapidKey.isNotEmpty ? _vapidKey : null;
 
+  String? _servicoWebOuNulo() => kIsWeb ? _caminhoDoServiceWorker : null;
+
   @override
   Future<void> inicializar({
     required void Function(String chaveDaLeitura) aoTocarNotificacao,
@@ -687,7 +702,10 @@ class LembretesReais implements Lembretes {
   /// caminho em vez de duplicar tratamento em cada método.
   Future<String?> _tokenOuNulo() async {
     try {
-      return await _mensageria.getToken(vapidKey: _vapidKeyOuNulo());
+      return await _mensageria.getToken(
+        vapidKey: _vapidKeyOuNulo(),
+        serviceWorkerScriptPath: _servicoWebOuNulo(),
+      );
     } catch (erro, pilha) {
       Registro.erro('Lembretes.token', erro, pilha);
       return null;

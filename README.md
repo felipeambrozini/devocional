@@ -289,6 +289,21 @@ motivo novo.
   foto nova (câmera ou galeria, `image_picker`) para `fotos_de_perfil/{uid}.jpg`
   no Firebase Storage (`storage.rules`: um arquivo por conta, só o dono
   grava, leitura pública porque a URL vai direto num `NetworkImage`).
+- **Plano que só existia no celular não aparecia na web** (02/09/2026):
+  `Sincronia.comecar()` em `lib/data/nuvem.dart` puxava a cópia da conta,
+  fundia com a local e só então passava a ouvir o `Estado` — mas comparando
+  com a cópia local de antes da fusão. Com a conta ainda sem aquele domínio
+  (`puxar` devolvendo `null`, o caso de todo plano criado antes de existir a
+  sincronia de planos), a fusão não trazia novidade, a comparação não via
+  diferença e nada subia: o plano ficava preso no aparelho, e a mesma conta
+  na web nunca o via. Agora a base de comparação passa a ser o que a conta
+  tem, e o que só existe aqui sobe no primeiro envio. A comparação ali é de
+  conteúdo (`_mesmoConteudo`), não de string, porque o Firestore devolve as
+  chaves de um mapa em outra ordem que a de quem gravou — por string, toda
+  entrada na conta viraria uma escrita à toa. Vale para os quatro domínios
+  (cópia, conversas, lembretes e planos), e só depois de a fusão ter dado
+  certo: com a cópia da conta ilegível, mandar a local por cima apagaria o
+  que estava lá.
 - **Excluir um plano e sair dele são ações diferentes** (20/08/2026):
   `excluirPlano` (`lib/funcoes/planos_acoes.dart`) apaga o plano da nuvem para todos
   os participantes, e só quem criou pode chamar; `sairDoPlano` apaga apenas a
@@ -455,6 +470,23 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
   (sem máscara), a página continua espelhando o tema efetivo no Cache
   Storage (`lib/data/espelho_do_tema.dart`) e o service worker escolhe entre
   `notificacao-tema-claro/escuro.png`.
+- **O SDK precisa ouvir onde está o service worker**: `getToken` recebe
+  `serviceWorkerScriptPath: 'firebase-messaging-sw.js'` — relativo, para
+  resolver contra o `<base href="/devocional/">`. Sem esse argumento o SDK
+  registra por conta própria `/firebase-messaging-sw.js` na **raiz** do
+  domínio, onde o Hosting devolve a página 404 em HTML: o registro falha por
+  tipo MIME, `getToken` lança e nenhum token web chega ao Firestore — a
+  Function fica sem destinatário e a web inteira some do lembrete.
+  `web/index.html` registra o mesmo arquivo no carregamento da página (para o
+  `notificationclick` responder com o app fechado); mesmo caminho e mesmo
+  escopo, então o navegador reaproveita aquele registro em vez de criar um
+  segundo.
+- **Na web do iPhone, só instalado na tela de início**: o Safari entrega Web
+  Push apenas a site adicionado à tela de início (iOS 16.4+), e a permissão
+  tem de ser pedida por gesto do usuário já dentro do app instalado — em aba
+  comum não há caminho, e isso não se resolve em código (daí as meta tags
+  `apple-mobile-web-app-*` de `web/index.html`). Android/Chrome recebe em aba
+  comum, sem instalar.
 - **Deploy**: `deploy-web.yml` publica hosting + regras + functions juntos;
   o primeiro deploy cria sozinho o job do Cloud Scheduler. Requer plano Blaze
   (billing ativa; consumo fica dentro do free tier).
@@ -527,7 +559,10 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
   `Estado`, reaproveitando `exportar()`/`importar()` para favoritos/notas e
   `serializarConversas`/`serializarPlanos`/`serializarLembretes` para os
   demais domínios. O filtro contra ruído e contra loop é comparar a string
-  serializada com a última enviada. Documento único por usuário no Firestore
+  serializada com a última enviada — só na entrada na conta (`comecar()`) a
+  base de comparação é a cópia que veio da conta, e não a local: sem isso, o
+  que só existia no aparelho nunca subia sozinho (ver "Plano que só existia
+  no celular não aparecia na web" abaixo). Documento único por usuário no Firestore
   (`usuarios/{uid}`) com campos `copia`, `conversas`, `planos` e `lembretes`;
   **remoção não sincroniza** (funde e nunca apaga) nos domínios de cópia e
   planos. Login por `signInWithPopup` na web; no Android/iOS usa

@@ -105,13 +105,25 @@ class Sincronia {
 
   /// Puxa e funde ANTES de passar a ouvir. Nesta ordem nada se perde nos dois
   /// sentidos: quem entra num navegador novo recebe o que já estava na conta,
-  /// e o que só existia neste navegador sobe logo depois, no envio que a
-  /// própria fusão dispara.
+  /// e o que só existe neste aparelho sobe logo depois, no envio que o
+  /// [_aoMudar] do fim dispara.
   Future<void> comecar() async {
     _ultimaCopia = _serializar();
     try {
       final remota = await puxar();
       if (remota != null) await _fundir(remota);
+      // A partir daqui a base de comparação é o que a CONTA tem, não o que
+      // este aparelho tinha. Sem esta linha, o que só existe aqui só subia
+      // quando a fusão trazia novidade de lá: com a conta ainda sem cópia
+      // (`remota` null), `_aoMudar` comparava o local com ele mesmo, não via
+      // diferença e nada subia — um plano criado antes de entrar na conta
+      // ficava preso no aparelho, e a web, na mesma conta, nunca o via.
+      //
+      // Só depois da fusão ter dado certo: com ela quebrada (cópia ilegível)
+      // o local ainda não absorveu o que estava lá, e mandá-lo por cima
+      // apagaria o que a conta tinha. Nesse caso o `catch` abaixo mantém a
+      // base local, e nada sobe.
+      if (!_mesmoConteudo(remota, _serializar())) _ultimaCopia = null;
     } catch (erro, pilha) {
       // Cópia da conta ilegível (FormatException: versão futura ou gravada
       // torta), sem rede, ou o Firestore recusou o acesso: o local continua
@@ -187,6 +199,46 @@ class Sincronia {
     }
     aoMudarSituacao?.call();
   }
+}
+
+/// Se a cópia que veio da conta diz a mesma coisa que a local, sem depender
+/// da ordem das chaves — o Firestore devolve os campos de um mapa em outra
+/// ordem, e comparar as strings acusaria diferença a cada entrada na conta,
+/// numa escrita à toa por login. Conta ainda sem cópia (`remota` null) nunca
+/// é igual: é justamente o que precisa subir.
+///
+/// Só [Sincronia.comecar] usa; o caminho quente (`_aoMudar`, a cada mudança
+/// do Estado) continua comparando as strings, que é mais barato e ali basta:
+/// dos dois lados a cópia saiu do mesmo serializador.
+bool _mesmoConteudo(String? remota, String local) {
+  if (remota == null) return false;
+  try {
+    return _mesmoValor(json.decode(remota), json.decode(local));
+  } on FormatException {
+    // Cópia da conta ilegível: tratar como diferente deixaria o local subir
+    // por cima dela, que é o que o resto do arquivo já faz com cópia torta.
+    return false;
+  }
+}
+
+bool _mesmoValor(dynamic a, dynamic b) {
+  if (a is Map && b is Map) {
+    if (a.length != b.length) return false;
+    for (final chave in a.keys) {
+      if (!b.containsKey(chave) || !_mesmoValor(a[chave], b[chave])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  if (a is List && b is List) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (!_mesmoValor(a[i], b[i])) return false;
+    }
+    return true;
+  }
+  return a == b;
 }
 
 /// Conta Google e cópia na nuvem. Um valor só para o app inteiro, como
