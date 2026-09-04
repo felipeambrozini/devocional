@@ -91,7 +91,7 @@ jobs:
       # aparelhos reais atual; quem tiver um Android antigo em armeabi-v7a
       # (raro nos últimos anos) fica de fora deste grupo de teste por ora.
       - name: Distribute to Firebase App Distribution
-        uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15
+        uses: w9jds/firebase-action@5edc2e4fb0c08474ccf6cc71b29f49502aae5401 # v15
         with:
           args: appdistribution:distribute build/app/outputs/flutter-apk/app-arm64-v8a-release.apk --app 1:169480227109:android:286f46640a25846c3c72cc --groups testadores --release-notes-file release-notes.txt
         env:
