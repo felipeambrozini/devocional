@@ -24,6 +24,7 @@ import 'data/personas.dart';
 import 'data/planos_nuvem.dart';
 import 'data/recursos.dart';
 import 'data/registro.dart';
+import 'data/url_da_pagina.dart';
 import 'data/voz.dart';
 import 'estilo/theme.dart';
 import 'funcoes/lembretes_acoes.dart';
@@ -91,6 +92,10 @@ void _abrirLeituraDoLink() {
       ),
     ),
   );
+  // O push acima é direto no Navigator, não no GoRouter: a barra de
+  // endereço nunca seria atualizada por ele (ver `url_da_pagina_web.dart`),
+  // e ficaria com `?ler=` presa mesmo depois de sair da tela.
+  removerParametroDaUrl('ler');
 }
 
 /// Abre o plano compartilhado do parâmetro `plano` da URL — `?plano=<id>` ou
@@ -106,6 +111,9 @@ void _abrirPlanoDoLink(Estado estado) {
       builder: (_) => TelaDeUmPlano(estado: estado, planoId: planoId),
     ),
   );
+  // Mesmo motivo de `_abrirLeituraDoLink`: este push não passa pelo
+  // GoRouter, então a barra de endereço ficaria com `?plano=` presa.
+  removerParametroDaUrl('plano');
 }
 
 /// Tudo dentro de uma zona só, para [Registro] pegar também o que escapa de
@@ -241,7 +249,14 @@ Future<void> _iniciar() async {
 /// destino de [_abrirLeituraDoLembrete], só a origem muda.
 void _abrirLeituraDoLembreteDoLink() {
   final chave = Uri.base.queryParameters['lembrete'];
-  if (chave != null) _abrirLeituraDoLembrete(chave);
+  if (chave == null) return;
+  _abrirLeituraDoLembrete(chave);
+  // Mesmo motivo de `_abrirLeituraDoLink`: [_abrirLeituraDoLembrete] empurra
+  // direto no Navigator, não no GoRouter, e a barra de endereço ficaria com
+  // `?lembrete=` presa — reabrir a mesma notificação de novo (o service
+  // worker reaproveita a aba, `web/firebase-messaging-sw.js`) precisa achar
+  // a URL limpa, não um link já consumido.
+  removerParametroDaUrl('lembrete');
 }
 
 class _Destino {
