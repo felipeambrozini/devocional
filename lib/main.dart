@@ -345,16 +345,6 @@ final _escoposDasAbas = [
   for (final d in _destinos) FocusScopeNode(debugLabel: d.rotulo),
 ];
 
-/// Os destinos que aparecem na navegação nesta sessão: Conversas some
-/// enquanto o recurso estiver restrito (ver [Recursos.conversas]) e a conta
-/// aberta não for a autorizada. As rotas continuam existindo (ver
-/// [_router]) para quem chega direto por link — só a entrada pela barra e
-/// pelo trilho é que se esconde.
-List<_Destino> get _destinosVisiveis => [
-  for (final d in _destinos)
-    if (d.caminho != 'conversas' || Recursos.conversas) d,
-];
-
 /// Cada aba com o próprio caminho (`/hoje`, `/biblia`, `/devocional`,
 /// `/plano`, `/notas`, `/conversas`), para abrir direto por link e sobreviver
 /// a um F5 — o Firebase Hosting devolve o index.html para qualquer caminho sob
@@ -381,16 +371,13 @@ final _router = GoRouter(
   initialLocation: '/hoje',
   redirect: (context, state) {
     if (state.uri.path == '/') return '/hoje';
-    // Sem o recurso liberado, nem um link direto a Conversas ou a uma
-    // persona deve abrir o chat — a mesma restrição que esconde a aba e
-    // os balões.
-    const caminhosDeConversas = [
-      '/conversas',
-      '/charles-spurgeon',
-      '/felipe-ambrozini',
-    ];
+    // A aba Conversas é livre para todo mundo (ver TelaConversas, que troca
+    // as cartas pelo convite ao WhatsApp sem o recurso). Só o chat de cada
+    // persona continua trancado por link direto — é ele que chama a API
+    // paga, a mesma restrição que esconde os balões.
+    const caminhosDeChat = ['/charles-spurgeon', '/felipe-ambrozini'];
     if (!Recursos.conversas &&
-        caminhosDeConversas.any((c) => state.uri.path.startsWith(c))) {
+        caminhosDeChat.any((c) => state.uri.path.startsWith(c))) {
       return '/hoje';
     }
     return null;
@@ -683,7 +670,7 @@ class Moldura extends StatelessWidget {
 
   Widget _conteudo(BuildContext context) {
     final largo = telaLarga(context);
-    final destinosVisiveis = _destinosVisiveis;
+    final destinosVisiveis = _destinos;
 
     // A LarguraDeLeitura não fica aqui. Envolvendo o shell inteiro, ela prendia
     // também a AppBar e a régua de meses do Plano numa faixa de 720 px no meio da
@@ -717,10 +704,14 @@ class Moldura extends StatelessWidget {
     }
 
     // Em telas largas os balões de conversa substituem a aba: o rail omite
-    // Conversas para não duplicar a entrada do chat.
+    // Conversas para não duplicar a entrada do chat. Mas sem o recurso
+    // liberado (ver Recursos.conversas) os balões não aparecem — aí a aba
+    // volta a ser a única porta de entrada, mesmo em tela larga.
     final destinosDoRail = [
       for (final d in destinosVisiveis)
-        if (d.mostrarNoRail) d,
+        if (d.mostrarNoRail ||
+            (d.caminho == 'conversas' && !Recursos.conversas))
+          d,
     ];
 
     return Scaffold(

@@ -47,6 +47,7 @@ As chaves e parâmetros necessários para o funcionamento dos serviços integrad
 - `EMAILS_COM_CONVERSAS` (allowlist do chat com IA, ver `lib/data/recursos.dart` — nenhum e-mail fica versionado no repositório)
 - `SENTRY_DSN` (destino do reporte de erro remoto, ver 2.4 — vazio localiza o SDK em modo no-op)
 - `EMAIL_DE_CONTATO` (destino de "Relatar um problema" em Sobre; vazio esconde o item)
+- `WHATSAPP_NUMERO` (destino do botão "Falar no WhatsApp" em Conversas, para quem pede acesso fora da allowlist; vazio esconde o botão)
 
 Não há mais chave de Text-to-Speech: o áudio virou MP3 pré-gerado (ver `lib/data/voz.dart`), e as antigas `TTS_API_KEY_*` devem ser revogadas no Google Cloud Console, já que nenhum `String.fromEnvironment` no código as lê mais.
 

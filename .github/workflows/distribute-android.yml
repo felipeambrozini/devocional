@@ -79,7 +79,8 @@ jobs:
             --dart-define=AUDIO_BASE_URL=${{ secrets.AUDIO_BASE_URL }} \
             --dart-define=EMAILS_COM_CONVERSAS=${{ secrets.EMAILS_COM_CONVERSAS }} \
             --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }} \
-            --dart-define=EMAIL_DE_CONTATO=${{ secrets.EMAIL_DE_CONTATO }}
+            --dart-define=EMAIL_DE_CONTATO=${{ secrets.EMAIL_DE_CONTATO }} \
+            --dart-define=WHATSAPP_NUMERO=${{ secrets.WHATSAPP_NUMERO }}
 
       - name: Write release notes
         run: git log -1 --format=%B > release-notes.txt

@@ -89,6 +89,7 @@ dependencies:
   # Uso anônimo por tela e evento, para saber onde alguém trava sem ferramenta
   # de terceiro nem anúncio. Mesmo portão de aceite do Sentry acima.
   firebase_analytics: ^12.5.0
+  font_awesome_flutter: ^11.0.0
 
 dev_dependencies:
   sentry_dart_plugin: ^3.4.0

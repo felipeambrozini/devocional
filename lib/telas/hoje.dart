@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -315,14 +316,16 @@ class _BotaoDeConta extends StatelessWidget {
               label: const Text('Sair'),
             )
           : OutlinedButton.icon(
-              onPressed: nuvem.entrando ? null : () => entrarNaConta(context, nuvem),
+              onPressed: nuvem.entrando
+                  ? null
+                  : () => entrarNaConta(context, nuvem),
               icon: nuvem.entrando
                   ? const SizedBox(
                       width: Spacing.sp18,
                       height: Spacing.sp18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.login, size: 18),
+                  : const FaIcon(FontAwesomeIcons.google, size: 16),
               label: const Text('Entrar'),
             ),
     );

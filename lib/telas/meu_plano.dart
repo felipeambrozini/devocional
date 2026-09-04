@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../data/conteudo.dart';
 import '../data/estado.dart';
@@ -137,29 +138,32 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
   void _assinar() {
     _assinatura = PlanosNaNuvem.instancia
         .deUmPlano(widget.planoId)
-        .listen((doc) {
-          if (!mounted) return;
-          if (!doc.exists) {
+        .listen(
+          (doc) {
+            if (!mounted) return;
+            if (!doc.exists) {
+              setState(() {
+                _doc = null;
+                _carregando = false;
+                _erro = 'Este plano não existe mais.';
+              });
+              return;
+            }
+            _aplicarAoEspelho(doc);
             setState(() {
-              _doc = null;
+              _doc = doc;
               _carregando = false;
-              _erro = 'Este plano não existe mais.';
+              _erro = null;
             });
-            return;
-          }
-          _aplicarAoEspelho(doc);
-          setState(() {
-            _doc = doc;
-            _carregando = false;
-            _erro = null;
-          });
-        }, onError: (_) {
-          if (!mounted) return;
-          setState(() {
-            _erro = 'Não foi possível carregar o plano. Verifique a conexão.';
-            _carregando = false;
-          });
-        });
+          },
+          onError: (_) {
+            if (!mounted) return;
+            setState(() {
+              _erro = 'Não foi possível carregar o plano. Verifique a conexão.';
+              _carregando = false;
+            });
+          },
+        );
   }
 
   /// Espelha no [Estado] o que chegou da nuvem: o plano em si e os dias
@@ -177,9 +181,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
     );
     final atualizado = widget.estado.planoDoUsuario(widget.planoId);
     if (atualizado != null) _plano = atualizado;
-    unawaited(
-      widget.estado.aplicarPlanoDaNuvem(plano, lidos: _lidosDe(dados)),
-    );
+    unawaited(widget.estado.aplicarPlanoDaNuvem(plano, lidos: _lidosDe(dados)));
   }
 
   /// O uid da conta, só onde a nuvem existe. Num plano local não há conta
@@ -522,10 +524,7 @@ class _CabecalhoDoPlano extends StatelessWidget {
               style: tema.bodySmall?.copyWith(color: cor.onSurfaceVariant),
             ),
             const SizedBox(height: Spacing.sp12),
-            Text(
-              '$lidos de $totalDeDias dias lidos',
-              style: tema.labelMedium,
-            ),
+            Text('$lidos de $totalDeDias dias lidos', style: tema.labelMedium),
             const SizedBox(height: Spacing.sp6),
             ProgressoFino(valor: totalDeDias == 0 ? 0 : lidos / totalDeDias),
           ],
@@ -555,9 +554,7 @@ class _CartaoDeCompartilhar extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              compartilhado
-                  ? 'Plano compartilhado'
-                  : 'Compartilhe o plano',
+              compartilhado ? 'Plano compartilhado' : 'Compartilhe o plano',
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: Spacing.sp4),
@@ -567,17 +564,14 @@ class _CartaoDeCompartilhar extends StatelessWidget {
                         'um aparece para todos.'
                   : 'Quem abrir o link entra no plano, marca os próprios '
                         'dias e o progresso de cada um aparece para todos.',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: cor.onSurfaceVariant),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: cor.onSurfaceVariant),
             ),
             const SizedBox(height: Spacing.sp10),
             OutlinedButton.icon(
               onPressed: aoCompartilhar,
-              icon: Icon(
-                compartilhado ? Icons.link : Icons.share,
-              ),
+              icon: Icon(compartilhado ? Icons.link : Icons.share),
               label: Text(compartilhado ? 'Copiar link' : 'Compartilhar'),
             ),
           ],
@@ -714,10 +708,7 @@ class _LinhaDeParticipante extends StatelessWidget {
                 ),
               ),
             const SizedBox(width: Spacing.sp8),
-            Text(
-              '${lidos.length}/$totalDeDias',
-              style: tema.labelMedium,
-            ),
+            Text('${lidos.length}/$totalDeDias', style: tema.labelMedium),
           ],
         ),
         const SizedBox(height: Spacing.sp4),
@@ -778,7 +769,7 @@ class _CartaoDeEntrar extends StatelessWidget {
                             height: Spacing.sp18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.login),
+                        : const FaIcon(FontAwesomeIcons.google, size: 18),
                     label: const Text('Entrar com Google'),
                   ),
                 ),

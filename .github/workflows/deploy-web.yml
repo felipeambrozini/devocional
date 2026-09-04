@@ -72,6 +72,7 @@ jobs:
             --dart-define=EMAILS_COM_CONVERSAS=${{ secrets.EMAILS_COM_CONVERSAS }} \
             --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }} \
             --dart-define=EMAIL_DE_CONTATO=${{ secrets.EMAIL_DE_CONTATO }} \
+            --dart-define=WHATSAPP_NUMERO=${{ secrets.WHATSAPP_NUMERO }} \
             --dart-define=RECAPTCHA_V3_SITE_KEY=${{ secrets.RECAPTCHA_V3_SITE_KEY }} \
             --dart-define=FCM_VAPID_KEY=${{ secrets.FCM_VAPID_KEY }}
       # O Firebase Hosting serve da raiz do domínio; o app mora em /devocional/,

@@ -314,7 +314,7 @@ motivo novo.
   configuração** (20/08/2026): `lib/data/recursos.dart` reúne os
   interruptores — `planoPersonalizado` (aba "Meus planos"), `ouvirTextos`
   (`BotaoDeVoz`, único ponto de entrada da leitura em voz alta) e `conversas`
-  (aba Conversas, os balões flutuantes e as rotas `/conversas`,
+  (o chat de cada persona, os balões flutuantes e as rotas
   `/charles-spurgeon`, `/felipe-ambrozini`). Os dois primeiros são `const`;
   `conversas` compara o e-mail da conta aberta (`Nuvem.email`) contra uma
   allowlist vinda de `--dart-define=EMAILS_COM_CONVERSAS` (separada por
@@ -327,6 +327,20 @@ motivo novo.
   `Lembretes.instancia`, mutável) existe só para teste — o login de verdade
   nunca roda no ambiente de teste, e sem o override os testes de Conversas e
   dos balões não veriam o recurso.
+- **A aba Conversas é visível para todo mundo; só o chat em si é que
+  continua trancado pela allowlist** (04/09/2026): antes, `Recursos.conversas`
+  também escondia a aba inteira (barra, trilho e a rota `/conversas`) —
+  monetizar o único gasto real do app (a API do Gemini) exige que quem não
+  está na allowlist veja a aba e saiba que ela existe, para pedir acesso.
+  `TelaConversas` (`lib/telas/conversas.dart`) troca as cartas de cada
+  persona pelo convite ao WhatsApp quando `Recursos.conversas` é falso, com
+  o número vindo de `--dart-define=WHATSAPP_NUMERO` (mesmo padrão do
+  `EMAIL_DE_CONTATO`, vazio esconde o botão). O `redirect` do `GoRouter`
+  (`lib/main.dart`) só trava mais `/charles-spurgeon` e `/felipe-ambrozini` —
+  o chat de fato —, não mais `/conversas`. Em tela larga, onde os balões
+  substituem a aba no `NavigationRail`, a aba volta para o rail quando os
+  balões não aparecem (sem o recurso), senão telas largas sem allowlist não
+  teriam nenhuma porta de entrada.
 - **`web/index.html` tem fundo marrom e um marcador de carregamento**, retirado
   no evento `flutter-first-frame` (o Flutter acrescenta a `flutter-view` ao
   body em vez de limpar). As duas cores do fundo são por
