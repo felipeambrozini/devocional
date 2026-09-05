@@ -626,19 +626,30 @@ class _CartaoLeituraProgresso extends StatelessWidget {
           // Filete separador antes do progresso
           const Filete(),
           const SizedBox(height: Spacing.sp14),
-          // Progresso do ano
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
+          // Progresso do ano. Wrap, não Row com Spacer: em largura curta
+          // (ou fonte grande, ver a escala de leitura) o contador cai para a
+          // linha de baixo em vez de estourar a linha — o Row exigia que
+          // rótulo + número + total coubessem lado a lado sempre.
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: Spacing.sp8,
+            runSpacing: Spacing.sp4,
             children: [
               Text('Progresso do ano', style: tema.labelMedium),
-              const Spacer(),
-              Text(
-                '${estado.diasLidos}',
-                style: tema.titleMedium?.copyWith(color: cor.primary),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    '${estado.diasLidos}',
+                    style: tema.titleMedium?.copyWith(color: cor.primary),
+                  ),
+                  const SizedBox(width: Spacing.sp6),
+                  Text('de $total dias', style: tema.bodySmall),
+                ],
               ),
-              const SizedBox(width: Spacing.sp6),
-              Text('de $total dias', style: tema.bodySmall),
             ],
           ),
           const SizedBox(height: Spacing.sp8),

@@ -343,6 +343,46 @@ void main() {
     expect(find.text('Promessas de Deus'), findsWidgets);
   });
 
+  testWidgets('a Hoje estreita não estoura a linha do progresso do ano', (
+    tester,
+  ) async {
+    // Em 360 dp (celular comum) a linha "Progresso do ano ... de 365 dias"
+    // estourava 82 px para a direita: o Row com Spacer exigia que rótulo,
+    // número e total coubessem lado a lado em qualquer largura ou fonte (ver
+    // _CartaoLeituraProgresso em hoje.dart). O estouro não falha o teste
+    // sozinho, então os erros do Flutter são coletados e conferidos aqui.
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    await aquecerAssets(tester);
+    final erros = <FlutterErrorDetails>[];
+    final antigo = FlutterError.onError;
+    FlutterError.onError = erros.add;
+    try {
+      await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+      await tester.pumpAndSettle();
+      // Traz o cartão para a área que a lista realiza, para a linha ser
+      // medida de verdade na largura estreita.
+      await tester.scrollUntilVisible(
+        find.text('Progresso do ano'),
+        200,
+        scrollable: find.descendant(
+          of: find.byType(ListView),
+          matching: find.byType(Scrollable),
+        ),
+      );
+      await tester.pumpAndSettle();
+    } finally {
+      FlutterError.onError = antigo;
+    }
+    expect(
+      erros.where((e) => '${e.exception}'.contains('overflowed')),
+      isEmpty,
+    );
+    expect(find.text('Progresso do ano'), findsOneWidget);
+  });
+
   testWidgets('Sobre abre da folha de ajustes e atualiza a URL', (
     tester,
   ) async {

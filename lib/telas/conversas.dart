@@ -92,15 +92,14 @@ class _PedirAcesso extends StatelessWidget {
             Icon(Icons.forum_outlined, size: 56, color: cor.primary),
             const SizedBox(height: Spacing.sp16),
             Text(
-              'Conversas ainda em teste',
+              'Recurso premium',
               style: tema.titleLarge,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: Spacing.sp8),
             Text(
-              'O chat com Spurgeon e com Felipe está sendo liberado aos '
-              'poucos, porque cada conversa usa uma API paga. Fale comigo '
-              'pelo WhatsApp para habilitar o acesso na sua conta.',
+              'O chat com Spurgeon e com Felipe é um recurso premium. Fale '
+              'comigo pelo WhatsApp para habilitar o acesso na sua conta.',
               style: tema.bodyMedium?.copyWith(color: cor.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
