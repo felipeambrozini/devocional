@@ -140,6 +140,34 @@ class PlanosNaNuvem {
     return linkDoPlano(plano.id, titulo: plano.titulo);
   }
 
+  /// Atualiza título, livros, dias e/ou inclusão de devocionais do plano na
+  /// nuvem — só o criador chama isto (ver `editarPlano` em
+  /// `lib/funcoes/planos_acoes.dart`); a regra do Firestore também recusa
+  /// qualquer outro uid.
+  Future<void> atualizar(
+    String planoId, {
+    String? titulo,
+    List<String>? livros,
+    int? dias,
+    bool? incluirDevocionais,
+    bool? devocionalAntes,
+  }) async {
+    try {
+      await FirebaseFirestore.instance.collection(_colecao).doc(planoId).update({
+        'titulo': ?titulo,
+        'livros': ?livros,
+        'dias': ?dias,
+        'incluirDevocionais': ?incluirDevocionais,
+        'devocionalAntes': ?devocionalAntes,
+      });
+    } catch (erro, pilha) {
+      Registro.erro('PlanosNaNuvem.atualizar', erro, pilha);
+      throw const PlanosNaNuvemException(
+        'Não foi possível salvar as mudanças. Verifique a conexão e tente de novo.',
+      );
+    }
+  }
+
   /// Escreve os dias lidos do usuário na própria entrada do documento.
   /// Idempotente, e a regra do Firestore só deixa tocar a própria entrada.
   Future<void> gravarDias(String planoId, List<int> lidos) async {

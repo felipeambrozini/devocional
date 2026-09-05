@@ -3,11 +3,46 @@ import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/data/modelos.dart';
 import 'package:felipe_ambrozini/data/nuvem.dart';
 import 'package:felipe_ambrozini/data/planos.dart';
+import 'package:felipe_ambrozini/telas/meu_plano.dart';
 import 'package:felipe_ambrozini/telas/novo_plano.dart';
 import 'package:felipe_ambrozini/telas/plano.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+/// TelaNovoPlano e TelaDeUmPlano agora são rotas de verdade sob `/plano` (ver
+/// main.dart), não Navigator.push avulso — então os testes de widget que
+/// navegam entre elas (criar um plano, marcar um dia e voltar) precisam de um
+/// GoRouter de verdade na árvore, não só um MaterialApp com Navigator cru.
+/// Espelha o formato de main.dart, sem o shell de abas: aqui só o ramo do
+/// Plano importa.
+GoRouter _routerDoPlano(Estado estado, DateTime hoje) => GoRouter(
+  initialLocation: '/plano',
+  routes: [
+    GoRoute(
+      path: '/plano',
+      builder: (context, state) => TelaPlano(hoje: hoje),
+      routes: [
+        GoRoute(
+          path: 'novo',
+          builder: (context, state) => TelaNovoPlano(estado: estado),
+        ),
+        GoRoute(
+          path: ':id',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return TelaDeUmPlano(
+              estado: estado,
+              planoId: id,
+              plano: estado.planoDoUsuario(id),
+            );
+          },
+        ),
+      ],
+    ),
+  ],
+);
 
 void main() {
   setUpAll(() async {
@@ -458,6 +493,46 @@ void main() {
       expect(planoRelido.devocionalAntes, isFalse);
     });
 
+    test('atualizarPlano renomeia e liga/desliga devocionais, e persiste', () async {
+      final estado = await Estado.abrir();
+      final plano = await estado.criarPlano(
+        titulo: 'Nome original',
+        livros: ['genesis'],
+        dias: 30,
+      );
+
+      final atualizado = await estado.atualizarPlano(
+        plano.id,
+        titulo: 'Nome novo',
+        incluirDevocionais: true,
+        devocionalAntes: false,
+      );
+      expect(atualizado.titulo, 'Nome novo');
+      expect(atualizado.incluirDevocionais, isTrue);
+      expect(atualizado.devocionalAntes, isFalse);
+      // Livros e dias não mudam: atualizarPlano não mexe neles.
+      expect(atualizado.livros, plano.livros);
+      expect(atualizado.dias, plano.dias);
+      expect(estado.planosDoUsuario.single.titulo, 'Nome novo');
+
+      final relido = await reabrir();
+      final planoRelido = relido.planosDoUsuario.single;
+      expect(planoRelido.titulo, 'Nome novo');
+      expect(planoRelido.incluirDevocionais, isTrue);
+      expect(planoRelido.devocionalAntes, isFalse);
+    });
+
+    test('atualizarPlano com título em branco mantém o nome anterior', () async {
+      final estado = await Estado.abrir();
+      final plano = await estado.criarPlano(
+        titulo: 'Nome original',
+        livros: ['genesis'],
+        dias: 30,
+      );
+      final atualizado = await estado.atualizarPlano(plano.id, titulo: '   ');
+      expect(atualizado.titulo, 'Nome original');
+    });
+
     test('armazenamento corrompido não impede o app de abrir', () async {
       SharedPreferences.setMockInitialValues({
         'planos_do_usuario': 'isto não é json {',
@@ -479,10 +554,10 @@ void main() {
       Nuvem.instancia.logadoForcado = true;
       addTearDown(() => Nuvem.instancia.logadoForcado = null);
       await tester.pumpWidget(
-        MaterialApp(
-          home: EscopoDoEstado(
-            estado: estado,
-            child: TelaPlano(hoje: DateTime(2027, 2, 15)),
+        EscopoDoEstado(
+          estado: estado,
+          child: MaterialApp.router(
+            routerConfig: _routerDoPlano(estado, DateTime(2027, 2, 15)),
           ),
         ),
       );
@@ -555,6 +630,113 @@ void main() {
       expect(find.text('1 de 30 dias lidos'), findsOneWidget);
     });
 
+    testWidgets(
+      'trocar de aba e voltar para Planos mostra a lista, não o plano aberto '
+      'antes de trocar',
+      (tester) async {
+        await tester.runAsync(() => Conteudo.instancia.plano(bissexto: false));
+        final estado = Estado(await SharedPreferences.getInstance());
+        Nuvem.instancia.logadoForcado = true;
+        addTearDown(() => Nuvem.instancia.logadoForcado = null);
+        final plano = await estado.criarPlano(
+          titulo: 'Meu plano de teste',
+          livros: ['genesis'],
+          dias: 30,
+        );
+
+        // Espelha Moldura._irParaAba de main.dart: a aba Plano (índice 0
+        // aqui) sempre reseta para a lista ao voltar de outra aba.
+        final router = GoRouter(
+          initialLocation: '/plano',
+          routes: [
+            StatefulShellRoute.indexedStack(
+              builder: (context, state, shell) => Scaffold(
+                body: shell,
+                bottomNavigationBar: NavigationBar(
+                  selectedIndex: shell.currentIndex,
+                  onDestinationSelected: (i) => shell.goBranch(
+                    i,
+                    initialLocation: i == shell.currentIndex || i == 0,
+                  ),
+                  destinations: const [
+                    NavigationDestination(
+                      icon: Icon(Icons.event_note),
+                      label: 'Plano',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.book),
+                      label: 'Bíblia',
+                    ),
+                  ],
+                ),
+              ),
+              branches: [
+                StatefulShellBranch(
+                  routes: [
+                    GoRoute(
+                      path: '/plano',
+                      builder: (context, state) =>
+                          TelaPlano(hoje: DateTime(2027, 2, 15)),
+                      routes: [
+                        GoRoute(
+                          path: 'novo',
+                          builder: (context, state) =>
+                              TelaNovoPlano(estado: estado),
+                        ),
+                        GoRoute(
+                          path: ':id',
+                          builder: (context, state) {
+                            final id = state.pathParameters['id']!;
+                            return TelaDeUmPlano(
+                              estado: estado,
+                              planoId: id,
+                              plano: estado.planoDoUsuario(id),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                StatefulShellBranch(
+                  routes: [
+                    GoRoute(
+                      path: '/biblia',
+                      builder: (context, state) => const Text('tela biblia'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          EscopoDoEstado(
+            estado: estado,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Meus planos'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(plano.titulo));
+        await tester.pumpAndSettle();
+        expect(find.byTooltip('Opções do plano'), findsOneWidget);
+
+        await tester.tap(find.text('Bíblia'));
+        await tester.pumpAndSettle();
+        expect(find.text('tela biblia'), findsOneWidget);
+
+        await tester.tap(find.text('Plano'));
+        await tester.pumpAndSettle();
+
+        expect(find.byTooltip('Opções do plano'), findsNothing);
+        expect(find.text('Seus planos'), findsOneWidget);
+      },
+    );
+
     testWidgets('o cartão de um plano compartilhado mostra o selo', (
       tester,
     ) async {
@@ -596,8 +778,25 @@ void main() {
       Nuvem.instancia.logadoForcado = true;
       addTearDown(() => Nuvem.instancia.logadoForcado = null);
       await tester.pumpWidget(
-        MaterialApp(
-          home: EscopoDoEstado(estado: estado, child: TelaNovoPlano(estado: estado)),
+        EscopoDoEstado(
+          estado: estado,
+          child: MaterialApp.router(
+            routerConfig: GoRouter(
+              initialLocation: '/plano/novo',
+              routes: [
+                GoRoute(
+                  path: '/plano',
+                  builder: (context, state) => const SizedBox.shrink(),
+                  routes: [
+                    GoRoute(
+                      path: 'novo',
+                      builder: (context, state) => TelaNovoPlano(estado: estado),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -645,6 +844,90 @@ void main() {
 
       expect(estado.planosDoUsuario.single.incluirDevocionais, isTrue);
       expect(estado.planosDoUsuario.single.devocionalAntes, isTrue);
+    });
+  });
+
+  group('editar plano', () {
+    testWidgets(
+      'menu de opções renomeia o plano local',
+      (tester) async {
+        final estado = Estado(await SharedPreferences.getInstance());
+        final plano = await estado.criarPlano(
+          titulo: 'Nome original',
+          livros: ['genesis'],
+          dias: 30,
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: EscopoDoEstado(
+              estado: estado,
+              child: TelaDeUmPlano(
+                estado: estado,
+                planoId: plano.id,
+                plano: plano,
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byTooltip('Opções do plano'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Editar plano'));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Nome do plano'),
+          'Nome editado',
+        );
+        await tester.tap(find.text('Salvar'));
+        await tester.pumpAndSettle();
+
+        expect(estado.planosDoUsuario.single.titulo, 'Nome editado');
+        // Livros e dias não foram tocados no formulário: sem confirmação de
+        // reinício de progresso, o plano continua com os mesmos.
+        expect(estado.planosDoUsuario.single.livros, plano.livros);
+        expect(estado.planosDoUsuario.single.dias, plano.dias);
+        expect(find.text('Nome editado'), findsOneWidget);
+      },
+    );
+
+    testWidgets('cancelar o editor não muda nada', (tester) async {
+      final estado = Estado(await SharedPreferences.getInstance());
+      final plano = await estado.criarPlano(
+        titulo: 'Nome original',
+        livros: ['genesis'],
+        dias: 30,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EscopoDoEstado(
+            estado: estado,
+            child: TelaDeUmPlano(
+              estado: estado,
+              planoId: plano.id,
+              plano: plano,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Opções do plano'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Editar plano'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Nome do plano'),
+        'Isto não deveria ficar',
+      );
+      await tester.tap(find.text('Cancelar'));
+      await tester.pumpAndSettle();
+
+      expect(estado.planosDoUsuario.single.titulo, 'Nome original');
     });
   });
 }

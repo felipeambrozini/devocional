@@ -104,12 +104,14 @@ service cloud.firestore {
     // Planos de leitura compartilhados (ver lib/data/planos_nuvem.dart).
     //
     // Contrato do documento planos/{planoId}:
-    //   titulo        string
-    //   livros        list de slugs do canon
-    //   dias          int >= 1
-    //   criadoPor     string — uid de quem criou
-    //   criadoEm      timestamp do servidor
-    //   participantes mapa uid -> {nome: string, lidos: list de int}
+    //   titulo             string — o criador pode renomear depois
+    //   livros             list de slugs do canon — idem, o criador edita
+    //   dias               int >= 1 — idem
+    //   criadoPor          string — uid de quem criou
+    //   criadoEm           timestamp do servidor
+    //   incluirDevocionais bool — o criador pode ligar/desligar depois
+    //   devocionalAntes    bool — idem, antes ou depois do capítulo
+    //   participantes      mapa uid -> {nome: string, lidos: list de int}
     //
     // Quem cria o documento entra como primeiro participante. Depois disso,
     // qualquer participante lê o documento inteiro — é isso que permite ver
@@ -144,6 +146,33 @@ service cloud.firestore {
             minhaEntradaValida(uid);
       }
 
+      // O criador edita nome, livros, dias e devocionais depois de criado
+      // (ver `Estado.atualizarPlano` e `PlanosNaNuvem.atualizar`) — nunca a
+      // lista de participantes, que fica de fora do hasOnly. Mudar livros ou
+      // dias apaga o progresso do próprio criador (ver `editarPlano`, que
+      // grava isso à parte, na própria entrada de `participantes`); os
+      // outros participantes ficam com dias antigos até marcarem de novo.
+      function planoEditavelPeloCriador() {
+        let alterados = request.resource.data.diff(resource.data).affectedKeys();
+        return resource.data.criadoPor == request.auth.uid &&
+            alterados.hasOnly(
+                ['titulo', 'livros', 'dias', 'incluirDevocionais', 'devocionalAntes']) &&
+            (!('titulo' in alterados) ||
+                (request.resource.data.titulo is string &&
+                    request.resource.data.titulo.size() <= 200)) &&
+            (!('livros' in alterados) ||
+                (request.resource.data.livros is list &&
+                    request.resource.data.livros.size() <= 66)) &&
+            (!('dias' in alterados) ||
+                (request.resource.data.dias is int &&
+                    request.resource.data.dias >= 1 &&
+                    request.resource.data.dias <= 730)) &&
+            (!('incluirDevocionais' in alterados) ||
+                request.resource.data.incluirDevocionais is bool) &&
+            (!('devocionalAntes' in alterados) ||
+                request.resource.data.devocionalAntes is bool);
+      }
+
       allow create: if google() &&
           request.resource.data.criadoPor == request.auth.uid &&
           request.resource.data.criadoEm is timestamp &&
@@ -167,7 +196,8 @@ service cloud.firestore {
       // Entrar, marcar dias e sair são o mesmo tipo de escrita: só a
       // própria entrada. Quem ainda não participa pode criá-la (é o entrar
       // pelo link); quem participa pode mudá-la ou apagá-la.
-      allow update: if google() && soAParticipacaoDoProprio(request.auth.uid);
+      allow update: if google() &&
+          (soAParticipacaoDoProprio(request.auth.uid) || planoEditavelPeloCriador());
 
       allow delete: if google() && resource.data.criadoPor == request.auth.uid;
     }

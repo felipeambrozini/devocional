@@ -312,6 +312,15 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
     }
   }
 
+  Future<void> _editarPlano() async {
+    final plano = _plano;
+    if (plano == null) return;
+    final editou = await editarPlano(context, widget.estado, plano);
+    if (editou && mounted) {
+      setState(() => _plano = widget.estado.planoDoUsuario(widget.planoId));
+    }
+  }
+
   Future<void> _sairDoPlano() async {
     final saiu = await sairDoPlano(context, widget.estado, widget.planoId);
     if (saiu && mounted) Navigator.pop(context);
@@ -348,6 +357,8 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
                 switch (opcao) {
                   case 'copiar':
                     _copiarLink();
+                  case 'editar':
+                    _editarPlano();
                   case 'sair':
                     _sairDoPlano();
                   case 'excluir':
@@ -362,6 +373,16 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
                     title: Text('Copiar link do plano'),
                   ),
                 ),
+                // Só o criador edita: os outros participantes veem o mesmo
+                // título e a mesma escolha de devocionais que ele definir.
+                if (souCriador)
+                  const PopupMenuItem(
+                    value: 'editar',
+                    child: ListTile(
+                      leading: Icon(Icons.edit_outlined),
+                      title: Text('Editar plano'),
+                    ),
+                  ),
                 if (!souCriador)
                   const PopupMenuItem(
                     value: 'sair',
@@ -384,11 +405,21 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
             PopupMenuButton<String>(
               tooltip: 'Opções do plano',
               onSelected: (opcao) {
-                if (opcao == 'excluir') {
-                  _excluirPlano(compartilhado: false);
+                switch (opcao) {
+                  case 'editar':
+                    _editarPlano();
+                  case 'excluir':
+                    _excluirPlano(compartilhado: false);
                 }
               },
               itemBuilder: (context) => const [
+                PopupMenuItem(
+                  value: 'editar',
+                  child: ListTile(
+                    leading: Icon(Icons.edit_outlined),
+                    title: Text('Editar plano'),
+                  ),
+                ),
                 PopupMenuItem(
                   value: 'excluir',
                   child: ListTile(

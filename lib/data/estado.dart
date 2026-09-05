@@ -522,6 +522,56 @@ class Estado extends ChangeNotifier {
     return plano;
   }
 
+  /// Revisa um plano depois de criado: nome, livros, dias, e a inclusão e
+  /// posição dos devocionais — todas escolhas feitas em
+  /// `lib/telas/novo_plano.dart` na criação. Mudar livros ou dias remonta os
+  /// dias do plano (ver `PlanoDoUsuario.diasDoPlano`), o que reaproveita o
+  /// número de cada dia para um conteúdo diferente — por isso o progresso
+  /// marcado deste aparelho é apagado junto, para não sobrar dia marcado
+  /// como lido que na verdade nunca foi. Quem chama já confirmou isso com o
+  /// usuário antes (ver `editarPlano` em `lib/funcoes/planos_acoes.dart`).
+  Future<PlanoDoUsuario> atualizarPlano(
+    String id, {
+    String? titulo,
+    List<String>? livros,
+    int? dias,
+    bool? incluirDevocionais,
+    bool? devocionalAntes,
+  }) async {
+    final i = _planos.indexWhere((p) => p.id == id);
+    if (i == -1) throw ArgumentError('Plano não encontrado: $id');
+    final atual = _planos[i];
+    final novosLivros = livros ?? atual.livros;
+    final novosDias = dias ?? atual.dias;
+    final atualizado = PlanoDoUsuario(
+      id: atual.id,
+      titulo: titulo?.trim().isNotEmpty == true ? titulo!.trim() : atual.titulo,
+      livros: novosLivros,
+      dias: novosDias,
+      criadoEm: atual.criadoEm,
+      compartilhado: atual.compartilhado,
+      criadoPor: atual.criadoPor,
+      incluirDevocionais: incluirDevocionais ?? atual.incluirDevocionais,
+      devocionalAntes: devocionalAntes ?? atual.devocionalAntes,
+    );
+    _planos[i] = atualizado;
+    final mudouODiaADia =
+        !_mesmaLista(novosLivros, atual.livros) || novosDias != atual.dias;
+    if (mudouODiaADia) _planosLidos.remove(id);
+    notifyListeners();
+    await _gravarPlanos();
+    if (mudouODiaADia) await _gravarPlanosLidos();
+    return atualizado;
+  }
+
+  bool _mesmaLista(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
   Future<void> removerPlano(String id) async {
     final antes = _planos.length;
     _planos.removeWhere((p) => p.id == id);

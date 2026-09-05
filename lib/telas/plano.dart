@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 // ScrollCacheExtent ainda não é reexportado por material.dart nesta versão.
 import 'package:flutter/rendering.dart';
+import 'package:go_router/go_router.dart';
 
 import '../data/conteudo.dart';
 import '../data/estado.dart';
@@ -15,8 +16,6 @@ import '../estilo/spacing.dart';
 import '../funcoes/datas.dart';
 import '../funcoes/planos_acoes.dart';
 import '../widgets/widgets.dart';
-import 'meu_plano.dart';
-import 'novo_plano.dart';
 
 /// Cronograma anual agrupado por mês, com marcação de lido — e, na aba Meus
 /// Planos, os planos de leitura que o usuário cria, compartilha e acompanha.
@@ -318,7 +317,7 @@ class _AbaDosMeusPlanos extends StatelessWidget {
               acao: FilledButton.icon(
                 icon: const Icon(Icons.add),
                 label: const Text('Criar plano'),
-                onPressed: () => _abrirNovoPlano(context, estado),
+                onPressed: () => _abrirNovoPlano(context),
               ),
             )
           : ListView(
@@ -340,7 +339,7 @@ class _AbaDosMeusPlanos extends StatelessWidget {
                     FilledButton.icon(
                       icon: const Icon(Icons.add),
                       label: const Text('Criar plano'),
-                      onPressed: () => _abrirNovoPlano(context, estado),
+                      onPressed: () => _abrirNovoPlano(context),
                     ),
                   ],
                 ),
@@ -354,27 +353,13 @@ class _AbaDosMeusPlanos extends StatelessWidget {
     );
   }
 
-  Future<void> _abrirNovoPlano(BuildContext context, Estado estado) async {
-    final criado = await Navigator.push<PlanoDoUsuario>(
-      context,
-      MaterialPageRoute(builder: (_) => TelaNovoPlano(estado: estado)),
-    );
+  // Rotas próprias sob /plano (ver main.dart), não Navigator.push avulso: é o
+  // que faz a aba resetar para esta lista ao voltar de outra aba com um
+  // plano aberto (Moldura._irParaAba).
+  Future<void> _abrirNovoPlano(BuildContext context) async {
+    final criado = await context.push<PlanoDoUsuario>('/plano/novo');
     if (criado == null || !context.mounted) return;
-    _abrirDetalhe(context, estado, criado);
-  }
-
-  void _abrirDetalhe(
-    BuildContext context,
-    Estado estado,
-    PlanoDoUsuario plano,
-  ) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) =>
-            TelaDeUmPlano(estado: estado, planoId: plano.id, plano: plano),
-      ),
-    );
+    context.push('/plano/${criado.id}');
   }
 }
 
@@ -407,16 +392,7 @@ class _CartaoDePlano extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => TelaDeUmPlano(
-              estado: estado,
-              planoId: plano.id,
-              plano: plano,
-            ),
-          ),
-        ),
+        onTap: () => context.push('/plano/${plano.id}'),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
             Spacing.sp14,

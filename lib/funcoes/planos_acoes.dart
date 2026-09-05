@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../data/estado.dart';
+import '../data/planos.dart';
 import '../data/planos_nuvem.dart';
+import '../telas/editar_plano.dart';
 import 'aviso.dart';
 
 /// Ações de plano que tocam a nuvem antes do espelho local, com a confirmação
@@ -41,6 +43,56 @@ Future<bool> excluirPlano(
     }
   }
   await estado.removerPlano(planoId);
+  return true;
+}
+
+/// Edita nome, livros, dias e devocionais de um plano: abre o formulário, e —
+/// confirmado — grava no espelho local e, se compartilhado, também no
+/// documento da nuvem (só o criador chega aqui; ver o menu de opções em
+/// `lib/telas/meu_plano.dart` e a regra do Firestore). Devolve se salvou de
+/// fato.
+///
+/// Mudar livros ou dias apaga o progresso deste aparelho (ver
+/// `Estado.atualizarPlano`); num plano compartilhado, apaga também a própria
+/// entrada de dias lidos na nuvem — a de quem editou, não a dos outros
+/// participantes, que a regra do Firestore não deixa o criador tocar.
+Future<bool> editarPlano(
+  BuildContext context,
+  Estado estado,
+  PlanoDoUsuario plano,
+) async {
+  final edicao = await mostrarEditorDePlano(context, plano);
+  if (edicao == null) return false;
+  final mudouODiaADia =
+      edicao.livros.length != plano.livros.length ||
+      edicao.dias != plano.dias ||
+      !edicao.livros.asMap().entries.every((e) => e.value == plano.livros[e.key]);
+  if (plano.compartilhado) {
+    try {
+      await PlanosNaNuvem.instancia.atualizar(
+        plano.id,
+        titulo: edicao.titulo,
+        livros: edicao.livros,
+        dias: edicao.dias,
+        incluirDevocionais: edicao.incluirDevocionais,
+        devocionalAntes: edicao.devocionalAntes,
+      );
+      if (mudouODiaADia) {
+        await PlanosNaNuvem.instancia.gravarDias(plano.id, const []);
+      }
+    } on PlanosNaNuvemException catch (erro) {
+      if (context.mounted) mostrarErro(context, erro.mensagem);
+      return false;
+    }
+  }
+  await estado.atualizarPlano(
+    plano.id,
+    titulo: edicao.titulo,
+    livros: edicao.livros,
+    dias: edicao.dias,
+    incluirDevocionais: edicao.incluirDevocionais,
+    devocionalAntes: edicao.devocionalAntes,
+  );
   return true;
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../data/canon.dart';
 import '../data/conteudo.dart';
@@ -85,7 +86,7 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
       devocionalAntes: _devocionalAntes,
     );
     if (!mounted) return;
-    Navigator.pop(context, plano);
+    context.pop(plano);
   }
 
   String? _validarDias(String? valor) {

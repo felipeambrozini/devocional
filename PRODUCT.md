@@ -65,8 +65,12 @@ vitoriana dele, tratando o leitor por "tu".
   o próprio progresso. Ao criar o plano, uma caixa de marcar (desmarcada por
   padrão) inclui junto os devocionais (Manhã, Noite, Promessas de Deus) cujo
   versículo citado cai no capítulo do dia, antes ou depois dele, à escolha
-  de quem cria; a prévia do plano já mostra o resultado. Só vale para planos
-  do usuário, não para o cronograma anual fixo.
+  de quem cria; a prévia do plano já mostra o resultado. Depois de criado,
+  quem criou pode editar tudo isso de novo pelo menu de opções do plano —
+  nome, livros, dias e a inclusão/posição dos devocionais; mudar livros ou
+  dias pede confirmação e reinicia o progresso marcado (o dia 5 de hoje pode
+  virar outro trecho da Bíblia). Só vale para planos do usuário, não para o
+  cronograma anual fixo.
 - Avatar da conta (foto do Google ou inicial do nome) na saudação da aba
   Hoje, com foto trocável pela câmera ou galeria.
 - Só em pt_BR; conteúdo vem de JSON locais em `assets/`, carregado sob demanda.

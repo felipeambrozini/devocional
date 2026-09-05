@@ -38,6 +38,7 @@ import 'telas/historico.dart';
 import 'telas/hoje.dart';
 import 'telas/meu_plano.dart';
 import 'telas/notas.dart';
+import 'telas/novo_plano.dart';
 import 'telas/plano.dart';
 import 'telas/privacidade.dart';
 import 'telas/sobre.dart';
@@ -485,6 +486,41 @@ final _router = GoRouter(
                   ),
               ],
             )
+          else if (d.caminho == 'plano')
+            // Novo plano e o detalhe de um plano viram rotas próprias (não um
+            // Navigator.push avulso): é o que faz `goBranch(initialLocation:
+            // true)` descartar o plano aberto ao voltar para esta aba (ver
+            // `Moldura._irParaAba`) — uma rota empurrada por fora do
+            // go_router sobrevive ao reset, porque o go_router não sabe que
+            // ela existe.
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/${d.caminho}',
+                  builder: (context, state) =>
+                      FocusScope(node: _escoposDasAbas[i], child: d.tela),
+                  routes: [
+                    GoRoute(
+                      path: 'novo',
+                      builder: (context, state) =>
+                          TelaNovoPlano(estado: EscopoDoEstado.de(context)),
+                    ),
+                    GoRoute(
+                      path: ':id',
+                      builder: (context, state) {
+                        final id = state.pathParameters['id']!;
+                        final estado = EscopoDoEstado.de(context);
+                        return TelaDeUmPlano(
+                          estado: estado,
+                          planoId: id,
+                          plano: estado.planoDoUsuario(id),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            )
           else
             StatefulShellBranch(
               routes: [
@@ -643,7 +679,12 @@ class Moldura extends StatelessWidget {
     }
     navigationShell.goBranch(
       i,
-      initialLocation: i == navigationShell.currentIndex,
+      // A aba Plano sempre reabre em Meus Planos: diferente da Bíblia (que
+      // preserva capítulo e rolagem de propósito), não faz sentido continuar
+      // vendo um plano específico depois de ir para outra aba e voltar —
+      // ver a lixeira e o resto da navegação de planos em telas/plano.dart.
+      initialLocation:
+          i == navigationShell.currentIndex || _destinos[i].caminho == 'plano',
     );
     // Depois do frame: antes dele a aba de destino ainda não está na frente.
     WidgetsBinding.instance.addPostFrameCallback((_) {

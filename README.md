@@ -21,7 +21,9 @@ mesmo código).
   entra com a própria conta Google e o progresso de todos aparece junto (Meus
   Planos). Quem criou pode excluir o plano (some para todos os participantes,
   com o progresso de cada um); quem só participa pode sair, e some só o
-  próprio progresso.
+  próprio progresso. Quem criou também edita o plano depois — nome, livros,
+  dias e a inclusão/posição dos devocionais — pelo menu de opções; mudar
+  livros ou dias pede confirmação e reinicia o progresso marcado.
 - **Leitura em voz alta**: botão Ouvir narra capítulos da Bíblia, Manhã e
   Noite, Promessas de Deus e as introduções, numa voz que remete ao tom de
   Charles Spurgeon (não é clone da voz do Felipe), em MP3 pré-gerado
@@ -310,6 +312,36 @@ motivo novo.
   própria participação, para quem só entrou no plano de outra pessoa. Os dois
   ficam disponíveis pela lixeira no cartão de "Meus Planos" e pelo menu
   dentro do plano.
+- **Novo plano e o detalhe de um plano viraram rotas de verdade sob `/plano`**
+  (04/09/2026): antes eram `Navigator.push(MaterialPageRoute(...))` avulso a
+  partir de dentro da aba Plano. O botão físico de voltar do Android já
+  funcionava com isso (`GoRouterDelegate.popRoute` prioriza o Navigator da
+  aba ativa antes do raiz), mas `goBranch(initialLocation: true)` — o reset
+  que `Moldura._irParaAba` (`main.dart`) usa ao voltar para uma aba — só
+  descarta rotas que o próprio go_router controla; uma rota empurrada por
+  fora sobrevive ao reset porque ele nem sabe que ela existe. Por isso trocar
+  para Bíblia e voltar para Planos continuava mostrando o plano aberto antes,
+  em vez da lista. A correção: `/plano/novo` e `/plano/:id` (`main.dart`),
+  navegadas com `context.push`/`context.pop` (`lib/telas/plano.dart`,
+  `lib/telas/novo_plano.dart`) em vez de `Navigator.push`/`pop` cru. Provado
+  com um teste de widget que cria um plano, troca de aba pela barra inferior
+  e volta (`test/planos_test.dart`) — sem ele o bug não reproduzia de forma
+  confiável só lendo o código.
+- **Editar um plano depois de criado** (04/09/2026): nome, livros, dias e a
+  inclusão/posição dos devocionais, tudo pelo mesmo formulário da criação,
+  agora num diálogo (`mostrarEditorDePlano`, `lib/telas/editar_plano.dart`)
+  aberto pelo menu de opções (`lib/telas/meu_plano.dart`) — só quem criou o
+  plano vê a opção, num compartilhado. Mudar livros ou dias remonta os dias
+  do plano (`PlanoDoUsuario.diasDoPlano`), reaproveitando o número de cada
+  dia para um conteúdo diferente — por isso `Estado.atualizarPlano` apaga o
+  progresso deste aparelho junto, e o diálogo confirma isso antes de salvar.
+  Num plano compartilhado, a regra do Firestore (`planoEditavelPeloCriador`
+  em `firestore.rules`) só deixa o criador tocar `titulo`/`livros`/`dias`/
+  `incluirDevocionais`/`devocionalAntes` do documento — nunca a lista de
+  participantes; o progresso de quem edita reinicia também na nuvem (mesma
+  chamada de `gravarDias` que marcar um dia usa), mas o dos outros
+  participantes só reinicia quando cada um marcar de novo, porque as regras
+  não deixam o criador escrever na entrada alheia.
 - **Funcionalidades se ligam/desligam por uma constante, não por servidor de
   configuração** (20/08/2026): `lib/data/recursos.dart` reúne os
   interruptores — `planoPersonalizado` (aba "Meus planos"), `ouvirTextos`
