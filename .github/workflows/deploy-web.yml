@@ -50,8 +50,15 @@ jobs:
             -e "s/__FIREBASE_AUTH_DOMAIN__/${{ secrets.FIREBASE_AUTH_DOMAIN }}/" \
             -e "s/__FIREBASE_STORAGE_BUCKET__/${{ secrets.FIREBASE_STORAGE_BUCKET }}/" \
             web/firebase-messaging-sw.js
+      # --no-tree-shake-icons: o subsetter de fontes de ícone do Flutter (que
+      # roda por padrão em todo `flutter build`) corrompe as fontes CFF/OTF
+      # do Font Awesome especificamente no renderer da Web — todo ícone virava
+      # uma caixa vazia (tofu), só na web, com Android/iOS normais (mesmo
+      # tree-shaking, mas o rasterizador nativo tolera o resultado). Custo:
+      # ~700KB a mais no bundle, aceitável para um app que não é
+      # dado-sensível.
       - run: |
-          flutter build web --release --base-href /devocional/ \
+          flutter build web --release --no-tree-shake-icons --base-href /devocional/ \
             --dart-define=FIREBASE_API_KEY_WEB=${{ secrets.FIREBASE_API_KEY_WEB }} \
             --dart-define=FIREBASE_API_KEY_ANDROID=${{ secrets.FIREBASE_API_KEY_ANDROID }} \
             --dart-define=FIREBASE_API_KEY_IOS=${{ secrets.FIREBASE_API_KEY_IOS }} \
