@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 // ScrollCacheExtent ainda não é reexportado por material.dart nesta versão.
 import 'package:flutter/rendering.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/conteudo.dart';
@@ -37,7 +38,7 @@ class _TelaPlanoState extends State<TelaPlano> {
 
     final acaoDeAjustes = IconButton(
       tooltip: 'Tamanho do texto e aparência',
-      icon: const Icon(Icons.tune),
+      icon: const FaIcon(FontAwesomeIcons.sliders),
       onPressed: () => ajustesDeLeitura(context, estado),
     );
 
@@ -49,7 +50,7 @@ class _TelaPlanoState extends State<TelaPlano> {
       builder: (context, _) {
         if (!Recursos.planoPersonalizado || !Nuvem.instancia.logado) {
           return Scaffold(
-            appBar: AppBar(
+            appBar: DevocionalAppBar(
               title: const Text('Plano'),
               actions: [acaoDeAjustes],
             ),
@@ -74,7 +75,7 @@ class _AbasDoPlano extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(
+        appBar: DevocionalAppBar(
           title: const Text('Plano'),
           actions: [acaoDeAjustes],
           bottom: const TabBar(
@@ -309,13 +310,13 @@ class _AbaDosMeusPlanos extends StatelessWidget {
     return LarguraDeLeitura(
       child: planos.isEmpty
           ? AvisoVazio(
-              icone: Icons.edit_calendar_outlined,
+              icone: FontAwesomeIcons.calendarDays,
               titulo: 'Nenhum plano de leitura ainda',
               detalhe:
                   'Escolha um ou mais livros e em quantos dias quer lê-los: '
                   'o plano se monta sozinho, dia por dia.',
               acao: FilledButton.icon(
-                icon: const Icon(Icons.add),
+                icon: const FaIcon(FontAwesomeIcons.plus),
                 label: const Text('Criar plano'),
                 onPressed: () => _abrirNovoPlano(context),
               ),
@@ -337,7 +338,7 @@ class _AbaDosMeusPlanos extends StatelessWidget {
                       ),
                     ),
                     FilledButton.icon(
-                      icon: const Icon(Icons.add),
+                      icon: const FaIcon(FontAwesomeIcons.plus),
                       label: const Text('Criar plano'),
                       onPressed: () => _abrirNovoPlano(context),
                     ),
@@ -417,8 +418,8 @@ class _CartaoDePlano extends StatelessWidget {
                       padding: const EdgeInsets.only(top: Spacing.sp2),
                       child: Tooltip(
                         message: 'Plano compartilhado por link',
-                        child: Icon(
-                          Icons.group_outlined,
+                        child: FaIcon(
+                          FontAwesomeIcons.userGroup,
                           size: 18,
                           color: cor.primary,
                         ),
@@ -430,8 +431,8 @@ class _CartaoDePlano extends StatelessWidget {
                   // o alvo de toque fica nos 48dp padrão do IconButton.
                   IconButton(
                     tooltip: souCriador ? 'Excluir plano' : 'Sair do plano',
-                    icon: Icon(
-                      Icons.delete_outline,
+                    icon: FaIcon(
+                      FontAwesomeIcons.trash,
                       size: 20,
                       color: cor.onSurfaceVariant,
                     ),

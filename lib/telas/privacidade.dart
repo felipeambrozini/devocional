@@ -17,7 +17,7 @@ class TelaPrivacidade extends StatelessWidget {
   Widget build(BuildContext context) {
     final tema = Theme.of(context).textTheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Política de privacidade')),
+      appBar: DevocionalAppBar(title: const Text('Política de privacidade')),
       body: LarguraDeLeitura(
         // O chat só existe para quem tem acesso à função (ver
         // Recursos.conversas); as seções que falam dele ficam de fora da

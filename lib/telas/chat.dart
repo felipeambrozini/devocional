@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/conversador.dart';
@@ -233,7 +234,7 @@ class _TelaChatState extends State<TelaChat> {
         (estado.conversaDe(widget.persona.id, conversaId)?.cortada ?? false);
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: DevocionalAppBar(
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -275,7 +276,7 @@ class _TelaChatState extends State<TelaChat> {
           if (conversaId != null)
             IconButton(
               tooltip: 'Apagar esta conversa',
-              icon: const Icon(Icons.delete_outline),
+              icon: const FaIcon(FontAwesomeIcons.trash),
               onPressed: _limparConversa,
             ),
         ],
@@ -391,7 +392,10 @@ class _TelaChatState extends State<TelaChat> {
                             )
                           : IconButton(
                               tooltip: 'Enviar',
-                              icon: Icon(Icons.send, color: cor.primary),
+                              icon: FaIcon(
+                                FontAwesomeIcons.paperPlane,
+                                color: cor.primary,
+                              ),
                               onPressed: _enviar,
                             ),
                     ),
@@ -692,7 +696,7 @@ class _ErroDeResposta extends StatelessWidget {
                     ),
                     TextButton.icon(
                       onPressed: () => aoTentarDeNovo(),
-                      icon: const Icon(Icons.refresh, size: 18),
+                      icon: const FaIcon(FontAwesomeIcons.arrowsRotate, size: 18),
                       label: const Text('Tentar de novo'),
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(

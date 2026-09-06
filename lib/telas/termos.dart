@@ -15,7 +15,7 @@ class TelaTermos extends StatelessWidget {
   Widget build(BuildContext context) {
     final tema = Theme.of(context).textTheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Termos de serviço')),
+      appBar: DevocionalAppBar(title: const Text('Termos de serviço')),
       body: LarguraDeLeitura(
         // O chat só existe para quem tem acesso à função (ver
         // Recursos.conversas); os termos não citam o que essa conta não

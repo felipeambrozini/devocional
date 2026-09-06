@@ -8,6 +8,7 @@ import 'package:felipe_ambrozini/telas/biblia.dart';
 import 'package:felipe_ambrozini/telas/devocional.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -77,7 +78,7 @@ void main() {
       await abrir(tester);
 
       await tester.enterText(find.byType(TextField), 'João 3:16');
-      await tester.tap(find.byIcon(Icons.arrow_forward).first);
+      await tester.tap(find.byIcon(FontAwesomeIcons.arrowRight.data).first);
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Ir para João 3:16'), findsOneWidget);
@@ -95,7 +96,7 @@ void main() {
       await abrir(tester);
 
       await tester.enterText(find.byType(TextField), 'amor');
-      await tester.tap(find.byIcon(Icons.arrow_forward).first);
+      await tester.tap(find.byIcon(FontAwesomeIcons.arrowRight.data).first);
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Ir para'), findsNothing);
@@ -127,7 +128,7 @@ void main() {
           find.byType(TextField),
           'primeira promessa ao homem caído',
         );
-        await tester.tap(find.byIcon(Icons.arrow_forward).first);
+        await tester.tap(find.byIcon(FontAwesomeIcons.arrowRight.data).first);
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Devocionais'));

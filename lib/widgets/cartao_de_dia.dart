@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../data/modelos.dart';
 import '../estilo/spacing.dart';
@@ -95,8 +96,8 @@ class CartaoDeDia extends StatelessWidget {
             ),
             IconButton(
               tooltip: lido ? 'Desmarcar' : 'Marcar como lido',
-              icon: Icon(
-                lido ? Icons.check_circle : Icons.radio_button_unchecked,
+              icon: FaIcon(
+                lido ? FontAwesomeIcons.circleCheck : FontAwesomeIcons.circle,
                 color: lido ? cor.secondary : cor.onSurfaceVariant,
               ),
               onPressed: aoAlternar,

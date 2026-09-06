@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../data/canon.dart';
 import '../data/planos.dart';
@@ -134,7 +135,7 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                     const SizedBox(height: Spacing.sp8),
                     OutlinedButton.icon(
                       onPressed: escolherLivros,
-                      icon: const Icon(Icons.library_books_outlined),
+                      icon: const FaIcon(FontAwesomeIcons.book),
                       label: Text(
                         '${livros.length} '
                         '${livros.length == 1 ? 'livro' : 'livros'} '

@@ -18,6 +18,7 @@ import 'package:felipe_ambrozini/telas/plano.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -466,9 +467,9 @@ void main() {
       '/charles-spurgeon',
     );
 
-    // O botão de voltar da AppBar desta versão do Flutter é um IconButton
-    // com o BackButtonIcon, não o widget BackButton que o pageBack() procura.
-    await tester.tap(find.byIcon(Icons.arrow_back));
+    // O botão de voltar da AppBar é o IconButton do DevocionalAppBar, não o
+    // widget BackButton que o pageBack() procura.
+    await tester.tap(find.byIcon(FontAwesomeIcons.arrowLeft.data));
     await tester.pumpAndSettle();
 
     expect(
@@ -727,8 +728,8 @@ void main() {
   Future<void> voltarParaCasa(WidgetTester tester) async {
     // O router é global e os testes rodam no mesmo processo: devolve a
     // navegação ao ponto de partida para não contaminar o teste seguinte.
-    while (tester.any(find.byIcon(Icons.arrow_back))) {
-      await tester.tap(find.byIcon(Icons.arrow_back).first);
+    while (tester.any(find.byIcon(FontAwesomeIcons.arrowLeft.data))) {
+      await tester.tap(find.byIcon(FontAwesomeIcons.arrowLeft.data).first);
       await tester.pumpAndSettle();
     }
   }

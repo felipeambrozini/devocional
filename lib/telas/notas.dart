@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../data/conteudo.dart';
 import '../data/estado.dart';
@@ -58,23 +59,23 @@ class _TelaNotasState extends State<TelaNotas> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(
+        appBar: DevocionalAppBar(
           title: const Text('Favoritos e notas'),
           actions: [
             IconButton(
               tooltip: 'Tamanho do texto e aparência',
-              icon: const Icon(Icons.tune),
+              icon: const FaIcon(FontAwesomeIcons.sliders),
               onPressed: () => ajustesDeLeitura(context, estado),
             ),
             PopupMenuButton<void Function()>(
               tooltip: 'Cópia de segurança',
-              icon: const Icon(Icons.more_vert),
+              icon: const FaIcon(FontAwesomeIcons.ellipsisVertical),
               onSelected: (acao) => acao(),
               itemBuilder: (context) => [
                 PopupMenuItem(
                   value: () => _exportar(context, estado),
                   child: const ListTile(
-                    leading: Icon(Icons.upload_outlined),
+                    leading: FaIcon(FontAwesomeIcons.upload),
                     title: Text('Exportar cópia'),
                     contentPadding: EdgeInsets.zero,
                   ),
@@ -82,7 +83,7 @@ class _TelaNotasState extends State<TelaNotas> {
                 PopupMenuItem(
                   value: () => _importar(context, estado),
                   child: const ListTile(
-                    leading: Icon(Icons.download_outlined),
+                    leading: FaIcon(FontAwesomeIcons.download),
                     title: Text('Importar cópia'),
                     contentPadding: EdgeInsets.zero,
                   ),
@@ -119,11 +120,11 @@ class _TelaNotasState extends State<TelaNotas> {
                   onChanged: (v) => setState(() => _busca = v),
                   decoration: InputDecoration(
                     hintText: 'Buscar por referência ou anotação',
-                    prefixIcon: const Icon(Icons.search),
+                    prefixIcon: const FaIcon(FontAwesomeIcons.magnifyingGlass),
                     suffixIcon: _busca.isEmpty
                         ? null
                         : IconButton(
-                            icon: const Icon(Icons.clear),
+                            icon: const FaIcon(FontAwesomeIcons.xmark),
                             tooltip: 'Limpar busca',
                             onPressed: () => setState(() {
                               _controle.clear();
@@ -140,13 +141,13 @@ class _TelaNotasState extends State<TelaNotas> {
                       itens: favoritos,
                       vazio: _busca.isEmpty
                           ? const AvisoVazio(
-                              icone: Icons.bookmark_outline,
+                              icone: FontAwesomeIcons.bookmark,
                               titulo: 'Nenhum favorito',
                               detalhe:
                                   'Toque num versículo na Bíblia para favoritá-lo.',
                             )
                           : const AvisoVazio(
-                              icone: Icons.search_off,
+                              icone: FontAwesomeIcons.magnifyingGlassMinus,
                               titulo: 'Nada encontrado',
                             ),
                     ),
@@ -155,13 +156,13 @@ class _TelaNotasState extends State<TelaNotas> {
                       mostrarNota: true,
                       vazio: _busca.isEmpty
                           ? const AvisoVazio(
-                              icone: Icons.edit_note,
+                              icone: FontAwesomeIcons.penToSquare,
                               titulo: 'Nenhuma anotação',
                               detalhe:
                                   'Toque num versículo na Bíblia para anotar.',
                             )
                           : const AvisoVazio(
-                              icone: Icons.search_off,
+                              icone: FontAwesomeIcons.magnifyingGlassMinus,
                               titulo: 'Nada encontrado',
                             ),
                     ),
@@ -197,7 +198,7 @@ class _AvisoDePerda extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(Spacing.sp16, Spacing.sp10, Spacing.sp8, Spacing.sp10),
       child: Row(
         children: [
-          Icon(Icons.info_outline, color: cor.onSurfaceVariant, size: 20),
+          FaIcon(FontAwesomeIcons.circleInfo, color: cor.onSurfaceVariant, size: 20),
           const SizedBox(width: Spacing.sp12),
           Expanded(
             child: ListenableBuilder(
@@ -355,7 +356,7 @@ class _CartaoDeMarcacao extends StatelessWidget {
                   ),
                   IconButton(
                     tooltip: 'Editar anotação',
-                    icon: const Icon(Icons.edit_note, size: 20),
+                    icon: const FaIcon(FontAwesomeIcons.penToSquare, size: 20),
                     onPressed: () async {
                       final nota = await editarNota(
                         context,
@@ -374,7 +375,7 @@ class _CartaoDeMarcacao extends StatelessWidget {
                   ),
                   IconButton(
                     tooltip: 'Remover',
-                    icon: const Icon(Icons.delete_outline, size: 20),
+                    icon: const FaIcon(FontAwesomeIcons.trash, size: 20),
                     onPressed: () async {
                       final confirmou = await confirmarRemocao(
                         context,

@@ -93,8 +93,8 @@ class _CartaoDeAjuda extends StatelessWidget {
     final tema = Theme.of(context).textTheme;
     return Cartao(
       titulo: 'Como usar',
-      acessorio: Icon(
-        Icons.auto_stories_outlined,
+      acessorio: FaIcon(
+        FontAwesomeIcons.bookOpenReader,
         color: cor.primary,
         size: 20,
       ),
@@ -152,18 +152,18 @@ Future<void> _escolherFoto(BuildContext context) async {
         mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
-            leading: const Icon(Icons.photo_camera),
+            leading: const FaIcon(FontAwesomeIcons.camera),
             title: const Text('Câmera'),
             onTap: () => Navigator.pop(folha, _AcaoDeFoto.camera),
           ),
           ListTile(
-            leading: const Icon(Icons.photo_library),
+            leading: const FaIcon(FontAwesomeIcons.images),
             title: const Text('Galeria'),
             onTap: () => Navigator.pop(folha, _AcaoDeFoto.galeria),
           ),
           if (temFoto)
             ListTile(
-              leading: const Icon(Icons.delete_outline),
+              leading: const FaIcon(FontAwesomeIcons.trash),
               title: const Text('Remover foto'),
               onTap: () => Navigator.pop(folha, _AcaoDeFoto.remover),
             ),
@@ -312,7 +312,7 @@ class _BotaoDeConta extends StatelessWidget {
       builder: (context, _) => nuvem.logado
           ? TextButton.icon(
               onPressed: () => _sairDaConta(context),
-              icon: const Icon(Icons.logout, size: 18),
+              icon: const FaIcon(FontAwesomeIcons.rightFromBracket, size: 18),
               label: const Text('Sair'),
             )
           : OutlinedButton.icon(
@@ -403,10 +403,10 @@ class _PreviaDaLeitura extends StatelessWidget {
 
   String get _titulo => leitura.tituloCompleto;
 
-  IconData get _icone => switch (leitura) {
-    Leitura.manha => Icons.wb_sunny_outlined,
-    Leitura.noite => Icons.nightlight_outlined,
-    Leitura.promessas => Icons.auto_awesome_outlined,
+  FaIconData get _icone => switch (leitura) {
+    Leitura.manha => FontAwesomeIcons.sun,
+    Leitura.noite => FontAwesomeIcons.moon,
+    Leitura.promessas => FontAwesomeIcons.wandMagicSparkles,
   };
 
   Future<Devocional?> _futuro() {
@@ -427,7 +427,7 @@ class _PreviaDaLeitura extends StatelessWidget {
   /// Cartão de uma linha só, para quando ainda não há texto para mostrar.
   Widget _aviso(BuildContext context, String texto) => Cartao(
     titulo: _titulo,
-    acessorio: Icon(
+    acessorio: FaIcon(
       _icone,
       color: Theme.of(context).colorScheme.primary,
       size: 20,
@@ -480,7 +480,7 @@ class _PreviaDaLeitura extends StatelessWidget {
         );
         return Cartao(
           titulo: _titulo,
-          acessorio: Icon(_icone, color: cor.primary, size: 20),
+          acessorio: FaIcon(_icone, color: cor.primary, size: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -519,7 +519,7 @@ class _PreviaDaLeitura extends StatelessWidget {
                 // ação tinha dois controles na mesma tela.
                 child: TextButton.icon(
                   onPressed: () => _abrir(context),
-                  icon: const Icon(Icons.arrow_forward, size: 16),
+                  icon: const FaIcon(FontAwesomeIcons.arrowRight, size: 16),
                   label: const Text('Ler tudo'),
                 ),
               ),
@@ -603,8 +603,8 @@ class _CartaoLeituraProgresso extends StatelessWidget {
               ),
               IconButton(
                 tooltip: lido ? 'Desmarcar' : 'Marcar como lido',
-                icon: Icon(
-                  lido ? Icons.check_circle : Icons.radio_button_unchecked,
+                icon: FaIcon(
+                  lido ? FontAwesomeIcons.circleCheck : FontAwesomeIcons.circle,
                   color: lido ? cor.secondary : cor.onSurfaceVariant,
                 ),
                 onPressed: () =>

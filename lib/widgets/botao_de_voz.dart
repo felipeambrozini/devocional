@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../data/audio_offline.dart';
 import '../data/eventos.dart';
@@ -218,12 +219,12 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
                             ),
                             const SizedBox(width: Spacing.sp10),
                           ],
-                          Icon(
+                          FaIcon(
                             ativo
-                                ? Icons.pause_rounded
+                                ? FontAwesomeIcons.pause
                                 : preparando
-                                ? Icons.hourglass_top_rounded
-                                : Icons.play_arrow_rounded,
+                                ? FontAwesomeIcons.hourglassStart
+                                : FontAwesomeIcons.play,
                             size: 20,
                             color: cor.primary,
                           ),
@@ -300,8 +301,8 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.wifi_off_rounded,
+                  FaIcon(
+                    FontAwesomeIcons.plugCircleXmark,
                     size: 20,
                     color: cor.onSurfaceVariant,
                   ),
@@ -404,8 +405,8 @@ class _BotaoDeEncerrar extends StatelessWidget {
           child: SizedBox.square(
             dimension: Spacing.sp48,
             child: Center(
-              child: Icon(
-                Icons.close_rounded,
+              child: FaIcon(
+                FontAwesomeIcons.xmark,
                 size: 18,
                 color: cor.onSurfaceVariant,
               ),
@@ -465,7 +466,7 @@ class IndicadorDeVozNaBarra extends StatelessWidget {
                       backgroundColor: cor.surfaceContainerHighest,
                     ),
                   ),
-                  Icon(Icons.hourglass_top_rounded, size: 18),
+                  FaIcon(FontAwesomeIcons.hourglassStart, size: 18),
                 ],
               ),
               onPressed: voz.parar,
@@ -513,10 +514,10 @@ class IndicadorDeVozNaBarra extends StatelessWidget {
                                 backgroundColor: cor.surfaceContainerHighest,
                               ),
                             ),
-                            Icon(
+                            FaIcon(
                               retomar
-                                  ? Icons.play_circle_outline
-                                  : Icons.pause_circle_outline,
+                                  ? FontAwesomeIcons.circlePlay
+                                  : FontAwesomeIcons.circlePause,
                               size: 18,
                             ),
                           ],
@@ -530,7 +531,7 @@ class IndicadorDeVozNaBarra extends StatelessWidget {
               if (!retomar)
                 IconButton(
                   tooltip: 'Encerrar a leitura',
-                  icon: const Icon(Icons.stop_rounded, size: 20),
+                  icon: const FaIcon(FontAwesomeIcons.stop, size: 20),
                   onPressed: voz.parar,
                 ),
             ],

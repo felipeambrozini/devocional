@@ -10,6 +10,7 @@ export 'botao_de_voz.dart';
 export 'carrega_uma_vez.dart';
 export 'cartao.dart';
 export 'cartao_de_dia.dart';
+export 'devocional_app_bar.dart';
 export 'faixa.dart';
 export 'filete.dart';
 export 'folha_de_ajustes.dart';

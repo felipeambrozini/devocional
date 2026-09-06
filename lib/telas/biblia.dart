@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../data/canon.dart';
@@ -292,7 +293,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
             _abrirBusca,
       },
       child: Scaffold(
-        appBar: AppBar(
+        appBar: DevocionalAppBar(
           title: Tooltip(
             message: 'Toque para escolher capítulo',
             child: TextButton(
@@ -309,7 +310,11 @@ class _TelaBibliaState extends State<TelaBiblia> {
                       style: Theme.of(context).appBarTheme.titleTextStyle,
                     ),
                   ),
-                  Icon(Icons.expand_more, color: cor.primary, size: 20),
+                  FaIcon(
+                    FontAwesomeIcons.chevronDown,
+                    color: cor.primary,
+                    size: 20,
+                  ),
                 ],
               ),
             ),
@@ -318,12 +323,12 @@ class _TelaBibliaState extends State<TelaBiblia> {
             IndicadorDeVozNaBarra(chave: chaveDeCapitulo(_livro, _capitulo)),
             IconButton(
               tooltip: 'Buscar',
-              icon: const Icon(Icons.search),
+              icon: const FaIcon(FontAwesomeIcons.magnifyingGlass),
               onPressed: _abrirBusca,
             ),
             IconButton(
               tooltip: 'Tamanho do texto e aparência',
-              icon: const Icon(Icons.tune),
+              icon: const FaIcon(FontAwesomeIcons.sliders),
               onPressed: () => ajustesDeLeitura(context, estado),
             ),
           ],
@@ -374,7 +379,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
     final capitulo = snap.data!;
     if (capitulo.versiculos.isEmpty) {
       return const AvisoVazio(
-        icone: Icons.menu_book_outlined,
+        icone: FontAwesomeIcons.bookOpen,
         titulo: 'Capítulo não encontrado',
       );
     }
@@ -511,8 +516,8 @@ class _Leitor extends StatelessWidget {
                                   style: tema.displayMedium,
                                 ),
                                 const SizedBox(width: Spacing.sp8),
-                                Icon(
-                                  Icons.expand_more,
+                                FaIcon(
+                                  FontAwesomeIcons.chevronDown,
                                   size: 22,
                                   color: cor.primary,
                                 ),
@@ -659,7 +664,11 @@ class _LinhaDeVersiculo extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.edit_note, size: 15, color: cor.primary),
+                    FaIcon(
+                      FontAwesomeIcons.penToSquare,
+                      size: 15,
+                      color: cor.primary,
+                    ),
                     const SizedBox(width: Spacing.sp6),
                     Expanded(
                       child: Text(
@@ -751,8 +760,10 @@ class _AcoesDoVersiculo {
 
   ListTile _itemFavoritar(BuildContext folha, ColorScheme cor) {
     return ListTile(
-      leading: Icon(
-        marcacao != null ? Icons.bookmark : Icons.bookmark_outline,
+      leading: FaIcon(
+        marcacao != null
+            ? FontAwesomeIcons.solidBookmark
+            : FontAwesomeIcons.bookmark,
         color: cor.primary,
       ),
       title: Text(marcacao != null ? 'Remover dos favoritos' : 'Favoritar'),
@@ -781,7 +792,7 @@ class _AcoesDoVersiculo {
 
   ListTile _itemCopiar(BuildContext folha, ColorScheme cor) {
     return ListTile(
-      leading: Icon(Icons.content_copy_outlined, color: cor.primary),
+      leading: FaIcon(FontAwesomeIcons.copy, color: cor.primary),
       title: const Text('Copiar'),
       onTap: () async {
         final mensageiro = ScaffoldMessenger.of(folha);
@@ -795,7 +806,7 @@ class _AcoesDoVersiculo {
 
   ListTile _itemCompartilhar(BuildContext folha, ColorScheme cor) {
     return ListTile(
-      leading: Icon(Icons.ios_share_outlined, color: cor.primary),
+      leading: FaIcon(FontAwesomeIcons.arrowUpFromBracket, color: cor.primary),
       title: const Text('Compartilhar'),
       onTap: () async {
         final navegador = Navigator.of(folha);
@@ -807,8 +818,8 @@ class _AcoesDoVersiculo {
 
   ListTile _itemAnotar(BuildContext folha) {
     return ListTile(
-      leading: Icon(
-        Icons.edit_note,
+      leading: FaIcon(
+        FontAwesomeIcons.penToSquare,
         color: Theme.of(folha).colorScheme.primary,
       ),
       title: Text(
@@ -901,8 +912,8 @@ class _AlcaDeDeslize extends StatelessWidget {
               ),
             ),
             child: Center(
-              child: Icon(
-                Icons.drag_indicator,
+              child: FaIcon(
+                FontAwesomeIcons.gripVertical,
                 size: 20,
                 color: cor.primary.withValues(alpha: 0.5),
               ),
@@ -947,12 +958,12 @@ class _BarraDeCapitulo extends StatelessWidget {
             IconButton(
               tooltip: 'Capítulo anterior',
               onPressed: podeVoltar ? aoVoltar : null,
-              icon: const Icon(Icons.chevron_left),
+              icon: const FaIcon(FontAwesomeIcons.chevronLeft),
             ),
             IconButton(
               tooltip: 'Próximo capítulo',
               onPressed: podeAvancar ? aoAvancar : null,
-              icon: const Icon(Icons.chevron_right),
+              icon: const FaIcon(FontAwesomeIcons.chevronRight),
             ),
           ],
         ),

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/audio_offline.dart';
@@ -24,7 +25,10 @@ class BotaoDeAjustes extends StatelessWidget {
   @override
   Widget build(BuildContext context) => IconButton(
     tooltip: 'Tamanho do texto e aparência',
-    icon: Icon(Icons.tune, color: Theme.of(context).colorScheme.primary),
+    icon: FaIcon(
+      FontAwesomeIcons.sliders,
+      color: Theme.of(context).colorScheme.primary,
+    ),
     onPressed: () => ajustesDeLeitura(context, estado),
   );
 }
@@ -162,20 +166,20 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 // e fontes, canais e privacidade esperam quem rola até o fim.
                 _ItemDeNavegacaoDaFolha(
                   folha: folha,
-                  icone: Icons.info_outline,
+                  icone: FontAwesomeIcons.circleInfo,
                   titulo: 'Sobre',
                   subtitulo: 'Fontes do texto, canais e privacidade',
                   rota: '/sobre',
                 ),
                 _ItemDeNavegacaoDaFolha(
                   folha: folha,
-                  icone: Icons.help_outline,
+                  icone: FontAwesomeIcons.circleQuestion,
                   titulo: 'Perguntas frequentes',
                   rota: '/faq',
                 ),
                 _ItemDeNavegacaoDaFolha(
                   folha: folha,
-                  icone: Icons.privacy_tip_outlined,
+                  icone: FontAwesomeIcons.shieldHalved,
                   titulo: 'Política de privacidade',
                   rota: '/privacidade',
                 ),
@@ -202,7 +206,7 @@ class _ItemDeNavegacaoDaFolha extends StatelessWidget {
   });
 
   final BuildContext folha;
-  final IconData icone;
+  final FaIconData icone;
   final String titulo;
   final String? subtitulo;
   final String rota;
@@ -210,7 +214,7 @@ class _ItemDeNavegacaoDaFolha extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(icone, color: Theme.of(context).colorScheme.primary),
+      leading: FaIcon(icone, color: Theme.of(context).colorScheme.primary),
       title: Text(titulo),
       subtitle: subtitulo == null ? null : Text(subtitulo!),
       onTap: () {
@@ -398,7 +402,7 @@ class _SecaoAudioOffline {
                           : Text(pronto ? 'Baixado' : '$baixados/$total'),
                       trailing: pronto
                           ? IconButton(
-                              icon: const Icon(Icons.delete_outline),
+                              icon: const FaIcon(FontAwesomeIcons.trash),
                               tooltip: 'Apagar',
                               onPressed: off.baixando
                                   ? null

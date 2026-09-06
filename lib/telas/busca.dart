@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../data/canon.dart';
 import '../data/conteudo.dart';
@@ -168,7 +169,7 @@ class _TelaBuscaState extends State<TelaBusca> {
       length: 2,
       initialIndex: widget.abaInicial == AbaDaBusca.devocionais ? 1 : 0,
       child: Scaffold(
-        appBar: AppBar(
+        appBar: DevocionalAppBar(
           title: const Text('Buscar'),
           bottom: const TabBar(tabs: [Tab(text: 'Bíblia'), Tab(text: 'Devocionais')]),
         ),
@@ -187,14 +188,14 @@ class _TelaBuscaState extends State<TelaBusca> {
                   onSubmitted: (_) => _buscar(),
                   decoration: InputDecoration(
                     hintText: 'Palavra, expressão ou referência',
-                    prefixIcon: Icon(
-                      Icons.search,
+                    prefixIcon: FaIcon(
+                      FontAwesomeIcons.magnifyingGlass,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     suffixIcon: _controle.text.isEmpty
                         ? IconButton(
                             tooltip: 'Buscar',
-                            icon: const Icon(Icons.arrow_forward),
+                            icon: const FaIcon(FontAwesomeIcons.arrowRight),
                             onPressed: _buscar,
                           )
                         : Row(
@@ -202,12 +203,12 @@ class _TelaBuscaState extends State<TelaBusca> {
                             children: [
                               IconButton(
                                 tooltip: 'Limpar busca',
-                                icon: const Icon(Icons.clear),
+                                icon: const FaIcon(FontAwesomeIcons.xmark),
                                 onPressed: _limpar,
                               ),
                               IconButton(
                                 tooltip: 'Buscar',
-                                icon: const Icon(Icons.arrow_forward),
+                                icon: const FaIcon(FontAwesomeIcons.arrowRight),
                                 onPressed: _buscar,
                               ),
                             ],
@@ -268,14 +269,14 @@ class _AbaBiblia extends StatelessWidget {
     }
     if (termoBuscado.isEmpty) {
       return const AvisoVazio(
-        icone: Icons.search,
+        icone: FontAwesomeIcons.magnifyingGlass,
         titulo: 'Busque um versículo',
         detalhe: 'A busca ignora acentos e maiúsculas.',
       );
     }
     if (achados.isEmpty && referencia == null && !buscando) {
       return AvisoVazio(
-        icone: Icons.search_off,
+        icone: FontAwesomeIcons.magnifyingGlassMinus,
         titulo: 'Nada encontrado',
         detalhe: 'Nenhum versículo com "$termoBuscado".',
       );
@@ -361,7 +362,7 @@ class _CartaoDeReferencia extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: Spacing.sp10, horizontal: Spacing.sp4),
         child: Row(
           children: [
-            Icon(Icons.arrow_forward, size: 18, color: cor.primary),
+            FaIcon(FontAwesomeIcons.arrowRight, size: 18, color: cor.primary),
             const SizedBox(width: Spacing.sp10),
             Text(
               'Ir para $rotulo',
@@ -442,14 +443,14 @@ class _AbaDevocionais extends StatelessWidget {
     }
     if (termoBuscado.isEmpty) {
       return const AvisoVazio(
-        icone: Icons.menu_book_outlined,
+        icone: FontAwesomeIcons.bookOpen,
         titulo: 'Busque nos devocionais',
         detalhe: 'Manhã e Noite e Promessas de Deus, na voz de Spurgeon.',
       );
     }
     if (achados.isEmpty && !buscando) {
       return AvisoVazio(
-        icone: Icons.search_off,
+        icone: FontAwesomeIcons.magnifyingGlassMinus,
         titulo: 'Nada encontrado',
         detalhe: 'Nenhum devocional com "$termoBuscado".',
       );
@@ -557,7 +558,7 @@ class _ErroDeBusca extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => AvisoVazio(
-    icone: Icons.error_outline,
+    icone: FontAwesomeIcons.triangleExclamation,
     titulo: 'Não foi possível carregar',
     detalhe: 'A busca falhou. Tente de novo.',
     acao: TextButton(

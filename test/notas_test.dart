@@ -3,6 +3,7 @@ import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/telas/notas.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Busca na tela de Marcações: filtra por referência e por texto da nota, não
@@ -108,7 +109,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Favoritos (1)'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.clear));
+    await tester.tap(find.byIcon(FontAwesomeIcons.xmark.data));
     await tester.pumpAndSettle();
     expect(find.text('Favoritos (2)'), findsOneWidget);
   });

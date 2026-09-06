@@ -273,6 +273,12 @@ class Conteudo {
     return _comVersiculosResolvidos(Devocional.doJson(dia));
   }
 
+  /// O título que Promessas de Deus dá ao dia [chaveDoDia] — para o botão do
+  /// plano mostrar o assunto da promessa em vez do rótulo genérico do tipo.
+  /// `null` se o índice ainda não aqueceu ou o dia não tem título.
+  String? tituloDaPromessa(String chaveDoDia) =>
+      _promessas?[chaveDoDia]?['titulo'] as String?;
+
   Map<String, List<ItemDeDevocional>>? _indiceDeDevocionais;
   Future<void>? _carregandoIndiceDeDevocionais;
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/estado.dart';
@@ -64,7 +65,7 @@ class TelaHistorico extends StatelessWidget {
     final estado = EscopoDoEstado.de(context);
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: DevocionalAppBar(
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -100,7 +101,7 @@ class TelaHistorico extends StatelessWidget {
         actions: [
           IconButton(
             tooltip: 'Nova conversa',
-            icon: const Icon(Icons.add_comment_outlined),
+            icon: const FaIcon(FontAwesomeIcons.commentDots),
             onPressed: () => _abrirNova(context),
           ),
           // Só tem o que apagar tudo quando há conversas.
@@ -110,7 +111,7 @@ class TelaHistorico extends StatelessWidget {
                 ? const SizedBox.shrink()
                 : IconButton(
                     tooltip: 'Apagar todas as conversas',
-                    icon: const Icon(Icons.delete_sweep_outlined),
+                    icon: const FaIcon(FontAwesomeIcons.broom),
                     onPressed: () => _apagarTodas(context),
                   ),
           ),
@@ -153,7 +154,7 @@ class TelaHistorico extends StatelessWidget {
                 ),
                 trailing: IconButton(
                   tooltip: 'Apagar conversa',
-                  icon: Icon(Icons.delete_outline, color: cor.error),
+                  icon: FaIcon(FontAwesomeIcons.trash, color: cor.error),
                   onPressed: () => _apagarUma(context, conversa),
                 ),
               );
@@ -210,7 +211,7 @@ class _SemConversas extends StatelessWidget {
             const SizedBox(height: Spacing.sp18),
             FilledButton.icon(
               onPressed: aoComecar,
-              icon: const Icon(Icons.add_comment_outlined),
+              icon: const FaIcon(FontAwesomeIcons.commentDots),
               label: const Text('Começar conversa'),
             ),
           ],

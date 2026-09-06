@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -52,12 +53,12 @@ class _TelaSobreState extends State<TelaSobre> {
     final tema = Theme.of(context).textTheme;
     final cor = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(
+      appBar: DevocionalAppBar(
         title: const Text('Sobre'),
         actions: [
           IconButton(
             tooltip: 'Tamanho do texto e aparência',
-            icon: const Icon(Icons.tune),
+            icon: const FaIcon(FontAwesomeIcons.sliders),
             onPressed: () =>
                 ajustesDeLeitura(context, EscopoDoEstado.de(context)),
           ),
@@ -134,7 +135,7 @@ class _TelaSobreState extends State<TelaSobre> {
                   return Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton.icon(
-                      icon: const Icon(Icons.refresh),
+                      icon: const FaIcon(FontAwesomeIcons.arrowsRotate),
                       label: const Text('Tentar de novo'),
                       onPressed: () => setState(() => _tentativasDaDemo++),
                     ),
@@ -213,7 +214,7 @@ class _TelaSobreState extends State<TelaSobre> {
             // procura por ajuda quando se procura.
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.help_outline, color: cor.primary),
+              leading: FaIcon(FontAwesomeIcons.circleQuestion, color: cor.primary),
               title: const Text('Como usar'),
               subtitle: const Text('O cartão da primeira visita, de novo.'),
               onTap: () => _mostrarAjuda(context),
@@ -221,7 +222,7 @@ class _TelaSobreState extends State<TelaSobre> {
             if (_emailDeContato.isNotEmpty)
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: Icon(Icons.mail_outline, color: cor.primary),
+                leading: FaIcon(FontAwesomeIcons.envelope, color: cor.primary),
                 title: const Text('Relatar um problema'),
                 subtitle: const Text(
                   'Abre um e-mail com a versão do app já preenchida.',
@@ -237,7 +238,7 @@ class _TelaSobreState extends State<TelaSobre> {
                 final estado = EscopoDoEstado.de(context);
                 return SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  secondary: Icon(Icons.insights_outlined, color: cor.primary),
+                  secondary: FaIcon(FontAwesomeIcons.chartLine, color: cor.primary),
                   title: const Text('Erro técnico e uso anônimo'),
                   subtitle: const Text(
                     'Sentry (erro) e Analytics (uso por tela), sem '
@@ -290,13 +291,13 @@ class _TelaSobreState extends State<TelaSobre> {
               const SizedBox(height: Spacing.sp10),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: Icon(Icons.privacy_tip_outlined, color: cor.primary),
+                leading: FaIcon(FontAwesomeIcons.shieldHalved, color: cor.primary),
                 title: const Text('Política de privacidade completa'),
                 onTap: () => GoRouter.of(context).push('/privacidade'),
               ),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: Icon(Icons.description_outlined, color: cor.primary),
+                leading: FaIcon(FontAwesomeIcons.fileLines, color: cor.primary),
                 title: const Text('Termos de serviço'),
                 onTap: () => GoRouter.of(context).push('/termos'),
               ),
@@ -306,7 +307,7 @@ class _TelaSobreState extends State<TelaSobre> {
                 builder: (context, _) => Nuvem.instancia.logado
                     ? ListTile(
                         contentPadding: EdgeInsets.zero,
-                        leading: Icon(Icons.delete_outline, color: cor.error),
+                        leading: FaIcon(FontAwesomeIcons.trash, color: cor.error),
                         title: const Text('Apagar meus dados da nuvem'),
                         subtitle: const Text(
                           'Remove a cópia salva na conta. O que está neste '

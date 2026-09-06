@@ -297,7 +297,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
             child: const Text('Fechar'),
           ),
           FilledButton.icon(
-            icon: const Icon(Icons.copy),
+            icon: const FaIcon(FontAwesomeIcons.copy),
             label: const Text('Copiar link'),
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: link));
@@ -347,7 +347,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
     final lidos = _meusLidos().length;
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: DevocionalAppBar(
         title: Text(plano?.titulo ?? 'Plano'),
         actions: [
           if (_compartilhado && dados != null) ...[
@@ -369,7 +369,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
                 const PopupMenuItem(
                   value: 'copiar',
                   child: ListTile(
-                    leading: Icon(Icons.link),
+                    leading: FaIcon(FontAwesomeIcons.link),
                     title: Text('Copiar link do plano'),
                   ),
                 ),
@@ -379,7 +379,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
                   const PopupMenuItem(
                     value: 'editar',
                     child: ListTile(
-                      leading: Icon(Icons.edit_outlined),
+                      leading: FaIcon(FontAwesomeIcons.penToSquare),
                       title: Text('Editar plano'),
                     ),
                   ),
@@ -387,7 +387,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
                   const PopupMenuItem(
                     value: 'sair',
                     child: ListTile(
-                      leading: Icon(Icons.logout),
+                      leading: FaIcon(FontAwesomeIcons.rightFromBracket),
                       title: Text('Sair do plano'),
                     ),
                   )
@@ -395,7 +395,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
                   const PopupMenuItem(
                     value: 'excluir',
                     child: ListTile(
-                      leading: Icon(Icons.delete_outline),
+                      leading: FaIcon(FontAwesomeIcons.trash),
                       title: Text('Excluir plano'),
                     ),
                   ),
@@ -416,14 +416,14 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
                 PopupMenuItem(
                   value: 'editar',
                   child: ListTile(
-                    leading: Icon(Icons.edit_outlined),
+                    leading: FaIcon(FontAwesomeIcons.penToSquare),
                     title: Text('Editar plano'),
                   ),
                 ),
                 PopupMenuItem(
                   value: 'excluir',
                   child: ListTile(
-                    leading: Icon(Icons.delete_outline),
+                    leading: FaIcon(FontAwesomeIcons.trash),
                     title: Text('Excluir plano'),
                   ),
                 ),
@@ -446,10 +446,10 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
     }
     if (_erro != null) {
       return AvisoVazio(
-        icone: Icons.error_outline,
+        icone: FontAwesomeIcons.triangleExclamation,
         titulo: _erro!,
         acao: FilledButton.icon(
-          icon: const Icon(Icons.refresh),
+          icon: const FaIcon(FontAwesomeIcons.arrowsRotate),
           label: const Text('Tentar de novo'),
           onPressed: () {
             setState(() {
@@ -602,7 +602,9 @@ class _CartaoDeCompartilhar extends StatelessWidget {
             const SizedBox(height: Spacing.sp10),
             OutlinedButton.icon(
               onPressed: aoCompartilhar,
-              icon: Icon(compartilhado ? Icons.link : Icons.share),
+              icon: FaIcon(
+                compartilhado ? FontAwesomeIcons.link : FontAwesomeIcons.shareNodes,
+              ),
               label: Text(compartilhado ? 'Copiar link' : 'Compartilhar'),
             ),
           ],

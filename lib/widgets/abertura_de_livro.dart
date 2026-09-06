@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../data/canon.dart';
 import '../data/conteudo.dart';
@@ -81,8 +82,10 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                             ],
                           ),
                         ),
-                        Icon(
-                          _aberta ? Icons.expand_less : Icons.expand_more,
+                        FaIcon(
+                          _aberta
+                              ? FontAwesomeIcons.chevronUp
+                              : FontAwesomeIcons.chevronDown,
                           color: cor.primary,
                         ),
                       ],

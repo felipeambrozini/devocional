@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/canon.dart';
@@ -108,7 +109,7 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
     final previa = _previa;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Novo plano de leitura')),
+      appBar: DevocionalAppBar(title: const Text('Novo plano de leitura')),
       body: LarguraDeLeitura(
         child: Form(
           key: _form,
@@ -136,7 +137,7 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
               const SizedBox(height: Spacing.sp8),
               OutlinedButton.icon(
                 onPressed: _escolherLivros,
-                icon: const Icon(Icons.library_books_outlined),
+                icon: const FaIcon(FontAwesomeIcons.book),
                 label: Text(
                   _livros.isEmpty
                       ? 'Escolher livros'
@@ -235,7 +236,7 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
               const SizedBox(height: Spacing.sp24),
               FilledButton.icon(
                 onPressed: _criar,
-                icon: const Icon(Icons.check),
+                icon: const FaIcon(FontAwesomeIcons.check),
                 label: const Text('Criar plano'),
               ),
             ],
@@ -281,7 +282,7 @@ Future<List<String>?> mostrarSeletorDeLivros(
                   onChanged: (_) => setDialogState(() {}),
                   decoration: const InputDecoration(
                     hintText: 'Buscar livro',
-                    prefixIcon: Icon(Icons.search),
+                    prefixIcon: FaIcon(FontAwesomeIcons.magnifyingGlass),
                     border: OutlineInputBorder(),
                   ),
                 ),

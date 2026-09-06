@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../estilo/spacing.dart';
 
@@ -12,7 +13,7 @@ class AvisoVazio extends StatelessWidget {
     this.acao,
   });
 
-  final IconData icone;
+  final FaIconData icone;
   final String titulo;
   final String? detalhe;
 
@@ -29,7 +30,7 @@ class AvisoVazio extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icone, size: 44, color: cor.outline),
+            FaIcon(icone, size: 44, color: cor.outline),
             const SizedBox(height: Spacing.sp16),
             Text(
               titulo,
@@ -63,7 +64,7 @@ class AvisoDeErro extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => AvisoVazio(
-    icone: Icons.error_outline,
+    icone: FontAwesomeIcons.triangleExclamation,
     titulo: 'Não foi possível carregar',
     detalhe:
         'Feche e abra o aplicativo. Se continuar, pode faltar um arquivo de conteúdo.',

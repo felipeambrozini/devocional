@@ -3,9 +3,9 @@ import 'package:felipe_ambrozini/data/estado.dart';
 import 'package:felipe_ambrozini/data/recursos.dart';
 import 'package:felipe_ambrozini/main.dart';
 import 'package:felipe_ambrozini/widgets/widgets.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -64,7 +64,7 @@ void main() {
       reason: 'abrir o histórico tem de pedir um pushState ao motor',
     );
 
-    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.tap(find.byIcon(FontAwesomeIcons.arrowLeft.data));
     await tester.pumpAndSettle();
 
     expect(

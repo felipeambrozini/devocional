@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -157,7 +158,7 @@ class _TelaDevocionalState extends State<TelaDevocional> {
     final estado = EscopoDoEstado.de(context);
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: DevocionalAppBar(
         title: Text(
           ehHoje ? 'Hoje, ${dataLonga(_data)}' : dataLonga(_data),
           overflow: TextOverflow.ellipsis,
@@ -165,23 +166,23 @@ class _TelaDevocionalState extends State<TelaDevocional> {
         actions: [
           IconButton(
             tooltip: 'Buscar',
-            icon: const Icon(Icons.search),
+            icon: const FaIcon(FontAwesomeIcons.magnifyingGlass),
             onPressed: _abrirBusca,
           ),
           IconButton(
             tooltip: 'Escolher data',
-            icon: const Icon(Icons.calendar_month_outlined),
+            icon: const FaIcon(FontAwesomeIcons.calendarDays),
             onPressed: _escolherData,
           ),
           if (!ehHoje)
             IconButton(
               tooltip: 'Voltar para hoje',
-              icon: const Icon(Icons.today_outlined),
+              icon: const FaIcon(FontAwesomeIcons.calendarCheck),
               onPressed: () => _irPara(_leitura, DateTime.now()),
             ),
           IconButton(
             tooltip: 'Tamanho do texto e aparência',
-            icon: const Icon(Icons.tune),
+            icon: const FaIcon(FontAwesomeIcons.sliders),
             onPressed: () => ajustesDeLeitura(context, estado),
           ),
         ],
@@ -412,7 +413,10 @@ class _CartaoDeLeitura extends StatelessWidget {
                 ),
                 IconButton(
                   tooltip: 'Compartilhar',
-                  icon: Icon(Icons.ios_share_outlined, color: cor.primary),
+                  icon: FaIcon(
+                    FontAwesomeIcons.arrowUpFromBracket,
+                    color: cor.primary,
+                  ),
                   onPressed: () => SharePlus.instance.share(
                     ShareParams(text: _textoParaCompartilhar),
                   ),

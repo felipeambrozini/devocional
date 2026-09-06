@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 // Não `flutter_web_plugins.dart` (o barril): ele também exporta o registro de
 // plugins, que importa `dart:ui_web` sem condicional e quebra a compilação
 // para a VM — é o que `flutter test` usa. Este arquivo é condicional de
@@ -277,8 +278,8 @@ class _Destino {
   /// também evita acento em identificador para não depender de como cada
   /// camada decide escapar.
   final String caminho;
-  final IconData icone;
-  final IconData iconeAtivo;
+  final FaIconData icone;
+  final FaIconData iconeAtivo;
   final Widget tela;
 
   /// Em telas largas os balões de conversa substituem a aba: esconder este
@@ -290,43 +291,43 @@ const _destinos = <_Destino>[
   _Destino(
     'Hoje',
     'hoje',
-    Icons.wb_twilight_outlined,
-    Icons.wb_twilight,
+    FontAwesomeIcons.sun,
+    FontAwesomeIcons.solidSun,
     TelaHoje(),
   ),
   _Destino(
     'Bíblia',
     'biblia',
-    Icons.menu_book_outlined,
-    Icons.menu_book,
+    FontAwesomeIcons.bookOpen,
+    FontAwesomeIcons.bookOpen,
     TelaBiblia(),
   ),
   _Destino(
     'Devocional',
     'devocional',
-    Icons.auto_stories_outlined,
-    Icons.auto_stories,
+    FontAwesomeIcons.bookOpenReader,
+    FontAwesomeIcons.bookOpenReader,
     TelaDevocional(),
   ),
   _Destino(
     'Plano',
     'plano',
-    Icons.event_note_outlined,
-    Icons.event_note,
+    FontAwesomeIcons.calendarDays,
+    FontAwesomeIcons.solidCalendarDays,
     TelaPlano(),
   ),
   _Destino(
     'Notas',
     'notas',
-    Icons.bookmark_outline,
-    Icons.bookmark,
+    FontAwesomeIcons.bookmark,
+    FontAwesomeIcons.solidBookmark,
     TelaNotas(),
   ),
   _Destino(
     'Conversas',
     'conversas',
-    Icons.forum_outlined,
-    Icons.forum,
+    FontAwesomeIcons.comments,
+    FontAwesomeIcons.solidComments,
     TelaConversas(),
     mostrarNoRail: false,
   ),
@@ -735,8 +736,8 @@ class Moldura extends StatelessWidget {
           destinations: [
             for (final d in destinosVisiveis)
               NavigationDestination(
-                icon: Icon(d.icone),
-                selectedIcon: Icon(d.iconeAtivo),
+                icon: FaIcon(d.icone),
+                selectedIcon: FaIcon(d.iconeAtivo),
                 label: d.rotulo,
               ),
           ],
@@ -768,8 +769,8 @@ class Moldura extends StatelessWidget {
             destinations: [
               for (final d in destinosDoRail)
                 NavigationRailDestination(
-                  icon: Icon(d.icone),
-                  selectedIcon: Icon(d.iconeAtivo),
+                  icon: FaIcon(d.icone),
+                  selectedIcon: FaIcon(d.iconeAtivo),
                   label: Text(d.rotulo),
                 ),
             ],

@@ -28,7 +28,7 @@ class TelaConversas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Conversas')),
+      appBar: DevocionalAppBar(title: const Text('Conversas')),
       body: LarguraDeLeitura(
         // Recursos.conversas depende do e-mail logado (ver Nuvem): sem
         // ouvir a nuvem, entrar ou sair da conta com a aba aberta deixava o
@@ -89,7 +89,7 @@ class _PedirAcesso extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.forum_outlined, size: 56, color: cor.primary),
+            FaIcon(FontAwesomeIcons.comments, size: 56, color: cor.primary),
             const SizedBox(height: Spacing.sp16),
             Text(
               'Recurso premium',
@@ -167,7 +167,7 @@ class _CartaDeConversa extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: cor.primary),
+              FaIcon(FontAwesomeIcons.chevronRight, color: cor.primary),
             ],
           ),
         ),

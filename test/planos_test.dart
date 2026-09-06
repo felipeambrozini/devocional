@@ -8,6 +8,7 @@ import 'package:felipe_ambrozini/telas/novo_plano.dart';
 import 'package:felipe_ambrozini/telas/plano.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -660,11 +661,11 @@ void main() {
                   ),
                   destinations: const [
                     NavigationDestination(
-                      icon: Icon(Icons.event_note),
+                      icon: FaIcon(FontAwesomeIcons.calendarDays),
                       label: 'Plano',
                     ),
                     NavigationDestination(
-                      icon: Icon(Icons.book),
+                      icon: FaIcon(FontAwesomeIcons.bookOpen),
                       label: 'Bíblia',
                     ),
                   ],
@@ -765,7 +766,7 @@ void main() {
 
       expect(find.text('Gênesis em 5 dias'), findsOneWidget);
       expect(find.text('5 dias · 50 capítulos'), findsOneWidget);
-      expect(find.byIcon(Icons.group_outlined), findsOneWidget);
+      expect(find.byIcon(FontAwesomeIcons.userGroup.data), findsOneWidget);
     });
 
     testWidgets('checkbox de devocionais mostra o seletor e cria o plano '

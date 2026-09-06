@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Atalhos de teclado do leitor, para a web.
@@ -94,8 +95,8 @@ void main() {
     testWidgets('não aparecem no Android', (tester) async {
       await comoSe(TargetPlatform.android, () async {
         await abrirLeitor(tester);
-        expect(find.byIcon(Icons.chevron_right), findsNothing);
-        expect(find.byIcon(Icons.chevron_left), findsNothing);
+        expect(find.byIcon(FontAwesomeIcons.chevronRight.data), findsNothing);
+        expect(find.byIcon(FontAwesomeIcons.chevronLeft.data), findsNothing);
       });
     });
   });
@@ -119,7 +120,7 @@ void main() {
     // eles já não existem; a asserção cobre o Android, que é o lugar onde dá
     // para simular a ausência. O que importa aqui é o teclado: esconder os
     // botões nunca pode esconder o atalho.
-    expect(find.byIcon(Icons.chevron_right), findsNothing);
+    expect(find.byIcon(FontAwesomeIcons.chevronRight.data), findsNothing);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
     await tester.pumpAndSettle();
     expect(estado.ultimaLeitura, ('genesis', 2));

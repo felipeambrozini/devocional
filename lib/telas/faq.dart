@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/nuvem.dart';
@@ -16,7 +17,7 @@ class TelaFAQ extends StatelessWidget {
   Widget build(BuildContext context) {
     final tema = Theme.of(context).textTheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Perguntas frequentes')),
+      appBar: DevocionalAppBar(title: const Text('Perguntas frequentes')),
       body: LarguraDeLeitura(
         // O chat só existe para quem tem acesso à função (ver
         // Recursos.conversas); as perguntas sobre ele não fazem sentido
@@ -34,7 +35,10 @@ class TelaFAQ extends StatelessWidget {
               const SizedBox(height: Spacing.sp16),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: Icon(Icons.privacy_tip_outlined, color: Theme.of(context).colorScheme.primary),
+                leading: FaIcon(
+                  FontAwesomeIcons.shieldHalved,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 title: const Text('Política de privacidade completa'),
                 subtitle: const Text('O que é guardado, onde e por quê.'),
                 onTap: () => context.push('/privacidade'),

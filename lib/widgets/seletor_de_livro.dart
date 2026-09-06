@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../data/canon.dart';
 import '../data/conteudo.dart';
@@ -65,7 +66,7 @@ class _SeletorDeLivroState extends State<SeletorDeLivro> {
                       onChanged: (v) => setState(() => _filtro = v.trim()),
                       decoration: const InputDecoration(
                         hintText: 'Buscar livro',
-                        prefixIcon: Icon(Icons.search),
+                        prefixIcon: FaIcon(FontAwesomeIcons.magnifyingGlass),
                       ),
                     ),
                   ),
@@ -75,7 +76,7 @@ class _SeletorDeLivroState extends State<SeletorDeLivro> {
                     padding: const EdgeInsets.all(Spacing.sp8),
                     child: TextButton.icon(
                       onPressed: () => setState(() => _escolhido = null),
-                      icon: const Icon(Icons.arrow_back),
+                      icon: const FaIcon(FontAwesomeIcons.arrowLeft),
                       label: const Text('Todos os livros'),
                     ),
                   ),
