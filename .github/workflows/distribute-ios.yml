@@ -87,7 +87,7 @@ jobs:
             --dart-define=WHATSAPP_NUMERO=${{ secrets.WHATSAPP_NUMERO }}
 
       - name: Distribute to Firebase App Distribution
-        uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15
+        uses: w9jds/firebase-action@c38233488869fe50f21a3ab4931095d09807cc7a # v15
         with:
           args: appdistribution:distribute build/ios/ipa/*.ipa \
             --app 1:169480227109:ios:8f722638a506e0d83c72cc \

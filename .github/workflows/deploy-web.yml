@@ -106,7 +106,7 @@ jobs:
       # (firebase target:apply), não como seletor de recurso — como o
       # firebase.json não define target, "storage:rules" falhava com
       # "Could not find rules for the following storage targets: rules".
-      - uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15.27.0
+      - uses: w9jds/firebase-action@c38233488869fe50f21a3ab4931095d09807cc7a # v15.27.0
         with:
           args: deploy --only hosting,firestore:rules,storage,functions
         env:
