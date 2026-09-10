@@ -1,6 +1,6 @@
-import 'package:felipe_ambrozini/data/estado.dart';
-import 'package:felipe_ambrozini/data/lembretes.dart';
-import 'package:felipe_ambrozini/data/recursos.dart';
+import 'package:felipe_ambrozini/dados/estado.dart';
+import 'package:felipe_ambrozini/dados/lembretes.dart';
+import 'package:felipe_ambrozini/dados/recursos.dart';
 import 'package:felipe_ambrozini/main.dart';
 import 'package:felipe_ambrozini/telas/chat.dart';
 import 'package:felipe_ambrozini/widgets/widgets.dart';
@@ -75,20 +75,20 @@ void main() {
         // tela. O finder desce até o balão para não colidir com outros textos.
         expect(
           find.descendant(
-            of: find.byType(BalaoDeChat),
+            of: find.byType(DevocionalBalaoDeChat),
             matching: find.text('Spurgeon'),
           ),
           findsOneWidget,
         );
         expect(
           find.descendant(
-            of: find.byType(BalaoDeChat),
+            of: find.byType(DevocionalBalaoDeChat),
             matching: find.text('Felipe'),
           ),
           findsOneWidget,
         );
 
-        await tester.tap(find.byType(BotaoDeAjustes));
+        await tester.tap(find.byType(DevocionalBotaoDeAjustes));
         await tester.pumpAndSettle();
 
         expect(camadasFlutuantes.value, greaterThan(0), reason: 'folha aberta');
@@ -159,7 +159,7 @@ void main() {
       await tester.pumpWidget(AppDevocional(estado: estado));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(BotaoDeAjustes));
+      await tester.tap(find.byType(DevocionalBotaoDeAjustes));
       await tester.pumpAndSettle();
 
       // A aba Conversas é a entrada do chat; o interruptor que escondia os
@@ -194,7 +194,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Sem faixa nem balão: nada de retrato por cima do texto de leitura.
-      expect(find.byType(BalaoDeChat), findsNothing);
+      expect(find.byType(DevocionalBalaoDeChat), findsNothing);
 
       await tester.tap(find.text('Conversas'));
       await tester.pumpAndSettle();

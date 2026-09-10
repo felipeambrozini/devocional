@@ -18,8 +18,8 @@ import 'package:flutter/material.dart';
 /// Não memoizar dentro do [Conteudo]: guardar o Future amarra ele à zona de quem
 /// chamou primeiro, e um future criado no `tester.runAsync` nunca entrega o valor
 /// para quem se inscreve pela zona de tempo falso do teste.
-class CarregaUmaVez<T> extends StatefulWidget {
-  const CarregaUmaVez({
+class DevocionalCarregaUmaVez<T> extends StatefulWidget {
+  const DevocionalCarregaUmaVez({
     super.key,
     required this.chave,
     required this.carregar,
@@ -31,10 +31,10 @@ class CarregaUmaVez<T> extends StatefulWidget {
   final AsyncWidgetBuilder<T> construir;
 
   @override
-  State<CarregaUmaVez<T>> createState() => _CarregaUmaVezState<T>();
+  State<DevocionalCarregaUmaVez<T>> createState() => _CarregaUmaVezState<T>();
 }
 
-class _CarregaUmaVezState<T> extends State<CarregaUmaVez<T>> {
+class _CarregaUmaVezState<T> extends State<DevocionalCarregaUmaVez<T>> {
   late Future<T> _futuro;
 
   @override
@@ -44,7 +44,7 @@ class _CarregaUmaVezState<T> extends State<CarregaUmaVez<T>> {
   }
 
   @override
-  void didUpdateWidget(CarregaUmaVez<T> anterior) {
+  void didUpdateWidget(DevocionalCarregaUmaVez<T> anterior) {
     super.didUpdateWidget(anterior);
     if (widget.chave != anterior.chave) _futuro = widget.carregar();
   }

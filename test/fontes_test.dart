@@ -1,4 +1,4 @@
-import 'package:felipe_ambrozini/estilo/theme.dart';
+import 'package:felipe_ambrozini/estilo/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show FontLoader, rootBundle;
 import 'package:flutter_test/flutter_test.dart';
@@ -72,7 +72,7 @@ void main() {
 
   test('os estilos do tema saem em pesos distintos de verdade', () {
     // Ponta a ponta, sobre o tema que o app usa, e não sobre estilos montados
-    // aqui: se alguém tirar o fontVariations de theme.dart, corpo e destaque
+    // aqui: se alguém tirar o fontVariations de tema.dart, corpo e destaque
     // passam a medir igual e este teste cai.
     final tema = construirTema().textTheme;
 

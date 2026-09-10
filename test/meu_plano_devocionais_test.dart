@@ -1,5 +1,5 @@
-import 'package:felipe_ambrozini/data/conteudo.dart';
-import 'package:felipe_ambrozini/data/estado.dart';
+import 'package:felipe_ambrozini/dados/conteudo.dart';
+import 'package:felipe_ambrozini/dados/estado.dart';
 import 'package:felipe_ambrozini/telas/meu_plano.dart';
 import 'package:felipe_ambrozini/widgets/faixa.dart';
 import 'package:flutter/material.dart';
@@ -60,9 +60,9 @@ void main() {
 
       // Gênesis 1 é citado por devocionais reais de Manhã e Noite de 05-01
       // (ver test/conteudo_test.dart); se a tela não aquecesse o índice,
-      // nenhum BotaoDeDevocional apareceria mesmo depois do índice global
+      // nenhum DevocionalBotaoDeDevocional apareceria mesmo depois do índice global
       // estar pronto, porque a tela nunca reconstruiria para lê-lo de novo.
-      expect(find.byType(BotaoDeDevocional), findsWidgets);
+      expect(find.byType(DevocionalBotaoDeDevocional), findsWidgets);
     },
   );
 }

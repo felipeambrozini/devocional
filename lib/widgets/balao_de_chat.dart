@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../data/estado.dart';
-import '../data/personas.dart';
+import '../dados/estado.dart';
+import '../dados/personas.dart';
 import '../estilo/spacing.dart';
 import 'widgets.dart';
 
@@ -9,8 +9,8 @@ import 'widgets.dart';
 ///
 /// Fica pendurado por cima de todas as telas (ver o `builder` em `main.dart`),
 /// no canto do próprio dono: Spurgeon à esquerda, Felipe à direita.
-class BalaoDeChat extends StatelessWidget {
-  const BalaoDeChat({super.key, required this.persona, required this.onTap});
+class DevocionalBalaoDeChat extends StatelessWidget {
+  const DevocionalBalaoDeChat({super.key, required this.persona, required this.onTap});
 
   final Persona persona;
   final VoidCallback onTap;
@@ -52,14 +52,14 @@ class BalaoDeChat extends StatelessWidget {
                       }
                       onTap();
                     },
-                    child: RetratoDePersona(
+                    child: DevocionalRetratoDePersona(
                       persona: persona,
                       tamanho: tamanho,
-                      folga: Spacing.sp3,
+                      folga: DevocionalEspacamento.sp3,
                     ),
                   ),
                 ),
-                const SizedBox(height: Spacing.sp4),
+                const SizedBox(height: DevocionalEspacamento.sp4),
                 // A placa com o nome curto: o retrato flutuante sem nome era um
                 // enigma na primeira visita, quando só o tooltip dizia quem era.
                 // Mesmo tom do círculo, para o balão ler como um pendão só, e
@@ -68,8 +68,8 @@ class BalaoDeChat extends StatelessWidget {
                 ExcludeSemantics(
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: Spacing.sp8,
-                      vertical: Spacing.sp3,
+                      horizontal: DevocionalEspacamento.sp8,
+                      vertical: DevocionalEspacamento.sp3,
                     ),
                     decoration: BoxDecoration(
                       color: cor.surfaceContainer,

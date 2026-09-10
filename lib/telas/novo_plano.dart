@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:go_router/go_router.dart';
 
-import '../data/canon.dart';
-import '../data/conteudo.dart';
-import '../data/estado.dart';
-import '../data/planos.dart';
+import '../controladores/novo_plano_controlador.dart';
+import '../dados/canon.dart';
+import '../dados/conteudo.dart';
+import '../dados/estado.dart';
+import '../dados/planos.dart';
 import '../estilo/spacing.dart';
-import '../funcoes/aviso.dart';
 import '../widgets/widgets.dart';
 
 /// Formulário de um novo plano de leitura: nome opcional, um ou mais livros
@@ -24,225 +23,170 @@ class TelaNovoPlano extends StatefulWidget {
 }
 
 class _TelaNovoPlanoState extends State<TelaNovoPlano> {
-  final _form = GlobalKey<FormState>();
-  final _titulo = TextEditingController();
-  final _dias = TextEditingController(text: '30');
-
-  /// Slugs escolhidos, na ordem canônica (a ordem do seletor).
-  final List<String> _livros = [];
-  bool _incluirDevocionais = false;
-  bool _devocionalAntes = true;
-
-  @override
-  void initState() {
-    super.initState();
-    Conteudo.instancia.aquecerIndiceDeDevocionais().then((_) {
-      if (mounted) setState(() {});
-    });
-  }
+  late final _controller = NovoPlanoControlador(estado: widget.estado);
 
   @override
   void dispose() {
-    _titulo.dispose();
-    _dias.dispose();
+    _controller.dispose();
     super.dispose();
-  }
-
-  int get _totalDeCapitulos {
-    var total = 0;
-    for (final slug in _livros) {
-      total += livroPorSlug(slug)?.capitulos ?? 0;
-    }
-    return total;
-  }
-
-  List<DiaDePlanoDoUsuario> get _previa => montarPlanoDeLeitura(
-    livros: _livros,
-    dias: int.tryParse(_dias.text) ?? 0,
-    incluirDevocionais: _incluirDevocionais,
-    devocionalAntes: _devocionalAntes,
-  );
-
-  Future<void> _escolherLivros() async {
-    final escolhidos = await mostrarSeletorDeLivros(context, jaEscolhidos: _livros);
-    if (escolhidos == null) return;
-    setState(() {
-      _livros
-        ..clear()
-        ..addAll(escolhidos);
-    });
-  }
-
-  Future<void> _criar() async {
-    if (_livros.isEmpty) {
-      mostrarAviso(context, 'Escolha pelo menos um livro.');
-      return;
-    }
-    if (!(_form.currentState?.validate() ?? false)) return;
-    final plano = await widget.estado.criarPlano(
-      titulo: _titulo.text,
-      livros: _livros,
-      dias: int.parse(_dias.text),
-      incluirDevocionais: _incluirDevocionais,
-      devocionalAntes: _devocionalAntes,
-    );
-    if (!mounted) return;
-    context.pop(plano);
-  }
-
-  String? _validarDias(String? valor) {
-    final dias = int.tryParse(valor ?? '');
-    if (dias == null || dias < 1) {
-      return 'Informe em quantos dias o plano acontece.';
-    }
-    final total = _totalDeCapitulos;
-    if (total > 0 && dias > total) {
-      return 'Os livros têm $total capítulos; o máximo é $total dias.';
-    }
-    return null;
   }
 
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context).textTheme;
-    final dias = int.tryParse(_dias.text) ?? 0;
-    final previa = _previa;
 
-    return Scaffold(
-      appBar: DevocionalAppBar(title: const Text('Novo plano de leitura')),
-      body: LarguraDeLeitura(
-        child: Form(
-          key: _form,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(
-              Spacing.sp16,
-              Spacing.sp12,
-              Spacing.sp16,
-              Spacing.sp32,
-            ),
-            children: [
-              TextFormField(
-                controller: _titulo,
-                textInputAction: TextInputAction.next,
-                decoration: InputDecoration(
-                  labelText: 'Nome do plano (opcional)',
-                  hintText: _livros.isEmpty
-                      ? 'Ex.: Ler os Evangelhos'
-                      : tituloDePlano(_livros, dias),
-                  border: const OutlineInputBorder(),
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) {
+        final livros = _controller.livros;
+        final dias = int.tryParse(_controller.dias.text) ?? 0;
+        final previa = _controller.previa;
+        final totalDeCapitulos = _controller.totalDeCapitulos;
+
+        return Scaffold(
+          appBar: DevocionalAppBar(title: const Text('Novo plano de leitura')),
+          body: DevocionalLarguraDeLeitura(
+            child: Form(
+              key: _controller.form,
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  DevocionalEspacamento.sp16,
+                  DevocionalEspacamento.sp12,
+                  DevocionalEspacamento.sp16,
+                  DevocionalEspacamento.sp32,
                 ),
-              ),
-              const SizedBox(height: Spacing.sp20),
-              Text('Quais livros?', style: tema.titleMedium),
-              const SizedBox(height: Spacing.sp8),
-              OutlinedButton.icon(
-                onPressed: _escolherLivros,
-                icon: const FaIcon(FontAwesomeIcons.book),
-                label: Text(
-                  _livros.isEmpty
-                      ? 'Escolher livros'
-                      : '${_livros.length} '
-                            '${_livros.length == 1 ? 'livro' : 'livros'} '
-                            'escolhidos',
-                ),
-              ),
-              if (_livros.isNotEmpty) ...[
-                const SizedBox(height: Spacing.sp10),
-                Wrap(
-                  spacing: Spacing.sp8,
-                  runSpacing: Spacing.sp8,
-                  children: [
-                    for (final slug in _livros)
-                      InputChip(
-                        label: Text(nomeDoLivro(slug)),
-                        onDeleted: () => setState(() => _livros.remove(slug)),
-                      ),
-                  ],
-                ),
-              ],
-              const SizedBox(height: Spacing.sp20),
-              Text('Em quantos dias?', style: tema.titleMedium),
-              const SizedBox(height: Spacing.sp8),
-              TextFormField(
-                controller: _dias,
-                keyboardType: TextInputType.number,
-                onChanged: (_) => setState(() {}),
-                validator: _validarDias,
-                decoration: InputDecoration(
-                  helperText: _totalDeCapitulos == 0
-                      ? 'Escolha os livros para ver o tamanho do plano.'
-                      : 'O plano terá $_totalDeCapitulos '
-                            '${_totalDeCapitulos == 1 ? 'capítulo' : 'capítulos'}.',
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: Spacing.sp20),
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                controlAffinity: ListTileControlAffinity.leading,
-                title: const Text('Incluir devocionais dos livros'),
-                subtitle: const Text(
-                  'Junto de cada capítulo, os devocionais de Manhã, Noite e '
-                  'Promessas de Deus que citam aquele texto.',
-                ),
-                value: _incluirDevocionais,
-                onChanged: (marcado) =>
-                    setState(() => _incluirDevocionais = marcado ?? false),
-              ),
-              if (_incluirDevocionais) ...[
-                const SizedBox(height: Spacing.sp8),
-                SegmentedButton<bool>(
-                  segments: const [
-                    ButtonSegment(value: true, label: Text('Antes do capítulo')),
-                    ButtonSegment(value: false, label: Text('Depois do capítulo')),
-                  ],
-                  selected: {_devocionalAntes},
-                  onSelectionChanged: (novo) =>
-                      setState(() => _devocionalAntes = novo.first),
-                ),
-              ],
-              if (_previa.isNotEmpty) ...[
-                const SizedBox(height: Spacing.sp20),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(Spacing.sp14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextFormField(
+                    controller: _controller.titulo,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                      labelText: 'Nome do plano (opcional)',
+                      hintText: livros.isEmpty
+                          ? 'Ex.: Ler os Evangelhos'
+                          : tituloDePlano(livros, dias),
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: DevocionalEspacamento.sp20),
+                  Text('Quais livros?', style: tema.titleMedium),
+                  const SizedBox(height: DevocionalEspacamento.sp8),
+                  OutlinedButton.icon(
+                    onPressed: () => _controller.escolherLivros(context),
+                    icon: const FaIcon(FontAwesomeIcons.book),
+                    label: Text(
+                      livros.isEmpty
+                          ? 'Escolher livros'
+                          : '${livros.length} '
+                                '${livros.length == 1 ? 'livro' : 'livros'} '
+                                'escolhidos',
+                    ),
+                  ),
+                  if (livros.isNotEmpty) ...[
+                    const SizedBox(height: DevocionalEspacamento.sp10),
+                    Wrap(
+                      spacing: DevocionalEspacamento.sp8,
+                      runSpacing: DevocionalEspacamento.sp8,
                       children: [
-                        Text('Prévia', style: tema.titleSmall),
-                        const SizedBox(height: Spacing.sp8),
-                        for (final dia in previa.take(3))
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: Spacing.sp4),
-                            child: Text(
-                              'Dia ${dia.numero} · ${dia.rotulo}',
-                              style: tema.bodySmall,
-                            ),
-                          ),
-                        if (previa.length > 3)
-                          Text(
-                            '… e mais ${previa.length - 3} dias',
-                            style: tema.bodySmall?.copyWith(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                            ),
+                        for (final slug in livros)
+                          InputChip(
+                            label: Text(nomeDoLivro(slug)),
+                            onDeleted: () => _controller.removerLivro(slug),
                           ),
                       ],
                     ),
+                  ],
+                  const SizedBox(height: DevocionalEspacamento.sp20),
+                  Text('Em quantos dias?', style: tema.titleMedium),
+                  const SizedBox(height: DevocionalEspacamento.sp8),
+                  TextFormField(
+                    controller: _controller.dias,
+                    keyboardType: TextInputType.number,
+                    onChanged: (_) => _controller.diasAlterados(),
+                    validator: _controller.validarDias,
+                    decoration: InputDecoration(
+                      helperText: totalDeCapitulos == 0
+                          ? 'Escolha os livros para ver o tamanho do plano.'
+                          : 'O plano terá $totalDeCapitulos '
+                                '${totalDeCapitulos == 1 ? 'capítulo' : 'capítulos'}.',
+                      border: const OutlineInputBorder(),
+                    ),
                   ),
-                ),
-              ],
-              const SizedBox(height: Spacing.sp24),
-              FilledButton.icon(
-                onPressed: _criar,
-                icon: const FaIcon(FontAwesomeIcons.check),
-                label: const Text('Criar plano'),
+                  const SizedBox(height: DevocionalEspacamento.sp20),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    title: const Text('Incluir devocionais dos livros'),
+                    subtitle: const Text(
+                      'Junto de cada capítulo, os devocionais de Manhã, Noite e '
+                      'Promessas de Deus que citam aquele texto.',
+                    ),
+                    value: _controller.incluirDevocionais,
+                    onChanged: _controller.definirIncluirDevocionais,
+                  ),
+                  if (_controller.incluirDevocionais) ...[
+                    const SizedBox(height: DevocionalEspacamento.sp8),
+                    SegmentedButton<bool>(
+                      segments: const [
+                        ButtonSegment(
+                          value: true,
+                          label: Text('Antes do capítulo'),
+                        ),
+                        ButtonSegment(
+                          value: false,
+                          label: Text('Depois do capítulo'),
+                        ),
+                      ],
+                      selected: {_controller.devocionalAntes},
+                      onSelectionChanged: (novo) =>
+                          _controller.definirDevocionalAntes(novo.first),
+                    ),
+                  ],
+                  if (previa.isNotEmpty) ...[
+                    const SizedBox(height: DevocionalEspacamento.sp20),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(DevocionalEspacamento.sp14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Prévia', style: tema.titleSmall),
+                            const SizedBox(height: DevocionalEspacamento.sp8),
+                            for (final dia in previa.take(3))
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: DevocionalEspacamento.sp4,
+                                ),
+                                child: Text(
+                                  'Dia ${dia.numero} · ${dia.rotulo}',
+                                  style: tema.bodySmall,
+                                ),
+                              ),
+                            if (previa.length > 3)
+                              Text(
+                                '… e mais ${previa.length - 3} dias',
+                                style: tema.bodySmall?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: DevocionalEspacamento.sp24),
+                  FilledButton.icon(
+                    onPressed: () => _controller.criar(context),
+                    icon: const FaIcon(FontAwesomeIcons.check),
+                    label: const Text('Criar plano'),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -266,7 +210,8 @@ Future<List<String>?> mostrarSeletorDeLivros(
         final termo = Conteudo.normalizar(busca.text);
         final livros = [
           for (final livro in canon)
-            if (termo.isEmpty || Conteudo.normalizar(livro.nome).contains(termo))
+            if (termo.isEmpty ||
+                Conteudo.normalizar(livro.nome).contains(termo))
               livro,
         ];
         return AlertDialog(
@@ -276,17 +221,14 @@ Future<List<String>?> mostrarSeletorDeLivros(
             height: 480,
             child: Column(
               children: [
-                TextField(
+                DevocionalBusca(
                   controller: busca,
                   autofocus: true,
+                  hintText: 'Buscar livro',
                   onChanged: (_) => setDialogState(() {}),
-                  decoration: const InputDecoration(
-                    hintText: 'Buscar livro',
-                    prefixIcon: FaIcon(FontAwesomeIcons.magnifyingGlass),
-                    border: OutlineInputBorder(),
-                  ),
+                  border: const OutlineInputBorder(),
                 ),
-                const SizedBox(height: Spacing.sp12),
+                const SizedBox(height: DevocionalEspacamento.sp12),
                 Expanded(
                   child: livros.isEmpty
                       ? const Center(child: Text('Nenhum livro encontrado.'))
@@ -324,10 +266,8 @@ Future<List<String>?> mostrarSeletorDeLivros(
               child: const Text('Cancelar'),
             ),
             FilledButton(
-              onPressed: () => Navigator.pop(
-                dialogContext,
-                selecionados.toList(),
-              ),
+              onPressed: () =>
+                  Navigator.pop(dialogContext, selecionados.toList()),
               child: const Text('Confirmar'),
             ),
           ],

@@ -5,40 +5,22 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
-import '../data/audio_offline.dart';
-import '../data/estado.dart';
-import '../data/eventos.dart';
-import '../data/lembretes.dart';
-import '../data/modelos.dart';
+import '../dados/audio_offline.dart';
+import '../dados/estado.dart';
+import '../dados/eventos.dart';
+import '../dados/lembretes.dart';
+import '../dados/modelos.dart';
 import '../funcoes/aviso.dart';
 import '../funcoes/lembretes_acoes.dart';
 import '../estilo/spacing.dart';
 import 'filete.dart';
-
-/// Abre os ajustes de leitura. Usado onde não há AppBar para pendurar a ação,
-/// que hoje é só a tela Hoje.
-class BotaoDeAjustes extends StatelessWidget {
-  const BotaoDeAjustes({super.key, required this.estado});
-
-  final Estado estado;
-
-  @override
-  Widget build(BuildContext context) => IconButton(
-    tooltip: 'Tamanho do texto e aparência',
-    icon: FaIcon(
-      FontAwesomeIcons.sliders,
-      color: Theme.of(context).colorScheme.primary,
-    ),
-    onPressed: () => ajustesDeLeitura(context, estado),
-  );
-}
 
 /// Ajustes de leitura: tamanho do texto e claro ou escuro, a dica dos botões
 /// de conversa, lembretes - e Sobre, que deixou de ser aba e voltou
 /// para a folha quando a URL das conversas passou a ser refletida no
 /// navegador (ver `main.dart`, `optionURLReflectsImperativeAPIs`).
 ///
-/// A folha fala dois assuntos e um Filete os divide: o que se ajusta na
+/// A folha fala dois assuntos e um DevocionalFilete os divide: o que se ajusta na
 /// leitura (tamanho, aparência e, na web, as setas do rodapé) vem antes;
 /// o que é do app inteiro (conversas, lembretes, Sobre) vem depois. Quem
 /// abriu da AppBar do leitor encontra o assunto da leitura sem rolar.
@@ -77,18 +59,18 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    Spacing.sp20,
-                    Spacing.sp8,
-                    Spacing.sp20,
-                    Spacing.sp12,
+                    DevocionalEspacamento.sp20,
+                    DevocionalEspacamento.sp8,
+                    DevocionalEspacamento.sp20,
+                    DevocionalEspacamento.sp12,
                   ),
                   child: Text('Tamanho do texto', style: tema.headlineSmall),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: Spacing.sp20),
+                  padding: const EdgeInsets.symmetric(horizontal: DevocionalEspacamento.sp20),
                   child: Wrap(
-                    spacing: Spacing.sp8,
-                    runSpacing: Spacing.sp8,
+                    spacing: DevocionalEspacamento.sp8,
+                    runSpacing: DevocionalEspacamento.sp8,
                     children: [
                       for (final (i, escala) in escalasDeLeitura.indexed)
                         ChoiceChip(
@@ -105,10 +87,10 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 // de leitura escala com o tema, e a linha abaixo é a amostra.
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    Spacing.sp20,
-                    Spacing.sp12,
-                    Spacing.sp20,
-                    Spacing.sp4,
+                    DevocionalEspacamento.sp20,
+                    DevocionalEspacamento.sp12,
+                    DevocionalEspacamento.sp20,
+                    DevocionalEspacamento.sp4,
                   ),
                   child: Text(
                     'O texto de leitura fica deste tamanho.',
@@ -117,18 +99,18 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    Spacing.sp20,
-                    Spacing.sp24,
-                    Spacing.sp20,
-                    Spacing.sp12,
+                    DevocionalEspacamento.sp20,
+                    DevocionalEspacamento.sp24,
+                    DevocionalEspacamento.sp20,
+                    DevocionalEspacamento.sp12,
                   ),
                   child: Text('Aparência', style: tema.headlineSmall),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: Spacing.sp20),
+                  padding: const EdgeInsets.symmetric(horizontal: DevocionalEspacamento.sp20),
                   child: Wrap(
-                    spacing: Spacing.sp8,
-                    runSpacing: Spacing.sp8,
+                    spacing: DevocionalEspacamento.sp8,
+                    runSpacing: DevocionalEspacamento.sp8,
                     children: [
                       for (final modo in ModoDoTema.values)
                         ChoiceChip(
@@ -144,16 +126,16 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 // rodapé nem existe. Leitura é o assunto do bloco de cima,
                 // por isso as setas fecham este primeiro grupo.
                 if (kIsWeb) ..._SecaoDasSetas(estado: estado).montar(context),
-                // O Filete divide os dois assuntos da folha: o que se ajusta
+                // O DevocionalFilete divide os dois assuntos da folha: o que se ajusta
                 // na leitura (acima) e o que é do app inteiro (abaixo).
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    Spacing.sp20,
-                    Spacing.sp24,
-                    Spacing.sp20,
+                    DevocionalEspacamento.sp20,
+                    DevocionalEspacamento.sp24,
+                    DevocionalEspacamento.sp20,
                     0,
                   ),
-                  child: const Filete(largura: 64),
+                  child: const DevocionalFilete(largura: 64),
                 ),
                 // Lembrete exclusivo do Android: alarme agendado no próprio
                 // aparelho (ver lembretes.dart). iOS e web ficam de fora.
@@ -183,7 +165,7 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                   titulo: 'Política de privacidade',
                   rota: '/privacidade',
                 ),
-                const SizedBox(height: Spacing.sp8),
+                const SizedBox(height: DevocionalEspacamento.sp8),
               ],
             ),
           );
@@ -243,10 +225,10 @@ class _SecaoDeLembretes {
     return [
       Padding(
         padding: const EdgeInsets.fromLTRB(
-          Spacing.sp20,
-          Spacing.sp24,
-          Spacing.sp20,
-          Spacing.sp4,
+          DevocionalEspacamento.sp20,
+          DevocionalEspacamento.sp24,
+          DevocionalEspacamento.sp20,
+          DevocionalEspacamento.sp4,
         ),
         child: Text('Lembretes', style: tema.headlineSmall),
       ),
@@ -330,7 +312,7 @@ class _SecaoDeLembretes {
 /// Ordem fixa pedida: Bíblia, Introdução, Manhã e Noite, Promessas.
 /// Baixa a categoria e registra os dois eventos de uso ao redor do download
 /// real (`AudioOffline.baixarCategoria` não sabe de Analytics — ver o
-/// limite entre dado e coleta em lib/data/eventos.dart).
+/// limite entre dado e coleta em lib/dados/eventos.dart).
 Future<void> _baixarComEvento(AudioOffline off, String categoria) async {
   unawaited(registrarDownloadIniciado(categoria));
   await off.baixarCategoria(categoria);
@@ -343,21 +325,21 @@ class _SecaoAudioOffline {
     return [
       Padding(
         padding: const EdgeInsets.fromLTRB(
-          Spacing.sp20,
-          Spacing.sp24,
-          Spacing.sp20,
-          Spacing.sp4,
+          DevocionalEspacamento.sp20,
+          DevocionalEspacamento.sp24,
+          DevocionalEspacamento.sp20,
+          DevocionalEspacamento.sp4,
         ),
         child: Text('Áudio offline', style: tema.headlineSmall),
       ),
       Padding(
-        padding: const EdgeInsets.symmetric(horizontal: Spacing.sp20),
+        padding: const EdgeInsets.symmetric(horizontal: DevocionalEspacamento.sp20),
         child: Text(
           'Baixe para ouvir sem internet. Na ordem: Bíblia, Introdução, Manhã e Noite, Promessas. O player usa o arquivo local quando existir, senão baixa da nuvem.',
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ),
-      const SizedBox(height: Spacing.sp8),
+      const SizedBox(height: DevocionalEspacamento.sp8),
       ListenableBuilder(
         listenable: AudioOffline.instancia,
         builder: (context, _) {
@@ -432,7 +414,7 @@ class _SecaoAudioOffline {
                 ),
               if (off.erro != null)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: Spacing.sp20),
+                  padding: const EdgeInsets.symmetric(horizontal: DevocionalEspacamento.sp20),
                   child: Text(
                     off.erro!,
                     style: TextStyle(
@@ -478,10 +460,10 @@ class _SecaoDasSetas {
     return [
       Padding(
         padding: const EdgeInsets.fromLTRB(
-          Spacing.sp20,
-          Spacing.sp24,
-          Spacing.sp20,
-          Spacing.sp4,
+          DevocionalEspacamento.sp20,
+          DevocionalEspacamento.sp24,
+          DevocionalEspacamento.sp20,
+          DevocionalEspacamento.sp4,
         ),
         child: Text('Navegação', style: tema.headlineSmall),
       ),

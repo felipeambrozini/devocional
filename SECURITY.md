@@ -25,31 +25,31 @@ O aplicativo **não grava nenhum cookie**, não tem anúncio e não vende nem co
 Progresso de leitura, anotações e versículos favoritos são salvos localmente por meio do `shared_preferences` em todas as plataformas (Android, iOS e web). Quem não entra com conta usa o app inteiro assim, sem nada saindo do aparelho.
 
 ### 2.3 Sincronização na Nuvem e Autenticação
-- **Plataformas:** A sincronização com a nuvem (Firebase) está disponível em Android, iOS e web — `nuvemSuportada` (`lib/data/nuvem.dart`) não distingue plataforma. O login nativo (Android/iOS) usa `GoogleSignIn.instance.authenticate()` mais `signInWithCredential`; a web usa `signInWithPopup` em desktop e `signInWithRedirect` em navegador mobile, onde o popup falha ao trocar o token com a janela original por causa do armazenamento particionado do navegador.
+- **Plataformas:** A sincronização com a nuvem (Firebase) está disponível em Android, iOS e web — `nuvemSuportada` (`lib/dados/nuvem.dart`) não distingue plataforma. O login nativo (Android/iOS) usa `GoogleSignIn.instance.authenticate()` mais `signInWithCredential`; a web usa `signInWithPopup` em desktop e `signInWithRedirect` em navegador mobile, onde o popup falha ao trocar o token com a janela original por causa do armazenamento particionado do navegador.
 - **Segurança no Firestore:** Cada usuário autenticado possui acesso exclusivo ao seu próprio documento localizado no caminho `usuarios/{uid}`.
 - **Regras de Acesso:** O acesso aos dados no Cloud Firestore é protegido por regras rígidas de segurança (`firestore.rules`), garantindo que apenas o proprietário autenticado (`request.auth.uid == userId`) possa ler ou escrever em seu respetivo documento. A remoção de dados locais não apaga registros na nuvem, atuando a sincronização por fusão (*merge*). Apagar a conta (Sobre → Conta e privacidade) remove também a foto de perfil e a participação em planos compartilhados, além do documento e da própria conta.
 
 ### 2.4 Coleta Remota Opcional (Sentry e Analytics)
-Na primeira abertura, o app pergunta se o usuário autoriza o envio de dois tipos de informação sem identificação: erro técnico (Sentry, web e Android) e uso anônimo por tela (Firebase Analytics). As duas ficam desligadas por padrão — `Registro.envioRemotoPermitido` começa `false` e o `beforeSend` do Sentry descarta qualquer evento até a resposta chegar (`lib/main.dart`); a aplicação da escolha aos dois SDKs vive em `lib/data/coleta.dart`, único ponto que liga Firebase Analytics à decisão do usuário. A resposta pode ser revista a qualquer momento em Sobre. Nenhum dos dois canais recebe o texto lido, escrito ou de conversas.
+Na primeira abertura, o app pergunta se o usuário autoriza o envio de dois tipos de informação sem identificação: erro técnico (Sentry, web e Android) e uso anônimo por tela (Firebase Analytics). As duas ficam desligadas por padrão — `Registro.envioRemotoPermitido` começa `false` e o `beforeSend` do Sentry descarta qualquer evento até a resposta chegar (`lib/main.dart`); a aplicação da escolha aos dois SDKs vive em `lib/dados/coleta.dart`, único ponto que liga Firebase Analytics à decisão do usuário. A resposta pode ser revista a qualquer momento em Sobre. Nenhum dos dois canais recebe o texto lido, escrito ou de conversas.
 
 ---
 
 ## 3. Gestão de Chaves de API e Segredos
 
 ### 3.1 Injeção de Variáveis em Tempo de Compilação
-As chaves e parâmetros necessários para o funcionamento dos serviços integrados (Firebase, IA Gemini, Sentry) não são mantidos estáticos no código-fonte. Eles são injetados exclusivamente em tempo de compilação via parâmetros `--dart-define`, lidos por `String.fromEnvironment` em `lib/data/google.dart`, `lib/firebase_options.dart` e nos poucos outros pontos que os usam diretamente. Nenhum trafega como *asset* do aplicativo — o arquivo local `.env.json` serve apenas ao `--dart-define-from-file` durante o desenvolvimento e nunca é empacotado no build:
+As chaves e parâmetros necessários para o funcionamento dos serviços integrados (Firebase, IA Gemini, Sentry) não são mantidos estáticos no código-fonte. Eles são injetados exclusivamente em tempo de compilação via parâmetros `--dart-define`, lidos por `String.fromEnvironment` em `lib/dados/google.dart`, `lib/firebase_options.dart` e nos poucos outros pontos que os usam diretamente. Nenhum trafega como *asset* do aplicativo — o arquivo local `.env.json` serve apenas ao `--dart-define-from-file` durante o desenvolvimento e nunca é empacotado no build:
 
 - `FIREBASE_API_KEY_WEB`, `FIREBASE_API_KEY_ANDROID`, `FIREBASE_API_KEY_IOS`
 - `GEMINI_API_KEY_WEB`, `GEMINI_API_KEY_ANDROID`, `GEMINI_API_KEY_IOS`
 - `FCM_VAPID_KEY` (chave pública do Web Push, para o lembrete diário na web)
 - `AUDIO_BASE_URL` (origem dos MP3 pré-gerados da leitura em voz alta)
 - `RECAPTCHA_V3_SITE_KEY` (App Check na web, ver 3.3)
-- `EMAILS_COM_CONVERSAS` (allowlist do chat com IA, ver `lib/data/recursos.dart` — nenhum e-mail fica versionado no repositório)
+- `EMAILS_COM_CONVERSAS` (allowlist do chat com IA, ver `lib/dados/recursos.dart` — nenhum e-mail fica versionado no repositório)
 - `SENTRY_DSN` (destino do reporte de erro remoto, ver 2.4 — vazio localiza o SDK em modo no-op)
 - `EMAIL_DE_CONTATO` (destino de "Relatar um problema" em Sobre; vazio esconde o item)
 - `WHATSAPP_NUMERO` (destino do botão "Falar no WhatsApp" em Conversas, para quem pede acesso fora da allowlist; vazio esconde o botão)
 
-Não há mais chave de Text-to-Speech: o áudio virou MP3 pré-gerado (ver `lib/data/voz.dart`), e as antigas `TTS_API_KEY_*` devem ser revogadas no Google Cloud Console, já que nenhum `String.fromEnvironment` no código as lê mais.
+Não há mais chave de Text-to-Speech: o áudio virou MP3 pré-gerado (ver `lib/dados/voz.dart`), e as antigas `TTS_API_KEY_*` devem ser revogadas no Google Cloud Console, já que nenhum `String.fromEnvironment` no código as lê mais.
 
 ### 3.2 Proteção de Chaves Públicas
 Conforme a arquitetura padrão para aplicações no lado do cliente (Web e Mobile), as chaves do Firebase e do Google Cloud presentes nos artefatos de compilação são consideradas públicas por desenho. A segurança dos serviços é assegurada por:
@@ -59,7 +59,7 @@ Conforme a arquitetura padrão para aplicações no lado do cliente (Web e Mobil
 3. **Regras do Banco de Dados:** O acesso aos dados no Firestore independe da chave de API, sendo controlado integralmente pelas regras de autenticação do backend do Firebase.
 
 ### 3.3 Firebase App Check
-Além da chave, o app se identifica ao Firestore e ao Auth com uma prova de que o pedido vem do próprio aplicativo, não de um cliente forjado com a mesma chave pública copiada do bundle (ver `lib/data/nuvem.dart`, função `Sincronia.iniciar`):
+Além da chave, o app se identifica ao Firestore e ao Auth com uma prova de que o pedido vem do próprio aplicativo, não de um cliente forjado com a mesma chave pública copiada do bundle (ver `lib/dados/nuvem.dart`, função `Sincronia.iniciar`):
 
 - **Web:** reCAPTCHA v3, com o *site key* também injetado por `--dart-define` (`RECAPTCHA_V3_SITE_KEY`).
 - **Android:** Play Integrity, por atestação do próprio Google Play — sem chave de app.
@@ -69,7 +69,7 @@ A falha em ativar o App Check (site key ausente durante a migração, domínio a
 
 ### 3.4 Lembrete Diário — Push com Reserva Local no Android
 
-O lembrete diário é híbrido: uma Cloud Function agendada (`functions/src/index.ts`, `enviarLembretes`) lê a coleção `lembretes` do Firestore a cada minuto e envia push via FCM em Android e web; no Android, `flutter_local_notifications` ainda arma uma reserva local em T+5 min, para o caso de o push não chegar. A superfície de permissão local se resume a POST_NOTIFICATIONS, concedida em runtime — sem pedir a permissão especial de alarme exato: o agendamento local é sempre inexato de propósito (ver `lib/data/lembretes.dart`).
+O lembrete diário é híbrido: uma Cloud Function agendada (`functions/src/index.ts`, `enviarLembretes`) lê a coleção `lembretes` do Firestore a cada minuto e envia push via FCM em Android e web; no Android, `flutter_local_notifications` ainda arma uma reserva local em T+5 min, para o caso de o push não chegar. A superfície de permissão local se resume a POST_NOTIFICATIONS, concedida em runtime — sem pedir a permissão especial de alarme exato: o agendamento local é sempre inexato de propósito (ver `lib/dados/lembretes.dart`).
 
 ---
 

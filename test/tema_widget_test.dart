@@ -1,8 +1,8 @@
-import 'package:felipe_ambrozini/data/estado.dart';
-import 'package:felipe_ambrozini/data/modelos.dart';
+import 'package:felipe_ambrozini/dados/estado.dart';
+import 'package:felipe_ambrozini/dados/modelos.dart';
 import 'package:felipe_ambrozini/main.dart';
 import 'package:felipe_ambrozini/widgets/widgets.dart';
-import 'package:felipe_ambrozini/estilo/theme.dart';
+import 'package:felipe_ambrozini/estilo/cores.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -38,11 +38,11 @@ void main() {
 
     await estado.definirModoDoTema(ModoDoTema.escuro);
     await passarATransicao(tester);
-    expect(fundoEmUso(tester), Cores.fundo);
+    expect(fundoEmUso(tester), DevocionalCores.fundo);
 
     await estado.definirModoDoTema(ModoDoTema.claro);
     await passarATransicao(tester);
-    expect(fundoEmUso(tester), Cores.pergaminho);
+    expect(fundoEmUso(tester), DevocionalCores.pergaminho);
   });
 
   testWidgets('no automático, quem manda é o aparelho', (tester) async {
@@ -54,13 +54,13 @@ void main() {
     expect(estado.modoDoTema, ModoDoTema.sistema);
     await tester.pumpWidget(AppDevocional(estado: estado));
     await passarATransicao(tester);
-    expect(fundoEmUso(tester), Cores.pergaminho);
+    expect(fundoEmUso(tester), DevocionalCores.pergaminho);
 
     tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
     await passarATransicao(tester);
     expect(
       fundoEmUso(tester),
-      Cores.fundo,
+      DevocionalCores.fundo,
       reason:
           'o MaterialApp tem os dois temas montados, então virar o sistema '
           'não pode depender de passar pelo Estado',
@@ -76,13 +76,13 @@ void main() {
         estado: estado,
         child: MaterialApp(
           home: Scaffold(
-            body: Center(child: BotaoDeAjustes(estado: estado)),
+            body: Center(child: DevocionalBotaoDeAjustes(estado: estado)),
           ),
         ),
       ),
     );
 
-    await tester.tap(find.byType(BotaoDeAjustes));
+    await tester.tap(find.byType(DevocionalBotaoDeAjustes));
     await tester.pumpAndSettle();
 
     // As duas escolhas moram na mesma folha: quem abre para aumentar a letra vê
@@ -122,6 +122,6 @@ void main() {
 
     // Às nove da noite o celular pode ainda estar no claro; quem lê na cama
     // escolheu escuro e a escolha tem que valer.
-    expect(fundoEmUso(tester), Cores.fundo);
+    expect(fundoEmUso(tester), DevocionalCores.fundo);
   });
 }

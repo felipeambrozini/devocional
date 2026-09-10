@@ -16,7 +16,7 @@ import 'package:flutter/foundation.dart'
 /// ```
 // As chaves chegam por `--dart-define` no build (GitHub Secrets no CI; o
 // .env.json local via --dart-define-from-file). Mesmo caminho das chaves
-// Gemini e TTS em lib/data/google.dart — e não por asset, que iria ao ar
+// Gemini e TTS em lib/dados/google.dart — e não por asset, que iria ao ar
 // junto com o bundle.
 const _firebaseApiKeyWeb = String.fromEnvironment('FIREBASE_API_KEY_WEB');
 const _firebaseApiKeyAndroid = String.fromEnvironment('FIREBASE_API_KEY_ANDROID');

@@ -1,7 +1,7 @@
 rules_version = '2';
 
 // Regras do Firestore para a conta na nuvem do app devocional. Ver
-// lib/data/nuvem.dart para o código que lê e grava aqui.
+// lib/dados/nuvem.dart para o código que lê e grava aqui.
 //
 // Publicadas à mão no console do Firebase (Firestore Database > Regras), ou
 // com `firebase deploy --only firestore:rules`. Este arquivo é a fonte da
@@ -101,7 +101,7 @@ service cloud.firestore {
       allow read: if dono();
     }
 
-    // Planos de leitura compartilhados (ver lib/data/planos_nuvem.dart).
+    // Planos de leitura compartilhados (ver lib/dados/planos_nuvem.dart).
     //
     // Contrato do documento planos/{planoId}:
     //   titulo             string — o criador pode renomear depois
@@ -202,7 +202,7 @@ service cloud.firestore {
       allow delete: if google() && resource.data.criadoPor == request.auth.uid;
     }
 
-    // Lembrete diário do devocional (ver lib/data/lembretes.dart e
+    // Lembrete diário do devocional (ver lib/dados/lembretes.dart e
     // functions/src/index.ts). Sem login — o lembrete não pede conta, e por
     // isso não há uid para checar dono. O id do documento é o próprio token
     // FCM deste aparelho; a proteção é o formato estrito de valido() mais a

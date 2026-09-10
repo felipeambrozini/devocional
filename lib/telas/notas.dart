@@ -3,15 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-import '../data/conteudo.dart';
-import '../data/estado.dart';
-import '../data/modelos.dart';
-import '../data/nuvem.dart';
+import '../controladores/notas_controlador.dart';
+import '../dados/estado.dart';
 import '../estilo/spacing.dart';
 import '../funcoes/aviso.dart';
-import '../funcoes/dialogos.dart';
 import '../widgets/widgets.dart';
-import 'biblia.dart';
 
 /// Favoritos e anotações, em duas abas, com busca.
 class TelaNotas extends StatefulWidget {
@@ -22,198 +18,132 @@ class TelaNotas extends StatefulWidget {
 }
 
 class _TelaNotasState extends State<TelaNotas> {
-  final _controle = TextEditingController();
-  String _busca = '';
+  final _controller = NotasControlador();
 
   @override
   void dispose() {
-    _controle.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
-  /// Filtra por referência (ex. "João 3:16") e pelo texto da própria nota.
-  ///
-  /// Não pelo corpo do versículo: ele é carregado sob demanda, um por cartão
-  /// (ver `Conteudo.instancia.versiculo` abaixo), e trazer todos para buscar
-  /// no corpo derrubaria exatamente o carregamento tardio que o app inteiro
-  /// foi desenhado para ter.
-  List<Marcacao> _filtrar(List<Marcacao> itens) {
-    if (_busca.isEmpty) return itens;
-    final alvo = Conteudo.normalizar(_busca);
-    return itens
-        .where(
-          (m) =>
-              Conteudo.normalizar(m.referencia).contains(alvo) ||
-              Conteudo.normalizar(m.nota).contains(alvo),
-        )
-        .toList();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final cor = Theme.of(context).colorScheme;
-    final estado = EscopoDoEstado.de(context);
-    final favoritos = _filtrar(estado.marcacoes);
-    final notas = _filtrar(estado.comNota);
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) {
+        final cor = Theme.of(context).colorScheme;
+        final estado = EscopoDoEstado.de(context);
+        final favoritos = _controller.filtrar(estado.marcacoes);
+        final notas = _controller.filtrar(estado.comNota);
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: DevocionalAppBar(
-          title: const Text('Favoritos e notas'),
-          actions: [
-            IconButton(
-              tooltip: 'Tamanho do texto e aparência',
-              icon: const FaIcon(FontAwesomeIcons.sliders),
-              onPressed: () => ajustesDeLeitura(context, estado),
-            ),
-            PopupMenuButton<void Function()>(
-              tooltip: 'Cópia de segurança',
-              icon: const FaIcon(FontAwesomeIcons.ellipsisVertical),
-              onSelected: (acao) => acao(),
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: () => _exportar(context, estado),
-                  child: const ListTile(
-                    leading: FaIcon(FontAwesomeIcons.upload),
-                    title: Text('Exportar cópia'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                PopupMenuItem(
-                  value: () => _importar(context, estado),
-                  child: const ListTile(
-                    leading: FaIcon(FontAwesomeIcons.download),
-                    title: Text('Importar cópia'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-              ],
-            ),
-          ],
-          bottom: TabBar(
-            labelColor: cor.secondary,
-            unselectedLabelColor: cor.onSurfaceVariant,
-            indicatorColor: cor.primary,
-            tabs: [
-              Tab(text: 'Favoritos (${favoritos.length})'),
-              Tab(text: 'Notas (${notas.length})'),
-            ],
-          ),
-        ),
-        body: LarguraDeLeitura(
-          child: Column(
-            children: [
-              // Só na web: o navegador pode limpar o localStorage sem aviso,
-              // e ninguém além de quem já leu o README sabe disso. Sem
-              // Dismissible de propósito — o risco não desaparece porque a
-              // pessoa fechou o aviso uma vez. E só avisa quando já há o que
-              // perder: quem chega sem favorito nem dia lido ouviria do risco
-              // antes de ter algo para guardar (medo antes do valor).
-              if (kIsWeb &&
-                  (estado.marcacoes.isNotEmpty || estado.diasLidos > 0))
-                _AvisoDePerda(onExportar: () => _exportar(context, estado)),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(Spacing.sp16, Spacing.sp12, Spacing.sp16, Spacing.sp4),
-                child: TextField(
-                  controller: _controle,
-                  onChanged: (v) => setState(() => _busca = v),
-                  decoration: InputDecoration(
-                    hintText: 'Buscar por referência ou anotação',
-                    prefixIcon: const FaIcon(FontAwesomeIcons.magnifyingGlass),
-                    suffixIcon: _busca.isEmpty
-                        ? null
-                        : IconButton(
-                            icon: const FaIcon(FontAwesomeIcons.xmark),
-                            tooltip: 'Limpar busca',
-                            onPressed: () => setState(() {
-                              _controle.clear();
-                              _busca = '';
-                            }),
-                          ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: TabBarView(
-                  children: [
-                    _Lista(
-                      itens: favoritos,
-                      vazio: _busca.isEmpty
-                          ? const AvisoVazio(
-                              icone: FontAwesomeIcons.bookmark,
-                              titulo: 'Nenhum favorito',
-                              detalhe:
-                                  'Toque num versículo na Bíblia para favoritá-lo.',
-                            )
-                          : const AvisoVazio(
-                              icone: FontAwesomeIcons.magnifyingGlassMinus,
-                              titulo: 'Nada encontrado',
-                            ),
+        return DefaultTabController(
+          length: 2,
+          child: Scaffold(
+            appBar: DevocionalAppBar(
+              title: const Text('Favoritos e notas'),
+              actions: [
+                DevocionalBotaoDeAjustes(estado: estado),
+                PopupMenuButton<void Function()>(
+                  tooltip: 'Cópia de segurança',
+                  icon: const FaIcon(FontAwesomeIcons.ellipsisVertical),
+                  onSelected: (acao) => acao(),
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: () => _exportar(context, estado),
+                      child: const DevocionalItemDeMenu(
+                        icone: FontAwesomeIcons.upload,
+                        rotulo: 'Exportar cópia',
+                      ),
                     ),
-                    _Lista(
-                      itens: notas,
-                      mostrarNota: true,
-                      vazio: _busca.isEmpty
-                          ? const AvisoVazio(
-                              icone: FontAwesomeIcons.penToSquare,
-                              titulo: 'Nenhuma anotação',
-                              detalhe:
-                                  'Toque num versículo na Bíblia para anotar.',
-                            )
-                          : const AvisoVazio(
-                              icone: FontAwesomeIcons.magnifyingGlassMinus,
-                              titulo: 'Nada encontrado',
-                            ),
+                    PopupMenuItem(
+                      value: () => _importar(context, estado),
+                      child: const DevocionalItemDeMenu(
+                        icone: FontAwesomeIcons.download,
+                        rotulo: 'Importar cópia',
+                      ),
                     ),
                   ],
                 ),
+              ],
+              bottom: TabBar(
+                labelColor: cor.secondary,
+                unselectedLabelColor: cor.onSurfaceVariant,
+                indicatorColor: cor.primary,
+                tabs: [
+                  Tab(text: 'Favoritos (${favoritos.length})'),
+                  Tab(text: 'Notas (${notas.length})'),
+                ],
               ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Faixa fixa, só na web: quem usa o app pelo navegador não tem como saber
-/// que o localStorage pode ser limpo sem aviso (ver `_exportar` abaixo).
-///
-/// Logado, o risco de perder continua existindo — o navegador ainda pode
-/// limpar — mas deixa de ser uma perda de verdade, porque agora tem de onde
-/// voltar. Por isso só o texto muda com `Nuvem.instancia.logado`; o botão
-/// "Exportar" fica, porque é a saída que não depende de conta nem de servidor.
-class _AvisoDePerda extends StatelessWidget {
-  const _AvisoDePerda({required this.onExportar});
-
-  final VoidCallback onExportar;
-
-  @override
-  Widget build(BuildContext context) {
-    final cor = Theme.of(context).colorScheme;
-    return Container(
-      width: double.infinity,
-      color: cor.surfaceContainerHighest,
-      padding: const EdgeInsets.fromLTRB(Spacing.sp16, Spacing.sp10, Spacing.sp8, Spacing.sp10),
-      child: Row(
-        children: [
-          FaIcon(FontAwesomeIcons.circleInfo, color: cor.onSurfaceVariant, size: 20),
-          const SizedBox(width: Spacing.sp12),
-          Expanded(
-            child: ListenableBuilder(
-              listenable: Nuvem.instancia,
-              builder: (context, _) => Text(
-                Nuvem.instancia.logado
-                    ? 'Suas notas também estão salvas na sua conta Google.'
-                    : 'Na web, o navegador pode apagar suas notas sem aviso.',
-                style: Theme.of(context).textTheme.bodySmall,
+            ),
+            body: DevocionalLarguraDeLeitura(
+              child: Column(
+                children: [
+                  // Só na web: o navegador pode limpar o localStorage sem aviso,
+                  // e ninguém além de quem já leu o README sabe disso. Sem
+                  // Dismissible de propósito — o risco não desaparece porque a
+                  // pessoa fechou o aviso uma vez. E só avisa quando já há o que
+                  // perder: quem chega sem favorito nem dia lido ouviria do risco
+                  // antes de ter algo para guardar (medo antes do valor).
+                  if (kIsWeb &&
+                      (estado.marcacoes.isNotEmpty || estado.diasLidos > 0))
+                    DevocionalAvisoDePerda(
+                      onExportar: () => _exportar(context, estado),
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      DevocionalEspacamento.sp16,
+                      DevocionalEspacamento.sp12,
+                      DevocionalEspacamento.sp16,
+                      DevocionalEspacamento.sp4,
+                    ),
+                    child: DevocionalBusca(
+                      controller: _controller.controle,
+                      hintText: 'Buscar por referência ou anotação',
+                      onChanged: _controller.aoDigitar,
+                      aoLimpar: _controller.limpar,
+                    ),
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        DevocionalLista(
+                          itens: favoritos,
+                          vazio: _controller.busca.isEmpty
+                              ? const DevocionalAvisoVazio(
+                                  icone: FontAwesomeIcons.bookmark,
+                                  titulo: 'Nenhum favorito',
+                                  detalhe:
+                                      'Toque num versículo na Bíblia para favoritá-lo.',
+                                )
+                              : const DevocionalAvisoVazio(
+                                  icone: FontAwesomeIcons.magnifyingGlassMinus,
+                                  titulo: 'Nada encontrado',
+                                ),
+                        ),
+                        DevocionalLista(
+                          itens: notas,
+                          mostrarNota: true,
+                          vazio: _controller.busca.isEmpty
+                              ? const DevocionalAvisoVazio(
+                                  icone: FontAwesomeIcons.penToSquare,
+                                  titulo: 'Nenhuma anotação',
+                                  detalhe:
+                                      'Toque num versículo na Bíblia para anotar.',
+                                )
+                              : const DevocionalAvisoVazio(
+                                  icone: FontAwesomeIcons.magnifyingGlassMinus,
+                                  titulo: 'Nada encontrado',
+                                ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          TextButton(onPressed: onExportar, child: const Text('Exportar')),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -250,7 +180,7 @@ Future<void> _importar(BuildContext context, Estado estado) async {
             'que já está no aparelho.',
             style: Theme.of(dialogo).textTheme.bodySmall,
           ),
-          const SizedBox(height: Spacing.sp12),
+          const SizedBox(height: DevocionalEspacamento.sp12),
           TextField(
             controller: controle,
             autofocus: true,
@@ -288,153 +218,6 @@ Future<void> _importar(BuildContext context, Estado estado) async {
       mensageiro,
       'Cópia não reconhecida. Verifique se colou o texto inteiro exportado '
       'e tente de novo.',
-    );
-  }
-}
-
-class _Lista extends StatelessWidget {
-  const _Lista({
-    required this.itens,
-    required this.vazio,
-    this.mostrarNota = false,
-  });
-
-  final List<Marcacao> itens;
-  final Widget vazio;
-  final bool mostrarNota;
-
-  @override
-  Widget build(BuildContext context) {
-    if (itens.isEmpty) return vazio;
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(Spacing.sp16, Spacing.sp16, Spacing.sp16, Spacing.sp32),
-      itemCount: itens.length,
-      separatorBuilder: (_, _) => const SizedBox(height: Spacing.sp10),
-      itemBuilder: (context, i) =>
-          _CartaoDeMarcacao(marcacao: itens[i], mostrarNota: mostrarNota),
-    );
-  }
-}
-
-class _CartaoDeMarcacao extends StatelessWidget {
-  const _CartaoDeMarcacao({required this.marcacao, required this.mostrarNota});
-
-  final Marcacao marcacao;
-  final bool mostrarNota;
-
-  @override
-  Widget build(BuildContext context) {
-    final cor = Theme.of(context).colorScheme;
-    final estado = EscopoDoEstado.de(context);
-    final tema = Theme.of(context).textTheme;
-
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => TelaBiblia(
-              livroInicial: marcacao.livro,
-              capituloInicial: marcacao.capitulo,
-              destacar: (marcacao.versiculo, marcacao.versiculo),
-            ),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(Spacing.sp16, Spacing.sp12, Spacing.sp8, Spacing.sp12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      marcacao.referencia,
-                      style: tema.titleSmall?.copyWith(color: cor.secondary),
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'Editar anotação',
-                    icon: const FaIcon(FontAwesomeIcons.penToSquare, size: 20),
-                    onPressed: () async {
-                      final nota = await editarNota(
-                        context,
-                        referencia: marcacao.referencia,
-                        notaAtual: marcacao.nota,
-                      );
-                      if (nota != null) {
-                        await estado.definirNota(
-                          marcacao.livro,
-                          marcacao.capitulo,
-                          marcacao.versiculo,
-                          nota,
-                        );
-                      }
-                    },
-                  ),
-                  IconButton(
-                    tooltip: 'Remover',
-                    icon: const FaIcon(FontAwesomeIcons.trash, size: 20),
-                    onPressed: () async {
-                      final confirmou = await confirmarRemocao(
-                        context,
-                        referencia: marcacao.referencia,
-                        comNota: marcacao.nota.isNotEmpty,
-                      );
-                      if (confirmou) estado.removerMarcacao(marcacao);
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: Spacing.sp4),
-              // O texto do versículo não é guardado junto da marcação: fica sempre
-              // na versão salva, e assim uma correção no asset se reflete aqui.
-              CarregaUmaVez<String>(
-                chave: marcacao.chave,
-                carregar: () => Conteudo.instancia.versiculo(
-                  marcacao.livro,
-                  marcacao.capitulo,
-                  marcacao.versiculo,
-                ),
-                // Falhar aqui deixava o cartão com o texto do versículo em branco,
-                // sem dizer nada. A referência e a nota continuam visíveis, então
-                // basta uma linha no lugar do versículo.
-                construir: (context, snap) => Text(
-                  snap.hasError
-                      ? 'Não foi possível carregar o texto deste versículo.'
-                      : snap.data ?? '',
-                  style: tema.bodyMedium?.copyWith(
-                    height: 1.55,
-                    fontStyle: snap.hasError ? FontStyle.italic : null,
-                    color: snap.hasError ? cor.onSurfaceVariant : null,
-                  ),
-                ),
-              ),
-              if (mostrarNota && marcacao.nota.isNotEmpty) ...[
-                const SizedBox(height: Spacing.sp12),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(Spacing.sp12),
-                  decoration: BoxDecoration(
-                    color: cor.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border(
-                      left: BorderSide(color: cor.primary, width: 3),
-                    ),
-                  ),
-                  child: Text(
-                    marcacao.nota,
-                    style: tema.bodyMedium?.copyWith(
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

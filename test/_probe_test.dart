@@ -1,6 +1,6 @@
-import 'package:felipe_ambrozini/data/conteudo.dart';
-import 'package:felipe_ambrozini/data/estado.dart';
-import 'package:felipe_ambrozini/data/modelos.dart';
+import 'package:felipe_ambrozini/dados/conteudo.dart';
+import 'package:felipe_ambrozini/dados/estado.dart';
+import 'package:felipe_ambrozini/dados/modelos.dart';
 import 'package:felipe_ambrozini/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -98,7 +98,7 @@ void main() {
     }
     await tester.pumpAndSettle();
 
-    // O _LeituraDeHoje usa CarregaUmaVez (FutureBuilder) que carrega
+    // O _LeituraDeHoje usa DevocionalCarregaUmaVez (FutureBuilder) que carrega
     // assincronamente. Espera o FutureBuilder completar.
     await tester.pumpAndSettle(const Duration(seconds: 10));
 

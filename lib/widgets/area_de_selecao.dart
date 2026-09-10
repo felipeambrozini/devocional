@@ -9,18 +9,18 @@ import 'package:share_plus/share_plus.dart';
 /// pode ser parte de um versículo, um parágrafo do devocional ou da
 /// introdução, sem uma referência única por trás. Usada igual nas três
 /// telas de leitura (Bíblia, Devocional, Introdução).
-class AreaDeSelecaoComCompartilhar extends StatefulWidget {
-  const AreaDeSelecaoComCompartilhar({super.key, required this.child});
+class DevocionalAreaDeSelecaoComCompartilhar extends StatefulWidget {
+  const DevocionalAreaDeSelecaoComCompartilhar({super.key, required this.child});
 
   final Widget child;
 
   @override
-  State<AreaDeSelecaoComCompartilhar> createState() =>
+  State<DevocionalAreaDeSelecaoComCompartilhar> createState() =>
       _AreaDeSelecaoComCompartilharState();
 }
 
 class _AreaDeSelecaoComCompartilharState
-    extends State<AreaDeSelecaoComCompartilhar> {
+    extends State<DevocionalAreaDeSelecaoComCompartilhar> {
   // SelectableRegionState não expõe o texto selecionado publicamente; captura
   // aqui pelo onSelectionChanged, e o menu lê o valor mais recente ao montar.
   String? _selecionado;

@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:felipe_ambrozini/data/conversador.dart';
-import 'package:felipe_ambrozini/data/estado.dart';
-import 'package:felipe_ambrozini/data/ia.dart';
-import 'package:felipe_ambrozini/data/modelos.dart';
-import 'package:felipe_ambrozini/data/personas.dart';
+import 'package:felipe_ambrozini/dados/conversador.dart';
+import 'package:felipe_ambrozini/dados/estado.dart';
+import 'package:felipe_ambrozini/dados/ia.dart';
+import 'package:felipe_ambrozini/dados/modelos.dart';
+import 'package:felipe_ambrozini/dados/personas.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -120,7 +120,7 @@ void main() {
         chamar: ({required persona, required historico, required pergunta}) async {
           tentativas++;
           if (tentativas == 1) {
-            throw const IaException('O limite gratuito da inteligência '
+            throw const IaExcecao('O limite gratuito da inteligência '
                 'artificial foi atingido.');
           }
           return 'Agora sim.';
@@ -161,7 +161,7 @@ void main() {
         estado: estado,
         duracaoDoErro: const Duration(milliseconds: 20),
         chamar: ({required persona, required historico, required pergunta}) {
-          throw const IaException('Sem resposta.');
+          throw const IaExcecao('Sem resposta.');
         },
       );
 

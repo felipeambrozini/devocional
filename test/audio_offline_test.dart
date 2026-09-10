@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:felipe_ambrozini/data/audio_offline.dart';
+import 'package:felipe_ambrozini/dados/audio_offline.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';

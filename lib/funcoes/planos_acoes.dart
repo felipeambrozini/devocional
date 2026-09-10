@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../data/estado.dart';
-import '../data/planos.dart';
-import '../data/planos_nuvem.dart';
+import '../dados/estado.dart';
+import '../dados/planos.dart';
+import '../dados/planos_nuvem.dart';
 import '../telas/editar_plano.dart';
 import 'aviso.dart';
 
@@ -37,7 +37,7 @@ Future<bool> excluirPlano(
   if (compartilhado) {
     try {
       await PlanosNaNuvem.instancia.excluir(planoId);
-    } on PlanosNaNuvemException catch (erro) {
+    } on PlanosNaNuvemExcecao catch (erro) {
       if (context.mounted) mostrarErro(context, erro.mensagem);
       return false;
     }
@@ -80,7 +80,7 @@ Future<bool> editarPlano(
       if (mudouODiaADia) {
         await PlanosNaNuvem.instancia.gravarDias(plano.id, const []);
       }
-    } on PlanosNaNuvemException catch (erro) {
+    } on PlanosNaNuvemExcecao catch (erro) {
       if (context.mounted) mostrarErro(context, erro.mensagem);
       return false;
     }
@@ -116,7 +116,7 @@ Future<bool> sairDoPlano(
   if (!confirmou) return false;
   try {
     await PlanosNaNuvem.instancia.sair(planoId);
-  } on PlanosNaNuvemException catch (erro) {
+  } on PlanosNaNuvemExcecao catch (erro) {
     if (context.mounted) mostrarErro(context, erro.mensagem);
     return false;
   }

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:felipe_ambrozini/data/voz.dart';
+import 'package:felipe_ambrozini/dados/voz.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Leitor falso sem plataforma de áudio: igual ao original, mas sem dependência

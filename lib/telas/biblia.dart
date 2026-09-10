@@ -4,16 +4,16 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../data/canon.dart';
-import '../data/conteudo.dart';
-import '../data/estado.dart';
-import '../data/modelos.dart';
-import '../data/voz.dart';
+import '../controladores/biblia_controlador.dart';
+import '../dados/canon.dart';
+import '../dados/conteudo.dart';
+import '../dados/estado.dart';
+import '../dados/modelos.dart';
+import '../dados/voz.dart';
 import '../estilo/spacing.dart';
 import '../funcoes/aviso.dart';
 import '../funcoes/dialogos.dart';
 import '../widgets/widgets.dart';
-import 'busca.dart';
 
 /// Leitor da Bíblia. Abre em Gênesis 1 ou onde a leitura parou.
 class TelaBiblia extends StatefulWidget {
@@ -36,30 +36,14 @@ class TelaBiblia extends StatefulWidget {
 }
 
 class _TelaBibliaState extends State<TelaBiblia> {
-  late String _livro;
-  late int _capitulo;
-  final _rolagem = ScrollController();
-
-  /// Uma única vez por instância: a aba retoma a última leitura, e quem
-  /// chegou com destino explícito registra esse destino como última leitura.
-  bool _inicializada = false;
-
-  /// Onde cai o versículo pedido por link, nota ou busca ([widget.destacar]).
-  /// GlobalKey porque o `Scrollable.ensureVisible` precisa do item já
-  /// construído; sem ele não há como achar o versículo dentro do capítulo.
-  final _chaveDoAlvoDeRolagem = GlobalKey();
-  bool _rolouAteOAlvo = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _livro = widget.livroInicial ?? 'genesis';
-    _capitulo = widget.capituloInicial ?? 1;
-  }
+  late final _controller = BibliaControlador(
+    livroInicial: widget.livroInicial,
+    capituloInicial: widget.capituloInicial,
+  );
 
   @override
   void dispose() {
-    _rolagem.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -69,211 +53,17 @@ class _TelaBibliaState extends State<TelaBiblia> {
     // Depender do TickerMode aqui é o que acorda este método quando a aba
     // Bíblia volta à frente: o go_router envolve cada aba em Offstage +
     // TickerMode, e a troca de aba liga e desliga o TickerMode.
-    final ativa = TickerMode.valuesOf(context).enabled;
-    final estado = EscopoDoEstado.de(context);
-    final ultima = estado.ultimaLeitura;
-
-    if (widget.livroInicial != null) {
-      // Quem chegou com destino explícito (link, busca, nota, faixa) também
-      // está lendo: esse destino vira a última leitura, para a aba Bíblia
-      // abrir nele na próxima vez.
-      if (!_inicializada) {
-        _inicializada = true;
-        final livro = widget.livroInicial!;
-        final capitulo = widget.capituloInicial ?? 1;
-        // Depois do frame: registrarLeitura avisa a árvore, e avisar no meio
-        // do ciclo de build é proibido.
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) estado.registrarLeitura(livro, capitulo);
-        });
-      }
-      return;
-    }
-
-    // A aba: na primeira vez retoma a última leitura; nas seguintes, reabre
-    // o último livro quando ele mudou por fora (tela empurrada, link, toque
-    // de lembrete) e a aba volta à frente.
-    if (!_inicializada) {
-      _inicializada = true;
-      if (ultima != null) {
-        _livro = ultima.$1;
-        _capitulo = ultima.$2;
-      }
-    } else if (ativa &&
-        ultima != null &&
-        (ultima.$1 != _livro || ultima.$2 != _capitulo)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _irPara(ultima.$1, ultima.$2);
-      });
-    }
-  }
-
-  Livro get _livroAtual => livroPorSlug(_livro) ?? canon.first;
-
-  void _irPara(String livro, int capitulo) {
-    // Um áudio tocando do capítulo antigo não pode continuar: o botão de
-    // parar dele saiu da tela, e a leitura nova começa do zero. Um preparo em
-    // curso não para aqui: o áudio ainda não toca, e o "Desfazer" do deslize
-    // devolve a voz que ficou pronta.
-    if (Voz.instancia.tocando || Voz.instancia.pausado) {
-      Voz.instancia.parar();
-    }
-    setState(() {
-      _livro = livro;
-      _capitulo = capitulo;
-    });
-    EscopoDoEstado.de(context).registrarLeitura(livro, capitulo);
-    if (_rolagem.hasClients) _rolagem.jumpTo(0);
-  }
-
-  void _passarCapitulo(int passo) {
-    final destino = _capitulo + passo;
-    if (destino >= 1 && destino <= _livroAtual.capitulos) {
-      _irPara(_livro, destino);
-      return;
-    }
-    // Passa para o livro vizinho em vez de travar no fim do último capítulo.
-    final ordem = canon.indexWhere((l) => l.slug == _livro);
-    final vizinho = ordem + passo;
-    if (vizinho < 0 || vizinho >= canon.length) return;
-    final livro = canon[vizinho];
-    _irPara(livro.slug, passo > 0 ? 1 : livro.capitulos);
-  }
-
-  void _abrirBusca() => Navigator.push(
-    context,
-    MaterialPageRoute(builder: (_) => const TelaBusca()),
-  );
-
-  /// Grade de capítulos do livro aberto, direto pelo título do capítulo no
-  /// corpo: um passo em vez dos dois do seletor de livros, e o caminho que
-  /// não depende do deslize (que é invisível para quem chegou agora).
-  Future<void> _abrirGradeDeCapitulos() async {
-    final livro = _livroAtual;
-    final capitulo = await showModalBottomSheet<int>(
+    _controller.aoChangeDependencies(
       context: context,
-      builder: (_) => FolhaDeCapitulos(livro: livro),
-    );
-    if (capitulo != null && mounted) _irPara(livro.slug, capitulo);
-  }
-
-  /// Depois do capítulo aberto por link, nota ou busca, rola até o versículo
-  /// pedido: quem chega por `?ler=joao.3.16` quer o versículo, não o topo do
-  /// capítulo. Roda uma vez por abertura.
-  void _rolarAteOAlvoSePreciso() {
-    final alvo = widget.destacar;
-    if (alvo == null || _rolouAteOAlvo) return;
-    _rolouAteOAlvo = true;
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _rolarAteOAlvo(alvo.$1),
+      ativa: TickerMode.valuesOf(context).enabled,
+      livroInicial: widget.livroInicial,
+      capituloInicial: widget.capituloInicial,
+      estado: EscopoDoEstado.de(context),
     );
   }
-
-  void _rolarAteOAlvo(int versiculo) {
-    var tentativas = 0;
-    void tentar() {
-      final contexto = _chaveDoAlvoDeRolagem.currentContext;
-      if (contexto != null) {
-        Scrollable.ensureVisible(
-          contexto,
-          alignment: 0.3,
-          duration: MediaQuery.disableAnimationsOf(contexto)
-              ? Duration.zero
-              : const Duration(milliseconds: 350),
-        );
-        return;
-      }
-      if (!mounted || ++tentativas >= 90 || !_rolagem.hasClients) return;
-      // Estimativa bruta primeiro: corpo em 17 com altura 1.6, mais o respiro
-      // de 24 dp do versículo. Só precisa chegar perto do item; o
-      // ensureVisible acima ajusta o resto.
-      if (tentativas == 1) {
-        _rolagem.jumpTo(
-          ((versiculo - 1) * 51)
-              .clamp(0.0, _rolagem.position.maxScrollExtent)
-              .toDouble(),
-        );
-      } else if (tentativas > 3) {
-        // A estimativa errou (uma introdução aberta, por exemplo): avança em
-        // blocos até o item entrar na árvore.
-        _rolagem.jumpTo(
-          (_rolagem.offset + 400)
-              .clamp(0.0, _rolagem.position.maxScrollExtent)
-              .toDouble(),
-        );
-      }
-      WidgetsBinding.instance.addPostFrameCallback((_) => tentar());
-    }
-
-    tentar();
-  }
-
-  void _aoArrastarCapitulo(DragEndDetails detalhe) {
-    final horizontal = detalhe.primaryVelocity ?? 0;
-    final vertical = detalhe.velocity.pixelsPerSecond.dy;
-    // O corpo inteiro é um detector de arrasto horizontal em volta de uma
-    // lista vertical. Sem dominância clara, um flick horizontal durante a
-    // rolagem trocava de capítulo em silêncio; aqui o horizontal precisa
-    // vencer o vertical por 2,5x para valer.
-    if (horizontal.abs() < 250) return;
-    if (vertical.abs() * 2.5 > horizontal.abs()) return;
-    _passarCapituloComDesfazer(horizontal < 0 ? 1 : -1);
-  }
-
-  /// Passa de capítulo pelo deslize e oferece voltar: o deslize é o único
-  /// jeito de trocar de capítulo no toque, e um acidente não pode custar o
-  /// lugar na Escritura sem um "Desfazer" à mão. Setas e chevrons não passam
-  /// por aqui: são escolhas explícitas e não pedem volta.
-  void _passarCapituloComDesfazer(int passo) {
-    // O tooltip do deslize some quando o gesto acontece de verdade: um toque
-    // distraído na alça não pode apagar o único aviso do gesto (o antigo
-    // onPointerDown fazia isso); só o uso do gesto que ele ensina dispensa.
-    final estado = EscopoDoEstado.de(context);
-    if (!estado.swipeTooltipDispensado) {
-      estado.dispensarSwipeTooltip();
-    }
-    final livroAnterior = _livro;
-    final capituloAnterior = _capitulo;
-    // A voz em curso (tocando, pausada ou no preparo) tem de voltar junto
-    // com a página: desfazer o deslize sem devolver o áudio seria desfazer
-    // pela metade.
-    final chaveDaLeitura = Voz.instancia.tocandoChave;
-    _passarCapitulo(passo);
-    mostrarAviso(
-      context,
-      '${_livroAtual.nome} $_capitulo',
-      rotuloDeAcao: 'Desfazer',
-      aoAgir: () {
-        if (!mounted) return;
-        _irPara(livroAnterior, capituloAnterior);
-        if (chaveDaLeitura != null) {
-          Voz.instancia.retomar(
-            chaveDeCapitulo(livroAnterior, capituloAnterior),
-            de: Voz.instancia.desdeAParada,
-          );
-        }
-      },
-    );
-  }
-
-  /// Se vale a pena gastar uma faixa do rodapé com os chevrons de capítulo.
-  ///
-  /// No celular não vale: deslizar já passa a página, e a barra ficava logo
-  /// acima da barra de navegação repetindo o que o dedo faz. Na web vale,
-  /// porque ali quem usa só o mouse não tem gesto: arrastar com o botão
-  /// apertado funciona, mas ninguém descobre isso, e as setas do teclado também
-  /// não se anunciam. Mesmo lá é escolha: quem navega pelo teclado esconde os
-  /// botões na folha de ajustes ([Estado.setasDoRodape]).
-  ///
-  /// É a única ramificação por plataforma do app, e existe porque a forma de
-  /// apontar muda de verdade entre elas. A web pode estar num desktop sem
-  /// toque, então entra pelo pior caso.
-  bool get _semGestoDeToque => kIsWeb;
 
   @override
   Widget build(BuildContext context) {
-    final cor = Theme.of(context).colorScheme;
-    final estado = EscopoDoEstado.de(context);
     // Teclado na web: as setas passam de capítulo e Ctrl+F abre a
     // busca, que antes só existiam como dois chevrons pequenos no rodapé e um
     // ícone na barra. Setas horizontais não rolam uma lista vertical, então não
@@ -283,84 +73,94 @@ class _TelaBibliaState extends State<TelaBiblia> {
     // de quem tem o foco, e dentro da moldura o foco costuma cair num botão da
     // AppBar. Com o atalho só no corpo, a tecla passava por fora dele e nada
     // acontecia.
-    return CallbackShortcuts(
-      bindings: {
-        const SingleActivator(LogicalKeyboardKey.arrowRight): () =>
-            _passarCapitulo(1),
-        const SingleActivator(LogicalKeyboardKey.arrowLeft): () =>
-            _passarCapitulo(-1),
-        const SingleActivator(LogicalKeyboardKey.keyF, control: true):
-            _abrirBusca,
-      },
-      child: Scaffold(
-        appBar: DevocionalAppBar(
-          title: Tooltip(
-            message: 'Toque para escolher capítulo',
-            child: TextButton(
-              onPressed: _abrirSeletor,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Flexible com reticências porque a barra tem duas ações e um
-                  // livro de nome longo em celular estreito estouraria a linha.
-                  Flexible(
-                    child: Text(
-                      '${_livroAtual.nome} $_capitulo',
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).appBarTheme.titleTextStyle,
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) {
+        final cor = Theme.of(context).colorScheme;
+        final estado = EscopoDoEstado.de(context);
+        final livro = _controller.livro;
+        final capitulo = _controller.capitulo;
+
+        return CallbackShortcuts(
+          bindings: {
+            const SingleActivator(LogicalKeyboardKey.arrowRight): () =>
+                _controller.passarCapitulo(context, 1),
+            const SingleActivator(LogicalKeyboardKey.arrowLeft): () =>
+                _controller.passarCapitulo(context, -1),
+            const SingleActivator(LogicalKeyboardKey.keyF, control: true): () =>
+                _controller.abrirBusca(context),
+          },
+          child: Scaffold(
+            appBar: DevocionalAppBar(
+              title: Tooltip(
+                message: 'Toque para escolher capítulo',
+                child: TextButton(
+                  onPressed: () => _controller.abrirSeletor(context),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Flexible com reticências porque a barra tem duas ações e um
+                      // livro de nome longo em celular estreito estouraria a linha.
+                      Flexible(
+                        child: Text(
+                          '${_controller.livroAtual.nome} $capitulo',
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).appBarTheme.titleTextStyle,
+                        ),
+                      ),
+                      const SizedBox(width: DevocionalEspacamento.sp8),
+                      FaIcon(
+                        FontAwesomeIcons.chevronDown,
+                        color: cor.primary,
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                DevocionalIndicadorDeVozNaBarra(
+                  chave: chaveDeCapitulo(livro, capitulo),
+                ),
+                IconButton(
+                  tooltip: 'Buscar',
+                  icon: const FaIcon(FontAwesomeIcons.magnifyingGlass),
+                  onPressed: () => _controller.abrirBusca(context),
+                ),
+                DevocionalBotaoDeAjustes(estado: estado),
+              ],
+            ),
+            body: Focus(
+              autofocus: true,
+              child: DevocionalLarguraDeLeitura(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: DevocionalCarregaUmaVez<Capitulo>(
+                        chave: '$livro/$capitulo',
+                        carregar: () =>
+                            Conteudo.instancia.capitulo(livro, capitulo),
+                        construir: (context, snap) =>
+                            _corpoDoCapitulo(context, estado, snap),
+                      ),
                     ),
-                  ),
-                  FaIcon(
-                    FontAwesomeIcons.chevronDown,
-                    color: cor.primary,
-                    size: 20,
-                  ),
-                ],
+                    if (_controller.semGestoDeToque && estado.setasDoRodape)
+                      DevocionalBarraDeCapitulo(
+                        podeVoltar:
+                            !(livro == canon.first.slug && capitulo == 1),
+                        podeAvancar:
+                            !(livro == canon.last.slug &&
+                                capitulo == canon.last.capitulos),
+                        aoVoltar: () => _controller.passarCapitulo(context, -1),
+                        aoAvancar: () => _controller.passarCapitulo(context, 1),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
-          actions: [
-            IndicadorDeVozNaBarra(chave: chaveDeCapitulo(_livro, _capitulo)),
-            IconButton(
-              tooltip: 'Buscar',
-              icon: const FaIcon(FontAwesomeIcons.magnifyingGlass),
-              onPressed: _abrirBusca,
-            ),
-            IconButton(
-              tooltip: 'Tamanho do texto e aparência',
-              icon: const FaIcon(FontAwesomeIcons.sliders),
-              onPressed: () => ajustesDeLeitura(context, estado),
-            ),
-          ],
-        ),
-        body: Focus(
-          autofocus: true,
-          child: LarguraDeLeitura(
-            child: Column(
-              children: [
-                Expanded(
-                  child: CarregaUmaVez<Capitulo>(
-                    chave: '$_livro/$_capitulo',
-                    carregar: () =>
-                        Conteudo.instancia.capitulo(_livro, _capitulo),
-                    construir: (context, snap) =>
-                        _corpoDoCapitulo(context, estado, snap),
-                  ),
-                ),
-                if (_semGestoDeToque && estado.setasDoRodape)
-                  _BarraDeCapitulo(
-                    podeVoltar: !(_livro == canon.first.slug && _capitulo == 1),
-                    podeAvancar:
-                        !(_livro == canon.last.slug &&
-                            _capitulo == canon.last.capitulos),
-                    aoVoltar: () => _passarCapitulo(-1),
-                    aoAvancar: () => _passarCapitulo(1),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -372,35 +172,36 @@ class _TelaBibliaState extends State<TelaBiblia> {
     Estado estado,
     AsyncSnapshot<Capitulo> snap,
   ) {
-    if (snap.hasError) return const AvisoDeErro();
+    if (snap.hasError) return const DevocionalAvisoDeErro();
     if (snap.connectionState != ConnectionState.done) {
       return const Center(child: CircularProgressIndicator());
     }
     final capitulo = snap.data!;
     if (capitulo.versiculos.isEmpty) {
-      return const AvisoVazio(
+      return const DevocionalAvisoVazio(
         icone: FontAwesomeIcons.bookOpen,
         titulo: 'Capítulo não encontrado',
       );
     }
     // Quem chegou por link, nota ou busca pediu um versículo exato; rolar até
     // ele precisa de um frame depois do capítulo montado.
-    _rolarAteOAlvoSePreciso();
+    _controller.rolarAteOAlvoSePreciso(widget.destacar);
     // Arrastar na horizontal passa de capítulo. Vale na web também: arrasto
     // com o botão do mouse apertado dispara o mesmo reconhecedor. Só que
     // ninguém descobre isso sem um dedo na tela, e é por isso que os chevrons
-    // continuam lá embaixo em quem não tem toque. Ver [_semGestoDeToque].
+    // continuam lá embaixo em quem não tem toque. Ver [BibliaControlador.semGestoDeToque].
     final leitor = GestureDetector(
-      onHorizontalDragEnd: _aoArrastarCapitulo,
+      onHorizontalDragEnd: (detalhe) =>
+          _controller.aoArrastarCapitulo(context, detalhe),
       child: _Leitor(
         capitulo: capitulo,
-        rolagem: _rolagem,
+        rolagem: _controller.rolagem,
         destacar: widget.destacar,
         alvoDeRolagem: widget.destacar?.$1,
         chaveDoAlvoDeRolagem: widget.destacar == null
             ? null
-            : _chaveDoAlvoDeRolagem,
-        aoAbrirCapitulos: _abrirGradeDeCapitulos,
+            : _controller.chaveDoAlvoDeRolagem,
+        aoAbrirCapitulos: () => _controller.abrirGradeDeCapitulos(context),
       ),
     );
     // Só no toque o texto vira selecionável: por lá o dedo escolhe com um
@@ -408,7 +209,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
     // capítulo. No mouse (web) a seleção por arrasto disputaria a arena com o
     // gesto de capítulo, então lá Copiar pela folha do versículo continua
     // sendo o caminho.
-    final corpoLeitura = _semGestoDeToque
+    final corpoLeitura = _controller.semGestoDeToque
         ? leitor
         : SelectionArea(child: leitor);
     return ListenableBuilder(
@@ -419,19 +220,12 @@ class _TelaBibliaState extends State<TelaBiblia> {
           // A alça é um indício de que dá para deslizar, não um controle:
           // quem desliza usa a tela inteira como alvo de toque.
           if (!kIsWeb)
-            _AlcaDeDeslize(primeiraVez: !estado.swipeTooltipDispensado),
+            DevocionalAlcaDeDeslize(
+              primeiraVez: !estado.swipeTooltipDispensado,
+            ),
         ],
       ),
     );
-  }
-
-  Future<void> _abrirSeletor() async {
-    final destino = await showModalBottomSheet<(String, int)>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => SeletorDeLivro(livroAtual: _livro),
-    );
-    if (destino != null && mounted) _irPara(destino.$1, destino.$2);
   }
 }
 
@@ -466,10 +260,10 @@ class _Leitor extends StatelessWidget {
     return ListView.builder(
       controller: rolagem,
       padding: const EdgeInsets.fromLTRB(
-        Spacing.sp20,
-        Spacing.sp8,
-        Spacing.sp20,
-        Spacing.sp32,
+        DevocionalEspacamento.sp20,
+        DevocionalEspacamento.sp8,
+        DevocionalEspacamento.sp20,
+        DevocionalEspacamento.sp32,
       ),
       itemCount: capitulo.versiculos.length + 1,
       itemBuilder: (context, i) {
@@ -479,7 +273,7 @@ class _Leitor extends StatelessWidget {
             children: [
               // O cartão é o único caminho para a introdução, então fica
               // disponível em todo capítulo, não só antes do primeiro.
-              AberturaDeLivro(slug: capitulo.livro),
+              DevocionalAberturaDeLivro(slug: capitulo.livro),
               // O título completo do livro só aparece no capítulo 1: é a
               // abertura do livro, não algo para repetir a cada capítulo.
               if (capitulo.numero == 1) ...[
@@ -490,7 +284,7 @@ class _Leitor extends StatelessWidget {
                     color: cor.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: Spacing.sp4),
+                const SizedBox(height: DevocionalEspacamento.sp4),
               ],
               Semantics(
                 button: aoAbrirCapitulos != null,
@@ -505,8 +299,8 @@ class _Leitor extends StatelessWidget {
                           onTap: aoAbrirCapitulos,
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
-                              vertical: Spacing.sp4,
-                              horizontal: Spacing.sp2,
+                              vertical: DevocionalEspacamento.sp4,
+                              horizontal: DevocionalEspacamento.sp2,
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -515,7 +309,7 @@ class _Leitor extends StatelessWidget {
                                   capitulo.referencia,
                                   style: tema.displayMedium,
                                 ),
-                                const SizedBox(width: Spacing.sp8),
+                                const SizedBox(width: DevocionalEspacamento.sp8),
                                 FaIcon(
                                   FontAwesomeIcons.chevronDown,
                                   size: 22,
@@ -527,16 +321,16 @@ class _Leitor extends StatelessWidget {
                         ),
                       ),
               ),
-              const SizedBox(height: Spacing.sp8),
-              const Filete(),
+              const SizedBox(height: DevocionalEspacamento.sp8),
+              const DevocionalFilete(),
               // A voz de Spurgeon lê o capítulo inteiro, do título ao último
               // versículo; tocar de novo para a leitura.
-              const SizedBox(height: Spacing.sp14),
-              BotaoDeVoz(
+              const SizedBox(height: DevocionalEspacamento.sp14),
+              DevocionalBotaoDeVoz(
                 chave: chaveDeCapitulo(capitulo.livro, capitulo.numero),
               ),
               if (capitulo.titulo.isNotEmpty) ...[
-                const SizedBox(height: Spacing.sp12),
+                const SizedBox(height: DevocionalEspacamento.sp12),
                 Text(
                   capitulo.titulo,
                   style: tema.bodyMedium?.copyWith(
@@ -545,7 +339,7 @@ class _Leitor extends StatelessWidget {
                   ),
                 ),
               ],
-              const SizedBox(height: Spacing.sp16),
+              const SizedBox(height: DevocionalEspacamento.sp16),
             ],
           );
         }
@@ -616,8 +410,8 @@ class _LinhaDeVersiculo extends StatelessWidget {
           // linha ficava em cerca de 41 dp de alvo, abaixo dos 48 dp mínimos.
           // Os curtos são justamente os mais marcados.
           padding: const EdgeInsets.symmetric(
-            vertical: Spacing.sp12,
-            horizontal: Spacing.sp6,
+            vertical: DevocionalEspacamento.sp12,
+            horizontal: DevocionalEspacamento.sp6,
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
@@ -660,7 +454,7 @@ class _LinhaDeVersiculo extends StatelessWidget {
                 ),
               ),
               if (marcacao != null && marcacao.nota.isNotEmpty) ...[
-                const SizedBox(height: Spacing.sp6),
+                const SizedBox(height: DevocionalEspacamento.sp6),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -669,7 +463,7 @@ class _LinhaDeVersiculo extends StatelessWidget {
                       size: 15,
                       color: cor.primary,
                     ),
-                    const SizedBox(width: Spacing.sp6),
+                    const SizedBox(width: DevocionalEspacamento.sp6),
                     Expanded(
                       child: Text(
                         marcacao.nota,
@@ -702,6 +496,7 @@ class _AcoesDoVersiculo {
     required this.numero,
     required this.texto,
     required this.marcacao,
+    required this.comentario,
   });
 
   final Estado estado;
@@ -716,6 +511,9 @@ class _AcoesDoVersiculo {
   /// A marcação como estava na hora em que a folha abriu.
   final Marcacao? marcacao;
 
+  /// Comentário de Spurgeon sobre este versículo, se já escrito.
+  final String? comentario;
+
   Widget folha(BuildContext contextoDaFolha) {
     final cor = Theme.of(contextoDaFolha).colorScheme;
     return SafeArea(
@@ -725,10 +523,10 @@ class _AcoesDoVersiculo {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                Spacing.sp20,
-                Spacing.sp20,
-                Spacing.sp8,
-                Spacing.sp20,
+                DevocionalEspacamento.sp20,
+                DevocionalEspacamento.sp20,
+                DevocionalEspacamento.sp8,
+                DevocionalEspacamento.sp20,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -737,11 +535,25 @@ class _AcoesDoVersiculo {
                     '$referencia:$numero',
                     style: Theme.of(contextoDaFolha).textTheme.headlineSmall,
                   ),
-                  const SizedBox(height: Spacing.sp8),
+                  const SizedBox(height: DevocionalEspacamento.sp8),
                   Text(
                     texto,
                     style: Theme.of(contextoDaFolha).textTheme.bodyMedium,
                   ),
+                  if (comentario != null && comentario!.isNotEmpty) ...[
+                    const SizedBox(height: DevocionalEspacamento.sp16),
+                    Text(
+                      'Comentário de Charles Spurgeon',
+                      style: Theme.of(contextoDaFolha).textTheme.labelMedium
+                          ?.copyWith(color: cor.primary, fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: DevocionalEspacamento.sp6),
+                    Text(
+                      comentario!,
+                      style: Theme.of(contextoDaFolha).textTheme.bodyMedium
+                          ?.copyWith(fontStyle: FontStyle.italic),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -775,8 +587,7 @@ class _AcoesDoVersiculo {
         // remove oferece o "Desfazer" (o padrão do deslize de capítulo). Com
         // nota o alternarFavorito se recusa a remover (a nota manda, ver
         // estado.dart), e nesse caso não há o que desfazer.
-        if (eraFavorito &&
-            !estado.ehFavorito(livro, capituloNumero, numero)) {
+        if (eraFavorito && !estado.ehFavorito(livro, capituloNumero, numero)) {
           final mensageiro = ScaffoldMessenger.of(folha);
           mostrarAvisoNo(
             mensageiro,
@@ -857,6 +668,12 @@ Future<void> _abrirAcoesDoVersiculo(
   required String texto,
 }) async {
   final marcacao = estado.marcacaoDe(livro, capituloNumero, numero);
+  final comentario = await Conteudo.instancia.comentario(
+    livro,
+    capituloNumero,
+    numero,
+  );
+  if (!context.mounted) return;
   final acoes = _AcoesDoVersiculo(
     estado: estado,
     livro: livro,
@@ -865,6 +682,7 @@ Future<void> _abrirAcoesDoVersiculo(
     numero: numero,
     texto: texto,
     marcacao: marcacao,
+    comentario: comentario,
   );
   await showModalBottomSheet<void>(
     context: context,
@@ -875,99 +693,4 @@ Future<void> _abrirAcoesDoVersiculo(
     isScrollControlled: true,
     builder: acoes.folha,
   );
-}
-
-/// A alça de arraste na borda esquerda do leitor (mobile): o gradiente e o
-/// ícone indicam que deslizar horizontalmente troca de capítulo. O tooltip de
-/// primeiro uso só some quando o gesto acontece de verdade (ver
-/// `_passarCapituloComDesfazer`). Um toque nela não faz nada: quem desliza
-/// usa a tela inteira como alvo, muito maior que os 48px mínimos.
-class _AlcaDeDeslize extends StatelessWidget {
-  const _AlcaDeDeslize({required this.primeiraVez});
-
-  final bool primeiraVez;
-
-  @override
-  Widget build(BuildContext context) {
-    final cor = Theme.of(context).colorScheme;
-    return Positioned(
-      left: 0,
-      top: 0,
-      bottom: 0,
-      width: 24,
-      child: Tooltip(
-        message: primeiraVez ? 'Arraste para trocar capítulo' : '',
-        child: Semantics(
-          label: primeiraVez ? 'Arraste para trocar capítulo' : '',
-          child: Container(
-            width: 24,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [
-                  cor.primary.withValues(alpha: 0.12),
-                  Colors.transparent,
-                ],
-              ),
-            ),
-            child: Center(
-              child: FaIcon(
-                FontAwesomeIcons.gripVertical,
-                size: 20,
-                color: cor.primary.withValues(alpha: 0.5),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Rodapé com os dois chevrons de capítulo.
-///
-/// Só é montado onde não há gesto de toque; ver `_semGestoDeToque` em
-/// [_TelaBibliaState]. No celular deslizar já faz isso, e a barra custava uma
-/// faixa do fim de toda tela, logo acima da barra de navegação.
-class _BarraDeCapitulo extends StatelessWidget {
-  const _BarraDeCapitulo({
-    required this.podeVoltar,
-    required this.podeAvancar,
-    required this.aoVoltar,
-    required this.aoAvancar,
-  });
-
-  final bool podeVoltar;
-  final bool podeAvancar;
-  final VoidCallback aoVoltar;
-  final VoidCallback aoAvancar;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: Spacing.sp12,
-          vertical: Spacing.sp4,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            IconButton(
-              tooltip: 'Capítulo anterior',
-              onPressed: podeVoltar ? aoVoltar : null,
-              icon: const FaIcon(FontAwesomeIcons.chevronLeft),
-            ),
-            IconButton(
-              tooltip: 'Próximo capítulo',
-              onPressed: podeAvancar ? aoAvancar : null,
-              icon: const FaIcon(FontAwesomeIcons.chevronRight),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

@@ -1,5 +1,5 @@
-import 'package:felipe_ambrozini/data/audio_offline.dart';
-import 'package:felipe_ambrozini/data/voz.dart';
+import 'package:felipe_ambrozini/dados/audio_offline.dart';
+import 'package:felipe_ambrozini/dados/voz.dart';
 import 'package:felipe_ambrozini/funcoes/aviso.dart';
 import 'package:felipe_ambrozini/widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -20,13 +20,13 @@ void main() {
 
   Widget montar({String chave = 'capitulo:joao.3'}) => MaterialApp(
     home: Scaffold(
-      body: BotaoDeVoz(
+      body: DevocionalBotaoDeVoz(
         chave: chave,
       ),
     ),
   );
 
-  group('BotaoDeVoz', () {
+  group('DevocionalBotaoDeVoz', () {
     testWidgets('em repouso mostra "Ouvir" e anuncia o rótulo completo', (
       tester,
     ) async {

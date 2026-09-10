@@ -1,22 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../data/conteudo.dart';
-import '../data/estado.dart';
-import '../data/modelos.dart';
-import '../data/nuvem.dart';
-import '../data/registro.dart';
+import '../dados/estado.dart';
+import '../dados/modelos.dart';
+import '../dados/nuvem.dart';
+import '../dados/registro.dart';
 import '../estilo/spacing.dart';
-import '../funcoes/alternar_lido.dart';
 import '../funcoes/aviso.dart';
-import '../funcoes/citacao.dart';
 import '../funcoes/conta_acoes.dart';
 import '../funcoes/datas.dart';
-import '../funcoes/linhas_de_ajuda.dart';
 import '../widgets/widgets.dart';
-import 'biblia.dart';
 import 'devocional.dart';
 
 /// Tela de abertura: quem sou, o devocional da hora, a leitura do dia e o progresso.
@@ -36,91 +30,43 @@ class _TelaHojeState extends State<TelaHoje> {
 
     return Scaffold(
       body: SafeArea(
-        child: LarguraDeLeitura(
+        child: DevocionalLarguraDeLeitura(
           child: ListView(
             padding: const EdgeInsets.fromLTRB(
-              Spacing.sp16,
-              Spacing.sp8,
-              Spacing.sp16,
-              Spacing.sp32,
+              DevocionalEspacamento.sp16,
+              DevocionalEspacamento.sp8,
+              DevocionalEspacamento.sp16,
+              DevocionalEspacamento.sp32,
             ),
             children: [
               _Cabecalho(data: agora),
-              const SizedBox(height: Spacing.sp20),
+              const SizedBox(height: DevocionalEspacamento.sp20),
               // Ajuda só para quem chega: um cartão curto na primeira visita,
               // que some para sempre com "Entendi". Fica antes dos cards de
               // leitura, para orientar quem não conhece o app antes de mostrar
               // o conteúdo do dia.
               if (!estado.ajudaDispensada) ...[
-                _CartaoDeAjuda(estado: estado),
-                const SizedBox(height: Spacing.sp16),
+                DevocionalCartaoDeAjuda(estado: estado),
+                const SizedBox(height: DevocionalEspacamento.sp16),
               ],
               // A leitura do plano abre a tela, antes dos devocionais: é a
               // razão do app existir. A leitura da hora vem logo depois, no
               // cartão que ganha o filete; promessas mantém o cartão sem ele,
               // e o progresso do ano segue a leitura como quem a acompanha.
-              _LeituraDeHoje(data: agora),
-              const SizedBox(height: Spacing.sp16),
-              _PreviaDaLeitura(
+              DevocionalLeituraDeHoje(data: agora),
+              const SizedBox(height: DevocionalEspacamento.sp16),
+              DevocionalPreviaDaLeitura(
                 data: agora,
                 leitura: periodo == Periodo.manha
                     ? Leitura.manha
                     : Leitura.noite,
                 destaque: true,
               ),
-              const SizedBox(height: Spacing.sp16),
-              _PreviaDaLeitura(data: agora, leitura: Leitura.promessas),
+              const SizedBox(height: DevocionalEspacamento.sp16),
+              DevocionalPreviaDaLeitura(data: agora, leitura: Leitura.promessas),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Primeira visita: três linhas essenciais e nada mais, para a ajuda não
-/// competir com a leitura que abre a tela. A lista completa continua em Sobre
-/// ("Ver tudo"), junto com as fontes e a privacidade; o botão "Entendi" some
-/// com o cartão para sempre (ver `Estado.ajudaDispensada`).
-class _CartaoDeAjuda extends StatelessWidget {
-  const _CartaoDeAjuda({required this.estado});
-
-  final Estado estado;
-
-  @override
-  Widget build(BuildContext context) {
-    final cor = Theme.of(context).colorScheme;
-    final tema = Theme.of(context).textTheme;
-    return Cartao(
-      titulo: 'Como usar',
-      acessorio: FaIcon(
-        FontAwesomeIcons.bookOpenReader,
-        color: cor.primary,
-        size: 20,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (final linha in linhasDeAjuda.take(3)) ...[
-            Text(linha, style: tema.bodyMedium),
-            const SizedBox(height: Spacing.sp6),
-          ],
-          const SizedBox(height: Spacing.sp2),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: () => context.push('/sobre'),
-                child: const Text('Ver tudo'),
-              ),
-              const SizedBox(width: Spacing.sp8),
-              TextButton(
-                onPressed: () => estado.dispensarAjuda(),
-                child: const Text('Entendi'),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
@@ -265,7 +211,7 @@ class _Cabecalho extends StatelessWidget {
                       : null,
                 ),
               ),
-              const SizedBox(width: Spacing.sp14),
+              const SizedBox(width: DevocionalEspacamento.sp14),
             ],
             Expanded(
               child: Column(
@@ -278,7 +224,7 @@ class _Cabecalho extends StatelessWidget {
                     nome != null ? '$saudacao, $nome' : saudacao,
                     style: tema.headlineMedium,
                   ),
-                  const SizedBox(height: Spacing.sp4),
+                  const SizedBox(height: DevocionalEspacamento.sp4),
                   Text(dataLonga(data), style: tema.bodySmall),
                 ],
               ),
@@ -289,7 +235,7 @@ class _Cabecalho extends StatelessWidget {
             _BotaoDeConta(),
             // Hoje não tem AppBar onde pendurar a ação, e sem isto os ajustes
             // só seriam alcançáveis de duas das seis abas.
-            BotaoDeAjustes(estado: EscopoDoEstado.de(context)),
+            DevocionalBotaoDeAjustes(estado: EscopoDoEstado.de(context)),
           ],
         );
       },
@@ -321,389 +267,13 @@ class _BotaoDeConta extends StatelessWidget {
                   : () => entrarNaConta(context, nuvem),
               icon: nuvem.entrando
                   ? const SizedBox(
-                      width: Spacing.sp18,
-                      height: Spacing.sp18,
+                      width: DevocionalEspacamento.sp18,
+                      height: DevocionalEspacamento.sp18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const FaIcon(FontAwesomeIcons.google, size: 16),
               label: const Text('Entrar'),
             ),
-    );
-  }
-}
-
-/// Texto de até 5 linhas que desvanece na última quando o corte é real.
-///
-/// A reticência sozinha parecia um fim de texto, e a prévia competia com o
-/// resto do cartão: o corte vira um convite ao "Ler tudo" quando se lê como
-/// corte. O `TextPainter` decide antes de pintar se o texto estoura; só então
-/// o `ShaderMask` suaviza a quinta linha para o fundo (o `dstIn` usa só o
-/// alfa do gradiente, preservando a cor do texto).
-class _ComFadeAoFim extends StatelessWidget {
-  const _ComFadeAoFim({required this.texto, required this.estilo});
-
-  final String texto;
-  final TextStyle? estilo;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final painter = TextPainter(
-          text: TextSpan(text: texto, style: estilo),
-          maxLines: 5,
-          textDirection: TextDirection.ltr,
-        )..layout(maxWidth: constraints.maxWidth);
-        if (!painter.didExceedMaxLines) {
-          return Text(
-            texto,
-            maxLines: 5,
-            overflow: TextOverflow.ellipsis,
-            style: estilo,
-          );
-        }
-        return ShaderMask(
-          shaderCallback: (limites) => const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.white, Colors.white, Colors.transparent],
-            stops: [0.82, 0.95, 1.0],
-          ).createShader(limites),
-          blendMode: BlendMode.dstIn,
-          child: Text(
-            texto,
-            maxLines: 5,
-            overflow: TextOverflow.ellipsis,
-            style: estilo,
-          ),
-        );
-      },
-    );
-  }
-}
-
-/// Prévia de uma das três leituras do dia, com atalho para a tela inteira.
-///
-/// Serve às três porque só o que muda é de onde o texto vem e se há título e
-/// versículo em destaque: Promessas de Deus tem os dois, Manhã e Noite não.
-///
-/// [destaque] marca a leitura do período da hora (a "de agora"): é a que
-/// ganha o filete dourado embaixo do título, dizendo que uma leitura começa
-/// ali. As outras leituras do dia mantêm o mesmo cartão, só sem o filete.
-class _PreviaDaLeitura extends StatelessWidget {
-  const _PreviaDaLeitura({
-    required this.data,
-    required this.leitura,
-    this.destaque = false,
-  });
-
-  final DateTime data;
-  final Leitura leitura;
-  final bool destaque;
-
-  String get _titulo => leitura.tituloCompleto;
-
-  FaIconData get _icone => switch (leitura) {
-    Leitura.manha => FontAwesomeIcons.sun,
-    Leitura.noite => FontAwesomeIcons.moon,
-    Leitura.promessas => FontAwesomeIcons.wandMagicSparkles,
-  };
-
-  Future<Devocional?> _futuro() {
-    final periodo = leitura.periodo;
-    return periodo == null
-        ? Conteudo.instancia.promessa(data)
-        : Conteudo.instancia.devocional(data, periodo);
-  }
-
-  void _abrir(BuildContext context) => Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) =>
-          TelaDevocional(dataInicial: data, leituraInicial: leitura),
-    ),
-  );
-
-  /// Cartão de uma linha só, para quando ainda não há texto para mostrar.
-  Widget _aviso(BuildContext context, String texto) => Cartao(
-    titulo: _titulo,
-    acessorio: FaIcon(
-      _icone,
-      color: Theme.of(context).colorScheme.primary,
-      size: 20,
-    ),
-    child: Text(texto),
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    final cor = Theme.of(context).colorScheme;
-    final tema = Theme.of(context).textTheme;
-    return CarregaUmaVez<Devocional?>(
-      // A chave inclui a leitura e a data para reaproveitar o resultado certo.
-      chave: '${leitura.name}/${Conteudo.chaveDoDia(data)}',
-      carregar: _futuro,
-      construir: (context, snap) {
-        // A ordem importa: `snap.data` é nulo enquanto carrega, e só depois
-        // de `done` é que nulo significa anomalia. Com os corpora completos
-        // (366/366 verificados nos testes), erro de carga e entrada ausente
-        // dizem a mesma coisa: conteúdo que devia estar ali não veio.
-        if (snap.connectionState != ConnectionState.done) {
-          return _aviso(context, 'Carregando...');
-        }
-        final dev = snap.data;
-        if (snap.hasError || dev == null) {
-          return _aviso(context, 'Não foi possível carregar esta leitura.');
-        }
-
-        final spans = spansDeCitacao(
-          dev,
-          estiloCitacao: tema.bodyMedium?.copyWith(
-            height: 1.6,
-            fontStyle: FontStyle.italic,
-            color: cor.secondary,
-          ),
-          estiloReferencia: tema.titleSmall?.copyWith(color: cor.secondary),
-          // A prévia segue o cartão do devocional: a referência da epígrafe
-          // abre a Bíblia no versículo citado.
-          aoAbrirReferencia: (livro, capitulo, deVersiculo, ateVersiculo) =>
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => TelaBiblia(
-                    livroInicial: livro.slug,
-                    capituloInicial: capitulo,
-                    destacar: (deVersiculo, ateVersiculo),
-                  ),
-                ),
-              ),
-        );
-        return Cartao(
-          titulo: _titulo,
-          acessorio: FaIcon(_icone, color: cor.primary, size: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // O filete sob o título é a gramática da leitura que começa
-              // ali, a mesma da capa do devocional: a prévia de agora tem o
-              // mesmo gesto de chamada da leitura em si.
-              if (destaque) ...[
-                const Filete(),
-                const SizedBox(height: Spacing.sp12),
-              ],
-              if (dev.titulo.isNotEmpty)
-                Text(
-                  dev.titulo,
-                  style: tema.titleMedium?.copyWith(color: cor.primary),
-                ),
-              const SizedBox(height: Spacing.sp8),
-              // A citação vem antes do nome do livro, e o nome do livro fica
-              // ao lado do fim da citação, não numa linha própria embaixo.
-              // Mais de uma linha no raro dia com mais de um versículo-base.
-              if (spans.isNotEmpty) ...[
-                Text.rich(TextSpan(children: spans)),
-                const SizedBox(height: Spacing.sp8),
-              ],
-              // O corte em 5 linhas precisa ler como corte, não como fim do
-              // texto: a prévia desvanece a última linha quando o texto
-              // realmente não cabe.
-              _ComFadeAoFim(
-                texto: dev.texto,
-                estilo: tema.bodyMedium?.copyWith(height: 1.6),
-              ),
-              const SizedBox(height: Spacing.sp10),
-              Align(
-                alignment: Alignment.centerRight,
-                // "Ler tudo" é TextButton em todo lugar (ação quieta, ver
-                // DESIGN.md); esta prévia usava OutlinedButton e a mesma
-                // ação tinha dois controles na mesma tela.
-                child: TextButton.icon(
-                  onPressed: () => _abrir(context),
-                  icon: const FaIcon(FontAwesomeIcons.arrowRight, size: 16),
-                  label: const Text('Ler tudo'),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _LeituraDeHoje extends StatelessWidget {
-  const _LeituraDeHoje({required this.data});
-
-  final DateTime data;
-
-  @override
-  Widget build(BuildContext context) {
-    final estado = EscopoDoEstado.de(context);
-    return CarregaUmaVez<DiaDoPlano?>(
-      chave: Conteudo.chaveDoDia(data),
-      carregar: () => Conteudo.instancia.diaDoPlano(data),
-      construir: (context, snap) {
-        if (snap.hasError) {
-          return _CartaoLeituraProgressoErro(
-            mensagem: 'Não foi possível carregar o cronograma.',
-          );
-        }
-        if (snap.connectionState != ConnectionState.done) {
-          return const _CartaoLeituraProgressoCarregando();
-        }
-        final dia = snap.data!;
-        return _CartaoLeituraProgresso(
-          dia: dia,
-          estado: estado,
-          ano: data.year,
-        );
-      },
-    );
-  }
-}
-
-/// Cartão unificado: leitura de hoje + progresso do ano, no estilo devocional.
-class _CartaoLeituraProgresso extends StatelessWidget {
-  const _CartaoLeituraProgresso({
-    required this.dia,
-    required this.estado,
-    required this.ano,
-  });
-
-  final DiaDoPlano dia;
-  final Estado estado;
-  final int ano;
-
-  @override
-  Widget build(BuildContext context) {
-    final cor = Theme.of(context).colorScheme;
-    final tema = Theme.of(context).textTheme;
-    final lido = estado.foiLido(dia.data);
-    final total = Conteudo.diasDoAno(ano);
-    final progresso = estado.progressoDoAno(total);
-
-    return Cartao(
-      padding: const EdgeInsets.all(Spacing.sp20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Cabeçalho com título e ação de marcar como lido
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Filete(),
-                    const SizedBox(height: Spacing.sp12),
-                    Text('Leitura de hoje', style: tema.titleLarge),
-                  ],
-                ),
-              ),
-              IconButton(
-                tooltip: lido ? 'Desmarcar' : 'Marcar como lido',
-                icon: FaIcon(
-                  lido ? FontAwesomeIcons.circleCheck : FontAwesomeIcons.circle,
-                  color: lido ? cor.secondary : cor.onSurfaceVariant,
-                ),
-                onPressed: () =>
-                    alternarLidoComDesfazer(context, estado, dia.data),
-              ),
-            ],
-          ),
-          const SizedBox(height: Spacing.sp8),
-          // Rótulo do dia (ex: "Dia 1 — Gênesis 1–2")
-          Text(dia.rotulo, style: tema.bodyLarge),
-          const SizedBox(height: Spacing.sp12),
-          // Faixas do dia
-          Wrap(
-            spacing: Spacing.sp8,
-            runSpacing: Spacing.sp8,
-            children: [for (final f in dia.faixas) BotaoDeFaixa(faixa: f)],
-          ),
-          const SizedBox(height: Spacing.sp20),
-          // Filete separador antes do progresso
-          const Filete(),
-          const SizedBox(height: Spacing.sp14),
-          // Progresso do ano. Wrap, não Row com Spacer: em largura curta
-          // (ou fonte grande, ver a escala de leitura) o contador cai para a
-          // linha de baixo em vez de estourar a linha — o Row exigia que
-          // rótulo + número + total coubessem lado a lado sempre.
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: Spacing.sp8,
-            runSpacing: Spacing.sp4,
-            children: [
-              Text('Progresso do ano', style: tema.labelMedium),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Text(
-                    '${estado.diasLidos}',
-                    style: tema.titleMedium?.copyWith(color: cor.primary),
-                  ),
-                  const SizedBox(width: Spacing.sp6),
-                  Text('de $total dias', style: tema.bodySmall),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: Spacing.sp8),
-          // Trilho do tema, fio do metal por cima: o mesmo ProgressoFino do
-          // plano e do cronograma. O `outline` que vivia aqui era papel de
-          // borda, não de trilho.
-          ProgressoFino(valor: progresso.clamp(0.0, 1.0)),
-        ],
-      ),
-    );
-  }
-}
-
-class _CartaoLeituraProgressoErro extends StatelessWidget {
-  const _CartaoLeituraProgressoErro({required this.mensagem});
-  final String mensagem;
-
-  @override
-  Widget build(BuildContext context) {
-    final tema = Theme.of(context).textTheme;
-    return Cartao(
-      padding: const EdgeInsets.all(Spacing.sp20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Filete(),
-          const SizedBox(height: Spacing.sp12),
-          Text('Leitura de hoje', style: tema.titleLarge),
-          const SizedBox(height: Spacing.sp8),
-          Text(mensagem, style: tema.bodyMedium),
-        ],
-      ),
-    );
-  }
-}
-
-class _CartaoLeituraProgressoCarregando extends StatelessWidget {
-  const _CartaoLeituraProgressoCarregando();
-
-  @override
-  Widget build(BuildContext context) {
-    final tema = Theme.of(context).textTheme;
-    return Cartao(
-      padding: const EdgeInsets.all(Spacing.sp20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Filete(),
-          const SizedBox(height: Spacing.sp12),
-          Text('Leitura de hoje', style: tema.titleLarge),
-          const SizedBox(height: Spacing.sp8),
-          Text('Carregando...', style: tema.bodyMedium),
-        ],
-      ),
     );
   }
 }

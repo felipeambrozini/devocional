@@ -39,9 +39,9 @@ RAIZ = pathlib.Path(__file__).resolve().parent.parent
 FONTES = RAIZ / 'assets/icone'
 FONTE_TTF = RAIZ / 'assets/fonts/Cinzel-Variable.ttf'
 
-# Os dois fundos do app e o par de destaque de cada tema, em lib/theme.dart.
+# Os dois fundos do app e o par de destaque de cada tema, em lib/estilo/cores.dart.
 # Dourado sobre pergaminho da 2,1:1 (ilegivel) — por isso o claro usa bronze,
-# nao dourado; ver o comentario no topo de Cores.
+# nao dourado; ver o comentario no topo de DevocionalCores.
 FUNDO_ESCURO = (0x2E, 0x1B, 0x10, 255)
 FUNDO_CLARO = (0xF7, 0xF1, 0xE3, 255)
 DOURADO = (0xC9, 0xA2, 0x27, 255)

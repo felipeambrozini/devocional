@@ -1,5 +1,5 @@
 // Service worker do FCM: entrega o lembrete diário quando o app está em
-// segundo plano ou fechado (ver lib/data/lembretes.dart e
+// segundo plano ou fechado (ver lib/dados/lembretes.dart e
 // functions/src/index.ts). O Flutter web tem o próprio service worker
 // (flutter_service_worker.js, gerado no build); este é um segundo, registrado
 // à parte em web/index.html — não há conflito, cada um cuida do próprio
@@ -26,7 +26,7 @@ firebase.initializeApp({
 const mensageria = firebase.messaging();
 
 // Ícones por tema: a página espelha o tema efetivo do app no Cache Storage
-// (lib/data/espelho_do_tema.dart) — localStorage não serve, é invisível para
+// (lib/dados/espelho_do_tema.dart) — localStorage não serve, é invisível para
 // o service worker. Sem espelho (primeira visita, storage limpo), cai no
 // ícone fixo de sempre.
 const ICONE_PADRAO = '/devocional/icons/Icon-192.png';
@@ -46,7 +46,7 @@ async function lerTemaEspelhado() {
 // Sem exibição automática do navegador em segundo plano — por isso o
 // `showNotification` manual aqui. A mensagem é data-only (o Android também
 // recebe data-only, para o handler de fundo exibir via notificação local —
-// ver lib/data/lembretes.dart), então título e corpo vêm em `data`, junto com
+// ver lib/dados/lembretes.dart), então título e corpo vêm em `data`, junto com
 // `chave` ("manha", "promessas" ou "noite") e `minutos`. Tudo vem da Cloud
 // Function agendada (functions/src/index.ts).
 mensageria.onBackgroundMessage(async (mensagem) => {

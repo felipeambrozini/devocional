@@ -1,13 +1,13 @@
 // O plugin "com.google.gms.google-services" lê google-services.json (neste
 // diretório) e injeta a configuração do Firebase no build do Android. É
 // necessário porque o Android também usa Firebase: `nuvemSuportada` em
-// lib/data/nuvem.dart é `true` em toda plataforma, não só na web, então
+// lib/dados/nuvem.dart é `true` em toda plataforma, não só na web, então
 // main.dart chama `Nuvem.instancia.iniciar(estado)` (Auth + Firestore) no
 // Android também. O arquivo precisa continuar em sincronia com o
 // applicationId abaixo — o plugin falha o build se o "package_name" dele não
 // bater. (O lembrete diário continua usando Firebase — é híbrido: push via
 // FCM de uma Cloud Function agendada, mais um alarme local de reserva no
-// Android para o caso de o push não chegar; ver lib/data/lembretes.dart.)
+// Android para o caso de o push não chegar; ver lib/dados/lembretes.dart.)
 plugins {
     id("com.android.application")
     id("kotlin-android")

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-import '../data/canon.dart';
-import '../data/planos.dart';
+import '../dados/canon.dart';
+import '../dados/planos.dart';
 import '../estilo/spacing.dart';
 import '../funcoes/aviso.dart';
 import 'novo_plano.dart' show mostrarSeletorDeLivros;
@@ -127,12 +127,12 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                         border: OutlineInputBorder(),
                       ),
                     ),
-                    const SizedBox(height: Spacing.sp20),
+                    const SizedBox(height: DevocionalEspacamento.sp20),
                     Text(
                       'Quais livros?',
                       style: Theme.of(dialogContext).textTheme.titleSmall,
                     ),
-                    const SizedBox(height: Spacing.sp8),
+                    const SizedBox(height: DevocionalEspacamento.sp8),
                     OutlinedButton.icon(
                       onPressed: escolherLivros,
                       icon: const FaIcon(FontAwesomeIcons.book),
@@ -143,10 +143,10 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                       ),
                     ),
                     if (livros.isNotEmpty) ...[
-                      const SizedBox(height: Spacing.sp10),
+                      const SizedBox(height: DevocionalEspacamento.sp10),
                       Wrap(
-                        spacing: Spacing.sp8,
-                        runSpacing: Spacing.sp8,
+                        spacing: DevocionalEspacamento.sp8,
+                        runSpacing: DevocionalEspacamento.sp8,
                         children: [
                           for (final slug in livros)
                             InputChip(
@@ -158,12 +158,12 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                         ],
                       ),
                     ],
-                    const SizedBox(height: Spacing.sp20),
+                    const SizedBox(height: DevocionalEspacamento.sp20),
                     Text(
                       'Em quantos dias?',
                       style: Theme.of(dialogContext).textTheme.titleSmall,
                     ),
-                    const SizedBox(height: Spacing.sp8),
+                    const SizedBox(height: DevocionalEspacamento.sp8),
                     TextFormField(
                       controller: dias,
                       keyboardType: TextInputType.number,
@@ -177,7 +177,7 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                         border: const OutlineInputBorder(),
                       ),
                     ),
-                    const SizedBox(height: Spacing.sp20),
+                    const SizedBox(height: DevocionalEspacamento.sp20),
                     CheckboxListTile(
                       contentPadding: EdgeInsets.zero,
                       controlAffinity: ListTileControlAffinity.leading,
@@ -192,7 +192,7 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                       ),
                     ),
                     if (incluirDevocionais) ...[
-                      const SizedBox(height: Spacing.sp8),
+                      const SizedBox(height: DevocionalEspacamento.sp8),
                       SegmentedButton<bool>(
                         segments: const [
                           ButtonSegment(

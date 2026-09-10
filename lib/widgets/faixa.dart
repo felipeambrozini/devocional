@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
-import '../data/conteudo.dart';
-import '../data/modelos.dart';
+import '../dados/conteudo.dart';
+import '../dados/modelos.dart';
 import '../telas/biblia.dart';
 
 /// Botão que abre a Bíblia numa faixa do cronograma.
@@ -11,8 +11,8 @@ import '../telas/biblia.dart';
 /// Quando a faixa é por versículo, como "Salmos 119:1 a 56", abre o capítulo e
 /// destaca só o recorte pedido; o resto do capítulo continua visível, apenas
 /// esmaecido, para não perder o contexto.
-class BotaoDeFaixa extends StatelessWidget {
-  const BotaoDeFaixa({super.key, required this.faixa});
+class DevocionalBotaoDeFaixa extends StatelessWidget {
+  const DevocionalBotaoDeFaixa({super.key, required this.faixa});
 
   final Faixa faixa;
 
@@ -40,8 +40,8 @@ class BotaoDeFaixa extends StatelessWidget {
 /// Botão que abre o devocional (Manhã, Noite ou Promessas) citado por um
 /// capítulo do plano, na data em que foi publicado — o conteúdo não depende
 /// do ano, só do dia-mês (ver `Conteudo.chaveDoDia`).
-class BotaoDeDevocional extends StatelessWidget {
-  const BotaoDeDevocional({
+class DevocionalBotaoDeDevocional extends StatelessWidget {
+  const DevocionalBotaoDeDevocional({
     super.key,
     required this.tipo,
     required this.chaveDoDia,

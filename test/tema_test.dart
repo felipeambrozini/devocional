@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:felipe_ambrozini/data/modelos.dart';
-import 'package:felipe_ambrozini/estilo/theme.dart';
+import 'package:felipe_ambrozini/dados/modelos.dart';
+import 'package:felipe_ambrozini/estilo/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -64,7 +64,7 @@ void main() {
   });
 
   group('contraste das duas paletas', () {
-    // A conta da WCAG. Está aqui porque os números do comentário de theme.dart
+    // A conta da WCAG. Está aqui porque os números do comentário de tema.dart
     // não valem nada se ninguém os verificar: clarear o bronze "só um pouco"
     // para ficar mais bonito é exatamente o tipo de mudança que passa numa
     // revisão e deixa o texto ilegível no sol.

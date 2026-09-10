@@ -1,0 +1,510 @@
+import 'dart:convert';
+
+import 'package:flutter/services.dart' show rootBundle;
+
+import 'canon.dart';
+import 'modelos.dart';
+
+/// Leitura dos assets, com cache em memória.
+///
+/// Um arquivo por livro da tradução interna. Abrir João não custa carregar
+/// Gênesis, e na web o navegador baixa só o livro aberto em vez de 4 MB no
+/// primeiro frame.
+class Conteudo {
+  Conteudo._();
+
+  static final Conteudo instancia = Conteudo._();
+
+  final Map<String, Map<String, dynamic>> _livros = {};
+  Map<String, Map<String, dynamic>>? _devocionais;
+  List<DiaDoPlano>? _planoComum;
+  List<DiaDoPlano>? _planoBissexto;
+  final Map<String, Introducao?> _introducoes = {};
+
+  /// Regra gregoriana padrão: bissexto a cada 4 anos, exceto séculos não
+  /// divisíveis por 400.
+  static bool ehBissexto(int ano) =>
+      (ano % 4 == 0 && ano % 100 != 0) || ano % 400 == 0;
+
+  /// Quantos dias o cronograma tem no ano, que é o total contra o qual o
+  /// progresso é medido. Um dono só para esse número: ele estava escrito como 365
+  /// à mão na fração do progresso, no rótulo da tela e na escolha do asset, e em
+  /// ano bissexto os três discordavam do cronograma de 366 dias.
+  static int diasDoAno(int ano) => ehBissexto(ano) ? 366 : 365;
+
+  /// Chave 'DD-MM' de uma data (dia-mês, como se escreve a data em português).
+  /// Os devocionais e o cronograma são anuais e se repetem, então nenhum deles
+  /// guarda ano.
+  ///
+  /// 29 de fevereiro se resolve sozinho: em ano comum essa data não existe, e o
+  /// próprio DateTime a normaliza para 1 de março. Não há caminho no app que
+  /// produza a chave '29-02' fora de um ano bissexto.
+  static String chaveDoDia(DateTime data) =>
+      '${data.day.toString().padLeft(2, '0')}-'
+      '${data.month.toString().padLeft(2, '0')}';
+
+  /// `null` quando o livro ainda não foi traduzido: a ausência também é
+  /// cacheada, senão cada chamada tentaria carregar de novo um asset que não
+  /// existe. A tradução está em andamento livro por livro, então isto não é
+  /// caso de erro, e sim o estado esperado até o 66º livro fechar.
+  final Map<String, bool> _tentouLivro = {};
+
+  Future<Map<String, dynamic>?> _carregarLivro(String slug) async {
+    final cacheado = _livros[slug];
+    if (cacheado != null) return cacheado;
+    if (_tentouLivro[slug] == true) return null;
+    _tentouLivro[slug] = true;
+    try {
+      final cru = await rootBundle.loadString('assets/biblia/$slug.json');
+      final dados = json.decode(cru) as Map<String, dynamic>;
+      _livros[slug] = dados;
+      return dados;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Capitulo> capitulo(String slug, int numero) async {
+    final livro = await _carregarLivro(slug);
+    if (livro == null) {
+      return Capitulo(
+        livro: slug,
+        numero: numero,
+        titulo: '',
+        versiculos: const [],
+      );
+    }
+    final capitulos = livro['capitulos'] as Map<String, dynamic>;
+    final cap = capitulos['$numero'] as Map<String, dynamic>?;
+    if (cap == null) {
+      return Capitulo(
+        livro: slug,
+        numero: numero,
+        titulo: '',
+        versiculos: const [],
+        nome: livro['nome'] as String? ?? '',
+      );
+    }
+    final versiculos =
+        (cap['versiculos'] as Map<String, dynamic>).entries
+            .map((e) => (int.parse(e.key), e.value as String))
+            .toList()
+          ..sort((a, b) => a.$1.compareTo(b.$1));
+    return Capitulo(
+      livro: slug,
+      numero: numero,
+      titulo: cap['titulo'] as String? ?? '',
+      versiculos: versiculos,
+      nome: livro['nome'] as String? ?? '',
+    );
+  }
+
+  /// Um único versículo, para mostrar o texto de um favorito ou de uma nota sem
+  /// abrir o capítulo inteiro na tela.
+  Future<String> versiculo(String slug, int capitulo, int numero) async {
+    final cap = await this.capitulo(slug, capitulo);
+    for (final (n, texto) in cap.versiculos) {
+      if (n == numero) return texto;
+    }
+    return '';
+  }
+
+  /// Um versículo, ou uma faixa de versículos do mesmo capítulo unidos por
+  /// espaço. Promessas de Deus às vezes cita dois versículos como uma só
+  /// promessa ("Salmos 102:13-14"); buscar só o primeiro perderia metade dela.
+  Future<String> versiculoOuFaixa(
+    String slug,
+    int capitulo,
+    int deVersiculo,
+    int ateVersiculo,
+  ) async {
+    final cap = await this.capitulo(slug, capitulo);
+    final textos = [
+      for (final (n, texto) in cap.versiculos)
+        if (n >= deVersiculo && n <= ateVersiculo) texto,
+    ];
+    return textos.join(' ');
+  }
+
+  /// O cronograma anual. Em ano bissexto usa a variante de 366 dias, com 29 de
+  /// fevereiro como dia próprio em vez de dobrar a leitura de 28/2.
+  Future<List<DiaDoPlano>> plano({bool bissexto = false}) async {
+    final cacheado = bissexto ? _planoBissexto : _planoComum;
+    if (cacheado != null) return cacheado;
+    final arquivo = bissexto
+        ? 'cronograma_bissexto.json'
+        : 'cronograma.json';
+    final cru = await rootBundle.loadString('assets/$arquivo');
+    final dias = [
+      for (final d in json.decode(cru) as List)
+        DiaDoPlano.doJson(d as Map<String, dynamic>),
+    ];
+    if (bissexto) {
+      _planoBissexto = dias;
+    } else {
+      _planoComum = dias;
+    }
+    return dias;
+  }
+
+  /// O dia do cronograma para uma data.
+  Future<DiaDoPlano?> diaDoPlano(DateTime data) async {
+    final chave = chaveDoDia(data);
+    final dias = await plano(bissexto: ehBissexto(data.year));
+    for (final dia in dias) {
+      if (dia.data == chave) return dia;
+    }
+    return null;
+  }
+
+  Future<Map<String, Map<String, dynamic>>> _carregarDevocionais() async {
+    final cacheado = _devocionais;
+    if (cacheado != null) return cacheado;
+    final cru = await rootBundle.loadString(
+      'assets/devocionais/manha_e_noite.json',
+    );
+    final dados = (json.decode(cru) as Map<String, dynamic>).map(
+      (chave, valor) => MapEntry(chave, valor as Map<String, dynamic>),
+    );
+    _devocionais = dados;
+    return dados;
+  }
+
+  /// Manhã e Noite para uma data. Manhã e Noite tem 366 dias, inclusive 29 de
+  /// fevereiro, então não há fallback a fazer aqui.
+  ///
+  /// A referência do JSON vem abreviada ("Jo 6:37") e o versículo vem embutido
+  /// no próprio texto do comentário. Aqui ela é trocada pelo nome do livro por
+  /// extenso ("João 6:37") e o versículo completo é buscado na tradução
+  /// interna, para o cartão mostrar o mesmo formato de Promessas de Deus:
+  /// versículo em destaque, depois o livro, depois o comentário. A caixa alta de
+  /// epígrafe fica por conta da tela, que aplica o mesmo tratamento às duas leituras.
+  ///
+  /// No raro dia cuja epígrafe encadeia mais de uma passagem, a referência do
+  /// JSON traz todas separadas por vírgula ou "e"; cada uma é resolvida, e as
+  /// que sobram do principal vão para [Devocional.outrosVersiculos].
+  ///
+  /// A tradução interna fornece o texto completo do versículo.
+  Future<Devocional?> devocional(DateTime data, Periodo periodo) async {
+    final dados = await _carregarDevocionais();
+    final chave = chaveDoDia(data);
+    final dia = dados[chave];
+    if (dia == null) return null;
+    final entrada = dia[periodo.chave] as Map<String, dynamic>?;
+    if (entrada == null) return null;
+    return _comVersiculosResolvidos(Devocional.doJson(entrada));
+  }
+
+  /// Busca o(s) versículo(s)-base de [dev] na tradução interna e devolve uma
+  /// cópia com [Devocional.referencia]/[Devocional.versiculo] atualizados. Sem
+  /// referência que resolva, devolve [dev] como veio do asset.
+  Future<Devocional> _comVersiculosResolvidos(Devocional dev) async {
+    final resolvidos = faixasDaReferencia(dev.referencia);
+    if (resolvidos.isEmpty) return dev;
+
+    final pares = <(String, String)>[];
+    for (final (livro, capitulo, deVersiculo, ateVersiculo) in resolvidos) {
+      final texto = await versiculoOuFaixa(
+        livro.slug,
+        capitulo,
+        deVersiculo,
+        ateVersiculo,
+      );
+      if (texto.isEmpty) continue;
+      final referencia = deVersiculo == ateVersiculo
+          ? '${livro.nome} $capitulo:$deVersiculo'
+          : '${livro.nome} $capitulo:$deVersiculo-$ateVersiculo';
+      pares.add((referencia, texto));
+    }
+    if (pares.isEmpty) return dev;
+
+    final (referenciaPrincipal, versiculoPrincipal) = pares.first;
+    // Quando o JSON traz um trecho (com ...), respeita o trecho com reticências
+    // como no livro físico: primeira/última frase sem ... na borda, meio com
+    // ...texto..., trecho final com ponto. O JSON já vem corrigido para ser
+    // exatamente igual à tradução interna; se for trecho, o texto do JSON é
+    // o que deve aparecer no cartão, não o versículo completo buscado.
+    final versiculoParaMostrar = dev.versiculo.isNotEmpty
+        ? dev.versiculo
+        : versiculoPrincipal;
+    return Devocional(
+      referencia: referenciaPrincipal,
+      texto: dev.texto,
+      titulo: dev.titulo,
+      versiculo: versiculoParaMostrar,
+      outrosVersiculos: pares.skip(1).toList(),
+    );
+  }
+
+  /// Promessas de Deus. Ainda sem texto: o arquivo pode não existir, e nesse caso a
+  /// tela mostra o aviso em vez de estourar.
+  ///
+  /// A ausência também é cacheada, senão cada reconstrução da tela tentaria carregar
+  /// de novo um asset que não existe.
+  Map<String, Map<String, dynamic>>? _promessas;
+  bool _tentouPromessas = false;
+
+  Future<Map<String, Map<String, dynamic>>?> _carregarPromessas() async {
+    if (!_tentouPromessas) {
+      _tentouPromessas = true;
+      try {
+        final cru = await rootBundle.loadString(
+          'assets/devocionais/promessas_de_deus.json',
+        );
+        _promessas = (json.decode(cru) as Map<String, dynamic>).map(
+          (chave, valor) => MapEntry(chave, valor as Map<String, dynamic>),
+        );
+      } catch (_) {
+        _promessas = null;
+      }
+    }
+    return _promessas;
+  }
+
+  /// O versículo em destaque vem da tradução interna, do mesmo jeito que em
+  /// [devocional]; o texto da promessa em si é sempre o mesmo, escrito na voz
+  /// de Spurgeon.
+  Future<Devocional?> promessa(DateTime data) async {
+    final dados = await _carregarPromessas();
+    if (dados == null) return null;
+    final chave = chaveDoDia(data);
+    final dia = dados[chave];
+    if (dia == null) return null;
+    return _comVersiculosResolvidos(Devocional.doJson(dia));
+  }
+
+  /// O título que Promessas de Deus dá ao dia [chaveDoDia] — para o botão do
+  /// plano mostrar o assunto da promessa em vez do rótulo genérico do tipo.
+  /// `null` se o índice ainda não aqueceu ou o dia não tem título.
+  String? tituloDaPromessa(String chaveDoDia) =>
+      _promessas?[chaveDoDia]?['titulo'] as String?;
+
+  Map<String, List<ItemDeDevocional>>? _indiceDeDevocionais;
+  Future<void>? _carregandoIndiceDeDevocionais;
+
+  /// Garante que o índice livro+capítulo → devocionais está carregado.
+  /// Idempotente: chamadas repetidas reaproveitam o mesmo carregamento, do
+  /// mesmo jeito que [_carregarLivro] cacheia por slug.
+  Future<void> aquecerIndiceDeDevocionais() =>
+      _carregandoIndiceDeDevocionais ??= _montarIndiceDeDevocionais();
+
+  Future<void> _montarIndiceDeDevocionais() async {
+    final indice = <String, List<ItemDeDevocional>>{};
+
+    final devocionais = await _carregarDevocionais();
+    for (final MapEntry(key: chave, value: dia) in devocionais.entries) {
+      for (final periodo in Periodo.values) {
+        final entrada = dia[periodo.chave] as Map<String, dynamic>?;
+        if (entrada == null) continue;
+        _indexarReferencia(
+          indice,
+          entrada['referencia'] as String? ?? '',
+          periodo == Periodo.manha
+              ? TipoDeDevocional.manha
+              : TipoDeDevocional.noite,
+          chave,
+        );
+      }
+    }
+
+    final promessas = await _carregarPromessas();
+    if (promessas != null) {
+      for (final MapEntry(key: chave, value: entrada) in promessas.entries) {
+        _indexarReferencia(
+          indice,
+          entrada['referencia'] as String? ?? '',
+          TipoDeDevocional.promessa,
+          chave,
+        );
+      }
+    }
+
+    _indiceDeDevocionais = indice;
+  }
+
+  void _indexarReferencia(
+    Map<String, List<ItemDeDevocional>> indice,
+    String referencia,
+    TipoDeDevocional tipo,
+    String chaveDoDia,
+  ) {
+    for (final (livro, capitulo, _, _) in faixasDaReferencia(referencia)) {
+      final chaveIndice = '${livro.slug}-$capitulo';
+      (indice[chaveIndice] ??= []).add(
+        ItemDeDevocional(tipo: tipo, chaveDoDia: chaveDoDia),
+      );
+    }
+  }
+
+  /// Os devocionais (Manhã, Noite, Promessas) cuja referência cita este
+  /// capítulo. Vazio se [aquecerIndiceDeDevocionais] ainda não terminou, ou
+  /// se nenhum devocional cita este capítulo — os dois casos são o mesmo
+  /// "nada a mostrar" para quem monta um plano (ver [montarPlanoDeLeitura]).
+  List<ItemDeDevocional> devocionaisDoCapitulo(String livroSlug, int capitulo) =>
+      _indiceDeDevocionais?['$livroSlug-$capitulo'] ?? const [];
+
+  /// Busca nos devocionais de Spurgeon (Manhã, Noite e Promessas de Deus).
+  ///
+  /// Diferente de [buscar]: síncrona e sem teto. Os dois corpora somam 366 +
+  /// 366 registros já cacheados por completo depois da primeira leitura —
+  /// 2 MB, não os 4,7 MB da Bíblia inteira — então uma varredura completa
+  /// não pesa o bastante para precisar de stream nem de limite de resultados.
+  /// ponytail: sem paginação; adicionar se um dia ficar lento de ver na tela.
+  Future<List<AchadoDevocional>> buscarDevocionais(String termo) async {
+    final alvo = _normalizar(termo);
+    if (alvo.length < 3) return const [];
+    final expressao = _regexDePalavra(alvo);
+
+    final devocionais = await _carregarDevocionais();
+    final promessas = await _carregarPromessas();
+    final achados = <AchadoDevocional>[];
+
+    void conferir(String leitura, String data, Map<String, dynamic> entrada) {
+      final titulo = entrada['titulo'] as String? ?? '';
+      final texto = entrada['devocional'] as String? ?? '';
+      if (expressao.hasMatch(_normalizar(titulo)) ||
+          expressao.hasMatch(_normalizar(texto))) {
+        achados.add(
+          AchadoDevocional(
+            leitura: leitura,
+            data: data,
+            titulo: titulo,
+            texto: texto,
+          ),
+        );
+      }
+    }
+
+    for (final MapEntry(key: data, value: dia) in devocionais.entries) {
+      for (final periodo in Periodo.values) {
+        final entrada = dia[periodo.chave] as Map<String, dynamic>?;
+        if (entrada != null) conferir(periodo.chave, data, entrada);
+      }
+    }
+    if (promessas != null) {
+      for (final MapEntry(key: data, value: entrada) in promessas.entries) {
+        conferir('promessas', data, entrada);
+      }
+    }
+    return achados;
+  }
+
+  /// Introdução de um livro. Devolve nulo quando ainda não foi escrita.
+  Future<Introducao?> introducao(String slug) async {
+    if (_introducoes.containsKey(slug)) return _introducoes[slug];
+    Introducao? introducao;
+    try {
+      final cru = await rootBundle.loadString('assets/introducao/$slug.json');
+      introducao = Introducao.doJson(json.decode(cru) as Map<String, dynamic>);
+    } catch (_) {
+      introducao = null;
+    }
+    _introducoes[slug] = introducao;
+    return introducao;
+  }
+
+  final Map<String, Map<String, dynamic>> _comentarios = {};
+  final Map<String, bool> _tentouComentario = {};
+
+  Future<Map<String, dynamic>?> _carregarComentarios(String slug) async {
+    final cacheado = _comentarios[slug];
+    if (cacheado != null) return cacheado;
+    if (_tentouComentario[slug] == true) return null;
+    _tentouComentario[slug] = true;
+    try {
+      final cru = await rootBundle.loadString('assets/comentario/$slug.json');
+      final dados = json.decode(cru) as Map<String, dynamic>;
+      _comentarios[slug] = dados;
+      return dados;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Comentário de Spurgeon sobre um versículo. Nulo quando ainda não foi
+  /// escrito: os comentários são redigidos aos poucos, versículo por
+  /// versículo, então a ausência é o estado esperado para a maioria da
+  /// Bíblia, não um erro.
+  Future<String?> comentario(String slug, int capitulo, int numero) async {
+    final dados = await _carregarComentarios(slug);
+    if (dados == null) return null;
+    final capitulos = dados['capitulos'] as Map<String, dynamic>?;
+    final versiculos = capitulos?['$capitulo'] as Map<String, dynamic>?;
+    return versiculos?['$numero'] as String?;
+  }
+
+  /// Busca no texto da Bíblia, emitindo os achados livro por livro.
+  ///
+  /// ponytail: varredura sequencial, sem índice invertido. A primeira busca na Bíblia
+  /// inteira lê cerca de 4 MB e leva uns segundos; depois tudo está em cache. Como é
+  /// um stream, a tela já mostra Gênesis enquanto o resto carrega, e cancelar a busca
+  /// interrompe a leitura. Se incomodar, o caminho é SQLite com FTS5.
+  /// Teto de achados de uma busca. Público porque a tela precisa dizer que a
+  /// lista foi cortada: sem isso, buscar "Deus" parecia dar exatamente 300
+  /// ocorrências na Bíblia inteira, e a pessoa não tinha como saber que faltava.
+  static const limiteDeBusca = 300;
+
+  Stream<Achado> buscar(String termo, {int limite = limiteDeBusca}) async* {
+    final alvo = _normalizar(termo);
+    if (alvo.length < 3) return;
+    final expressao = _regexDePalavra(alvo);
+    var total = 0;
+    for (final livro in canon) {
+      final dados = await _carregarLivro(livro.slug);
+      if (dados == null) continue;
+      final capitulos = dados['capitulos'] as Map<String, dynamic>;
+      for (var n = 1; n <= livro.capitulos; n++) {
+        final cap = capitulos['$n'] as Map<String, dynamic>?;
+        if (cap == null) continue;
+        for (final entrada
+            in (cap['versiculos'] as Map<String, dynamic>).entries) {
+          final texto = entrada.value as String;
+          if (expressao.hasMatch(_normalizar(texto))) {
+            yield Achado(
+              livro: livro.slug,
+              capitulo: n,
+              versiculo: int.parse(entrada.key),
+              texto: texto,
+            );
+            if (++total >= limite) return;
+          }
+        }
+      }
+    }
+  }
+
+  /// Busca sem acento e sem caixa: procurar "coracao" precisa achar "coração".
+  /// Pública porque a tela de busca usa a mesma normalização para realçar o termo
+  /// no texto original; duas normalizações diferentes desalinhariam o destaque.
+  static String normalizar(String valor) => _normalizar(valor);
+
+  /// Casa o termo só como palavra (ou expressão) inteira, não como pedaço de
+  /// outra: sem os limites `\b`, buscar "amor" também achava "amorreus".
+  /// Pública para a tela de busca usar a mesma regra ao grifar o termo achado.
+  static RegExp regexDePalavra(String alvoNormalizado) =>
+      _regexDePalavra(alvoNormalizado);
+
+  static RegExp _regexDePalavra(String alvoNormalizado) =>
+      RegExp(r'\b' + RegExp.escape(alvoNormalizado) + r'\b');
+
+  static String _normalizar(String valor) {
+    final minusculo = valor.toLowerCase();
+    final saida = StringBuffer();
+    for (final unidade in minusculo.codeUnits) {
+      saida.writeCharCode(_semAcento[unidade] ?? unidade);
+    }
+    return saida.toString();
+  }
+
+  static final Map<int, int> _semAcento = _montarTabelaDeAcentos();
+
+  static Map<int, int> _montarTabelaDeAcentos() {
+    const acentuados = 'áàâãäéèêëíìîïóòôõöúùûüçñ';
+    const simples = 'aaaaaeeeeiiiiooooouuuucn';
+    final tabela = <int, int>{};
+    for (var i = 0; i < acentuados.length; i++) {
+      tabela[acentuados.codeUnitAt(i)] = simples.codeUnitAt(i);
+    }
+    return tabela;
+  }
+}

@@ -1,4 +1,4 @@
-import 'package:felipe_ambrozini/data/registro.dart';
+import 'package:felipe_ambrozini/dados/registro.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../data/nuvem.dart';
-import '../data/recursos.dart';
+import '../dados/nuvem.dart';
+import '../dados/recursos.dart';
 import '../estilo/spacing.dart';
 import '../widgets/widgets.dart';
 
@@ -16,7 +16,7 @@ class TelaTermos extends StatelessWidget {
     final tema = Theme.of(context).textTheme;
     return Scaffold(
       appBar: DevocionalAppBar(title: const Text('Termos de serviço')),
-      body: LarguraDeLeitura(
+      body: DevocionalLarguraDeLeitura(
         // O chat só existe para quem tem acesso à função (ver
         // Recursos.conversas); os termos não citam o que essa conta não
         // consegue usar.
@@ -26,23 +26,23 @@ class TelaTermos extends StatelessWidget {
             final chat = Recursos.conversas;
             return ListView(
               padding: const EdgeInsets.fromLTRB(
-                Spacing.sp20,
-                Spacing.sp16,
-                Spacing.sp20,
-                Spacing.sp40,
+                DevocionalEspacamento.sp20,
+                DevocionalEspacamento.sp16,
+                DevocionalEspacamento.sp20,
+                DevocionalEspacamento.sp40,
               ),
               children: [
                 Text('Termos de serviço', style: tema.displayMedium),
-                const SizedBox(height: Spacing.sp8),
-                const Filete(largura: 64),
-                const SizedBox(height: Spacing.sp16),
+                const SizedBox(height: DevocionalEspacamento.sp8),
+                const DevocionalFilete(largura: 64),
+                const SizedBox(height: DevocionalEspacamento.sp16),
                 Text(
                   'Ao usar este aplicativo você concorda com o que segue. Ele é '
                   'gratuito, sem anúncio e mantido por uma única pessoa como '
                   'projeto pessoal.',
                   style: tema.bodyLarge?.copyWith(height: 1.7),
                 ),
-                _Secao(
+                DevocionalSecaoDeTexto(
                   titulo: 'O serviço',
                   texto: chat
                       ? 'O aplicativo oferece Bíblia, devocionais, plano de '
@@ -59,7 +59,7 @@ class TelaTermos extends StatelessWidget {
                             'mudar ou ser descontinuado a qualquer momento, '
                             'sem aviso prévio.',
                 ),
-                _Secao(
+                DevocionalSecaoDeTexto(
                   titulo: 'Conta e conteúdo do usuário',
                   texto: chat
                       ? 'Entrar com conta Google é opcional e serve para '
@@ -76,7 +76,7 @@ class TelaTermos extends StatelessWidget {
                             'leitura compartilhados expõem o progresso a '
                             'quem participa do mesmo plano.',
                 ),
-                const _Secao(
+                const DevocionalSecaoDeTexto(
                   titulo: 'Uso aceitável',
                   texto:
                       'O aplicativo não deve ser usado para fins ilegais, para '
@@ -84,7 +84,7 @@ class TelaTermos extends StatelessWidget {
                       'para automatizar acesso em volume que sobrecarregue a '
                       'infraestrutura do serviço.',
                 ),
-                const _Secao(
+                const DevocionalSecaoDeTexto(
                   titulo: 'Isenção de responsabilidade',
                   texto:
                       'O conteúdo é fornecido "como está". O criador não se '
@@ -92,7 +92,7 @@ class TelaTermos extends StatelessWidget {
                       'no aplicativo, nem por perdas decorrentes de '
                       'indisponibilidade do serviço.',
                 ),
-                const _Secao(
+                const DevocionalSecaoDeTexto(
                   titulo: 'Encerramento',
                   texto:
                       'Você pode parar de usar o aplicativo e apagar sua conta a '
@@ -100,14 +100,14 @@ class TelaTermos extends StatelessWidget {
                       'privacidade. O criador pode encerrar o serviço ou '
                       'contas que violem estes termos.',
                 ),
-                const _Secao(
+                const DevocionalSecaoDeTexto(
                   titulo: 'Alterações',
                   texto:
                       'Estes termos podem ser atualizados; o uso continuado do '
                       'aplicativo após uma mudança implica aceitação da nova '
                       'versão.',
                 ),
-                const _Secao(
+                const DevocionalSecaoDeTexto(
                   titulo: 'Contato',
                   texto:
                       'Dúvidas sobre estes termos podem ser enviadas pelos '
@@ -117,29 +117,6 @@ class TelaTermos extends StatelessWidget {
             );
           },
         ),
-      ),
-    );
-  }
-}
-
-class _Secao extends StatelessWidget {
-  const _Secao({required this.titulo, required this.texto});
-
-  final String titulo;
-  final String texto;
-
-  @override
-  Widget build(BuildContext context) {
-    final tema = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.only(top: Spacing.sp32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(titulo, style: tema.headlineSmall),
-          const SizedBox(height: Spacing.sp10),
-          Text(texto, style: tema.bodyLarge?.copyWith(height: 1.7)),
-        ],
       ),
     );
   }

@@ -13,21 +13,21 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-import 'data/canon.dart';
-import 'data/coleta.dart';
-import 'data/estado.dart';
-import 'data/espelho_do_tema.dart';
-import 'data/eventos.dart';
-import 'data/lembretes.dart';
-import 'data/modelos.dart';
-import 'data/nuvem.dart';
-import 'data/personas.dart';
-import 'data/planos_nuvem.dart';
-import 'data/recursos.dart';
-import 'data/registro.dart';
-import 'data/url_da_pagina.dart';
-import 'data/voz.dart';
-import 'estilo/theme.dart';
+import 'dados/canon.dart';
+import 'dados/coleta.dart';
+import 'dados/estado.dart';
+import 'dados/espelho_do_tema.dart';
+import 'dados/eventos.dart';
+import 'dados/lembretes.dart';
+import 'dados/modelos.dart';
+import 'dados/nuvem.dart';
+import 'dados/personas.dart';
+import 'dados/planos_nuvem.dart';
+import 'dados/recursos.dart';
+import 'dados/registro.dart';
+import 'dados/url_da_pagina.dart';
+import 'dados/voz.dart';
+import 'estilo/tema.dart';
 import 'funcoes/lembretes_acoes.dart';
 import 'telas/aceite_de_coleta.dart';
 import 'telas/biblia.dart';
@@ -57,9 +57,10 @@ const _sentryDsn = String.fromEnvironment('SENTRY_DSN');
 /// Navigator raiz para os dois casos.
 final navigatorKey = GlobalKey<NavigatorState>();
 
-/// Abre a leitura da notificação por cima do que estiver na tela, igual ao
-/// "Continuar leitura" da tela Hoje. `chave` é "manha", "promessas", "leitura"
-/// ou "noite" — ver o contrato em `lib/data/lembretes.dart`.
+/// Leva à aba certa para a notificação tocada: Plano para "leitura" (que já
+/// abre no dia de hoje sozinho) e Devocional, na leitura certa, para as
+/// outras três. `chave` é "manha", "promessas", "leitura" ou "noite" — ver o
+/// contrato em `lib/dados/lembretes.dart`.
 void _abrirLeituraDoLembrete(String chave) {
   if (chave == 'leitura') {
     _router.go('/plano');
@@ -67,9 +68,7 @@ void _abrirLeituraDoLembrete(String chave) {
   }
   final leitura = Leitura.values.where((l) => l.name == chave).firstOrNull;
   if (leitura == null) return;
-  navigatorKey.currentState?.push(
-    MaterialPageRoute(builder: (_) => TelaDevocional(leituraInicial: leitura)),
-  );
+  _router.go('/${leitura.name}');
 }
 
 /// Abre o versículo ou capítulo do parâmetro `ler` da URL (`?ler=joao.3.16`),
@@ -714,7 +713,7 @@ class Moldura extends StatelessWidget {
     final largo = telaLarga(context);
     final destinosVisiveis = _destinos;
 
-    // A LarguraDeLeitura não fica aqui. Envolvendo o shell inteiro, ela prendia
+    // A DevocionalLarguraDeLeitura não fica aqui. Envolvendo o shell inteiro, ela prendia
     // também a AppBar e a régua de meses do Plano numa faixa de 720 px no meio da
     // janela, e deixava de fora as telas abertas por push (como "Sobre" e o
     // "Continuar leitura"), que nascem no Navigator raiz: o mesmo leitor ficava
@@ -898,7 +897,7 @@ class _ComBaloes extends StatelessWidget {
                             Positioned(
                               left: 96,
                               bottom: 12,
-                              child: BalaoDeChat(
+                              child: DevocionalBalaoDeChat(
                                 persona: personaSpurgeon,
                                 onTap: () => _abrirChat(personaSpurgeon),
                               ),
@@ -906,7 +905,7 @@ class _ComBaloes extends StatelessWidget {
                             Positioned(
                               right: 12,
                               bottom: 12,
-                              child: BalaoDeChat(
+                              child: DevocionalBalaoDeChat(
                                 persona: personaFelipe,
                                 onTap: () => _abrirChat(personaFelipe),
                               ),

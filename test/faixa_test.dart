@@ -1,6 +1,6 @@
-import 'package:felipe_ambrozini/data/conteudo.dart';
-import 'package:felipe_ambrozini/data/estado.dart';
-import 'package:felipe_ambrozini/data/modelos.dart';
+import 'package:felipe_ambrozini/dados/conteudo.dart';
+import 'package:felipe_ambrozini/dados/estado.dart';
+import 'package:felipe_ambrozini/dados/modelos.dart';
 import 'package:felipe_ambrozini/telas/biblia.dart';
 import 'package:felipe_ambrozini/widgets/faixa.dart';
 import 'package:flutter/material.dart';
@@ -26,11 +26,11 @@ void main() {
       EscopoDoEstado(
         estado: Estado(await SharedPreferences.getInstance()),
         child: MaterialApp(
-          home: Scaffold(body: BotaoDeFaixa(faixa: faixa)),
+          home: Scaffold(body: DevocionalBotaoDeFaixa(faixa: faixa)),
         ),
       ),
     );
-    await tester.tap(find.byType(BotaoDeFaixa));
+    await tester.tap(find.byType(DevocionalBotaoDeFaixa));
     await tester.pumpAndSettle();
   }
 
@@ -71,7 +71,7 @@ void main() {
     expect(find.text('Salmos 119'), findsWidgets);
   });
 
-  testWidgets('BotaoDeDevocional mostra o nome do tipo e navega para a rota '
+  testWidgets('DevocionalBotaoDeDevocional mostra o nome do tipo e navega para a rota '
       'e data certas', (tester) async {
     final roteador = GoRouter(
       initialLocation: '/inicio',
@@ -79,7 +79,7 @@ void main() {
         GoRoute(
           path: '/inicio',
           builder: (context, state) => const Scaffold(
-            body: BotaoDeDevocional(
+            body: DevocionalBotaoDeDevocional(
               tipo: TipoDeDevocional.noite,
               chaveDoDia: '25-12',
             ),
@@ -95,7 +95,7 @@ void main() {
     await tester.pumpWidget(MaterialApp.router(routerConfig: roteador));
 
     expect(find.text('Noite'), findsOneWidget);
-    await tester.tap(find.byType(BotaoDeDevocional));
+    await tester.tap(find.byType(DevocionalBotaoDeDevocional));
     await tester.pumpAndSettle();
 
     final ano = DateTime.now().year;

@@ -1,4 +1,4 @@
-import 'package:felipe_ambrozini/data/recursos.dart';
+import 'package:felipe_ambrozini/dados/recursos.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

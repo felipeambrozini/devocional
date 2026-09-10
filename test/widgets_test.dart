@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('LarguraDeLeitura', () {
+  group('DevocionalLarguraDeLeitura', () {
     testWidgets('numa janela larga, centraliza e limita a largura do conteúdo', (
       tester,
     ) async {
@@ -17,7 +17,7 @@ void main() {
       const chave = Key('conteudo');
       await tester.pumpWidget(
         const MaterialApp(
-          home: LarguraDeLeitura(
+          home: DevocionalLarguraDeLeitura(
             maxWidth: 720,
             child: ColoredBox(
               key: chave,
@@ -44,7 +44,7 @@ void main() {
         const chave = Key('conteudo');
         await tester.pumpWidget(
           const MaterialApp(
-            home: LarguraDeLeitura(
+            home: DevocionalLarguraDeLeitura(
               maxWidth: 720,
               child: ColoredBox(
                 key: chave,

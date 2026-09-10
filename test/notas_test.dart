@@ -1,5 +1,5 @@
-import 'package:felipe_ambrozini/data/conteudo.dart';
-import 'package:felipe_ambrozini/data/estado.dart';
+import 'package:felipe_ambrozini/dados/conteudo.dart';
+import 'package:felipe_ambrozini/dados/estado.dart';
 import 'package:felipe_ambrozini/telas/notas.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

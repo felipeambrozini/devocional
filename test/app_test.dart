@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:felipe_ambrozini/data/audio_offline.dart';
-import 'package:felipe_ambrozini/data/conteudo.dart';
-import 'package:felipe_ambrozini/data/estado.dart';
-import 'package:felipe_ambrozini/data/modelos.dart';
-import 'package:felipe_ambrozini/data/personas.dart';
-import 'package:felipe_ambrozini/data/recursos.dart';
-import 'package:felipe_ambrozini/data/voz.dart';
+import 'package:felipe_ambrozini/dados/audio_offline.dart';
+import 'package:felipe_ambrozini/dados/conteudo.dart';
+import 'package:felipe_ambrozini/dados/estado.dart';
+import 'package:felipe_ambrozini/dados/modelos.dart';
+import 'package:felipe_ambrozini/dados/personas.dart';
+import 'package:felipe_ambrozini/dados/recursos.dart';
+import 'package:felipe_ambrozini/dados/voz.dart';
 import 'package:felipe_ambrozini/main.dart';
 import 'package:felipe_ambrozini/funcoes/datas.dart';
 import 'package:felipe_ambrozini/telas/biblia.dart';
@@ -122,7 +122,7 @@ void main() {
     Recursos.conversasForcado = true;
     Voz.baseUrlForTest = 'https://test.audio';
     // Evita bater no path_provider de verdade: sem plugin registrado em
-    // teste de widget, o botão de ouvir (BotaoDeVoz) ficaria escondido pra
+    // teste de widget, o botão de ouvir (DevocionalBotaoDeVoz) ficaria escondido pra
     // sempre esperando essa checagem nunca resolver.
     AudioOffline.temOfflineParaTeste = (_) => false;
   });
@@ -161,6 +161,7 @@ void main() {
       }
       await conteudo.capitulo('salmos', 119);
       await conteudo.introducao('genesis');
+      await conteudo.comentario('genesis', 1, 1);
     });
   }
 
@@ -396,7 +397,7 @@ void main() {
     await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byType(BotaoDeAjustes));
+    await tester.tap(find.byType(DevocionalBotaoDeAjustes));
     await tester.pumpAndSettle();
 
     // A folha cresce até quase a tela inteira e rola; o tile de Sobre é o
@@ -422,7 +423,7 @@ void main() {
       scrollable: listaDeSobre,
     );
     expect(find.text('YouTube'), findsOneWidget);
-    // Assentamento extra: cada BotaoDeVoz da tela checa disponibilidade do
+    // Assentamento extra: cada DevocionalBotaoDeVoz da tela checa disponibilidade do
     // áudio de forma assíncrona (local e remoto) antes de decidir se aparece;
     // sem esperar essa checagem terminar, o resto da lista (Instagram em
     // diante) ainda não tinha acabado de montar quando a rolagem seguinte
@@ -457,7 +458,7 @@ void main() {
       tester.element(find.byType(Scaffold).first),
     ).state.uri.path;
 
-    await tester.tap(find.byType(BalaoDeChat).first);
+    await tester.tap(find.byType(DevocionalBalaoDeChat).first);
     await tester.pumpAndSettle();
 
     expect(find.text('Charles Spurgeon'), findsWidgets);
@@ -669,7 +670,7 @@ void main() {
     // desenha a última fala é o seguinte.
     await tester.pump();
 
-    // A conversa reabre na última fala, não no Filete: a última mensagem
+    // A conversa reabre na última fala, não no DevocionalFilete: a última mensagem
     // está visível e o aviso do corte (que mora no topo) ainda não foi
     // construído.
     expect(find.text('fala 120'), findsOneWidget);
@@ -721,7 +722,7 @@ void main() {
   Future<void> abrirHistorico(WidgetTester tester, Estado estado) async {
     await tester.pumpWidget(AppDevocional(estado: estado));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(BalaoDeChat).first);
+    await tester.tap(find.byType(DevocionalBalaoDeChat).first);
     await tester.pumpAndSettle();
   }
 
@@ -895,12 +896,12 @@ void main() {
 
     expect(find.byType(NavigationRail), findsOneWidget);
 
-    // Mede a caixa real que a LarguraDeLeitura produz na árvore de verdade, não
+    // Mede a caixa real que a DevocionalLarguraDeLeitura produz na árvore de verdade, não
     // uma versão isolada: o Center sozinho preenche todo o Expanded, quem tem a
     // largura de 720 é o ConstrainedBox logo dentro dele.
     final caixa = find
         .descendant(
-          of: find.byType(LarguraDeLeitura),
+          of: find.byType(DevocionalLarguraDeLeitura),
           matching: find.byType(ConstrainedBox),
         )
         .first;
@@ -923,7 +924,7 @@ void main() {
   testWidgets(
     'numa janela larga, a barra do leitor ocupa a janela e só o texto fica em coluna',
     (tester) async {
-      // A LarguraDeLeitura já envolveu o IndexedStack inteiro, e então a AppBar
+      // A DevocionalLarguraDeLeitura já envolveu o IndexedStack inteiro, e então a AppBar
       // de cada aba também ficava presa em 720 px no meio da janela, com fundo
       // vazio dos dois lados: cara de celular colado no meio de um monitor.
       tester.view.physicalSize = const Size(1600, 900);
@@ -942,7 +943,7 @@ void main() {
       final coluna = tester.getRect(
         find
             .descendant(
-              of: find.byType(LarguraDeLeitura),
+              of: find.byType(DevocionalLarguraDeLeitura),
               matching: find.byType(ConstrainedBox),
             )
             .first,
@@ -965,7 +966,7 @@ void main() {
     tester,
   ) async {
     // As rotas empurradas nascem no Navigator raiz, fora da moldura. Com a
-    // LarguraDeLeitura no lugar errado elas ficavam de fora dela, e o mesmo
+    // DevocionalLarguraDeLeitura no lugar errado elas ficavam de fora dela, e o mesmo
     // leitor tinha 720 px pela aba e a janela inteira por uma rota empurrada.
     tester.view.physicalSize = const Size(1600, 900);
     tester.view.devicePixelRatio = 1.0;
@@ -984,7 +985,7 @@ void main() {
     final coluna = tester.getRect(
       find
           .descendant(
-            of: find.byType(LarguraDeLeitura),
+            of: find.byType(DevocionalLarguraDeLeitura),
             matching: find.byType(ConstrainedBox),
           )
           .first,
@@ -1172,7 +1173,7 @@ void main() {
     await tester.runAsync(
       () => Conteudo.instancia.devocional(data, Periodo.manha),
     );
-    // Pré-aquece a introdução de Josué: sem isso a Future do CarregaUmaVez
+    // Pré-aquece a introdução de Josué: sem isso a Future do DevocionalCarregaUmaVez
     // nunca completa dentro do tempo falso do teste.
     await tester.runAsync(() => Conteudo.instancia.introducao('josue'));
     await tester.pumpWidget(
@@ -1518,7 +1519,7 @@ void main() {
       expect(Voz.instancia.tocando, isTrue);
       expect(
         find.descendant(
-          of: find.byType(BotaoDeVoz),
+          of: find.byType(DevocionalBotaoDeVoz),
           matching: find.byType(Image),
         ),
         findsNothing,
@@ -1601,7 +1602,7 @@ void main() {
       expect(Voz.instancia.pausado, isTrue);
       expect(
         find.descendant(
-          of: find.byType(BotaoDeVoz),
+          of: find.byType(DevocionalBotaoDeVoz),
           matching: find.text('Pausado. Toque para retomar.'),
         ),
         findsOneWidget,
@@ -1664,7 +1665,7 @@ void main() {
       expect(Voz.instancia.pausado, isTrue);
       expect(
         find.descendant(
-          of: find.byType(BotaoDeVoz),
+          of: find.byType(DevocionalBotaoDeVoz),
           matching: find.byTooltip('Encerrar a leitura pausada'),
         ),
         findsOneWidget,
@@ -1672,7 +1673,7 @@ void main() {
       );
       await tester.tap(
         find.descendant(
-          of: find.byType(BotaoDeVoz),
+          of: find.byType(DevocionalBotaoDeVoz),
           matching: find.byTooltip('Encerrar a leitura pausada'),
         ),
       );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../data/canon.dart';
-import '../data/modelos.dart';
+import '../dados/canon.dart';
+import '../dados/modelos.dart';
 import '../estilo/spacing.dart';
 
 /// Uma linha por versículo-base de um devocional: a citação entre aspas seguida
@@ -98,7 +98,7 @@ class _ReferenciaDaCitacao extends StatelessWidget {
         borderRadius: BorderRadius.circular(4),
         onTap: aoAbrir,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: Spacing.sp2),
+          padding: const EdgeInsets.symmetric(vertical: DevocionalEspacamento.sp2),
           child: Text(rotulo, style: estilo),
         ),
       ),

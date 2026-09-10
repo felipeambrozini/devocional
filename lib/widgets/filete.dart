@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// Filete do metal do tema, usado para separar seções sem o peso de um Divider
+/// DevocionalFilete do metal do tema, usado para separar seções sem o peso de um Divider
 /// comum. Dourado no escuro, bronze no claro.
-class Filete extends StatelessWidget {
-  const Filete({super.key, this.largura = 48});
+class DevocionalFilete extends StatelessWidget {
+  const DevocionalFilete({super.key, this.largura = 48});
 
   final double largura;
 

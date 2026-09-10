@@ -20,11 +20,10 @@ jobs:
 
       # Projeto Flutter: precisa do Flutter SDK, não só do Dart, senão o
       # pub resolve falha em pacotes que exigem o SDK do Flutter (ex.:
-      # flutter_native_splash). Mesma versão exata do .fvmrc e do
-      # deploy-web.yml.
+      # flutter_native_splash). Mesmo canal do .fvmrc e do deploy-web.yml.
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
-          flutter-version: 3.44.9
+          channel: stable
 
       - name: Install dependencies
         run: flutter pub get

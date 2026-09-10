@@ -167,7 +167,7 @@ Não há terceiro acento. O metal tem dois graus (principal e destaque) e um gra
 
 **A Regra da Não-Inversão.** O claro não é o escuro invertido; o que se mantém entre temas é a relação entre os tons, não os valores. Dourado sobre pergaminho dá 2,1:1 e é proibido — quem precisa do metal num fundo claro usa o bronze. Clarear o bronze "só um pouco" também é proibido: `test/tema_test.dart` mede os contrastes da WCAG e falha se os pares anotados piorarem.
 
-**A Regra dos Papéis.** Nenhuma tela lê a paleta direto: tudo sai de `Theme.of(context).colorScheme` (surface fundo, surfaceContainer cartão, surfaceContainerHighest citação e chip, primary título e ícone, secondary destaque, outline borda, onSurface corpo, onSurfaceVariant apoio). Um `Cores.` solto numa tela é um vazamento.
+**A Regra dos Papéis.** Nenhuma tela lê a paleta direto: tudo sai de `Theme.of(context).colorScheme` (surface fundo, surfaceContainer cartão, surfaceContainerHighest citação e chip, primary título e ícone, secondary destaque, outline borda, onSurface corpo, onSurfaceVariant apoio). Um `DevocionalCores.` solto numa tela é um vazamento.
 
 ## Typography
 
@@ -179,7 +179,7 @@ pedra, o peso de um frontispício de Bíblia. Montserrat é uma humanista sem
 serifa sóbria que não compete: corpo calmo, legível, que deixa a leitura
 acontecer. O par é o da capa e do texto: ornamento nos títulos, clareza no
 corpo. As duas são fontes variáveis, e o peso vem de `fontVariations` (nunca de
-arquivos por peso), em `lib/theme.dart`.
+arquivos por peso), em `lib/estilo/tema.dart`.
 
 ### Hierarchy
 
@@ -274,5 +274,5 @@ Contidos e discretos: os controles existem para o texto passar. Nenhum component
 - **Don't** inventar um terceiro acento de cor ou uma terceira família de fonte.
 - **Don't** usar `SegmentedButton` para as três leituras (chips).
 - **Don't** deixar o texto de leitura passar de 720px, nem multiplicar títulos pela escala do usuário.
-- **Don't** ler a paleta direto de `Cores` numa tela — só `Theme.of(context).colorScheme`.
+- **Don't** ler a paleta direto de `DevocionalCores` numa tela — só `Theme.of(context).colorScheme`.
 - **Don't** usar sombra, gradiente de fundo, brilho ou movimento decorativo: a estante é chapada, sóbria e solene.

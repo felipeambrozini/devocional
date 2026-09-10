@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:felipe_ambrozini/data/ia.dart';
-import 'package:felipe_ambrozini/data/modelos.dart';
-import 'package:felipe_ambrozini/data/personas.dart';
+import 'package:felipe_ambrozini/dados/ia.dart';
+import 'package:felipe_ambrozini/dados/modelos.dart';
+import 'package:felipe_ambrozini/dados/personas.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -132,7 +132,7 @@ void main() {
           historico: const [],
         ),
         throwsA(
-          isA<IaException>().having(
+          isA<IaExcecao>().having(
             (e) => e.mensagem,
             'mensagem',
             contains('limite gratuito'),
@@ -154,7 +154,7 @@ void main() {
           historico: const [],
         ),
         throwsA(
-          isA<IaException>().having(
+          isA<IaExcecao>().having(
             (e) => e.mensagem,
             'mensagem',
             contains('sem permissão'),
@@ -176,7 +176,7 @@ void main() {
           historico: const [],
         ),
         throwsA(
-          isA<IaException>().having(
+          isA<IaExcecao>().having(
             (e) => e.mensagem,
             'mensagem',
             contains('não respondeu agora'),
@@ -185,10 +185,10 @@ void main() {
       );
     });
 
-    test('200 com corpo ilegível vira IaException, não exceção solta',
+    test('200 com corpo ilegível vira IaExcecao, não exceção solta',
         () async {
       // Um 200 com HTML de proxy ou resposta truncada não pode vazar como
-      // FormatException: a tela do chat só trata IaException.
+      // FormatException: a tela do chat só trata IaExcecao.
       final cliente = MockClient(
         (requisicao) async => http.Response('<html>proxy</html>', 200),
       );
@@ -201,7 +201,7 @@ void main() {
           historico: const [],
         ),
         throwsA(
-          isA<IaException>().having(
+          isA<IaExcecao>().having(
             (e) => e.mensagem,
             'mensagem',
             contains('não respondeu agora'),
@@ -210,7 +210,7 @@ void main() {
       );
     });
 
-    test('falha de rede vira IaException de conexão', () async {
+    test('falha de rede vira IaExcecao de conexão', () async {
       final cliente = MockClient(
         (requisicao) async => throw http.ClientException('sem rede'),
       );
@@ -223,7 +223,7 @@ void main() {
           historico: const [],
         ),
         throwsA(
-          isA<IaException>().having(
+          isA<IaExcecao>().having(
             (e) => e.mensagem,
             'mensagem',
             contains('Não foi possível falar agora'),
@@ -232,7 +232,7 @@ void main() {
       );
     });
 
-    test('resposta sem texto vira IaException, não string nula', () async {
+    test('resposta sem texto vira IaExcecao, não string nula', () async {
       final cliente = MockClient(
         (requisicao) async => http.Response('{"candidates": []}', 200),
       );
@@ -244,7 +244,7 @@ void main() {
           pergunta: 'Oi',
           historico: const [],
         ),
-        throwsA(isA<IaException>()),
+        throwsA(isA<IaExcecao>()),
       );
     });
   });

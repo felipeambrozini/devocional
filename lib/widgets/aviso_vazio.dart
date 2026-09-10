@@ -4,8 +4,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../estilo/spacing.dart';
 
 /// Estado de "ainda não há texto para isto", em vez de uma tela em branco.
-class AvisoVazio extends StatelessWidget {
-  const AvisoVazio({
+class DevocionalAvisoVazio extends StatelessWidget {
+  const DevocionalAvisoVazio({
     super.key,
     required this.icone,
     required this.titulo,
@@ -26,26 +26,26 @@ class AvisoVazio extends StatelessWidget {
     final cor = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(Spacing.sp32),
+        padding: const EdgeInsets.all(DevocionalEspacamento.sp32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             FaIcon(icone, size: 44, color: cor.outline),
-            const SizedBox(height: Spacing.sp16),
+            const SizedBox(height: DevocionalEspacamento.sp16),
             Text(
               titulo,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             if (detalhe != null) ...[
-              const SizedBox(height: Spacing.sp8),
+              const SizedBox(height: DevocionalEspacamento.sp8),
               Text(
                 detalhe!,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
-            if (acao != null) ...[const SizedBox(height: Spacing.sp12), acao!],
+            if (acao != null) ...[const SizedBox(height: DevocionalEspacamento.sp12), acao!],
           ],
         ),
       ),
@@ -59,11 +59,11 @@ class AvisoVazio extends StatelessWidget {
 /// ausente deixava o CircularProgressIndicator girando para sempre, sem saída e
 /// sem dizer o que houve. Girar é promessa de que algo vai chegar; quando não
 /// vai, a tela precisa dizer isso.
-class AvisoDeErro extends StatelessWidget {
-  const AvisoDeErro({super.key});
+class DevocionalAvisoDeErro extends StatelessWidget {
+  const DevocionalAvisoDeErro({super.key});
 
   @override
-  Widget build(BuildContext context) => AvisoVazio(
+  Widget build(BuildContext context) => DevocionalAvisoVazio(
     icone: FontAwesomeIcons.triangleExclamation,
     titulo: 'Não foi possível carregar',
     detalhe:

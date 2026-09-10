@@ -7,7 +7,7 @@
 /// por múltiplos de 2 (10, 12, 14, 16, 18, 20), refletindo o que as telas
 /// realmente precisam; a partir de 24 sobe em saltos de 8, e os degraus maiores
 /// (40 a 200) ficam reservados para vãos estruturais e áreas de respiro.
-abstract final class Spacing {
+abstract final class DevocionalEspacamento {
   static const double sp2 = 2.0;
   static const double sp3 = 3.0;
   static const double sp4 = 4.0;

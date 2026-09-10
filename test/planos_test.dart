@@ -1,8 +1,8 @@
-import 'package:felipe_ambrozini/data/conteudo.dart';
-import 'package:felipe_ambrozini/data/estado.dart';
-import 'package:felipe_ambrozini/data/modelos.dart';
-import 'package:felipe_ambrozini/data/nuvem.dart';
-import 'package:felipe_ambrozini/data/planos.dart';
+import 'package:felipe_ambrozini/dados/conteudo.dart';
+import 'package:felipe_ambrozini/dados/estado.dart';
+import 'package:felipe_ambrozini/dados/modelos.dart';
+import 'package:felipe_ambrozini/dados/nuvem.dart';
+import 'package:felipe_ambrozini/dados/planos.dart';
 import 'package:felipe_ambrozini/telas/meu_plano.dart';
 import 'package:felipe_ambrozini/telas/novo_plano.dart';
 import 'package:felipe_ambrozini/telas/plano.dart';

@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import '../estilo/spacing.dart';
 
 /// Cartão com título em Cinzel na cor do tema. Repete em quase toda tela.
-class Cartao extends StatelessWidget {
-  const Cartao({
+class DevocionalCartao extends StatelessWidget {
+  const DevocionalCartao({
     super.key,
     this.titulo,
     this.acessorio,
     required this.child,
-    this.padding = const EdgeInsets.all(Spacing.sp16),
+    this.padding = const EdgeInsets.all(DevocionalEspacamento.sp16),
   });
 
   final String? titulo;
@@ -37,7 +37,7 @@ class Cartao extends StatelessWidget {
                   ?acessorio,
                 ],
               ),
-              const SizedBox(height: Spacing.sp12),
+              const SizedBox(height: DevocionalEspacamento.sp12),
             ],
             child,
           ],

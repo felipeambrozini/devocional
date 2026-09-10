@@ -1,6 +1,6 @@
-import 'package:felipe_ambrozini/data/conteudo.dart';
-import 'package:felipe_ambrozini/data/estado.dart';
-import 'package:felipe_ambrozini/data/modelos.dart';
+import 'package:felipe_ambrozini/dados/conteudo.dart';
+import 'package:felipe_ambrozini/dados/estado.dart';
+import 'package:felipe_ambrozini/dados/modelos.dart';
 import 'package:felipe_ambrozini/main.dart';
 import 'package:felipe_ambrozini/telas/biblia.dart';
 import 'package:felipe_ambrozini/telas/busca.dart';
@@ -134,12 +134,12 @@ void main() {
         estado: estado,
         child: MaterialApp(
           home: Scaffold(
-            body: Center(child: BotaoDeAjustes(estado: estado)),
+            body: Center(child: DevocionalBotaoDeAjustes(estado: estado)),
           ),
         ),
       ),
     );
-    await tester.tap(find.byType(BotaoDeAjustes));
+    await tester.tap(find.byType(DevocionalBotaoDeAjustes));
     await tester.pumpAndSettle();
 
     // No ambiente de teste `kIsWeb` é falso — o mesmo Android do teste acima.

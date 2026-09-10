@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:felipe_ambrozini/data/canon.dart';
-import 'package:felipe_ambrozini/data/conteudo.dart';
-import 'package:felipe_ambrozini/data/estado.dart';
+import 'package:felipe_ambrozini/dados/canon.dart';
+import 'package:felipe_ambrozini/dados/conteudo.dart';
+import 'package:felipe_ambrozini/dados/estado.dart';
 import 'package:felipe_ambrozini/telas/busca.dart';
 import 'package:felipe_ambrozini/telas/biblia.dart';
 import 'package:felipe_ambrozini/telas/devocional.dart';

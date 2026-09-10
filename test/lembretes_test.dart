@@ -1,5 +1,5 @@
-import 'package:felipe_ambrozini/data/estado.dart';
-import 'package:felipe_ambrozini/data/lembretes.dart';
+import 'package:felipe_ambrozini/dados/estado.dart';
+import 'package:felipe_ambrozini/dados/lembretes.dart';
 import 'package:felipe_ambrozini/funcoes/aviso.dart';
 import 'package:felipe_ambrozini/funcoes/lembretes_acoes.dart';
 import 'package:felipe_ambrozini/widgets/widgets.dart';
@@ -11,7 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Implementação falsa: grava o que foi chamado, sem canal de plataforma.
 ///
 /// `Lembretes.instancia` é um campo estático mutável exatamente para isto —
-/// ver o comentário em `lib/data/lembretes.dart`.
+/// ver o comentário em `lib/dados/lembretes.dart`.
 class _LembretesFalsas implements Lembretes {
   bool permissaoConcedida = true;
   String? chaveDeAberturaSimulada;
@@ -214,12 +214,12 @@ void main() {
           estado: estado,
           child: MaterialApp(
             home: Scaffold(
-              body: Center(child: BotaoDeAjustes(estado: estado)),
+              body: Center(child: DevocionalBotaoDeAjustes(estado: estado)),
             ),
           ),
         ),
       );
-      await tester.tap(find.byType(BotaoDeAjustes));
+      await tester.tap(find.byType(DevocionalBotaoDeAjustes));
       await tester.pumpAndSettle();
     }
 

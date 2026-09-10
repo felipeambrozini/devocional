@@ -2,8 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuthException;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
-import '../data/nuvem.dart';
-import '../data/registro.dart';
+import '../dados/nuvem.dart';
+import '../dados/registro.dart';
 import 'aviso.dart';
 
 /// Tenta o login e mostra o motivo quando não completa. Público porque dois

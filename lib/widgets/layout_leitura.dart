@@ -12,8 +12,8 @@ bool telaLarga(BuildContext context) =>
 /// Limita a largura de leitura e centraliza, para a web não esticar texto
 /// de ponta a ponta numa janela larga. No celular a tela já é mais estreita
 /// que o limite, então nada muda.
-class LarguraDeLeitura extends StatelessWidget {
-  const LarguraDeLeitura({
+class DevocionalLarguraDeLeitura extends StatelessWidget {
+  const DevocionalLarguraDeLeitura({
     super.key,
     required this.child,
     this.maxWidth = larguraDeTelaLarga,

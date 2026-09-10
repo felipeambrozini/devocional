@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-import '../data/audio_offline.dart';
-import '../data/eventos.dart';
-import '../data/personas.dart';
-import '../data/recursos.dart';
-import '../data/voz.dart';
+import '../dados/audio_offline.dart';
+import '../dados/eventos.dart';
+import '../dados/personas.dart';
+import '../dados/recursos.dart';
+import '../dados/voz.dart';
 import '../estilo/spacing.dart';
 import '../funcoes/aviso.dart';
 import 'retrato_de_persona.dart';
@@ -23,17 +23,17 @@ import 'retrato_de_persona.dart';
 ///
 /// O botão escuta o fim da própria leitura para fechar o ciclo com a
 /// confirmação "Leitura concluída.": parar no meio não é um fim, e não avisa.
-class BotaoDeVoz extends StatefulWidget {
-  const BotaoDeVoz({super.key, required this.chave, this.referencia});
+class DevocionalBotaoDeVoz extends StatefulWidget {
+  const DevocionalBotaoDeVoz({super.key, required this.chave, this.referencia});
 
   final String chave;
   final String? referencia;
 
   @override
-  State<BotaoDeVoz> createState() => _BotaoDeVozState();
+  State<DevocionalBotaoDeVoz> createState() => _BotaoDeVozState();
 }
 
-class _BotaoDeVozState extends State<BotaoDeVoz> {
+class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
   StreamSubscription<String>? _conclusoes;
 
   // Null enquanto ainda não sabe se o áudio existe: o botão fica escondido
@@ -91,7 +91,7 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
   }
 
   @override
-  void didUpdateWidget(covariant BotaoDeVoz oldWidget) {
+  void didUpdateWidget(covariant DevocionalBotaoDeVoz oldWidget) {
     super.didUpdateWidget(oldWidget);
     // O mesmo State pode ser reaproveitado com outra chave (ex: navegação
     // entre capítulos sem remontar o widget) — sem isso o botão continuaria
@@ -115,7 +115,7 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
     if (_disponivel != true) {
       // Sem rede: o áudio pode existir de verdade, só não deu para checar —
       // aparece desabilitado com uma dica, em vez de sumir como se a leitura
-      // em voz não existisse (ver DisponibilidadeRemota em lib/data/voz.dart).
+      // em voz não existisse (ver DisponibilidadeRemota em lib/dados/voz.dart).
       return _semRede ? _botaoSemRede(context) : const SizedBox.shrink();
     }
     final cor = Theme.of(context).colorScheme;
@@ -194,10 +194,10 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
                         : () => _alternar(context, voz),
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(
-                        Spacing.sp6,
-                        Spacing.sp6,
-                        Spacing.sp16,
-                        Spacing.sp6,
+                        DevocionalEspacamento.sp6,
+                        DevocionalEspacamento.sp6,
+                        DevocionalEspacamento.sp16,
+                        DevocionalEspacamento.sp6,
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -209,15 +209,15 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
                           // estado falar mais alto.
                           if (!preparando && !ativo && !pausado) ...[
                             // O mesmo retrato das entradas de conversa
-                            // ([RetratoDePersona]): aro dourado, e o cabelo,
+                            // ([DevocionalRetratoDePersona]): aro dourado, e o cabelo,
                             // que encosta na borda de cima da foto, preservado
                             // pelo corte alinhado ao topo.
-                            RetratoDePersona(
+                            DevocionalRetratoDePersona(
                               persona: personaSpurgeon,
-                              folga: Spacing.sp3,
+                              folga: DevocionalEspacamento.sp3,
                               decorativo: true,
                             ),
-                            const SizedBox(width: Spacing.sp10),
+                            const SizedBox(width: DevocionalEspacamento.sp10),
                           ],
                           FaIcon(
                             ativo
@@ -228,7 +228,7 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
                             size: 20,
                             color: cor.primary,
                           ),
-                          const SizedBox(width: Spacing.sp6),
+                          const SizedBox(width: DevocionalEspacamento.sp6),
                           // Flexible com reticências: em escala de texto 2x um
                           // rótulo comprido ("O pregador está lendo…") não
                           // pode estourar a largura da tela. Semantics: o
@@ -295,8 +295,8 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
             onTap: _checarDisponibilidade,
             child: Padding(
               padding: const EdgeInsets.symmetric(
-                horizontal: Spacing.sp10,
-                vertical: Spacing.sp6,
+                horizontal: DevocionalEspacamento.sp10,
+                vertical: DevocionalEspacamento.sp6,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -306,7 +306,7 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
                     size: 20,
                     color: cor.onSurfaceVariant,
                   ),
-                  const SizedBox(width: Spacing.sp6),
+                  const SizedBox(width: DevocionalEspacamento.sp6),
                   Text(
                     'Sem conexão',
                     style: tema.labelLarge?.copyWith(
@@ -331,7 +331,7 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
     if (!vaiParar) unawaited(registrarOuvirIniciado());
     try {
       await voz.alternar(widget.chave);
-    } on VozException catch (erro) {
+    } on VozExcecao catch (erro) {
       if (!vaiParar) unawaited(registrarOuvirFalhou());
       if (context.mounted) _avisarErro(context, voz, erro);
     }
@@ -340,7 +340,7 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
   Future<void> _pausar(BuildContext context, Voz voz) async {
     try {
       await voz.pausar();
-    } on VozException catch (erro) {
+    } on VozExcecao catch (erro) {
       if (context.mounted) _avisarErro(context, voz, erro);
     }
   }
@@ -353,7 +353,7 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
       if (!retomou) {
         await voz.alternar(widget.chave);
       }
-    } on VozException catch (erro) {
+    } on VozExcecao catch (erro) {
       if (context.mounted) _avisarErro(context, voz, erro);
     }
   }
@@ -361,7 +361,7 @@ class _BotaoDeVozState extends State<BotaoDeVoz> {
   /// O aviso de erro com um "Tentar de novo" à mão: um erro de rede ou de
   /// serviço é momentâneo na maioria das vezes, e sem a ação o usuário teria
   /// de descobrir sozinho que tocar de novo é o caminho.
-  void _avisarErro(BuildContext context, Voz voz, VozException erro) {
+  void _avisarErro(BuildContext context, Voz voz, VozExcecao erro) {
     mostrarErro(
       context,
       erro.mensagem,
@@ -403,7 +403,7 @@ class _BotaoDeEncerrar extends StatelessWidget {
           // vinte minutos, e um alvo de 26dp no topo da tela pedia mira.
           // O ícone continua pequeno dentro do quadrado centrado.
           child: SizedBox.square(
-            dimension: Spacing.sp48,
+            dimension: DevocionalEspacamento.sp48,
             child: Center(
               child: FaIcon(
                 FontAwesomeIcons.xmark,
@@ -423,8 +423,8 @@ class _BotaoDeEncerrar extends StatelessWidget {
 /// botão ainda poder pausar, retomar, encerrar (ou cancelar o preparo) sem
 /// voltar ao topo. A mesma peça na Bíblia, na introdução e em Sobre: uma
 /// leitura não pode ficar sem os controles à vista.
-class IndicadorDeVozNaBarra extends StatelessWidget {
-  const IndicadorDeVozNaBarra({super.key, required this.chave});
+class DevocionalIndicadorDeVozNaBarra extends StatelessWidget {
+  const DevocionalIndicadorDeVozNaBarra({super.key, required this.chave});
 
   /// A chave de voz desta tela ("capitulo:joao.3", "introducao:joao"): só o
   /// áudio dela aparece aqui; o de outra tela não rouba a barra.

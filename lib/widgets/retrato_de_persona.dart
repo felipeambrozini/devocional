@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../data/personas.dart';
+import '../dados/personas.dart';
 import '../estilo/spacing.dart';
 
 /// O retrato de uma persona num anel do metal — a gramática única dos três
@@ -9,12 +9,12 @@ import '../estilo/spacing.dart';
 /// flutuante do chat (`chat.dart`). Anel de 1,5 na cor primária, folga entre
 /// o anel e a foto, e o corte alinhado ao topo que preserva o cabelo (a foto
 /// é mais alta que larga). Sem o asset, a inicial ocupa o lugar.
-class RetratoDePersona extends StatelessWidget {
-  const RetratoDePersona({
+class DevocionalRetratoDePersona extends StatelessWidget {
+  const DevocionalRetratoDePersona({
     super.key,
     required this.persona,
     this.tamanho = 38,
-    this.folga = Spacing.sp2,
+    this.folga = DevocionalEspacamento.sp2,
     this.decorativo = false,
   });
 
@@ -23,7 +23,7 @@ class RetratoDePersona extends StatelessWidget {
 
   /// A folga entre o anel dourado e a foto: sem ela a foto preenche o círculo
   /// até a borda e o cabelo encosta no aro. As entradas de conversa usam a
-  /// apertada; botão de voz e balão usam [Spacing.sp3].
+  /// apertada; botão de voz e balão usam [DevocionalEspacamento.sp3].
   final double folga;
 
   /// Dentro de um botão cujo rótulo já diz o que faz, a imagem é enfeite:

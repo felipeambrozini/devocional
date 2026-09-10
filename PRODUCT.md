@@ -120,7 +120,7 @@ vitoriana dele, tratando o leitor por "tu".
   `tools/icones.py --splash` e gerada nas plataformas por
   `flutter_native_splash`.
 - Fontes empacotadas localmente: Cinzel (títulos) e Montserrat (corpo),
-  variáveis, pesadas via `fontVariations` em `lib/estilo/theme.dart`.
+  variáveis, pesadas via `fontVariations` em `lib/estilo/tema.dart`.
 - Duas paletas fixas: marrom e dourado no escuro, pergaminho e bronze no
   claro; o destaque do claro é o metal escurecido (bronze) porque o dourado
   sobre pergaminho dá 2,1:1. As telas leem tudo do `ColorScheme`, nunca de
@@ -133,7 +133,8 @@ vitoriana dele, tratando o leitor por "tu".
 
 - Conteúdo todo carregado e verificado (README): BKJ 1611 com 31.102
   versículos, batendo exatamente com o canon; Manhã e Noite com 366 dias completos;
-  Promessas de Deus 366/366; cronograma 365/366 dias; 66 introduções completas.
+  Promessas de Deus 366/366; cronograma 365/366 dias; 66 introduções completas;
+  66 livros com comentários de Spurgeon completos (assets/comentario/).
 - Suíte de testes em `test/` cobre canon, bissexto, tema (contrastes WCAG),
   fontes, lembretes e comportamento de plataforma.
 - Links de canais do Felipe (YouTube e Instagram) na tela Sobre.

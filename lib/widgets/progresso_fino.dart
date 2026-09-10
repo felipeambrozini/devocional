@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 /// e para o que mais medir ritmo de leitura. A pílula de voz fica de fora de
 /// propósito: o trilho dela precisa contrastar com o fundo do próprio
 /// comprimido, não com a página.
-class ProgressoFino extends StatelessWidget {
-  const ProgressoFino({super.key, required this.valor});
+class DevocionalProgressoFino extends StatelessWidget {
+  const DevocionalProgressoFino({super.key, required this.valor});
 
   /// Fração concluída, de 0,0 a 1,0. Valor fora da faixa é cortado.
   final double valor;

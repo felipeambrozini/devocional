@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-import '../data/modelos.dart';
+import '../dados/modelos.dart';
 import '../estilo/spacing.dart';
+import 'botao.dart';
 import 'faixa.dart';
 
 /// Um dia de leitura: número, o que se lê e o botão de marcar como lido.
@@ -10,8 +10,8 @@ import 'faixa.dart';
 /// Serve o cronograma anual (com data e borda dourada no dia de hoje) e os
 /// dias dos planos do usuário (uma sequência de 1 a N), porque são a mesma
 /// peça de UI.
-class CartaoDeDia extends StatelessWidget {
-  const CartaoDeDia({
+class DevocionalCartaoDeDia extends StatelessWidget {
+  const DevocionalCartaoDeDia({
     super.key,
     required this.numero,
     required this.rotulo,
@@ -45,10 +45,10 @@ class CartaoDeDia extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
-          Spacing.sp14,
-          Spacing.sp12,
-          Spacing.sp8,
-          Spacing.sp12,
+          DevocionalEspacamento.sp14,
+          DevocionalEspacamento.sp12,
+          DevocionalEspacamento.sp8,
+          DevocionalEspacamento.sp12,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,7 +62,7 @@ class CartaoDeDia extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: Spacing.sp8),
+            const SizedBox(width: DevocionalEspacamento.sp8),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,17 +74,17 @@ class CartaoDeDia extends StatelessWidget {
                       color: lido ? cor.onSurfaceVariant : cor.onSurface,
                     ),
                   ),
-                  const SizedBox(height: Spacing.sp10),
+                  const SizedBox(height: DevocionalEspacamento.sp10),
                   Wrap(
-                    spacing: Spacing.sp8,
-                    runSpacing: Spacing.sp8,
+                    spacing: DevocionalEspacamento.sp8,
+                    runSpacing: DevocionalEspacamento.sp8,
                     children: [
                       for (final item in itens)
                         switch (item) {
                           ItemDeCapitulo(:final faixa) =>
-                            BotaoDeFaixa(faixa: faixa),
+                            DevocionalBotaoDeFaixa(faixa: faixa),
                           ItemDeDevocional(:final tipo, :final chaveDoDia) =>
-                            BotaoDeDevocional(
+                            DevocionalBotaoDeDevocional(
                               tipo: tipo,
                               chaveDoDia: chaveDoDia,
                             ),
@@ -94,14 +94,7 @@ class CartaoDeDia extends StatelessWidget {
                 ],
               ),
             ),
-            IconButton(
-              tooltip: lido ? 'Desmarcar' : 'Marcar como lido',
-              icon: FaIcon(
-                lido ? FontAwesomeIcons.circleCheck : FontAwesomeIcons.circle,
-                color: lido ? cor.secondary : cor.onSurfaceVariant,
-              ),
-              onPressed: aoAlternar,
-            ),
+            DevocionalBotaoDeLido(lido: lido, aoAlternar: aoAlternar),
           ],
         ),
       ),

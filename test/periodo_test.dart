@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:felipe_ambrozini/data/modelos.dart';
+import 'package:felipe_ambrozini/dados/modelos.dart';
 
 /// A virada entre manhã e noite segue só o horário do aparelho: 0h-17h59 é
 /// manhã, 18h-23h59 é noite.

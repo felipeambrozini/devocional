@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../data/coleta.dart';
-import '../data/estado.dart';
+import '../dados/coleta.dart';
+import '../dados/estado.dart';
 
 /// Diálogo de aceite mostrado uma vez, antes de qualquer coleta remota —
 /// erro para o Sentry, uso anônimo para o Analytics (ver
-/// `lib/data/coleta.dart` e a seção "Uso anônimo" em
+/// `lib/dados/coleta.dart` e a seção "Uso anônimo" em
 /// `lib/telas/privacidade.dart`). Os dois SDKs ficam desligados por padrão;
 /// só [aplicarAceiteDeColeta] os liga, e só depois desta resposta.
 ///

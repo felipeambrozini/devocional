@@ -7,13 +7,13 @@
 // reserva local — por isso a cadência apertada: cada minuto de atraso aqui é
 // um minuto de atraso na única notificação que a web recebe.
 // Lê a coleção `lembretes` no Firestore ({token, minutosManha, minutosNoite,
-// fuso}, gravada pelo app; ver lib/data/lembretes.dart) e envia via FCM uma
+// fuso}, gravada pelo app; ver lib/dados/lembretes.dart) e envia via FCM uma
 // mensagem **data-only** para quem venceu o horário:
 //
 //   - data-only acorda o handler Dart com o app morto no Android, que exibe
 //     via notificação local (o lembrete local recorrente de reserva do
 //     Android continua rodando por conta própria, sem cancelamento cruzado —
-//     ver `LembretesReais._armarReservas` em lib/data/lembretes.dart);
+//     ver `LembretesReais._armarReservas` em lib/dados/lembretes.dart);
 //   - na web, o service worker (firebase-messaging-sw.js) lê os mesmos dados
 //     e exibe por conta própria;
 //   - `minutos` vai junto para o app saber suprimir um push muito tardio (ver
@@ -42,7 +42,7 @@ const COLECAO = "lembretes";
 
 // Minutos depois do horário cadastrado em que o push ainda é enviado. O app,
 // do outro lado, suprime push mais de 5 min atrasado (o alarme local já
-// avisou) — ver `pushAindaVale` em lib/data/lembretes.dart.
+// avisou) — ver `pushAindaVale` em lib/dados/lembretes.dart.
 const TOLERANCIA_MINUTOS = 60;
 
 interface PromessaDia {

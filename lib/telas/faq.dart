@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
-import '../data/nuvem.dart';
-import '../data/recursos.dart';
+import '../dados/nuvem.dart';
+import '../dados/recursos.dart';
 import '../estilo/spacing.dart';
 import '../widgets/widgets.dart';
 
@@ -18,21 +18,21 @@ class TelaFAQ extends StatelessWidget {
     final tema = Theme.of(context).textTheme;
     return Scaffold(
       appBar: DevocionalAppBar(title: const Text('Perguntas frequentes')),
-      body: LarguraDeLeitura(
+      body: DevocionalLarguraDeLeitura(
         // O chat só existe para quem tem acesso à função (ver
         // Recursos.conversas); as perguntas sobre ele não fazem sentido
         // para quem não pode usá-lo.
         child: ListenableBuilder(
           listenable: Nuvem.instancia,
           builder: (context, _) => ListView(
-            padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp16, Spacing.sp20, Spacing.sp40),
+            padding: const EdgeInsets.fromLTRB(DevocionalEspacamento.sp20, DevocionalEspacamento.sp16, DevocionalEspacamento.sp20, DevocionalEspacamento.sp40),
             children: [
               Text('Perguntas frequentes', style: tema.displayMedium),
-              const SizedBox(height: Spacing.sp8),
-              const Filete(largura: 64),
-              const SizedBox(height: Spacing.sp16),
-              for (final pergunta in _perguntas(Recursos.conversas)) _Pergunta(pergunta),
-              const SizedBox(height: Spacing.sp16),
+              const SizedBox(height: DevocionalEspacamento.sp8),
+              const DevocionalFilete(largura: 64),
+              const SizedBox(height: DevocionalEspacamento.sp16),
+              for (final pergunta in _perguntas(Recursos.conversas)) DevocionalPergunta(pergunta),
+              const SizedBox(height: DevocionalEspacamento.sp16),
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: FaIcon(
@@ -47,28 +47,6 @@ class TelaFAQ extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _Pergunta extends StatelessWidget {
-  const _Pergunta(this.item);
-
-  final (String, String) item;
-
-  @override
-  Widget build(BuildContext context) {
-    final tema = Theme.of(context).textTheme;
-    return ExpansionTile(
-      tilePadding: EdgeInsets.zero,
-      childrenPadding: EdgeInsets.zero,
-      title: Text(item.$1, style: tema.titleMedium),
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: Spacing.sp12),
-          child: Text(item.$2, style: tema.bodyLarge?.copyWith(height: 1.7)),
-        ),
-      ],
     );
   }
 }

@@ -1,7 +1,7 @@
 rules_version = '2';
 
 // Regras do Storage para a foto de perfil da conta na nuvem. Ver
-// Nuvem.atualizarFoto em lib/data/nuvem.dart para o código que grava aqui.
+// Nuvem.atualizarFoto em lib/dados/nuvem.dart para o código que grava aqui.
 //
 // Publicadas junto com firestore.rules a cada push na main
 // (.github/workflows/deploy-web.yml, `--only ...,storage:rules,...`). Este
@@ -23,7 +23,7 @@ service firebase.storage {
           request.resource.contentType == 'image/jpeg';
     }
     // Áudios pré-gerados da voz (Bíblia, devocional, introduções) — ver
-    // lib/data/voz.dart (Voz._urlParaChave). Leitura pública, escrita só
+    // lib/dados/voz.dart (Voz._urlParaChave). Leitura pública, escrita só
     // via deploy / Admin SDK; nunca pelo app.
     match /audio/{allPaths=**} {
       allow read: if true;

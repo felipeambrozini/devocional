@@ -42,7 +42,7 @@ mesmo código).
 - **Conta Google (Web, Android e iOS)**: opcional — favoritos, notas, progresso e
   planos sobem sozinhos para a conta de quem entrar, para não perder nada se o
   navegador limpar o armazenamento e para o mesmo plano aparecer no celular e
-  na web. O Android e iOS também sincronizam; ver `nuvemSuportada` em `lib/data/nuvem.dart`.
+  na web. O Android e iOS também sincronizam; ver `nuvemSuportada` em `lib/dados/nuvem.dart`.
   Quem entra vê o próprio avatar (foto da conta Google, ou a inicial do nome
   sem foto) na saudação da aba Hoje, e pode trocar a foto tocando nele
   (câmera ou galeria).
@@ -93,7 +93,7 @@ plano compartilhado.
   conta Google (Android, iOS ou web) também espelha favoritos, notas, progresso
   e planos num documento do Firestore — ver a conta na nuvem, acima.
 - `share_plus` para compartilhar um versículo. O lembrete diário é híbrido,
-  Android e web (ver `lembretesSuportados` em `lib/data/lembretes.dart`):
+  Android e web (ver `lembretesSuportados` em `lib/dados/lembretes.dart`):
   push de uma Cloud Function agendada via `firebase_messaging`, mais
   `flutter_local_notifications` + `flutter_timezone` + `timezone` para o
   alarme local de reserva no Android, no fuso detectado — ver a seção
@@ -102,17 +102,17 @@ plano compartilhado.
   `Moldura` continua preservando a rolagem e o capítulo aberto de cada aba,
   como o `IndexedStack` antigo fazia).
 - `firebase_core` + `firebase_auth` + `cloud_firestore` para a conta na
-  nuvem, só chamados quando `nuvemSuportada` (`lib/data/nuvem.dart`).
+  nuvem, só chamados quando `nuvemSuportada` (`lib/dados/nuvem.dart`).
   `firebase_storage` guarda a foto de perfil trocada pelo avatar da Hoje;
   `image_picker` escolhe a foto na câmera ou na galeria.
 - `http` fala direto com a Gemini API (`gemini-3.5-flash-lite`, tier gratuito;
   nome fixo, não o alias `gemini-flash-latest`, que pode migrar para fora do
-  grátis sem aviso) para o chat das duas personas (`lib/data/ia.dart`). Chave
-  em `lib/data/google.dart`, vinda do `.env.json`.
+  grátis sem aviso) para o chat das duas personas (`lib/dados/ia.dart`). Chave
+  em `lib/dados/google.dart`, vinda do `.env.json`.
 - `just_audio` toca os MP3 pré-gerados da leitura em voz alta
-  (`lib/data/voz.dart`), servidos a partir de `AUDIO_BASE_URL`
-  (`lib/data/audio_config.dart`); `AudioOffline`
-  (`lib/data/audio_offline.dart`) baixa e cacheia esses arquivos em disco
+  (`lib/dados/voz.dart`), servidos a partir de `AUDIO_BASE_URL`
+  (`lib/dados/audio_config.dart`); `AudioOffline`
+  (`lib/dados/audio_offline.dart`) baixa e cacheia esses arquivos em disco
   fora da web, para ouvir sem internet. A geração dos MP3 é em lotes (roda por
   semanas fora deste repo, ver `audio_gen/`), então o botão de ouvir só
   aparece quando o áudio já existe: `Voz.disponibilidadeRemota` faz um HEAD
@@ -127,18 +127,21 @@ plano compartilhado.
 
 ```
 lib/
-  data/        serviços (estado, voz, nuvem, lembretes...), canon (os 66 livros),
+  dados/       serviços (estado, voz, nuvem, lembretes...), canon (os 66 livros),
                leitura de conteúdo; modelos/ tem os tipos de dado, um domínio
                por arquivo (bíblia, cronograma, devocional, marcações, busca,
                chat, áudio, preferências de leitura), reunidos no barril
-               `data/modelos.dart`
+               `dados/modelos.dart`
+  controladores/ um controller por tela (biblia, busca, chat, devocional,
+               notas, novo plano, plano, sobre)
   telas/       uma tela por arquivo (hoje, bíblia, devocional, plano, notas, busca, conversas, sobre...)
   widgets/     widgets compartilhados entre telas, um por arquivo, reunidos no
                barril `widgets/widgets.dart`
   funcoes/     funções livres sem widget próprio (avisos, diálogos, ações que
                tocam dados, formatação de data e afins)
-  estilo/      spacing.dart (ritmo de espaçamento) e theme.dart (as duas
-               paletas: marrom e dourada, pergaminho e bronze)
+  estilo/      cores.dart (as duas paletas: marrom e dourada, pergaminho e
+               bronze), spacing.dart (ritmo de espaçamento) e tema.dart
+               (monta o ThemeData)
   main.dart    navegação (barra/trilho), rotas e ponto de entrada
 assets/        Bíblia interna, devocionais, introduções, cronograma, imagens, fontes
 test/          testes de unidade e de widget
@@ -159,7 +162,7 @@ repositório: a BKJ e os devocionais não serão traduzidos de novo.
 | 66 introduções | Completas, com as frases aplicadas e o tom calibrado (56,3 "!" por 10 mil palavras) |
 
 Regras que valem para os assets anuais (`assets/devocionais/*.json` e
-`assets/reading_plan*.json`):
+`assets/cronograma*.json`):
 
 - **Chave de data é DD-MM**, dia primeiro, como se escreve a data em português.
 - **O versículo dos devocionais não é traduzido**: vem da fonte do devocional
@@ -167,7 +170,7 @@ Regras que valem para os assets anuais (`assets/devocionais/*.json` e
   versículos entram no campo `versiculo`.
 - **Sem travessões** em nenhum texto do app (por pedido do usuário) e **sem
   aspas curvas**: vírgula, ponto e vírgula ou ponto, e aspas retas `"`.
-- **Referências no JSON precisam resolver no canon do app** (`lib/data/canon.dart`
+- **Referências no JSON precisam resolver no canon do app** (`lib/dados/canon.dart`
   usa `_livroEPrefixo`). Atenção às acentuações não óbvias: "Oseias" **sem**
   acento.
 - **Voz vitoriana de Spurgeon**, tratando o leitor por "tu"; citações bíblicas
@@ -234,7 +237,7 @@ motivo novo.
 ### Arquitetura e comportamento
 
 - **A virada manhã/noite é por horário fixo do aparelho, não pelo sol do lugar.**
-  0h-17h59 manhã, 18h-23h59 noite (`Periodo.pelaHora` em `lib/data/modelos.dart`).
+  0h-17h59 manhã, 18h-23h59 noite (`Periodo.pelaHora` em `lib/dados/modelos.dart`).
   A versão por geolocalização (nascer/pôr do sol, pacote `geolocator`) foi
   removida junto das permissões de localização.
 - **29 de fevereiro** não precisa de tratamento especial: `DateTime` do Dart já
@@ -248,13 +251,13 @@ motivo novo.
   "Promessas de Deus" nunca cabe num celular.
 - **O peso das fontes vem de `fontVariations`, não do `weight` do pubspec**:
   Cinzel e Montserrat são variáveis, e declarar `weight:` só rotula o arquivo.
-  `lib/estilo/theme.dart` põe `FontVariation('wght', N)` em todo estilo. Guardado por
+  `lib/estilo/tema.dart` põe `FontVariation('wght', N)` em todo estilo. Guardado por
   dois testes (`test/tema_test.dart` e `test/fontes_test.dart`, que mede o
   texto de verdade).
-- **Há dois temas, e nenhuma tela lê a paleta direto**: `Cores` tem as duas
-  paletas e só `theme.dart` a importa; as telas leem tudo de
-  `Theme.of(context).colorScheme`. Se aparecer um `Cores.` em `lib/telas/`, é
-  um vazamento. O mapa dos papéis: `surface` fundo, `surfaceContainer` cartão,
+- **Há dois temas, e nenhuma tela lê a paleta direto**: `DevocionalCores`
+  (`lib/estilo/cores.dart`) tem as duas paletas e só `tema.dart` a importa;
+  as telas leem tudo de `Theme.of(context).colorScheme`. Se aparecer um
+  `DevocionalCores.` em `lib/telas/`, é um vazamento. O mapa dos papéis: `surface` fundo, `surfaceContainer` cartão,
   `surfaceContainerHighest` citação e chip, `primary` título e ícone,
   `secondary` destaque, `outline` borda, `onSurface` corpo, `onSurfaceVariant`
   apoio. **O claro não é o escuro invertido**: o dourado sobre pergaminho dá
@@ -292,7 +295,7 @@ motivo novo.
   no Firebase Storage (`storage.rules`: um arquivo por conta, só o dono
   grava, leitura pública porque a URL vai direto num `NetworkImage`).
 - **Plano que só existia no celular não aparecia na web** (02/09/2026):
-  `Sincronia.comecar()` em `lib/data/nuvem.dart` puxava a cópia da conta,
+  `Sincronia.comecar()` em `lib/dados/nuvem.dart` puxava a cópia da conta,
   fundia com a local e só então passava a ouvir o `Estado` — mas comparando
   com a cópia local de antes da fusão. Com a conta ainda sem aquele domínio
   (`puxar` devolvendo `null`, o caso de todo plano criado antes de existir a
@@ -343,7 +346,7 @@ motivo novo.
   participantes só reinicia quando cada um marcar de novo, porque as regras
   não deixam o criador escrever na entrada alheia.
 - **Funcionalidades se ligam/desligam por uma constante, não por servidor de
-  configuração** (20/08/2026): `lib/data/recursos.dart` reúne os
+  configuração** (20/08/2026): `lib/dados/recursos.dart` reúne os
   interruptores — `planoPersonalizado` (aba "Meus planos"), `ouvirTextos`
   (`BotaoDeVoz`, único ponto de entrada da leitura em voz alta) e `conversas`
   (o chat de cada persona, os balões flutuantes e as rotas
@@ -429,7 +432,7 @@ motivo novo.
   índice livro+capítulo → devocionais (Manhã, Noite, Promessas de Deus)
   construído reaproveitando `faixasDaReferencia()` sobre a citação já existente
   de cada devocional. `DiaDePlanoDoUsuario` trocou `faixas: List<Faixa>` por
-  `itens: List<ItemDoDia>` (`lib/data/modelos/cronograma.dart`), um sealed
+  `itens: List<ItemDoDia>` (`lib/dados/modelos/cronograma.dart`), um sealed
   class com `ItemDeCapitulo` e `ItemDeDevocional` (tipo + data-chave do
   calendário); `faixas` virou getter derivado, então nada que lia `.faixas`
   quebrou. `montarPlanoDeLeitura` ganhou `incluirDevocionais`/`devocionalAntes`
@@ -450,7 +453,7 @@ motivo novo.
   chamava `aquecerIndiceDeDevocionais()`; como `Conteudo` é singleton do
   processo, sem passar por Novo plano antes os devocionais ficavam vazios a
   sessão toda. Ganhou o mesmo aquecimento do `initState` de `TelaNovoPlano`.
-  E `_itensComDevocionais` (`lib/data/planos.dart`) não deduplicava: um
+  E `_itensComDevocionais` (`lib/dados/planos.dart`) não deduplicava: um
   devocional cuja referência cite dois capítulos da mesma faixa multi-capítulo
   apareceria duas vezes no dia; agora dedupe por `{...}.toList()` antes de
   intercalar, aproveitando a igualdade por valor de `ItemDeDevocional`.
@@ -509,12 +512,12 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
   `PlatformException(invalid_icon)`. O que ainda varia por tema é a cor do
   círculo de destaque atrás do ícone na gaveta expandida
   (`AndroidNotificationDetails.color`, calculada em `_corDoTema()`
-  em `lib/data/lembretes.dart`) — dourado no tema escuro, bronze no claro,
-  mesmo par de `Cores.dourado`/`Cores.bronze` de `lib/estilo/theme.dart`
-  (duplicado como constante, não importado — `lib/data` não depende do
+  em `lib/dados/lembretes.dart`) — dourado no tema escuro, bronze no claro,
+  mesmo par de `DevocionalCores.dourado`/`DevocionalCores.bronze` de `lib/estilo/cores.dart`
+  (duplicado como constante, não importado — `lib/dados` não depende do
   pacote de estilo). Na web, que renderiza o ícone em cor cheia de verdade
   (sem máscara), a página continua espelhando o tema efetivo no Cache
-  Storage (`lib/data/espelho_do_tema.dart`) e o service worker escolhe entre
+  Storage (`lib/dados/espelho_do_tema.dart`) e o service worker escolhe entre
   `notificacao-tema-claro/escuro.png`.
 - **O SDK precisa ouvir onde está o service worker**: `getToken` recebe
   `serviceWorkerScriptPath: 'firebase-messaging-sw.js'` — relativo, para
@@ -570,7 +573,7 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
   servidor).
 - **Link direto**, formato `?ler=joao.3.16` (capítulo sem versículo: `?ler=joao.3`).
   Parâmetro de consulta, não caminho, porque o
-  Pages devolveria 404. `alvoDoLink` e `linkDoVersiculo` em `lib/data/canon.dart`
+  Pages devolveria 404. `alvoDoLink` e `linkDoVersiculo` em `lib/dados/canon.dart`
   fazem a ida e volta.
 - **A aba "Meus planos" só existe para quem tem conta** (21/08/2026):
   `TelaPlano` (`lib/telas/plano.dart`) escuta `Nuvem.instancia` e, sem login,
@@ -579,7 +582,7 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
   compartilhado aberto sem conta já pedia login antes disto (`_CartaoDeEntrar`
   em `lib/telas/meu_plano.dart`); a mudança foi só a aba da lista.
 - **Link do plano compartilhado leva o título como slug** (20/08/2026),
-  `?plano=<slug-do-titulo>-<id>` (`linkDoPlano` em `lib/data/planos_nuvem.dart`).
+  `?plano=<slug-do-titulo>-<id>` (`linkDoPlano` em `lib/dados/planos_nuvem.dart`).
   O slug é só estética: quem abre busca pelo plano sempre pelo `id`, o último
   trecho depois do último hífen (`idDoParametroDePlano`), que nunca tem hífen
   dentro e por isso continua único mesmo com dois planos de mesmo título.
@@ -601,7 +604,7 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
   (`Ctrl+F` na Bíblia; lupa na barra do devocional, que abre direto na aba
   "Devocionais" via `TelaBusca(abaInicial:)`).
 - **Conta Google e cópia na nuvem (Web, Android e iOS)** (19/08/2026): `Sincronia` em
-  `lib/data/nuvem.dart` é um ouvinte de fora sobre o `ChangeNotifier` do
+  `lib/dados/nuvem.dart` é um ouvinte de fora sobre o `ChangeNotifier` do
   `Estado`, reaproveitando `exportar()`/`importar()` para favoritos/notas e
   `serializarConversas`/`serializarPlanos`/`serializarLembretes` para os
   demais domínios. O filtro contra ruído e contra loop é comparar a string
@@ -617,7 +620,7 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
   Chrome/Safari de iOS e Android o `signInWithPopup` abre a janela e deixa
   escolher a conta, mas a troca de token com a janela original falha
   (armazenamento particionado do navegador mobile) — daí `entrar()` em
-  `lib/data/nuvem.dart` checar `defaultTargetPlatform` (que reflete o
+  `lib/dados/nuvem.dart` checar `defaultTargetPlatform` (que reflete o
   user-agent mesmo com `kIsWeb`) e usar redirect só nesse caso, mantendo popup
   no desktop.
 - **`lib/firebase_options.dart` lê do `.env.json` via `flutter_dotenv`** (19/08/2026):
@@ -634,7 +637,7 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
   completa e é a fonte da verdade sobre o que sobe para a nuvem; o resumo em
   Sobre (seção Conta e privacidade) só linka para ela. Escrita para corrigir
   uma lacuna real: o resumo antigo dizia que só favoritos, anotações e dias
-  lidos subiam, mas `Nuvem._empurrarConversas` (`lib/data/nuvem.dart`) também
+  lidos subiam, mas `Nuvem._empurrarConversas` (`lib/dados/nuvem.dart`) também
   sincroniza o histórico do chat com IA para quem tem conta.
 - **Termos de serviço** (21/08/2026): `lib/telas/termos.dart`, rota própria
   (`/termos`) e entrada na folha de ajustes ao lado de Sobre, com o mesmo

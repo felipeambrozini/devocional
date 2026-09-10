@@ -1,4 +1,4 @@
-import '../data/recursos.dart';
+import '../dados/recursos.dart';
 
 /// As linhas do cartão "Como usar" da Hoje. A mesma ajuda reaparece em Sobre,
 /// porque quem dispensou o cartão na primeira visita não tem como vê-lo de

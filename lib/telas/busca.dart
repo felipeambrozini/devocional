@@ -1,16 +1,12 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-import '../data/canon.dart';
-import '../data/conteudo.dart';
-import '../data/modelos.dart';
+import '../controladores/busca_controlador.dart';
+import '../dados/conteudo.dart';
+import '../dados/modelos.dart';
 import '../estilo/spacing.dart';
-import '../funcoes/aviso.dart';
 import '../funcoes/datas.dart';
 import '../widgets/widgets.dart';
-import 'biblia.dart';
 import 'devocional.dart';
 
 /// Busca no texto da Bíblia e nos devocionais de Spurgeon, em duas abas.
@@ -34,389 +30,77 @@ class TelaBusca extends StatefulWidget {
 }
 
 class _TelaBuscaState extends State<TelaBusca> {
-  final _controle = TextEditingController();
-  final _achados = <Achado>[];
-  StreamSubscription<Achado>? _assinatura;
-  Timer? _debounce;
-  bool _buscando = false;
-  bool _erro = false;
-  String _termoBuscado = '';
-
-  /// Não nula quando o termo digitado é, ele mesmo, uma referência bíblica
-  /// ("João 3:16"): a busca por texto não acha isso, porque o versículo não
-  /// contém a própria referência.
-  (Livro, int, int, int)? _referencia;
-
-  List<AchadoDevocional> _achadosDevocionais = [];
-  bool _buscandoDevocionais = false;
-  bool _erroDevocionais = false;
+  late final _controller = BuscaControlador();
 
   @override
   void dispose() {
-    _debounce?.cancel();
-    _assinatura?.cancel();
-    _controle.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
-  /// Dispara a busca sozinha um instante depois que a digitação parar, em
-  /// vez de esperar clique no botão. O atraso evita buscar a cada tecla.
-  void _aoDigitar() {
-    setState(() {});
-    _debounce?.cancel();
-    _debounce = Timer(
-      const Duration(milliseconds: 400),
-      () => _buscar(avisar: false),
-    );
-  }
-
-  void _buscar({bool avisar = true}) {
-    _debounce?.cancel();
-    final termo = _controle.text.trim();
-    // Menos de três letras devolveria meia Bíblia e não ajudaria ninguém. Ao
-    // digitar, isso só limpa os resultados em silêncio; só o clique no botão
-    // ou o Enter avisam, senão a mensagem apareceria a cada letra digitada.
-    if (termo.isEmpty || termo.length < 3) {
-      if (avisar) {
-        mostrarAviso(context, 'Escreva ao menos três letras para buscar.');
-      } else {
-        _resetarResultados();
-      }
-      return;
-    }
-
-    // Cancelar a busca anterior interrompe a leitura dos livros restantes.
-    _assinatura?.cancel();
-    setState(() {
-      _achados.clear();
-      _achadosDevocionais = [];
-      _buscando = true;
-      _buscandoDevocionais = true;
-      _erro = false;
-      _erroDevocionais = false;
-      _termoBuscado = termo;
-      _referencia = faixaDeVersiculoDaReferencia(termo);
-    });
-
-    _assinatura = Conteudo.instancia.buscar(termo).listen(
-          (achado) {
-            if (mounted) setState(() => _achados.add(achado));
-          },
-          onDone: () {
-            if (mounted) setState(() => _buscando = false);
-          },
-          onError: (Object _) {
-            if (mounted) {
-              setState(() {
-                _erro = true;
-                _buscando = false;
-              });
-            }
-          },
-        );
-
-    _buscarDevocionais(termo);
-  }
-
-  Future<void> _buscarDevocionais(String termo) async {
-    try {
-      final achados = await Conteudo.instancia.buscarDevocionais(termo);
-      if (mounted) {
-        setState(() {
-          _achadosDevocionais = achados;
-          _buscandoDevocionais = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          _erroDevocionais = true;
-          _buscandoDevocionais = false;
-        });
-      }
-    }
-  }
-
-  /// Devolve os resultados ao estado inicial sem tocar no texto digitado:
-  /// usado quando a digitação encolhe abaixo de três letras.
-  void _resetarResultados() {
-    _assinatura?.cancel();
-    setState(() {
-      _achados.clear();
-      _achadosDevocionais = [];
-      _buscando = false;
-      _buscandoDevocionais = false;
-      _erro = false;
-      _erroDevocionais = false;
-      _termoBuscado = '';
-      _referencia = null;
-    });
-  }
-
-  /// Esvazia a busca e devolve a tela ao estado inicial, em vez de pedir
-  /// para quem pesquisou apagar o termo letra por letra.
-  void _limpar() {
-    _debounce?.cancel();
-    _controle.clear();
-    _resetarResultados();
-  }
-
   @override
   Widget build(BuildContext context) {
-    // A LarguraDeLeitura fica no corpo, não em volta do Scaffold: envolvendo o
+    // A DevocionalLarguraDeLeitura fica no corpo, não em volta do Scaffold: envolvendo o
     // Scaffold, a própria AppBar ficava numa faixa de 720 px no meio da janela.
-    return DefaultTabController(
-      length: 2,
-      initialIndex: widget.abaInicial == AbaDaBusca.devocionais ? 1 : 0,
-      child: Scaffold(
-        appBar: DevocionalAppBar(
-          title: const Text('Buscar'),
-          bottom: const TabBar(tabs: [Tab(text: 'Bíblia'), Tab(text: 'Devocionais')]),
-        ),
-        body: LarguraDeLeitura(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(Spacing.sp16),
-                child: TextField(
-                  controller: _controle,
-                  autofocus: true,
-                  textInputAction: TextInputAction.search,
-                  // Além de atualizar o botão de limpar, dispara a busca
-                  // automaticamente um instante depois que a digitação parar.
-                  onChanged: (_) => _aoDigitar(),
-                  onSubmitted: (_) => _buscar(),
-                  decoration: InputDecoration(
-                    hintText: 'Palavra, expressão ou referência',
-                    prefixIcon: FaIcon(
-                      FontAwesomeIcons.magnifyingGlass,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) {
+        return DefaultTabController(
+          length: 2,
+          initialIndex: widget.abaInicial == AbaDaBusca.devocionais ? 1 : 0,
+          child: Scaffold(
+            appBar: DevocionalAppBar(
+              title: const Text('Buscar'),
+              bottom: const TabBar(
+                tabs: [
+                  Tab(text: 'Bíblia'),
+                  Tab(text: 'Devocionais'),
+                ],
+              ),
+            ),
+            body: DevocionalLarguraDeLeitura(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(DevocionalEspacamento.sp16),
+                    child: DevocionalBusca(
+                      controller: _controller.controle,
+                      autofocus: true,
+                      hintText: 'Palavra, expressão ou referência',
+                      // Além de atualizar o botão de limpar, dispara a busca
+                      // automaticamente um instante depois que a digitação parar.
+                      onChanged: (_) => _controller.aoDigitar(context),
+                      aoBuscar: () => _controller.buscar(context),
+                      aoLimpar: _controller.limpar,
                     ),
-                    suffixIcon: _controle.text.isEmpty
-                        ? IconButton(
-                            tooltip: 'Buscar',
-                            icon: const FaIcon(FontAwesomeIcons.arrowRight),
-                            onPressed: _buscar,
-                          )
-                        : Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                tooltip: 'Limpar busca',
-                                icon: const FaIcon(FontAwesomeIcons.xmark),
-                                onPressed: _limpar,
-                              ),
-                              IconButton(
-                                tooltip: 'Buscar',
-                                icon: const FaIcon(FontAwesomeIcons.arrowRight),
-                                onPressed: _buscar,
-                              ),
-                            ],
-                          ),
                   ),
-                ),
-              ),
-              Expanded(
-                child: TabBarView(
-                  children: [
-                    _AbaBiblia(
-                      termoBuscado: _termoBuscado,
-                      referencia: _referencia,
-                      achados: _achados,
-                      buscando: _buscando,
-                      erro: _erro,
-                      aoTentarDeNovo: _buscar,
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        DevocionalAbaBiblia(
+                          termoBuscado: _controller.termoBuscado,
+                          referencia: _controller.referencia,
+                          achados: _controller.achados,
+                          buscando: _controller.buscando,
+                          erro: _controller.erro,
+                          aoTentarDeNovo: () => _controller.buscar(context),
+                        ),
+                        _AbaDevocionais(
+                          termoBuscado: _controller.termoBuscado,
+                          achados: _controller.achadosDevocionais,
+                          buscando: _controller.buscandoDevocionais,
+                          erro: _controller.erroDevocionais,
+                          aoTentarDeNovo: () => _controller.buscar(context),
+                        ),
+                      ],
                     ),
-                    _AbaDevocionais(
-                      termoBuscado: _termoBuscado,
-                      achados: _achadosDevocionais,
-                      buscando: _buscandoDevocionais,
-                      erro: _erroDevocionais,
-                      aoTentarDeNovo: () => _buscar(),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AbaBiblia extends StatelessWidget {
-  const _AbaBiblia({
-    required this.termoBuscado,
-    required this.referencia,
-    required this.achados,
-    required this.buscando,
-    required this.erro,
-    required this.aoTentarDeNovo,
-  });
-
-  final String termoBuscado;
-  final (Livro, int, int, int)? referencia;
-  final List<Achado> achados;
-  final bool buscando;
-  final bool erro;
-  final VoidCallback aoTentarDeNovo;
-
-  @override
-  Widget build(BuildContext context) {
-    if (erro) {
-      return _ErroDeBusca(aoTentarDeNovo: aoTentarDeNovo);
-    }
-    if (termoBuscado.isEmpty) {
-      return const AvisoVazio(
-        icone: FontAwesomeIcons.magnifyingGlass,
-        titulo: 'Busque um versículo',
-        detalhe: 'A busca ignora acentos e maiúsculas.',
-      );
-    }
-    if (achados.isEmpty && referencia == null && !buscando) {
-      return AvisoVazio(
-        icone: FontAwesomeIcons.magnifyingGlassMinus,
-        titulo: 'Nada encontrado',
-        detalhe: 'Nenhum versículo com "$termoBuscado".',
-      );
-    }
-
-    final temReferencia = referencia != null;
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(Spacing.sp16, 0, Spacing.sp16, Spacing.sp8),
-          child: Row(
-            children: [
-              // A busca para no teto e a lista fica cortada. Dizer só "300
-              // resultados" faria parecer que são exatamente 300 na Bíblia
-              // inteira, quando na verdade a contagem parou ali.
-              Expanded(
-                child: Text(
-                  achados.length >= Conteudo.limiteDeBusca
-                      ? 'Primeiros ${Conteudo.limiteDeBusca} resultados; há mais'
-                      : '${achados.length} ${achados.length == 1 ? 'resultado' : 'resultados'}',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-              ),
-              const SizedBox(width: Spacing.sp10),
-              if (buscando)
-                const SizedBox(
-                  width: 13,
-                  height: 13,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(Spacing.sp16, 0, Spacing.sp16, Spacing.sp32),
-            itemCount: achados.length + (temReferencia ? 1 : 0),
-            separatorBuilder: (_, _) => const Divider(height: Spacing.sp18),
-            itemBuilder: (context, i) {
-              if (temReferencia && i == 0) {
-                return _CartaoDeReferencia(referencia: referencia!);
-              }
-              final indice = temReferencia ? i - 1 : i;
-              return _ItemDeAchado(achado: achados[indice], termo: termoBuscado);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Card fixo no topo dos resultados quando o próprio termo digitado é uma
-/// referência bíblica reconhecida, para ir direto ao versículo em vez de
-/// depender da busca de texto — que nunca acharia isso, já que o corpo do
-/// versículo não contém a própria referência.
-class _CartaoDeReferencia extends StatelessWidget {
-  const _CartaoDeReferencia({required this.referencia});
-
-  final (Livro, int, int, int) referencia;
-
-  @override
-  Widget build(BuildContext context) {
-    final (livro, capitulo, deVersiculo, ateVersiculo) = referencia;
-    final cor = Theme.of(context).colorScheme;
-    final rotulo = deVersiculo == ateVersiculo
-        ? '${livro.nome} $capitulo:$deVersiculo'
-        : '${livro.nome} $capitulo:$deVersiculo-$ateVersiculo';
-
-    return InkWell(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => TelaBiblia(
-            livroInicial: livro.slug,
-            capituloInicial: capitulo,
-            destacar: (deVersiculo, ateVersiculo),
-          ),
-        ),
-      ),
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: Spacing.sp10, horizontal: Spacing.sp4),
-        child: Row(
-          children: [
-            FaIcon(FontAwesomeIcons.arrowRight, size: 18, color: cor.primary),
-            const SizedBox(width: Spacing.sp10),
-            Text(
-              'Ir para $rotulo',
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(color: cor.primary),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ItemDeAchado extends StatelessWidget {
-  const _ItemDeAchado({required this.achado, required this.termo});
-
-  final Achado achado;
-  final String termo;
-
-  @override
-  Widget build(BuildContext context) {
-    final cor = Theme.of(context).colorScheme;
-    final tema = Theme.of(context).textTheme;
-    return InkWell(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => TelaBiblia(
-            livroInicial: achado.livro,
-            capituloInicial: achado.capitulo,
-            destacar: (achado.versiculo, achado.versiculo),
           ),
-        ),
-      ),
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: Spacing.sp4, horizontal: Spacing.sp4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              achado.referencia,
-              style: tema.titleSmall?.copyWith(color: cor.secondary),
-            ),
-            const SizedBox(height: Spacing.sp5),
-            Text.rich(
-              destacar(achado.texto, termo, tema, cor),
-              maxLines: 4,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -439,17 +123,17 @@ class _AbaDevocionais extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (erro) {
-      return _ErroDeBusca(aoTentarDeNovo: aoTentarDeNovo);
+      return DevocionalErroDeBusca(aoTentarDeNovo: aoTentarDeNovo);
     }
     if (termoBuscado.isEmpty) {
-      return const AvisoVazio(
+      return const DevocionalAvisoVazio(
         icone: FontAwesomeIcons.bookOpen,
         titulo: 'Busque nos devocionais',
         detalhe: 'Manhã e Noite e Promessas de Deus, na voz de Spurgeon.',
       );
     }
     if (achados.isEmpty && !buscando) {
-      return AvisoVazio(
+      return DevocionalAvisoVazio(
         icone: FontAwesomeIcons.magnifyingGlassMinus,
         titulo: 'Nada encontrado',
         detalhe: 'Nenhum devocional com "$termoBuscado".',
@@ -459,7 +143,12 @@ class _AbaDevocionais extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(Spacing.sp16, 0, Spacing.sp16, Spacing.sp8),
+          padding: const EdgeInsets.fromLTRB(
+            DevocionalEspacamento.sp16,
+            0,
+            DevocionalEspacamento.sp16,
+            DevocionalEspacamento.sp8,
+          ),
           child: Row(
             children: [
               Expanded(
@@ -468,7 +157,7 @@ class _AbaDevocionais extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
               ),
-              const SizedBox(width: Spacing.sp10),
+              const SizedBox(width: DevocionalEspacamento.sp10),
               if (buscando)
                 const SizedBox(
                   width: 13,
@@ -480,9 +169,14 @@ class _AbaDevocionais extends StatelessWidget {
         ),
         Expanded(
           child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(Spacing.sp16, 0, Spacing.sp16, Spacing.sp32),
+            padding: const EdgeInsets.fromLTRB(
+              DevocionalEspacamento.sp16,
+              0,
+              DevocionalEspacamento.sp16,
+              DevocionalEspacamento.sp32,
+            ),
             itemCount: achados.length,
-            separatorBuilder: (_, _) => const Divider(height: Spacing.sp18),
+            separatorBuilder: (_, _) => const Divider(height: DevocionalEspacamento.sp18),
             itemBuilder: (context, i) => _ItemDeAchadoDevocional(
               achado: achados[i],
               termo: termoBuscado,
@@ -517,7 +211,10 @@ class _ItemDeAchadoDevocional extends StatelessWidget {
       ),
       borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: Spacing.sp4, horizontal: Spacing.sp4),
+        padding: const EdgeInsets.symmetric(
+          vertical: DevocionalEspacamento.sp4,
+          horizontal: DevocionalEspacamento.sp4,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -526,7 +223,7 @@ class _ItemDeAchadoDevocional extends StatelessWidget {
               style: tema.titleSmall?.copyWith(color: cor.secondary),
             ),
             if (achado.titulo.isNotEmpty) ...[
-              const SizedBox(height: Spacing.sp2),
+              const SizedBox(height: DevocionalEspacamento.sp2),
               Text(
                 achado.titulo,
                 style: tema.bodySmall?.copyWith(
@@ -535,7 +232,7 @@ class _ItemDeAchadoDevocional extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(height: Spacing.sp5),
+            const SizedBox(height: DevocionalEspacamento.sp5),
             Text.rich(
               destacar(achado.texto, termo, tema, cor),
               maxLines: 4,
@@ -546,26 +243,6 @@ class _ItemDeAchadoDevocional extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Falha de busca com a recuperação à mão: um erro de stream ou de leitura
-/// de asset costuma ser momentâneo, e o "Tentar de novo" refaz a última
-/// busca sem digitar nada de novo.
-class _ErroDeBusca extends StatelessWidget {
-  const _ErroDeBusca({required this.aoTentarDeNovo});
-
-  final VoidCallback aoTentarDeNovo;
-
-  @override
-  Widget build(BuildContext context) => AvisoVazio(
-    icone: FontAwesomeIcons.triangleExclamation,
-    titulo: 'Não foi possível carregar',
-    detalhe: 'A busca falhou. Tente de novo.',
-    acao: TextButton(
-      onPressed: aoTentarDeNovo,
-      child: const Text('Tentar de novo'),
-    ),
-  );
 }
 
 /// Uma data qualquer, só para navegar até o dia certo do devocional: os
@@ -582,7 +259,10 @@ DateTime _dataDoDevocional(String chave) {
 /// tipos de resultado, Bíblia e devocionais.
 TextSpan destacar(String texto, String termo, TextTheme tema, ColorScheme cor) {
   final base = tema.bodyMedium?.copyWith(height: 1.5);
-  final forte = base?.copyWith(color: cor.secondary, fontWeight: FontWeight.w700);
+  final forte = base?.copyWith(
+    color: cor.secondary,
+    fontWeight: FontWeight.w700,
+  );
   final textoSemAcento = Conteudo.normalizar(texto);
   final expressao = Conteudo.regexDePalavra(Conteudo.normalizar(termo));
 
@@ -590,9 +270,13 @@ TextSpan destacar(String texto, String termo, TextTheme tema, ColorScheme cor) {
   var cursor = 0;
   for (final acerto in expressao.allMatches(textoSemAcento)) {
     if (acerto.start > cursor) {
-      pedacos.add(TextSpan(text: texto.substring(cursor, acerto.start), style: base));
+      pedacos.add(
+        TextSpan(text: texto.substring(cursor, acerto.start), style: base),
+      );
     }
-    pedacos.add(TextSpan(text: texto.substring(acerto.start, acerto.end), style: forte));
+    pedacos.add(
+      TextSpan(text: texto.substring(acerto.start, acerto.end), style: forte),
+    );
     cursor = acerto.end;
   }
   if (cursor < texto.length) {

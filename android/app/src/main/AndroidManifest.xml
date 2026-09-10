@@ -32,7 +32,7 @@
             android:value="2" />
 
         <!-- Lembrete diário local (flutter_local_notifications, ver
-             lib/data/lembretes.dart): alarmes sobrevivem ao reinício do
+             lib/dados/lembretes.dart): alarmes sobrevivem ao reinício do
              celular porque este receiver os rearma no boot — sem ele, o
              lembrete sumia até o app ser aberto de novo. -->
         <receiver
@@ -44,7 +44,7 @@
             </intent-filter>
         </receiver>
     </application>
-    <!-- O chat com as personas fala com a Gemini API pela rede (lib/data/ia.dart).
+    <!-- O chat com as personas fala com a Gemini API pela rede (lib/dados/ia.dart).
          O debug e o perfil já trazem isto embutido; sem esta linha o release
          não consegue chamar a API. -->
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -53,7 +53,7 @@
          fotos do sistema. -->
     <uses-permission android:name="android.permission.CAMERA"/>
     <!-- Lembrete diário no Android 13+: permissão de notificação pedida em
-         runtime por lib/data/lembretes.dart; sem esta declaração nem o
+         runtime por lib/dados/lembretes.dart; sem esta declaração nem o
          diálogo aparece. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <!-- Sem isto o RebootBroadcastReceiver acima nunca é chamado: o Android

@@ -29,12 +29,12 @@ jobs:
     environment: github-pages
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-      # Versão exata, não "stable": uma release nova do Flutter podia quebrar
-      # o deploy sem nenhuma mudança no repositório. Mesma versão do .fvmrc,
-      # que já fixa o SDK local — aqui é o mesmo cuidado para o CI.
+      # Mesmo canal do .fvmrc, que já fixa o SDK local. Se uma release nova
+      # do canal stable quebrar o deploy, o workflow falha aqui e avisa no
+      # GitHub Actions — não é um risco silencioso.
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
-          flutter-version: 3.44.9
+          channel: stable
       - run: flutter pub get
       - run: flutter test
       # Preenche os placeholders de web/firebase-messaging-sw.js com os mesmos

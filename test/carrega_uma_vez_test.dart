@@ -19,7 +19,7 @@ void main() {
           home: StatefulBuilder(
             builder: (context, setState) {
               redesenhar = () => setState(() {});
-              return CarregaUmaVez<String>(
+              return DevocionalCarregaUmaVez<String>(
                 chave: 'fixa',
                 carregar: () async {
                   carregamentos++;
@@ -63,7 +63,7 @@ void main() {
         home: StatefulBuilder(
           builder: (context, setState) {
             trocarChave = () => setState(() => chave = 'b');
-            return CarregaUmaVez<String>(
+            return DevocionalCarregaUmaVez<String>(
               chave: chave,
               carregar: () async {
                 carregamentos++;
@@ -96,12 +96,12 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: CarregaUmaVez<String>(
+        home: DevocionalCarregaUmaVez<String>(
           chave: 'quebra',
           carregar: () async => throw Exception('asset ausente'),
           construir: (context, snap) {
             vistos.add((snap.connectionState, snap.hasError));
-            if (snap.hasError) return const AvisoDeErro();
+            if (snap.hasError) return const DevocionalAvisoDeErro();
             return const CircularProgressIndicator();
           },
         ),

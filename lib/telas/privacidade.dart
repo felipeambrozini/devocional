@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../data/nuvem.dart';
-import '../data/recursos.dart';
+import '../dados/nuvem.dart';
+import '../dados/recursos.dart';
 import '../estilo/spacing.dart';
 import '../widgets/widgets.dart';
 
 /// Política de privacidade completa: a versão longa do resumo que já vive em
 /// Sobre, com URL própria para quem chega por um link direto ou por exigência
 /// de uma conta Google. Todo item aqui espelha o que o código de fato faz
-/// (`lib/data/nuvem.dart`, `lib/data/conversas.dart` e `lib/data/coleta.dart`),
+/// (`lib/dados/nuvem.dart`, `lib/dados/conversas.dart` e `lib/dados/coleta.dart`),
 /// não uma promessa separada do comportamento real.
 class TelaPrivacidade extends StatelessWidget {
   const TelaPrivacidade({super.key});
@@ -18,7 +18,7 @@ class TelaPrivacidade extends StatelessWidget {
     final tema = Theme.of(context).textTheme;
     return Scaffold(
       appBar: DevocionalAppBar(title: const Text('Política de privacidade')),
-      body: LarguraDeLeitura(
+      body: DevocionalLarguraDeLeitura(
         // O chat só existe para quem tem acesso à função (ver
         // Recursos.conversas); as seções que falam dele ficam de fora da
         // política para quem não pode usá-lo.
@@ -27,12 +27,12 @@ class TelaPrivacidade extends StatelessWidget {
           builder: (context, _) {
             final chat = Recursos.conversas;
             return ListView(
-              padding: const EdgeInsets.fromLTRB(Spacing.sp20, Spacing.sp16, Spacing.sp20, Spacing.sp40),
+              padding: const EdgeInsets.fromLTRB(DevocionalEspacamento.sp20, DevocionalEspacamento.sp16, DevocionalEspacamento.sp20, DevocionalEspacamento.sp40),
               children: [
                 Text('Política de privacidade', style: tema.displayMedium),
-                const SizedBox(height: Spacing.sp8),
-                const Filete(largura: 64),
-                const SizedBox(height: Spacing.sp16),
+                const SizedBox(height: DevocionalEspacamento.sp8),
+                const DevocionalFilete(largura: 64),
+                const SizedBox(height: DevocionalEspacamento.sp16),
                 Text(
                   'Este aplicativo não tem anúncio e não vende nem '
                   'compartilha dados com terceiros para fins de '
@@ -42,14 +42,14 @@ class TelaPrivacidade extends StatelessWidget {
                   'que é guardado, onde e por quê.',
                   style: tema.bodyLarge?.copyWith(height: 1.7),
                 ),
-                const _Secao(
+                const DevocionalSecaoDeTexto(
                   titulo: 'Sem conta',
                   texto:
                       'Favoritos, anotações, progresso de leitura, tema e '
                       'tamanho do texto ficam só no aparelho ou no navegador '
                       '(armazenamento local). Nada disso sai daqui.',
                 ),
-                _Secao(
+                DevocionalSecaoDeTexto(
                   titulo: 'Com conta Google',
                   texto: chat
                       ? 'Entrar com a conta Google sobe, além do e-mail e '
@@ -74,7 +74,7 @@ class TelaPrivacidade extends StatelessWidget {
                             'entra com conta usa o aplicativo do mesmo '
                             'jeito, sem nada saindo do aparelho.',
                 ),
-                const _Secao(
+                const DevocionalSecaoDeTexto(
                   titulo: 'Planos de leitura compartilhados',
                   texto:
                       'Um plano criado para ser compartilhado por link mostra o '
@@ -85,7 +85,7 @@ class TelaPrivacidade extends StatelessWidget {
                       'próprio progresso.',
                 ),
                 if (chat)
-                  const _Secao(
+                  const DevocionalSecaoDeTexto(
                     titulo: 'Chat com inteligência artificial',
                     texto:
                         'As mensagens enviadas às personas Charles Spurgeon e '
@@ -94,7 +94,7 @@ class TelaPrivacidade extends StatelessWidget {
                         'conversa é salvo no aparelho e, para quem tem conta, '
                         'também na nuvem descrita acima.',
                   ),
-                const _Secao(
+                const DevocionalSecaoDeTexto(
                   titulo: 'Leitura em voz alta',
                   texto:
                       'O áudio de cada capítulo, devocional e introdução é '
@@ -105,7 +105,7 @@ class TelaPrivacidade extends StatelessWidget {
                       'aparelho, e pode apagá-los a qualquer momento na '
                       'mesma tela.',
                 ),
-                const _Secao(
+                const DevocionalSecaoDeTexto(
                   titulo: 'Uso anônimo e erro técnico',
                   texto:
                       'Na primeira vez que abre o app, você escolhe se '
@@ -118,7 +118,7 @@ class TelaPrivacidade extends StatelessWidget {
                       'você lê ou escreve. Dá para mudar de ideia depois '
                       'em Sobre.',
                 ),
-                const _Secao(
+                const DevocionalSecaoDeTexto(
                   titulo: 'Verificação de app genuíno',
                   texto:
                       'O aplicativo usa o Firebase App Check para confirmar que '
@@ -126,7 +126,7 @@ class TelaPrivacidade extends StatelessWidget {
                       'próprio aplicativo, e não de um script externo. Essa '
                       'verificação não identifica pessoas, só a instalação.',
                 ),
-                _Secao(
+                DevocionalSecaoDeTexto(
                   titulo: 'Apagar seus dados',
                   texto: chat
                       ? 'Quem tem conta pode apagar a cópia salva na nuvem em '
@@ -146,7 +146,7 @@ class TelaPrivacidade extends StatelessWidget {
                             'limpar os dados do aplicativo ou do site pelo próprio '
                             'sistema ou navegador.',
                 ),
-                const _Secao(
+                const DevocionalSecaoDeTexto(
                   titulo: 'Contato',
                   texto:
                       'Dúvidas sobre esta política podem ser enviadas pelos '
@@ -157,29 +157,6 @@ class TelaPrivacidade extends StatelessWidget {
             );
           },
         ),
-      ),
-    );
-  }
-}
-
-class _Secao extends StatelessWidget {
-  const _Secao({required this.titulo, required this.texto});
-
-  final String titulo;
-  final String texto;
-
-  @override
-  Widget build(BuildContext context) {
-    final tema = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.only(top: Spacing.sp32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(titulo, style: tema.headlineSmall),
-          const SizedBox(height: Spacing.sp10),
-          Text(texto, style: tema.bodyLarge?.copyWith(height: 1.7)),
-        ],
       ),
     );
   }

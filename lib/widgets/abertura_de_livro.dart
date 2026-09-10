@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-import '../data/canon.dart';
-import '../data/conteudo.dart';
-import '../data/modelos.dart';
-import '../data/voz.dart';
+import '../dados/canon.dart';
+import '../dados/conteudo.dart';
+import '../dados/modelos.dart';
+import '../dados/voz.dart';
 import '../funcoes/capa_biblia.dart';
 import '../estilo/spacing.dart';
 import 'area_de_selecao.dart';
@@ -17,16 +17,16 @@ import 'filete.dart';
 /// Recolhida porque o texto é longo e quem já leu a introdução quer chegar ao
 /// texto sem rolar páginas. Expandida, lê inteira ali mesmo. Aparece tanto no
 /// leitor da Bíblia quanto no devocional, por isso vive aqui e não numa tela só.
-class AberturaDeLivro extends StatefulWidget {
-  const AberturaDeLivro({super.key, required this.slug});
+class DevocionalAberturaDeLivro extends StatefulWidget {
+  const DevocionalAberturaDeLivro({super.key, required this.slug});
 
   final String slug;
 
   @override
-  State<AberturaDeLivro> createState() => _AberturaDeLivroState();
+  State<DevocionalAberturaDeLivro> createState() => _AberturaDeLivroState();
 }
 
-class _AberturaDeLivroState extends State<AberturaDeLivro> {
+class _AberturaDeLivroState extends State<DevocionalAberturaDeLivro> {
   bool _aberta = false;
 
   @override
@@ -34,7 +34,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
 
-    return CarregaUmaVez<Introducao?>(
+    return DevocionalCarregaUmaVez<Introducao?>(
       chave: widget.slug,
       carregar: () => Conteudo.instancia.introducao(widget.slug),
       construir: (context, snap) {
@@ -43,7 +43,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
         if (introducao == null) return const SizedBox.shrink();
 
         return Padding(
-          padding: const EdgeInsets.only(bottom: Spacing.sp24),
+          padding: const EdgeInsets.only(bottom: DevocionalEspacamento.sp24),
           child: Card(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,7 +52,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                   borderRadius: BorderRadius.circular(14),
                   onTap: () => setState(() => _aberta = !_aberta),
                   child: Padding(
-                    padding: const EdgeInsets.all(Spacing.sp16),
+                    padding: const EdgeInsets.all(DevocionalEspacamento.sp16),
                     child: Row(
                       children: [
                         ClipRRect(
@@ -65,7 +65,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                             excludeFromSemantics: true,
                           ),
                         ),
-                        const SizedBox(width: Spacing.sp14),
+                        const SizedBox(width: DevocionalEspacamento.sp14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,7 +74,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
                                 tituloDaIntroducao(livroPorSlug(widget.slug)!),
                                 style: tema.titleLarge,
                               ),
-                              const SizedBox(height: Spacing.sp4),
+                              const SizedBox(height: DevocionalEspacamento.sp4),
                               Text(
                                 'Bíblia de Estudo Charles Haddon Spurgeon',
                                 style: tema.labelMedium,
@@ -109,7 +109,7 @@ class _AberturaDeLivroState extends State<AberturaDeLivro> {
 /// outra aqui truncaria a seleção que cruza a borda do cartão. Na web não há
 /// área acima: o leitor abre mão da seleção no mouse porque o arrasto disputa
 /// com o deslize de capítulo, então o corpo carrega a própria
-/// [AreaDeSelecaoComCompartilhar].
+/// [DevocionalAreaDeSelecaoComCompartilhar].
 class _IntroducaoAberta extends StatelessWidget {
   const _IntroducaoAberta({required this.slug, required this.introducao});
 
@@ -124,36 +124,36 @@ class _IntroducaoAberta extends StatelessWidget {
 
     final conteudo = Padding(
       padding: const EdgeInsets.fromLTRB(
-        Spacing.sp16,
+        DevocionalEspacamento.sp16,
         0,
-        Spacing.sp16,
-        Spacing.sp16,
+        DevocionalEspacamento.sp16,
+        DevocionalEspacamento.sp16,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Filete(),
-          const SizedBox(height: Spacing.sp16),
+          const DevocionalFilete(),
+          const SizedBox(height: DevocionalEspacamento.sp16),
           // A voz de Spurgeon lê a introdução inteira, do título à frase;
           // tocar de novo para a leitura.
-          BotaoDeVoz(
+          DevocionalBotaoDeVoz(
             chave: chaveDaIntroducao(slug),
             referencia: 'Introdução de ${introducao.livro}',
           ),
-          const SizedBox(height: Spacing.sp16),
+          const SizedBox(height: DevocionalEspacamento.sp16),
           for (final (titulo, corpo) in introducao.secoes) ...[
             Text(titulo, style: tema.headlineSmall),
-            const SizedBox(height: Spacing.sp8),
+            const SizedBox(height: DevocionalEspacamento.sp8),
             for (final paragrafo in corpo.split('\n\n')) ...[
               Text(paragrafo, style: tema.bodyMedium?.copyWith(height: 1.7)),
-              const SizedBox(height: Spacing.sp10),
+              const SizedBox(height: DevocionalEspacamento.sp10),
             ],
-            const SizedBox(height: Spacing.sp12),
+            const SizedBox(height: DevocionalEspacamento.sp12),
           ],
           if (introducao.frase.isNotEmpty)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(Spacing.sp14),
+              padding: const EdgeInsets.all(DevocionalEspacamento.sp14),
               decoration: BoxDecoration(
                 color: cor.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(10),
@@ -170,7 +170,7 @@ class _IntroducaoAberta extends StatelessWidget {
                       height: 1.6,
                     ),
                   ),
-                  const SizedBox(height: Spacing.sp8),
+                  const SizedBox(height: DevocionalEspacamento.sp8),
                   Text(introducao.atribuicao, style: tema.labelMedium),
                 ],
               ),
@@ -180,6 +180,6 @@ class _IntroducaoAberta extends StatelessWidget {
     );
 
     if (dentroDeAreaDeSelecao) return conteudo;
-    return AreaDeSelecaoComCompartilhar(child: conteudo);
+    return DevocionalAreaDeSelecaoComCompartilhar(child: conteudo);
   }
 }

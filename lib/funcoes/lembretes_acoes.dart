@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../data/estado.dart';
-import '../data/lembretes.dart';
+import '../dados/estado.dart';
+import '../dados/lembretes.dart';
 
 /// Minutos do dia (0..1439) como [TimeOfDay], para mostrar e escolher o
 /// horário na folha de ajustes.

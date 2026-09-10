@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../data/estado.dart';
-import '../data/eventos.dart';
+import '../dados/estado.dart';
+import '../dados/eventos.dart';
 import 'aviso.dart';
 
 /// Marca ou desmarca o dia como lido e oferece voltar no mesmo gesto.

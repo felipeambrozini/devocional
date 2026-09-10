@@ -3,7 +3,7 @@ description: "Aplicativo devocional pessoal: tradução autoral da King James 16
 
 publish_to: 'none' 
 
-version: 1.0.0+7
+version: 1.0.0+8
 
 environment:
   sdk: ^3.12.0
@@ -27,7 +27,7 @@ dependencies:
   # Folha de compartilhar nativa. Android e web de uma vez, sem
   # ramificação de plataforma — mesma razão do shared_preferences acima.
   share_plus: ^13.3.0
-  # Lembrete diário híbrido (ver Lembretes em lib/data/lembretes.dart):
+  # Lembrete diário híbrido (ver Lembretes em lib/dados/lembretes.dart):
   # push da Cloud Function agendada (functions/) via token FCM gravado no
   # Firestore, em Android e web; no Android ainda há alarme local de reserva
   # pelo flutter_local_notifications abaixo.
@@ -37,7 +37,7 @@ dependencies:
   # web — lá a exibição é do service worker.
   flutter_local_notifications: ^22.3.0
   # Ligações tipadas às APIs do navegador. Usado pelo espelho do tema para
-  # notificações (lib/data/espelho_do_tema.dart): grava no Cache Storage,
+  # notificações (lib/dados/espelho_do_tema.dart): grava no Cache Storage,
   # que o service worker lê para escolher o ícone da notificação. Já era
   # transitiva dos plugins web; direta para o código poder importar.
   web: ^1.1.1
@@ -48,13 +48,13 @@ dependencies:
   # Flutter, funciona igual em todas as plataformas sem ramificação.
   url_launcher: ^6.3.2
   # Conta Google e cópia na nuvem, em todas as plataformas (ver
-  # lib/data/nuvem.dart): o navegador é o caso que mais precisa, porque é a
+  # lib/dados/nuvem.dart): o navegador é o caso que mais precisa, porque é a
   # única plataforma que apaga o armazenamento sozinho.
   firebase_core: ^4.14.0
   firebase_auth: ^6.6.1
   cloud_firestore: ^6.9.0
   # Onde a foto de perfil escolhida na câmera ou galeria é hospedada, para
-  # virar a photoURL da conta (ver Nuvem.atualizarFoto em lib/data/nuvem.dart).
+  # virar a photoURL da conta (ver Nuvem.atualizarFoto em lib/dados/nuvem.dart).
   firebase_storage: ^13.5.0
   # Escolher a foto de perfil da câmera ou da galeria (ver hoje.dart).
   image_picker: ^1.2.3
@@ -66,21 +66,21 @@ dependencies:
   # build pela google_api_headers, dependência transitiva do Firebase; listar
   # aqui o promove a dependência direta para o código poder importar.
   package_info_plus: ^10.2.1
-  # Chamadas HTTP para a Gemini API gratuita (ver lib/data/ia.dart). Único
+  # Chamadas HTTP para a Gemini API gratuita (ver lib/dados/ia.dart). Único
   # cliente HTTP do app; funciona igual em Android e web.
   http: ^1.6.0
   google_api_headers: ^5.3.7
   just_audio: ^0.10.6
   google_sign_in: ^7.2.0
   firebase_app_check: ^0.4.7
-  # Onde gravar o arquivo de registro de erros (ver lib/data/registro.dart).
+  # Onde gravar o arquivo de registro de erros (ver lib/dados/registro.dart).
   # Já era dependência transitiva do Firebase; só promovida a direta para o
   # código poder importar.
   path_provider: ^2.1.6
   # Cálculo de horário por fuso para armar o alarme do lembrete na hora certa
-  # do aparelho (lib/data/lembretes.dart).
+  # do aparelho (lib/dados/lembretes.dart).
   timezone: ^0.11.1
-  # Reporte de erro remoto (ver Registro.erro em lib/data/registro.dart): sem
+  # Reporte de erro remoto (ver Registro.erro em lib/dados/registro.dart): sem
   # isto, um erro na web — onde estão a maioria dos usuários — não deixava
   # rastro nenhum. Um SDK só cobre web e Android; o Crashlytics não existe no
   # Flutter Web. Só entra em produção depois do aceite em [FoiceDeAceite]
@@ -138,7 +138,7 @@ flutter_launcher_icons:
 # Aqui, ao contrário do ícone do lançador, a troca por tema funciona em todas as
 # plataformas: a splash é a marca "Devocional" sem fundo, dourada no escuro e
 # em bronze no claro (dourado sobre pergaminho é ilegível, mesmo motivo do
-# tools/icones.py), com a lona atrás em Cores.pergaminho/Cores.fundo.
+# tools/icones.py), com a lona atrás em DevocionalCores.pergaminho/DevocionalCores.fundo.
 flutter_native_splash:
   color: "#F7F1E3"
   color_dark: "#2E1B10"
@@ -163,9 +163,10 @@ flutter:
     - assets/biblia/
     - assets/devocionais/
     - assets/introducao/
+    - assets/comentario/
     - assets/images/
-    - assets/reading_plan.json
-    - assets/reading_plan_bissexto.json
+    - assets/cronograma.json
+    - assets/cronograma_bissexto.json
 
   # Cinzel e Montserrat empacotadas localmente: o google_fonts baixa a fonte na
   # primeira execução, e um aparelho sem internet (ou sem DNS, comum em emulador)

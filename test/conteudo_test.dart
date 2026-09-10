@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:felipe_ambrozini/data/canon.dart';
-import 'package:felipe_ambrozini/data/conteudo.dart';
-import 'package:felipe_ambrozini/data/modelos.dart';
+import 'package:felipe_ambrozini/dados/canon.dart';
+import 'package:felipe_ambrozini/dados/conteudo.dart';
+import 'package:felipe_ambrozini/dados/modelos.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Estes testes leem os assets do disco. Não são um teste de widget: são a garantia

@@ -1,6 +1,6 @@
-import 'package:felipe_ambrozini/data/conteudo.dart';
-import 'package:felipe_ambrozini/data/estado.dart';
-import 'package:felipe_ambrozini/data/recursos.dart';
+import 'package:felipe_ambrozini/dados/conteudo.dart';
+import 'package:felipe_ambrozini/dados/estado.dart';
+import 'package:felipe_ambrozini/dados/recursos.dart';
 import 'package:felipe_ambrozini/main.dart';
 import 'package:felipe_ambrozini/widgets/widgets.dart';
 import 'package:flutter/services.dart';
@@ -55,7 +55,7 @@ void main() {
 
     chamadas.clear();
 
-    await tester.tap(find.byType(BalaoDeChat).first);
+    await tester.tap(find.byType(DevocionalBalaoDeChat).first);
     await tester.pumpAndSettle();
 
     expect(

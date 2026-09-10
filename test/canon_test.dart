@@ -1,4 +1,4 @@
-import 'package:felipe_ambrozini/data/canon.dart';
+import 'package:felipe_ambrozini/dados/canon.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
