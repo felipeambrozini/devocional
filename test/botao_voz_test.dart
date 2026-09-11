@@ -74,7 +74,7 @@ void main() {
         await tester.pumpWidget(montar());
         await tester.pump(const Duration(milliseconds: 500));
 
-        expect(find.text('Sem conexão'), findsOneWidget);
+        expect(find.text('Sem conexão — toque para tentar'), findsOneWidget);
         expect(find.text('Ouvir'), findsNothing);
       },
     );

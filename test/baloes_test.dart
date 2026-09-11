@@ -99,6 +99,13 @@ void main() {
           reason: 'os balões não podem flutuar por cima da folha de ajustes',
         );
 
+        // A seção Lembretes vem dentro de ExpansionTile colapsado por padrão.
+        // Tapa no primeiro ExpansionTile da lista (há 2: Lembretes e Áudio).
+        final tileDeLembretes = find.byType(ExpansionTile).first;
+        await tester.ensureVisible(tileDeLembretes);
+        await tester.tap(tileDeLembretes);
+        await tester.pumpAndSettle();
+
         await tester.ensureVisible(
           find.widgetWithText(
             SwitchListTile,

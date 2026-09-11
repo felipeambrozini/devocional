@@ -137,15 +137,23 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                   ),
                   child: const DevocionalFilete(largura: 64),
                 ),
-                // Lembrete exclusivo do Android: alarme agendado no próprio
-                // aparelho (ver lembretes.dart). iOS e web ficam de fora.
+                // Lembretes e áudio colapsados por padrão: são os dois blocos
+                // mais densos da folha e, abertos, exigiam >2 swipes antes de
+                // chegar em Sobre. ExpansionTile mantém o primeiro viewport só
+                // com leitura (tamanho/aparência/setas) e revela o resto sob
+                // demanda, sem esconder que existe.
                 if (lembretesSuportados)
-                  ..._SecaoDeLembretes(estado: estado).montar(context),
-                // Áudio offline: download dos MP3 pré-gerados para uso sem rede.
-                // Ordem pedida: Bíblia, Introdução, Manhã e Noite, Promessas.
-                if (!kIsWeb) ..._SecaoAudioOffline().montar(context),
-                // Sobre no fim da folha: as escolhas do dia ficam na frente,
-                // e fontes, canais e privacidade esperam quem rola até o fim.
+                  _SecaoDeLembretesExpansivel(estado: estado),
+                if (!kIsWeb) _SecaoAudioOfflineExpansivel(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    DevocionalEspacamento.sp20,
+                    DevocionalEspacamento.sp16,
+                    DevocionalEspacamento.sp20,
+                    DevocionalEspacamento.sp4,
+                  ),
+                  child: Text('Sobre e ajuda', style: tema.headlineSmall),
+                ),
                 _ItemDeNavegacaoDaFolha(
                   folha: folha,
                   icone: FontAwesomeIcons.circleInfo,
@@ -305,6 +313,60 @@ class _SecaoDeLembretes {
         'aparelho para usar os lembretes.',
       );
     }
+  }
+}
+
+/// Envolve `_SecaoDeLembretes` num `ExpansionTile` colapsado por padrão para
+/// não empurrar Sobre para fora do primeiro viewport da folha.
+class _SecaoDeLembretesExpansivel extends StatelessWidget {
+  const _SecaoDeLembretesExpansivel({required this.estado});
+
+  final Estado estado;
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        leading: FaIcon(FontAwesomeIcons.bell, color: cor.primary, size: 18),
+        title: const Text('Lembretes'),
+        subtitle: Text(
+          estado.lembretesAtivos
+              ? 'Avisar no horário · 4 horários'
+              : 'Avisar no horário do devocional',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        initiallyExpanded: estado.lembretesAtivos,
+        childrenPadding: EdgeInsets.zero,
+        children: _SecaoDeLembretes(estado: estado).montar(context),
+      ),
+    );
+  }
+}
+
+/// Envolve `_SecaoAudioOffline` num `ExpansionTile` colapsado por padrão:
+/// 4 categorias + progresso + armazenamento exigiam 5 ListTiles sempre
+/// visíveis, mesmo para quem nunca baixa áudio.
+class _SecaoAudioOfflineExpansivel extends StatelessWidget {
+  const _SecaoAudioOfflineExpansivel();
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        leading: FaIcon(FontAwesomeIcons.headphones, color: cor.primary, size: 18),
+        title: const Text('Áudio offline'),
+        subtitle: Text(
+          'Baixe para ouvir sem internet',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        childrenPadding: EdgeInsets.zero,
+        children: _SecaoAudioOffline().montar(context),
+      ),
+    );
   }
 }
 

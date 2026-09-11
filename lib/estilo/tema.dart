@@ -4,9 +4,9 @@ import 'cores.dart';
 
 /// Monta o tema.
 ///
-/// [escalaDeLeitura] multiplica todos os tamanhos de texto do app — títulos,
-/// corpo, rótulos e tooltips — garantindo que o tamanho configurado pelo
-/// usuário seja respeitado em todo lugar.
+/// [escalaDeLeitura] multiplica o texto corrido de leitura (bodyLarge/Medium)
+/// integralmente e os títulos/rótulos com teto de 1,3× — Regra da Escala do
+/// DESIGN.md: aumentar o corpo não pode estourar AppBar/Nav.
 ///
 /// [brilho] escolhe a paleta. As telas nunca leem de [DevocionalCores] direto: tudo sai do
 /// `ColorScheme`, senão metade da interface continuaria marrom sobre pergaminho.
@@ -58,21 +58,26 @@ ThemeData construirTema({
   // o peso final fica por conta do casamento e da síntese de fonte do motor, que
   // variam por plataforma. `fontWeight` continua declarado porque é o que o
   // Flutter usa para escolher a família; `fontVariations` é o que pesa a letra.
-  /// A escala de leitura agora aplica-se a todos os textos do app, garantindo
-  /// que o tamanho configurado pelo usuário seja respeitado em títulos, rótulos
-  /// e corpo de texto — não apenas no texto corrido da leitura.
-  double escalar(double tamanho) => tamanho * escalaDeLeitura;
+  //
+  // Regra da Escala (DESIGN.md): a escala do usuário multiplica só
+  // bodyLarge/bodyMedium — nunca a navegação, o título ou a legenda. Títulos
+  // escalam só 30% do solicitado (teto 1,3×) para não estourar AppBar/Nav em 2×.
+  double escalarLeitura(double tamanho) => tamanho * escalaDeLeitura;
+  double escalarTitulo(double tamanho) {
+    final limitada = 1.0 + (escalaDeLeitura - 1.0) * 0.3;
+    return tamanho * limitada.clamp(1.0, 1.3);
+  }
 
   TextStyle titulo(double tamanho, FontWeight peso) => TextStyle(
     fontFamily: 'Cinzel',
-    fontSize: escalar(tamanho),
+    fontSize: escalarTitulo(tamanho),
     fontWeight: peso,
     fontVariations: [FontVariation('wght', peso.value.toDouble())],
     color: esquema.primary,
   );
   TextStyle corpo(double tamanho, {Color? cor, FontWeight? peso}) => TextStyle(
     fontFamily: 'Montserrat',
-    fontSize: escalar(tamanho),
+    fontSize: escalarTitulo(tamanho),
     color: cor ?? esquema.onSurface,
     fontWeight: peso,
     fontVariations: [
@@ -80,8 +85,13 @@ ThemeData construirTema({
     ],
   );
 
-  /// Texto corrido de leitura — mantém a mesma escala que o restante agora.
-  TextStyle leitura(double tamanho) => corpo(tamanho);
+  /// Texto corrido de leitura — o único que escala integralmente (1× a 2×).
+  TextStyle leitura(double tamanho, {Color? cor}) => TextStyle(
+    fontFamily: 'Montserrat',
+    fontSize: escalarLeitura(tamanho),
+    color: cor ?? esquema.onSurface,
+    fontVariations: [FontVariation('wght', FontWeight.w400.value.toDouble())],
+  );
 
   final traco = esquema.outline;
 

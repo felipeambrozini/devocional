@@ -125,20 +125,25 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
                   ),
                   if (_controller.incluirDevocionais) ...[
                     const SizedBox(height: DevocionalEspacamento.sp8),
-                    SegmentedButton<bool>(
-                      segments: const [
-                        ButtonSegment(
-                          value: true,
-                          label: Text('Antes do capítulo'),
+                    Wrap(
+                      spacing: DevocionalEspacamento.sp8,
+                      runSpacing: DevocionalEspacamento.sp8,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('Antes do capítulo'),
+                          selected: _controller.devocionalAntes,
+                          showCheckmark: false,
+                          onSelected: (_) =>
+                              _controller.definirDevocionalAntes(true),
                         ),
-                        ButtonSegment(
-                          value: false,
-                          label: Text('Depois do capítulo'),
+                        ChoiceChip(
+                          label: const Text('Depois do capítulo'),
+                          selected: !_controller.devocionalAntes,
+                          showCheckmark: false,
+                          onSelected: (_) =>
+                              _controller.definirDevocionalAntes(false),
                         ),
                       ],
-                      selected: {_controller.devocionalAntes},
-                      onSelectionChanged: (novo) =>
-                          _controller.definirDevocionalAntes(novo.first),
                     ),
                   ],
                   if (previa.isNotEmpty) ...[

@@ -14,15 +14,23 @@ class DevocionalAlcaDeDeslize extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
+    // Depois de dispensado o gesto, a alça fica sutil (0.22) mas nunca some:
+    // é o único lembrete persistente de que o gesto existe. Sem ela, o
+    // deslize vira gesto invisível em aparelho sem chevrons.
+    final alphaFundo = primeiraVez ? 0.12 : 0.06;
+    final alphaIcone = primeiraVez ? 0.5 : 0.22;
     return Positioned(
       left: 0,
       top: 0,
       bottom: 0,
       width: 24,
       child: Tooltip(
-        message: primeiraVez ? 'Arraste para trocar capítulo' : '',
+        message: 'Deslize para trocar capítulo',
         child: Semantics(
-          label: primeiraVez ? 'Arraste para trocar capítulo' : '',
+          label: 'Deslize horizontalmente para trocar capítulo',
+          hint: primeiraVez
+              ? 'Dica: arraste a tela para o lado'
+              : 'Gesto já usado, mas continua disponível',
           child: Container(
             width: 24,
             decoration: BoxDecoration(
@@ -30,7 +38,7 @@ class DevocionalAlcaDeDeslize extends StatelessWidget {
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
                 colors: [
-                  cor.primary.withValues(alpha: 0.12),
+                  cor.primary.withValues(alpha: alphaFundo),
                   Colors.transparent,
                 ],
               ),
@@ -38,8 +46,8 @@ class DevocionalAlcaDeDeslize extends StatelessWidget {
             child: Center(
               child: FaIcon(
                 FontAwesomeIcons.gripVertical,
-                size: 20,
-                color: cor.primary.withValues(alpha: 0.5),
+                size: primeiraVez ? 20 : 14,
+                color: cor.primary.withValues(alpha: alphaIcone),
               ),
             ),
           ),

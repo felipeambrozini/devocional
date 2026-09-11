@@ -226,13 +226,22 @@ void main() {
     testWidgets('tocar o interruptor liga de verdade, não só na UI', (
       tester,
     ) async {
+      //Viewport maior para acomodar a folha de ajustes expandida.
+      tester.view.physicalSize = const Size(800, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
       await comoAndroid(tester, () async {
         await abrirAFolha(tester);
 
-        // A folha agora rola (a seção Lembretes empurrou o conteúdo além da
-        // altura padrão de teste), então o interruptor pode nascer fora da
-        // viewport visível. O finder é por texto porque a seção Conversas tem
-        // outro SwitchListTile na mesma folha.
+        // A seção Lembretes vem dentro de ExpansionTile colapsado por padrão.
+        // Tapa no primeiro ExpansionTile da lista (há 2: Lembretes e Áudio).
+        final tile = find.byType(ExpansionTile).first;
+        await tester.tap(tile);
+        await tester.pumpAndSettle();
+
+        // Agora o interruptor está visível na viewport (a expansão pode ter
+        // empurrado o conteúdo). Usamos ensureVisible no SwitchListTile por texto.
         await tester.ensureVisible(
           find.widgetWithText(
             SwitchListTile,
@@ -259,14 +268,23 @@ void main() {
     });
 
     testWidgets('permissão negada avisa e não liga', (tester) async {
+      //Viewport maior para acomodar a folha de ajustes expandida.
+      tester.view.physicalSize = const Size(800, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
       await comoAndroid(tester, () async {
         falsas.permissaoConcedida = false;
         await abrirAFolha(tester);
 
-        // A folha agora rola (a seção Lembretes empurrou o conteúdo além da
-        // altura padrão de teste), então o interruptor pode nascer fora da
-        // viewport visível. O finder é por texto porque a seção Conversas tem
-        // outro SwitchListTile na mesma folha.
+        // A seção Lembretes vem dentro de ExpansionTile colapsado por padrão.
+        // Tapa no primeiro ExpansionTile da lista (há 2: Lembretes e Áudio).
+        final tile = find.byType(ExpansionTile).first;
+        await tester.tap(tile);
+        await tester.pumpAndSettle();
+
+        // Agora o interruptor está visível na viewport (a expansão pode ter
+        // empurrado o conteúdo). Usamos ensureVisible no SwitchListTile por texto.
         await tester.ensureVisible(
           find.widgetWithText(
             SwitchListTile,

@@ -193,20 +193,25 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                     ),
                     if (incluirDevocionais) ...[
                       const SizedBox(height: DevocionalEspacamento.sp8),
-                      SegmentedButton<bool>(
-                        segments: const [
-                          ButtonSegment(
-                            value: true,
-                            label: Text('Antes do capítulo'),
+                      Wrap(
+                        spacing: DevocionalEspacamento.sp8,
+                        runSpacing: DevocionalEspacamento.sp8,
+                        children: [
+                          ChoiceChip(
+                            label: const Text('Antes do capítulo'),
+                            selected: devocionalAntes,
+                            showCheckmark: false,
+                            onSelected: (_) =>
+                                setDialogState(() => devocionalAntes = true),
                           ),
-                          ButtonSegment(
-                            value: false,
-                            label: Text('Depois do capítulo'),
+                          ChoiceChip(
+                            label: const Text('Depois do capítulo'),
+                            selected: !devocionalAntes,
+                            showCheckmark: false,
+                            onSelected: (_) =>
+                                setDialogState(() => devocionalAntes = false),
                           ),
                         ],
-                        selected: {devocionalAntes},
-                        onSelectionChanged: (novo) =>
-                            setDialogState(() => devocionalAntes = novo.first),
                       ),
                     ],
                   ],

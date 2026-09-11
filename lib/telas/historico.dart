@@ -111,7 +111,7 @@ class TelaHistorico extends StatelessWidget {
                 ? const SizedBox.shrink()
                 : IconButton(
                     tooltip: 'Apagar todas as conversas',
-                    icon: const FaIcon(FontAwesomeIcons.broom),
+                    icon: FaIcon(FontAwesomeIcons.broom, color: cor.error),
                     onPressed: () => _apagarTodas(context),
                   ),
           ),
@@ -134,7 +134,7 @@ class TelaHistorico extends StatelessWidget {
               height: 1,
               indent: DevocionalEspacamento.sp16,
               endIndent: DevocionalEspacamento.sp16,
-              color: cor.outlineVariant.withValues(alpha: 0.5),
+              color: cor.outline.withValues(alpha: 0.4),
             ),
             itemBuilder: (context, i) {
               final conversa = conversas[i];

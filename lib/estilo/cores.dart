@@ -32,4 +32,9 @@ abstract final class DevocionalCores {
   static const bronzeSuave = Color(0xFFC2AE86); // traço e borda
   static const tinta = Color(0xFF3D2417); // corpo, 12,8:1
   static const tintaSuave = Color(0xFF6B5842); // apoio, 6,0:1
+
+  // Exceção isolada: marca do WhatsApp, só no gating premium de
+  // `lib/telas/conversas.dart`. Não é acento do sistema — Regra do Metal
+  // continua valendo, e nenhum outro FilledButton usa esta cor.
+  static const whatsapp = Color(0xFF25D366);
 }

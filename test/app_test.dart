@@ -589,7 +589,7 @@ void main() {
         findsOneWidget,
       );
       // Fora do dia atual, o botão de voltar para hoje aparece.
-      expect(find.byTooltip('Voltar para hoje'), findsOneWidget);
+      expect(find.widgetWithText(TextButton, 'Voltar para hoje'), findsOneWidget);
     },
   );
 

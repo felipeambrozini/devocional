@@ -276,6 +276,8 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
   /// Pílula compacta e desabilitada para quando a checagem de disponibilidade
   /// falhou por rede — não porque o áudio confirmadamente não existe. O
   /// toque tenta checar de novo, já que a causa costuma ser passageira.
+  /// Mantida visível (e não `SizedBox.shrink`) para não esconder que a voz
+  /// existe — a ausência temporária de rede não pode parecer ausência de recurso.
   Widget _botaoSemRede(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
@@ -283,11 +285,13 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
       message: 'Sem conexão para checar o áudio. Toque para tentar de novo.',
       child: Semantics(
         button: true,
-        label: 'Ouvir na voz de Spurgeon, indisponível sem conexão',
+        label: 'Ouvir na voz de Spurgeon, indisponível sem conexão. Toque para tentar de novo',
+        hint: 'Toca para verificar novamente',
         child: Material(
           color: cor.surfaceContainerHighest,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
+            side: BorderSide(color: cor.outline.withValues(alpha: 0.35)),
           ),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
@@ -295,22 +299,25 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
             onTap: _checarDisponibilidade,
             child: Padding(
               padding: const EdgeInsets.symmetric(
-                horizontal: DevocionalEspacamento.sp10,
-                vertical: DevocionalEspacamento.sp6,
+                horizontal: DevocionalEspacamento.sp14,
+                vertical: DevocionalEspacamento.sp8,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   FaIcon(
                     FontAwesomeIcons.plugCircleXmark,
-                    size: 20,
+                    size: 16,
                     color: cor.onSurfaceVariant,
                   ),
                   const SizedBox(width: DevocionalEspacamento.sp6),
-                  Text(
-                    'Sem conexão',
-                    style: tema.labelLarge?.copyWith(
-                      color: cor.onSurfaceVariant,
+                  Flexible(
+                    child: Text(
+                      'Sem conexão — toque para tentar',
+                      overflow: TextOverflow.ellipsis,
+                      style: tema.labelMedium?.copyWith(
+                        color: cor.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ],

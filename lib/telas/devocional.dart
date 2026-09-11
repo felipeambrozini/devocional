@@ -108,17 +108,35 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                 icon: const FaIcon(FontAwesomeIcons.magnifyingGlass),
                 onPressed: () => _controller.abrirBusca(context),
               ),
-              IconButton(
-                tooltip: 'Escolher data',
-                icon: const FaIcon(FontAwesomeIcons.calendarDays),
-                onPressed: () => _controller.escolherData(context),
+              PopupMenuButton<String>(
+                tooltip: 'Mais opções',
+                icon: const FaIcon(FontAwesomeIcons.ellipsisVertical, size: 18),
+                onSelected: (valor) {
+                  switch (valor) {
+                    case 'data':
+                      _controller.escolherData(context);
+                    case 'hoje':
+                      _controller.irPara(context, leitura, hoje);
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'data',
+                    child: DevocionalItemDeMenu(
+                      icone: FontAwesomeIcons.calendarDays,
+                      rotulo: 'Escolher data',
+                    ),
+                  ),
+                  if (!ehHoje)
+                    const PopupMenuItem(
+                      value: 'hoje',
+                      child: DevocionalItemDeMenu(
+                        icone: FontAwesomeIcons.calendarCheck,
+                        rotulo: 'Voltar para hoje',
+                      ),
+                    ),
+                ],
               ),
-              if (!ehHoje)
-                IconButton(
-                  tooltip: 'Voltar para hoje',
-                  icon: const FaIcon(FontAwesomeIcons.calendarCheck),
-                  onPressed: () => _controller.irPara(context, leitura, hoje),
-                ),
               DevocionalBotaoDeAjustes(estado: estado),
             ],
           ),
@@ -131,6 +149,17 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                 DevocionalEspacamento.sp32,
               ),
               children: [
+                if (!ehHoje)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: DevocionalEspacamento.sp12),
+                    child: Center(
+                      child: TextButton.icon(
+                        onPressed: () => _controller.irPara(context, leitura, hoje),
+                        icon: const FaIcon(FontAwesomeIcons.calendarCheck, size: 14),
+                        label: const Text('Voltar para hoje'),
+                      ),
+                    ),
+                  ),
                 DevocionalAlternadorDeLeitura(
                   atual: leitura,
                   ao: (l) => _controller.irPara(context, l, data),
