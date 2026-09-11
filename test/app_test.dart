@@ -406,17 +406,44 @@ void main() {
     await tester.tap(find.text('Sobre'));
     await tester.pumpAndSettle();
 
+    // Ajuda é a primeira seção da tela (ver reordenação em sobre.dart: Ajuda
+    // e Conta e privacidade vêm antes das seções de referência colapsadas),
+    // por isso aparece sem rolar.
+    expect(find.text('Ajuda'), findsOneWidget);
+    // Fontes do texto, A voz de Spurgeon, Sobre mim e Onde me encontrar
+    // vivem colapsados num ExpansionTile (ver _SecaoExpansivel em
+    // sobre.dart), depois de Ajuda/Conta e privacidade — o título sempre
+    // aparece, mas os canais só depois de rolar até a seção e abri-la.
+    final listaDeSobre = find.descendant(
+      of: find.byType(ListView),
+      matching: find.byType(Scrollable),
+    );
+    await tester.scrollUntilVisible(
+      find.text('Fontes do texto'),
+      200,
+      scrollable: listaDeSobre,
+    );
     expect(find.text('Fontes do texto'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Onde me encontrar'),
+      200,
+      scrollable: listaDeSobre,
+    );
+    // scrollUntilVisible para no primeiro overlap com o viewport, o que pode
+    // deixar o título parcialmente cortado embaixo — ensureVisible completa
+    // o ajuste, mas sua rolagem é animada; sem settle aqui o toque seguinte
+    // ainda mirava a posição de antes da rolagem terminar.
+    await tester.ensureVisible(find.text('Onde me encontrar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Onde me encontrar'));
+    await tester.pumpAndSettle();
+
     // O parágrafo de créditos e o da voz empurram os canais para fora da
     // área que a lista realiza de saída; sem rolar até eles, o finder não
     // os encontra. `scrollable` explícito, e não o padrão de
     // `scrollUntilVisible`: o conteúdo acima (demonstração da voz) muda de
     // altura conforme a disponibilidade do áudio resolve, e o finder padrão
     // não convergia com a lista mais curta.
-    final listaDeSobre = find.descendant(
-      of: find.byType(ListView),
-      matching: find.byType(Scrollable),
-    );
     await tester.scrollUntilVisible(
       find.text('YouTube'),
       200,

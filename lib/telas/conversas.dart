@@ -4,7 +4,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../dados/nuvem.dart';
 import '../dados/recursos.dart';
-import '../estilo/cores.dart';
 import '../estilo/spacing.dart';
 import '../widgets/widgets.dart';
 
@@ -79,9 +78,6 @@ class _PedirAcesso extends StatelessWidget {
                 onPressed: _abrirWhatsapp,
                 icon: const FaIcon(FontAwesomeIcons.whatsapp),
                 label: const Text('Falar no WhatsApp'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: DevocionalCores.whatsapp,
-                ),
               ),
             ],
           ],

@@ -86,122 +86,14 @@ class _TelaSobreState extends State<TelaSobre> {
                 ),
               ),
               const SizedBox(height: DevocionalEspacamento.sp24),
-              Text('Fontes do texto', style: tema.headlineSmall),
-              const SizedBox(height: DevocionalEspacamento.sp10),
-              Text(
-                'Este aplicativo utiliza uma tradução autoral e inédita da '
-                'King James 1611, elaborada diretamente do texto '
-                'inglês em domínio público. Também reúne traduções próprias '
-                'dos devocionais clássicos de Charles H. Spurgeon, Morning '
-                'and Evening e Faith\'s Checkbook. O texto busca conservar '
-                'fidelidade teológica, reverência literária e rigor no respeito '
-                'aos direitos autorais.',
-                style: tema.bodyLarge?.copyWith(height: 1.7),
+              // Ajuda e Conta e privacidade vêm primeiro: são a razão mais
+              // comum de abrir Sobre (ajuda, mudar o consentimento de coleta,
+              // apagar dados). O que é crédito/leitura de referência (fontes,
+              // voz, biografia, canais) vem depois, colapsado.
+              Semantics(
+                header: true,
+                child: Text('Ajuda', style: tema.headlineSmall),
               ),
-              const SizedBox(height: DevocionalEspacamento.sp32),
-              Text('A voz de Spurgeon', style: tema.headlineSmall),
-              const SizedBox(height: DevocionalEspacamento.sp10),
-              Text(
-                'O retrato de Spurgeon nas telas de leitura lê o texto em voz '
-                'alta: MP3 pré-gravados numa voz que remete ao tom de Charles '
-                'Spurgeon, mais natural que uma síntese em tempo real. Fora '
-                'da web dá para '
-                'baixar por categoria e ouvir offline, nos Ajustes. A '
-                'demonstração abaixo toca o Salmo 23.',
-                style: tema.bodyLarge?.copyWith(height: 1.7),
-              ),
-              const SizedBox(height: DevocionalEspacamento.sp16),
-              // A demonstração no próprio lugar da explicação: quem descobre a
-              // voz aqui ouve na hora, sem caçar um capítulo para testar.
-              Text(
-                'Ouça uma amostra:',
-                style: tema.labelLarge?.copyWith(color: cor.onSurfaceVariant),
-              ),
-              const SizedBox(height: DevocionalEspacamento.sp10),
-              DevocionalCarregaUmaVez<Capitulo>(
-                chave: 'voz-demo-salmos-23-${_controller.tentativasDaDemo}',
-                carregar: () => Conteudo.instancia.capitulo('salmos', 23),
-                construir: (context, snap) {
-                  if (snap.hasError) {
-                    // A demonstração não pode sumir em silêncio: quem a pediu
-                    // precisa saber que ela não veio, e de um jeito de pedir de
-                    // novo.
-                    return Align(
-                      alignment: Alignment.centerLeft,
-                      child: TextButton.icon(
-                        icon: const FaIcon(FontAwesomeIcons.arrowsRotate),
-                        label: const Text('Tentar de novo'),
-                        onPressed: _controller.tentarDeNovo,
-                      ),
-                    );
-                  }
-                  final capitulo = snap.data;
-                  if (capitulo == null ||
-                      snap.connectionState != ConnectionState.done) {
-                    return const SizedBox.shrink();
-                  }
-                  // O Salmo 23 tem só seis versículos: curto o bastante para
-                  // servir de amostra tocando o capítulo inteiro, com a mesma
-                  // chave (e o mesmo arquivo) que o leitor usa.
-                  return DevocionalBotaoDeVoz(
-                    chave: chaveDeCapitulo(capitulo.livro, capitulo.numero),
-                    referencia: capitulo.referencia,
-                  );
-                },
-              ),
-              const SizedBox(height: DevocionalEspacamento.sp32),
-              Text('Sobre mim', style: tema.headlineSmall),
-              const SizedBox(height: DevocionalEspacamento.sp12),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const DevocionalRetratoDePersona(
-                    persona: personaFelipe,
-                    tamanho: 72,
-                    folga: DevocionalEspacamento.sp3,
-                  ),
-                  const SizedBox(width: DevocionalEspacamento.sp14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Felipe Ambrozini', style: tema.titleMedium),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Criador do app',
-                          style: tema.labelMedium?.copyWith(
-                            color: cor.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: DevocionalEspacamento.sp12),
-              Text(
-                'Sou cristão, criador de conteúdo e desenvolvedor. Criei este '
-                'app para meu uso diário de leitura bíblica e dos devocionais '
-                'de Spurgeon e o abri para quem quiser usar também. Aqui reúno '
-                'ensino bíblico, devocionais e ferramentas simples de leitura, '
-                'sempre apontando para Cristo.',
-                style: tema.bodyLarge?.copyWith(height: 1.7),
-              ),
-              const SizedBox(height: DevocionalEspacamento.sp32),
-              Text('Onde me encontrar', style: tema.headlineSmall),
-              const SizedBox(height: DevocionalEspacamento.sp10),
-              DevocionalLinkDeCanal(
-                asset: 'assets/imagens/youtube.webp',
-                rotulo: 'YouTube',
-                url: 'https://www.youtube.com/@felipe_ambrozini',
-              ),
-              DevocionalLinkDeCanal(
-                asset: 'assets/imagens/instagram.webp',
-                rotulo: 'Instagram',
-                url: 'https://www.instagram.com/felipe_ambrozini/',
-              ),
-              const SizedBox(height: DevocionalEspacamento.sp32),
-              Text('Ajuda', style: tema.headlineSmall),
               const SizedBox(height: DevocionalEspacamento.sp10),
               // A ajuda não pode morar só no primeiro dia: quem dispensou o
               // cartão da Hoje não tem como vê-lo de novo, e Sobre é onde se
@@ -259,7 +151,10 @@ class _TelaSobreState extends State<TelaSobre> {
               // nuvem.dart); esta seção é a de privacidade e apagar dados.
               if (nuvemSuportada) ...[
                 const SizedBox(height: DevocionalEspacamento.sp32),
-                Text('Conta e privacidade', style: tema.headlineSmall),
+                Semantics(
+                  header: true,
+                  child: Text('Conta e privacidade', style: tema.headlineSmall),
+                ),
                 const SizedBox(height: DevocionalEspacamento.sp10),
                 ListenableBuilder(
                   listenable: Nuvem.instancia,
@@ -330,9 +225,184 @@ class _TelaSobreState extends State<TelaSobre> {
                       : const SizedBox.shrink(),
                 ),
               ],
+              const SizedBox(height: DevocionalEspacamento.sp32),
+              // As quatro seções abaixo são conteúdo de referência, lido uma
+              // vez e raramente revisitado — colapsadas por padrão e depois
+              // de Ajuda/Conta e privacidade, que são a razão mais comum de
+              // abrir esta tela.
+              _SecaoExpansivel(
+                icone: FontAwesomeIcons.bookBible,
+                titulo: 'Fontes do texto',
+                children: [
+                  Text(
+                    'Este aplicativo utiliza uma tradução autoral e inédita da '
+                    'King James 1611, elaborada diretamente do texto '
+                    'inglês em domínio público. Também reúne traduções próprias '
+                    'dos devocionais clássicos de Charles H. Spurgeon, Morning '
+                    'and Evening e Faith\'s Checkbook. O texto busca conservar '
+                    'fidelidade teológica, reverência literária e rigor no respeito '
+                    'aos direitos autorais.',
+                    style: tema.bodyLarge?.copyWith(height: 1.7),
+                  ),
+                  const SizedBox(height: DevocionalEspacamento.sp16),
+                ],
+              ),
+              _SecaoExpansivel(
+                icone: FontAwesomeIcons.volumeHigh,
+                titulo: 'A voz de Spurgeon',
+                children: [
+                  Text(
+                    'O retrato de Spurgeon nas telas de leitura lê o texto em voz '
+                    'alta: MP3 pré-gravados numa voz que remete ao tom de Charles '
+                    'Spurgeon, mais natural que uma síntese em tempo real. Fora '
+                    'da web dá para '
+                    'baixar por categoria e ouvir offline, nos Ajustes. A '
+                    'demonstração abaixo toca o Salmo 23.',
+                    style: tema.bodyLarge?.copyWith(height: 1.7),
+                  ),
+                  const SizedBox(height: DevocionalEspacamento.sp16),
+                  // A demonstração no próprio lugar da explicação: quem descobre a
+                  // voz aqui ouve na hora, sem caçar um capítulo para testar.
+                  Text(
+                    'Ouça uma amostra:',
+                    style: tema.labelLarge?.copyWith(
+                      color: cor.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: DevocionalEspacamento.sp10),
+                  DevocionalCarregaUmaVez<Capitulo>(
+                    chave:
+                        'voz-demo-salmos-23-${_controller.tentativasDaDemo}',
+                    carregar: () => Conteudo.instancia.capitulo('salmos', 23),
+                    construir: (context, snap) {
+                      if (snap.hasError) {
+                        // A demonstração não pode sumir em silêncio: quem a
+                        // pediu precisa saber que ela não veio, e de um jeito
+                        // de pedir de novo.
+                        return Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton.icon(
+                            icon: const FaIcon(FontAwesomeIcons.arrowsRotate),
+                            label: const Text('Tentar de novo'),
+                            onPressed: _controller.tentarDeNovo,
+                          ),
+                        );
+                      }
+                      final capitulo = snap.data;
+                      if (capitulo == null ||
+                          snap.connectionState != ConnectionState.done) {
+                        return const SizedBox.shrink();
+                      }
+                      // O Salmo 23 tem só seis versículos: curto o bastante
+                      // para servir de amostra tocando o capítulo inteiro, com
+                      // a mesma chave (e o mesmo arquivo) que o leitor usa.
+                      return DevocionalBotaoDeVoz(
+                        chave: chaveDeCapitulo(capitulo.livro, capitulo.numero),
+                        referencia: capitulo.referencia,
+                      );
+                    },
+                  ),
+                  const SizedBox(height: DevocionalEspacamento.sp16),
+                ],
+              ),
+              _SecaoExpansivel(
+                icone: FontAwesomeIcons.user,
+                titulo: 'Sobre mim',
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const DevocionalRetratoDePersona(
+                        persona: personaFelipe,
+                        tamanho: 72,
+                        folga: DevocionalEspacamento.sp3,
+                      ),
+                      const SizedBox(width: DevocionalEspacamento.sp14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Felipe Ambrozini', style: tema.titleMedium),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Criador do app',
+                              style: tema.labelMedium?.copyWith(
+                                color: cor.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: DevocionalEspacamento.sp12),
+                  Text(
+                    'Sou cristão, criador de conteúdo e desenvolvedor. Criei este '
+                    'app para meu uso diário de leitura bíblica e dos devocionais '
+                    'de Spurgeon e o abri para quem quiser usar também. Aqui reúno '
+                    'ensino bíblico, devocionais e ferramentas simples de leitura, '
+                    'sempre apontando para Cristo.',
+                    style: tema.bodyLarge?.copyWith(height: 1.7),
+                  ),
+                  const SizedBox(height: DevocionalEspacamento.sp16),
+                ],
+              ),
+              _SecaoExpansivel(
+                icone: FontAwesomeIcons.shareNodes,
+                titulo: 'Onde me encontrar',
+                children: [
+                  DevocionalLinkDeCanal(
+                    asset: 'assets/imagens/youtube.webp',
+                    rotulo: 'YouTube',
+                    url: 'https://www.youtube.com/@felipe_ambrozini',
+                  ),
+                  DevocionalLinkDeCanal(
+                    asset: 'assets/imagens/instagram.webp',
+                    rotulo: 'Instagram',
+                    url: 'https://www.instagram.com/felipe_ambrozini/',
+                  ),
+                ],
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Envolve uma seção de referência (lida uma vez, raramente revisitada) num
+/// `ExpansionTile` colapsado por padrão — mesma técnica de
+/// `_SecaoDeLembretesExpansivel` em `folha_de_ajustes.dart`, para não exigir
+/// rolar por texto estático até chegar em Ajuda e Conta e privacidade.
+class _SecaoExpansivel extends StatelessWidget {
+  const _SecaoExpansivel({
+    required this.icone,
+    required this.titulo,
+    required this.children,
+  });
+
+  final FaIconData icone;
+  final String titulo;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context).textTheme;
+    final cor = Theme.of(context).colorScheme;
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: EdgeInsets.zero,
+        leading: FaIcon(icone, color: cor.primary, size: 18),
+        // Cabeçalho semântico: sem isto, quem navega por leitor de tela só
+        // consegue rolar linearmente, sem pular de seção em seção.
+        title: Semantics(
+          header: true,
+          child: Text(titulo, style: tema.headlineSmall),
+        ),
+        children: children,
       ),
     );
   }

@@ -47,10 +47,37 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
     plano: widget.plano,
   );
 
+  /// Marca o primeiro dia ainda não lido, para poder rolar até ele.
+  final _chaveDoProximoDia = GlobalKey();
+
+  /// Se a rolagem automática já aconteceu, para não refazê-la a cada
+  /// redesenho nem roubar a posição de quem já rolou a lista com a mão.
+  bool _jaRolouAteProximoDia = false;
+
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  /// Num plano de muitos dias, rolar manualmente até onde se parou é
+  /// cansativo — o cronograma anual já resolve isso para o dia de hoje
+  /// (`_rolarAteHoje` em aba_do_cronograma.dart); aqui o equivalente é o
+  /// primeiro dia ainda não marcado como lido.
+  void _rolarAteProximoDia() {
+    if (_jaRolouAteProximoDia) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final alvo = _chaveDoProximoDia.currentContext;
+      if (!mounted || alvo == null) return;
+      _jaRolouAteProximoDia = true;
+      Scrollable.ensureVisible(
+        alvo,
+        alignment: 0.15,
+        duration: MediaQuery.disableAnimationsOf(alvo)
+            ? Duration.zero
+            : const Duration(milliseconds: 350),
+      );
+    });
   }
 
   @override
@@ -188,6 +215,16 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
     }
 
     final dias = planoLocal.diasDoPlano;
+    final meusLidos = _controller.meusLidos();
+    var proximoIndice = -1;
+    for (var i = 0; i < dias.length; i++) {
+      if (!meusLidos.contains(dias[i].numero)) {
+        proximoIndice = i;
+        break;
+      }
+    }
+    if (proximoIndice != -1) _rolarAteProximoDia();
+
     return DevocionalLarguraDeLeitura(
       child: ListView.separated(
         padding: const EdgeInsets.fromLTRB(
@@ -234,6 +271,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
           }
           final dia = dias[i - 1];
           return DevocionalCartaoDeDia(
+            key: (i - 1) == proximoIndice ? _chaveDoProximoDia : null,
             numero: dia.numero,
             rotulo: dia.rotulo,
             itens: dia.itens,
