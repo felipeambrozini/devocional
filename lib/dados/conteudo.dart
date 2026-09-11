@@ -47,13 +47,23 @@ class Conteudo {
   /// cacheada, senão cada chamada tentaria carregar de novo um asset que não
   /// existe. A tradução está em andamento livro por livro, então isto não é
   /// caso de erro, e sim o estado esperado até o 66º livro fechar.
+  ///
+  /// A flag só é marcada depois do `await`, nunca antes: duas telas podem
+  /// pedir o mesmo livro quase juntas, e marcá-la antes fazia a segunda
+  /// chamada ler o cache ainda vazio e devolver `null` prematuro em vez de
+  /// esperar o carregamento (ver o mesmo bug, de verdade, em
+  /// [_carregarPromessas]). Não guardar o `Future` em si é de propósito: um
+  /// `Future` criado dentro de `tester.runAsync` não entrega valor a quem
+  /// aguarda pela zona de tempo falso do teste (ver o aviso em
+  /// `widgets/carrega_uma_vez.dart`) — pior que a corrida rara é o teste
+  /// nunca assentar. Duas chamadas concorrentes no app de verdade só pagam
+  /// o preço de ler o asset duas vezes, igual [_carregarDevocionais].
   final Map<String, bool> _tentouLivro = {};
 
   Future<Map<String, dynamic>?> _carregarLivro(String slug) async {
     final cacheado = _livros[slug];
     if (cacheado != null) return cacheado;
     if (_tentouLivro[slug] == true) return null;
-    _tentouLivro[slug] = true;
     try {
       final cru = await rootBundle.loadString('assets/biblia/$slug.json');
       final dados = json.decode(cru) as Map<String, dynamic>;
@@ -61,6 +71,8 @@ class Conteudo {
       return dados;
     } catch (_) {
       return null;
+    } finally {
+      _tentouLivro[slug] = true;
     }
   }
 
@@ -241,22 +253,35 @@ class Conteudo {
   ///
   /// A ausência também é cacheada, senão cada reconstrução da tela tentaria carregar
   /// de novo um asset que não existe.
+  ///
+  /// [_tentouPromessas] só vira `true` depois do `await`, nunca antes: a
+  /// prévia da tela Hoje e a notificação que abre direto na aba Promessas
+  /// pedem este asset quase ao mesmo tempo na abertura do app, e marcar a
+  /// flag cedo demais fazia a segunda chamada ler `_promessas` ainda nulo e
+  /// devolver "sem conteúdo" antes do primeiro carregamento terminar — o
+  /// toque na notificação caía direto nesse caminho e mostrava o aviso de
+  /// erro à toa. Não guardar o `Future` em si (em vez da flag) é de
+  /// propósito: um `Future` criado dentro de `tester.runAsync` não entrega
+  /// valor a quem aguarda pela zona de tempo falso do teste (ver o aviso em
+  /// `widgets/carrega_uma_vez.dart`). Duas chamadas concorrentes no app de
+  /// verdade só pagam o preço de ler o asset duas vezes, igual
+  /// [_carregarDevocionais].
   Map<String, Map<String, dynamic>>? _promessas;
   bool _tentouPromessas = false;
 
   Future<Map<String, Map<String, dynamic>>?> _carregarPromessas() async {
-    if (!_tentouPromessas) {
+    if (_tentouPromessas) return _promessas;
+    try {
+      final cru = await rootBundle.loadString(
+        'assets/devocionais/promessas_de_deus.json',
+      );
+      _promessas = (json.decode(cru) as Map<String, dynamic>).map(
+        (chave, valor) => MapEntry(chave, valor as Map<String, dynamic>),
+      );
+    } catch (_) {
+      _promessas = null;
+    } finally {
       _tentouPromessas = true;
-      try {
-        final cru = await rootBundle.loadString(
-          'assets/devocionais/promessas_de_deus.json',
-        );
-        _promessas = (json.decode(cru) as Map<String, dynamic>).map(
-          (chave, valor) => MapEntry(chave, valor as Map<String, dynamic>),
-        );
-      } catch (_) {
-        _promessas = null;
-      }
     }
     return _promessas;
   }
@@ -394,7 +419,7 @@ class Conteudo {
     if (_introducoes.containsKey(slug)) return _introducoes[slug];
     Introducao? introducao;
     try {
-      final cru = await rootBundle.loadString('assets/introducao/$slug.json');
+      final cru = await rootBundle.loadString('assets/introducoes/$slug.json');
       introducao = Introducao.doJson(json.decode(cru) as Map<String, dynamic>);
     } catch (_) {
       introducao = null;
@@ -404,20 +429,26 @@ class Conteudo {
   }
 
   final Map<String, Map<String, dynamic>> _comentarios = {};
+
+  /// A flag só é marcada depois do `await`, nunca antes — mesmo bug de
+  /// [_carregarPromessas] se duas telas pedirem o comentário do mesmo
+  /// versículo quase juntas, e mesmo motivo de guardar uma flag e não o
+  /// `Future` em si.
   final Map<String, bool> _tentouComentario = {};
 
   Future<Map<String, dynamic>?> _carregarComentarios(String slug) async {
     final cacheado = _comentarios[slug];
     if (cacheado != null) return cacheado;
     if (_tentouComentario[slug] == true) return null;
-    _tentouComentario[slug] = true;
     try {
-      final cru = await rootBundle.loadString('assets/comentario/$slug.json');
+      final cru = await rootBundle.loadString('assets/comentarios/$slug.json');
       final dados = json.decode(cru) as Map<String, dynamic>;
       _comentarios[slug] = dados;
       return dados;
     } catch (_) {
       return null;
+    } finally {
+      _tentouComentario[slug] = true;
     }
   }
 

@@ -39,6 +39,10 @@ mesmo código).
   compartilhado; tela própria lista os favoritos e os que têm anotação, com
   busca por referência ou por texto da nota, e exporta uma cópia de segurança
   de tudo (favoritos, notas e progresso) para reimportar em outro aparelho.
+- **Comentário de Spurgeon por versículo**: a mesma folha que abre ao tocar um
+  versículo (Favoritar, Copiar, Anotar) mostra também o comentário de Charles
+  Spurgeon para aquele versículo, quando já estiver escrito — projeto em
+  andamento, verso a verso, pelos 66 livros da Bíblia.
 - **Conta Google (Web, Android e iOS)**: opcional — favoritos, notas, progresso e
   planos sobem sozinhos para a conta de quem entrar, para não perder nada se o
   navegador limpar o armazenamento e para o mesmo plano aparecer no celular e

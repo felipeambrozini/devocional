@@ -83,6 +83,10 @@ vitoriana dele, tratando o leitor por "tu".
   o corpo do versículo (deliberado).
 - A referência da epígrafe do devocional (na Hoje e no Devocional) é um alvo
   de toque: abre a Bíblia no capítulo citado, com os versículos destacados.
+- Comentário de Spurgeon por versículo: a folha de ações do versículo na
+  Bíblia (Favoritar, Copiar, Anotar) mostra o comentário quando já estiver
+  escrito; ausência é o estado esperado onde o projeto ainda não chegou, não
+  um erro.
 - Texto selecionável e copiável na Bíblia, no Devocional e na Introdução. No
   Devocional e na Introdução, o menu de seleção (o clique forte que já abre a
   seleção) ganha um botão de Compartilhar para o trecho escolhido; na
@@ -134,7 +138,10 @@ vitoriana dele, tratando o leitor por "tu".
 - Conteúdo todo carregado e verificado (README): BKJ 1611 com 31.102
   versículos, batendo exatamente com o canon; Manhã e Noite com 366 dias completos;
   Promessas de Deus 366/366; cronograma 365/366 dias; 66 introduções completas;
-  66 livros com comentários de Spurgeon completos (assets/comentario/).
+  comentário de Spurgeon por versículo em andamento pelos 66 livros
+  (assets/comentarios/) — cobertura já alta, mas auditoria de qualidade e
+  reescrita de trechos gerados por molde ainda em curso (ver
+  `tools/validar_comentarios.py`).
 - Suíte de testes em `test/` cobre canon, bissexto, tema (contrastes WCAG),
   fontes, lembretes e comportamento de plataforma.
 - Links de canais do Felipe (YouTube e Instagram) na tela Sobre.

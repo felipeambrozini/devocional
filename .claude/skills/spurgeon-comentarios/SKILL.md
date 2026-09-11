@@ -1,6 +1,6 @@
 ---
 name: spurgeon-comentarios
-description: Escreve, na voz de Charles Spurgeon, o comentário de um ou mais versículos bíblicos para a "Bíblia de Estudo Spurgeon" deste app (assets/comentario/<slug>.json). Use quando o pedido for para escrever, revisar ou auditar o comentário de um versículo, de uma faixa de versículos ou de um capítulo inteiro.
+description: Escreve, na voz de Charles Spurgeon, o comentário de um ou mais versículos bíblicos para a "Bíblia de Estudo Spurgeon" deste app (assets/comentarios/<slug>.json). Use quando o pedido for para escrever, revisar ou auditar o comentário de um versículo, de uma faixa de versículos ou de um capítulo inteiro.
 ---
 
 # Comentário de versículo na voz de Spurgeon
@@ -67,8 +67,8 @@ ela de fato ilumina o versículo em questão.
 ## Formato de saída
 
 Este projeto guarda os comentários em um arquivo por livro,
-`assets/comentario/<slug>.json`, lido por `Conteudo.comentario` em
-`lib/data/conteudo.dart`. A estrutura espelha a da Bíblia interna
+`assets/comentarios/<slug>.json`, lido por `Conteudo.comentario` em
+`lib/dados/conteudo.dart`. A estrutura espelha a da Bíblia interna
 (`assets/biblia/<slug>.json`), trocando o texto do versículo pelo comentário:
 
 ```json
@@ -87,7 +87,7 @@ Este projeto guarda os comentários em um arquivo por livro,
 Ao escrever ou revisar comentários, edite só as chaves dos versículos
 pedidos, dentro do capítulo certo. Se o arquivo do livro ainda não existir,
 crie-o com `slug` e `book` corretos (mesmo nome usado em
-`assets/introducao/<slug>.json`) e só os capítulos/versículos já comentados;
+`assets/introducoes/<slug>.json`) e só os capítulos/versículos já comentados;
 não é preciso preencher o livro inteiro de uma vez, o app trata a ausência de
 comentário como "ainda não escrito" e simplesmente não mostra nada.
 

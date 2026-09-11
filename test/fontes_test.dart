@@ -25,8 +25,8 @@ void main() {
   }
 
   setUpAll(() async {
-    await carregar('Cinzel', 'assets/fonts/Cinzel-Variable.ttf');
-    await carregar('Montserrat', 'assets/fonts/Montserrat-Variable.ttf');
+    await carregar('Cinzel', 'assets/fontes/Cinzel-Variable.ttf');
+    await carregar('Montserrat', 'assets/fontes/Montserrat-Variable.ttf');
   });
 
   double largura(String familia, {required double peso, String? variacao}) {

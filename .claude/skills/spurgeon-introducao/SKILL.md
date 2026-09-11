@@ -1,6 +1,6 @@
 ---
 name: spurgeon-introducao
-description: Escreve ou reescreve, na voz de Charles Spurgeon, a introdução de um livro bíblico para a "Bíblia de Estudo Spurgeon" deste app (assets/intro/<slug>.json). Use quando o pedido for para escrever, revisar, auditar ou reescrever a introdução de um dos 66 livros, ou para checar se uma introdução já escrita soa autenticamente Spurgeon.
+description: Escreve ou reescreve, na voz de Charles Spurgeon, a introdução de um livro bíblico para a "Bíblia de Estudo Spurgeon" deste app (assets/introducoes/<slug>.json). Use quando o pedido for para escrever, revisar, auditar ou reescrever a introdução de um dos 66 livros, ou para checar se uma introdução já escrita soa autenticamente Spurgeon.
 ---
 
 # Introdução de livro na voz de Spurgeon
@@ -69,8 +69,8 @@ ausência de travessão e a primeira pessoa na quarta seção).
 
 ## Formato de saída
 
-Este projeto guarda cada introdução como um arquivo `assets/intro/<slug>.json`
-com este formato, lido por `Introducao.doJson` em `lib/data/modelos.dart`:
+Este projeto guarda cada introdução como um arquivo `assets/introducoes/<slug>.json`
+com este formato, lido por `Introducao.doJson` em `lib/dados/modelos.dart`:
 
 ```json
 {

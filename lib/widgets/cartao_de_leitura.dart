@@ -139,7 +139,7 @@ class DevocionalCartaoDeLeitura extends StatelessWidget {
             const SizedBox(height: DevocionalEspacamento.sp8),
             Center(
               child: Image.asset(
-                'assets/images/assinatura_spurgeon.webp',
+                'assets/imagens/assinatura_spurgeon.webp',
                 height: 40,
                 semanticLabel: 'Assinatura de Charles Spurgeon',
                 // A imagem é tinta chapada num tom só, o próprio dourado claro do

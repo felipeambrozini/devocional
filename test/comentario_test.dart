@@ -12,7 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// ausência de arquivo, ou de um versículo dentro dele, como "ainda não
 /// escrito", não como erro.
 void main() {
-  final diretorio = Directory('assets/comentario');
+  final diretorio = Directory('assets/comentarios');
   final arquivos =
       (diretorio.existsSync() ? diretorio.listSync() : <FileSystemEntity>[])
           .whereType<File>()

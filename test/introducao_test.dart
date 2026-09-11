@@ -11,7 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// travessão esquecido só apareceria na tela, depois de tudo pronto.
 void main() {
   final arquivos =
-      Directory('assets/introducao')
+      Directory('assets/introducoes')
           .listSync()
           .whereType<File>()
           .where((f) => f.path.endsWith('.json'))

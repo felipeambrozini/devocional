@@ -6,8 +6,8 @@ import '../widgets/layout_leitura.dart';
 String capaBibliaSpurgeon(BuildContext context) {
   final escuro = Theme.of(context).brightness == Brightness.dark;
   return escuro
-      ? 'assets/images/capa_biblia_spurgeon_dark.webp'
-      : 'assets/images/capa_biblia_spurgeon_light.webp';
+      ? 'assets/imagens/capa_biblia_spurgeon_dark.webp'
+      : 'assets/imagens/capa_biblia_spurgeon_light.webp';
 }
 
 /// A mesma altura em pixels lógicos ocupa bem menos da tela num monitor

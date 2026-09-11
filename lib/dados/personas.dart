@@ -62,7 +62,7 @@ const personaSpurgeon = Persona(
   nome: 'Charles Spurgeon',
   nomeCurto: 'Spurgeon',
   titulo: 'Príncipe dos Pregadores',
-  foto: 'assets/images/spurgeon.webp',
+  foto: 'assets/imagens/spurgeon.webp',
   boasVindas:
       'Meu filho, que alegria receber-te. Fala-me do que pesa no teu coração, '
       'e buscaremos juntos a face do Senhor.',
@@ -120,7 +120,7 @@ const personaFelipe = Persona(
   nome: 'Felipe Ambrozini',
   nomeCurto: 'Felipe',
   titulo: 'Criação, devocionais e apps',
-  foto: 'assets/images/felipe.webp',
+  foto: 'assets/imagens/felipe.webp',
   saudacaoPorHorario: true,
   boasVindas:
       'Boa conversa começa com sinceridade. No que posso te ajudar hoje?',

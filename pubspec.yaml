@@ -162,9 +162,9 @@ flutter:
   assets:
     - assets/biblia/
     - assets/devocionais/
-    - assets/introducao/
-    - assets/comentario/
-    - assets/images/
+    - assets/introducoes/
+    - assets/comentarios/
+    - assets/imagens/
     - assets/cronograma.json
     - assets/cronograma_bissexto.json
 
@@ -180,10 +180,10 @@ flutter:
   fonts:
     - family: Cinzel
       fonts:
-        - asset: assets/fonts/Cinzel-Variable.ttf
+        - asset: assets/fontes/Cinzel-Variable.ttf
     - family: Montserrat
       fonts:
-        - asset: assets/fonts/Montserrat-Variable.ttf
+        - asset: assets/fontes/Montserrat-Variable.ttf
 
 
 sentry:

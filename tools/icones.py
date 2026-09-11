@@ -37,7 +37,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
 FONTES = RAIZ / 'assets/icone'
-FONTE_TTF = RAIZ / 'assets/fonts/Cinzel-Variable.ttf'
+FONTE_TTF = RAIZ / 'assets/fontes/Cinzel-Variable.ttf'
 
 # Os dois fundos do app e o par de destaque de cada tema, em lib/estilo/cores.dart.
 # Dourado sobre pergaminho da 2,1:1 (ilegivel) — por isso o claro usa bronze,

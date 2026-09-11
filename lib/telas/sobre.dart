@@ -191,12 +191,12 @@ class _TelaSobreState extends State<TelaSobre> {
               Text('Onde me encontrar', style: tema.headlineSmall),
               const SizedBox(height: DevocionalEspacamento.sp10),
               DevocionalLinkDeCanal(
-                asset: 'assets/images/youtube.webp',
+                asset: 'assets/imagens/youtube.webp',
                 rotulo: 'YouTube',
                 url: 'https://www.youtube.com/@felipe_ambrozini',
               ),
               DevocionalLinkDeCanal(
-                asset: 'assets/images/instagram.webp',
+                asset: 'assets/imagens/instagram.webp',
                 rotulo: 'Instagram',
                 url: 'https://www.instagram.com/felipe_ambrozini/',
               ),
