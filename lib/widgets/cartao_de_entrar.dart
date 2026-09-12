@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../dados/nuvem.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../funcoes/conta_acoes.dart';
+import 'botao.dart';
 import 'layout_leitura.dart';
 
 /// O caminho para entrar na conta quando o plano foi aberto por link e só
@@ -38,7 +39,7 @@ class DevocionalCartaoDeEntrar extends StatelessWidget {
                 const SizedBox(height: DevocionalEspacamento.sp16),
                 ListenableBuilder(
                   listenable: Nuvem.instancia,
-                  builder: (context, _) => FilledButton.icon(
+                  builder: (context, _) => DevocionalBotaoPrimario.icon(
                     onPressed: Nuvem.instancia.entrando
                         ? null
                         : () async {

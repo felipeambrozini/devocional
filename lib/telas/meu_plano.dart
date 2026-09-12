@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+// ScrollCacheExtent ainda não é reexportado por material.dart nesta versão.
+import 'package:flutter/rendering.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../controladores/plano_controlador.dart';
 import '../dados/estado.dart';
 import '../dados/nuvem.dart';
 import '../dados/planos.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../widgets/widgets.dart';
 
 /// A tela de um plano do usuário: o que se lê dia a dia, o progresso
@@ -201,7 +203,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
       return DevocionalAvisoVazio(
         icone: FontAwesomeIcons.triangleExclamation,
         titulo: erro,
-        acao: FilledButton.icon(
+        acao: DevocionalBotaoPrimario.icon(
           icon: const FaIcon(FontAwesomeIcons.arrowsRotate),
           label: const Text('Tentar de novo'),
           onPressed: _controller.tentarDeNovo,
@@ -233,6 +235,17 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
           DevocionalEspacamento.sp16,
           DevocionalEspacamento.sp32,
         ),
+        // ponytail: monta o plano inteiro (como aba_do_cronograma.dart monta o mês
+        // inteiro), dimensionado ao tamanho real do plano — sem isto o GlobalKey do
+        // próximo dia não lido ainda não tem contexto quando _rolarAteProximoDia
+        // procura por ele, em qualquer plano além de poucos dias. 240px/dia é uma
+        // superestimativa deliberada: com `incluirDevocionais` cada dia intercala
+        // até 2-3 devocionais por capítulo (ver planos.dart) e o Wrap de chips do
+        // cartão cresce em altura — superestimar só gasta memória de widgets
+        // construídos a mais, subestimar quebra a rolagem em silêncio. Se planos
+        // crescerem para milhares de dias, o caminho é scrollable_positioned_list
+        // (mesmo próximo passo já anotado no cronograma).
+        scrollCacheExtent: ScrollCacheExtent.pixels(dias.length * 240.0),
         itemCount: dias.length + 1,
         separatorBuilder: (_, _) => const SizedBox(height: DevocionalEspacamento.sp10),
         itemBuilder: (context, i) {

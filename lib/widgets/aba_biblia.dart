@@ -4,7 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../dados/canon.dart';
 import '../dados/conteudo.dart';
 import '../dados/modelos.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import 'aviso_vazio.dart';
 import 'cartao_de_referencia.dart';
 import 'erro_de_busca.dart';

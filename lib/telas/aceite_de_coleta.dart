@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../dados/coleta.dart';
 import '../dados/estado.dart';
+import '../widgets/botao.dart';
 
 /// Diálogo de aceite mostrado uma vez, antes de qualquer coleta remota —
 /// erro para o Sentry, uso anônimo para o Analytics (ver
@@ -38,18 +39,18 @@ Future<void> mostrarAceiteDeColetaSeNecessario(BuildContext context) async {
         ),
       ),
       actions: [
-        TextButton(
+        DevocionalBotaoTerciario(
           onPressed: () {
             Navigator.of(dialogo).pop();
             GoRouter.of(context).push('/privacidade');
           },
           child: const Text('Ver a política'),
         ),
-        TextButton(
+        DevocionalBotaoTerciario(
           onPressed: () => Navigator.of(dialogo).pop(false),
           child: const Text('Não'),
         ),
-        FilledButton(
+        DevocionalBotaoPrimario(
           onPressed: () => Navigator.of(dialogo).pop(true),
           child: const Text('Aceitar'),
         ),

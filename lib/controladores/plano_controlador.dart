@@ -10,10 +10,11 @@ import '../dados/estado.dart';
 import '../dados/nuvem.dart';
 import '../dados/planos.dart';
 import '../dados/planos_nuvem.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
 import '../funcoes/conta_acoes.dart';
 import '../funcoes/planos_acoes.dart' as acoes;
+import '../widgets/botao.dart';
 
 /// Estado e ações da tela de um plano: a cópia viva do plano, a assinatura do
 /// documento da nuvem (num plano compartilhado) e as ações do menu de
@@ -278,11 +279,11 @@ class PlanoControlador extends ChangeNotifier {
           ],
         ),
         actions: [
-          TextButton(
+          DevocionalBotaoTerciario(
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Fechar'),
           ),
-          FilledButton.icon(
+          DevocionalBotaoPrimario.icon(
             icon: const FaIcon(FontAwesomeIcons.copy),
             label: const Text('Copiar link'),
             onPressed: () async {

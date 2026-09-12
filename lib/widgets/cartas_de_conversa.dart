@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../dados/personas.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import 'carta_de_conversa.dart';
 
 class DevocionalCartasDeConversa extends StatelessWidget {

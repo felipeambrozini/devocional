@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../dados/nuvem.dart';
 import '../dados/recursos.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../widgets/widgets.dart';
 
 /// Política de privacidade completa: a versão longa do resumo que já vive em

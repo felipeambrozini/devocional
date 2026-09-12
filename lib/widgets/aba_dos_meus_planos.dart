@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../dados/estado.dart';
 import '../dados/planos.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../widgets/widgets.dart';
 
 /// A aba Meus Planos: a lista dos planos do usuário e o caminho para criar
@@ -25,7 +25,7 @@ class DevocionalAbaDosMeusPlanos extends StatelessWidget {
               detalhe:
                   'Escolha um ou mais livros e em quantos dias quer lê-los: '
                   'o plano se monta sozinho, dia por dia.',
-              acao: FilledButton.icon(
+              acao: DevocionalBotaoPrimario.icon(
                 icon: const FaIcon(FontAwesomeIcons.plus),
                 label: const Text('Criar plano'),
                 onPressed: () => _abrirNovoPlano(context),
@@ -47,7 +47,7 @@ class DevocionalAbaDosMeusPlanos extends StatelessWidget {
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                     ),
-                    FilledButton.icon(
+                    DevocionalBotaoPrimario.icon(
                       icon: const FaIcon(FontAwesomeIcons.plus),
                       label: const Text('Criar plano'),
                       onPressed: () => _abrirNovoPlano(context),

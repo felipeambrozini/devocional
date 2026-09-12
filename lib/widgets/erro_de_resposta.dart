@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../dados/personas.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 
 /// O aviso de resposta que não veio, com o motivo e o botão de tentar de
 /// novo. Não é parte do histórico: some sozinho dois segundos depois de

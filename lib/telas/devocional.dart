@@ -6,7 +6,7 @@ import '../dados/canon.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
 import '../dados/voz.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../funcoes/datas.dart';
 import '../widgets/widgets.dart';
 
@@ -153,7 +153,7 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: DevocionalEspacamento.sp12),
                     child: Center(
-                      child: TextButton.icon(
+                      child: DevocionalBotaoTerciario.icon(
                         onPressed: () => _controller.irPara(context, leitura, hoje),
                         icon: const FaIcon(FontAwesomeIcons.calendarCheck, size: 14),
                         label: const Text('Voltar para hoje'),

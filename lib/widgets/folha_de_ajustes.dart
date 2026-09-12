@@ -12,7 +12,8 @@ import '../dados/lembretes.dart';
 import '../dados/modelos.dart';
 import '../funcoes/aviso.dart';
 import '../funcoes/lembretes_acoes.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
+import 'botao.dart';
 import 'filete.dart';
 
 /// Ajustes de leitura: tamanho do texto e claro ou escuro, a dica dos botões
@@ -288,7 +289,7 @@ class _SecaoDeLembretes {
     final hora = horaDeMinutos(minutos);
     return ListTile(
       title: Text(titulo),
-      trailing: TextButton(
+      trailing: DevocionalBotaoTerciario(
         onPressed: () async {
           final escolhida = await showTimePicker(
             context: context,
@@ -453,11 +454,11 @@ class _SecaoAudioOffline {
                                   : () => off.apagarCategoria(cat),
                             )
                           : baixandoEste
-                          ? OutlinedButton(
+                          ? DevocionalBotaoSecundario(
                               onPressed: off.cancelar,
                               child: const Text('Parar'),
                             )
-                          : FilledButton(
+                          : DevocionalBotaoPrimario(
                               onPressed: off.baixando
                                   ? null
                                   : () => _baixarComEvento(off, cat),
@@ -490,7 +491,7 @@ class _SecaoAudioOffline {
                       .toStringAsFixed(1);
                   return ListTile(
                     title: Text('Armazenamento: $mb MB'),
-                    trailing: TextButton(
+                    trailing: DevocionalBotaoTerciario(
                       onPressed: off.baixando ? null : () => off.apagarTudo(),
                       child: const Text('Apagar tudo'),
                     ),

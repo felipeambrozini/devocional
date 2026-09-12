@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../dados/conteudo.dart';
 import '../dados/modelos.dart';
 import '../telas/biblia.dart';
+import 'botao.dart';
 
 /// Botão que abre a Bíblia numa faixa do cronograma.
 ///
@@ -18,7 +19,7 @@ class DevocionalBotaoDeFaixa extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
+    return DevocionalBotaoSecundario.icon(
       icon: const FaIcon(FontAwesomeIcons.bookOpen, size: 17),
       label: Text(faixa.rotulo),
       onPressed: () => Navigator.push(
@@ -66,7 +67,7 @@ class DevocionalBotaoDeDevocional extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
+    return DevocionalBotaoSecundario.icon(
       icon: FaIcon(_icone, size: 17),
       label: Text(_rotulo),
       onPressed: () {

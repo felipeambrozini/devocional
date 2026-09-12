@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../dados/modelos.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import 'cartao_de_marcacao.dart';
 
 class DevocionalLista extends StatelessWidget {

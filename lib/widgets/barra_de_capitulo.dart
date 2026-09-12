@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 
 /// Rodapé com os dois chevrons de capítulo.
 ///

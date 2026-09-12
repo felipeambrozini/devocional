@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../dados/nuvem.dart';
 import '../dados/recursos.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../widgets/widgets.dart';
 
 /// Perguntas frequentes: dúvidas reais de quem ainda decide se fica, não um

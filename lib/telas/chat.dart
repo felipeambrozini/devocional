@@ -6,7 +6,7 @@ import '../dados/conversas.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
 import '../dados/personas.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
 import '../widgets/widgets.dart';
 

@@ -8,7 +8,7 @@ import '../dados/eventos.dart';
 import '../dados/personas.dart';
 import '../dados/recursos.dart';
 import '../dados/voz.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
 import 'retrato_de_persona.dart';
 

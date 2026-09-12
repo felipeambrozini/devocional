@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../dados/personas.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 
 /// O retrato de uma persona num anel do metal — a gramática única dos três
 /// pontos que mostram quem fala: as entradas de conversa (a carta da aba

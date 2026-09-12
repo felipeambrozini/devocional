@@ -3,8 +3,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import '../dados/estado.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../funcoes/linhas_de_ajuda.dart';
+import 'botao.dart';
 import 'cartao.dart';
 
 /// Primeira visita: três linhas essenciais e nada mais, para a ajuda não
@@ -38,12 +39,12 @@ class DevocionalCartaoDeAjuda extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              TextButton(
+              DevocionalBotaoTerciario(
                 onPressed: () => context.push('/sobre'),
                 child: const Text('Ver tudo'),
               ),
               const SizedBox(width: DevocionalEspacamento.sp8),
-              TextButton(
+              DevocionalBotaoTerciario(
                 onPressed: () => estado.dispensarAjuda(),
                 child: const Text('Entendi'),
               ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../dados/canon.dart';
 import '../dados/modelos.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 
 /// Uma linha por versículo-base de um devocional: a citação entre aspas seguida
 /// da referência em caixa alta.

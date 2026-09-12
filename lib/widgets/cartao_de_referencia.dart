@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../dados/canon.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../telas/biblia.dart';
 
 /// Card fixo no topo dos resultados quando o próprio termo digitado é uma

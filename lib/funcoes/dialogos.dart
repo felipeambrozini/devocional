@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/botao.dart';
 import 'aviso.dart';
 
 /// Editor de nota de um versículo. Devolve o texto salvo, ou nulo se cancelado.
@@ -21,11 +22,11 @@ Future<String?> editarNota(
         decoration: const InputDecoration(hintText: 'Sua anotação'),
       ),
       actions: [
-        TextButton(
+        DevocionalBotaoTerciario(
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancelar'),
         ),
-        FilledButton(
+        DevocionalBotaoPrimario(
           onPressed: () => Navigator.pop(context, controle.text),
           child: const Text('Salvar'),
         ),

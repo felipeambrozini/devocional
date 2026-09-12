@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../dados/conteudo.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../funcoes/alternar_lido.dart';
 import 'cartao.dart';
 import 'botao.dart';

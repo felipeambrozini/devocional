@@ -3,7 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import '../dados/personas.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import 'retrato_de_persona.dart';
 
 /// Uma carta da aba Conversas: o retrato no anel, o nome em Cinzel e o que

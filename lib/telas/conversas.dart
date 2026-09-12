@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../dados/nuvem.dart';
 import '../dados/recursos.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../widgets/widgets.dart';
 
 /// Número que recebe o pedido de acesso pelo WhatsApp, para quem ainda não
@@ -74,7 +74,7 @@ class _PedirAcesso extends StatelessWidget {
             ),
             if (_numeroWhatsapp.isNotEmpty) ...[
               const SizedBox(height: DevocionalEspacamento.sp24),
-              FilledButton.icon(
+              DevocionalBotaoPrimario.icon(
                 onPressed: _abrirWhatsapp,
                 icon: const FaIcon(FontAwesomeIcons.whatsapp),
                 label: const Text('Falar no WhatsApp'),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 
 class DevocionalPergunta extends StatelessWidget {
   const DevocionalPergunta(this.item, {super.key});

@@ -15,7 +15,7 @@ import '../dados/nuvem.dart';
 import '../dados/personas.dart';
 import '../dados/recursos.dart';
 import '../dados/voz.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
 import '../funcoes/linhas_de_ajuda.dart';
 import '../widgets/widgets.dart';
@@ -55,9 +55,11 @@ class _TelaSobreState extends State<TelaSobre> {
           title: const Text('Sobre'),
           actions: [
             DevocionalBotaoDeAjustes(estado: EscopoDoEstado.de(context)),
-            // A demonstração vive num ListView: quem rola até a ajuda não vê
-            // mais a pílula, e o trecho não pode tocar sem o botão de parar à
-            // vista. O indicador também cobre o trecho pausado (chamada).
+            // A demonstração vive dentro de "A voz de Spurgeon", uma seção
+            // expansível aberta por padrão (ver _SecaoExpansivel): quem rola
+            // para longe dela, ou a fecha, não vê mais a pílula, e o trecho
+            // não pode tocar sem o botão de parar à vista. O indicador também
+            // cobre o trecho pausado (chamada).
             const DevocionalIndicadorDeVozNaBarra(chave: 'trecho:salmos.1'),
           ],
         ),
@@ -250,6 +252,7 @@ class _TelaSobreState extends State<TelaSobre> {
               _SecaoExpansivel(
                 icone: FontAwesomeIcons.volumeHigh,
                 titulo: 'A voz de Spurgeon',
+                abertaPorPadrao: true,
                 children: [
                   Text(
                     'O retrato de Spurgeon nas telas de leitura lê o texto em voz '
@@ -281,7 +284,7 @@ class _TelaSobreState extends State<TelaSobre> {
                         // de pedir de novo.
                         return Align(
                           alignment: Alignment.centerLeft,
-                          child: TextButton.icon(
+                          child: DevocionalBotaoTerciario.icon(
                             icon: const FaIcon(FontAwesomeIcons.arrowsRotate),
                             label: const Text('Tentar de novo'),
                             onPressed: _controller.tentarDeNovo,
@@ -380,11 +383,17 @@ class _SecaoExpansivel extends StatelessWidget {
     required this.icone,
     required this.titulo,
     required this.children,
+    this.abertaPorPadrao = false,
   });
 
   final FaIconData icone;
   final String titulo;
   final List<Widget> children;
+
+  /// Só a seção com um CTA interativo (a demonstração de voz) deveria abrir
+  /// já expandida — as outras três são texto de crédito, sem ação, e ficam
+  /// fechadas como o resto do padrão.
+  final bool abertaPorPadrao;
 
   @override
   Widget build(BuildContext context) {
@@ -395,7 +404,11 @@ class _SecaoExpansivel extends StatelessWidget {
       child: ExpansionTile(
         tilePadding: EdgeInsets.zero,
         childrenPadding: EdgeInsets.zero,
-        leading: FaIcon(icone, color: cor.primary, size: 18),
+        // Mesmo tamanho dos ícones de Ajuda/Conta e privacidade nesta tela
+        // (FaIcon sem `size:` explícito) — um `size: 18` menor aqui destoava
+        // do resto da tela.
+        leading: FaIcon(icone, color: cor.primary),
+        initiallyExpanded: abertaPorPadrao,
         // Cabeçalho semântico: sem isto, quem navega por leitor de tela só
         // consegue rolar linearmente, sem pular de seção em seção.
         title: Semantics(
@@ -429,7 +442,7 @@ Future<void> _mostrarAjuda(BuildContext context) {
         ),
       ),
       actions: [
-        TextButton(
+        DevocionalBotaoTerciario(
           onPressed: () => Navigator.pop(dialogo),
           child: const Text('Entendi'),
         ),

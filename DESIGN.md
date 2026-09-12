@@ -163,7 +163,7 @@ Não há terceiro acento. O metal tem dois graus (principal e destaque) e um gra
 
 ### Named Rules
 
-**A Regra do Metal.** O metal é o único acento do sistema. Ele pinta títulos, ícones, o estado selecionado e o filete — e nada além disso. Nunca é usado como fundo de área grande nem como cor de corpo: correr o ouro pelo texto inteiro é quebrar a sobriedade e a legibilidade (o corpo, nos dois temas, é o bege ou a tinta, nunca o metal).
+**A Regra do Metal.** O metal é o único acento do sistema. Ele pinta títulos, ícones, o estado selecionado e o filete — e nada além disso. Nunca é usado como fundo de área grande nem como cor de corpo: correr o ouro pelo texto inteiro é quebrar a sobriedade e a legibilidade (o corpo, nos dois temas, é o bege ou a tinta, nunca o metal). A única exceção é o preenchimento do `FilledButton` (ver Buttons em Components): a ação decisiva do sistema é, de propósito, a maior mancha de metal que uma tela pode ter — é o que a torna reconhecível como *a* ação, e não uma cor de corpo correndo solta.
 
 **A Regra da Não-Inversão.** O claro não é o escuro invertido; o que se mantém entre temas é a relação entre os tons, não os valores. Dourado sobre pergaminho dá 2,1:1 e é proibido — quem precisa do metal num fundo claro usa o bronze. Clarear o bronze "só um pouco" também é proibido: `test/tema_test.dart` mede os contrastes da WCAG e falha se os pares anotados piorarem.
 

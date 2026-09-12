@@ -6,7 +6,7 @@ import '../dados/canon.dart';
 import '../dados/conteudo.dart';
 import '../dados/estado.dart';
 import '../dados/planos.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../widgets/widgets.dart';
 
 /// Formulário de um novo plano de leitura: nome opcional, um ou mais livros
@@ -70,7 +70,7 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
                   const SizedBox(height: DevocionalEspacamento.sp20),
                   Text('Quais livros?', style: tema.titleMedium),
                   const SizedBox(height: DevocionalEspacamento.sp8),
-                  OutlinedButton.icon(
+                  DevocionalBotaoSecundario.icon(
                     onPressed: () => _controller.escolherLivros(context),
                     icon: const FaIcon(FontAwesomeIcons.book),
                     label: Text(
@@ -103,6 +103,10 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
                     keyboardType: TextInputType.number,
                     onChanged: (_) => _controller.diasAlterados(),
                     validator: _controller.validarDias,
+                    // O texto de ajuda já mostra o teto de capítulos enquanto
+                    // digita; sem isto, o erro só aparecia ao tocar "Criar
+                    // plano", mesmo com o valor inválido visível há tempo.
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
                     decoration: InputDecoration(
                       helperText: totalDeCapitulos == 0
                           ? 'Escolha os livros para ver o tamanho do plano.'
@@ -181,7 +185,7 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
                     ),
                   ],
                   const SizedBox(height: DevocionalEspacamento.sp24),
-                  FilledButton.icon(
+                  DevocionalBotaoPrimario.icon(
                     onPressed: () => _controller.criar(context),
                     icon: const FaIcon(FontAwesomeIcons.check),
                     label: const Text('Criar plano'),
@@ -266,11 +270,11 @@ Future<List<String>?> mostrarSeletorDeLivros(
             ),
           ),
           actions: [
-            TextButton(
+            DevocionalBotaoTerciario(
               onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Cancelar'),
             ),
-            FilledButton(
+            DevocionalBotaoPrimario(
               onPressed: () =>
                   Navigator.pop(dialogContext, selecionados.toList()),
               child: const Text('Confirmar'),

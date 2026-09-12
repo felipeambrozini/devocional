@@ -6,7 +6,7 @@ import '../dados/estado.dart';
 import '../dados/modelos.dart';
 import '../dados/nuvem.dart';
 import '../dados/registro.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
 import '../funcoes/conta_acoes.dart';
 import '../funcoes/datas.dart';
@@ -256,12 +256,12 @@ class _BotaoDeConta extends StatelessWidget {
     return ListenableBuilder(
       listenable: nuvem,
       builder: (context, _) => nuvem.logado
-          ? TextButton.icon(
+          ? DevocionalBotaoTerciario.icon(
               onPressed: () => _sairDaConta(context),
               icon: const FaIcon(FontAwesomeIcons.rightFromBracket, size: 18),
               label: const Text('Sair'),
             )
-          : OutlinedButton.icon(
+          : DevocionalBotaoSecundario.icon(
               onPressed: nuvem.entrando
                   ? null
                   : () => entrarNaConta(context, nuvem),

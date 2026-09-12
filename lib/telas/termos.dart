@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../dados/nuvem.dart';
 import '../dados/recursos.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../widgets/widgets.dart';
 
 /// Termos de serviço: URL própria exigida por integrações que pedem um link
@@ -48,16 +48,18 @@ class TelaTermos extends StatelessWidget {
                       ? 'O aplicativo oferece Bíblia, devocionais, plano de '
                             'leitura, notas, busca, leitura em voz alta e '
                             'conversas com personas de inteligência '
-                            'artificial. Não há garantia de disponibilidade '
-                            'contínua nem de ausência de erros; o conteúdo '
-                            'pode mudar ou ser descontinuado a qualquer '
-                            'momento, sem aviso prévio.'
+                            'artificial. Como todo projeto mantido por uma '
+                            'pessoa só, o serviço pode falhar ou ficar fora '
+                            'do ar de vez em quando, e o conteúdo pode '
+                            'mudar ou ser descontinuado a qualquer momento, '
+                            'sem aviso prévio.'
                       : 'O aplicativo oferece Bíblia, devocionais, plano de '
                             'leitura, notas, busca e leitura em voz alta. '
-                            'Não há garantia de disponibilidade contínua '
-                            'nem de ausência de erros; o conteúdo pode '
-                            'mudar ou ser descontinuado a qualquer momento, '
-                            'sem aviso prévio.',
+                            'Como todo projeto mantido por uma pessoa só, o '
+                            'serviço pode falhar ou ficar fora do ar de vez '
+                            'em quando, e o conteúdo pode mudar ou ser '
+                            'descontinuado a qualquer momento, sem aviso '
+                            'prévio.',
                 ),
                 DevocionalSecaoDeTexto(
                   titulo: 'Conta e conteúdo do usuário',

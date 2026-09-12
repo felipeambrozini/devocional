@@ -144,7 +144,7 @@ lib/
   funcoes/     funções livres sem widget próprio (avisos, diálogos, ações que
                tocam dados, formatação de data e afins)
   estilo/      cores.dart (as duas paletas: marrom e dourada, pergaminho e
-               bronze), spacing.dart (ritmo de espaçamento) e tema.dart
+               bronze), espacamento.dart (ritmo de espaçamento) e tema.dart
                (monta o ThemeData)
   main.dart    navegação (barra/trilho), rotas e ponto de entrada
 assets/        Bíblia interna, devocionais, introduções, cronograma, imagens, fontes

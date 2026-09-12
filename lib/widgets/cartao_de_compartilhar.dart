@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
+import 'botao.dart';
 
 /// O convite a compartilhar, ou o atalho para copiar o link de novo.
 class DevocionalCartaoDeCompartilhar extends StatelessWidget {
@@ -39,7 +40,7 @@ class DevocionalCartaoDeCompartilhar extends StatelessWidget {
               ).textTheme.bodySmall?.copyWith(color: cor.onSurfaceVariant),
             ),
             const SizedBox(height: DevocionalEspacamento.sp10),
-            OutlinedButton.icon(
+            DevocionalBotaoSecundario.icon(
               onPressed: aoCompartilhar,
               icon: FaIcon(
                 compartilhado ? FontAwesomeIcons.link : FontAwesomeIcons.shareNodes,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../dados/modelos.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import 'botao.dart';
 import 'faixa.dart';
 

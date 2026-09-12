@@ -3,7 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../dados/canon.dart';
 import '../dados/conteudo.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import 'widgets.dart';
 
 /// Seletor em duas etapas: escolhe o livro, depois o capítulo numa grade.
@@ -71,7 +71,7 @@ class _SeletorDeLivroState extends State<DevocionalSeletorDeLivro> {
                 if (escolhido != null)
                   Padding(
                     padding: const EdgeInsets.all(DevocionalEspacamento.sp8),
-                    child: TextButton.icon(
+                    child: DevocionalBotaoTerciario.icon(
                       onPressed: () => setState(() => _escolhido = null),
                       icon: const FaIcon(FontAwesomeIcons.arrowLeft),
                       label: const Text('Todos os livros'),

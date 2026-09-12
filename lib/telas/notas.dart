@@ -5,7 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../controladores/notas_controlador.dart';
 import '../dados/estado.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
 import '../widgets/widgets.dart';
 
@@ -162,7 +162,11 @@ class _TelaNotasState extends State<TelaNotas> {
 Future<void> _exportar(BuildContext context, Estado estado) async {
   final mensageiro = ScaffoldMessenger.of(context);
   await Clipboard.setData(ClipboardData(text: estado.exportar()));
-  mostrarAvisoNo(mensageiro, 'Copiado. Guarde num arquivo de texto.');
+  mostrarAvisoNo(
+    mensageiro,
+    'Copiado. Cole num e-mail ou no app de Notas do aparelho para guardar — '
+    'depois, é colando aqui de novo que você importa.',
+  );
 }
 
 /// Pede a cópia colada e funde com o que já existe.
@@ -191,11 +195,11 @@ Future<void> _importar(BuildContext context, Estado estado) async {
         ],
       ),
       actions: [
-        TextButton(
+        DevocionalBotaoTerciario(
           onPressed: () => Navigator.pop(dialogo),
           child: const Text('Cancelar'),
         ),
-        FilledButton(
+        DevocionalBotaoPrimario(
           onPressed: () => Navigator.pop(dialogo, controle.text),
           child: const Text('Importar'),
         ),

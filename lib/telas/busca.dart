@@ -4,7 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../controladores/busca_controlador.dart';
 import '../dados/conteudo.dart';
 import '../dados/modelos.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../funcoes/datas.dart';
 import '../widgets/widgets.dart';
 import 'devocional.dart';

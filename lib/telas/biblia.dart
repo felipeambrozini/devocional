@@ -10,7 +10,7 @@ import '../dados/conteudo.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
 import '../dados/voz.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
 import '../funcoes/dialogos.dart';
 import '../widgets/widgets.dart';
@@ -295,7 +295,7 @@ class _Leitor extends StatelessWidget {
                         // também abre a grade, e só a AppBar tinha a dica.
                         message: 'Toque para escolher o capítulo',
                         child: InkWell(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                           onTap: aoAbrirCapitulos,
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
@@ -404,7 +404,7 @@ class _LinhaDeVersiculo extends StatelessWidget {
           numero: numero,
           texto: texto,
         ),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         child: Container(
           // 12 e não 7: com bodyLarge em 17 e altura 1.6, um versículo de uma
           // linha ficava em cerca de 41 dp de alvo, abaixo dos 48 dp mínimos.
@@ -414,7 +414,7 @@ class _LinhaDeVersiculo extends StatelessWidget {
             horizontal: DevocionalEspacamento.sp6,
           ),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
             color: marcacao != null
                 ? cor.outline.withValues(alpha: 0.18)
                 : null,

@@ -3,8 +3,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../dados/canon.dart';
 import '../dados/planos.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
+import '../widgets/widgets.dart';
 import 'novo_plano.dart' show mostrarSeletorDeLivros;
 
 /// O que [mostrarEditorDePlano] devolve quando confirmado.
@@ -133,7 +134,7 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                       style: Theme.of(dialogContext).textTheme.titleSmall,
                     ),
                     const SizedBox(height: DevocionalEspacamento.sp8),
-                    OutlinedButton.icon(
+                    DevocionalBotaoSecundario.icon(
                       onPressed: escolherLivros,
                       icon: const FaIcon(FontAwesomeIcons.book),
                       label: Text(
@@ -220,11 +221,11 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
             ),
           ),
           actions: [
-            TextButton(
+            DevocionalBotaoTerciario(
               onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Cancelar'),
             ),
-            FilledButton(onPressed: salvar, child: const Text('Salvar')),
+            DevocionalBotaoPrimario(onPressed: salvar, child: const Text('Salvar')),
           ],
         );
       },

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../dados/planos.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import 'progresso_fino.dart';
 
 /// O resumo do plano no topo da tela: livros, prazo e o progresso próprio.

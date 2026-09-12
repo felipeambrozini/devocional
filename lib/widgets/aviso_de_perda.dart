@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../dados/nuvem.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
+import 'botao.dart';
 
 /// Faixa fixa, só na web: quem usa o app pelo navegador não tem como saber
 /// que o localStorage pode ser limpo sem aviso (ver `_exportar` em notas.dart).
@@ -38,7 +39,7 @@ class DevocionalAvisoDePerda extends StatelessWidget {
               ),
             ),
           ),
-          TextButton(onPressed: onExportar, child: const Text('Exportar')),
+          DevocionalBotaoTerciario(onPressed: onExportar, child: const Text('Exportar')),
         ],
       ),
     );

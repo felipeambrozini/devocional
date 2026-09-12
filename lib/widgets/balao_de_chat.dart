@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../dados/estado.dart';
 import '../dados/personas.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import 'widgets.dart';
 
 /// Balão circular com o retrato da persona, o botão flutuante do chat.

@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
 import '../dados/personas.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
 import '../funcoes/datas.dart';
 import '../widgets/widgets.dart';

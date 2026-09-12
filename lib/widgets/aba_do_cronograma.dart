@@ -8,7 +8,7 @@ import '../dados/conteudo.dart';
 import '../dados/estado.dart';
 import '../dados/eventos.dart';
 import '../dados/modelos.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../funcoes/datas.dart';
 import '../widgets/widgets.dart';
 

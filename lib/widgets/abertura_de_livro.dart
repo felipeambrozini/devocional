@@ -6,7 +6,7 @@ import '../dados/conteudo.dart';
 import '../dados/modelos.dart';
 import '../dados/voz.dart';
 import '../funcoes/capa_biblia.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import 'area_de_selecao.dart';
 import 'botao_de_voz.dart';
 import 'carrega_uma_vez.dart';

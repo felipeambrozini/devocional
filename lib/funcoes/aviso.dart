@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/botao.dart';
+
 /// Avisos e confirmações compartilhados: a snackbar com fechamento próprio e o
 /// diálogo de confirmação destrutiva. Um lugar só para o comportamento ser o
 /// mesmo em toda parte.
@@ -132,11 +134,11 @@ Future<bool> confirmar(
       title: Text(titulo),
       content: Text(conteudo),
       actions: [
-        TextButton(
+        DevocionalBotaoTerciario(
           onPressed: () => Navigator.pop(context, false),
           child: const Text('Cancelar'),
         ),
-        FilledButton(
+        DevocionalBotaoPrimario(
           onPressed: () => Navigator.pop(context, true),
           child: Text(rotuloDaAcao),
         ),

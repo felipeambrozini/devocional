@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../dados/modelos.dart';
 import '../dados/personas.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 
 /// Uma mensagem da conversa: a resposta da persona entra como citação das
 /// introduções (fundo chapado e fio do metal à esquerda), e a pergunta do

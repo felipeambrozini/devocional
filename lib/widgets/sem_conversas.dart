@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../dados/personas.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
 import '../widgets/widgets.dart';
 
@@ -53,7 +53,7 @@ class DevocionalSemConversas extends StatelessWidget {
               ),
             ),
             const SizedBox(height: DevocionalEspacamento.sp18),
-            FilledButton.icon(
+            DevocionalBotaoPrimario.icon(
               onPressed: aoComecar,
               icon: const FaIcon(FontAwesomeIcons.commentDots),
               label: const Text('Começar conversa'),

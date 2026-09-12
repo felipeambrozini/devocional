@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import 'linha_de_participante.dart';
 
 /// O progresso de cada participante do plano compartilhado.

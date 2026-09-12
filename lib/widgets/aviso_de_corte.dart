@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../telas/chat.dart';
 
 /// A conversa passou do teto de mensagens e as falas mais antigas saíram do

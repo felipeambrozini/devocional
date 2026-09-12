@@ -3,10 +3,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../dados/conteudo.dart';
 import '../dados/modelos.dart';
-import '../estilo/spacing.dart';
+import '../estilo/espacamento.dart';
 import '../funcoes/citacao.dart';
 import '../telas/biblia.dart';
 import '../telas/devocional.dart';
+import 'botao.dart';
 import 'cartao.dart';
 import 'carrega_uma_vez.dart';
 import 'com_fade_ao_fim.dart';
@@ -148,7 +149,7 @@ class DevocionalPreviaDaLeitura extends StatelessWidget {
                 // "Ler tudo" é TextButton em todo lugar (ação quieta, ver
                 // DESIGN.md); esta prévia usava OutlinedButton e a mesma
                 // ação tinha dois controles na mesma tela.
-                child: TextButton.icon(
+                child: DevocionalBotaoTerciario.icon(
                   onPressed: () => _abrir(context),
                   icon: const FaIcon(FontAwesomeIcons.arrowRight, size: 16),
                   label: const Text('Ler tudo'),
