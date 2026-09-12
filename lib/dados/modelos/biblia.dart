@@ -23,8 +23,11 @@ class Capitulo {
   /// Pares (número, texto) na ordem numérica.
   final List<(int, String)> versiculos;
 
+  /// Salmos é o único livro em que cada capítulo é um poema autônomo, então
+  /// a referência usa o singular ("Salmo 23"), diferente do seletor de
+  /// livro, que continua no plural ("Salmos").
   String get referencia =>
-      '${nome.isNotEmpty ? nome : nomeDoLivro(livro)} $numero';
+      '${livro == 'salmos' ? 'Salmo' : (nome.isNotEmpty ? nome : nomeDoLivro(livro))} $numero';
 }
 
 /// Introdução de um livro, na voz de Spurgeon.
