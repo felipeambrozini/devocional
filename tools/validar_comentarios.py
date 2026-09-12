@@ -113,6 +113,20 @@ def media_sentencas(texto: str) -> float:
     return palavras / max(len(sentencas), 1)
 
 
+def cauda_do_texto(texto: str, n_sentencas: int = 2) -> str:
+    """As ultimas `n_sentencas` frases do comentario, normalizadas (minusculas,
+    espacos colapsados) -- usado para achar fechos que se repetem entre
+    versiculos diferentes mesmo quando a abertura de cada um muda (o que
+    escapa da lista MOLDE, literal, e do check DUPLICADO, que so pega texto
+    integralmente identico). Retorna "" se o comentario tiver poucas frases
+    para a cauda nao virar o texto inteiro."""
+    sentencas = [s.strip() for s in re.split(r"(?<=[.!?])\s+", texto.strip()) if s.strip()]
+    if len(sentencas) <= n_sentencas:
+        return ""
+    cauda = " ".join(sentencas[-n_sentencas:])
+    return " ".join(cauda.split()).lower()
+
+
 def valida_texto(texto: str):
     """Retorna (erros, avisos) para o corpo de um comentario."""
     erros, avisos = [], []
@@ -220,6 +234,7 @@ def valida_arquivo(caminho: Path, corpus_biblia: str):
     total = 0
     marcados_molde = 0
     vistos = {}  # texto normalizado -> lista de "cap:ver" que o usam
+    caudas = {}  # ultimas 2 frases normalizadas -> lista de "cap:ver" que terminam assim
     for num_cap, versiculos in capitulos.items():
         cap_bib = biblia.get("capitulos", {}).get(num_cap) if biblia else None
         if cap_bib is None:
@@ -245,6 +260,10 @@ def valida_arquivo(caminho: Path, corpus_biblia: str):
             if normalizado:
                 vistos.setdefault(normalizado, []).append(f"{num_cap}:{num_ver}")
 
+            cauda = cauda_do_texto(str(texto))
+            if cauda:
+                caudas.setdefault(cauda, []).append(ref)
+
     for refs in vistos.values():
         if len(refs) > 1:
             erros.append(f"[DUPLICADO] mesmo texto em {', '.join(refs)}")
@@ -255,6 +274,25 @@ def valida_arquivo(caminho: Path, corpus_biblia: str):
             f"[LIVRO-MOLDE] {marcados_molde}/{total} versiculos ({pct:.1f}%) batem em "
             "padrao formulaico/telegrafico/molde estrutural -- livro provavelmente "
             "gerado por template, revisar ou reescrever inteiro"
+        )
+
+    # Fecho reciclado: mesmo quando a abertura de cada versiculo muda (o que
+    # escapa da lista MOLDE, literal, e do DUPLICADO, que exige texto inteiro
+    # identico), varios versiculos terminando com as mesmas 2 frases indicam
+    # geracao por template disfarcada de prosa unica.
+    marcados_final_repetido = 0
+    for cauda, refs in sorted(caudas.items(), key=lambda kv: -len(kv[1])):
+        if len(refs) > 1:
+            marcados_final_repetido += len(refs)
+            mostrar = ", ".join(refs[:8]) + (", ..." if len(refs) > 8 else "")
+            avisos.append(f"[FINAL-REPETIDO] {len(refs)} versiculos terminam com o mesmo fecho: {mostrar}")
+
+    if total and marcados_final_repetido / total >= LIMIAR_LIVRO_MOLDE:
+        pct = 100 * marcados_final_repetido / total
+        erros.append(
+            f"[LIVRO-MOLDE-FINAL] {marcados_final_repetido}/{total} versiculos ({pct:.1f}%) "
+            "reciclam um fecho de 2 frases identico ao de outro versiculo -- mesmo com "
+            "aberturas diferentes, indica geracao por template; revisar ou reescrever o livro inteiro"
         )
 
     return erros, avisos, total

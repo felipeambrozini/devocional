@@ -35,17 +35,24 @@ Future<void> mostrarAceiteDeColetaSeNecessario(BuildContext context) async {
               'para mudar de ideia depois em Sobre.',
               style: tema.bodyMedium?.copyWith(height: 1.5),
             ),
+            // "Ver a política" é um desvio de leitura, não parte da decisão
+            // sim/não — mora junto do texto, não na fileira de ações, para
+            // não ser o primeiro botão que quem escaneia da esquerda para a
+            // direita toca sem querer.
+            Align(
+              alignment: Alignment.centerLeft,
+              child: DevocionalBotaoTerciario(
+                onPressed: () {
+                  Navigator.of(dialogo).pop();
+                  GoRouter.of(context).push('/privacidade');
+                },
+                child: const Text('Ver a política'),
+              ),
+            ),
           ],
         ),
       ),
       actions: [
-        DevocionalBotaoTerciario(
-          onPressed: () {
-            Navigator.of(dialogo).pop();
-            GoRouter.of(context).push('/privacidade');
-          },
-          child: const Text('Ver a política'),
-        ),
         DevocionalBotaoTerciario(
           onPressed: () => Navigator.of(dialogo).pop(false),
           child: const Text('Não'),

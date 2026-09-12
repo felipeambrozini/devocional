@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../dados/estado.dart';
-import '../dados/nuvem.dart';
-import '../dados/recursos.dart';
 import '../widgets/widgets.dart';
 
 /// Cronograma anual agrupado por mês, com marcação de lido — e, na aba Meus
 /// Planos, os planos de leitura que o usuário cria, compartilha e acompanha.
+///
+/// As duas abas ficam sempre visíveis: a aba Meus Planos explica o que falta
+/// (conta ou o recurso premium) em vez de sumir em silêncio quando não se
+/// aplica — ver `DevocionalAbaDosMeusPlanos`.
 class TelaPlano extends StatefulWidget {
   const TelaPlano({super.key, this.hoje});
 
@@ -23,28 +25,9 @@ class _TelaPlanoState extends State<TelaPlano> {
   Widget build(BuildContext context) {
     final estado = EscopoDoEstado.de(context);
 
-    final acaoDeAjustes = DevocionalBotaoDeAjustes(estado: estado);
-
-    // Sem plano personalizado, ou sem conta para guardá-lo na nuvem, a tela
-    // não tem o que dividir em abas: só o cronograma anual. A aba Meus
-    // Planos depende de conta porque compartilhar um plano depende dela.
-    return ListenableBuilder(
-      listenable: Nuvem.instancia,
-      builder: (context, _) {
-        if (!Recursos.planoPersonalizado || !Nuvem.instancia.logado) {
-          return Scaffold(
-            appBar: DevocionalAppBar(
-              title: const Text('Plano'),
-              actions: [acaoDeAjustes],
-            ),
-            body: DevocionalAbaDoCronograma(hoje: widget.hoje),
-          );
-        }
-        return DevocionalAbasDoPlano(
-          hoje: widget.hoje,
-          acaoDeAjustes: acaoDeAjustes,
-        );
-      },
+    return DevocionalAbasDoPlano(
+      hoje: widget.hoje,
+      acaoDeAjustes: DevocionalBotaoDeAjustes(estado: estado),
     );
   }
 }

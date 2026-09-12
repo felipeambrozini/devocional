@@ -1,17 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../dados/nuvem.dart';
 import '../dados/recursos.dart';
-import '../estilo/espacamento.dart';
 import '../widgets/widgets.dart';
-
-/// Número que recebe o pedido de acesso pelo WhatsApp, para quem ainda não
-/// está na allowlist (ver [Recursos.conversas]). Mesmo padrão de
-/// `--dart-define` do `_emailDeContato` em `sobre.dart`: sem número
-/// versionado no repositório, e vazio esconde o botão.
-const _numeroWhatsapp = String.fromEnvironment('WHATSAPP_NUMERO');
 
 /// A aba Conversas: a porta de entrada do chat no celular e no computador.
 ///
@@ -35,63 +27,16 @@ class TelaConversas extends StatelessWidget {
           listenable: Nuvem.instancia,
           builder: (context, _) => Recursos.conversas
               ? const DevocionalCartasDeConversa()
-              : const _PedirAcesso(),
+              : const DevocionalCartaoDePedirAcesso(
+                  icone: FontAwesomeIcons.comments,
+                  descricao:
+                      'O chat com Spurgeon e com Felipe é um recurso '
+                      'premium. Fale comigo pelo WhatsApp para habilitar '
+                      'o acesso na sua conta.',
+                  mensagemDoWhatsapp: 'Oi Felipe, quero habilitar as conversas',
+                ),
         ),
       ),
     );
   }
-}
-
-/// Convite para pedir acesso, para quem abre a aba sem estar na allowlist.
-/// O botão do WhatsApp some se [_numeroWhatsapp] não estiver configurado —
-/// mesma regra do `_emailDeContato` em `sobre.dart`.
-class _PedirAcesso extends StatelessWidget {
-  const _PedirAcesso();
-
-  @override
-  Widget build(BuildContext context) {
-    final tema = Theme.of(context).textTheme;
-    final cor = Theme.of(context).colorScheme;
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(DevocionalEspacamento.sp24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            FaIcon(FontAwesomeIcons.comments, size: 56, color: cor.primary),
-            const SizedBox(height: DevocionalEspacamento.sp16),
-            Text(
-              'Recurso premium',
-              style: tema.titleLarge,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: DevocionalEspacamento.sp8),
-            Text(
-              'O chat com Spurgeon e com Felipe é um recurso premium. Fale '
-              'comigo pelo WhatsApp para habilitar o acesso na sua conta.',
-              style: tema.bodyMedium?.copyWith(color: cor.onSurfaceVariant),
-              textAlign: TextAlign.center,
-            ),
-            if (_numeroWhatsapp.isNotEmpty) ...[
-              const SizedBox(height: DevocionalEspacamento.sp24),
-              DevocionalBotaoPrimario.icon(
-                onPressed: _abrirWhatsapp,
-                icon: const FaIcon(FontAwesomeIcons.whatsapp),
-                label: const Text('Falar no WhatsApp'),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Abre o WhatsApp já com a mensagem de pedido de acesso preenchida, para
-/// quem tocou o botão em [_PedirAcesso] não precisar digitá-la.
-Future<void> _abrirWhatsapp() async {
-  final uri = Uri.https('wa.me', '/$_numeroWhatsapp', {
-    'text': 'Oi Felipe, quero habilitar as conversas',
-  });
-  await launchUrl(uri, mode: LaunchMode.externalApplication);
 }

@@ -138,10 +138,9 @@ vitoriana dele, tratando o leitor por "tu".
 - Conteúdo todo carregado e verificado (README): BKJ 1611 com 31.102
   versículos, batendo exatamente com o canon; Manhã e Noite com 366 dias completos;
   Promessas de Deus 366/366; cronograma 365/366 dias; 66 introduções completas;
-  comentário de Spurgeon por versículo em andamento pelos 66 livros
-  (assets/comentarios/) — cobertura já alta, mas auditoria de qualidade e
-  reescrita de trechos gerados por molde ainda em curso (ver
-  `tools/validar_comentarios.py`).
+  comentário de Spurgeon por versículo completo nos 66 livros
+  (assets/comentarios/) — cobertura total, 31.102 comentários (um por
+  versículo), com `tools/validar_comentarios.py` zerado (0 erros, 0 avisos).
 - Suíte de testes em `test/` cobre canon, bissexto, tema (contrastes WCAG),
   fontes, lembretes e comportamento de plataforma.
 - Links de canais do Felipe (YouTube e Instagram) na tela Sobre.
