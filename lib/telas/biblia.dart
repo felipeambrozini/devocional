@@ -94,7 +94,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
             appBar: DevocionalAppBar(
               title: Tooltip(
                 message: 'Toque para escolher capítulo',
-                child: TextButton(
+                child: DevocionalBotaoTerciario(
                   onPressed: () => _controller.abrirSeletor(context),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -122,10 +122,8 @@ class _TelaBibliaState extends State<TelaBiblia> {
                 DevocionalIndicadorDeVozNaBarra(
                   chave: chaveDeCapitulo(livro, capitulo),
                 ),
-                IconButton(
-                  tooltip: 'Buscar',
-                  icon: const FaIcon(FontAwesomeIcons.magnifyingGlass),
-                  onPressed: () => _controller.abrirBusca(context),
+                DevocionalBotaoDeBusca(
+                  aoBuscar: () => _controller.abrirBusca(context),
                 ),
                 DevocionalBotaoDeAjustes(estado: estado),
               ],
@@ -309,7 +307,9 @@ class _Leitor extends StatelessWidget {
                                   capitulo.referencia,
                                   style: tema.displayMedium,
                                 ),
-                                const SizedBox(width: DevocionalEspacamento.sp8),
+                                const SizedBox(
+                                  width: DevocionalEspacamento.sp8,
+                                ),
                                 FaIcon(
                                   FontAwesomeIcons.chevronDown,
                                   size: 22,
@@ -391,8 +391,16 @@ class _LinhaDeVersiculo extends StatelessWidget {
     final tema = Theme.of(context).textTheme;
     final estado = EscopoDoEstado.de(context);
     final marcacao = estado.marcacaoDe(livro, capituloNumero, numero);
+    final temNota = marcacao != null && marcacao.nota.trim().isNotEmpty;
 
+    // A marcação era só visual (fundo a 18%): quem usa leitor de tela não
+    // sabia o que já marcou. O estado vai no rótulo, não só na cor.
     return Semantics(
+      label:
+          '$referencia:$numero'
+          '${marcacao == null ? '' : ', favoritado'}'
+          '${temNota ? ', com anotação' : ''}',
+      selected: marcacao != null,
       hint: 'Toque para favoritar, anotar ou copiar',
       child: InkWell(
         onTap: () => _abrirAcoesDoVersiculo(
@@ -545,9 +553,17 @@ class _AcoesDoVersiculo {
                     Text(
                       'Comentário de Charles Spurgeon',
                       style: Theme.of(contextoDaFolha).textTheme.labelMedium
-                          ?.copyWith(color: cor.primary, fontWeight: FontWeight.w700),
+                          ?.copyWith(
+                            color: cor.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
                     ),
-                    const SizedBox(height: DevocionalEspacamento.sp6),
+                    const SizedBox(height: DevocionalEspacamento.sp8),
+                    DevocionalBotaoDeVoz(
+                      chave: chaveDoComentario(livro, capituloNumero, numero),
+                      referencia: '$referencia:$numero, comentário',
+                    ),
+                    const SizedBox(height: DevocionalEspacamento.sp8),
                     Text(
                       comentario!,
                       style: Theme.of(contextoDaFolha).textTheme.bodyMedium

@@ -1,6 +1,5 @@
 import '../canon.dart';
 
-/// Um capítulo carregado: o sobrescrito (existe nos Salmos) e os versículos em ordem.
 class Capitulo {
   const Capitulo({
     required this.livro,

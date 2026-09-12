@@ -89,7 +89,6 @@ void main() {
       final relido = await reabrir();
       final marcacao = relido.marcacaoDe('salmos', 23, 1);
       expect(marcacao, isNotNull);
-      // A nota e gravada sem espaco em volta.
       expect(marcacao!.nota, 'Pastor e provedor.');
       expect(relido.comNota.length, 1);
     });
@@ -232,7 +231,6 @@ void main() {
       await estado.definirNota('joao', 3, 16, 'nota daqui');
       await estado.alternarLido('01-01');
 
-      // Copia com o mesmo versiculo sem nota, mais um dia que nao existia aqui.
       final outra = await () async {
         SharedPreferences.setMockInitialValues({});
         final e = await Estado.abrir();
@@ -406,6 +404,44 @@ void main() {
       );
     });
 
+    test('restaurar desfaz o limpar e remove a lápide', () async {
+      final estado = await Estado.abrir();
+      final a = await conversaCom(estado, 'spurgeon', [
+        mensagem('1', 'user', 'Ola', 1),
+        mensagem('2', 'assistant', 'Paz, meu filho.', 2),
+      ]);
+      // conversaCom devolve o objeto da criação (vazio): o fio cheio é o
+      // que está guardado, e é ele que a tela entrega ao Desfazer.
+      final cheia = estado.conversaDe('spurgeon', a.id)!;
+
+      await estado.limparConversa('spurgeon', a.id);
+      expect(estado.conversasDe('spurgeon'), isEmpty);
+
+      await estado.restaurarConversa('spurgeon', cheia);
+      final restaurada = estado.conversaDe('spurgeon', a.id);
+      expect(restaurada, isNotNull);
+      expect(
+        restaurada!.mensagens.map((m) => m.id),
+        ['1', '2'],
+        reason: 'o Desfazer devolve o fio inteiro, não só o título',
+      );
+      expect(restaurada.titulo, cheia.titulo);
+
+      final mapa =
+          json.decode(estado.serializarConversas()) as Map<String, dynamic>;
+      final apagadas = mapa['apagadas'];
+      expect(
+        apagadas is Map ? apagadas[a.id] : null,
+        isNull,
+        reason: 'sem lápide a fusão com a nuvem não reapaga a restaurada',
+      );
+      expect(
+        (await reabrir()).conversaDe('spurgeon', a.id),
+        isNotNull,
+        reason: 'o Desfazer sobrevive ao reabrir',
+      );
+    });
+
     test(
       'limpar todas apaga a persona inteira, cada uma com a lápide',
       () async {
@@ -437,6 +473,38 @@ void main() {
         expect((await reabrir()).conversasDe('spurgeon'), isEmpty);
       },
     );
+
+    test('restaurarConversas desfaz o limpar todas, na ordem', () async {
+      final estado = await Estado.abrir();
+      final a = await conversaCom(estado, 'spurgeon', [
+        mensagem('1', 'user', 'um', 1),
+      ]);
+      final b = await conversaCom(estado, 'spurgeon', [
+        mensagem('2', 'user', 'dois', 2),
+      ]);
+      // O fio cheio é o guardado, não o objeto da criação (vazio).
+      final antes = estado.conversasDe('spurgeon');
+      expect(antes.map((c) => c.id), [b.id, a.id]);
+
+      await estado.limparTodasDe('spurgeon');
+      expect(estado.conversasDe('spurgeon'), isEmpty);
+
+      await estado.restaurarConversas('spurgeon', antes);
+      final depois = estado.conversasDe('spurgeon');
+      expect(
+        depois.map((c) => c.id),
+        [b.id, a.id],
+        reason: 'o Desfazer devolve a lista na ordem em que estava',
+      );
+      expect(depois.first.mensagens.single.texto, 'dois');
+
+      final mapa =
+          json.decode(estado.serializarConversas()) as Map<String, dynamic>;
+      final apagadas = mapa['apagadas'];
+      expect(apagadas is Map ? apagadas[a.id] : null, isNull);
+      expect(apagadas is Map ? apagadas[b.id] : null, isNull);
+      expect((await reabrir()).conversasDe('spurgeon'), hasLength(2));
+    });
 
     test('teto de 120 mensagens por conversa, ficando com a cauda', () async {
       final estado = await Estado.abrir();

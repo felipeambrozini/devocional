@@ -43,7 +43,6 @@ enum Leitura {
       ? 'assets/imagens/capa_promessas_de_deus.webp'
       : 'assets/imagens/capa_manha_e_noite.webp';
 
-  /// A aba inicial segue o horário do aparelho. Ver [Periodo.pelaHora].
   static Leitura pelaHora(int hora) =>
       Periodo.pelaHora(hora) == Periodo.manha ? Leitura.manha : Leitura.noite;
 }
@@ -103,39 +102,13 @@ class _TelaDevocionalState extends State<TelaDevocional> {
               overflow: TextOverflow.ellipsis,
             ),
             actions: [
-              IconButton(
-                tooltip: 'Buscar',
-                icon: const FaIcon(FontAwesomeIcons.magnifyingGlass),
-                onPressed: () => _controller.abrirBusca(context),
+              DevocionalBotaoDeBusca(
+                aoBuscar: () => _controller.abrirBusca(context),
               ),
-              PopupMenuButton<String>(
-                tooltip: 'Mais opções',
-                icon: const FaIcon(FontAwesomeIcons.ellipsisVertical, size: 18),
-                onSelected: (valor) {
-                  switch (valor) {
-                    case 'data':
-                      _controller.escolherData(context);
-                    case 'hoje':
-                      _controller.irPara(context, leitura, hoje);
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'data',
-                    child: DevocionalItemDeMenu(
-                      icone: FontAwesomeIcons.calendarDays,
-                      rotulo: 'Escolher data',
-                    ),
-                  ),
-                  if (!ehHoje)
-                    const PopupMenuItem(
-                      value: 'hoje',
-                      child: DevocionalItemDeMenu(
-                        icone: FontAwesomeIcons.calendarCheck,
-                        rotulo: 'Voltar para hoje',
-                      ),
-                    ),
-                ],
+              // Sem menu de uma opção só: com a volta para hoje no banner, a
+              // única ação do canto é escolher a data, e ela vai direto.
+              DevocionalBotaoDeData(
+                aoEscolher: () => _controller.escolherData(context),
               ),
               DevocionalBotaoDeAjustes(estado: estado),
             ],

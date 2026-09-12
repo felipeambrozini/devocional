@@ -7,7 +7,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Tamanho máximo do arquivo antes de recomeçar do zero.
 ///
-/// ponytail: sem rotação por data nem histórico de arquivos antigos — se um
+/// Sem rotação por data nem histórico de arquivos antigos — se um
 /// dia isto virar pouco, trocar por `registro.log` + `registro.log.1`.
 const _tamanhoMaximo = 512 * 1024;
 

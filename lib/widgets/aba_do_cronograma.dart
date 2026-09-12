@@ -45,7 +45,6 @@ class _DevocionalAbaDoCronogramaState
   /// (espelho do que `_rolarAteHoje` faz com a lista).
   final _chavesDeMes = List.generate(12, (_) => GlobalKey());
 
-  /// Marca o cartão de hoje na lista, para poder rolar até ele.
   final _chaveDeHoje = GlobalKey();
 
   /// Em qual mês a rolagem automática já aconteceu, para não refazê-la a cada
@@ -167,7 +166,7 @@ class _DevocionalAbaDoCronogramaState
                     DevocionalEspacamento.sp16,
                     DevocionalEspacamento.sp32,
                   ),
-                  // ponytail: monta o mês inteiro de uma vez em vez de só o visível.
+                  // Monta o mês inteiro de uma vez em vez de só o visível.
                   // São no máximo 31 cartões leves, e é o que faz o cartão de hoje já
                   // existir na árvore quando _rolarAteHoje procura por ele; sem isso o
                   // GlobalKey de um dia lá embaixo ainda não tem contexto. Se um dia a

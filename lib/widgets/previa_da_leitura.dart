@@ -72,7 +72,6 @@ class DevocionalPreviaDaLeitura extends StatelessWidget {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     return DevocionalCarregaUmaVez<Devocional?>(
-      // A chave inclui a leitura e a data para reaproveitar o resultado certo.
       chave: '${leitura.name}/${Conteudo.chaveDoDia(data)}',
       carregar: _futuro,
       construir: (context, snap) {

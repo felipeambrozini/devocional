@@ -34,7 +34,7 @@ class LeitorFalso implements LeitorDeAudio {
       _encerramentoPendente = false;
       fim.complete();
     }
-    return Future<void>.value(); // Inicia imediatamente no mock
+    return Future<void>.value();
   }
 
   void encerrar() {
@@ -389,7 +389,6 @@ void main() {
       await esperarAvisos();
       expect(Voz.instancia.tocando, isTrue);
 
-      // Simula troca rápida: segunda chave assume
       final segunda = Voz.instancia.alternar(
         'capitulo:p.16',
       );

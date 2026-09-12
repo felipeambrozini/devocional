@@ -31,31 +31,51 @@ class TelaHistorico extends StatelessWidget {
       context.push('/${persona.slug}/conversa/${conversa.id}');
 
   Future<void> _apagarUma(BuildContext context, Conversa conversa) async {
+    final estado = EscopoDoEstado.de(context);
+    final mensageiro = ScaffoldMessenger.of(context);
     final confirmou = await confirmar(
       context,
       titulo: 'Apagar esta conversa?',
       conteudo:
           'Só esta conversa será apagada deste aparelho, e da cópia na nuvem '
-          'se houver. As outras conversas ficam. Essa ação não pode ser '
-          'desfeita.',
+          'se houver. As outras conversas ficam.',
       rotuloDaAcao: 'Apagar',
     );
     if (!confirmou || !context.mounted) return;
-    await EscopoDoEstado.de(context).limparConversa(persona.id, conversa.id);
+    await estado.limparConversa(persona.id, conversa.id);
+    // Apagar uma conversa tem volta pelo "Desfazer", como remover um
+    // favorito (ver biblia.dart). O mensageiro foi capturado antes dos
+    // awaits porque o contexto pode não estar mais montado aqui.
+    mostrarAvisoNo(
+      mensageiro,
+      'Conversa apagada.',
+      rotuloDeAcao: 'Desfazer',
+      aoAgir: () => estado.restaurarConversa(persona.id, conversa),
+    );
   }
 
   Future<void> _apagarTodas(BuildContext context) async {
+    final estado = EscopoDoEstado.de(context);
+    final mensageiro = ScaffoldMessenger.of(context);
+    // Snapshot antes de apagar: o Desfazer devolve a lista inteira, na ordem.
+    final apagadas = estado.conversasDe(persona.id);
     final confirmou = await confirmar(
       context,
       titulo: 'Apagar todas as conversas?',
       conteudo:
           'Todas as conversas com ${persona.nome} serão apagadas deste '
-          'aparelho, e da cópia na nuvem se houver. Essa ação não pode ser '
-          'desfeita.',
+          'aparelho, e da cópia na nuvem se houver.',
       rotuloDaAcao: 'Apagar tudo',
     );
     if (!confirmou || !context.mounted) return;
-    await EscopoDoEstado.de(context).limparTodasDe(persona.id);
+    await estado.limparTodasDe(persona.id);
+    // Mesmo Desfazer do apagar uma (ver _apagarUma): bulk também tem volta.
+    mostrarAvisoNo(
+      mensageiro,
+      'Conversas apagadas.',
+      rotuloDeAcao: 'Desfazer',
+      aoAgir: () => estado.restaurarConversas(persona.id, apagadas),
+    );
   }
 
   @override
@@ -104,16 +124,21 @@ class TelaHistorico extends StatelessWidget {
             icon: const FaIcon(FontAwesomeIcons.commentDots),
             onPressed: () => _abrirNova(context),
           ),
-          // Só tem o que apagar tudo quando há conversas.
+          // O apagar-tudo fica reservado mesmo sem conversas: sem isto, apagar
+          // a última da lista troca AppBar e corpo no mesmo quadro.
           ListenableBuilder(
             listenable: estado,
-            builder: (context, _) => estado.conversasDe(persona.id).isEmpty
-                ? const SizedBox.shrink()
-                : IconButton(
-                    tooltip: 'Apagar todas as conversas',
-                    icon: FaIcon(FontAwesomeIcons.broom, color: cor.error),
-                    onPressed: () => _apagarTodas(context),
-                  ),
+            builder: (context, _) => Visibility(
+              visible: estado.conversasDe(persona.id).isNotEmpty,
+              maintainSize: true,
+              maintainAnimation: true,
+              maintainState: true,
+              child: IconButton(
+                tooltip: 'Apagar todas as conversas',
+                icon: FaIcon(FontAwesomeIcons.broom, color: cor.error),
+                onPressed: () => _apagarTodas(context),
+              ),
+            ),
           ),
         ],
       ),

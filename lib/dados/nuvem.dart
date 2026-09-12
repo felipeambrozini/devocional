@@ -31,7 +31,6 @@ import 'registro.dart';
 /// `--dart-define` das outras chaves para ficar num só lugar.
 const _googleServerClientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
 
-/// RegExp para separar por espaços em branco (evita warning de RegExp deprecated).
 // ignore: deprecated_member_use
 final _espacos = RegExp(r'\s+');
 
@@ -246,7 +245,7 @@ bool _mesmoValor(dynamic a, dynamic b) {
 /// os botões de Entrar e Sair (Hoje e plano compartilhado) não têm como
 /// compartilhar uma instância sem um Provider inteiro só para isto.
 ///
-/// ponytail: um documento por usuário (`usuarios/{uid}`) com o mesmo mapa que
+/// Um documento por usuário (`usuarios/{uid}`) com o mesmo mapa que
 /// `exportar()` já produz. `importar()` funde e nunca apaga, então uma
 /// remoção feita num navegador não se propaga — se um favorito apagado
 /// "ressuscitar" na prática, o caminho é uma `versao: 2` da cópia com

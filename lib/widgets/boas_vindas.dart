@@ -41,8 +41,6 @@ class DevocionalBoasVindas extends StatelessWidget {
               ),
             ),
             const SizedBox(height: DevocionalEspacamento.sp18),
-            // A carta de boas-vindas também é página: abre pelo DevocionalFilete, como
-            // toda leitura da Estante.
             const DevocionalFilete(largura: 64),
             const SizedBox(height: DevocionalEspacamento.sp12),
             Text(persona.nome, style: tema.headlineSmall),

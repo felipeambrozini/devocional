@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -17,7 +18,6 @@ import 'devocional.dart';
 /// por completo depois da primeira leitura (`Conteudo.buscarDevocionais`,
 /// bem mais barato que varrer a Bíblia), então essa aba não precisa de
 /// stream nem de teto de resultados.
-/// A aba da tela de busca que começa selecionada.
 enum AbaDaBusca { biblia, devocionais }
 
 class TelaBusca extends StatefulWidget {
@@ -45,14 +45,18 @@ class _TelaBuscaState extends State<TelaBusca> {
     return ListenableBuilder(
       listenable: _controller,
       builder: (context, _) {
+        final cor = Theme.of(context).colorScheme;
         return DefaultTabController(
           length: 2,
           initialIndex: widget.abaInicial == AbaDaBusca.devocionais ? 1 : 0,
           child: Scaffold(
             appBar: DevocionalAppBar(
               title: const Text('Buscar'),
-              bottom: const TabBar(
-                tabs: [
+              bottom: TabBar(
+                labelColor: cor.secondary,
+                unselectedLabelColor: cor.onSurfaceVariant,
+                indicatorColor: cor.primary,
+                tabs: const [
                   Tab(text: 'Bíblia'),
                   Tab(text: 'Devocionais'),
                 ],
@@ -65,7 +69,9 @@ class _TelaBuscaState extends State<TelaBusca> {
                     padding: const EdgeInsets.all(DevocionalEspacamento.sp16),
                     child: DevocionalBusca(
                       controller: _controller.controle,
-                      autofocus: true,
+                      // Só fora da web: no celular o teclado abre junto e cobre
+                      // a lista antes de qualquer intenção de digitar.
+                      autofocus: !kIsWeb,
                       hintText: 'Palavra, expressão ou referência',
                       // Além de atualizar o botão de limpar, dispara a busca
                       // automaticamente um instante depois que a digitação parar.
@@ -209,7 +215,8 @@ class _ItemDeAchadoDevocional extends StatelessWidget {
               TelaDevocional(dataInicial: data, leituraInicial: leitura),
         ),
       ),
-      borderRadius: BorderRadius.circular(8),
+      // 12 como no destaque de versículo: 8 está fora da escala do DESIGN.md.
+      borderRadius: BorderRadius.circular(12),
       child: Padding(
         padding: const EdgeInsets.symmetric(
           vertical: DevocionalEspacamento.sp4,

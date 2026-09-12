@@ -9,6 +9,7 @@ import 'package:felipe_ambrozini/dados/recursos.dart';
 import 'package:felipe_ambrozini/dados/voz.dart';
 import 'package:felipe_ambrozini/main.dart';
 import 'package:felipe_ambrozini/funcoes/datas.dart';
+import 'package:felipe_ambrozini/funcoes/aviso.dart';
 import 'package:felipe_ambrozini/telas/biblia.dart';
 import 'package:felipe_ambrozini/telas/chat.dart';
 import 'package:felipe_ambrozini/widgets/widgets.dart';
@@ -553,72 +554,66 @@ void main() {
     );
   });
 
-  testWidgets(
-    'a data escolhida no calendário do Devocional atualiza a tela',
-    (tester) async {
-      await aquecerAssets(tester);
-      await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
-      await tester.pumpAndSettle();
+  testWidgets('a data escolhida no calendário do Devocional atualiza a tela', (
+    tester,
+  ) async {
+    await aquecerAssets(tester);
+    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+    await tester.pumpAndSettle();
 
-      final roteador = GoRouter.of(
-        tester.element(find.byType(Scaffold).first),
-      );
-      roteador.go('/manha');
-      await tester.pumpAndSettle();
+    final roteador = GoRouter.of(tester.element(find.byType(Scaffold).first));
+    roteador.go('/manha');
+    await tester.pumpAndSettle();
 
-      // O calendário escreve a data na mesma rota (/manha?data=...), e o
-      // go_router chaveia a página só pelo caminho: a tela não é recriada, o
-      // State sobrevive e a data nova tem de ser recolhida pelo
-      // didUpdateWidget. Regressão: o título ficava preso no dia anterior.
-      //
-      // Sem pumpAndSettle: o corpo do dia 10 de janeiro não está no cache de
-      // assets do teste, e o spinner girando não deixaria a tela assentar.
-      final anoPassado = DateTime.now().year - 1;
-      roteador.go('/manha?data=$anoPassado-01-10');
-      await tester.pump();
-      await tester.pump();
-      await tester.pump();
-      expect(find.text('10 de janeiro de $anoPassado'), findsOneWidget);
-    },
-  );
+    // O calendário escreve a data na mesma rota (/manha?data=...), e o
+    // go_router chaveia a página só pelo caminho: a tela não é recriada, o
+    // State sobrevive e a data nova tem de ser recolhida pelo
+    // didUpdateWidget. Regressão: o título ficava preso no dia anterior.
+    //
+    // Sem pumpAndSettle: o corpo do dia 10 de janeiro não está no cache de
+    // assets do teste, e o spinner girando não deixaria a tela assentar.
+    final anoPassado = DateTime.now().year - 1;
+    roteador.go('/manha?data=$anoPassado-01-10');
+    await tester.pump();
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('10 de janeiro de $anoPassado'), findsOneWidget);
+  });
 
-  testWidgets(
-    'o calendário navega para o mesmo dia e mês de outro ano',
-    (tester) async {
-      await aquecerAssets(tester);
-      await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
-      await tester.pumpAndSettle();
+  testWidgets('o calendário navega para o mesmo dia e mês de outro ano', (
+    tester,
+  ) async {
+    await aquecerAssets(tester);
+    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+    await tester.pumpAndSettle();
 
-      final roteador = GoRouter.of(
-        tester.element(find.byType(Scaffold).first),
-      );
-      roteador.go('/manha');
-      await tester.pumpAndSettle();
+    final roteador = GoRouter.of(tester.element(find.byType(Scaffold).first));
+    roteador.go('/manha');
+    await tester.pumpAndSettle();
 
-      // O ano entra na comparação de "mesmo dia": escolher 19 de agosto do
-      // ano passado não pode ser o mesmo dia que 19 de agosto de hoje, senão
-      // a navegação morria no retorno cedo de _irPara e o usuário ficava
-      // preso no dia atual sem o botão de voltar para hoje à vista.
-      final anoPassado = DateTime.now().year - 1;
-      final agora = DateTime.now();
-      final mes = agora.month.toString().padLeft(2, '0');
-      final dia = agora.day.toString().padLeft(2, '0');
-      roteador.go('/manha?data=$anoPassado-$mes-$dia');
-      await tester.pump();
-      await tester.pump();
-      await tester.pump();
+    // O ano entra na comparação de "mesmo dia": escolher 19 de agosto do
+    // ano passado não pode ser o mesmo dia que 19 de agosto de hoje, senão
+    // a navegação morria no retorno cedo de _irPara e o usuário ficava
+    // preso no dia atual sem o botão de voltar para hoje à vista.
+    final anoPassado = DateTime.now().year - 1;
+    final agora = DateTime.now();
+    final mes = agora.month.toString().padLeft(2, '0');
+    final dia = agora.day.toString().padLeft(2, '0');
+    roteador.go('/manha?data=$anoPassado-$mes-$dia');
+    await tester.pump();
+    await tester.pump();
+    await tester.pump();
 
-      expect(
-        find.text(
-          '${agora.day} de ${meses[agora.month - 1].toLowerCase()} '
-          'de $anoPassado',
-        ),
-        findsOneWidget,
-      );
-      // Fora do dia atual, o botão de voltar para hoje aparece.
-      expect(find.widgetWithText(TextButton, 'Voltar para hoje'), findsOneWidget);
-    },
-  );
+    expect(
+      find.text(
+        '${agora.day} de ${meses[agora.month - 1].toLowerCase()} '
+        'de $anoPassado',
+      ),
+      findsOneWidget,
+    );
+    // Fora do dia atual, o botão de voltar para hoje aparece.
+    expect(find.widgetWithText(TextButton, 'Voltar para hoje'), findsOneWidget);
+  });
 
   testWidgets(
     'reabrir o chat com uma resposta interrompida oferece tentar de novo',
@@ -701,10 +696,7 @@ void main() {
     // está visível e o aviso do corte (que mora no topo) ainda não foi
     // construído.
     expect(find.text('fala 120'), findsOneWidget);
-    expect(
-      find.textContaining('As falas mais antigas saíram'),
-      findsNothing,
-    );
+    expect(find.textContaining('As falas mais antigas saíram'), findsNothing);
 
     // O aviso de corte existe e aparece quando a lista volta ao topo.
     await tester.scrollUntilVisible(
@@ -835,6 +827,36 @@ void main() {
     expect(find.text('Outra'), findsOneWidget);
     expect(estado.conversasDe('spurgeon'), hasLength(1));
 
+    // O Desfazer devolve a conversa apagada, como no favorito. Os balões
+    // flutuantes ficam por cima do aviso nas telas largas e cobririam a ação:
+    // esconde-os pelo mecanismo do próprio app (ver _ComBaloes em main.dart).
+    camadasFlutuantes.value++;
+    addTearDown(() => camadasFlutuantes.value = 0);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(SnackBarAction, 'Desfazer'));
+    await tester.pumpAndSettle();
+    expect(find.text('Uma'), findsOneWidget);
+    expect(estado.conversasDe('spurgeon'), hasLength(2));
+    camadasFlutuantes.value--;
+    await tester.pumpAndSettle();
+
+    // Apagando de novo e deixando o aviso expirar, a remoção fica.
+    await tester.tap(
+      find.descendant(
+        of: find.widgetWithText(ListTile, 'Uma'),
+        matching: find.byTooltip('Apagar conversa'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Apagar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Uma'), findsNothing);
+    expect(estado.conversasDe('spurgeon'), hasLength(1));
+    // O aviso fecha sozinho por timer: avança o relógio para não deixar
+    // o timer pendente no fim do teste.
+    await tester.pump(duracaoDeAviso);
+    await tester.pumpAndSettle();
+
     await voltarParaCasa(tester);
   });
 
@@ -874,6 +896,22 @@ void main() {
     );
     expect(estado.conversasDe('spurgeon'), isEmpty);
 
+    // O Desfazer devolve as duas, na ordem. Os balões flutuantes ficam por
+    // cima do aviso nas telas largas: esconde-os pelo mecanismo do app.
+    camadasFlutuantes.value++;
+    addTearDown(() => camadasFlutuantes.value = 0);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(SnackBarAction, 'Desfazer'));
+    await tester.pumpAndSettle();
+    expect(find.text('Uma'), findsOneWidget);
+    expect(find.text('Outra'), findsOneWidget);
+    expect(estado.conversasDe('spurgeon'), hasLength(2));
+    camadasFlutuantes.value--;
+    // O aviso fecha sozinho por timer: avança o relógio para não deixar o
+    // timer pendente no fim do teste.
+    await tester.pump(duracaoDeAviso);
+    await tester.pumpAndSettle();
+
     await voltarParaCasa(tester);
   });
 
@@ -899,11 +937,11 @@ void main() {
     final uri = GoRouter.of(
       tester.element(find.byType(Scaffold).first),
     ).state.uri;
-    expect(
-      uri.pathSegments,
-      ['charles-spurgeon', 'conversa', c.id],
-      reason: 'o F5 e um link compartilhado reabrem esta conversa, não outra',
-    );
+    expect(uri.pathSegments, [
+      'charles-spurgeon',
+      'conversa',
+      c.id,
+    ], reason: 'o F5 e um link compartilhado reabrem esta conversa, não outra');
 
     await voltarParaCasa(tester);
   });
@@ -1049,35 +1087,33 @@ void main() {
     );
   });
 
-  testWidgets(
-    'faixa por versículo destaca o recorte e mantém o contexto',
-    (tester) async {
-      await aquecerAssets(tester);
-      await tester.pumpWidget(
-        MaterialApp(
-          home: EscopoDoEstado(
-            estado: await estadoLimpo(),
-            child: const TelaBiblia(
-              livroInicial: 'salmos',
-              capituloInicial: 119,
-              destacar: (1, 56),
-            ),
+  testWidgets('faixa por versículo destaca o recorte e mantém o contexto', (
+    tester,
+  ) async {
+    await aquecerAssets(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: EscopoDoEstado(
+          estado: await estadoLimpo(),
+          child: const TelaBiblia(
+            livroInicial: 'salmos',
+            capituloInicial: 119,
+            destacar: (1, 56),
           ),
         ),
-      );
-      await tester.pumpAndSettle();
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Salmos 119'), findsWidgets);
-      // O capítulo inteiro é carregado; o destaque é visual, não um corte no conteúdo.
-      expect(
-        find.byWidgetPredicate(
-          (w) => w is RichText && w.text.toPlainText().startsWith('1 '),
-        ),
-        findsOneWidget,
-      );
-    },
-    skip: false, // salmos.json foi traduzido
-  );
+    expect(find.text('Salmos 119'), findsWidgets);
+    // O capítulo inteiro é carregado; o destaque é visual, não um corte no conteúdo.
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is RichText && w.text.toPlainText().startsWith('1 '),
+      ),
+      findsOneWidget,
+    );
+  }, skip: false);
 
   testWidgets('favoritar pelo toque no versículo persiste no estado', (
     tester,
@@ -1151,6 +1187,11 @@ void main() {
         },
       );
 
+      // O comentário de Spurgeon (com o botão de ouvir) empurra Copiar para
+      // baixo da dobra na folha de teste — sem isto o tap acerta o vazio
+      // abaixo da tela em vez do ListTile.
+      await tester.ensureVisible(find.text('Copiar'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Copiar'));
       await tester.pumpAndSettle();
       expect(
@@ -1481,9 +1522,7 @@ void main() {
       // teste deixa) e a barra de cima tem de mostrá-lo — senão quem rolou
       // não saberia que o toque pegou nem como cancelar.
       leitor.atrasarProximoInicio = true;
-      final leitura = Voz.instancia.alternar(
-        'capitulo:genesis.1',
-      );
+      final leitura = Voz.instancia.alternar('capitulo:genesis.1');
       await tester.pump();
       expect(Voz.instancia.carregando, isTrue);
       expect(
@@ -1515,7 +1554,8 @@ void main() {
           matching: find.byTooltip('Pausar a leitura'),
         ),
         findsOneWidget,
-        reason: 'tocando, a barra de cima também oferece pausar, não só '
+        reason:
+            'tocando, a barra de cima também oferece pausar, não só '
             'parar',
       );
 
@@ -1529,8 +1569,11 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(Voz.instancia.pausado, isTrue,
-          reason: 'o anel de pausar leva ao mesmo estado "Pausado" da pílula');
+      expect(
+        Voz.instancia.pausado,
+        isTrue,
+        reason: 'o anel de pausar leva ao mesmo estado "Pausado" da pílula',
+      );
       expect(
         find.descendant(
           of: find.byType(AppBar),
@@ -1559,8 +1602,11 @@ void main() {
       await tester.fling(find.byType(ListView), const Offset(-300, 0), 800);
       await tester.pumpAndSettle();
       expect(estado.ultimaLeitura, ('genesis', 2));
-      expect(Voz.instancia.tocando, isFalse,
-          reason: 'o deslize não pode deixar áudio no ar');
+      expect(
+        Voz.instancia.tocando,
+        isFalse,
+        reason: 'o deslize não pode deixar áudio no ar',
+      );
       await leitura;
 
       // O "Desfazer" devolve a página e a leitura, da posição em que estava:
@@ -1603,9 +1649,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final leitura = Voz.instancia.alternar(
-        'capitulo:genesis.2',
-      );
+      final leitura = Voz.instancia.alternar('capitulo:genesis.2');
       await tester.pumpAndSettle();
       expect(Voz.instancia.tocando, isTrue);
 
@@ -1653,8 +1697,11 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(Voz.instancia.pausado, isFalse);
-      expect(Voz.instancia.tocando, isTrue,
-          reason: 'o toque na sessão pausada retoma a leitura');
+      expect(
+        Voz.instancia.tocando,
+        isTrue,
+        reason: 'o toque na sessão pausada retoma a leitura',
+      );
       expect(leitor.toques, 2);
       expect(
         leitor.ultimoDe,
@@ -1675,8 +1722,11 @@ void main() {
       await tester.tap(find.text('Desfazer'));
       await tester.pumpAndSettle();
       expect(estado.ultimaLeitura, ('genesis', 2));
-      expect(Voz.instancia.tocandoChave, 'capitulo:genesis.2',
-          reason: 'o desfazer devolve a sessão pausada junto com a página');
+      expect(
+        Voz.instancia.tocandoChave,
+        'capitulo:genesis.2',
+        reason: 'o desfazer devolve a sessão pausada junto com a página',
+      );
       expect(
         leitor.ultimoDe,
         const Duration(minutes: 4),
@@ -1706,8 +1756,11 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(Voz.instancia.pausado, isFalse);
-      expect(Voz.instancia.tocandoChave, isNull,
-          reason: 'o descarte encerra a sessão pausada de vez');
+      expect(
+        Voz.instancia.tocandoChave,
+        isNull,
+        reason: 'o descarte encerra a sessão pausada de vez',
+      );
       expect(leitor.toques, 3, reason: 'o descarte não toca — só encerra');
       leitor.encerrar();
       await leitura;
@@ -1739,9 +1792,7 @@ void main() {
       await tester.pumpAndSettle();
 
       leitor.atrasarProximoInicio = true;
-      final leitura = Voz.instancia.alternar(
-        'capitulo:genesis.4',
-      );
+      final leitura = Voz.instancia.alternar('capitulo:genesis.4');
       await tester.pump();
       expect(Voz.instancia.carregando, isTrue);
 
@@ -1762,10 +1813,16 @@ void main() {
       await tester.pumpAndSettle();
       expect(estado.ultimaLeitura, ('genesis', 4));
       expect(Voz.instancia.tocandoChave, 'capitulo:genesis.4');
-      expect(leitor.ultimoDe, isNull,
-          reason: 'preparo sem pausa: retoma do zero (sem posição)');
-      expect(leitor.toques, 2,
-          reason: 'o desfazer re-sintetizou (ou retomou da cache) a voz');
+      expect(
+        leitor.ultimoDe,
+        isNull,
+        reason: 'preparo sem pausa: retoma do zero (sem posição)',
+      );
+      expect(
+        leitor.toques,
+        2,
+        reason: 'o desfazer re-sintetizou (ou retomou da cache) a voz',
+      );
       leitor.encerrar();
       await leitura;
       // Deixa o aviso fechar sozinho, senão o timer dele fica pendente.
@@ -1789,7 +1846,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-     // O cartão fica abaixo das duas leituras do dia, que abrem a tela: numa
+    // O cartão fica abaixo das duas leituras do dia, que abrem a tela: numa
     // janela de 600 px de altura a lista nem o constrói. Rola até ele, como
     // o visitante faria, antes de conferir e tocar. O progresso do ano agora
     // viaja com a leitura, mas não afeta a posição deste cartão de ajuda.
@@ -1909,4 +1966,3 @@ void main() {
     expect(find.text('Gênesis 3'), findsWidgets);
   });
 }
-

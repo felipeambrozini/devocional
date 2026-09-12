@@ -127,8 +127,6 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 // rodapé nem existe. Leitura é o assunto do bloco de cima,
                 // por isso as setas fecham este primeiro grupo.
                 if (kIsWeb) ..._SecaoDasSetas(estado: estado).montar(context),
-                // O DevocionalFilete divide os dois assuntos da folha: o que se ajusta
-                // na leitura (acima) e o que é do app inteiro (abaixo).
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
                     DevocionalEspacamento.sp20,

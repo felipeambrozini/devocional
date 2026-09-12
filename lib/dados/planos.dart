@@ -114,7 +114,7 @@ class PlanoDoUsuario {
 
   /// Se o plano intercala os devocionais dos livros entre os capítulos —
   /// ver [montarPlanoDeLeitura]. Escolhido na criação do plano
-  /// (`lib/telas/novo_plano.dart`), não editável depois.
+  /// (`lib/telas/novo_plano.dart`).
   final bool incluirDevocionais;
 
   /// Só relevante com [incluirDevocionais]: se o devocional do capítulo

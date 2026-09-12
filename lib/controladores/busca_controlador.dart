@@ -68,7 +68,6 @@ class BuscaControlador extends ChangeNotifier {
       return;
     }
 
-    // Cancelar a busca anterior interrompe a leitura dos livros restantes.
     assinatura?.cancel();
     achados.clear();
     achadosDevocionais = [];

@@ -78,7 +78,12 @@ class DevocionalBotaoDeDevocional extends StatelessWidget {
         final parametroDeData =
             '$ano-${mes.toString().padLeft(2, '0')}-'
             '${dia.toString().padLeft(2, '0')}';
-        GoRouter.of(context).go('/${tipo.rota}?data=$parametroDeData');
+        // Push, não go: vindo de um plano (/plano/:id), o go trocava de aba
+        // e o devocional abria como raiz da aba Devocional — sem volta para
+        // o plano (DevocionalAppBar esconde a seta quando não há o que
+        // desempilhar). O push empilha por cima do plano, então voltar
+        // (seta no app e na web) retorna ao plano personalizado.
+        GoRouter.of(context).push('/${tipo.rota}?data=$parametroDeData');
       },
     );
   }

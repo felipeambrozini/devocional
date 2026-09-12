@@ -102,7 +102,6 @@ void main() {
     // assincronamente. Espera o FutureBuilder completar.
     await tester.pumpAndSettle(const Duration(seconds: 10));
 
-    // Procura pelo tooltip "Marcar como lido" ou "Desmarcar" que está no IconButton.
     final botaoMarcar = find.byTooltip('Marcar como lido');
     final botaoDesmarcar = find.byTooltip('Desmarcar');
     
@@ -112,14 +111,12 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(botaoMarcar);
     } else if (botaoDesmarcar.evaluate().isNotEmpty) {
-      // Já está marcado - desmarca primeiro para testar o fluxo completo
       expect(botaoDesmarcar, findsOneWidget);
       await tester.ensureVisible(botaoDesmarcar);
       await tester.pumpAndSettle();
       await tester.tap(botaoDesmarcar);
       await tester.pumpAndSettle();
       
-      // Agora marca
       final botaoMarcar2 = find.byTooltip('Marcar como lido');
       expect(botaoMarcar2, findsOneWidget);
       await tester.ensureVisible(botaoMarcar2);

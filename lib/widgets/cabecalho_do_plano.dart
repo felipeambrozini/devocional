@@ -4,7 +4,6 @@ import '../dados/planos.dart';
 import '../estilo/espacamento.dart';
 import 'progresso_fino.dart';
 
-/// O resumo do plano no topo da tela: livros, prazo e o progresso próprio.
 class DevocionalCabecalhoDoPlano extends StatelessWidget {
   const DevocionalCabecalhoDoPlano({
     super.key,

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -83,16 +84,9 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
                   ),
                   if (livros.isNotEmpty) ...[
                     const SizedBox(height: DevocionalEspacamento.sp10),
-                    Wrap(
-                      spacing: DevocionalEspacamento.sp8,
-                      runSpacing: DevocionalEspacamento.sp8,
-                      children: [
-                        for (final slug in livros)
-                          InputChip(
-                            label: Text(nomeDoLivro(slug)),
-                            onDeleted: () => _controller.removerLivro(slug),
-                          ),
-                      ],
+                    DevocionalLivrosEscolhidos(
+                      livros: livros,
+                      aoRemover: _controller.removerLivro,
                     ),
                   ],
                   const SizedBox(height: DevocionalEspacamento.sp20),
@@ -116,71 +110,39 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
                     ),
                   ),
                   const SizedBox(height: DevocionalEspacamento.sp20),
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    controlAffinity: ListTileControlAffinity.leading,
-                    title: const Text('Incluir devocionais dos livros'),
-                    subtitle: const Text(
-                      'Junto de cada capítulo, os devocionais de Manhã, Noite e '
-                      'Promessas de Deus que citam aquele texto.',
-                    ),
-                    value: _controller.incluirDevocionais,
-                    onChanged: _controller.definirIncluirDevocionais,
+                  DevocionalOpcaoDeDevocionais(
+                    incluir: _controller.incluirDevocionais,
+                    antes: _controller.devocionalAntes,
+                    aoMudarIncluir: _controller.definirIncluirDevocionais,
+                    aoMudarOrdem: _controller.definirDevocionalAntes,
                   ),
-                  if (_controller.incluirDevocionais) ...[
-                    const SizedBox(height: DevocionalEspacamento.sp8),
-                    Wrap(
-                      spacing: DevocionalEspacamento.sp8,
-                      runSpacing: DevocionalEspacamento.sp8,
-                      children: [
-                        ChoiceChip(
-                          label: const Text('Antes do capítulo'),
-                          selected: _controller.devocionalAntes,
-                          showCheckmark: false,
-                          onSelected: (_) =>
-                              _controller.definirDevocionalAntes(true),
-                        ),
-                        ChoiceChip(
-                          label: const Text('Depois do capítulo'),
-                          selected: !_controller.devocionalAntes,
-                          showCheckmark: false,
-                          onSelected: (_) =>
-                              _controller.definirDevocionalAntes(false),
-                        ),
-                      ],
-                    ),
-                  ],
                   if (previa.isNotEmpty) ...[
                     const SizedBox(height: DevocionalEspacamento.sp20),
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(DevocionalEspacamento.sp14),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Prévia', style: tema.titleSmall),
-                            const SizedBox(height: DevocionalEspacamento.sp8),
-                            for (final dia in previa.take(3))
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  bottom: DevocionalEspacamento.sp4,
-                                ),
-                                child: Text(
-                                  'Dia ${dia.numero} · ${dia.rotulo}',
-                                  style: tema.bodySmall,
-                                ),
+                    DevocionalCartao(
+                      titulo: 'Prévia',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          for (final dia in previa.take(5))
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: DevocionalEspacamento.sp4,
                               ),
-                            if (previa.length > 3)
-                              Text(
-                                '… e mais ${previa.length - 3} dias',
-                                style: tema.bodySmall?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                ),
+                              child: Text(
+                                'Dia ${dia.numero} · ${dia.rotulo}',
+                                style: tema.bodySmall,
                               ),
-                          ],
-                        ),
+                            ),
+                          if (previa.length > 5)
+                            Text(
+                              '… e mais ${previa.length - 5} dias',
+                              style: tema.bodySmall?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ],
@@ -224,7 +186,10 @@ Future<List<String>?> mostrarSeletorDeLivros(
               livro,
         ];
         return AlertDialog(
-          title: const Text('Escolher livros'),
+          title: Text(
+            'Escolher livros',
+            style: Theme.of(dialogContext).textTheme.headlineSmall,
+          ),
           content: SizedBox(
             width: 460,
             height: 480,
@@ -232,7 +197,9 @@ Future<List<String>?> mostrarSeletorDeLivros(
               children: [
                 DevocionalBusca(
                   controller: busca,
-                  autofocus: true,
+                  // Mesmo padrão da aba de busca: no celular o teclado
+                  // cobriria a lista de 66 livros antes de qualquer intenção.
+                  autofocus: !kIsWeb,
                   hintText: 'Buscar livro',
                   onChanged: (_) => setDialogState(() {}),
                   border: const OutlineInputBorder(),

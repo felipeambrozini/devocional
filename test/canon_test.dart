@@ -96,7 +96,6 @@ void main() {
         livrosDaReferencia('Gênesis 3:15, Romanos 16:20').map((l) => l.slug),
         ['genesis', 'romanos'],
       );
-      // Livro repetido aparece uma unica vez.
       expect(livrosDaReferencia('Js 5:12 e Js 1:9').map((l) => l.slug), [
         'josue',
       ]);
@@ -115,7 +114,6 @@ void main() {
           (livroPorSlug('1pedro'), 1, 2),
         ],
       );
-      // Trecho que nao resolve e' descartado, nao derruba os outros.
       expect(versiculosDaReferencia('Js 5:12 e nada a ver 1:1'), [
         (livroPorSlug('josue'), 5, 12),
       ]);
@@ -124,14 +122,12 @@ void main() {
     test(
       'resolve faixa de versiculos, como as promessas de dois versiculos',
       () {
-        // Sem faixa, e' um so versiculo (inicio e fim iguais).
         expect(faixaDeVersiculoDaReferencia('Jo 6:37'), (
           livroPorSlug('joao'),
           6,
           37,
           37,
         ));
-        // Promessas de Deus as vezes cita dois versiculos como uma so promessa.
         expect(faixaDeVersiculoDaReferencia('Salmos 102:13-14'), (
           livroPorSlug('salmos'),
           102,

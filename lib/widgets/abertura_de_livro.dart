@@ -39,7 +39,6 @@ class _AberturaDeLivroState extends State<DevocionalAberturaDeLivro> {
       carregar: () => Conteudo.instancia.introducao(widget.slug),
       construir: (context, snap) {
         final introducao = snap.data;
-        // Sem introdução escrita, nada é mostrado: o texto começa direto.
         if (introducao == null) return const SizedBox.shrink();
 
         return Padding(
@@ -134,8 +133,6 @@ class _IntroducaoAberta extends StatelessWidget {
         children: [
           const DevocionalFilete(),
           const SizedBox(height: DevocionalEspacamento.sp16),
-          // A voz de Spurgeon lê a introdução inteira, do título à frase;
-          // tocar de novo para a leitura.
           DevocionalBotaoDeVoz(
             chave: chaveDaIntroducao(slug),
             referencia: 'Introdução de ${introducao.livro}',

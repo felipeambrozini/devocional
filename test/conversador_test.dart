@@ -111,6 +111,53 @@ void main() {
       expect(conversador.respondendo, isFalse);
     });
 
+    test('interromper para a espera, descarta a tardia e libera repetir',
+        () async {
+      final estado = await Estado.abrir();
+      final portao = Completer<String>();
+      var chamadas = 0;
+      final conversador = Conversador(
+        persona: personaSpurgeon,
+        estado: estado,
+        chamar: ({required persona, required historico, required pergunta}) {
+          chamadas++;
+          return chamadas == 1 ? portao.future : Future.value('Agora sim.');
+        },
+      );
+
+      conversador.interromper();
+      expect(conversador.erro, isNull,
+          reason: 'sem espera não há o que parar');
+
+      final enviando = conversador.enviar('Oi');
+      await Future<void>.delayed(Duration.zero);
+      expect(conversador.respondendo, isTrue);
+
+      conversador.interromper();
+      expect(conversador.respondendo, isFalse);
+      expect(conversador.erro, contains('interrompida'));
+
+      // A resposta que chega depois do toque não entra no histórico.
+      portao.complete('Tarde demais.');
+      await enviando;
+      final mensagens = estado.mensagensDe('spurgeon', conversador.id!);
+      expect(mensagens, hasLength(1));
+      expect(
+        mensagens.single.pendente,
+        isTrue,
+        reason: 'a pergunta fica para o "Tentar de novo"',
+      );
+
+      await conversador.repetir();
+      expect(conversador.erro, isNull);
+      expect(conversador.respondendo, isFalse);
+      expect(estado.mensagensDe('spurgeon', conversador.id!), hasLength(2));
+      expect(
+        estado.mensagensDe('spurgeon', conversador.id!).last.texto,
+        'Agora sim.',
+      );
+    });
+
     test('falha vira erro e deixa a pergunta pendente para repetir', () async {
       final estado = await Estado.abrir();
       var tentativas = 0;
@@ -231,7 +278,6 @@ void main() {
       expect(conversador.erro, 'A resposta anterior não chegou.');
       expect(conversador.ultimaPergunta, 'Sumiu?');
 
-      // E o "Tentar de novo" resolve de verdade.
       await conversador.repetir();
       expect(conversador.erro, isNull);
       expect(estado.mensagensDe('spurgeon', id), hasLength(2));

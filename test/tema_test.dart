@@ -225,11 +225,9 @@ void main() {
         final grande = construirTema(escalaDeLeitura: 1.3).textTheme;
         const limitada = 1.0 + (1.3 - 1.0) * 0.3;
 
-        // Texto corrido de leitura
         expect(grande.bodyLarge?.fontSize, closeTo(17 * 1.3, 0.001));
         expect(grande.bodyMedium?.fontSize, closeTo(15 * 1.3, 0.001));
 
-        // Título, rótulo e legenda escalam com teto, não integralmente
         expect(
           grande.bodySmall?.fontSize,
           closeTo(padrao.bodySmall!.fontSize! * limitada, 0.001),

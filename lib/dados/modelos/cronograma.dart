@@ -39,7 +39,6 @@ class Faixa {
   }
 }
 
-/// Um dia do cronograma anual.
 class DiaDoPlano {
   const DiaDoPlano({
     required this.data,
@@ -89,7 +88,6 @@ sealed class ItemDoDia {
   const ItemDoDia();
 }
 
-/// Um capítulo (ou faixa de capítulos) do dia.
 final class ItemDeCapitulo extends ItemDoDia {
   const ItemDeCapitulo(this.faixa);
 

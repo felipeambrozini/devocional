@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -8,7 +9,6 @@ import '../funcoes/aviso.dart';
 import '../widgets/widgets.dart';
 import 'novo_plano.dart' show mostrarSeletorDeLivros;
 
-/// O que [mostrarEditorDePlano] devolve quando confirmado.
 typedef EdicaoDePlano = ({
   String titulo,
   List<String> livros,
@@ -22,8 +22,9 @@ typedef EdicaoDePlano = ({
 /// Devolve nulo se cancelado.
 ///
 /// Mudar livros ou dias remonta os dias do plano — o dia 5 de hoje pode
-/// virar outro trecho da Bíblia amanhã — então o botão de salvar confirma
-/// isso à parte quando é o caso: ver [_confirmarSeMudouODiaADia].
+/// virar outro trecho da Bíblia amanhã — então o próprio editor avisa com um
+/// banner e o botão de salvar vira "Mudar e reiniciar" quando é o caso, em
+/// vez de um diálogo de confirmação à parte.
 Future<EdicaoDePlano?> mostrarEditorDePlano(
   BuildContext context,
   PlanoDoUsuario plano,
@@ -59,8 +60,21 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
     context: context,
     builder: (dialogContext) => StatefulBuilder(
       builder: (dialogContext, setDialogState) {
-        Future<void> escolherLivros() async {
-          final escolhidos = await mostrarSeletorDeLivros(
+        // Mudar livros ou dias remonta os dias do plano — o dia 5 de hoje
+        // pode virar outro trecho da Bíblia amanhã. Em vez de um terceiro
+        // diálogo confirmando isso, o aviso mora no próprio editor e o botão
+        // de salvar diz o que vai acontecer.
+        bool mudouODiaADia() {
+          final novoTotalDeDias = int.tryParse(dias.text);
+          if (novoTotalDeDias == null) return false;
+          return novoTotalDeDias != plano.dias ||
+              livros.length != plano.livros.length ||
+              !livros.asMap().entries.every(
+                (e) => e.value == plano.livros[e.key],
+              );
+        }
+
+        Future<void> escolherLivros() async {          final escolhidos = await mostrarSeletorDeLivros(
             dialogContext,
             jaEscolhidos: livros,
           );
@@ -79,24 +93,6 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
           }
           if (!(form.currentState?.validate() ?? false)) return;
           final novoTotalDeDias = int.parse(dias.text);
-          final mudouODiaADia =
-              novoTotalDeDias != plano.dias ||
-              livros.length != plano.livros.length ||
-              !livros.asMap().entries.every(
-                (e) => e.value == plano.livros[e.key],
-              );
-          if (mudouODiaADia) {
-            final confirmou = await confirmar(
-              dialogContext,
-              titulo: 'Reiniciar o progresso?',
-              conteudo:
-                  'Mudar os livros ou os dias remonta o plano: o progresso '
-                  'já marcado deste aparelho será apagado, porque o dia 5 de '
-                  'hoje pode virar outro trecho da Bíblia.',
-              rotuloDaAcao: 'Mudar e reiniciar',
-            );
-            if (!confirmou) return;
-          }
           if (!dialogContext.mounted) return;
           Navigator.pop(dialogContext, (
             titulo: titulo.text,
@@ -108,7 +104,10 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
         }
 
         return AlertDialog(
-          title: const Text('Editar plano'),
+          title: Text(
+            'Editar plano',
+            style: Theme.of(dialogContext).textTheme.headlineSmall,
+          ),
           content: SizedBox(
             width: 420,
             height: 520,
@@ -119,9 +118,41 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (mudouODiaADia()) ...[
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(
+                          DevocionalEspacamento.sp12,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Theme.of(
+                              dialogContext,
+                            ).colorScheme.outline,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const DevocionalFilete(largura: 48),
+                            const SizedBox(height: DevocionalEspacamento.sp8),
+                            Text(
+                              'Mudar os livros ou os dias remonta o plano: o '
+                              'progresso já marcado será apagado.',
+                              style: Theme.of(
+                                dialogContext,
+                              ).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: DevocionalEspacamento.sp16),
+                    ],
                     TextField(
                       controller: titulo,
-                      autofocus: true,
+                      autofocus: !kIsWeb,
                       textInputAction: TextInputAction.next,
                       decoration: const InputDecoration(
                         labelText: 'Nome do plano',
@@ -131,7 +162,7 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                     const SizedBox(height: DevocionalEspacamento.sp20),
                     Text(
                       'Quais livros?',
-                      style: Theme.of(dialogContext).textTheme.titleSmall,
+                      style: Theme.of(dialogContext).textTheme.titleMedium,
                     ),
                     const SizedBox(height: DevocionalEspacamento.sp8),
                     DevocionalBotaoSecundario.icon(
@@ -145,24 +176,16 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                     ),
                     if (livros.isNotEmpty) ...[
                       const SizedBox(height: DevocionalEspacamento.sp10),
-                      Wrap(
-                        spacing: DevocionalEspacamento.sp8,
-                        runSpacing: DevocionalEspacamento.sp8,
-                        children: [
-                          for (final slug in livros)
-                            InputChip(
-                              label: Text(nomeDoLivro(slug)),
-                              onDeleted: () => setDialogState(
-                                () => livros.remove(slug),
-                              ),
-                            ),
-                        ],
+                      DevocionalLivrosEscolhidos(
+                        livros: livros,
+                        aoRemover: (slug) =>
+                            setDialogState(() => livros.remove(slug)),
                       ),
                     ],
                     const SizedBox(height: DevocionalEspacamento.sp20),
                     Text(
                       'Em quantos dias?',
-                      style: Theme.of(dialogContext).textTheme.titleSmall,
+                      style: Theme.of(dialogContext).textTheme.titleMedium,
                     ),
                     const SizedBox(height: DevocionalEspacamento.sp8),
                     TextFormField(
@@ -170,6 +193,9 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                       keyboardType: TextInputType.number,
                       onChanged: (_) => setDialogState(() {}),
                       validator: validarDias,
+                      // Igual ao novo plano: o erro aparece enquanto digita,
+                      // não só ao tocar "Mudar e reiniciar".
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
                       decoration: InputDecoration(
                         helperText: totalDeCapitulos() == 0
                             ? 'Escolha os livros para ver o tamanho do plano.'
@@ -179,42 +205,15 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                       ),
                     ),
                     const SizedBox(height: DevocionalEspacamento.sp20),
-                    CheckboxListTile(
-                      contentPadding: EdgeInsets.zero,
-                      controlAffinity: ListTileControlAffinity.leading,
-                      title: const Text('Incluir devocionais dos livros'),
-                      subtitle: const Text(
-                        'Junto de cada capítulo, os devocionais de Manhã, '
-                        'Noite e Promessas de Deus que citam aquele texto.',
-                      ),
-                      value: incluirDevocionais,
-                      onChanged: (marcado) => setDialogState(
+                    DevocionalOpcaoDeDevocionais(
+                      incluir: incluirDevocionais,
+                      antes: devocionalAntes,
+                      aoMudarIncluir: (marcado) => setDialogState(
                         () => incluirDevocionais = marcado ?? false,
                       ),
+                      aoMudarOrdem: (antes) =>
+                          setDialogState(() => devocionalAntes = antes),
                     ),
-                    if (incluirDevocionais) ...[
-                      const SizedBox(height: DevocionalEspacamento.sp8),
-                      Wrap(
-                        spacing: DevocionalEspacamento.sp8,
-                        runSpacing: DevocionalEspacamento.sp8,
-                        children: [
-                          ChoiceChip(
-                            label: const Text('Antes do capítulo'),
-                            selected: devocionalAntes,
-                            showCheckmark: false,
-                            onSelected: (_) =>
-                                setDialogState(() => devocionalAntes = true),
-                          ),
-                          ChoiceChip(
-                            label: const Text('Depois do capítulo'),
-                            selected: !devocionalAntes,
-                            showCheckmark: false,
-                            onSelected: (_) =>
-                                setDialogState(() => devocionalAntes = false),
-                          ),
-                        ],
-                      ),
-                    ],
                   ],
                 ),
               ),
@@ -225,7 +224,10 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
               onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Cancelar'),
             ),
-            DevocionalBotaoPrimario(onPressed: salvar, child: const Text('Salvar')),
+            DevocionalBotaoPrimario(
+              onPressed: salvar,
+              child: Text(mudouODiaADia() ? 'Mudar e reiniciar' : 'Salvar'),
+            ),
           ],
         );
       },

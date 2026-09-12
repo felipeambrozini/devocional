@@ -67,6 +67,9 @@ graphify-out/
 .claude/skills/*
 !.claude/skills/spurgeon-introducao/
 !.claude/skills/spurgeon-comentarios/
+!.claude/skills/feature-flag-gate/
+!.claude/skills/release-checklist/
+!.claude/agents/
 .github/hooks/
 .github/skills/
 .agents/

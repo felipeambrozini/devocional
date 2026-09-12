@@ -8,11 +8,37 @@ import '../widgets/widgets.dart';
 /// Termos de serviço: URL própria exigida por integrações que pedem um link
 /// de termos (ex.: tela de consentimento OAuth do Google), com o mesmo
 /// tratamento visual de [privacidade.dart].
-class TelaTermos extends StatelessWidget {
+class TelaTermos extends StatefulWidget {
   const TelaTermos({super.key});
 
   @override
+  State<TelaTermos> createState() => _TelaTermosState();
+}
+
+class _TelaTermosState extends State<TelaTermos> {
+  final _servico = GlobalKey();
+  final _conta = GlobalKey();
+  final _uso = GlobalKey();
+  final _isencao = GlobalKey();
+  final _encerramento = GlobalKey();
+  final _alteracoes = GlobalKey();
+  final _contato = GlobalKey();
+
+  // Mesma razão do índice da privacidade: chegar direto à seção que motivou
+  // a visita, sem rolagem às cegas.
+  void _rolarAte(GlobalKey chave) {
+    final alvo = chave.currentContext;
+    if (alvo == null) return;
+    Scrollable.ensureVisible(
+      alvo,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     return Scaffold(
       appBar: DevocionalAppBar(title: const Text('Termos de serviço')),
@@ -24,6 +50,24 @@ class TelaTermos extends StatelessWidget {
           listenable: Nuvem.instancia,
           builder: (context, _) {
             final chat = Recursos.conversas;
+            const indice = <String>[
+              'O serviço',
+              'Conta e conteúdo do usuário',
+              'Uso aceitável',
+              'Isenção de responsabilidade',
+              'Encerramento',
+              'Alterações',
+              'Contato',
+            ];
+            final chaves = <String, GlobalKey>{
+              'O serviço': _servico,
+              'Conta e conteúdo do usuário': _conta,
+              'Uso aceitável': _uso,
+              'Isenção de responsabilidade': _isencao,
+              'Encerramento': _encerramento,
+              'Alterações': _alteracoes,
+              'Contato': _contato,
+            };
             return ListView(
               padding: const EdgeInsets.fromLTRB(
                 DevocionalEspacamento.sp20,
@@ -42,7 +86,24 @@ class TelaTermos extends StatelessWidget {
                   'projeto pessoal.',
                   style: tema.bodyLarge?.copyWith(height: 1.7),
                 ),
+                const SizedBox(height: DevocionalEspacamento.sp16),
+                Text(
+                  'Nesta página',
+                  style: tema.labelLarge?.copyWith(color: cor.secondary),
+                ),
+                const SizedBox(height: DevocionalEspacamento.sp4),
+                Wrap(
+                  spacing: DevocionalEspacamento.sp4,
+                  children: [
+                    for (final titulo in indice)
+                      DevocionalBotaoTerciario(
+                        onPressed: () => _rolarAte(chaves[titulo]!),
+                        child: Text(titulo),
+                      ),
+                  ],
+                ),
                 DevocionalSecaoDeTexto(
+                  key: _servico,
                   titulo: 'O serviço',
                   texto: chat
                       ? 'O aplicativo oferece Bíblia, devocionais, plano de '
@@ -62,6 +123,7 @@ class TelaTermos extends StatelessWidget {
                             'prévio.',
                 ),
                 DevocionalSecaoDeTexto(
+                  key: _conta,
                   titulo: 'Conta e conteúdo do usuário',
                   texto: chat
                       ? 'Entrar com conta Google é opcional e serve para '
@@ -78,7 +140,8 @@ class TelaTermos extends StatelessWidget {
                             'leitura compartilhados expõem o progresso a '
                             'quem participa do mesmo plano.',
                 ),
-                const DevocionalSecaoDeTexto(
+                DevocionalSecaoDeTexto(
+                  key: _uso,
                   titulo: 'Uso aceitável',
                   texto:
                       'O aplicativo não deve ser usado para fins ilegais, para '
@@ -86,7 +149,8 @@ class TelaTermos extends StatelessWidget {
                       'para automatizar acesso em volume que sobrecarregue a '
                       'infraestrutura do serviço.',
                 ),
-                const DevocionalSecaoDeTexto(
+                DevocionalSecaoDeTexto(
+                  key: _isencao,
                   titulo: 'Isenção de responsabilidade',
                   texto:
                       'O conteúdo é fornecido "como está". O criador não se '
@@ -94,7 +158,8 @@ class TelaTermos extends StatelessWidget {
                       'no aplicativo, nem por perdas decorrentes de '
                       'indisponibilidade do serviço.',
                 ),
-                const DevocionalSecaoDeTexto(
+                DevocionalSecaoDeTexto(
+                  key: _encerramento,
                   titulo: 'Encerramento',
                   texto:
                       'Você pode parar de usar o aplicativo e apagar sua conta a '
@@ -102,14 +167,16 @@ class TelaTermos extends StatelessWidget {
                       'privacidade. O criador pode encerrar o serviço ou '
                       'contas que violem estes termos.',
                 ),
-                const DevocionalSecaoDeTexto(
+                DevocionalSecaoDeTexto(
+                  key: _alteracoes,
                   titulo: 'Alterações',
                   texto:
                       'Estes termos podem ser atualizados; o uso continuado do '
                       'aplicativo após uma mudança implica aceitação da nova '
                       'versão.',
                 ),
-                const DevocionalSecaoDeTexto(
+                DevocionalSecaoDeTexto(
+                  key: _contato,
                   titulo: 'Contato',
                   texto:
                       'Dúvidas sobre estes termos podem ser enviadas pelos '

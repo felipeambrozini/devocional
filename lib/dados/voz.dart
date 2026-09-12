@@ -43,6 +43,12 @@ String chaveDeCapitulo(String livro, int numero) => 'capitulo:$livro.$numero';
 
 String chaveDaIntroducao(String slug) => 'introducao:$slug';
 
+/// A chave da voz para o comentário de Spurgeon de um versículo
+/// ("comentario:joao.3.16") — um áudio por versículo, e não por capítulo:
+/// cada arquivo já anuncia "Livro Capítulo N Versículo M" antes do comentário.
+String chaveDoComentario(String livro, int capitulo, int versiculo) =>
+    'comentario:$livro.$capitulo.$versiculo';
+
 /// A chave da voz para um devocional ("devocional:manha:19-08",
 /// "devocional:promessas:01-01"): [dia] e [mes] sempre com dois dígitos, na
 /// ordem DD-MM — o mesmo formato que `audio_gen` grava os mp3 (ver
@@ -70,13 +76,20 @@ String? caminhoRelativoParaChave(String chave) {
   if (chave.startsWith('introducao:')) {
     return 'introducao/${chave.substring('introducao:'.length)}.mp3';
   }
+  if (chave.startsWith('comentario:')) {
+    final partes = chave.substring('comentario:'.length).split('.');
+    if (partes.length != 3) return null;
+    return 'comentarios/${partes[0]}/${partes[1]}-${partes[2]}.mp3';
+  }
   if (chave.startsWith('devocional:')) {
     final resto = chave.substring('devocional:'.length);
     final idx = resto.indexOf(':');
     if (idx == -1) return null;
     final leitura = resto.substring(0, idx);
     final data = resto.substring(idx + 1).replaceAll('/', '-');
-    if (leitura == 'promessas') return 'devocionais/promessas_de_deus/$data.mp3';
+    if (leitura == 'promessas') {
+      return 'devocionais/promessas_de_deus/$data.mp3';
+    }
     return 'devocionais/manha_e_noite/$leitura/$data.mp3';
   }
   return null;
@@ -179,10 +192,13 @@ class Voz extends ChangeNotifier {
     if (chave.startsWith('introducao:')) {
       return livroPorSlug(chave.substring('introducao:'.length)) != null;
     }
+    if (chave.startsWith('comentario:')) {
+      final slug = chave.substring('comentario:'.length).split('.').first;
+      return livroPorSlug(slug) != null;
+    }
     return true;
   }
 
-  /// Se há um arquivo de áudio para [chave] (base configurada e chave conhecida).
   bool temArquivoParaChave(String chave) => _urlParaChave(chave) != null;
 
   /// Override para testes: quando não nulo, [disponibilidadeRemota] retorna
@@ -227,9 +243,7 @@ class Voz extends ChangeNotifier {
     final emCache = _cacheDeDisponibilidade[chave];
     if (emCache != null) return emCache;
     try {
-      final resp = await http
-          .head(Uri.parse(url))
-          .timeout(_timeoutDaChecagem);
+      final resp = await http.head(Uri.parse(url)).timeout(_timeoutDaChecagem);
       final resultado = resp.statusCode == 200
           ? DisponibilidadeRemota.existe
           : DisponibilidadeRemota.naoExiste;
@@ -240,22 +254,16 @@ class Voz extends ChangeNotifier {
     }
   }
 
-  /// Há um áudio tocando agora (a leitura começou e não terminou).
   bool get tocando => _tocando;
 
-  /// A voz ainda está preparando o áudio (baixando).
   bool get carregando => _carregando;
 
   /// O que está tocando ou carregando: o botão com a mesma chave mostra
   /// "Parar", e os outros ficam em "Ouvir".
   String? get tocandoChave => _tocandoChave;
 
-  /// Pausada de fora: a leitura não acabou nem foi parada, e a sessão espera
-  /// o retomar da posição em que estava.
   bool get pausado => _pausado;
 
-  /// A posição em que o [parar] derrubou a leitura: o "Desfazer" do deslize
-  /// passa isto para o [retomar] e a leitura volta de onde estava.
   Duration? get desdeAParada => _desdeAParada;
 
   /// A posição da leitura atual, para a linha fina de progresso do botão. Sem
@@ -463,7 +471,6 @@ class Voz extends ChangeNotifier {
     await _acompanharLeitura(fim, chave, versao: versao);
   }
 
-  /// Retoma um arquivo pausado sem recriar a source quando possível.
   Future<void> _retomarArquivo(
     String url, {
     Duration? de,
@@ -473,7 +480,6 @@ class Voz extends ChangeNotifier {
     await _tocarArquivo(url, _tocandoChave!, versao: versao, de: de);
   }
 
-  /// Resolve a fonte preferindo arquivo offline local, depois URL remota.
   Future<String?> _fonteComOffline(String url, String chave) async {
     if (kIsWeb) return url;
     try {
@@ -571,7 +577,6 @@ class Voz extends ChangeNotifier {
     return true;
   }
 
-  /// Retoma a leitura pausada de fora: do arquivo na posição da pausa.
   Future<bool> retomarDaPausa() async {
     if (!_pausado) return false;
     final chave = _tocandoChave!;
@@ -593,7 +598,6 @@ class Voz extends ChangeNotifier {
     return false;
   }
 
-  /// Acompanha a leitura até o fim e fecha o ciclo.
   Future<void> _acompanharLeitura(
     Future<void> fim,
     String chave, {
@@ -648,8 +652,6 @@ class Voz extends ChangeNotifier {
     } catch (_) {}
   }
 
-  /// Onde a leitura está agora: no leitor de testes, a posição que o teste
-  /// ajustou; no app, a do player.
   Duration? _posicaoDoLeitor() {
     final leitor = _leitorDeAudio;
     if (leitor != null) return leitor.posicaoAtual;

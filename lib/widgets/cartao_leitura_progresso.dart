@@ -11,7 +11,6 @@ import 'faixa.dart';
 import 'filete.dart';
 import 'progresso_fino.dart';
 
-/// Cartão unificado: leitura de hoje + progresso do ano, no estilo devocional.
 class DevocionalCartaoLeituraProgresso extends StatelessWidget {
   const DevocionalCartaoLeituraProgresso({
     super.key,
@@ -37,7 +36,6 @@ class DevocionalCartaoLeituraProgresso extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Cabeçalho com título e ação de marcar como lido
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -59,17 +57,14 @@ class DevocionalCartaoLeituraProgresso extends StatelessWidget {
             ],
           ),
           const SizedBox(height: DevocionalEspacamento.sp8),
-          // Rótulo do dia (ex: "Dia 1 — Gênesis 1–2")
           Text(dia.rotulo, style: tema.bodyLarge),
           const SizedBox(height: DevocionalEspacamento.sp12),
-          // Faixas do dia
           Wrap(
             spacing: DevocionalEspacamento.sp8,
             runSpacing: DevocionalEspacamento.sp8,
             children: [for (final f in dia.faixas) DevocionalBotaoDeFaixa(faixa: f)],
           ),
           const SizedBox(height: DevocionalEspacamento.sp20),
-          // DevocionalFilete separador antes do progresso
           const DevocionalFilete(),
           const SizedBox(height: DevocionalEspacamento.sp14),
           // Progresso do ano. Wrap, não Row com Spacer: em largura curta

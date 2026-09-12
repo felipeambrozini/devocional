@@ -29,7 +29,6 @@ class Livro {
 
 enum Testamento { antigo, novo }
 
-/// RegExp constants to avoid deprecated RegExp warnings.
   // ignore: deprecated_member_use
   final _digitosInicio = RegExp(r'^\d+');
   // ignore: deprecated_member_use
@@ -368,8 +367,6 @@ List<String> trechosDaReferencia(String referencia) {
   return trechos;
 }
 
-/// Todos os livros citados numa referência, na ordem em que aparecem.
-///
 /// Cobre o dia comum, de um só livro, e o raro dia que cita mais de um.
 List<Livro> livrosDaReferencia(String referencia) {
   final encontrados = <Livro>[];

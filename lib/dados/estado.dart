@@ -11,7 +11,7 @@ import 'registro.dart';
 
 /// Estado persistido do app: progresso de leitura, favoritos, notas e preferências.
 ///
-/// ponytail: um blob JSON por domínio em SharedPreferences, sem banco. Escala para
+/// Um blob JSON por domínio em SharedPreferences, sem banco. Escala para
 /// centenas de notas; o teto é o localStorage da web, por volta de 5 MB. Se as notas
 /// crescerem além disso, o caminho é `drift`. Escolhido por ser o único
 /// armazenamento que funciona igual em Android e web sem ramificar código.
@@ -200,8 +200,6 @@ class Estado extends ChangeNotifier {
             PlanoDoUsuario.doJson(item as Map<String, dynamic>),
         ];
       } catch (erro, pilha) {
-        // Dado corrompido não deve impedir o app de abrir, mesma regra das
-        // marcações.
         Registro.erro('Estado.lerTudo', erro, pilha);
         _planos = [];
       }
@@ -677,11 +675,15 @@ class Estado extends ChangeNotifier {
   Future<void> limparConversa(String persona, String conversaId) =>
       conversas.limparConversa(persona, conversaId);
 
+  Future<void> restaurarConversa(String persona, Conversa conversa) =>
+      conversas.restaurarConversa(persona, conversa);
+
   Future<void> limparTodasDe(String persona) =>
       conversas.limparTodasDe(persona);
 
-  /// O que a cópia na nuvem recebe para as conversas. Ver o método homônimo
-  /// em `Conversas`.
+  Future<void> restaurarConversas(String persona, List<Conversa> lista) =>
+      conversas.restaurarConversas(persona, lista);
+
   String serializarConversas() => conversas.serializarConversas();
 
   Future<void> fundirConversas(String remota) =>

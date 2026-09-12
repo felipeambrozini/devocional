@@ -126,6 +126,10 @@ class ChatControlador extends ChangeNotifier {
     await conversadorAtual.enviar(texto);
   }
 
+  /// Para a resposta em andamento: a pergunta fica pendente e a tela oferece
+  /// "Tentar de novo" (ver [Conversador.interromper]).
+  void interromper() => conversador?.interromper();
+
   Future<void> limparConversa(BuildContext context) async {
     final id = conversador?.id;
     if (id == null) return;

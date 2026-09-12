@@ -20,7 +20,7 @@ class AudioOffline extends ChangeNotifier {
 
   bool _baixando = false;
   bool _cancelado = false;
-  String? _categoriaAtiva; // biblia, introducao, manha_noite, promessas
+  String? _categoriaAtiva;
   double _progresso = 0; // 0..1 do lote atual
   int _baixadosNoLote = 0;
   int _totalNoLote = 0;
@@ -86,7 +86,6 @@ class AudioOffline extends ChangeNotifier {
 
   String get _baseUrl => baseUrlParaTeste ?? audioBaseUrl;
 
-  /// Se o arquivo offline já existe para [chave].
   Future<bool> temOffline(String chave) async {
     final paraTeste = temOfflineParaTeste;
     if (paraTeste != null) return paraTeste(chave);
@@ -95,7 +94,6 @@ class AudioOffline extends ChangeNotifier {
     return f.exists();
   }
 
-  /// Retorna o caminho do arquivo offline se existir, senão null.
   Future<String?> caminhoOffline(String chave) async {
     if (!_suportado) return null;
     final f = await _arquivoLocal(chave);
@@ -136,7 +134,6 @@ class AudioOffline extends ChangeNotifier {
     }
   }
 
-  /// Baixa todos os arquivos de [categoria] (biblia, introducao, manha_noite, promessas).
   /// Se AUDIO_BASE_URL não estiver configurada, não faz nada. Interrompível
   /// por [cancelar]: o que já baixou fica — só para de pedir o resto.
   Future<void> baixarCategoria(String categoria, {http.Client? cliente}) async {
@@ -216,7 +213,6 @@ class AudioOffline extends ChangeNotifier {
     return '$b/$relativo';
   }
 
-  /// Apaga todos os arquivos offline de [categoria].
   Future<void> apagarCategoria(String categoria) async {
     if (!_suportado) return;
     final dir = await _dirBase();
@@ -236,7 +232,6 @@ class AudioOffline extends ChangeNotifier {
     await atualizarContagens();
   }
 
-  /// Apaga tudo.
   Future<void> apagarTudo() async {
     if (!_suportado) return;
     final dir = await _dirBase();

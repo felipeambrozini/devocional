@@ -7,6 +7,21 @@ import 'folha_de_ajustes.dart';
 /// Botões compartilhados entre telas: cada mudança neles (ícone, cor, texto)
 /// acontece uma vez aqui, não em cada tela que precisa de um.
 
+/// Abre a busca. Usado nas telas de leitura (Bíblia e devocional): a mesma
+/// lupa, com o mesmo tooltip, sem cada AppBar declarar o próprio IconButton.
+class DevocionalBotaoDeBusca extends StatelessWidget {
+  const DevocionalBotaoDeBusca({super.key, required this.aoBuscar});
+
+  final VoidCallback aoBuscar;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: 'Buscar',
+    icon: const FaIcon(FontAwesomeIcons.magnifyingGlass),
+    onPressed: aoBuscar,
+  );
+}
+
 /// Abre os ajustes de leitura. Usado onde não há AppBar para pendurar a ação,
 /// que hoje é só a tela Hoje.
 class DevocionalBotaoDeAjustes extends StatelessWidget {
@@ -22,6 +37,22 @@ class DevocionalBotaoDeAjustes extends StatelessWidget {
       color: Theme.of(context).colorScheme.primary,
     ),
     onPressed: () => ajustesDeLeitura(context, estado),
+  );
+}
+
+/// Abre o seletor de data. Usado onde a data é navegável, que hoje é só o
+/// devocional: sem isto, cada tela com calendário teria o próprio IconButton
+/// de elipse-e-item.
+class DevocionalBotaoDeData extends StatelessWidget {
+  const DevocionalBotaoDeData({super.key, required this.aoEscolher});
+
+  final VoidCallback aoEscolher;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: 'Escolher data',
+    icon: const FaIcon(FontAwesomeIcons.calendarDays),
+    onPressed: aoEscolher,
   );
 }
 

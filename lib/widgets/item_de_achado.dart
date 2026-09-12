@@ -26,7 +26,7 @@ class DevocionalItemDeAchado extends StatelessWidget {
           ),
         ),
       ),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(12),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: DevocionalEspacamento.sp4, horizontal: DevocionalEspacamento.sp4),
         child: Column(

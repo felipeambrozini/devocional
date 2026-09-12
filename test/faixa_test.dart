@@ -100,5 +100,12 @@ void main() {
 
     final ano = DateTime.now().year;
     expect(find.text('data=$ano-12-25'), findsOneWidget);
+    // Regressão: abrir o devocional a partir de um plano trocava de aba com
+    // go e perdia a volta para o plano. Com push, voltar desempilha para a
+    // origem (/inicio aqui, /plano/:id no app).
+    expect(roteador.canPop(), isTrue);
+    roteador.pop();
+    await tester.pumpAndSettle();
+    expect(find.text('Noite'), findsOneWidget);
   });
 }

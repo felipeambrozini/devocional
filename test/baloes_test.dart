@@ -206,8 +206,6 @@ void main() {
       await tester.tap(find.text('Conversas'));
       await tester.pumpAndSettle();
 
-      // A aba é a entrada do chat: as duas cartas levam ao histórico de cada
-      // persona.
       expect(find.text('Charles Spurgeon'), findsOneWidget);
       expect(find.text('Felipe Ambrozini'), findsOneWidget);
 

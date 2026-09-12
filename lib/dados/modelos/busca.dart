@@ -1,6 +1,5 @@
 import '../canon.dart';
 
-/// Um resultado de busca.
 class Achado {
   const Achado({
     required this.livro,

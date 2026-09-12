@@ -4,7 +4,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../estilo/espacamento.dart';
 import 'botao.dart';
 
-/// O convite a compartilhar, ou o atalho para copiar o link de novo.
 class DevocionalCartaoDeCompartilhar extends StatelessWidget {
   const DevocionalCartaoDeCompartilhar({
     super.key,

@@ -46,6 +46,12 @@ class Conversador extends ChangeNotifier {
 
   bool _respondendo = false;
 
+  /// Qual turno de pergunta/resposta vale agora. [interromper] e um novo
+  /// [_perguntar] passam a geração adiante: a resposta de uma geração antiga
+  /// que chegar depois é descartada, em vez de entrar no histórico ou de
+  /// derrubar o "respondendo" do turno atual.
+  int _geracao = 0;
+
   /// Falha da última tentativa, mostrada num balão de erro no rodapé da
   /// conversa com o botão de tentar de novo. Vive só aqui: um erro não é
   /// parte do histórico e não deve ser persistido.
@@ -75,7 +81,6 @@ class Conversador extends ChangeNotifier {
 
   bool get respondendo => _respondendo;
 
-  /// Quanto tempo o balão de erro fica na tela antes de sumir sozinho.
   final Duration duracaoDoErro;
 
   String? get erro => _erro;
@@ -125,8 +130,18 @@ class Conversador extends ChangeNotifier {
     return conversa.id;
   }
 
-  /// Refaz a última pergunta que falhou, sem o usuário redigitar.
   Future<void> repetir() => _perguntar(_ultimaPergunta);
+
+  /// Para a resposta em andamento (o botão parar da tela): a pergunta
+  /// continua no histórico como pendente e a tela oferece "Tentar de novo",
+  /// como quando a resposta não chega por rede. A resposta que chegar depois
+  /// do toque é descartada, não entra no histórico.
+  void interromper() {
+    if (!_respondendo) return;
+    _geracao++;
+    _respondendo = false;
+    _mostrarErro('Resposta interrompida.');
+  }
 
   /// Reabrir depois de uma resposta interrompida: a última pergunta ficou
   /// pendente, e a tela oferece "Tentar de novo" em vez de deixar a pergunta
@@ -155,10 +170,10 @@ class Conversador extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Chama a IA com a pergunta já registrada no histórico.
   Future<void> _perguntar(String pergunta) async {
     final id = this.id;
     if (id == null) return;
+    final geracao = ++_geracao;
     _respondendo = true;
     _erro = null;
     _temporizadorDoErro?.cancel();
@@ -170,6 +185,9 @@ class Conversador extends ChangeNotifier {
         historico: estado.mensagensDe(persona.id, id),
         pergunta: pergunta,
       );
+      // Parou no meio do caminho (ou um turno novo assumiu): a resposta
+      // tardia não entra no histórico.
+      if (geracao != _geracao) return;
       await estado.registrarMensagem(
         persona.id,
         id,
@@ -180,13 +198,17 @@ class Conversador extends ChangeNotifier {
           momento: DateTime.now().millisecondsSinceEpoch,
         ),
       );
-      // A resposta chegou: nada fica pendente nesta conversa.
       await estado.marcarRespondidas(persona.id, id);
     } on IaExcecao catch (erro) {
+      if (geracao != _geracao) return;
       _mostrarErro(erro.mensagem);
     } finally {
-      _respondendo = false;
-      notifyListeners();
+      // Só a geração atual derruba o estado: um turno novo (repetir) já
+      // assumiu o "respondendo".
+      if (geracao == _geracao) {
+        _respondendo = false;
+        notifyListeners();
+      }
     }
   }
 

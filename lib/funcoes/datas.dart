@@ -1,4 +1,3 @@
-/// Nomes dos meses, usados no cronograma e no calendário.
 const meses = <String>[
   'Janeiro',
   'Fevereiro',

@@ -1,6 +1,5 @@
 import '../canon.dart';
 
-/// Um versículo marcado como favorito, com nota opcional.
 class Marcacao {
   const Marcacao({
     required this.livro,

@@ -636,8 +636,6 @@ class LembretesReais implements Lembretes {
           // Doze pode atrasar alguns minutos; o push do servidor continua
           // sendo o caminho no horário certo.
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-          // Recorrência diária nativa: o próprio Android reagenda a
-          // ocorrência de amanhã ao disparar a de hoje, sem o app rodar.
           matchDateTimeComponents: DateTimeComponents.time,
         );
       } catch (_) {
@@ -653,8 +651,6 @@ class LembretesReais implements Lembretes {
         );
       }
     } catch (erro, pilha) {
-      // Um alarme recusado pelo sistema não pode abortar os irmãos — cada
-      // slot falha sozinho.
       Registro.erro('Lembretes.armar/$chave', erro, pilha);
     }
   }

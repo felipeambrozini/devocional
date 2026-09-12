@@ -3,8 +3,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../estilo/espacamento.dart';
 
-/// Rodapé com os dois chevrons de capítulo.
-///
 /// Só é montado onde não há gesto de toque; ver `_semGestoDeToque` em
 /// `_TelaBibliaState`. No celular deslizar já faz isso, e a barra custava uma
 /// faixa do fim de toda tela, logo acima da barra de navegação.

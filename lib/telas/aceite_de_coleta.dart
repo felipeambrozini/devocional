@@ -3,7 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../dados/coleta.dart';
 import '../dados/estado.dart';
-import '../widgets/botao.dart';
+import '../estilo/espacamento.dart';
+import '../widgets/widgets.dart';
 
 /// Diálogo de aceite mostrado uma vez, antes de qualquer coleta remota —
 /// erro para o Sentry, uso anônimo para o Analytics (ver
@@ -21,12 +22,16 @@ Future<void> mostrarAceiteDeColetaSeNecessario(BuildContext context) async {
     context: context,
     barrierDismissible: false,
     builder: (dialogo) => AlertDialog(
-      title: const Text('Ajudar a melhorar o app'),
+      title: Text('Ajudar a melhorar o app', style: tema.headlineSmall),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // O Filete abre a primeira tela de todo usuário novo como abre
+            // cada leitura: mesmo um diálogo legal veste a Estante.
+            const DevocionalFilete(largura: 64),
+            const SizedBox(height: DevocionalEspacamento.sp12),
             Text(
               'Com sua permissão, o app envia dois tipos de informação sem '
               'identificar você: erros técnicos, para achar e corrigir '

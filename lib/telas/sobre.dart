@@ -76,8 +76,6 @@ class _TelaSobreState extends State<TelaSobre> {
               const SizedBox(height: DevocionalEspacamento.sp8),
               const DevocionalFilete(largura: 64),
               const SizedBox(height: DevocionalEspacamento.sp12),
-              // A versão pequena, sem alarde, é o que basta para quem quer
-              // conferir se está na última compilação.
               DevocionalCarregaUmaVez<String>(
                 chave: 'versao',
                 carregar: () async =>
@@ -428,12 +426,14 @@ Future<void> _mostrarAjuda(BuildContext context) {
   return showDialog<void>(
     context: context,
     builder: (dialogo) => AlertDialog(
-      title: const Text('Como usar'),
+      title: Text('Como usar', style: tema.headlineSmall),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const DevocionalFilete(largura: 64),
+            const SizedBox(height: DevocionalEspacamento.sp12),
             for (final linha in linhasDeAjuda) ...[
               Text(linha, style: tema.bodyMedium?.copyWith(height: 1.5)),
               const SizedBox(height: DevocionalEspacamento.sp8),

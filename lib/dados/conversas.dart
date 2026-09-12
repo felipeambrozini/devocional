@@ -121,7 +121,6 @@ class Conversas {
     }
   }
 
-  /// A primeira fala do visitante, para virar o título da conversa.
   static String _primeiraPergunta(List<Mensagem> mensagens) {
     for (final m in mensagens) {
       if (m.doUsuario) return m.texto;
@@ -252,6 +251,27 @@ class Conversas {
     await _gravar();
   }
 
+  /// Desfaz [limparConversa]: remove a lápide e devolve a conversa à lista.
+  /// O momento vai para agora para a restaurada vencer a própria lápide (e a
+  /// cópia dela na nuvem) na próxima fusão — ver [fundirConversas]: lápide
+  /// mais nova que o histórico apagaria de novo.
+  Future<void> restaurarConversa(String persona, Conversa conversa) async {
+    _apagadas.remove(conversa.id);
+    final lista = _conversas[persona] ??= [];
+    lista.removeWhere((c) => c.id == conversa.id);
+    lista.add(
+      Conversa(
+        id: conversa.id,
+        titulo: conversa.titulo,
+        momento: DateTime.now().millisecondsSinceEpoch,
+        mensagens: conversa.mensagens,
+        cortada: conversa.cortada,
+      ),
+    );
+    _aoMudar();
+    await _gravar();
+  }
+
   /// Apaga todas as conversas da persona, cada uma com a própria lápide.
   Future<void> limparTodasDe(String persona) async {
     final lista = _conversas.remove(persona);
@@ -259,6 +279,33 @@ class Conversas {
     final agora = DateTime.now().millisecondsSinceEpoch;
     for (final c in lista) {
       _apagadas[c.id] = agora;
+    }
+    _aoMudar();
+    await _gravar();
+  }
+
+  /// Desfaz [limparTodasDe]: remove as lápides e devolve as conversas. Recebe
+  /// a lista na ordem de exibição (mais recente primeiro, como [conversasDe]
+  /// devolve) e reconstrói essa ordem com momentos novos (ver
+  /// [restaurarConversa]).
+  Future<void> restaurarConversas(
+    String persona,
+    List<Conversa> conversas,
+  ) async {
+    final lista = _conversas[persona] ??= [];
+    var momento = DateTime.now().millisecondsSinceEpoch;
+    for (final conversa in conversas.reversed) {
+      _apagadas.remove(conversa.id);
+      lista.removeWhere((c) => c.id == conversa.id);
+      lista.add(
+        Conversa(
+          id: conversa.id,
+          titulo: conversa.titulo,
+          momento: momento++,
+          mensagens: conversa.mensagens,
+          cortada: conversa.cortada,
+        ),
+      );
     }
     _aoMudar();
     await _gravar();

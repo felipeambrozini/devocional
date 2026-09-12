@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'cores.dart';
 
-/// Monta o tema.
-///
 /// [escalaDeLeitura] multiplica o texto corrido de leitura (bodyLarge/Medium)
 /// integralmente e os títulos/rótulos com teto de 1,3× — Regra da Escala do
 /// DESIGN.md: aumentar o corpo não pode estourar AppBar/Nav.

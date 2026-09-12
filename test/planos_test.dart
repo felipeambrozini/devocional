@@ -83,7 +83,6 @@ void main() {
     });
 
     test('distribui com diferença de no máximo um capítulo por dia', () {
-      // 150 salmos em 60 dias: uns dias pegam 2 e outros 3, nunca mais longe.
       final dias = montarPlanoDeLeitura(livros: ['salmos'], dias: 60);
       final tamanhos = [for (final d in dias) d.faixas.single.capitulos.length];
       expect(tamanhos.reduce((a, b) => a + b), 150);
@@ -132,7 +131,6 @@ void main() {
     });
 
     test('a virada de livro quebra a faixa', () {
-      // Gênesis (50) + Êxodo (40) = 90 capítulos em 3 dias, 30 por dia.
       final dias = montarPlanoDeLeitura(livros: ['genesis', 'exodo'], dias: 3);
       expect(dias, hasLength(3));
       final segundo = dias[1];
@@ -572,7 +570,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Novo plano de leitura'), findsOneWidget);
 
-      // Escolhe Gênesis pela busca do seletor.
       await tester.tap(find.widgetWithText(OutlinedButton, 'Escolher livros'));
       await tester.pumpAndSettle();
       await tester.enterText(
@@ -588,7 +585,6 @@ void main() {
       await tester.tap(find.text('Confirmar'));
       await tester.pumpAndSettle();
 
-      // A prévia mostra o primeiro dia já montado, antes de confirmar.
       expect(find.text('Dia 1 · Gênesis 1-2'), findsOneWidget);
 
       // O formulário ficou mais alto que a viewport do teste: rola até o
@@ -612,7 +608,6 @@ void main() {
       await tester.tap(find.widgetWithText(FilledButton, 'Criar plano'));
       await tester.pumpAndSettle();
 
-      // Cai na tela do plano, com o título padrão e o dia 1 marcável.
       expect(find.text('Gênesis em 30 dias'), findsOneWidget);
       // O contador canônico mora no cabeçalho ("dias lidos"); o rótulo
       // duplicado "dias concluídos" no meio da lista foi removido.
@@ -623,7 +618,6 @@ void main() {
       expect(find.text('1 de 30 dias lidos'), findsOneWidget);
       expect(estado.diasLidosDoPlano(estado.planosDoUsuario.single.id), 1);
 
-      // De volta à lista, o cartão mostra o progresso.
       await tester.pageBack();
       await tester.pumpAndSettle();
       expect(find.text('Seus planos'), findsOneWidget);
@@ -894,8 +888,49 @@ void main() {
       },
     );
 
-    testWidgets('cancelar o editor não muda nada', (tester) async {
+    testWidgets('mudar os dias avisa no editor e salva sem outro diálogo',
+        (tester) async {
       final estado = Estado(await SharedPreferences.getInstance());
+      final plano = await estado.criarPlano(
+        titulo: 'Gênesis',
+        livros: ['genesis'],
+        dias: 30,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EscopoDoEstado(
+            estado: estado,
+            child: TelaDeUmPlano(
+              estado: estado,
+              planoId: plano.id,
+              plano: plano,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Opções do plano'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Editar plano'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextFormField), '10');
+      await tester.pumpAndSettle();
+
+      // O aviso mora no próprio editor e o botão diz o que vai acontecer:
+      // sem o terceiro diálogo de confirmação.
+      expect(find.textContaining('remonta o plano'), findsOneWidget);
+      expect(find.text('Mudar e reiniciar'), findsOneWidget);
+      await tester.tap(find.text('Mudar e reiniciar'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Reiniciar o progresso?'), findsNothing);
+      expect(estado.planosDoUsuario.single.dias, 10);
+    });
+
+    testWidgets('cancelar o editor não muda nada', (tester) async {      final estado = Estado(await SharedPreferences.getInstance());
       final plano = await estado.criarPlano(
         titulo: 'Nome original',
         livros: ['genesis'],

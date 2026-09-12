@@ -235,7 +235,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
           DevocionalEspacamento.sp16,
           DevocionalEspacamento.sp32,
         ),
-        // ponytail: monta o plano inteiro (como aba_do_cronograma.dart monta o mês
+        // Monta o plano inteiro (como aba_do_cronograma.dart monta o mês
         // inteiro), dimensionado ao tamanho real do plano — sem isto o GlobalKey do
         // próximo dia não lido ainda não tem contexto quando _rolarAteProximoDia
         // procura por ele, em qualquer plano além de poucos dias. 240px/dia é uma

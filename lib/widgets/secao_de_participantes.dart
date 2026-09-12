@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../estilo/espacamento.dart';
 import 'linha_de_participante.dart';
 
-/// O progresso de cada participante do plano compartilhado.
 class DevocionalSecaoDeParticipantes extends StatelessWidget {
   const DevocionalSecaoDeParticipantes({
     super.key,

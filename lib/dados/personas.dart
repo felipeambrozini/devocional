@@ -32,15 +32,12 @@ class Persona {
   /// cabe sob um retrato de 52 px, e é como o resto do app chama os dois.
   final String nomeCurto;
 
-  /// Linha sob o nome no topo do chat.
   final String titulo;
 
-  /// Fala da primeira visita, quando a conversa ainda está vazia.
   final String boasVindas;
 
   final String sistema;
 
-  /// Asset do retrato, webp como as outras imagens do app.
   final String foto;
 
   /// Se a persona cumprimenta pelo horário (o "Bom dia" do Felipe). O serviço

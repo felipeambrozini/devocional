@@ -10,11 +10,39 @@ import '../widgets/widgets.dart';
 /// de uma conta Google. Todo item aqui espelha o que o código de fato faz
 /// (`lib/dados/nuvem.dart`, `lib/dados/conversas.dart` e `lib/dados/coleta.dart`),
 /// não uma promessa separada do comportamento real.
-class TelaPrivacidade extends StatelessWidget {
+class TelaPrivacidade extends StatefulWidget {
   const TelaPrivacidade({super.key});
 
   @override
+  State<TelaPrivacidade> createState() => _TelaPrivacidadeState();
+}
+
+class _TelaPrivacidadeState extends State<TelaPrivacidade> {
+  final _semConta = GlobalKey();
+  final _comConta = GlobalKey();
+  final _planos = GlobalKey();
+  final _chat = GlobalKey();
+  final _voz = GlobalKey();
+  final _usoAnonimo = GlobalKey();
+  final _appGenuino = GlobalKey();
+  final _apagar = GlobalKey();
+  final _contato = GlobalKey();
+
+  // O aceite, o Sobre e o FAQ linkam esta página mirando perguntas ("posso
+  // apagar meus dados?"): o índice leva direto à seção, sem rolagem às cegas.
+  void _rolarAte(GlobalKey chave) {
+    final alvo = chave.currentContext;
+    if (alvo == null) return;
+    Scrollable.ensureVisible(
+      alvo,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     return Scaffold(
       appBar: DevocionalAppBar(title: const Text('Política de privacidade')),
@@ -26,6 +54,17 @@ class TelaPrivacidade extends StatelessWidget {
           listenable: Nuvem.instancia,
           builder: (context, _) {
             final chat = Recursos.conversas;
+            final indice = <String, GlobalKey>{
+              'Sem conta': _semConta,
+              'Com conta Google': _comConta,
+              'Planos de leitura compartilhados': _planos,
+              if (chat) 'Chat com inteligência artificial': _chat,
+              'Leitura em voz alta': _voz,
+              'Uso anônimo e erro técnico': _usoAnonimo,
+              'Verificação de app genuíno': _appGenuino,
+              'Apagar seus dados': _apagar,
+              'Contato': _contato,
+            };
             return ListView(
               padding: const EdgeInsets.fromLTRB(DevocionalEspacamento.sp20, DevocionalEspacamento.sp16, DevocionalEspacamento.sp20, DevocionalEspacamento.sp40),
               children: [
@@ -42,7 +81,24 @@ class TelaPrivacidade extends StatelessWidget {
                   'que é guardado, onde e por quê.',
                   style: tema.bodyLarge?.copyWith(height: 1.7),
                 ),
-                const DevocionalSecaoDeTexto(
+                const SizedBox(height: DevocionalEspacamento.sp16),
+                Text(
+                  'Nesta página',
+                  style: tema.labelLarge?.copyWith(color: cor.secondary),
+                ),
+                const SizedBox(height: DevocionalEspacamento.sp4),
+                Wrap(
+                  spacing: DevocionalEspacamento.sp4,
+                  children: [
+                    for (final entrada in indice.entries)
+                      DevocionalBotaoTerciario(
+                        onPressed: () => _rolarAte(entrada.value),
+                        child: Text(entrada.key),
+                      ),
+                  ],
+                ),
+                DevocionalSecaoDeTexto(
+                  key: _semConta,
                   titulo: 'Sem conta',
                   texto:
                       'Favoritos, anotações, progresso de leitura, tema e '
@@ -50,6 +106,7 @@ class TelaPrivacidade extends StatelessWidget {
                       '(armazenamento local). Nada disso sai daqui.',
                 ),
                 DevocionalSecaoDeTexto(
+                  key: _comConta,
                   titulo: 'Com conta Google',
                   texto: chat
                       ? 'Entrar com a conta Google sobe, além do e-mail e '
@@ -74,7 +131,8 @@ class TelaPrivacidade extends StatelessWidget {
                             'entra com conta usa o aplicativo do mesmo '
                             'jeito, sem nada saindo do aparelho.',
                 ),
-                const DevocionalSecaoDeTexto(
+                DevocionalSecaoDeTexto(
+                  key: _planos,
                   titulo: 'Planos de leitura compartilhados',
                   texto:
                       'Um plano criado para ser compartilhado por link mostra o '
@@ -85,7 +143,8 @@ class TelaPrivacidade extends StatelessWidget {
                       'próprio progresso.',
                 ),
                 if (chat)
-                  const DevocionalSecaoDeTexto(
+                  DevocionalSecaoDeTexto(
+                    key: _chat,
                     titulo: 'Chat com inteligência artificial',
                     texto:
                         'As mensagens enviadas às personas Charles Spurgeon e '
@@ -94,7 +153,8 @@ class TelaPrivacidade extends StatelessWidget {
                         'conversa é salvo no aparelho e, para quem tem conta, '
                         'também na nuvem descrita acima.',
                   ),
-                const DevocionalSecaoDeTexto(
+                DevocionalSecaoDeTexto(
+                  key: _voz,
                   titulo: 'Leitura em voz alta',
                   texto:
                       'O áudio de cada capítulo, devocional e introdução é '
@@ -105,7 +165,8 @@ class TelaPrivacidade extends StatelessWidget {
                       'aparelho, e pode apagá-los a qualquer momento na '
                       'mesma tela.',
                 ),
-                const DevocionalSecaoDeTexto(
+                DevocionalSecaoDeTexto(
+                  key: _usoAnonimo,
                   titulo: 'Uso anônimo e erro técnico',
                   texto:
                       'Na primeira vez que abre o app, você escolhe se '
@@ -118,7 +179,8 @@ class TelaPrivacidade extends StatelessWidget {
                       'você lê ou escreve. Dá para mudar de ideia depois '
                       'em Sobre.',
                 ),
-                const DevocionalSecaoDeTexto(
+                DevocionalSecaoDeTexto(
+                  key: _appGenuino,
                   titulo: 'Verificação de app genuíno',
                   texto:
                       'O aplicativo usa o Firebase App Check para confirmar que '
@@ -127,6 +189,7 @@ class TelaPrivacidade extends StatelessWidget {
                       'verificação não identifica pessoas, só a instalação.',
                 ),
                 DevocionalSecaoDeTexto(
+                  key: _apagar,
                   titulo: 'Apagar seus dados',
                   texto: chat
                       ? 'Quem tem conta pode apagar a cópia salva na nuvem em '
@@ -146,7 +209,8 @@ class TelaPrivacidade extends StatelessWidget {
                             'limpar os dados do aplicativo ou do site pelo próprio '
                             'sistema ou navegador.',
                 ),
-                const DevocionalSecaoDeTexto(
+                DevocionalSecaoDeTexto(
+                  key: _contato,
                   titulo: 'Contato',
                   texto:
                       'Dúvidas sobre esta política podem ser enviadas pelos '

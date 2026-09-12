@@ -258,8 +258,6 @@ void main() {
 
         expect(estado.lembretesAtivos, isTrue);
         expect(falsas.agendamentos, hasLength(1));
-        // E a UI reflete: os campos de horário aparecem só com o interruptor
-        // ligado.
         expect(find.text('Manhã'), findsOneWidget);
         expect(find.text('Promessas'), findsOneWidget);
         expect(find.text('Leitura do Dia'), findsOneWidget);

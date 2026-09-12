@@ -29,8 +29,6 @@ import '../widgets/widgets.dart';
 /// direita recuadas; rodapé com o campo e a nota da IA.
 /// FORM: redesenho da superfície do chat no mundo estabelecido da Estante,
 /// direção fixada pelo usuário (carta enquadrada pelo DevocionalFilete); sem sorteio.
-/// FINISH: unreviewed and undocumented is unfinished; this build ends with
-/// the finish review, the verdict, and DESIGN.md.
 
 /// Quantas camadas flutuantes estão abertas (folha de ajustes, diálogo, o
 /// próprio chat). Os balões somem quando o número passa de zero: não faz
@@ -221,12 +219,18 @@ class _TelaChatState extends State<TelaChat> {
                   ),
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: DevocionalBolha(
-                      avatar: widget.persona.foto,
-                      child: SizedBox(
-                        width: DevocionalEspacamento.sp18,
-                        height: DevocionalEspacamento.sp18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                    // A espera é anunciada, não só desenhada: sem rótulo, o
+                    // leitor de tela passa segundos de geração paga em silêncio.
+                    child: Semantics(
+                      label: '${widget.persona.nome} está respondendo',
+                      liveRegion: true,
+                      child: DevocionalBolha(
+                        avatar: widget.persona.foto,
+                        child: SizedBox(
+                          width: DevocionalEspacamento.sp18,
+                          height: DevocionalEspacamento.sp18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
                       ),
                     ),
                   ),
@@ -264,15 +268,17 @@ class _TelaChatState extends State<TelaChat> {
                               ? 'aguarde a resposta...'
                               : 'Escreva para ${widget.persona.nome}...',
                           suffixIcon: respondendo
-                              ? const Padding(
-                                  padding: EdgeInsets.all(DevocionalEspacamento.sp12),
-                                  child: SizedBox(
-                                    width: DevocionalEspacamento.sp18,
-                                    height: DevocionalEspacamento.sp18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
+                              // Parar no meio da geração: sem isto, a espera
+                              // (paga, por resposta) não tem saída, e o toque
+                              // ansioso reenvia ou abandona a tela. A pergunta
+                              // fica pendente para o "Tentar de novo".
+                              ? IconButton(
+                                  tooltip: 'Parar resposta',
+                                  icon: FaIcon(
+                                    FontAwesomeIcons.stop,
+                                    color: cor.primary,
                                   ),
+                                  onPressed: _controller.interromper,
                                 )
                               : IconButton(
                                   tooltip: 'Enviar',

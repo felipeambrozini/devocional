@@ -327,8 +327,6 @@ class PlanoControlador extends ChangeNotifier {
     if (excluiu && context.mounted) Navigator.pop(context);
   }
 
-  /// Chamado pelo botão "Tentar de novo" do aviso de erro: reseta o estado de
-  /// carregamento e tenta abrir o plano de novo.
   void tentarDeNovo() {
     erro = null;
     carregando = true;

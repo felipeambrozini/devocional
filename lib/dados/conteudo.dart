@@ -21,8 +21,6 @@ class Conteudo {
   List<DiaDoPlano>? _planoBissexto;
   final Map<String, Introducao?> _introducoes = {};
 
-  /// Regra gregoriana padrão: bissexto a cada 4 anos, exceto séculos não
-  /// divisíveis por 400.
   static bool ehBissexto(int ano) =>
       (ano % 4 == 0 && ano % 100 != 0) || ano % 400 == 0;
 
@@ -159,7 +157,6 @@ class Conteudo {
     return dias;
   }
 
-  /// O dia do cronograma para uma data.
   Future<DiaDoPlano?> diaDoPlano(DateTime data) async {
     final chave = chaveDoDia(data);
     final dias = await plano(bissexto: ehBissexto(data.year));
@@ -195,8 +192,6 @@ class Conteudo {
   /// No raro dia cuja epígrafe encadeia mais de uma passagem, a referência do
   /// JSON traz todas separadas por vírgula ou "e"; cada uma é resolvida, e as
   /// que sobram do principal vão para [Devocional.outrosVersiculos].
-  ///
-  /// A tradução interna fornece o texto completo do versículo.
   Future<Devocional?> devocional(DateTime data, Periodo periodo) async {
     final dados = await _carregarDevocionais();
     final chave = chaveDoDia(data);
@@ -374,7 +369,7 @@ class Conteudo {
   /// 366 registros já cacheados por completo depois da primeira leitura —
   /// 2 MB, não os 4,7 MB da Bíblia inteira — então uma varredura completa
   /// não pesa o bastante para precisar de stream nem de limite de resultados.
-  /// ponytail: sem paginação; adicionar se um dia ficar lento de ver na tela.
+  /// Sem paginação; adicionar se um dia ficar lento de ver na tela.
   Future<List<AchadoDevocional>> buscarDevocionais(String termo) async {
     final alvo = _normalizar(termo);
     if (alvo.length < 3) return const [];
@@ -466,7 +461,7 @@ class Conteudo {
 
   /// Busca no texto da Bíblia, emitindo os achados livro por livro.
   ///
-  /// ponytail: varredura sequencial, sem índice invertido. A primeira busca na Bíblia
+  /// Varredura sequencial, sem índice invertido. A primeira busca na Bíblia
   /// inteira lê cerca de 4 MB e leva uns segundos; depois tudo está em cache. Como é
   /// um stream, a tela já mostra Gênesis enquanto o resto carrega, e cancelar a busca
   /// interrompe a leitura. Se incomodar, o caminho é SQLite com FTS5.

@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import '../estilo/espacamento.dart';
 import '../telas/devocional.dart';
 
-/// Alternador das três leituras, centralizado.
-///
 /// Chips e não SegmentedButton: o SegmentedButton iguala a largura de todos os
 /// segmentos à do maior, então três vezes "Promessas de Deus" nunca cabe num
 /// celular e o rótulo aparecia cortado. Cada chip se dimensiona pelo próprio

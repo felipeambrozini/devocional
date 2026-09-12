@@ -96,20 +96,50 @@ Future<void> _escolherFoto(BuildContext context) async {
     builder: (folha) => SafeArea(
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              DevocionalEspacamento.sp20,
+              DevocionalEspacamento.sp20,
+              DevocionalEspacamento.sp20,
+              DevocionalEspacamento.sp8,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Foto de perfil',
+                  style: Theme.of(folha).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: DevocionalEspacamento.sp8),
+                const DevocionalFilete(largura: 64),
+              ],
+            ),
+          ),
           ListTile(
-            leading: const FaIcon(FontAwesomeIcons.camera),
+            leading: FaIcon(
+              FontAwesomeIcons.camera,
+              color: Theme.of(folha).colorScheme.primary,
+            ),
             title: const Text('Câmera'),
             onTap: () => Navigator.pop(folha, _AcaoDeFoto.camera),
           ),
           ListTile(
-            leading: const FaIcon(FontAwesomeIcons.images),
+            leading: FaIcon(
+              FontAwesomeIcons.images,
+              color: Theme.of(folha).colorScheme.primary,
+            ),
             title: const Text('Galeria'),
             onTap: () => Navigator.pop(folha, _AcaoDeFoto.galeria),
           ),
           if (temFoto)
             ListTile(
-              leading: const FaIcon(FontAwesomeIcons.trash),
+              leading: FaIcon(
+                FontAwesomeIcons.trash,
+                color: Theme.of(folha).colorScheme.primary,
+              ),
               title: const Text('Remover foto'),
               onTap: () => Navigator.pop(folha, _AcaoDeFoto.remover),
             ),
@@ -191,24 +221,31 @@ class _Cabecalho extends StatelessWidget {
         final nome = nuvem.primeiroNome;
         return Row(
           children: [
-            // Avatar da própria conta Google de quem entrou; sem conta, sem
-            // avatar — só a saudação, igual na web e no aparelho.
             if (nuvem.logado) ...[
-              GestureDetector(
-                onTap: () => _escolherFoto(context),
-                child: CircleAvatar(
-                  radius: 30,
-                  backgroundImage: nuvem.fotoUrl != null
-                      ? NetworkImage(nuvem.fotoUrl!)
-                      : null,
-                  child: nuvem.fotoUrl == null
-                      ? Text(
-                          (nome ?? '?').substring(0, 1).toUpperCase(),
-                          style: tema.headlineMedium?.copyWith(
-                            color: cor.primary,
-                          ),
-                        )
-                      : null,
+              // Sem rótulo, "trocar foto" só se descobria tocando: o papel de
+              // botão e o nome vão na semântica, e a dica no toque longo.
+              Semantics(
+                button: true,
+                label: 'Trocar foto de perfil',
+                child: GestureDetector(
+                  onTap: () => _escolherFoto(context),
+                  child: Tooltip(
+                    message: 'Trocar foto de perfil',
+                    child: CircleAvatar(
+                      radius: 30,
+                      backgroundImage: nuvem.fotoUrl != null
+                          ? NetworkImage(nuvem.fotoUrl!)
+                          : null,
+                      child: nuvem.fotoUrl == null
+                          ? Text(
+                              (nome ?? '?').substring(0, 1).toUpperCase(),
+                              style: tema.headlineMedium?.copyWith(
+                                color: cor.primary,
+                              ),
+                            )
+                          : null,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: DevocionalEspacamento.sp14),
@@ -217,9 +254,6 @@ class _Cabecalho extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Quem entrou com a conta Google ganha o próprio nome na
-                  // saudação, em todas as plataformas: o botão de entrar mora
-                  // no fim desta mesma linha. Sem conta, fica só a saudação.
                   Text(
                     nome != null ? '$saudacao, $nome' : saudacao,
                     style: tema.headlineMedium,

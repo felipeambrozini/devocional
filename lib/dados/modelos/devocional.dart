@@ -1,4 +1,3 @@
-/// Uma leitura diária: Manhã, Noite ou a promessa do dia.
 class Devocional {
   const Devocional({
     required this.referencia,

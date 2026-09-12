@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../estilo/espacamento.dart';
 
-/// Uma linha da lista de participantes: nome, marca de "Você" e o progresso.
 class DevocionalLinhaDeParticipante extends StatelessWidget {
   const DevocionalLinhaDeParticipante({
     super.key,

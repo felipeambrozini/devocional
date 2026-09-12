@@ -148,9 +148,7 @@ class _TelaNotasState extends State<TelaNotas> {
   }
 }
 
-/// Joga a cópia na área de transferência.
-///
-/// ponytail: área de transferência, não arquivo. Favoritos, notas e progresso
+/// Área de transferência, não arquivo. Favoritos, notas e progresso
 /// vivem no SharedPreferences, que na web é o localStorage e o navegador limpa
 /// sozinho sob pressão de espaço; texto escrito à mão não pode existir num lugar
 /// só. `share_plus` já é dependência do app (usado para compartilhar um
@@ -169,16 +167,21 @@ Future<void> _exportar(BuildContext context, Estado estado) async {
   );
 }
 
-/// Pede a cópia colada e funde com o que já existe.
 Future<void> _importar(BuildContext context, Estado estado) async {
   final controle = TextEditingController();
   final texto = await showDialog<String>(
     context: context,
     builder: (dialogo) => AlertDialog(
-      title: const Text('Importar cópia'),
+      title: Text(
+        'Importar cópia',
+        style: Theme.of(dialogo).textTheme.headlineSmall,
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const DevocionalFilete(largura: 64),
+          const SizedBox(height: DevocionalEspacamento.sp12),
           Text(
             'Cole aqui o texto exportado. Nada é apagado: a cópia se junta ao '
             'que já está no aparelho.',
@@ -187,10 +190,14 @@ Future<void> _importar(BuildContext context, Estado estado) async {
           const SizedBox(height: DevocionalEspacamento.sp12),
           TextField(
             controller: controle,
-            autofocus: true,
+            // Mesmo padrão da busca: no celular o teclado cobriria o diálogo.
+            autofocus: !kIsWeb,
             maxLines: 6,
             minLines: 4,
-            decoration: const InputDecoration(),
+            decoration: const InputDecoration(
+              labelText: 'Texto exportado',
+              border: OutlineInputBorder(),
+            ),
           ),
         ],
       ),

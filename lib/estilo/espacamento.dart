@@ -1,5 +1,3 @@
-/// O ritmo de espaçamento do app.
-///
 /// Cada token guarda o próprio valor em pixels: é o conjunto de números que o
 /// layout pode usar, não uma palavra que esconde o número. Isso permite trocar
 /// o valor de um degrau inteiro num lugar só e deixa explícito no código o
