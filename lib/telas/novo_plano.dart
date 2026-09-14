@@ -87,6 +87,7 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
                     DevocionalLivrosEscolhidos(
                       livros: livros,
                       aoRemover: _controller.removerLivro,
+                      aoReordenar: _controller.reordenarLivros,
                     ),
                   ],
                   const SizedBox(height: DevocionalEspacamento.sp20),
@@ -163,8 +164,12 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
 }
 
 /// Seletor de livros com busca: a lista do canon com uma caixa de marcar
-/// para cada livro. Devolve os slugs escolhidos na ordem canônica, ou nulo
-/// se cancelado.
+/// para cada livro, e dois atalhos antes dela para marcar o Antigo ou o Novo
+/// Testamento inteiros de uma vez. Devolve os slugs escolhidos, ou nulo se
+/// cancelado.
+///
+/// Quem já estava escolhido mantém a ordem que tinha (a ordem de leitura que
+/// quem cria ajusta depois); livro novo entra no fim, em ordem canônica.
 ///
 /// Dialog e não bottom sheet: são 66 livros, e a busca + a lista rolável
 /// precisam da janela inteira no celular.
@@ -174,6 +179,14 @@ Future<List<String>?> mostrarSeletorDeLivros(
 }) {
   final busca = TextEditingController();
   final selecionados = <String>{...jaEscolhidos};
+  final antigos = [
+    for (final livro in canon)
+      if (livro.testamento == Testamento.antigo) livro,
+  ];
+  final novos = [
+    for (final livro in canon)
+      if (livro.testamento == Testamento.novo) livro,
+  ];
   return showDialog<List<String>>(
     context: context,
     builder: (dialogContext) => StatefulBuilder(
@@ -185,6 +198,39 @@ Future<List<String>?> mostrarSeletorDeLivros(
                 Conteudo.normalizar(livro.nome).contains(termo))
               livro,
         ];
+
+        bool todosMarcados(List<Livro> grupo) =>
+            grupo.every((livro) => selecionados.contains(livro.slug));
+        bool nenhumMarcado(List<Livro> grupo) =>
+            grupo.every((livro) => !selecionados.contains(livro.slug));
+        void alternarTestamento(List<Livro> grupo) {
+          if (todosMarcados(grupo)) {
+            selecionados.removeAll(grupo.map((livro) => livro.slug));
+          } else {
+            selecionados.addAll(grupo.map((livro) => livro.slug));
+          }
+        }
+
+        Widget atalhoDeTestamento(List<Livro> grupo, String nome) {
+          final todos = todosMarcados(grupo);
+          return CheckboxListTile(
+            dense: true,
+            tristate: true,
+            controlAffinity: ListTileControlAffinity.leading,
+            title: Text(nome),
+            subtitle: Text(
+              '${grupo.length} ${grupo.length == 1 ? 'livro' : 'livros'}',
+            ),
+            value: todos
+                ? true
+                : nenhumMarcado(grupo)
+                ? false
+                : null,
+            onChanged: (_) =>
+                setDialogState(() => alternarTestamento(grupo)),
+          );
+        }
+
         return AlertDialog(
           title: Text(
             'Escolher livros',
@@ -205,6 +251,11 @@ Future<List<String>?> mostrarSeletorDeLivros(
                   border: const OutlineInputBorder(),
                 ),
                 const SizedBox(height: DevocionalEspacamento.sp12),
+                if (termo.isEmpty) ...[
+                  atalhoDeTestamento(antigos, 'Antigo Testamento'),
+                  atalhoDeTestamento(novos, 'Novo Testamento'),
+                  const Divider(),
+                ],
                 Expanded(
                   child: livros.isEmpty
                       ? const Center(child: Text('Nenhum livro encontrado.'))
@@ -242,8 +293,16 @@ Future<List<String>?> mostrarSeletorDeLivros(
               child: const Text('Cancelar'),
             ),
             DevocionalBotaoPrimario(
-              onPressed: () =>
-                  Navigator.pop(dialogContext, selecionados.toList()),
+              onPressed: () => Navigator.pop(dialogContext, [
+                // Mantém a ordem de leitura que já existia; o novo entra
+                // no fim, em ordem canônica.
+                for (final slug in jaEscolhidos)
+                  if (selecionados.contains(slug)) slug,
+                for (final livro in canon)
+                  if (selecionados.contains(livro.slug) &&
+                      !jaEscolhidos.contains(livro.slug))
+                    livro.slug,
+              ]),
               child: const Text('Confirmar'),
             ),
           ],

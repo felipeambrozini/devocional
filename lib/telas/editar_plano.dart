@@ -74,7 +74,8 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
               );
         }
 
-        Future<void> escolherLivros() async {          final escolhidos = await mostrarSeletorDeLivros(
+        Future<void> escolherLivros() async {
+          final escolhidos = await mostrarSeletorDeLivros(
             dialogContext,
             jaEscolhidos: livros,
           );
@@ -180,6 +181,11 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                         livros: livros,
                         aoRemover: (slug) =>
                             setDialogState(() => livros.remove(slug)),
+                        aoReordenar: (novaOrdem) => setDialogState(
+                          () => livros
+                            ..clear()
+                            ..addAll(novaOrdem),
+                        ),
                       ),
                     ],
                     const SizedBox(height: DevocionalEspacamento.sp20),

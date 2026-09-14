@@ -140,6 +140,20 @@ void main() {
       expect(dias[2].faixas.single.rotulo, 'Êxodo 11-40');
     });
 
+    test('segue a ordem dada em livros, não a canônica', () {
+      final direto = montarPlanoDeLeitura(
+        livros: ['judas', 'obadias'],
+        dias: 2,
+      );
+      expect(direto.map((d) => d.rotulo), ['Judas 1', 'Obadias 1']);
+
+      final inverso = montarPlanoDeLeitura(
+        livros: ['obadias', 'judas'],
+        dias: 2,
+      );
+      expect(inverso.map((d) => d.rotulo), ['Obadias 1', 'Judas 1']);
+    });
+
     test('sem incluirDevocionais, itens são só ItemDeCapitulo', () {
       final dia = montarPlanoDeLeitura(livros: ['genesis'], dias: 50)[0];
       expect(dia.itens, [isA<ItemDeCapitulo>()]);
@@ -840,6 +854,115 @@ void main() {
       expect(estado.planosDoUsuario.single.incluirDevocionais, isTrue);
       expect(estado.planosDoUsuario.single.devocionalAntes, isTrue);
     });
+
+    testWidgets(
+      'o seletor oferece os testamentos e marca o Novo inteiro de uma vez',
+      (tester) async {
+        final estado = Estado(await SharedPreferences.getInstance());
+        await tester.pumpWidget(
+          MaterialApp(
+            home: EscopoDoEstado(
+              estado: estado,
+              child: TelaNovoPlano(estado: estado),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(
+          find.widgetWithText(OutlinedButton, 'Escolher livros'),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.widgetWithText(CheckboxListTile, 'Antigo Testamento'),
+          findsOneWidget,
+        );
+        expect(
+          find.widgetWithText(CheckboxListTile, 'Novo Testamento'),
+          findsOneWidget,
+        );
+
+        await tester.tap(
+          find.widgetWithText(CheckboxListTile, 'Novo Testamento'),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Confirmar'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('27 livros escolhidos'), findsOneWidget);
+      },
+    );
+
+    testWidgets('com 2+ livros dá para alterar a ordem de leitura', (
+      tester,
+    ) async {
+      // Viewport alta: o formulário é um ListView, que só monta o que cabe
+      // na tela — com 2 livros a prévia cai para fora dos 600px padrão e o
+      // finder não a acharia sem rolagem.
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      final estado = Estado(await SharedPreferences.getInstance());
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EscopoDoEstado(
+            estado: estado,
+            child: TelaNovoPlano(estado: estado),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      Future<void> marcarLivro(String nome) async {
+        await tester.enterText(
+          find.descendant(
+            of: find.byType(AlertDialog),
+            matching: find.byType(TextField),
+          ),
+          nome,
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(CheckboxListTile, nome));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.descendant(
+            of: find.byType(AlertDialog),
+            matching: find.byType(TextField),
+          ),
+          '',
+        );
+        await tester.pumpAndSettle();
+      }
+
+      await tester.tap(
+        find.widgetWithText(OutlinedButton, 'Escolher livros'),
+      );
+      await tester.pumpAndSettle();
+      await marcarLivro('Gênesis');
+      await marcarLivro('Êxodo');
+      await tester.tap(find.text('Confirmar'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('2 livros escolhidos'), findsOneWidget);
+      expect(find.text('Dia 1 · Gênesis 1-3'), findsOneWidget);
+
+      await tester.tap(find.text('Alterar ordem de leitura'));
+      await tester.pumpAndSettle();
+      expect(find.text('Ordem de leitura'), findsOneWidget);
+      expect(find.text('1º · Gênesis'), findsOneWidget);
+      expect(find.text('2º · Êxodo'), findsOneWidget);
+
+      // O primeiro "Mover para cima" é o do Gênesis, desabilitado; o segundo
+      // é o do Êxodo e o traz para a frente.
+      await tester.tap(find.byTooltip('Mover para cima').at(1));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Salvar ordem'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Dia 1 · Êxodo 1-3'), findsOneWidget);
+    });
   });
 
   group('editar plano', () {
@@ -964,6 +1087,64 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(estado.planosDoUsuario.single.titulo, 'Nome original');
+    });
+
+    testWidgets('editar a ordem de leitura remonta o plano e reinicia', (
+      tester,
+    ) async {
+      final estado = Estado(await SharedPreferences.getInstance());
+      final plano = await estado.criarPlano(
+        titulo: 'Dois livros',
+        livros: ['genesis', 'exodo'],
+        dias: 30,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EscopoDoEstado(
+            estado: estado,
+            child: TelaDeUmPlano(
+              estado: estado,
+              planoId: plano.id,
+              plano: plano,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Opções do plano'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Editar plano'));
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('Alterar ordem de leitura'),
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byType(AlertDialog),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Alterar ordem de leitura'));
+      await tester.pumpAndSettle();
+      expect(find.text('Ordem de leitura'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Mover para cima').at(1));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Salvar ordem'));
+      await tester.pumpAndSettle();
+
+      // Só trocar a ordem já remonta os dias: o editor avisa e o botão vira
+      // "Mudar e reiniciar".
+      expect(find.textContaining('remonta o plano'), findsOneWidget);
+      await tester.tap(find.text('Mudar e reiniciar'));
+      await tester.pumpAndSettle();
+
+      expect(estado.planosDoUsuario.single.livros, ['exodo', 'genesis']);
     });
   });
 }

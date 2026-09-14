@@ -60,14 +60,17 @@ vitoriana dele, tratando o leitor por "tu".
   Spurgeon): narra capítulos da Bíblia, os dois devocionais, Promessas de
   Deus e as introduções; download opcional para ouvir offline fora da web.
 - Planos personalizados: escolher livros e a duração; compartilháveis por
-  link, com progresso de cada participante (exige conta Google). Quem criou
+  link, com progresso de cada participante (exige conta Google). O seletor
+  tem atalhos para o Antigo e o Novo Testamento inteiros, e com 2+ livros dá
+  para escolher a ordem de leitura. Quem criou
   pode excluir o plano para todos; quem só participa pode sair, afetando só
   o próprio progresso. Ao criar o plano, uma caixa de marcar (desmarcada por
   padrão) inclui junto os devocionais (Manhã, Noite, Promessas de Deus) cujo
   versículo citado cai no capítulo do dia, antes ou depois dele, à escolha
   de quem cria; a prévia do plano já mostra o resultado. Depois de criado,
   quem criou pode editar tudo isso de novo pelo menu de opções do plano —
-  nome, livros, dias e a inclusão/posição dos devocionais; mudar livros ou
+  nome, livros, ordem de leitura, dias e a inclusão/posição dos devocionais;
+  mudar livros (inclusive só a ordem) ou
   dias pede confirmação e reinicia o progresso marcado (o dia 5 de hoje pode
   virar outro trecho da Bíblia). Só vale para planos do usuário, não para o
   cronograma anual fixo.

@@ -97,7 +97,8 @@ class PlanoDoUsuario {
   final String id;
   final String titulo;
 
-  /// Slugs dos livros, na ordem canônica.
+  /// Slugs dos livros, na ordem de leitura escolhida ao criar ou editar o
+  /// plano (não necessariamente a canônica).
   final List<String> livros;
 
   /// Quantos dias o plano tem. Pode ser maior que o número de dias de
@@ -182,7 +183,8 @@ String novoIdDePlano() {
 }
 
 /// Distribui os capítulos de [livros] por [dias] dias, do primeiro capítulo
-/// do primeiro livro ao último do último.
+/// do primeiro livro ao último do último, na ordem dada em [livros] (a ordem
+/// de leitura que quem criou escolheu).
 ///
 /// Cada dia recebe um trecho contíguo dos capítulos, com contagens o mais
 /// parecidas possível (Salmos tem 150 capítulos; em 30 dias, uns dias pegam

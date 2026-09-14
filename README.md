@@ -17,13 +17,16 @@ mesmo código).
 - **Cronograma de leitura anual**, 365 dias (366 em ano bissexto), agrupado por
   mês, com marcação de lido e barra de progresso do ano.
 - **Planos personalizados**: escolher um ou mais livros e em quantos dias, com
-  prévia antes de confirmar. Dá para compartilhar por link; cada participante
+  prévia antes de confirmar. O seletor tem atalhos para marcar o Antigo ou o
+  Novo Testamento inteiros de uma vez, e com 2+ livros dá para escolher a
+  ordem de leitura ("Alterar ordem de leitura"). Dá para compartilhar por link; cada participante
   entra com a própria conta Google e o progresso de todos aparece junto (Meus
   Planos). Quem criou pode excluir o plano (some para todos os participantes,
   com o progresso de cada um); quem só participa pode sair, e some só o
-  próprio progresso. Quem criou também edita o plano depois — nome, livros,
-  dias e a inclusão/posição dos devocionais — pelo menu de opções; mudar
-  livros ou dias pede confirmação e reinicia o progresso marcado.
+   próprio progresso. Quem criou também edita o plano depois — nome, livros,
+  ordem de leitura, dias e a inclusão/posição dos devocionais — pelo menu de
+  opções; mudar livros (inclusive só a ordem) ou dias pede confirmação e
+  reinicia o progresso marcado.
 - **Leitura em voz alta**: botão Ouvir narra capítulos da Bíblia, Manhã e
   Noite, Promessas de Deus e as introduções, numa voz que remete ao tom de
   Charles Spurgeon (não é clone da voz do Felipe), em MP3 pré-gerado

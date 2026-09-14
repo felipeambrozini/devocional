@@ -24,7 +24,8 @@ class NovoPlanoControlador extends ChangeNotifier {
   final titulo = TextEditingController();
   final dias = TextEditingController(text: '30');
 
-  /// Slugs escolhidos, na ordem canônica (a ordem do seletor).
+  /// Slugs escolhidos, na ordem de leitura (a do seletor na criação, e a que
+  /// quem cria ajusta em "Alterar ordem de leitura").
   final List<String> livros = [];
   bool incluirDevocionais = false;
   bool devocionalAntes = true;
@@ -68,6 +69,20 @@ class NovoPlanoControlador extends ChangeNotifier {
 
   void removerLivro(String slug) {
     livros.remove(slug);
+    notifyListeners();
+  }
+
+  /// Troca a ordem de leitura sem mudar o conjunto de livros: o seletor
+  /// decide quais entram, este método só reordena (vem do diálogo de ordem).
+  void reordenarLivros(List<String> novaOrdem) {
+    final atuais = Set.of(livros);
+    if (novaOrdem.length != livros.length ||
+        !novaOrdem.every(atuais.contains)) {
+      return;
+    }
+    livros
+      ..clear()
+      ..addAll(novaOrdem);
     notifyListeners();
   }
 
