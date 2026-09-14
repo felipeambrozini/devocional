@@ -48,3 +48,11 @@ Future<bool> confirmarRemocao(
       : '$referencia será removido dos favoritos. Essa ação não pode ser desfeita.',
   rotuloDaAcao: 'Remover',
 );
+
+/// Largura de conteúdo de diálogo que cabe no celular: a cheia em tela
+/// larga, a tela menos as margens do AlertDialog em tela estreita (a fixa
+/// de 460px estourava a janela de 360px).
+double larguraDeDialogo(BuildContext context, double cheia) {
+  final estreita = MediaQuery.sizeOf(context).width - 128;
+  return estreita < cheia ? estreita : cheia;
+}

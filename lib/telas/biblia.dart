@@ -93,7 +93,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
           child: Scaffold(
             appBar: DevocionalAppBar(
               title: Tooltip(
-                message: 'Toque para escolher capítulo',
+                message: 'Toque para escolher livro',
                 child: DevocionalBotaoTerciario(
                   onPressed: () => _controller.abrirSeletor(context),
                   child: Row(
@@ -310,9 +310,12 @@ class _Leitor extends StatelessWidget {
                                 const SizedBox(
                                   width: DevocionalEspacamento.sp8,
                                 ),
+                                // Grade, não chevron: este título abre a grade
+                                // de capítulos do livro, enquanto o da AppBar
+                                // (chevron) troca de livro.
                                 FaIcon(
-                                  FontAwesomeIcons.chevronDown,
-                                  size: 22,
+                                  FontAwesomeIcons.tableCells,
+                                  size: 20,
                                   color: cor.primary,
                                 ),
                               ],

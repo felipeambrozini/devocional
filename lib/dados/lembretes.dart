@@ -353,7 +353,7 @@ abstract class Lembretes {
 /// lembrete local recorrente de reserva para T+5 min, todo dia.
 ///
 /// Divisão de papéis: o servidor tenta primeiro, com o conteúdo do dia
-/// ("Devocional da Manhã | Gênesis 1:2"); a reserva cobre o pior caso
+/// ("Venha ler a reflexão para sua manhã em Gênesis 1:2"); a reserva cobre o pior caso
 /// (Function fora do ar, App Check falhando, silêncio além de 5 min) com um
 /// aviso genérico — sem conteúdo do dia, porque uma notificação recorrente
 /// nativa não é recalculada pelo Dart a cada disparo. Quando o push chega a

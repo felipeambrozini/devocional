@@ -28,8 +28,8 @@
 //
 // Conteúdo: assets/conteudo-lembretes.json — gerado dos JSONs do app
 // (manha_e_noite/promessas_de_deus) só com referência e título, que é tudo
-// que a notificação usa ("Devocional da Manhã | Gênesis 1:2"). Regenerar se
-// algum dia o conteúdo anual mudar.
+// que a notificação usa ("Venha ler a reflexão para sua manhã em
+// Gênesis 1:2"). Regenerar se algum dia o conteúdo anual mudar.
 import {initializeApp} from "firebase-admin/app";
 import {getFirestore} from "firebase-admin/firestore";
 import {getMessaging, Message} from "firebase-admin/messaging";
@@ -186,7 +186,7 @@ export const enviarLembretes = onSchedule(
           pendentes.push({
             slot: "manha",
             message: mensagem(d.token, "manha", "Devocional da Manhã",
-              conteudoDia.m, d.minutosManha),
+              `Venha ler a reflexão para sua manhã em ${conteudoDia.m}`, d.minutosManha),
           });
         }
       }
@@ -220,7 +220,7 @@ export const enviarLembretes = onSchedule(
           pendentes.push({
             slot: "noite",
             message: mensagem(d.token, "noite", "Devocional da Noite",
-              conteudoDia.n, d.minutosNoite),
+              `Venha ler a reflexão para sua noite em ${conteudoDia.n}`, d.minutosNoite),
           });
         }
       }

@@ -6,6 +6,7 @@ import '../dados/canon.dart';
 import '../dados/planos.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
+import '../funcoes/dialogos.dart';
 import '../widgets/widgets.dart';
 import 'novo_plano.dart' show mostrarSeletorDeLivros;
 
@@ -104,125 +105,172 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
           ));
         }
 
+        // Os campos são os mesmos na janela e na tela cheia: só o
+        // invólucro muda com a largura.
+        Widget campos() {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (mudouODiaADia()) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(DevocionalEspacamento.sp12),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Theme.of(dialogContext).colorScheme.outline,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const DevocionalFilete(largura: 48),
+                      const SizedBox(height: DevocionalEspacamento.sp8),
+                      Text(
+                        'Mudar os livros ou os dias remonta o plano: o '
+                        'progresso já marcado será apagado.',
+                        style: Theme.of(dialogContext).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: DevocionalEspacamento.sp16),
+              ],
+              TextField(
+                controller: titulo,
+                autofocus: !kIsWeb,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(
+                  labelText: 'Nome do plano',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: DevocionalEspacamento.sp20),
+              Text(
+                'Quais livros?',
+                style: Theme.of(dialogContext).textTheme.titleMedium,
+              ),
+              const SizedBox(height: DevocionalEspacamento.sp8),
+              DevocionalBotaoSecundario.icon(
+                onPressed: escolherLivros,
+                icon: const FaIcon(FontAwesomeIcons.book),
+                label: Text(
+                  '${livros.length} '
+                  '${livros.length == 1 ? 'livro' : 'livros'} '
+                  'escolhidos',
+                ),
+              ),
+              if (livros.isNotEmpty) ...[
+                const SizedBox(height: DevocionalEspacamento.sp10),
+                DevocionalLivrosEscolhidos(
+                  livros: livros,
+                  aoRemover: (slug) =>
+                      setDialogState(() => livros.remove(slug)),
+                  aoReordenar: (novaOrdem) => setDialogState(
+                    () => livros
+                      ..clear()
+                      ..addAll(novaOrdem),
+                  ),
+                  aoRestaurar: (slugs, indice) => setDialogState(() {
+                    var ponto = indice;
+                    if (ponto < 0) ponto = 0;
+                    if (ponto > livros.length) ponto = livros.length;
+                    for (final slug in slugs) {
+                      if (!livros.contains(slug)) {
+                        livros.insert(ponto, slug);
+                        ponto++;
+                      }
+                    }
+                  }),
+                ),
+              ],
+              const SizedBox(height: DevocionalEspacamento.sp20),
+              Text(
+                'Em quantos dias?',
+                style: Theme.of(dialogContext).textTheme.titleMedium,
+              ),
+              const SizedBox(height: DevocionalEspacamento.sp8),
+              TextFormField(
+                controller: dias,
+                keyboardType: TextInputType.number,
+                onChanged: (_) => setDialogState(() {}),
+                validator: validarDias,
+                // Igual ao novo plano: o erro aparece enquanto digita,
+                // não só ao tocar "Mudar e reiniciar".
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                decoration: InputDecoration(
+                  helperText: totalDeCapitulos() == 0
+                      ? 'Escolha os livros para ver o tamanho do plano.'
+                      : 'O plano terá ${totalDeCapitulos()} '
+                            '${totalDeCapitulos() == 1 ? 'capítulo' : 'capítulos'}.',
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: DevocionalEspacamento.sp20),
+              DevocionalOpcaoDeDevocionais(
+                incluir: incluirDevocionais,
+                antes: devocionalAntes,
+                aoMudarIncluir: (marcado) =>
+                    setDialogState(() => incluirDevocionais = marcado ?? false),
+                aoMudarOrdem: (antes) =>
+                    setDialogState(() => devocionalAntes = antes),
+              ),
+            ],
+          );
+        }
+
+        final acaoSalvar = DevocionalBotaoPrimario(
+          onPressed: salvar,
+          child: Text(mudouODiaADia() ? 'Mudar e reiniciar' : 'Salvar'),
+        );
+
+        // Em celular a janela fixa espremia nome e dias sob o banner com o
+        // teclado aberto: vira tela cheia, e voltar fecha sem salvar (o
+        // mesmo que Cancelar).
+        if (MediaQuery.sizeOf(dialogContext).width < 600) {
+          return Dialog.fullscreen(
+            child: Scaffold(
+              appBar: const DevocionalAppBar(title: Text('Editar plano')),
+              body: Form(
+                key: form,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(
+                    DevocionalEspacamento.sp16,
+                    DevocionalEspacamento.sp12,
+                    DevocionalEspacamento.sp16,
+                    DevocionalEspacamento.sp32,
+                  ),
+                  child: campos(),
+                ),
+              ),
+              bottomNavigationBar: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    DevocionalEspacamento.sp16,
+                    DevocionalEspacamento.sp8,
+                    DevocionalEspacamento.sp16,
+                    DevocionalEspacamento.sp16,
+                  ),
+                  child: SizedBox(width: double.infinity, child: acaoSalvar),
+                ),
+              ),
+            ),
+          );
+        }
+
         return AlertDialog(
           title: Text(
             'Editar plano',
             style: Theme.of(dialogContext).textTheme.headlineSmall,
           ),
           content: SizedBox(
-            width: 420,
+            width: larguraDeDialogo(dialogContext, 420),
             height: 520,
             child: Form(
               key: form,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (mudouODiaADia()) ...[
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(
-                          DevocionalEspacamento.sp12,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Theme.of(
-                              dialogContext,
-                            ).colorScheme.outline,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const DevocionalFilete(largura: 48),
-                            const SizedBox(height: DevocionalEspacamento.sp8),
-                            Text(
-                              'Mudar os livros ou os dias remonta o plano: o '
-                              'progresso já marcado será apagado.',
-                              style: Theme.of(
-                                dialogContext,
-                              ).textTheme.bodySmall,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: DevocionalEspacamento.sp16),
-                    ],
-                    TextField(
-                      controller: titulo,
-                      autofocus: !kIsWeb,
-                      textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
-                        labelText: 'Nome do plano',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: DevocionalEspacamento.sp20),
-                    Text(
-                      'Quais livros?',
-                      style: Theme.of(dialogContext).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: DevocionalEspacamento.sp8),
-                    DevocionalBotaoSecundario.icon(
-                      onPressed: escolherLivros,
-                      icon: const FaIcon(FontAwesomeIcons.book),
-                      label: Text(
-                        '${livros.length} '
-                        '${livros.length == 1 ? 'livro' : 'livros'} '
-                        'escolhidos',
-                      ),
-                    ),
-                    if (livros.isNotEmpty) ...[
-                      const SizedBox(height: DevocionalEspacamento.sp10),
-                      DevocionalLivrosEscolhidos(
-                        livros: livros,
-                        aoRemover: (slug) =>
-                            setDialogState(() => livros.remove(slug)),
-                        aoReordenar: (novaOrdem) => setDialogState(
-                          () => livros
-                            ..clear()
-                            ..addAll(novaOrdem),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: DevocionalEspacamento.sp20),
-                    Text(
-                      'Em quantos dias?',
-                      style: Theme.of(dialogContext).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: DevocionalEspacamento.sp8),
-                    TextFormField(
-                      controller: dias,
-                      keyboardType: TextInputType.number,
-                      onChanged: (_) => setDialogState(() {}),
-                      validator: validarDias,
-                      // Igual ao novo plano: o erro aparece enquanto digita,
-                      // não só ao tocar "Mudar e reiniciar".
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
-                      decoration: InputDecoration(
-                        helperText: totalDeCapitulos() == 0
-                            ? 'Escolha os livros para ver o tamanho do plano.'
-                            : 'O plano terá ${totalDeCapitulos()} '
-                                  '${totalDeCapitulos() == 1 ? 'capítulo' : 'capítulos'}.',
-                        border: const OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: DevocionalEspacamento.sp20),
-                    DevocionalOpcaoDeDevocionais(
-                      incluir: incluirDevocionais,
-                      antes: devocionalAntes,
-                      aoMudarIncluir: (marcado) => setDialogState(
-                        () => incluirDevocionais = marcado ?? false,
-                      ),
-                      aoMudarOrdem: (antes) =>
-                          setDialogState(() => devocionalAntes = antes),
-                    ),
-                  ],
-                ),
-              ),
+              child: SingleChildScrollView(child: campos()),
             ),
           ),
           actions: [
@@ -230,10 +278,7 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
               onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Cancelar'),
             ),
-            DevocionalBotaoPrimario(
-              onPressed: salvar,
-              child: Text(mudouODiaADia() ? 'Mudar e reiniciar' : 'Salvar'),
-            ),
+            acaoSalvar,
           ],
         );
       },

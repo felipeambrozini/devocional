@@ -72,6 +72,21 @@ class NovoPlanoControlador extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Recoloca livros que o Desfazer do snackbar traz de volta, no ponto de
+  /// onde saíram (sem duplicar quem já voltou por outro caminho).
+  void restaurarLivros(List<String> slugs, int indice) {
+    var ponto = indice;
+    if (ponto < 0) ponto = 0;
+    if (ponto > livros.length) ponto = livros.length;
+    for (final slug in slugs) {
+      if (!livros.contains(slug)) {
+        livros.insert(ponto, slug);
+        ponto++;
+      }
+    }
+    notifyListeners();
+  }
+
   /// Troca a ordem de leitura sem mudar o conjunto de livros: o seletor
   /// decide quais entram, este método só reordena (vem do diálogo de ordem).
   void reordenarLivros(List<String> novaOrdem) {

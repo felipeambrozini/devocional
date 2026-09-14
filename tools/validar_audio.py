@@ -25,6 +25,7 @@ Codigos de saida: 0 = nada abaixo do limiar, 1 = ha mp3 ruim, 2 = erro de uso.
 import argparse
 import json
 import re
+import subprocess
 import sys
 import unicodedata
 from difflib import SequenceMatcher
@@ -76,19 +77,103 @@ def _normalizar(texto: str) -> str:
 
 
 def semelhanca(esperado: str, transcrito: str) -> float:
-    return SequenceMatcher(None, _normalizar(esperado), _normalizar(transcrito)).ratio()
+    # autojunk=False: por padrao, o SequenceMatcher trata caracteres muito
+    # frequentes num texto longo (aqui, o espaco) como "lixo" e os ignora ao
+    # casar blocos -- isso derrubava a nota pra ~7% em capitulos com audio
+    # perfeito so por causa de um pequeno desalinhamento cedo no texto
+    # (ex.: "capitulo 6" falado como "capitulo seis").
+    return SequenceMatcher(
+        None, _normalizar(esperado), _normalizar(transcrito), autojunk=False
+    ).ratio()
+
+
+# Frases compostas antes das palavras soltas -- senao "ponto de exclamacao"
+# seria contado (errado) como um "ponto" solto.
+_PONTUACAO_FALADA = [
+    "ponto e virgula",
+    "ponto de interrogacao",
+    "ponto de exclamacao",
+    "dois pontos",
+    "reticencias",
+    "ponto",
+    "virgula",
+]
+
+
+def pontuacao_falada(esperado: str, transcrito: str) -> list[str]:
+    """Sinaliza quando a transcricao tem, como palavra isolada, "ponto",
+    "virgula" etc. -- defeito conhecido do XTTS-v2 que as vezes le o
+    caractere de pontuacao em voz alta em vez de so pausar (ver
+    _remover_ponto_final em audio_gen_*/_common.py). So conta se a palavra
+    nao aparece tambem no texto esperado, pra nao dar falso positivo num
+    versiculo que realmente cite alguma dessas palavras."""
+    ne = _normalizar(esperado)
+    nt = _normalizar(transcrito)
+    achados = []
+    restante = nt
+    for termo in _PONTUACAO_FALADA:
+        padrao = r"\b" + termo.replace(" ", r"\s+") + r"\b"
+        if termo in ne:
+            continue
+        if re.search(padrao, restante):
+            achados.append(termo)
+            restante = re.sub(padrao, " ", restante, count=1)
+    return achados
+
+
+def gerar_espectrograma(caminho_mp3: Path, destino_png: Path, duracao_s: float = 2.0) -> None:
+    """Miniatura do espectrograma dos primeiros [duracao_s] segundos.
+
+    Chiado/estatica aparece nele como energia continua espalhada por toda a
+    faixa de frequencia, sem os intervalos de silabas que a fala real tem --
+    visualmente obvio, mas nao vira uma metrica numerica confiavel (tentado
+    e descartado: planura espectral, proporcao de agudo, rolloff espectral e
+    piso de ruido em silencio nao separaram de forma robusta os casos
+    conhecidos com poucos exemplos). Por isso a checagem aqui e visual: gera
+    a miniatura, quem revisa bate o olho em vez de ouvir o arquivo inteiro.
+    """
+    destino_png.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        [
+            "ffmpeg", "-y", "-v", "error",
+            # -t ANTES do -i: e opcao de entrada, limita quanto e lido do
+            # arquivo. Depois do -i (junto do -lavfi) ele e ignorado com
+            # showspectrumpic, que gera uma imagem so pro audio inteiro.
+            "-t", str(duracao_s),
+            "-i", str(caminho_mp3),
+            "-lavfi", "showspectrumpic=s=1024x256:legend=0:scale=log",
+            str(destino_png),
+        ],
+        check=True,
+    )
 
 
 _MODELO = None
 
 
-def transcrever(caminho_mp3: Path) -> str:
+def _dispositivo_whisper() -> tuple[str, str]:
+    """GPU quando disponivel (Kaggle/Colab -- Whisper "small" fica bem mais
+    rapido) e CPU como fallback (maquina local sem GPU). Rodando validacao
+    JUNTO com uma sessao de geracao (XTTS-v2 na mesma GPU), prefira forcar
+    CPU aqui pra nao disputar VRAM -- ver --cpu."""
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            return "cuda", "float16"
+    except Exception:
+        pass
+    return "cpu", "int8"
+
+
+def transcrever(caminho_mp3: Path, forcar_cpu: bool = False) -> str:
     global _MODELO
     if _MODELO is None:
         from faster_whisper import WhisperModel
 
-        print("Carregando Whisper (CPU)...", file=sys.stderr)
-        _MODELO = WhisperModel("small", device="cpu", compute_type="int8")
+        dispositivo, tipo_calculo = ("cpu", "int8") if forcar_cpu else _dispositivo_whisper()
+        print(f"Carregando Whisper ({dispositivo})...", file=sys.stderr)
+        _MODELO = WhisperModel("small", device=dispositivo, compute_type=tipo_calculo)
     segmentos, _ = _MODELO.transcribe(str(caminho_mp3), language="pt")
     return " ".join(s.text for s in segmentos)
 
@@ -141,6 +226,19 @@ def main() -> None:
     parser.add_argument(
         "--apagar", action="store_true", help="Apaga os mp3 ruins (sem isso, so reporta)"
     )
+    parser.add_argument(
+        "--espectros",
+        help=(
+            "Pasta onde salvar uma miniatura de espectrograma (2s iniciais) de cada mp3 que "
+            "passar no teste de texto -- pra bater o olho e pegar artefato (chiado, estatica) "
+            "que a transcricao nao pega por nao mudar as palavras reconhecidas."
+        ),
+    )
+    parser.add_argument(
+        "--cpu",
+        action="store_true",
+        help="Forca Whisper em CPU mesmo com GPU disponivel -- use ao validar na mesma sessao/GPU que uma geracao (XTTS-v2) esta usando.",
+    )
     args = parser.parse_args()
 
     pasta = Path(args.pasta)
@@ -155,22 +253,41 @@ def main() -> None:
     existentes = [(rel, esperado) for rel, esperado in tarefas if (pasta / rel).exists()]
     print(f"{len(existentes)}/{len(tarefas)} mp3 ja gerados em {pasta}. Validando...")
 
+    pasta_espectros = Path(args.espectros) if args.espectros else None
+
     ruins = 0
     for relativo, esperado in existentes:
         caminho_mp3 = pasta / relativo
-        transcrito = transcrever(caminho_mp3)
-        pontuacao = semelhanca(esperado, transcrito)
-        if pontuacao < args.limiar:
+        transcrito = transcrever(caminho_mp3, forcar_cpu=args.cpu)
+        nota = semelhanca(esperado, transcrito)
+        # Semelhanca sozinha quase nao cai por causa disso -- um "ponto"
+        # falado a mais em meio a um capitulo inteiro apenas arranha a nota.
+        # Por isso e uma checagem a parte, que reprova mesmo com nota alta.
+        falado = pontuacao_falada(esperado, transcrito)
+        if nota < args.limiar or falado:
             ruins += 1
-            print(f"RUIM  {relativo}  (semelhanca {pontuacao:.0%})")
+            motivo = f"semelhanca {nota:.0%}"
+            if falado:
+                motivo += f", falou pontuacao em voz alta: {', '.join(falado)}"
+            print(f"RUIM  {relativo}  ({motivo})")
             print(f"      esperado:   {esperado[:120]}")
             print(f"      transcrito: {transcrito[:120]}")
             if args.apagar:
-                caminho_mp3.unlink()
+                try:
+                    caminho_mp3.unlink()
+                except OSError as erro:
+                    # Pasta so leitura (ex.: /kaggle/input) -- nao para o
+                    # resto da validacao por causa disso, so avisa.
+                    print(f"      nao apagou ({erro}) -- pasta so leitura?")
         else:
-            print(f"ok    {relativo}  (semelhanca {pontuacao:.0%})")
+            print(f"ok    {relativo}  (semelhanca {nota:.0%})")
+            if pasta_espectros:
+                destino = pasta_espectros / Path(relativo).with_suffix(".png")
+                gerar_espectrograma(caminho_mp3, destino)
 
     print(f"\n{ruins}/{len(existentes)} arquivo(s) abaixo do limiar de {args.limiar:.0%}.")
+    if pasta_espectros:
+        print(f"Espectrogramas salvos em {pasta_espectros} -- chiado/estatica aparece como energia continua espalhada pela frequencia toda, sem os intervalos que a fala real tem.")
     if ruins and args.apagar:
         print("Apagados -- rode o gerar_*.py correspondente de novo (sem --limpar) para recriar so esses.")
     elif ruins:

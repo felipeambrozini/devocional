@@ -3,7 +3,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../dados/canon.dart';
 import '../estilo/espacamento.dart';
+import '../funcoes/dialogos.dart';
 import 'botao.dart';
+import 'filete.dart';
 
 /// Os trechos iguais dos formulários de plano novo e de edição: os livros
 /// escolhidos e a opção de incluir devocionais. Um lugar só, para os dois
@@ -11,12 +13,13 @@ import 'botao.dart';
 ///
 /// Não inclui o botão "Escolher livros" nem os campos de nome e dias: esses
 /// falam com o controlador de cada tela, e só a lista e a opção se repetem.
-class DevocionalLivrosEscolhidos extends StatelessWidget {
+class DevocionalLivrosEscolhidos extends StatefulWidget {
   const DevocionalLivrosEscolhidos({
     super.key,
     required this.livros,
     required this.aoRemover,
     this.aoReordenar,
+    this.aoRestaurar,
   });
 
   final List<String> livros;
@@ -26,41 +29,134 @@ class DevocionalLivrosEscolhidos extends StatelessWidget {
   /// Nulo esconde o botão de ordenar — só aparece com 2+ livros de todo modo.
   final ValueChanged<List<String>>? aoReordenar;
 
+  /// Recoloca livros que o Desfazer do snackbar traz de volta, no ponto de
+  /// onde saíram. Nulo esconde o Desfazer (a remoção segue valendo).
+  final void Function(List<String> slugs, int indice)? aoRestaurar;
+
+  @override
+  State<DevocionalLivrosEscolhidos> createState() =>
+      _DevocionalLivrosEscolhidosState();
+}
+
+class _DevocionalLivrosEscolhidosState
+    extends State<DevocionalLivrosEscolhidos> {
+  /// Acima disto os chips colapsam no resumo, para a lista não empurrar o
+  /// resto do formulário para baixo do fold.
+  static const _limiteVisivel = 6;
+
+  bool _expandido = false;
+
+  void _remover(BuildContext context, String slug) {
+    final indice = widget.livros.indexOf(slug);
+    widget.aoRemover(slug);
+    final restaurar = widget.aoRestaurar;
+    if (restaurar == null) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('${nomeDoLivro(slug)} removido.'),
+          action: SnackBarAction(
+            label: 'Desfazer',
+            onPressed: () => restaurar([slug], indice < 0 ? 0 : indice),
+          ),
+        ),
+      );
+  }
+
+  void _limpar(BuildContext context) {
+    final backup = List<String>.from(widget.livros);
+    for (final slug in backup) {
+      widget.aoRemover(slug);
+    }
+    final restaurar = widget.aoRestaurar;
+    if (restaurar == null) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('${backup.length} livros removidos.'),
+          action: SnackBarAction(
+            label: 'Desfazer',
+            onPressed: () => restaurar(backup, 0),
+          ),
+        ),
+      );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final reordenar = aoReordenar;
+    final livros = widget.livros;
+    final reordenar = widget.aoReordenar;
+    final colapsado = livros.length > _limiteVisivel && !_expandido;
+    final visiveis = colapsado ? livros.take(_limiteVisivel).toList() : livros;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (colapsado)
+          Text(
+            '${livros.length} livros: '
+            '${nomeDoLivro(livros.first)}…${nomeDoLivro(livros.last)}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        if (colapsado) const SizedBox(height: DevocionalEspacamento.sp8),
         Wrap(
           spacing: DevocionalEspacamento.sp8,
           runSpacing: DevocionalEspacamento.sp8,
           children: [
-            for (final slug in livros)
+            for (var i = 0; i < visiveis.length; i++)
               InputChip(
-                label: Text(nomeDoLivro(slug)),
+                // A posição conta: a ordem dos livros decide o que cai em
+                // cada dia, então o chip já mostra onde cada um está.
+                label: Text(
+                  livros.length > 1
+                      ? '${i + 1} · ${nomeDoLivro(visiveis[i])}'
+                      : nomeDoLivro(visiveis[i]),
+                ),
                 // Sem o tique do Material: neste sistema chip não carrega
                 // checkmark (ver o alternador de leitura).
                 showCheckmark: false,
-                onDeleted: () => aoRemover(slug),
+                onDeleted: () => _remover(context, visiveis[i]),
               ),
           ],
         ),
-        if (reordenar != null && livros.length > 1) ...[
-          const SizedBox(height: DevocionalEspacamento.sp4),
-          DevocionalBotaoTerciario.icon(
-            onPressed: () async {
-              final novaOrdem = await mostrarEditorDeOrdemDosLivros(
-                context,
-                livros: livros,
-              );
-              if (novaOrdem != null) reordenar(novaOrdem);
-            },
-            icon: const FaIcon(FontAwesomeIcons.listOl),
-            label: const Text('Alterar ordem de leitura'),
-          ),
-        ],
+        const SizedBox(height: DevocionalEspacamento.sp4),
+        Wrap(
+          spacing: DevocionalEspacamento.sp8,
+          runSpacing: DevocionalEspacamento.sp4,
+          children: [
+            if (colapsado)
+              DevocionalBotaoTerciario(
+                onPressed: () => setState(() => _expandido = true),
+                child: Text('Ver todos (${livros.length})'),
+              )
+            else if (livros.length > _limiteVisivel)
+              DevocionalBotaoTerciario(
+                onPressed: () => setState(() => _expandido = false),
+                child: const Text('Ver menos'),
+              ),
+            if (livros.length > 1)
+              DevocionalBotaoTerciario(
+                onPressed: () => _limpar(context),
+                child: const Text('Limpar'),
+              ),
+            if (reordenar != null && livros.length > 1)
+              DevocionalBotaoTerciario.icon(
+                onPressed: () async {
+                  final novaOrdem = await mostrarEditorDeOrdemDosLivros(
+                    context,
+                    livros: livros,
+                  );
+                  if (novaOrdem != null) reordenar(novaOrdem);
+                },
+                icon: const FaIcon(FontAwesomeIcons.listOl),
+                label: const Text('Alterar ordem de leitura'),
+              ),
+          ],
+        ),
       ],
     );
   }
@@ -108,9 +204,7 @@ class DevocionalOpcaoDeDevocionais extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(DevocionalEspacamento.sp12),
             decoration: BoxDecoration(
-              border: Border.all(
-                color: cor.outline.withValues(alpha: 0.5),
-              ),
+              border: Border.all(color: cor.outline.withValues(alpha: 0.5)),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Wrap(
@@ -166,48 +260,64 @@ Future<List<String>?> mostrarEditorDeOrdemDosLivros(
             style: Theme.of(dialogContext).textTheme.headlineSmall,
           ),
           content: SizedBox(
-            width: 420,
+            width: larguraDeDialogo(dialogContext, 420),
             height: 400,
-            child: ReorderableListView.builder(
-              itemCount: ordem.length,
-              onReorderItem: (antigo, novo) {
-                setDialogState(() {
-                  final slug = ordem.removeAt(antigo);
-                  ordem.insert(novo, slug);
-                });
-              },
-              itemBuilder: (context, i) {
-                final slug = ordem[i];
-                final capitulos = livroPorSlug(slug)?.capitulos ?? 0;
-                return ListTile(
-                  key: ValueKey(slug),
-                  leading: ReorderableDragStartListener(
-                    index: i,
-                    child: const Icon(Icons.drag_handle),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const DevocionalFilete(largura: 48),
+                const SizedBox(height: DevocionalEspacamento.sp8),
+                Text(
+                  'Quem lê começa pelo primeiro livro: a ordem decide o que cai em cada dia.',
+                  style: Theme.of(dialogContext).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
                   ),
-                  title: Text('${i + 1}º · ${nomeDoLivro(slug)}'),
-                  subtitle: Text(
-                    '$capitulos ${capitulos == 1 ? 'capítulo' : 'capítulos'}',
+                ),
+                const SizedBox(height: DevocionalEspacamento.sp12),
+                Expanded(
+                  child: ReorderableListView.builder(
+                    itemCount: ordem.length,
+                    onReorderItem: (antigo, novo) {
+                      setDialogState(() {
+                        final slug = ordem.removeAt(antigo);
+                        ordem.insert(novo, slug);
+                      });
+                    },
+                    itemBuilder: (context, i) {
+                      final slug = ordem[i];
+                      final capitulos = livroPorSlug(slug)?.capitulos ?? 0;
+                      return ListTile(
+                        key: ValueKey(slug),
+                        leading: ReorderableDragStartListener(
+                          index: i,
+                          child: const Icon(Icons.drag_handle),
+                        ),
+                        title: Text('${i + 1}º · ${nomeDoLivro(slug)}'),
+                        subtitle: Text(
+                          '$capitulos ${capitulos == 1 ? 'capítulo' : 'capítulos'}',
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              tooltip: 'Mover para cima',
+                              icon: const Icon(Icons.arrow_upward),
+                              onPressed: i == 0 ? null : () => mover(i, i - 1),
+                            ),
+                            IconButton(
+                              tooltip: 'Mover para baixo',
+                              icon: const Icon(Icons.arrow_downward),
+                              onPressed: i == ordem.length - 1
+                                  ? null
+                                  : () => mover(i, i + 1),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        tooltip: 'Mover para cima',
-                        icon: const Icon(Icons.arrow_upward),
-                        onPressed: i == 0 ? null : () => mover(i, i - 1),
-                      ),
-                      IconButton(
-                        tooltip: 'Mover para baixo',
-                        icon: const Icon(Icons.arrow_downward),
-                        onPressed: i == ordem.length - 1
-                            ? null
-                            : () => mover(i, i + 1),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                ),
+              ],
             ),
           ),
           actions: [

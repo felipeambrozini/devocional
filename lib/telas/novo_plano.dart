@@ -8,6 +8,7 @@ import '../dados/conteudo.dart';
 import '../dados/estado.dart';
 import '../dados/planos.dart';
 import '../estilo/espacamento.dart';
+import '../funcoes/dialogos.dart';
 import '../widgets/widgets.dart';
 
 /// Formulário de um novo plano de leitura: nome opcional, um ou mais livros
@@ -88,6 +89,7 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
                       livros: livros,
                       aoRemover: _controller.removerLivro,
                       aoReordenar: _controller.reordenarLivros,
+                      aoRestaurar: _controller.restaurarLivros,
                     ),
                   ],
                   const SizedBox(height: DevocionalEspacamento.sp20),
@@ -226,18 +228,17 @@ Future<List<String>?> mostrarSeletorDeLivros(
                 : nenhumMarcado(grupo)
                 ? false
                 : null,
-            onChanged: (_) =>
-                setDialogState(() => alternarTestamento(grupo)),
+            onChanged: (_) => setDialogState(() => alternarTestamento(grupo)),
           );
         }
 
         return AlertDialog(
           title: Text(
-            'Escolher livros',
+            'Escolher livros (${selecionados.length} de ${canon.length})',
             style: Theme.of(dialogContext).textTheme.headlineSmall,
           ),
           content: SizedBox(
-            width: 460,
+            width: larguraDeDialogo(dialogContext, 460),
             height: 480,
             child: Column(
               children: [
@@ -251,14 +252,39 @@ Future<List<String>?> mostrarSeletorDeLivros(
                   border: const OutlineInputBorder(),
                 ),
                 const SizedBox(height: DevocionalEspacamento.sp12),
-                if (termo.isEmpty) ...[
-                  atalhoDeTestamento(antigos, 'Antigo Testamento'),
-                  atalhoDeTestamento(novos, 'Novo Testamento'),
-                  const Divider(),
-                ],
+                atalhoDeTestamento(antigos, 'Antigo Testamento'),
+                atalhoDeTestamento(novos, 'Novo Testamento'),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DevocionalEspacamento.sp16,
+                  ),
+                  child: Text(
+                    'Caixa cheia marca o testamento inteiro. Traço quer dizer que só parte dele está marcada.',
+                    style: Theme.of(dialogContext).textTheme.bodySmall
+                        ?.copyWith(
+                          color: Theme.of(
+                            dialogContext,
+                          ).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                ),
+                const Divider(),
                 Expanded(
                   child: livros.isEmpty
-                      ? const Center(child: Text('Nenhum livro encontrado.'))
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text('Nenhum livro encontrado.'),
+                              const SizedBox(height: DevocionalEspacamento.sp8),
+                              DevocionalBotaoTerciario(
+                                onPressed: () =>
+                                    setDialogState(() => busca.clear()),
+                                child: const Text('Limpar busca'),
+                              ),
+                            ],
+                          ),
+                        )
                       : ListView.builder(
                           itemCount: livros.length,
                           itemBuilder: (context, i) {
@@ -293,16 +319,20 @@ Future<List<String>?> mostrarSeletorDeLivros(
               child: const Text('Cancelar'),
             ),
             DevocionalBotaoPrimario(
-              onPressed: () => Navigator.pop(dialogContext, [
-                // Mantém a ordem de leitura que já existia; o novo entra
-                // no fim, em ordem canônica.
-                for (final slug in jaEscolhidos)
-                  if (selecionados.contains(slug)) slug,
-                for (final livro in canon)
-                  if (selecionados.contains(livro.slug) &&
-                      !jaEscolhidos.contains(livro.slug))
-                    livro.slug,
-              ]),
+              // Sem livro não há plano: o botão só acende com 1+ marcado,
+              // em vez de confirmar vazio e avisar depois.
+              onPressed: selecionados.isEmpty
+                  ? null
+                  : () => Navigator.pop(dialogContext, [
+                      // Mantém a ordem de leitura que já existia; o novo entra
+                      // no fim, em ordem canônica.
+                      for (final slug in jaEscolhidos)
+                        if (selecionados.contains(slug)) slug,
+                      for (final livro in canon)
+                        if (selecionados.contains(livro.slug) &&
+                            !jaEscolhidos.contains(livro.slug))
+                          livro.slug,
+                    ]),
               child: const Text('Confirmar'),
             ),
           ],
