@@ -188,9 +188,18 @@ Future<void> _iniciar() async {
     }
     // Sem await: o resto (App Check, listener de login) não bloqueia nada
     // que dependa só do núcleo já pronto acima, e poria uma ida a mais à
-    // rede na frente do primeiro quadro.
-    unawaited(Nuvem.instancia.iniciar(estado));
-    unawaited(PlanosNaNuvem.instancia.iniciar(estado));
+    // rede na frente do primeiro quadro. PlanosNaNuvem só entra depois de
+    // Nuvem.iniciar terminar (App Check incluso): sem isto, com uma sessão
+    // já em cache, o listener de login dela dispara a consulta ao Firestore
+    // antes de o App Check ter o token do Play Integrity pronto, e o
+    // Firestore recusa com o mesmo PERMISSION_DENIED genérico de uma regra
+    // — sem outra tentativa, porque _puxarOsMeus só refaz a consulta na
+    // próxima troca de login.
+    unawaited(
+      Nuvem.instancia
+          .iniciar(estado)
+          .then((_) => PlanosNaNuvem.instancia.iniciar(estado)),
+    );
   }
 
   // Numa zona só (comentário acima de `main`) uma falha aqui não impediria

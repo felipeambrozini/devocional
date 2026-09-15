@@ -291,7 +291,12 @@ class AudioOffline extends ChangeNotifier {
     if (!_suportado) return;
     final base = _baseUrl;
     if (base.isEmpty) return;
-    for (final categoria in _contagemPorCategoria.keys) {
+    // Cópia das chaves: `atualizarContagens` roda em paralelo (mesmo
+    // `unawaited` em folha_de_ajustes.dart) e faz `clear()+addAll()` no fim
+    // da varredura de disco — iterar a `Map` viva enquanto este loop está
+    // parado num `await` (a amostra HTTP abaixo) lançava
+    // ConcurrentModificationError se as duas terminassem no mesmo instante.
+    for (final categoria in _contagemPorCategoria.keys.toList()) {
       if (_tamanhoMedioPorCategoria.containsKey(categoria)) continue;
       _tamanhoMedioPorCategoria[categoria] = await _amostrarTamanho(
         categoria,
