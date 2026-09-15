@@ -34,6 +34,7 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parent.parent
 DIR_BIBLIA = RAIZ / "assets" / "biblia"
 DIR_COMENTARIOS = RAIZ / "assets" / "comentarios"
+DIR_INTRODUCOES = RAIZ / "assets" / "introducoes"
 
 # Nome falado de cada livro -- a maioria vem do campo "nome"/"book" do JSON
 # (ja acentuado certo); so os numerados precisam de forma por extenso, porque
@@ -213,11 +214,30 @@ def tarefas_comentarios(slugs_filtro: set | None) -> list[tuple[str, str]]:
     return tarefas
 
 
+def tarefas_introducoes(slugs_filtro: set | None) -> list[tuple[str, str]]:
+    """A abertura falada ("Introdução ao Evangelho segundo João" etc.) varia
+    por tipo de livro e nao esta reconstruida aqui -- so titulo+corpo de cada
+    secao entram no texto esperado. A nota fica um pouco mais baixa por causa
+    disso (a abertura e uma fracao pequena do total), mas ainda serve pra
+    comparar."""
+    tarefas = []
+    for caminho in sorted(DIR_INTRODUCOES.glob("*.json")):
+        slug = caminho.stem
+        if slugs_filtro and slug not in slugs_filtro:
+            continue
+        introducao = json.loads(caminho.read_text(encoding="utf-8"))
+        esperado = " ".join(
+            f"{secao['heading']}. {secao['body']}" for secao in introducao["sections"]
+        )
+        tarefas.append((f"{slug}.mp3", esperado))
+    return tarefas
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("tipo", choices=["biblia", "comentarios"])
+    parser.add_argument("tipo", choices=["biblia", "comentarios", "introducoes"])
     parser.add_argument("slugs", nargs="*", help="Livros a validar (vazio = todos)")
     parser.add_argument(
         "--pasta", required=True, help="Pasta com os mp3 ja gerados (ex.: audio_gen_at/biblia)"
@@ -247,9 +267,12 @@ def main() -> None:
         sys.exit(2)
 
     slugs_filtro = set(args.slugs) or None
-    tarefas = (
-        tarefas_biblia(slugs_filtro) if args.tipo == "biblia" else tarefas_comentarios(slugs_filtro)
-    )
+    tarefas_por_tipo = {
+        "biblia": tarefas_biblia,
+        "comentarios": tarefas_comentarios,
+        "introducoes": tarefas_introducoes,
+    }
+    tarefas = tarefas_por_tipo[args.tipo](slugs_filtro)
     existentes = [(rel, esperado) for rel, esperado in tarefas if (pasta / rel).exists()]
     print(f"{len(existentes)}/{len(tarefas)} mp3 ja gerados em {pasta}. Validando...")
 
@@ -263,6 +286,9 @@ def main() -> None:
         # Semelhanca sozinha quase nao cai por causa disso -- um "ponto"
         # falado a mais em meio a um capitulo inteiro apenas arranha a nota.
         # Por isso e uma checagem a parte, que reprova mesmo com nota alta.
+        # (Confirmado ouvindo os arquivos: e o TTS falando "ponto" de verdade,
+        # nao alucinacao do Whisper -- esse audio e de antes da correcao em
+        # _common.py, que so tira o ponto final de chunks gerados dai pra frente.)
         falado = pontuacao_falada(esperado, transcrito)
         if nota < args.limiar or falado:
             ruins += 1
