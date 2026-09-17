@@ -779,6 +779,13 @@ variables, no environment `github-pages`). O deploy usa
 `FIREBASE_SERVICE_ACCOUNT` (JSON da conta de serviço do Firebase). As actions
 estão fixadas em commit SHA completo, não em tag mutável.
 
+Cache: `index.html`, `flutter_bootstrap.js`, `main.dart.js`, os manifestos de
+assets (`FontManifest.json`, `AssetManifest*`) e as fontes do FontAwesome saem
+com `no-cache`; só o resto de `assets/` e o `canvaskit/` ficam imutáveis por um
+ano. O manifesto lista as fontes de cada build, e congelá-lo por um ano quebra
+os ícones quando o conjunto de fontes muda (foi o que apagou os ícones na troca
+de Material para FontAwesome). Ver `headers` em `firebase.json`.
+
 Além do build em `public/devocional`, o mesmo passo copia `404.html`,
 `robots.txt` e `llms.txt` para a raiz do `public` — o Hosting só olha esses
 arquivos na raiz do domínio, nunca num subcaminho.
