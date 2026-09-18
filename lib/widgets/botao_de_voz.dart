@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../dados/audio_offline.dart';
+import '../dados/config_admin.dart';
 import '../dados/eventos.dart';
 import '../dados/personas.dart';
 import '../dados/recursos.dart';
@@ -111,7 +112,19 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
 
   @override
   Widget build(BuildContext context) {
-    if (!Recursos.ouvirTextos) return const SizedBox.shrink();
+    // O kill switch do admin esconde o botão na hora, sem esperar trocar de
+    // tela: sem ouvir a configuração, desligar o Ouvir deixava o botão à
+    // vista até a próxima navegação.
+    return ListenableBuilder(
+      listenable: ConfigAdmin.instancia,
+      builder: (context, _) {
+        if (!Recursos.ouvirTextos) return const SizedBox.shrink();
+        return _conteudo(context);
+      },
+    );
+  }
+
+  Widget _conteudo(BuildContext context) {
     if (_disponivel != true) {
       // Sem rede: o áudio pode existir de verdade, só não deu para checar —
       // aparece desabilitado com uma dica, em vez de sumir como se a leitura

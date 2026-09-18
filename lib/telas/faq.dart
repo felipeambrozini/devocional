@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import '../dados/nuvem.dart';
+import '../dados/config_admin.dart';
 import '../dados/recursos.dart';
 import '../estilo/espacamento.dart';
 import '../widgets/widgets.dart';
@@ -23,7 +24,10 @@ class TelaFAQ extends StatelessWidget {
         // Recursos.conversas); as perguntas sobre ele não fazem sentido
         // para quem não pode usá-lo.
         child: ListenableBuilder(
-          listenable: Nuvem.instancia,
+          listenable: Listenable.merge([
+            Nuvem.instancia,
+            ConfigAdmin.instancia,
+          ]),
           builder: (context, _) => ListView(
             padding: const EdgeInsets.fromLTRB(DevocionalEspacamento.sp20, DevocionalEspacamento.sp16, DevocionalEspacamento.sp20, DevocionalEspacamento.sp40),
             children: [

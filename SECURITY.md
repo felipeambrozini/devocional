@@ -44,12 +44,11 @@ As chaves e parâmetros necessários para o funcionamento dos serviços integrad
 - `FCM_VAPID_KEY` (chave pública do Web Push, para o lembrete diário na web)
 - `AUDIO_BASE_URL` (origem dos MP3 pré-gerados da leitura em voz alta)
 - `RECAPTCHA_V3_SITE_KEY` (App Check na web, ver 3.3)
-- `EMAILS_COM_CONVERSAS` (allowlist do chat com IA, ver `lib/dados/recursos.dart` — nenhum e-mail fica versionado no repositório)
 - `SENTRY_DSN` (destino do reporte de erro remoto, ver 2.4 — vazio localiza o SDK em modo no-op)
 - `EMAIL_DE_CONTATO` (destino de "Relatar um problema" em Sobre; vazio esconde o item)
 - `WHATSAPP_NUMERO` (destino do botão "Falar no WhatsApp" em Conversas, para quem pede acesso fora da allowlist; vazio esconde o botão)
 
-Não há mais chave de Text-to-Speech: o áudio virou MP3 pré-gerado (ver `lib/dados/voz.dart`), e as antigas `TTS_API_KEY_*` devem ser revogadas no Google Cloud Console, já que nenhum `String.fromEnvironment` no código as lê mais.
+Não há mais chave de Text-to-Speech: o áudio virou MP3 pré-gerado (ver `lib/dados/voz.dart`), e as antigas `TTS_API_KEY_*` devem ser revogadas no Google Cloud Console, já que nenhum `String.fromEnvironment` no código as lê mais. Também não há mais `EMAILS_COM_CONVERSAS`: a allowlist do chat mora no Firestore (`config/recursos`, campo `emailsComConversas`) e o painel admin (`/admin`, só web e só o dono) a edita sem reimplantar — nenhum e-mail fica versionado no repositório. Se o secret antigo ainda existir no GitHub, pode ser apagado; o `--dart-define` legado em `lib/dados/recursos.dart` só vale como bootstrap enquanto o documento ainda não carregou.
 
 ### 3.2 Proteção de Chaves Públicas
 Conforme a arquitetura padrão para aplicações no lado do cliente (Web e Mobile), as chaves do Firebase e do Google Cloud presentes nos artefatos de compilação são consideradas públicas por desenho. A segurança dos serviços é assegurada por:

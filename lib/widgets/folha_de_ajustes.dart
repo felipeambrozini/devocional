@@ -6,10 +6,13 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import '../dados/audio_offline.dart';
+import '../dados/config_admin.dart';
 import '../dados/estado.dart';
 import '../dados/eventos.dart';
 import '../dados/lembretes.dart';
 import '../dados/modelos.dart';
+import '../dados/nuvem.dart';
+import '../dados/recursos.dart';
 import '../funcoes/aviso.dart';
 import '../funcoes/lembretes_acoes.dart';
 import '../estilo/espacamento.dart';
@@ -171,6 +174,23 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                   icone: FontAwesomeIcons.shieldHalved,
                   titulo: 'Política de privacidade',
                   rota: '/privacidade',
+                ),
+                // O painel admin só existe para o dono na web (ver
+                // Recursos.adminNaWeb): fora disso nem a entrada aparece.
+                ListenableBuilder(
+                  listenable: Listenable.merge([
+                    Nuvem.instancia,
+                    ConfigAdmin.instancia,
+                  ]),
+                  builder: (context, _) => Recursos.adminNaWeb
+                      ? _ItemDeNavegacaoDaFolha(
+                          folha: folha,
+                          icone: FontAwesomeIcons.screwdriverWrench,
+                          titulo: 'Administração',
+                          subtitulo: 'Recursos e acessos ao chat',
+                          rota: '/admin',
+                        )
+                      : const SizedBox.shrink(),
                 ),
                 const SizedBox(height: DevocionalEspacamento.sp8),
               ],

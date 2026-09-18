@@ -3,8 +3,10 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../controladores/devocional_controlador.dart';
 import '../dados/canon.dart';
+import '../dados/config_admin.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
+import '../dados/recursos.dart';
 import '../dados/voz.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/datas.dart';
@@ -47,6 +49,14 @@ enum Leitura {
       Periodo.pelaHora(hora) == Periodo.manha ? Leitura.manha : Leitura.noite;
 }
 
+/// Se a leitura está ligada no painel admin. Manhã, Noite e Promessas
+/// desligam em separado — tirar uma do ar não tira as outras.
+bool leituraAtiva(Leitura leitura) => switch (leitura) {
+  Leitura.manha => Recursos.devocionalManha,
+  Leitura.noite => Recursos.devocionalNoite,
+  Leitura.promessas => Recursos.promessas,
+};
+
 /// Manhã e Noite e Promessas de Deus, com calendário para escolher a data.
 class TelaDevocional extends StatefulWidget {
   const TelaDevocional({super.key, this.dataInicial, this.leituraInicial});
@@ -88,12 +98,47 @@ class _TelaDevocionalState extends State<TelaDevocional> {
     final estado = EscopoDoEstado.de(context);
 
     return ListenableBuilder(
-      listenable: _controller,
+      listenable: Listenable.merge([_controller, ConfigAdmin.instancia]),
       builder: (context, _) {
         final hoje = DateTime.now();
         final ehHoje = _controller.ehHoje(hoje);
         final data = _controller.data;
         final leitura = _controller.leitura;
+
+        if (!leituraAtiva(leitura)) {
+          return Scaffold(
+            appBar: DevocionalAppBar(
+              title: Text(
+                ehHoje ? 'Hoje, ${dataLonga(data)}' : dataLonga(data),
+                overflow: TextOverflow.ellipsis,
+              ),
+              actions: [DevocionalBotaoDeAjustes(estado: estado)],
+            ),
+            body: DevocionalLarguraDeLeitura(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  DevocionalEspacamento.sp16,
+                  DevocionalEspacamento.sp8,
+                  DevocionalEspacamento.sp16,
+                  DevocionalEspacamento.sp32,
+                ),
+                children: [
+                  DevocionalAlternadorDeLeitura(
+                    atual: leitura,
+                    ao: (l) => _controller.irPara(context, l, data),
+                  ),
+                  const SizedBox(height: DevocionalEspacamento.sp16),
+                  DevocionalAvisoVazio(
+                    icone: FontAwesomeIcons.moon,
+                    titulo: leitura.tituloCompleto,
+                    detalhe:
+                        'Esta leitura está desativada temporariamente. As outras continuam no alternador acima.',
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
 
         return Scaffold(
           appBar: DevocionalAppBar(

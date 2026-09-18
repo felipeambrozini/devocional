@@ -15,6 +15,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'dados/canon.dart';
 import 'dados/coleta.dart';
+import 'dados/config_admin.dart';
 import 'dados/estado.dart';
 import 'dados/espelho_do_tema.dart';
 import 'dados/eventos.dart';
@@ -30,6 +31,7 @@ import 'dados/voz.dart';
 import 'estilo/tema.dart';
 import 'funcoes/lembretes_acoes.dart';
 import 'telas/aceite_de_coleta.dart';
+import 'telas/admin.dart';
 import 'telas/biblia.dart';
 import 'telas/chat.dart';
 import 'telas/conversas.dart';
@@ -183,6 +185,10 @@ Future<void> _iniciar() async {
       // Com o Firebase de pé, repete a chamada: agora sim dá para ligar (ou
       // manter desligada) a coleta do Analytics de verdade.
       unawaited(aplicarAceiteDeColeta(estado.aceiteDeColeta));
+      // A configuração remota do painel admin: sem await, para uma ida a mais
+      // à rede nunca travar o primeiro quadro. Sem ela, os interruptores
+      // valem o padrão ligado (ver ConfigAdmin).
+      unawaited(ConfigAdmin.instancia.iniciar());
     } catch (erro, pilha) {
       Registro.erro('Nuvem.iniciar', erro, pilha);
     }
@@ -379,8 +385,17 @@ final _escoposDasAbas = [
 final _router = GoRouter(
   navigatorKey: navigatorKey,
   initialLocation: '/hoje',
+  // Reavalia o redirect quando a configuração remota chega: sem isto, quem
+  // abre um link de chat antes de o Firestore responder seria devolvido para
+  // /hoje pelo fallback ainda vazio, mesmo estando na allowlist.
+  refreshListenable: ConfigAdmin.instancia,
   redirect: (context, state) {
     if (state.uri.path == '/') return '/hoje';
+    // O painel admin é só web e só do dono: link direto fora disso volta
+    // para a Hoje em vez de mostrar o motivo (a tela também se defende).
+    if (state.uri.path.startsWith('/admin') && !Recursos.adminNaWeb) {
+      return '/hoje';
+    }
     // A aba Conversas é livre para todo mundo (ver TelaConversas, que troca
     // as cartas pelo convite ao WhatsApp sem o recurso). Só o chat de cada
     // persona continua trancado por link direto — é ele que chama a API
@@ -449,6 +464,10 @@ final _router = GoRouter(
       builder: (context, state) => const TelaSobre(),
     ),
     GoRoute(path: '/faq', builder: (context, state) => const TelaFAQ()),
+    GoRoute(
+      path: '/admin',
+      builder: (context, state) => const TelaAdmin(),
+    ),
     GoRoute(
       path: '/privacidade',
       builder: (context, state) => const TelaPrivacidade(),
@@ -710,10 +729,11 @@ class Moldura extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Reage ao login: Conversas pode aparecer ou sumir da navegação assim
-    // que a conta autorizada entra ou sai, sem esperar uma troca de aba.
+    // Reage ao login e à configuração remota: Conversas pode aparecer ou
+    // sumir assim que a conta autorizada entra ou sai, ou o admin desliga o
+    // recurso, sem esperar uma troca de aba.
     return ListenableBuilder(
-      listenable: Nuvem.instancia,
+      listenable: Listenable.merge([Nuvem.instancia, ConfigAdmin.instancia]),
       builder: (context, _) => _conteudo(context),
     );
   }
@@ -878,7 +898,11 @@ class _ComBaloes extends StatelessWidget {
   Widget build(BuildContext context) {
     final estado = EscopoDoEstado.de(context);
     return ListenableBuilder(
-      listenable: Listenable.merge([camadasFlutuantes, Nuvem.instancia]),
+      listenable: Listenable.merge([
+        camadasFlutuantes,
+        Nuvem.instancia,
+        ConfigAdmin.instancia,
+      ]),
       builder: (context, _) {
         if (!estado.baloesVisiveis || !Recursos.conversas) return child;
         return LayoutBuilder(

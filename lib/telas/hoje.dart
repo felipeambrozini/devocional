@@ -3,8 +3,10 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../dados/estado.dart';
+import '../dados/config_admin.dart';
 import '../dados/modelos.dart';
 import '../dados/nuvem.dart';
+import '../dados/recursos.dart';
 import '../dados/registro.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
@@ -31,40 +33,64 @@ class _TelaHojeState extends State<TelaHoje> {
     return Scaffold(
       body: SafeArea(
         child: DevocionalLarguraDeLeitura(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(
-              DevocionalEspacamento.sp16,
-              DevocionalEspacamento.sp8,
-              DevocionalEspacamento.sp16,
-              DevocionalEspacamento.sp32,
-            ),
-            children: [
-              _Cabecalho(data: agora),
-              const SizedBox(height: DevocionalEspacamento.sp20),
-              // Ajuda só para quem chega: um cartão curto na primeira visita,
-              // que some para sempre com "Entendi". Fica antes dos cards de
-              // leitura, para orientar quem não conhece o app antes de mostrar
-              // o conteúdo do dia.
-              if (!estado.ajudaDispensada) ...[
-                DevocionalCartaoDeAjuda(estado: estado),
-                const SizedBox(height: DevocionalEspacamento.sp16),
-              ],
-              // A leitura do plano abre a tela, antes dos devocionais: é a
-              // razão do app existir. A leitura da hora vem logo depois, no
-              // cartão que ganha o filete; promessas mantém o cartão sem ele,
-              // e o progresso do ano segue a leitura como quem a acompanha.
-              DevocionalLeituraDeHoje(data: agora),
-              const SizedBox(height: DevocionalEspacamento.sp16),
-              DevocionalPreviaDaLeitura(
-                data: agora,
-                leitura: periodo == Periodo.manha
-                    ? Leitura.manha
-                    : Leitura.noite,
-                destaque: true,
-              ),
-              const SizedBox(height: DevocionalEspacamento.sp16),
-              DevocionalPreviaDaLeitura(data: agora, leitura: Leitura.promessas),
-            ],
+          child: ListenableBuilder(
+            listenable: ConfigAdmin.instancia,
+            builder: (context, _) {
+              // A leitura da hora pode estar desligada no painel: aí o
+              // destaque cai para a outra leitura do período que continuar
+              // ligada, e some se as duas estiverem fora do ar. Promessas tem
+              // o próprio cartão, que some junto quando desligada.
+              final leituraDaHora = periodo == Periodo.manha
+                  ? Leitura.manha
+                  : Leitura.noite;
+              final leituraEmDestaque = leituraAtiva(leituraDaHora)
+                  ? leituraDaHora
+                  : leituraAtiva(Leitura.manha)
+                  ? Leitura.manha
+                  : leituraAtiva(Leitura.noite)
+                  ? Leitura.noite
+                  : null;
+              return ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  DevocionalEspacamento.sp16,
+                  DevocionalEspacamento.sp8,
+                  DevocionalEspacamento.sp16,
+                  DevocionalEspacamento.sp32,
+                ),
+                children: [
+                  _Cabecalho(data: agora),
+                  const SizedBox(height: DevocionalEspacamento.sp20),
+                  // Ajuda só para quem chega: um cartão curto na primeira visita,
+                  // que some para sempre com "Entendi". Fica antes dos cards de
+                  // leitura, para orientar quem não conhece o app antes de mostrar
+                  // o conteúdo do dia.
+                  if (!estado.ajudaDispensada) ...[
+                    DevocionalCartaoDeAjuda(estado: estado),
+                    const SizedBox(height: DevocionalEspacamento.sp16),
+                  ],
+                  // A leitura do plano abre a tela, antes dos devocionais: é a
+                  // razão do app existir. A leitura da hora vem logo depois, no
+                  // cartão que ganha o filete; promessas mantém o cartão sem ele,
+                  // e o progresso do ano segue a leitura como quem a acompanha.
+                  DevocionalLeituraDeHoje(data: agora),
+                  if (leituraEmDestaque != null) ...[
+                    const SizedBox(height: DevocionalEspacamento.sp16),
+                    DevocionalPreviaDaLeitura(
+                      data: agora,
+                      leitura: leituraEmDestaque,
+                      destaque: true,
+                    ),
+                  ],
+                  if (Recursos.promessas) ...[
+                    const SizedBox(height: DevocionalEspacamento.sp16),
+                    DevocionalPreviaDaLeitura(
+                      data: agora,
+                      leitura: Leitura.promessas,
+                    ),
+                  ],
+                ],
+              );
+            },
           ),
         ),
       ),

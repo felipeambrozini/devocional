@@ -56,6 +56,11 @@ vitoriana dele, tratando o leitor por "tu".
 - Conversas com IA (Gemini): duas personas, Charles Spurgeon e Felipe
   Ambrozini, com histórico salvo por conversa; aba no celular, balão flutuante
   em telas largas.
+- Painel admin (`/admin`, só web e só a conta do dono): liga/desliga cada
+  recurso na hora (conversas, planos personalizados, cronograma, cada leitura
+  do devocional, ouvir textos) e edita a allowlist de e-mails do chat.
+  Ferramenta de operação, não parte da leitura diária — por isso é a única
+  exceção à regra de "um app só em todas as plataformas".
 - Leitura em voz alta (MP3 pré-gerados, voz que remete ao tom de Charles
   Spurgeon): narra capítulos da Bíblia, os dois devocionais, Promessas de
   Deus e as introduções; download opcional para ouvir offline fora da web.

@@ -26,6 +26,57 @@ rules_version = '2';
 // próprio Firestore, e é sempre do próprio usuário.
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Configuração remota do painel admin (ver lib/dados/config_admin.dart).
+    //
+    // Contrato do documento config/recursos:
+    //   conversasAtivas          bool — kill switch global do chat
+    //   emailsComConversas       list de string — allowlist do chat
+    //   planoPersonalizadoAtivo  bool — aba "Meus planos"
+    //   cronogramaAtivo          bool — aba "Cronograma" dentro do Plano
+    //   manhaAtivo               bool — devocional da manhã
+    //   noiteAtivo               bool — devocional da noite
+    //   promessasAtivo           bool — Promessas de Deus
+    //   ouvirTextosAtivo         bool — botão "Ouvir" nos textos
+    //   atualizadoEm             timestamp do servidor, gravado em toda escrita
+    //
+    // Leitura pública: o gating precisa funcionar sem login (quem não tem
+    // acesso vê o convite do WhatsApp, não um erro). Escrita só do dono, pelo
+    // e-mail da conta Google — sem ele, qualquer logado desligaria o app
+    // inteiro. Campo ausente vale ligado (ver aplicarMapa), por isso a regra
+    // aceita documento parcial: o painel grava com merge, um campo por vez.
+    match /config/recursos {
+      function admin() {
+        return request.auth != null &&
+            request.auth.token.email == 'felipe.anegrini@gmail.com' &&
+            request.auth.token.firebase.sign_in_provider == 'google.com';
+      }
+
+      function formaValida() {
+        let dados = request.resource.data;
+        let soOsCampos = dados.keys().hasOnly([
+          'conversasAtivas', 'emailsComConversas', 'planoPersonalizadoAtivo',
+          'cronogramaAtivo', 'manhaAtivo', 'noiteAtivo', 'promessasAtivo',
+          'ouvirTextosAtivo', 'atualizadoEm'
+        ]);
+        let boolOk = (!('conversasAtivas' in dados) || dados.conversasAtivas is bool) &&
+            (!('planoPersonalizadoAtivo' in dados) || dados.planoPersonalizadoAtivo is bool) &&
+            (!('cronogramaAtivo' in dados) || dados.cronogramaAtivo is bool) &&
+            (!('manhaAtivo' in dados) || dados.manhaAtivo is bool) &&
+            (!('noiteAtivo' in dados) || dados.noiteAtivo is bool) &&
+            (!('promessasAtivo' in dados) || dados.promessasAtivo is bool) &&
+            (!('ouvirTextosAtivo' in dados) || dados.ouvirTextosAtivo is bool);
+        let emailsOk = !('emailsComConversas' in dados) ||
+            (dados.emailsComConversas is list && dados.emailsComConversas.size() < 5000);
+        return soOsCampos && boolOk && emailsOk &&
+            dados.atualizadoEm is timestamp;
+      }
+
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if admin() && formaValida();
+      allow delete: if false;
+    }
+
     // Cada um lê e escreve só o próprio documento, identificado pelo uid da
     // conta Google. Sem este `match`, o padrão do Firestore já é negar tudo
     // — mas ele fica explícito porque é a única linha que impede alguém de

@@ -352,23 +352,27 @@ motivo novo.
   chamada de `gravarDias` que marcar um dia usa), mas o dos outros
   participantes só reinicia quando cada um marcar de novo, porque as regras
   não deixam o criador escrever na entrada alheia.
-- **Funcionalidades se ligam/desligam por uma constante, não por servidor de
-  configuração** (20/08/2026): `lib/dados/recursos.dart` reúne os
-  interruptores — `planoPersonalizado` (aba "Meus planos"), `ouvirTextos`
-  (`BotaoDeVoz`, único ponto de entrada da leitura em voz alta) e `conversas`
-  (o chat de cada persona, os balões flutuantes e as rotas
-  `/charles-spurgeon`, `/felipe-ambrozini`). Os dois primeiros são `const`;
-  `conversas` compara o e-mail da conta aberta (`Nuvem.email`) contra uma
-  allowlist vinda de `--dart-define=EMAILS_COM_CONVERSAS` (separada por
-  vírgula, normalizada por `allowlistDeEmails`), porque o chat chama a API
-  paga do Gemini e abrir para todo mundo antes da hora custaria sem
-  controle — convidar alguém é mudar o secret do build e reimplantar, sem
-  versionar e-mail nenhum no repositório. Sem `firebase_remote_config`:
-  editar um valor e reimplantar já é o "ligar/desligar" possível para um app
-  de usuário único. `Recursos.conversasForcado` (mesmo padrão de
-  `Lembretes.instancia`, mutável) existe só para teste — o login de verdade
-  nunca roda no ambiente de teste, e sem o override os testes de Conversas e
-  dos balões não veriam o recurso.
+- **Funcionalidades se ligam/desligam pelo painel admin, sem reimplantar**:
+  `lib/dados/recursos.dart` reúne os interruptores — `planoPersonalizado`
+  (aba "Meus planos"), `ouvirTextos` (`BotaoDeVoz`, único ponto de entrada
+  da leitura em voz alta), `cronograma` (aba "Cronograma"), `devocionalManha`,
+  `devocionalNoite`, `promessas` (cada leitura em separado) e `conversas` (o
+  chat de cada persona, os balões flutuantes e as rotas
+  `/charles-spurgeon`, `/felipe-ambrozini`). Os valores moram no Firestore
+  (`config/recursos`, ver `lib/dados/config_admin.dart`) e o painel `/admin`
+  (só web e só a conta do dono, com entrada na folha de ajustes) os edita na
+  hora; sem o documento, cada campo vale o padrão ligado. `conversas` compara
+  o e-mail da conta aberta (`Nuvem.email`) contra a allowlist do documento
+  (`emailsComConversas`), porque o chat chama a API paga do Gemini e abrir
+  para todo mundo antes da hora custaria sem controle — convidar alguém é
+  adicionar o e-mail no painel, sem versionar e-mail nenhum no repositório e
+  sem trocar secret de build (o `--dart-define=EMAILS_COM_CONVERSAS` antigo
+  saiu dos workflows e só resta no código como bootstrap legado enquanto o
+  documento ainda não carregou). Sem `firebase_remote_config`: o Firestore que
+  o app já usa é o servidor de configuração. Cada interruptor tem o seu
+  `*Forcado` (mesmo padrão de `Lembretes.instancia`, mutável) só para teste —
+  o login de verdade nunca roda no ambiente de teste, e sem o override os
+  testes de Conversas e dos balões não veriam o recurso.
 - **A aba Conversas é visível para todo mundo; só o chat em si é que
   continua trancado pela allowlist** (04/09/2026): antes, `Recursos.conversas`
   também escondia a aba inteira (barra, trilho e a rota `/conversas`) —
@@ -738,7 +742,7 @@ flutter build web --dart-define-from-file=.env.json
 ```
 (O `.env.json` deve conter todas as chaves: `FIREBASE_API_KEY_WEB`,
 `FIREBASE_API_KEY_ANDROID`, `FIREBASE_API_KEY_IOS`, `GEMINI_API_KEY_WEB`,
-`GEMINI_API_KEY_ANDROID`, `AUDIO_BASE_URL`, `EMAILS_COM_CONVERSAS`,
+`GEMINI_API_KEY_ANDROID`, `AUDIO_BASE_URL`,
 `SENTRY_DSN`, `EMAIL_DE_CONTATO`, etc. — ver SECURITY.md §3.1 para a lista
 completa e o motivo de cada uma.)
 

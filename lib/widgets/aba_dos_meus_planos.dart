@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import '../dados/estado.dart';
+import '../dados/config_admin.dart';
 import '../dados/nuvem.dart';
 import '../dados/planos.dart';
 import '../dados/recursos.dart';
@@ -21,7 +22,7 @@ class DevocionalAbaDosMeusPlanos extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: Nuvem.instancia,
+      listenable: Listenable.merge([Nuvem.instancia, ConfigAdmin.instancia]),
       builder: (context, _) {
         if (!Nuvem.instancia.logado) {
           return DevocionalCartaoDeEntrar(

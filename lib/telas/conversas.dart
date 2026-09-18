@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import '../dados/config_admin.dart';
 import '../dados/nuvem.dart';
 import '../dados/recursos.dart';
 import '../widgets/widgets.dart';
@@ -24,7 +25,10 @@ class TelaConversas extends StatelessWidget {
         // ouvir a nuvem, entrar ou sair da conta com a aba aberta deixava o
         // conteúdo errado até trocar de aba e voltar.
         child: ListenableBuilder(
-          listenable: Nuvem.instancia,
+          listenable: Listenable.merge([
+            Nuvem.instancia,
+            ConfigAdmin.instancia,
+          ]),
           builder: (context, _) => Recursos.conversas
               ? const DevocionalCartasDeConversa()
               : const DevocionalCartaoDePedirAcesso(
