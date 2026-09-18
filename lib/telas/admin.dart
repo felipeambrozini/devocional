@@ -190,7 +190,7 @@ class _TelaAdminState extends State<TelaAdmin> {
         if (config.carregado)
           _Interruptor(
             titulo: 'Conversas (chat)',
-            subtitulo: 'Kill switch global: desligado, ninguém conversa.',
+            subtitulo: 'Interruptor geral: desligado, ninguém conversa.',
             valor: config.conversasAtivas,
             salvando: _salvando.contains('conversasAtivas'),
             aoMudar: (novo) => _alternar('conversasAtivas', 'Conversas', novo),
