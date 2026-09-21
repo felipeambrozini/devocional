@@ -51,7 +51,7 @@ dependencies:
   # lib/dados/nuvem.dart): o navegador é o caso que mais precisa, porque é a
   # única plataforma que apaga o armazenamento sozinho.
   firebase_core: ^4.14.0
-  firebase_auth: ^6.6.1
+  firebase_auth: ^6.7.0
   cloud_firestore: ^6.9.0
   # Onde a foto de perfil escolhida na câmera ou galeria é hospedada, para
   # virar a photoURL da conta (ver Nuvem.atualizarFoto em lib/dados/nuvem.dart).
