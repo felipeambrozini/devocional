@@ -261,6 +261,7 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
                               ),
                             ),
                           ),
+                          if (ativo || pausado) _BotaoDeVelocidade(voz: voz),
                           // Tocando ou pausada, a sessão precisa de um jeito
                           // de ser encerrada de vez sem trocar de página.
                           if (ativo || pausado)
@@ -298,7 +299,8 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
       message: 'Sem conexão para checar o áudio. Toque para tentar de novo.',
       child: Semantics(
         button: true,
-        label: 'Ouvir na voz de Spurgeon, indisponível sem conexão. Toque para tentar de novo',
+        label:
+            'Ouvir na voz de Spurgeon, indisponível sem conexão. Toque para tentar de novo',
         hint: 'Toca para verificar novamente',
         child: Material(
           color: cor.surfaceContainerHighest,
@@ -398,6 +400,56 @@ double? fracaoDeProgresso(Duration agora, Duration? total) =>
     total == null || total.inMilliseconds == 0
     ? null
     : (agora.inMilliseconds / total.inMilliseconds).clamp(0.0, 1.0);
+
+/// "1x", "1,25x", "1,5x", "2x": vírgula decimal, sem zeros à direita.
+String rotuloDaVelocidade(double velocidade) =>
+    '${velocidade.toString().replaceAll(RegExp(r'\.0$'), '').replaceAll('.', ',')}x';
+
+/// O "1x" da pílula de voz: cada toque passa para a próxima velocidade
+/// (1x → 1,25x → 1,5x → 1,75x → 2x → 1x), sem menu a abrir no meio da leitura.
+class _BotaoDeVelocidade extends StatelessWidget {
+  const _BotaoDeVelocidade({required this.voz});
+
+  final Voz voz;
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
+    final rotulo = rotuloDaVelocidade(voz.velocidade);
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(start: 6),
+      child: Tooltip(
+        message: 'Velocidade da leitura',
+        child: Semantics(
+          button: true,
+          label: 'Velocidade da leitura: $rotulo. Toque para mudar.',
+          child: InkWell(
+            borderRadius: BorderRadius.circular(30),
+            onTap: voz.proximaVelocidade,
+            // O mesmo alvo de 48dp de altura do X ao lado.
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                minWidth: DevocionalEspacamento.sp48,
+                minHeight: DevocionalEspacamento.sp48,
+              ),
+              child: Center(
+                child: ExcludeSemantics(
+                  child: Text(
+                    rotulo,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: cor.primary,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 /// O X da pílula de voz: encerra a sessão de vez sem trocar de página. Sem
 /// ele, pausar (ou uma pausa já em curso) vira um beco sem saída — e uma

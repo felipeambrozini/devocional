@@ -437,6 +437,10 @@ motivo novo.
   `_posicaoDaPausa`, e um `parar()` logo depois (o deslize de capítulo, por
   exemplo) lia a posição da pausa antiga em vez da posição real da leitura em
   andamento.
+- **Velocidade da leitura em voz** (`Voz.proximaVelocidade`, 22/09/2026): tocando
+  ou pausada, a pílula mostra um "1x" entre o rótulo e o X; cada toque passa
+  para 1,25x → 1,5x → 1,75x → 2x → 1x. A velocidade vale para a sessão do app
+  inteira (não volta a 1x a cada capítulo), mas não é salva entre aberturas.
 
 - **Devocionais dentro do plano personalizado** (31/08/2026): `Conteudo` ganhou
   `aquecerIndiceDeDevocionais()`/`devocionaisDoCapitulo(livro, capítulo)`, um

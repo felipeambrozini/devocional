@@ -266,6 +266,25 @@ class Voz extends ChangeNotifier {
 
   Duration? get desdeAParada => _desdeAParada;
 
+  /// As velocidades que a pílula oferece, na ordem do ciclo de toques.
+  static const velocidades = [1.0, 1.25, 1.5, 1.75, 2.0];
+
+  double _velocidade = 1.0;
+
+  /// Vale para a sessão do app inteira, não por leitura: quem ouve em 1,5x
+  /// não quer voltar a 1x a cada capítulo.
+  double get velocidade => _velocidade;
+
+  /// Passa para a próxima de [velocidades], voltando a 1x depois de 2x.
+  Future<void> proximaVelocidade() async {
+    final atual = velocidades.indexOf(_velocidade);
+    _velocidade = velocidades[(atual + 1) % velocidades.length];
+    notifyListeners();
+    try {
+      await _player?.setSpeed(_velocidade);
+    } catch (_) {}
+  }
+
   /// A posição da leitura atual, para a linha fina de progresso do botão. Sem
   /// player (nos testes não há plataforma de áudio) a stream fica vazia e
   /// nada é desenhado.
@@ -527,6 +546,7 @@ class Voz extends ChangeNotifier {
       return;
     }
     final player = _player ??= AudioPlayer();
+    await player.setSpeed(_velocidade);
     final fonte = await _fonteComOffline(url, chave);
     await player.setAudioSource(AudioSource.uri(Uri.parse(fonte ?? url)));
     if (versao != _versao) return;
