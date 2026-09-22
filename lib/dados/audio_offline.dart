@@ -218,7 +218,7 @@ class AudioOffline extends ChangeNotifier {
     final dir = await _dirBase();
     final sub = switch (categoria) {
       'biblia' => 'biblia',
-      'introducao' => 'introducao',
+      'introducao' => 'introducoes',
       'manha_noite' => 'devocionais/manha_e_noite',
       'promessas' => 'devocionais/promessas_de_deus',
       _ => null,
@@ -265,7 +265,7 @@ class AudioOffline extends ChangeNotifier {
         final p = e.path.replaceAll('\\', '/');
         if (p.contains('/biblia/')) {
           contagem['biblia'] = contagem['biblia']! + 1;
-        } else if (p.contains('/introducao/')) {
+        } else if (p.contains('/introducoes/')) {
           contagem['introducao'] = contagem['introducao']! + 1;
         } else if (p.contains('/promessas_de_deus/')) {
           contagem['promessas'] = contagem['promessas']! + 1;

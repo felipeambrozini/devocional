@@ -60,7 +60,7 @@ String chaveDeDevocional(String leitura, int dia, int mes) =>
     '${dia.toString().padLeft(2, '0')}-${mes.toString().padLeft(2, '0')}';
 
 /// O caminho relativo do mp3 pré-gerado para [chave] (sem base nem barra
-/// inicial): "biblia/joao/3.mp3", "introducao/joao.mp3",
+/// inicial): "biblia/joao/3.mp3", "introducoes/joao.mp3",
 /// "devocionais/manha_e_noite/manha/8-19.mp3",
 /// "devocionais/promessas_de_deus/8-19.mp3" — o mesmo nome dos arquivos em
 /// `assets/`. Null se a chave não tiver um desses formatos. Único
@@ -74,7 +74,7 @@ String? caminhoRelativoParaChave(String chave) {
     return 'biblia/${partes[0]}/${partes[1]}.mp3';
   }
   if (chave.startsWith('introducao:')) {
-    return 'introducao/${chave.substring('introducao:'.length)}.mp3';
+    return 'introducoes/${chave.substring('introducao:'.length)}.mp3';
   }
   if (chave.startsWith('comentario:')) {
     final partes = chave.substring('comentario:'.length).split('.');
