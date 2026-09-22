@@ -185,26 +185,22 @@ Future<void> _iniciar() async {
       // Com o Firebase de pé, repete a chamada: agora sim dá para ligar (ou
       // manter desligada) a coleta do Analytics de verdade.
       unawaited(aplicarAceiteDeColeta(estado.aceiteDeColeta));
-      // A configuração remota do painel admin: sem await, para uma ida a mais
-      // à rede nunca travar o primeiro quadro. Sem ela, os interruptores
-      // valem o padrão ligado (ver ConfigAdmin).
-      unawaited(ConfigAdmin.instancia.iniciar());
     } catch (erro, pilha) {
       Registro.erro('Nuvem.iniciar', erro, pilha);
     }
-    // Sem await: o resto (App Check, listener de login) não bloqueia nada
-    // que dependa só do núcleo já pronto acima, e poria uma ida a mais à
-    // rede na frente do primeiro quadro. PlanosNaNuvem só entra depois de
-    // Nuvem.iniciar terminar (App Check incluso): sem isto, com uma sessão
-    // já em cache, o listener de login dela dispara a consulta ao Firestore
-    // antes de o App Check ter o token do Play Integrity pronto, e o
-    // Firestore recusa com o mesmo PERMISSION_DENIED genérico de uma regra
-    // — sem outra tentativa, porque _puxarOsMeus só refaz a consulta na
-    // próxima troca de login.
+    // Sem await: o resto (App Check, listener de login, config remota) não
+    // bloqueia nada que dependa só do núcleo já pronto acima, e poria uma ida
+    // a mais à rede na frente do primeiro quadro. PlanosNaNuvem e ConfigAdmin
+    // só entram depois de Nuvem.iniciar terminar (App Check incluso): sem
+    // isto, com uma sessão já em cache, o listener de cada um dispara a
+    // consulta ao Firestore antes de o App Check ter o token pronto, e o
+    // Firestore recusa com o mesmo PERMISSION_DENIED genérico de uma regra —
+    // sem outra tentativa, porque nenhum dos dois refaz a consulta sozinho.
     unawaited(
-      Nuvem.instancia
-          .iniciar(estado)
-          .then((_) => PlanosNaNuvem.instancia.iniciar(estado)),
+      Nuvem.instancia.iniciar(estado).then((_) {
+        unawaited(PlanosNaNuvem.instancia.iniciar(estado));
+        unawaited(ConfigAdmin.instancia.iniciar());
+      }),
     );
   }
 
@@ -464,10 +460,7 @@ final _router = GoRouter(
       builder: (context, state) => const TelaSobre(),
     ),
     GoRoute(path: '/faq', builder: (context, state) => const TelaFAQ()),
-    GoRoute(
-      path: '/admin',
-      builder: (context, state) => const TelaAdmin(),
-    ),
+    GoRoute(path: '/admin', builder: (context, state) => const TelaAdmin()),
     GoRoute(
       path: '/privacidade',
       builder: (context, state) => const TelaPrivacidade(),

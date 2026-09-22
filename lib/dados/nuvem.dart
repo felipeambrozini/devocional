@@ -359,6 +359,13 @@ class Nuvem extends ChangeNotifier {
           // App Attest sozinho exige iOS 14+.
           providerApple: const AppleAppAttestWithDeviceCheckFallbackProvider(),
         );
+        // activate() resolve assim que o provedor é registrado, não quando o
+        // primeiro token chega — a troca com o reCAPTCHA/Play Integrity ainda
+        // é assíncrona. Sem este getToken() explícito, quem assina
+        // authStateChanges (aqui e em PlanosNaNuvem) e já tem sessão em cache
+        // dispara a primeira consulta ao Firestore antes do token existir, e
+        // o Firestore nega com PERMISSION_DENIED.
+        await FirebaseAppCheck.instance.getToken();
       } catch (erro, pilha) {
         Registro.erro('Nuvem.iniciar', erro, pilha);
       }
