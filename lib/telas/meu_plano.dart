@@ -5,7 +5,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../controladores/plano_controlador.dart';
 import '../dados/estado.dart';
-import '../dados/nuvem.dart';
 import '../dados/planos.dart';
 import '../estilo/espacamento.dart';
 import '../widgets/widgets.dart';
@@ -247,7 +246,8 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
         // (mesmo próximo passo já anotado no cronograma).
         scrollCacheExtent: ScrollCacheExtent.pixels(dias.length * 240.0),
         itemCount: dias.length + 1,
-        separatorBuilder: (_, _) => const SizedBox(height: DevocionalEspacamento.sp10),
+        separatorBuilder: (_, _) =>
+            const SizedBox(height: DevocionalEspacamento.sp10),
         itemBuilder: (context, i) {
           if (i == 0) {
             return Column(
@@ -258,19 +258,13 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
                   lidos: lidos,
                   totalDeDias: diaCount,
                 ),
-                if (_controller.compartilhado && nuvemSuportada) ...[
-                  const SizedBox(height: DevocionalEspacamento.sp10),
-                  DevocionalCartaoDeCompartilhar(
-                    compartilhado: true,
-                    aoCompartilhar: () => _controller.copiarLink(context),
-                  ),
-                ] else if (nuvemSuportada) ...[
-                  const SizedBox(height: DevocionalEspacamento.sp10),
-                  DevocionalCartaoDeCompartilhar(
-                    compartilhado: false,
-                    aoCompartilhar: () => _controller.compartilhar(context),
-                  ),
-                ],
+                const SizedBox(height: DevocionalEspacamento.sp10),
+                DevocionalCartaoDeCompartilhar(
+                  compartilhado: _controller.compartilhado,
+                  aoCompartilhar: _controller.compartilhado
+                      ? () => _controller.copiarLink(context)
+                      : () => _controller.compartilhar(context),
+                ),
                 if (_controller.compartilhado && dados != null) ...[
                   const SizedBox(height: DevocionalEspacamento.sp10),
                   DevocionalSecaoDeParticipantes(

@@ -11,9 +11,8 @@ import 'registro.dart';
 /// Um documento só no Firestore (`config/recursos`), lido por todo mundo e
 /// escrito só pelo admin (ver `firestore.rules`): interruptores de cada
 /// recurso mais a allowlist de e-mails do chat. Sem ele (primeiro deploy,
-/// sem rede, teste) vale o padrão ligado de cada campo, e a allowlist cai
-/// para o `--dart-define=EMAILS_COM_CONVERSAS` legado em `recursos.dart` —
-/// assim ninguém fica trancado antes de o documento existir.
+/// sem rede, teste) vale o padrão ligado de cada campo, e a allowlist fica
+/// vazia — o chat só abre depois de o documento chegar.
 ///
 /// Não importa `recursos.dart` de propósito: é `recursos.dart` quem lê daqui,
 /// e o contrário fecharia um ciclo.
@@ -92,6 +91,7 @@ class ConfigAdmin extends ChangeNotifier {
       final valor = mapa[chave];
       return valor is bool ? valor : true;
     }
+
     _conversasAtivas = ligado('conversasAtivas');
     _emails = normalizarEmails(mapa['emailsComConversas']);
     _planoPersonalizadoAtivo = ligado('planoPersonalizadoAtivo');
@@ -163,10 +163,8 @@ class ConfigAdmin extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _gravar(Map<String, Object?> dados) => FirebaseFirestore.instance
-      .collection(colecao)
-      .doc(documento)
-      .set({
+  Future<void> _gravar(Map<String, Object?> dados) =>
+      FirebaseFirestore.instance.collection(colecao).doc(documento).set({
         ...dados,
         'atualizadoEm': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));

@@ -34,12 +34,6 @@ const _googleServerClientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
 // ignore: deprecated_member_use
 final _espacos = RegExp(r'\s+');
 
-/// Se a conta na nuvem é uma opção nesta plataforma.
-///
-/// Verdade em todas as plataformas do projeto (web, Android e iOS): todas
-/// têm configuração Firebase em `firebase_options.dart`.
-bool get nuvemSuportada => true;
-
 /// Chave do reCAPTCHA v3 que ativa o App Check na web (console do Firebase >
 /// App Check > registrar o app Web, e o site key vem do console do
 /// reCAPTCHA, https://www.google.com/recaptcha/admin). Mesmo caminho das
@@ -333,7 +327,7 @@ class Nuvem extends ChangeNotifier {
   }
 
   /// Prepara o Firebase e liga a sincronização ao estado de login. Chamar uma
-  /// vez, em `main.dart`, só quando [nuvemSuportada].
+  /// vez, em `main.dart`.
   ///
   /// Falhar aqui (projeto ainda não configurado, sem rede) não pode impedir o
   /// app de abrir — mesma regra do fuso horário em `lembretes.dart`. Por isso

@@ -174,37 +174,35 @@ Future<void> _iniciar() async {
   // `aplicarAceiteDeColeta` só ajusta essa flag e volta.
   unawaited(aplicarAceiteDeColeta(estado.aceiteDeColeta));
 
-  if (nuvemSuportada) {
-    // Awaited, ao contrário do resto da Nuvem abaixo: Auth e Firestore lançam
-    // se chamados antes do app default do Firebase estar registrado. Sem
-    // isto, a sincronia quebra com "FirebaseException" toda vez — não uma
-    // corrida ocasional, já que ela roda sempre antes do unawaited abaixo
-    // terminar.
-    try {
-      await Nuvem.instancia.iniciarFirebase();
-      // Com o Firebase de pé, repete a chamada: agora sim dá para ligar (ou
-      // manter desligada) a coleta do Analytics de verdade.
-      unawaited(aplicarAceiteDeColeta(estado.aceiteDeColeta));
-    } catch (erro, pilha) {
-      Registro.erro('Nuvem.iniciar', erro, pilha);
-    }
-    // Sem await: o resto (App Check, listener de login, config remota) não
-    // bloqueia nada que dependa só do núcleo já pronto acima, e poria uma ida
-    // a mais à rede na frente do primeiro quadro. PlanosNaNuvem, ConfigAdmin
-    // e o reagendamento dos lembretes só entram depois de Nuvem.iniciar
-    // terminar (App Check incluso): sem isto, com uma sessão já em cache, o
-    // listener de cada um — e a escrita anônima em `lembretes/{token}` —
-    // dispara a consulta ao Firestore antes de o App Check ter o token
-    // pronto, e o Firestore recusa com o mesmo PERMISSION_DENIED genérico de
-    // uma regra, sem outra tentativa.
-    unawaited(
-      Nuvem.instancia.iniciar(estado).then((_) {
-        unawaited(PlanosNaNuvem.instancia.iniciar(estado));
-        unawaited(ConfigAdmin.instancia.iniciar());
-        unawaited(reagendarLembretesSeNecessario(estado));
-      }),
-    );
+  // Awaited, ao contrário do resto da Nuvem abaixo: Auth e Firestore lançam
+  // se chamados antes do app default do Firebase estar registrado. Sem
+  // isto, a sincronia quebra com "FirebaseException" toda vez — não uma
+  // corrida ocasional, já que ela roda sempre antes do unawaited abaixo
+  // terminar.
+  try {
+    await Nuvem.instancia.iniciarFirebase();
+    // Com o Firebase de pé, repete a chamada: agora sim dá para ligar (ou
+    // manter desligada) a coleta do Analytics de verdade.
+    unawaited(aplicarAceiteDeColeta(estado.aceiteDeColeta));
+  } catch (erro, pilha) {
+    Registro.erro('Nuvem.iniciar', erro, pilha);
   }
+  // Sem await: o resto (App Check, listener de login, config remota) não
+  // bloqueia nada que dependa só do núcleo já pronto acima, e poria uma ida
+  // a mais à rede na frente do primeiro quadro. PlanosNaNuvem, ConfigAdmin
+  // e o reagendamento dos lembretes só entram depois de Nuvem.iniciar
+  // terminar (App Check incluso): sem isto, com uma sessão já em cache, o
+  // listener de cada um — e a escrita anônima em `lembretes/{token}` —
+  // dispara a consulta ao Firestore antes de o App Check ter o token
+  // pronto, e o Firestore recusa com o mesmo PERMISSION_DENIED genérico de
+  // uma regra, sem outra tentativa.
+  unawaited(
+    Nuvem.instancia.iniciar(estado).then((_) {
+      unawaited(PlanosNaNuvem.instancia.iniciar(estado));
+      unawaited(ConfigAdmin.instancia.iniciar());
+      unawaited(reagendarLembretesSeNecessario(estado));
+    }),
+  );
 
   // Numa zona só (comentário acima de `main`) uma falha aqui não impediria
   // o `runApp` de rodar, mas o catch evita depender disso: mesma regra de
@@ -214,9 +212,6 @@ Future<void> _iniciar() async {
     await Lembretes.instancia.inicializar(
       aoTocarNotificacao: _abrirLeituraDoLembrete,
     );
-    // Sem nuvem (flag desligada), não há App Check para esperar: reagenda
-    // direto. Com nuvem, quem chama é o `.then()` de `Nuvem.iniciar` acima.
-    if (!nuvemSuportada) unawaited(reagendarLembretesSeNecessario(estado));
     // Precisa vir antes do runApp: depois dele o plugin já não sabe dizer que
     // toque abriu o app, só qual chegou com o app já aberto.
     chaveDeAbertura = await Lembretes.instancia.chaveQueAbriuOApp();

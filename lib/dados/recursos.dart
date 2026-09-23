@@ -3,16 +3,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'config_admin.dart';
 import 'nuvem.dart';
 
-/// Interpreta a lista de `--dart-define=EMAILS_COM_CONVERSAS=a@x.com,b@y.com`
-/// (separada por vírgula, com espaço e caixa normalizados) — extraído à
-/// parte para dar para testar sem precisar passar `--dart-define` ao
-/// `flutter test`, que sempre roda com o valor vazio.
-Set<String> allowlistDeEmails(String bruto) => bruto
-    .split(',')
-    .map((email) => email.trim().toLowerCase())
-    .where((email) => email.isNotEmpty)
-    .toSet();
-
 /// Interruptores de funcionalidades do app.
 ///
 /// Os valores vivem no Firestore (`config/recursos`, ver `config_admin.dart`)
@@ -81,38 +71,28 @@ class Recursos {
   /// Override para teste, mesmo padrão de [conversasForcado].
   static bool? promessasForcado;
 
-  /// E-mails das contas Google que já podem usar Conversas (chat com as
-  /// personas) e ver os balões flutuantes. Em teste: o chat chama a API paga
-  /// do Gemini, e abrir para todo mundo antes da hora custaria sem controle.
-  ///
-  /// A lista mora no Firestore (`config/recursos`, campo `emailsComConversas`)
-  /// e o painel admin edita sem reimplantar, sem versionar e-mail nenhum no
-  /// repositório. O `--dart-define=EMAILS_COM_CONVERSAS` abaixo é só o legado
-  /// de bootstrap: vale enquanto o documento ainda não carregou (primeiro
-  /// deploy, sem rede), e perde assim que o Firestore responde.
-  static const _emailsComConversas = String.fromEnvironment(
-    'EMAILS_COM_CONVERSAS',
-  );
-
-  static final Set<String> _allowlistDeConversas = allowlistDeEmails(
-    _emailsComConversas,
-  );
-
   /// Override para teste: os testes de balões e chat não fazem login de
   /// verdade (`Nuvem.iniciar` nunca roda neles), então sem isto a allowlist
   /// vazia recusaria sempre e nenhum deles veria o recurso. Em produção fica
   /// `null` e vale a allowlist real.
   static bool? conversasForcado;
 
+  /// Se a conta aberta pode usar Conversas (chat com as personas) e ver os
+  /// balões flutuantes. Em teste: o chat chama a API paga do Gemini, e abrir
+  /// para todo mundo antes da hora custaria sem controle.
+  ///
+  /// A allowlist mora no Firestore (`config/recursos`, campo
+  /// `emailsComConversas`) e o painel admin edita sem reimplantar, sem
+  /// versionar e-mail nenhum no repositório. Antes de o documento carregar
+  /// ninguém entra: o router reavalia o redirect quando o ConfigAdmin
+  /// notifica (ver `main.dart`).
   static bool get conversas {
     final forcado = conversasForcado;
     if (forcado != null) return forcado;
     if (!ConfigAdmin.instancia.conversasAtivas) return false;
     final email = Nuvem.instancia.email?.trim().toLowerCase();
     if (email == null || email.isEmpty) return false;
-    if (ConfigAdmin.instancia.carregado) {
-      return ConfigAdmin.instancia.emailsComConversas.contains(email);
-    }
-    return _allowlistDeConversas.contains(email);
+    if (!ConfigAdmin.instancia.carregado) return false;
+    return ConfigAdmin.instancia.emailsComConversas.contains(email);
   }
 }

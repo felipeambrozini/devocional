@@ -54,8 +54,6 @@ class AudioOffline extends ChangeNotifier {
   Map<String, int?> get tamanhoMedioPorCategoria =>
       Map.unmodifiable(_tamanhoMedioPorCategoria);
   final Map<String, int?> _tamanhoMedioPorCategoria = {};
-  int get baixadosNoLote => _baixadosNoLote;
-  int get totalNoLote => _totalNoLote;
   String? get erro => _erro;
 
   bool get _suportado => !kIsWeb;
@@ -92,12 +90,6 @@ class AudioOffline extends ChangeNotifier {
     if (!_suportado) return false;
     final f = await _arquivoLocal(chave);
     return f.exists();
-  }
-
-  Future<String?> caminhoOffline(String chave) async {
-    if (!_suportado) return null;
-    final f = await _arquivoLocal(chave);
-    return f.existsSync() ? f.path : null;
   }
 
   List<String> _chavesDaCategoria(String categoria) {

@@ -49,21 +49,18 @@ class PlanosNaNuvem {
   static const _colecao = 'planos';
 
   Estado? _estado;
-  // ignore: unused_field
-  StreamSubscription<User?>? _assinatura;
-
-  bool get pronta => _pronta;
-  bool _pronta = false;
 
   /// Prepara a sincronia dos planos compartilhados. Chamar uma vez, em
-  /// `main.dart`, só quando [nuvemSuportada] e depois de `Nuvem.iniciar`:
-  /// precisa do Firebase já inicializado. Se ele não inicializou (projeto
-  /// não configurado, sem rede), os planos continuam só locais.
+  /// `main.dart`, depois de `Nuvem.iniciar`: precisa do Firebase já
+  /// inicializado. Se ele não inicializou (projeto não configurado, sem
+  /// rede), os planos continuam só locais.
+  ///
+  /// A assinatura de login vive o app inteiro (este é um singleton), então
+  /// não há o que cancelar — por isso não é guardada.
   Future<void> iniciar(Estado estado) async {
     if (Firebase.apps.isEmpty) return;
     _estado = estado;
-    _pronta = true;
-    _assinatura = FirebaseAuth.instance.authStateChanges().listen((usuario) {
+    FirebaseAuth.instance.authStateChanges().listen((usuario) {
       if (usuario == null) return;
       unawaited(_puxarOsMeus(usuario.uid));
     });
@@ -85,7 +82,8 @@ class PlanosNaNuvem {
         final participantes =
             dados['participantes'] as Map<String, dynamic>? ?? const {};
         final minhaEntrada = participantes[uid];
-        final lidos = minhaEntrada is Map<String, dynamic> &&
+        final lidos =
+            minhaEntrada is Map<String, dynamic> &&
                 minhaEntrada['lidos'] is List
             ? {
                 for (final d in minhaEntrada['lidos'] as List)
@@ -127,9 +125,7 @@ class PlanosNaNuvem {
         'devocionalAntes': plano.devocionalAntes,
         'criadoPor': usuario.uid,
         'criadoEm': FieldValue.serverTimestamp(),
-        'participantes': {
-          usuario.uid: _entradaDoUsuario(usuario, const []),
-        },
+        'participantes': {usuario.uid: _entradaDoUsuario(usuario, const [])},
       });
     } catch (erro, pilha) {
       Registro.erro('PlanosNaNuvem.compartilhar', erro, pilha);
@@ -153,13 +149,16 @@ class PlanosNaNuvem {
     bool? devocionalAntes,
   }) async {
     try {
-      await FirebaseFirestore.instance.collection(_colecao).doc(planoId).update({
-        'titulo': ?titulo,
-        'livros': ?livros,
-        'dias': ?dias,
-        'incluirDevocionais': ?incluirDevocionais,
-        'devocionalAntes': ?devocionalAntes,
-      });
+      await FirebaseFirestore.instance
+          .collection(_colecao)
+          .doc(planoId)
+          .update({
+            'titulo': ?titulo,
+            'livros': ?livros,
+            'dias': ?dias,
+            'incluirDevocionais': ?incluirDevocionais,
+            'devocionalAntes': ?devocionalAntes,
+          });
     } catch (erro, pilha) {
       Registro.erro('PlanosNaNuvem.atualizar', erro, pilha);
       throw const PlanosNaNuvemExcecao(
@@ -178,10 +177,9 @@ class PlanosNaNuvem {
       );
     }
     try {
-      await FirebaseFirestore.instance
-          .collection(_colecao)
-          .doc(planoId)
-          .update({'participantes.${usuario.uid}.lidos': lidos});
+      await FirebaseFirestore.instance.collection(_colecao).doc(planoId).update(
+        {'participantes.${usuario.uid}.lidos': lidos},
+      );
     } catch (erro, pilha) {
       Registro.erro('PlanosNaNuvem.gravarDias', erro, pilha);
       throw const PlanosNaNuvemExcecao(
@@ -201,10 +199,9 @@ class PlanosNaNuvem {
       );
     }
     try {
-      await FirebaseFirestore.instance
-          .collection(_colecao)
-          .doc(planoId)
-          .update({'participantes.${usuario.uid}': _entradaDoUsuario(usuario, const [])});
+      await FirebaseFirestore.instance.collection(_colecao).doc(planoId).update(
+        {'participantes.${usuario.uid}': _entradaDoUsuario(usuario, const [])},
+      );
     } catch (erro, pilha) {
       Registro.erro('PlanosNaNuvem.entrar', erro, pilha);
       throw const PlanosNaNuvemExcecao(
@@ -219,10 +216,9 @@ class PlanosNaNuvem {
     final usuario = FirebaseAuth.instance.currentUser;
     if (usuario == null) return;
     try {
-      await FirebaseFirestore.instance
-          .collection(_colecao)
-          .doc(planoId)
-          .update({'participantes.${usuario.uid}': FieldValue.delete()});
+      await FirebaseFirestore.instance.collection(_colecao).doc(planoId).update(
+        {'participantes.${usuario.uid}': FieldValue.delete()},
+      );
     } catch (erro, pilha) {
       Registro.erro('PlanosNaNuvem.sair', erro, pilha);
       throw const PlanosNaNuvemExcecao(
@@ -295,12 +291,30 @@ String nomeDoParticipante(String? displayName) {
 /// Acentos comuns do português, para o slug do link não sair cheio de `%C3%A3`
 /// nem preservar letra que a URL só mostraria escapada.
 const _acentos = {
-  'á': 'a', 'à': 'a', 'ã': 'a', 'â': 'a', 'ä': 'a',
-  'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
-  'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
-  'ó': 'o', 'ò': 'o', 'õ': 'o', 'ô': 'o', 'ö': 'o',
-  'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
-  'ç': 'c', 'ñ': 'n',
+  'á': 'a',
+  'à': 'a',
+  'ã': 'a',
+  'â': 'a',
+  'ä': 'a',
+  'é': 'e',
+  'è': 'e',
+  'ê': 'e',
+  'ë': 'e',
+  'í': 'i',
+  'ì': 'i',
+  'î': 'i',
+  'ï': 'i',
+  'ó': 'o',
+  'ò': 'o',
+  'õ': 'o',
+  'ô': 'o',
+  'ö': 'o',
+  'ú': 'u',
+  'ù': 'u',
+  'û': 'u',
+  'ü': 'u',
+  'ç': 'c',
+  'ñ': 'n',
 };
 
 /// O título em minúsculas, sem acento e com hífen no lugar de espaço ou

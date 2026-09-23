@@ -154,10 +154,6 @@ class Voz extends ChangeNotifier {
   /// player, na ordem). O "Desfazer" do deslize devolve a leitura daqui.
   Duration? _desdeAParada;
 
-  /// Exposto para AudioOffline e para debug. Use [audioBaseUrl] de
-  /// `audio_config.dart` diretamente quando possível.
-  static String get baseUrlAudio => audioBaseUrl;
-
   /// Override para testes: quando não há --dart-define, os testes injetam
   /// um base fake para que _urlParaChave não retorne null.
   static String? baseUrlForTest;
@@ -199,8 +195,6 @@ class Voz extends ChangeNotifier {
     return true;
   }
 
-  bool temArquivoParaChave(String chave) => _urlParaChave(chave) != null;
-
   /// Override para testes: quando não nulo, [disponibilidadeRemota] retorna
   /// [DisponibilidadeRemota.existe]/[DisponibilidadeRemota.naoExiste] direto,
   /// sem bater na rede. Com [baseUrlForTest] setado e este continuando nulo,
@@ -223,9 +217,8 @@ class Voz extends ChangeNotifier {
   /// [semRede] nunca entra aqui, porque a causa pode ser passageira.
   final Map<String, DisponibilidadeRemota> _cacheDeDisponibilidade = {};
 
-  /// Se [chave] já tem áudio publicado no Storage agora — não confunde com
-  /// [temArquivoParaChave], que só valida o formato da chave. Confere na
-  /// hora com um HEAD no arquivo (sem manifesto/lista para manter
+  /// Se [chave] já tem áudio publicado no Storage agora — não só se o
+  /// formato da chave é válido. Confere na hora com um HEAD no arquivo (sem manifesto/lista para manter
   /// atualizado): a geração roda aos poucos, em lotes, por semanas, e sem
   /// essa checagem o botão de ouvir apareceria para áudio que ainda não
   /// existe. É assíncrono; quem mostra o botão deve esconder até a resposta
@@ -698,13 +691,6 @@ class Voz extends ChangeNotifier {
 
   set injetarLeitor(LeitorDeAudio? leitor) {
     _leitorDeAudio = leitor;
-    notifyListeners();
-  }
-
-  LeitorDeAudio? get leitorDeAudio => _leitorDeAudio;
-
-  void limparCacheParaTestes() {
-    _versao++;
     notifyListeners();
   }
 

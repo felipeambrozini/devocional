@@ -367,8 +367,8 @@ motivo novo.
   para todo mundo antes da hora custaria sem controle — convidar alguém é
   adicionar o e-mail no painel, sem versionar e-mail nenhum no repositório e
   sem trocar secret de build (o `--dart-define=EMAILS_COM_CONVERSAS` antigo
-  saiu dos workflows e só resta no código como bootstrap legado enquanto o
-  documento ainda não carregou). Sem `firebase_remote_config`: o Firestore que
+  saiu de vez; antes de o documento carregar o chat fica fechado). Sem
+  `firebase_remote_config`: o Firestore que
   o app já usa é o servidor de configuração. Cada interruptor tem o seu
   `*Forcado` (mesmo padrão de `Lembretes.instancia`, mutável) só para teste —
   o login de verdade nunca roda no ambiente de teste, e sem o override os

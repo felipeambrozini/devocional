@@ -147,84 +147,80 @@ class _TelaSobreState extends State<TelaSobre> {
                   );
                 },
               ),
-              // A conta na nuvem existe em todas as plataformas (ver
-              // nuvem.dart); esta seção é a de privacidade e apagar dados.
-              if (nuvemSuportada) ...[
-                const SizedBox(height: DevocionalEspacamento.sp32),
-                Semantics(
-                  header: true,
-                  child: Text('Conta e privacidade', style: tema.headlineSmall),
+              const SizedBox(height: DevocionalEspacamento.sp32),
+              Semantics(
+                header: true,
+                child: Text('Conta e privacidade', style: tema.headlineSmall),
+              ),
+              const SizedBox(height: DevocionalEspacamento.sp10),
+              ListenableBuilder(
+                listenable: Nuvem.instancia,
+                // O histórico do chat só existe para quem tem acesso à
+                // função (ver Recursos.conversas); citá-lo para quem não
+                // pode usar o chat só confundiria.
+                builder: (context, _) => Text(
+                  Recursos.conversas
+                      ? 'Quem entra com a conta Google salva favoritos, '
+                            'anotações, dias de leitura marcados e o '
+                            'histórico das conversas do chat numa conta na '
+                            'nuvem, para não perdê-los se o navegador '
+                            'limpar o armazenamento. Sobem só esses itens, '
+                            'mais o e-mail e o identificador da conta, '
+                            'nunca o texto da Bíblia ou do devocional que '
+                            'você lê; o tamanho da letra e o tema continuam '
+                            'só no aparelho. Quem não entra usa o app do '
+                            'mesmo jeito de sempre, sem nada saindo daqui.'
+                      : 'Quem entra com a conta Google salva favoritos, '
+                            'anotações e dias de leitura marcados numa '
+                            'conta na nuvem, para não perdê-los se o '
+                            'navegador limpar o armazenamento. Sobem só '
+                            'esses itens, mais o e-mail e o identificador '
+                            'da conta, nunca o texto da Bíblia ou do '
+                            'devocional que você lê; o tamanho da letra e o '
+                            'tema continuam só no aparelho. Quem não entra '
+                            'usa o app do mesmo jeito de sempre, sem nada '
+                            'saindo daqui.',
+                  style: tema.bodyLarge?.copyWith(height: 1.7),
                 ),
-                const SizedBox(height: DevocionalEspacamento.sp10),
-                ListenableBuilder(
-                  listenable: Nuvem.instancia,
-                  // O histórico do chat só existe para quem tem acesso à
-                  // função (ver Recursos.conversas); citá-lo para quem não
-                  // pode usar o chat só confundiria.
-                  builder: (context, _) => Text(
-                    Recursos.conversas
-                        ? 'Quem entra com a conta Google salva favoritos, '
-                              'anotações, dias de leitura marcados e o '
-                              'histórico das conversas do chat numa conta na '
-                              'nuvem, para não perdê-los se o navegador '
-                              'limpar o armazenamento. Sobem só esses itens, '
-                              'mais o e-mail e o identificador da conta, '
-                              'nunca o texto da Bíblia ou do devocional que '
-                              'você lê; o tamanho da letra e o tema continuam '
-                              'só no aparelho. Quem não entra usa o app do '
-                              'mesmo jeito de sempre, sem nada saindo daqui.'
-                        : 'Quem entra com a conta Google salva favoritos, '
-                              'anotações e dias de leitura marcados numa '
-                              'conta na nuvem, para não perdê-los se o '
-                              'navegador limpar o armazenamento. Sobem só '
-                              'esses itens, mais o e-mail e o identificador '
-                              'da conta, nunca o texto da Bíblia ou do '
-                              'devocional que você lê; o tamanho da letra e o '
-                              'tema continuam só no aparelho. Quem não entra '
-                              'usa o app do mesmo jeito de sempre, sem nada '
-                              'saindo daqui.',
-                    style: tema.bodyLarge?.copyWith(height: 1.7),
-                  ),
+              ),
+              const SizedBox(height: DevocionalEspacamento.sp10),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: FaIcon(
+                  FontAwesomeIcons.shieldHalved,
+                  color: cor.primary,
                 ),
-                const SizedBox(height: DevocionalEspacamento.sp10),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: FaIcon(
-                    FontAwesomeIcons.shieldHalved,
-                    color: cor.primary,
-                  ),
-                  title: const Text('Política de privacidade completa'),
-                  onTap: () => GoRouter.of(context).push('/privacidade'),
+                title: const Text('Política de privacidade completa'),
+                onTap: () => GoRouter.of(context).push('/privacidade'),
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: FaIcon(
+                  FontAwesomeIcons.fileLines,
+                  color: cor.primary,
                 ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: FaIcon(
-                    FontAwesomeIcons.fileLines,
-                    color: cor.primary,
-                  ),
-                  title: const Text('Termos de serviço'),
-                  onTap: () => GoRouter.of(context).push('/termos'),
-                ),
-                const SizedBox(height: DevocionalEspacamento.sp8),
-                ListenableBuilder(
-                  listenable: Nuvem.instancia,
-                  builder: (context, _) => Nuvem.instancia.logado
-                      ? ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: FaIcon(
-                            FontAwesomeIcons.trash,
-                            color: cor.error,
-                          ),
-                          title: const Text('Apagar meus dados da nuvem'),
-                          subtitle: const Text(
-                            'Remove a cópia salva na conta. O que está neste '
-                            'navegador não é tocado.',
-                          ),
-                          onTap: () => _apagarDaNuvem(context),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-              ],
+                title: const Text('Termos de serviço'),
+                onTap: () => GoRouter.of(context).push('/termos'),
+              ),
+              const SizedBox(height: DevocionalEspacamento.sp8),
+              ListenableBuilder(
+                listenable: Nuvem.instancia,
+                builder: (context, _) => Nuvem.instancia.logado
+                    ? ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: FaIcon(
+                          FontAwesomeIcons.trash,
+                          color: cor.error,
+                        ),
+                        title: const Text('Apagar meus dados da nuvem'),
+                        subtitle: const Text(
+                          'Remove a cópia salva na conta. O que está neste '
+                          'navegador não é tocado.',
+                        ),
+                        onTap: () => _apagarDaNuvem(context),
+                      )
+                    : const SizedBox.shrink(),
+              ),
               const SizedBox(height: DevocionalEspacamento.sp32),
               // As quatro seções abaixo são conteúdo de referência, lido uma
               // vez e raramente revisitado — colapsadas por padrão e depois
