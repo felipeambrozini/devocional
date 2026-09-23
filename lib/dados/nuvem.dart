@@ -365,7 +365,15 @@ class Nuvem extends ChangeNotifier {
         // authStateChanges (aqui e em PlanosNaNuvem) e já tem sessão em cache
         // dispara a primeira consulta ao Firestore antes do token existir, e
         // o Firestore nega com PERMISSION_DENIED.
-        await FirebaseAppCheck.instance.getToken();
+        //
+        // Com timeout: sem rede ou com o provedor emperrado, `getToken()`
+        // pode nunca resolver, e sem prazo `_pronta` nunca vira true — a
+        // sincronia, os planos e o admin ficam mudos para sempre em vez de
+        // só começarem sem nuvem.
+        await FirebaseAppCheck.instance.getToken().timeout(
+          const Duration(seconds: 10),
+          onTimeout: () => null,
+        );
       } catch (erro, pilha) {
         Registro.erro('Nuvem.iniciar', erro, pilha);
       }
@@ -653,11 +661,44 @@ class Nuvem extends ChangeNotifier {
       await usuario.delete();
     } on FirebaseAuthException catch (erro) {
       // O Firebase exige login recente para apagar a conta. Como já estamos
-      // dentro do gesto de "Apagar", reabrir o popup na hora ainda conta como
-      // gesto do usuário.
+      // dentro do gesto de "Apagar", refazer o login na hora ainda conta
+      // como gesto do usuário.
       if (erro.code != 'requires-recent-login') rethrow;
-      await FirebaseAuth.instance.signInWithPopup(GoogleAuthProvider());
-      await FirebaseAuth.instance.currentUser?.delete();
+      await _reautenticar(usuario);
+      await usuario.delete();
     }
+  }
+
+  /// Prova de novo a identidade de [usuario], sem trocar a sessão — o que
+  /// [apagarDados] precisa quando o Firebase recusa por login antigo demais.
+  ///
+  /// Mesmo fluxo de plataforma que [entrar] (popup/redirect na web conforme
+  /// mobile ou não, `google_sign_in` nativo fora dela), mas reautenticando o
+  /// próprio [usuario] em vez de abrir uma sessão nova. Sem este split, o
+  /// antigo `signInWithPopup` — só web — lançava em todo Android/iOS com
+  /// sessão antiga, e apagar a conta parava ali, com os dados do Firestore
+  /// já apagados mas a conta em si intacta.
+  Future<void> _reautenticar(User usuario) async {
+    if (kIsWeb) {
+      final mobil =
+          defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.android;
+      if (mobil) {
+        await usuario.reauthenticateWithRedirect(GoogleAuthProvider());
+      } else {
+        await usuario.reauthenticateWithPopup(GoogleAuthProvider());
+      }
+      return;
+    }
+    if (!_googlePronto) {
+      await GoogleSignIn.instance.initialize(
+        serverClientId: _googleServerClientId,
+      );
+      _googlePronto = true;
+    }
+    final conta = await GoogleSignIn.instance.authenticate();
+    await usuario.reauthenticateWithCredential(
+      GoogleAuthProvider.credential(idToken: conta.authentication.idToken),
+    );
   }
 }

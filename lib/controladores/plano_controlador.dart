@@ -31,11 +31,7 @@ import '../widgets/botao.dart';
 /// Aberto por link (sem [plano] inicial), o controller primeiro entra no
 /// plano — escreve a própria participação — e só então lê o documento.
 class PlanoControlador extends ChangeNotifier {
-  PlanoControlador({
-    required this.estado,
-    required this.planoId,
-    this.plano,
-  }) {
+  PlanoControlador({required this.estado, required this.planoId, this.plano}) {
     // A tela chega pelo widget.estado, fora do alcance do InheritedNotifier
     // quando aberta por link no Navigator raiz: sem este listener, marcar um
     // dia gravava mas a tela não redesenhava o contador nem o visto do cartão.
@@ -108,11 +104,19 @@ class PlanoControlador extends ChangeNotifier {
           .doc(planoId)
           .get();
       if (!doc.exists) {
-        // O plano sumiu da nuvem: sai também do espelho local.
+        // O plano sumiu da nuvem: sai também do espelho local. Trata aqui
+        // mesmo, sem lançar para o catch abaixo — lançar caía no mesmo
+        // `catch (_)` que tenta `entrar()` de novo, e essa segunda falha
+        // (documento continua não existindo) sempre substituía esta
+        // mensagem clara pela genérica de "Plano não encontrado".
         await estado.removerPlano(planoId);
-        throw const PlanosNaNuvemExcecao(
-          'Este plano não existe mais. Ele pode ter sido excluído por quem o criou.',
-        );
+        if (_descartado) return;
+        erro =
+            'Este plano não existe mais. Ele pode ter sido excluído por '
+            'quem o criou.';
+        carregando = false;
+        notifyListeners();
+        return;
       }
       _aplicarAoEspelho(doc);
       _assinar();

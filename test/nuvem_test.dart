@@ -324,11 +324,10 @@ void main() {
       );
       await sincronia.comecar();
 
-      expect(
-        estado.mensagensDe('spurgeon', c.id).map((m) => m.id),
-        ['local', 'remota'],
-        reason: 'fundir une por id, na ordem do momento',
-      );
+      expect(estado.mensagensDe('spurgeon', c.id).map((m) => m.id), [
+        'local',
+        'remota',
+      ], reason: 'fundir une por id, na ordem do momento');
     });
 
     test('apagar conversa sobe a lápide para a nuvem', () async {
@@ -441,11 +440,9 @@ void main() {
       );
       await sincronia.comecar();
 
-      expect(
-        estado.planosDoUsuario.map((p) => p.titulo),
-        ['Salmos em 30 dias'],
-        reason: 'é assim que o plano criado no celular chega à web',
-      );
+      expect(estado.planosDoUsuario.map((p) => p.titulo), [
+        'Salmos em 30 dias',
+      ], reason: 'é assim que o plano criado no celular chega à web');
       expect(estado.diasLidosDoPlano(estado.planosDoUsuario.first.id), 1);
     });
 
@@ -477,7 +474,106 @@ void main() {
         expect(envios, 0);
       },
     );
+
+    test(
+      'editar título, livros ou dias sincroniza: a edição mais nova vence',
+      () async {
+        final estado = await Estado.abrir();
+        final plano = await estado.criarPlano(
+          titulo: 'Gênesis em 10 dias',
+          livros: ['genesis'],
+          dias: 10,
+        );
+
+        // Simula uma edição feita noutro aparelho, marcada como mais nova
+        // que a criação: mesmo id, título e livros diferentes.
+        final remota = _comPlanoEditado(
+          estado.serializarPlanos(),
+          id: plano.id,
+          titulo: 'Gênesis e Êxodo em 20 dias',
+          livros: ['genesis', 'exodo'],
+          dias: 20,
+          atualizadoEm: DateTime.now().add(const Duration(days: 1)),
+        );
+
+        await estado.fundirPlanos(remota);
+
+        final fundido = estado.planosDoUsuario.single;
+        expect(fundido.titulo, 'Gênesis e Êxodo em 20 dias');
+        expect(fundido.livros, ['genesis', 'exodo']);
+        expect(fundido.dias, 20);
+        expect(
+          fundido.criadoEm,
+          plano.criadoEm,
+          reason: 'a data de criação não muda numa edição',
+        );
+      },
+    );
+
+    test(
+      'uma edição remota mais velha não sobrescreve a edição local mais nova',
+      () async {
+        final estado = await Estado.abrir();
+        final plano = await estado.criarPlano(
+          titulo: 'Gênesis em 10 dias',
+          livros: ['genesis'],
+          dias: 10,
+        );
+        await estado.alternarLidoNoPlano(plano.id, 1);
+        await estado.atualizarPlano(plano.id, titulo: 'Meu Gênesis');
+
+        // O remoto é a cópia de antes da edição local — como se este
+        // aparelho tivesse editado e sincronizado antes de a nuvem responder
+        // com o estado antigo de uma sincronia atrasada.
+        final remota = _comPlanoEditado(
+          estado.serializarPlanos(),
+          id: plano.id,
+          titulo: 'Gênesis em 10 dias',
+          livros: ['genesis'],
+          dias: 10,
+          atualizadoEm: plano.criadoEm,
+        );
+
+        await estado.fundirPlanos(remota);
+
+        expect(
+          estado.planosDoUsuario.single.titulo,
+          'Meu Gênesis',
+          reason: 'a edição local, mais nova, não pode ser desfeita',
+        );
+        expect(
+          estado.diasLidosDoPlano(plano.id),
+          1,
+          reason: 'sem mudança de conteúdo, o progresso marcado fica',
+        );
+      },
+    );
   });
+}
+
+/// Reescreve, dentro de uma cópia serializada de planos, o plano de [id] com
+/// novos título/livros/dias/atualizadoEm — como se viesse editado de outro
+/// aparelho. Só para os testes de fusão acima, que precisam controlar
+/// [atualizadoEm] com precisão para testar os dois lados do desempate.
+String _comPlanoEditado(
+  String copia, {
+  required String id,
+  required String titulo,
+  required List<String> livros,
+  required int dias,
+  required DateTime atualizadoEm,
+}) {
+  final mapa = json.decode(copia) as Map<String, dynamic>;
+  final planos = mapa['planos'] as List;
+  for (final item in planos) {
+    final plano = item as Map<String, dynamic>;
+    if (plano['id'] != id) continue;
+    plano['titulo'] = titulo;
+    plano['livros'] = livros;
+    plano['dias'] = dias;
+    plano['atualizadoEm'] = atualizadoEm.millisecondsSinceEpoch;
+  }
+  return json.encode(mapa);
 }
 
 /// A mesma cópia com as chaves de todo mapa em ordem alfabética — como o
@@ -487,7 +583,8 @@ String _comChavesOrdenadas(String copia) =>
 
 dynamic _ordenar(dynamic valor) => switch (valor) {
   Map<String, dynamic> mapa => {
-    for (final chave in mapa.keys.toList()..sort()) chave: _ordenar(mapa[chave]),
+    for (final chave in mapa.keys.toList()..sort())
+      chave: _ordenar(mapa[chave]),
   },
   List lista => [for (final item in lista) _ordenar(item)],
   _ => valor,

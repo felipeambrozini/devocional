@@ -24,6 +24,13 @@
 		<string>????</string>
 		<key>CFBundleVersion</key>
 		<string>$(FLUTTER_BUILD_NUMBER)</string>
+		<!-- Mesma razão do equivalente Android (AndroidManifest.xml): o SDK
+		     nativo do Analytics coleta desde a subida do processo, antes de o
+		     Dart rodar e poder desligá-lo por código. `aplicarAceiteDeColeta`
+		     (lib/dados/coleta.dart) liga de volta só depois do consentimento
+		     salvo. -->
+		<key>FIREBASE_ANALYTICS_COLLECTION_ENABLED</key>
+		<false/>
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
 		<key>NSCameraUsageDescription</key>

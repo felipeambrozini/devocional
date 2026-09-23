@@ -105,7 +105,11 @@ class Conversador extends ChangeNotifier {
     }
     _ultimoEnvio = agora;
     unawaited(registrarChatMensagem(persona.id));
-    final id = _id ??= await _novaConversa(pergunta);
+    // Uma conversa reaberta pelo histórico já chega com [conversaId]: a
+    // primeira mensagem enviada nela precisa continuar essa conversa, não
+    // abrir outra vazia. Só quando não há [conversaId] (chat novo) é que
+    // nasce uma conversa de verdade, na primeira pergunta.
+    final id = _id ??= conversaId ?? await _novaConversa(pergunta);
     // Perguntas antigas que ficaram pendentes ficam para trás: quem envia
     // uma pergunta nova seguiu a vida, e só a mais nova interessa.
     await estado.marcarRespondidas(persona.id, id);
@@ -180,9 +184,20 @@ class Conversador extends ChangeNotifier {
     _ultimaPergunta = pergunta;
     notifyListeners();
     try {
+      // A pergunta atual já está no histórico como mensagem pendente (foi
+      // gravada em `enviar` antes de chamar `_perguntar`) e vai também no
+      // parâmetro `pergunta`: sem excluir esse último item, `ia.dart` recebe
+      // a pergunta duas vezes e a envia em dobro para o modelo.
+      final historico = estado.mensagensDe(persona.id, id);
+      final historicoSemPendente =
+          historico.isNotEmpty &&
+              historico.last.doUsuario &&
+              historico.last.pendente
+          ? historico.sublist(0, historico.length - 1)
+          : historico;
       final resposta = await chamar(
         persona: persona,
-        historico: estado.mensagensDe(persona.id, id),
+        historico: historicoSemPendente,
         pergunta: pergunta,
       );
       // Parou no meio do caminho (ou um turno novo assumiu): a resposta

@@ -63,7 +63,12 @@ Future<String> perguntar({
   for (final mensagem in historico) {
     final papel = mensagem.doUsuario ? 'user' : 'model';
     if (papel == ultimoPapel) continue;
-    conteudos.add({'role': papel, 'parts': [{'text': mensagem.texto}]});
+    conteudos.add({
+      'role': papel,
+      'parts': [
+        {'text': mensagem.texto},
+      ],
+    });
     ultimoPapel = papel;
   }
   // A API não aceita duas falas seguidas do mesmo papel, nem uma conversa que
@@ -71,11 +76,14 @@ Future<String> perguntar({
   // pergunta anterior que falhou), a nova pergunta entra junta na mesma fala.
   if (ultimoPapel == 'user') {
     final ultimo = conteudos.last['parts'] as List;
-    ultimo[0] = {
-      'text': '${(ultimo[0] as Map)['text']}\n\n$pergunta',
-    };
+    ultimo[0] = {'text': '${(ultimo[0] as Map)['text']}\n\n$pergunta'};
   } else {
-    conteudos.add({'role': 'user', 'parts': [{'text': pergunta}]});
+    conteudos.add({
+      'role': 'user',
+      'parts': [
+        {'text': pergunta},
+      ],
+    });
   }
 
   final http.Response resposta;
@@ -84,9 +92,12 @@ Future<String> perguntar({
         .post(
           Uri.parse(
             'https://generativelanguage.googleapis.com/v1beta/models/'
-            '$_modelo:generateContent?key=$chaveGemini',
+            '$_modelo:generateContent',
           ),
-          headers: await cabecalhosGoogle(),
+          // A chave vai no cabeçalho, não na query string: uma URL com `?key=`
+          // pode ser registrada (log do servidor, `Registro.erro` abaixo com a
+          // URI do erro, histórico do proxy) e vazar a chave junto.
+          headers: {...await cabecalhosGoogle(), 'x-goog-api-key': chaveGemini},
           body: json.encode({
             'systemInstruction': {
               'parts': [

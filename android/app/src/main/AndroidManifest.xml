@@ -31,6 +31,17 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
+        <!-- O SDK nativo do Analytics começa a coletar (session_start,
+             first_open, screen_view) assim que o processo sobe — antes de o
+             Dart rodar, então antes de `aplicarAceiteDeColeta` (main.dart)
+             poder desligá-lo por código. Sem esta linha, quem nunca deu
+             consentimento (ou recusou) já teria eventos automáticos
+             enviados antes do diálogo aparecer. `aplicarAceiteDeColeta`
+             liga de volta só depois do "sim" salvo em `Estado`. -->
+        <meta-data
+            android:name="firebase_analytics_collection_enabled"
+            android:value="false" />
+
         <!-- Lembrete diário local (flutter_local_notifications, ver
              lib/dados/lembretes.dart): alarmes sobrevivem ao reinício do
              celular porque este receiver os rearma no boot — sem ele, o

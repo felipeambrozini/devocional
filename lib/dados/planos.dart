@@ -40,17 +40,18 @@ class DiaDePlanoDoUsuario {
 /// participante, gravado na própria entrada do documento. A cópia local é o
 /// espelho; o documento é a verdade.
 class PlanoDoUsuario {
-  const PlanoDoUsuario({
+  PlanoDoUsuario({
     required this.id,
     required this.titulo,
     required this.livros,
     required this.dias,
     required this.criadoEm,
+    DateTime? atualizadoEm,
     this.compartilhado = false,
     this.criadoPor,
     this.incluirDevocionais = false,
     this.devocionalAntes = true,
-  });
+  }) : atualizadoEm = atualizadoEm ?? criadoEm;
 
   factory PlanoDoUsuario.doJson(Map<String, dynamic> json) => PlanoDoUsuario(
     id: json['id'] as String? ?? '',
@@ -63,6 +64,12 @@ class PlanoDoUsuario {
     criadoEm: DateTime.fromMillisecondsSinceEpoch(
       json['criadoEm'] as int? ?? 0,
     ),
+    // Ausente em cópia gravada por uma versão anterior a este campo: cai no
+    // padrão do construtor (mesmo instante de criadoEm), o mesmo que dizer
+    // "nunca foi editado depois de criado".
+    atualizadoEm: json['atualizadoEm'] is int
+        ? DateTime.fromMillisecondsSinceEpoch(json['atualizadoEm'] as int)
+        : null,
     compartilhado: json['compartilhado'] as bool? ?? false,
     criadoPor: json['criadoPor'] as String?,
     incluirDevocionais: json['incluirDevocionais'] as bool? ?? false,
@@ -106,6 +113,13 @@ class PlanoDoUsuario {
   /// vazios (ver [montarPlanoDeLeitura]).
   final int dias;
   final DateTime criadoEm;
+
+  /// Quando título, livros, dias ou a configuração de devocionais mudaram
+  /// pela última vez. É o desempate de [Estado.fundirPlanos]: o lado com o
+  /// instante mais novo vence quando o mesmo plano existe em dois aparelhos
+  /// com conteúdo diferente. Cai em [criadoEm] por padrão — um plano recém
+  /// criado nunca foi editado.
+  final DateTime atualizadoEm;
   final bool compartilhado;
 
   /// O uid de quem criou, só em plano compartilhado — é quem tem o poder de
@@ -143,6 +157,10 @@ class PlanoDoUsuario {
     livros: livros,
     dias: dias,
     criadoEm: criadoEm,
+    // Virar compartilhado não é uma edição de conteúdo: preserva o instante,
+    // para não fazer este lado "ganhar" de uma edição de verdade mais nova
+    // no próximo fundirPlanos.
+    atualizadoEm: atualizadoEm,
     compartilhado: novo,
     criadoPor: criadoPor,
     incluirDevocionais: incluirDevocionais,
@@ -155,6 +173,7 @@ class PlanoDoUsuario {
     'livros': livros,
     'dias': dias,
     'criadoEm': criadoEm.millisecondsSinceEpoch,
+    'atualizadoEm': atualizadoEm.millisecondsSinceEpoch,
     if (compartilhado) 'compartilhado': true,
     if (criadoPor != null) 'criadoPor': criadoPor,
     'incluirDevocionais': incluirDevocionais,

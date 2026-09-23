@@ -34,11 +34,16 @@ void main() {
       final conversador = Conversador(
         persona: personaSpurgeon,
         estado: estado,
-        chamar: ({required persona, required historico, required pergunta}) async {
-          return 'Amém, meu filho.';
-        },
+        chamar:
+            ({required persona, required historico, required pergunta}) async {
+              return 'Amém, meu filho.';
+            },
       );
-      expect(conversador.id, isNull, reason: 'a conversa nova só nasce na fala');
+      expect(
+        conversador.id,
+        isNull,
+        reason: 'a conversa nova só nasce na fala',
+      );
 
       await conversador.enviar('Como vencer a ansiedade?');
 
@@ -46,8 +51,11 @@ void main() {
       final mensagens = estado.mensagensDe('spurgeon', conversador.id!);
       expect(mensagens, hasLength(2));
       expect(mensagens.first.texto, 'Como vencer a ansiedade?');
-      expect(mensagens.first.pendente, isFalse,
-          reason: 'a resposta chegou, nada fica pendente');
+      expect(
+        mensagens.first.pendente,
+        isFalse,
+        reason: 'a resposta chegou, nada fica pendente',
+      );
       expect(mensagens.last.papel, 'assistant');
       expect(mensagens.last.texto, 'Amém, meu filho.');
       expect(conversador.respondendo, isFalse);
@@ -59,7 +67,7 @@ void main() {
       );
     });
 
-    test('a pergunta chega ao modelo como última fala do histórico', () async {
+    test('a pergunta não vem duplicada no histórico e na pergunta', () async {
       final estado = await Estado.abrir();
       final id = await abrirConversa(estado, [
         Mensagem(id: '1', papel: 'user', texto: 'Tenho medo.', momento: 1),
@@ -69,13 +77,16 @@ void main() {
         persona: personaSpurgeon,
         estado: estado,
         conversaId: id,
-        chamar: ({required persona, required historico, required pergunta}) async {
-          vista = pergunta;
-          // O histórico que o modelo recebe já inclui a pergunta nova,
-          // registrada como pendente: a última fala é ela, na ordem.
-          expect(historico.last.texto, pergunta);
-          return 'Confie no Senhor.';
-        },
+        chamar:
+            ({required persona, required historico, required pergunta}) async {
+              vista = pergunta;
+              // A pergunta nova já foi gravada como mensagem pendente antes de
+              // chegar aqui (`enviar`), mas o histórico passado a `chamar` não a
+              // repete: ela só vai no parâmetro `pergunta`. Repeti-la também no
+              // histórico manda a mesma pergunta duas vezes para o modelo.
+              expect(historico.map((m) => m.texto), ['Tenho medo.']);
+              return 'Confie no Senhor.';
+            },
       );
 
       await conversador.enviar('Como parar?');
@@ -88,6 +99,50 @@ void main() {
       );
     });
 
+    test('reabrir uma conversa e mandar mensagem continua a mesma conversa,'
+        ' não abre outra', () async {
+      // Reproduz o fluxo real: TelaChat recebe conversaId do histórico ao
+      // reabrir uma conversa, e ChatControlador.enviar chama
+      // Conversador.enviar direto, sem passar pelo construtor de novo.
+      final estado = await Estado.abrir();
+      final id = await abrirConversa(estado, [
+        Mensagem(id: '1', papel: 'user', texto: 'Tenho medo.', momento: 1),
+        Mensagem(
+          id: '2',
+          papel: 'assistant',
+          texto: 'Confie no Senhor.',
+          momento: 2,
+        ),
+      ]);
+      final conversador = Conversador(
+        persona: personaSpurgeon,
+        estado: estado,
+        conversaId: id,
+        chamar:
+            ({required persona, required historico, required pergunta}) async {
+              return 'E o que mais te aflige?';
+            },
+      );
+
+      await conversador.enviar('E se eu recair?');
+
+      expect(
+        conversador.id,
+        id,
+        reason: 'a resposta continua na conversa reaberta, não numa nova',
+      );
+      expect(
+        estado.conversasDe('spurgeon'),
+        hasLength(1),
+        reason: 'nenhuma conversa nova foi criada',
+      );
+      expect(estado.mensagensDe('spurgeon', id), hasLength(4));
+      expect(
+        estado.mensagensDe('spurgeon', id).last.texto,
+        'E o que mais te aflige?',
+      );
+    });
+
     test('respondendo fica ligado enquanto a IA responde', () async {
       final estado = await Estado.abrir();
       final portao = Completer<String>();
@@ -96,8 +151,11 @@ void main() {
         persona: personaSpurgeon,
         estado: estado,
         chamar: ({required persona, required historico, required pergunta}) {
-          expect(conversador.respondendo, isTrue,
-              reason: 'a tela precisa do indicador durante a espera');
+          expect(
+            conversador.respondendo,
+            isTrue,
+            reason: 'a tela precisa do indicador durante a espera',
+          );
           return portao.future;
         },
       );
@@ -111,52 +169,57 @@ void main() {
       expect(conversador.respondendo, isFalse);
     });
 
-    test('interromper para a espera, descarta a tardia e libera repetir',
-        () async {
-      final estado = await Estado.abrir();
-      final portao = Completer<String>();
-      var chamadas = 0;
-      final conversador = Conversador(
-        persona: personaSpurgeon,
-        estado: estado,
-        chamar: ({required persona, required historico, required pergunta}) {
-          chamadas++;
-          return chamadas == 1 ? portao.future : Future.value('Agora sim.');
-        },
-      );
+    test(
+      'interromper para a espera, descarta a tardia e libera repetir',
+      () async {
+        final estado = await Estado.abrir();
+        final portao = Completer<String>();
+        var chamadas = 0;
+        final conversador = Conversador(
+          persona: personaSpurgeon,
+          estado: estado,
+          chamar: ({required persona, required historico, required pergunta}) {
+            chamadas++;
+            return chamadas == 1 ? portao.future : Future.value('Agora sim.');
+          },
+        );
 
-      conversador.interromper();
-      expect(conversador.erro, isNull,
-          reason: 'sem espera não há o que parar');
+        conversador.interromper();
+        expect(
+          conversador.erro,
+          isNull,
+          reason: 'sem espera não há o que parar',
+        );
 
-      final enviando = conversador.enviar('Oi');
-      await Future<void>.delayed(Duration.zero);
-      expect(conversador.respondendo, isTrue);
+        final enviando = conversador.enviar('Oi');
+        await Future<void>.delayed(Duration.zero);
+        expect(conversador.respondendo, isTrue);
 
-      conversador.interromper();
-      expect(conversador.respondendo, isFalse);
-      expect(conversador.erro, contains('interrompida'));
+        conversador.interromper();
+        expect(conversador.respondendo, isFalse);
+        expect(conversador.erro, contains('interrompida'));
 
-      // A resposta que chega depois do toque não entra no histórico.
-      portao.complete('Tarde demais.');
-      await enviando;
-      final mensagens = estado.mensagensDe('spurgeon', conversador.id!);
-      expect(mensagens, hasLength(1));
-      expect(
-        mensagens.single.pendente,
-        isTrue,
-        reason: 'a pergunta fica para o "Tentar de novo"',
-      );
+        // A resposta que chega depois do toque não entra no histórico.
+        portao.complete('Tarde demais.');
+        await enviando;
+        final mensagens = estado.mensagensDe('spurgeon', conversador.id!);
+        expect(mensagens, hasLength(1));
+        expect(
+          mensagens.single.pendente,
+          isTrue,
+          reason: 'a pergunta fica para o "Tentar de novo"',
+        );
 
-      await conversador.repetir();
-      expect(conversador.erro, isNull);
-      expect(conversador.respondendo, isFalse);
-      expect(estado.mensagensDe('spurgeon', conversador.id!), hasLength(2));
-      expect(
-        estado.mensagensDe('spurgeon', conversador.id!).last.texto,
-        'Agora sim.',
-      );
-    });
+        await conversador.repetir();
+        expect(conversador.erro, isNull);
+        expect(conversador.respondendo, isFalse);
+        expect(estado.mensagensDe('spurgeon', conversador.id!), hasLength(2));
+        expect(
+          estado.mensagensDe('spurgeon', conversador.id!).last.texto,
+          'Agora sim.',
+        );
+      },
+    );
 
     test('falha vira erro e deixa a pergunta pendente para repetir', () async {
       final estado = await Estado.abrir();
@@ -164,14 +227,17 @@ void main() {
       final conversador = Conversador(
         persona: personaSpurgeon,
         estado: estado,
-        chamar: ({required persona, required historico, required pergunta}) async {
-          tentativas++;
-          if (tentativas == 1) {
-            throw const IaExcecao('O limite gratuito da inteligência '
-                'artificial foi atingido.');
-          }
-          return 'Agora sim.';
-        },
+        chamar:
+            ({required persona, required historico, required pergunta}) async {
+              tentativas++;
+              if (tentativas == 1) {
+                throw const IaExcecao(
+                  'O limite gratuito da inteligência '
+                  'artificial foi atingido.',
+                );
+              }
+              return 'Agora sim.';
+            },
       );
 
       await conversador.enviar('Pode responder?');
@@ -217,8 +283,11 @@ void main() {
       expect(conversador.erro, isNotNull, reason: 'a falha aparece na hora');
 
       await Future<void>.delayed(const Duration(milliseconds: 50));
-      expect(conversador.erro, isNull,
-          reason: 'o balão não fica fixo: o erro some sozinho');
+      expect(
+        conversador.erro,
+        isNull,
+        reason: 'o balão não fica fixo: o erro some sozinho',
+      );
 
       // A pergunta continua pendente para o "Tentar de novo" de uma próxima
       // visita, mesmo depois de o aviso ter saído da tela.
@@ -228,28 +297,35 @@ void main() {
       );
     });
 
-    test('repetir sem falha anterior refaz a última pergunta mesmo assim',
-        () async {
-      final estado = await Estado.abrir();
-      final feitas = <String>[];
-      final conversador = Conversador(
-        persona: personaSpurgeon,
-        estado: estado,
-        chamar: ({required persona, required historico, required pergunta}) async {
-          feitas.add(pergunta);
-          return 'respondi';
-        },
-      );
+    test(
+      'repetir sem falha anterior refaz a última pergunta mesmo assim',
+      () async {
+        final estado = await Estado.abrir();
+        final feitas = <String>[];
+        final conversador = Conversador(
+          persona: personaSpurgeon,
+          estado: estado,
+          chamar:
+              ({
+                required persona,
+                required historico,
+                required pergunta,
+              }) async {
+                feitas.add(pergunta);
+                return 'respondi';
+              },
+        );
 
-      await conversador.enviar('Primeira');
-      expect(feitas, ['Primeira']);
+        await conversador.enviar('Primeira');
+        expect(feitas, ['Primeira']);
 
-      // Depois de um sucesso o "Tentar de novo" não está na tela, mas repetir
-      // continua seguro: refaz a última pergunta, sem duplicar a pergunta.
-      await conversador.repetir();
-      expect(feitas, ['Primeira', 'Primeira']);
-      expect(estado.mensagensDe('spurgeon', conversador.id!), hasLength(3));
-    });
+        // Depois de um sucesso o "Tentar de novo" não está na tela, mas repetir
+        // continua seguro: refaz a última pergunta, sem duplicar a pergunta.
+        await conversador.repetir();
+        expect(feitas, ['Primeira', 'Primeira']);
+        expect(estado.mensagensDe('spurgeon', conversador.id!), hasLength(3));
+      },
+    );
   });
 
   group('retomarInterrompida', () {
@@ -268,9 +344,10 @@ void main() {
         persona: personaSpurgeon,
         estado: estado,
         conversaId: id,
-        chamar: ({required persona, required historico, required pergunta}) async {
-          return 'Aqui estou.';
-        },
+        chamar:
+            ({required persona, required historico, required pergunta}) async {
+              return 'Aqui estou.';
+            },
       );
 
       conversador.retomarInterrompida();
@@ -293,9 +370,10 @@ void main() {
         persona: personaSpurgeon,
         estado: estado,
         conversaId: id,
-        chamar: ({required persona, required historico, required pergunta}) async {
-          return 'ok';
-        },
+        chamar:
+            ({required persona, required historico, required pergunta}) async {
+              return 'ok';
+            },
       );
 
       conversador.retomarInterrompida();
@@ -309,9 +387,10 @@ void main() {
       final conversador = Conversador(
         persona: personaSpurgeon,
         estado: estado,
-        chamar: ({required persona, required historico, required pergunta}) async {
-          return 'ok';
-        },
+        chamar:
+            ({required persona, required historico, required pergunta}) async {
+              return 'ok';
+            },
       );
 
       conversador.retomarInterrompida();

@@ -190,16 +190,18 @@ Future<void> _iniciar() async {
     }
     // Sem await: o resto (App Check, listener de login, config remota) não
     // bloqueia nada que dependa só do núcleo já pronto acima, e poria uma ida
-    // a mais à rede na frente do primeiro quadro. PlanosNaNuvem e ConfigAdmin
-    // só entram depois de Nuvem.iniciar terminar (App Check incluso): sem
-    // isto, com uma sessão já em cache, o listener de cada um dispara a
-    // consulta ao Firestore antes de o App Check ter o token pronto, e o
-    // Firestore recusa com o mesmo PERMISSION_DENIED genérico de uma regra —
-    // sem outra tentativa, porque nenhum dos dois refaz a consulta sozinho.
+    // a mais à rede na frente do primeiro quadro. PlanosNaNuvem, ConfigAdmin
+    // e o reagendamento dos lembretes só entram depois de Nuvem.iniciar
+    // terminar (App Check incluso): sem isto, com uma sessão já em cache, o
+    // listener de cada um — e a escrita anônima em `lembretes/{token}` —
+    // dispara a consulta ao Firestore antes de o App Check ter o token
+    // pronto, e o Firestore recusa com o mesmo PERMISSION_DENIED genérico de
+    // uma regra, sem outra tentativa.
     unawaited(
       Nuvem.instancia.iniciar(estado).then((_) {
         unawaited(PlanosNaNuvem.instancia.iniciar(estado));
         unawaited(ConfigAdmin.instancia.iniciar());
+        unawaited(reagendarLembretesSeNecessario(estado));
       }),
     );
   }
@@ -212,10 +214,9 @@ Future<void> _iniciar() async {
     await Lembretes.instancia.inicializar(
       aoTocarNotificacao: _abrirLeituraDoLembrete,
     );
-    // Sem await: armar alarmes envolve ler fuso e preferências, e travar o
-    // primeiro quadro numa notificação que o usuário nem pediu ainda é pior
-    // que rearmar um instante depois.
-    unawaited(reagendarLembretesSeNecessario(estado));
+    // Sem nuvem (flag desligada), não há App Check para esperar: reagenda
+    // direto. Com nuvem, quem chama é o `.then()` de `Nuvem.iniciar` acima.
+    if (!nuvemSuportada) unawaited(reagendarLembretesSeNecessario(estado));
     // Precisa vir antes do runApp: depois dele o plugin já não sabe dizer que
     // toque abriu o app, só qual chegou com o app já aberto.
     chaveDeAbertura = await Lembretes.instancia.chaveQueAbriuOApp();
@@ -381,10 +382,12 @@ final _escoposDasAbas = [
 final _router = GoRouter(
   navigatorKey: navigatorKey,
   initialLocation: '/hoje',
-  // Reavalia o redirect quando a configuração remota chega: sem isto, quem
-  // abre um link de chat antes de o Firestore responder seria devolvido para
-  // /hoje pelo fallback ainda vazio, mesmo estando na allowlist.
-  refreshListenable: ConfigAdmin.instancia,
+  // Reavalia o redirect quando a configuração remota chega ou quando a
+  // Nuvem fica pronta: sem a Nuvem aqui, um link de chat aberto antes do App
+  // Check terminar (`Nuvem.email` some até `_pronta` virar true) seria
+  // devolvido para /hoje mesmo com o e-mail já na allowlist, e o `notifyListeners`
+  // de `authStateChanges` que chega depois não reavaliaria a rota.
+  refreshListenable: Listenable.merge([ConfigAdmin.instancia, Nuvem.instancia]),
   redirect: (context, state) {
     if (state.uri.path == '/') return '/hoje';
     // O painel admin é só web e só do dono: link direto fora disso volta
@@ -776,16 +779,25 @@ class Moldura extends StatelessWidget {
             (d.caminho == 'conversas' && !Recursos.conversas))
           d,
     ];
+    // O índice de destinosDoRail não é o de navigationShell/_destinos: o
+    // rail omite Conversas quando os balões estão no ar, então um clamp
+    // direto do índice cheio caía sobre o último item que sobrou ("Notas")
+    // sempre que a aba atual era justamente a Conversas omitida. Acha a
+    // posição pelo caminho da aba atual; -1 (Conversas escondida) não
+    // destaca nenhum item do rail, que é o estado visual certo — a conversa
+    // está aberta nos balões flutuantes, não numa aba dele.
+    final caminhoAtual = _destinos[navigationShell.currentIndex].caminho;
+    final indiceNoRail = destinosDoRail.indexWhere(
+      (d) => d.caminho == caminhoAtual,
+    );
 
     return Scaffold(
       body: Row(
         children: [
           NavigationRail(
-            selectedIndex: navigationShell.currentIndex.clamp(
-              0,
-              destinosDoRail.length - 1,
-            ),
-            onDestinationSelected: _irParaAba,
+            selectedIndex: indiceNoRail == -1 ? null : indiceNoRail,
+            onDestinationSelected: (i) =>
+                _irParaAba(_destinos.indexOf(destinosDoRail[i])),
             labelType: NavigationRailLabelType.all,
             destinations: [
               for (final d in destinosDoRail)
@@ -877,7 +889,7 @@ final _observadorDeTelas = _ObservadorDeTelas();
 /// balões substituem a aba no NavigationRail — que omite "Conversas" —, mas a
 /// rota `/conversas` continua ativa para quem chega por link direto. Somem
 /// quando [camadasFlutuantes] passa de zero, e reaparecem quando a camada
-/// fecha. A preferência gravada (`estado.baloesVisiveis`) continua valendo.
+/// fecha.
 class _ComBaloes extends StatelessWidget {
   const _ComBaloes({required this.child});
 
@@ -889,7 +901,6 @@ class _ComBaloes extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final estado = EscopoDoEstado.de(context);
     return ListenableBuilder(
       listenable: Listenable.merge([
         camadasFlutuantes,
@@ -897,7 +908,7 @@ class _ComBaloes extends StatelessWidget {
         ConfigAdmin.instancia,
       ]),
       builder: (context, _) {
-        if (!estado.baloesVisiveis || !Recursos.conversas) return child;
+        if (!Recursos.conversas) return child;
         return LayoutBuilder(
           builder: (context, constraints) {
             // Tela estreita: os retratos estão na faixa da Moldura, não aqui.

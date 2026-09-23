@@ -987,6 +987,36 @@ void main() {
   });
 
   testWidgets(
+    'abrir /conversas numa janela larga não destaca nenhuma aba do trilho',
+    (tester) async {
+      // O trilho omite Conversas quando os balões flutuantes estão no ar
+      // (Recursos.conversas, forçado true no setUp). Chegar em /conversas
+      // por link ou rota direta não deve acender "Notas" só por ser o
+      // último item que sobrou no trilho depois do corte — bug corrigido:
+      // o índice cheio (5, o de Conversas) não podia ser usado direto contra
+      // a lista já sem Conversas (5 itens, índices 0 a 4).
+      tester.view.physicalSize = const Size(1600, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await aquecerAssets(tester);
+      await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+      await tester.pumpAndSettle();
+
+      GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/conversas');
+      await tester.pumpAndSettle();
+
+      final trilho = tester.widget<NavigationRail>(find.byType(NavigationRail));
+      expect(
+        trilho.selectedIndex,
+        isNull,
+        reason: 'nenhuma aba do trilho corresponde à conversa aberta',
+      );
+    },
+  );
+
+  testWidgets(
     'numa janela larga, a barra do leitor ocupa a janela e só o texto fica em coluna',
     (tester) async {
       // A DevocionalLarguraDeLeitura já envolveu o IndexedStack inteiro, e então a AppBar

@@ -31,7 +31,6 @@ class Estado extends ChangeNotifier {
   static const chaveModoDoTema = 'modo_do_tema';
   static const _kAjudaDispensada = 'ajuda_dispensada';
   static const _kAceiteDeColeta = 'aceite_de_coleta';
-  static const _kBaloesVisiveis = 'baloes_visiveis';
   static const _kBaloesTooltipDispensado = 'baloes_tooltip_dispensado';
   static const _kSwipeTooltipDispensado = 'swipe_tooltip_dispensado';
   static const _kSetasDoRodape = 'setas_do_rodape';
@@ -74,10 +73,6 @@ class Estado extends ChangeNotifier {
   /// `null` = ainda não respondeu (ver TelaDeAceiteDeColeta); `true`/`false`
   /// é a resposta já dada.
   bool? _aceiteDeColeta;
-
-  /// Se os balões de conversa aparecem nas bordas das telas. Padrão true: o
-  /// chat só é descoberto pelos retratos, escondê-los esconde o caminho.
-  bool _baloesVisiveis = true;
 
   /// Se o tooltip de primeiro uso dos balões já foi dispensado.
   bool _baloesTooltipDispensado = false;
@@ -164,8 +159,6 @@ class Estado extends ChangeNotifier {
 
     _ajudaDispensada = _prefs.getBool(_kAjudaDispensada) ?? false;
     _aceiteDeColeta = _prefs.getBool(_kAceiteDeColeta);
-
-    _baloesVisiveis = _prefs.getBool(_kBaloesVisiveis) ?? true;
 
     _baloesTooltipDispensado =
         _prefs.getBool(_kBaloesTooltipDispensado) ?? false;
@@ -285,8 +278,6 @@ class Estado extends ChangeNotifier {
   }
 
   // --- balões de conversa ---------------------------------------------------- //
-
-  bool get baloesVisiveis => _baloesVisiveis;
 
   bool get baloesTooltipDispensado => _baloesTooltipDispensado;
 
@@ -547,6 +538,9 @@ class Estado extends ChangeNotifier {
       livros: novosLivros,
       dias: novosDias,
       criadoEm: atual.criadoEm,
+      // Uma edição de verdade: marca agora, para fundirPlanos saber que este
+      // lado é o mais novo quando o mesmo plano existir noutro aparelho.
+      atualizadoEm: DateTime.now(),
       compartilhado: atual.compartilhado,
       criadoPor: atual.criadoPor,
       incluirDevocionais: incluirDevocionais ?? atual.incluirDevocionais,
@@ -782,26 +776,43 @@ class Estado extends ChangeNotifier {
         }
         if (plano.id.isEmpty) continue;
         if (idsLocais.contains(plano.id)) {
-          // Mesmo id já existe: se o remoto marcou como compartilhado e o
-          // local ainda não, promove. Título/livros/dias são imutáveis após
-          // criação, então não há o que mesclar além do flag.
+          // Mesmo id já existe: `compartilhado` e `criadoPor` só andam para
+          // frente (uma vez true, ou uma vez atribuído, nunca voltam), então
+          // esses dois sempre promovem. Título, livros, dias e a config de
+          // devocionais podem ter sido editados (`atualizarPlano`) em
+          // qualquer um dos dois lados — o [PlanoDoUsuario.atualizadoEm] mais
+          // novo é quem decide, como um "último a escrever vence" comum.
           final idx = _planos.indexWhere((p) => p.id == plano.id);
           final local = _planos[idx];
-          if (!local.compartilhado && plano.compartilhado) {
-            _planos[idx] = local.compartilhadoComo(true);
-            mudou = true;
-          } else if (local.criadoPor == null && plano.criadoPor != null) {
-            _planos[idx] = PlanoDoUsuario(
-              id: local.id,
-              titulo: local.titulo,
-              livros: local.livros,
-              dias: local.dias,
-              criadoEm: local.criadoEm,
-              compartilhado: local.compartilhado,
-              criadoPor: plano.criadoPor,
-              incluirDevocionais: local.incluirDevocionais,
-              devocionalAntes: local.devocionalAntes,
-            );
+          final remotoMaisNovo = plano.atualizadoEm.isAfter(local.atualizadoEm);
+          final base = remotoMaisNovo ? plano : local;
+          final mesclado = PlanoDoUsuario(
+            id: local.id,
+            titulo: base.titulo,
+            livros: base.livros,
+            dias: base.dias,
+            criadoEm: local.criadoEm,
+            atualizadoEm: base.atualizadoEm,
+            compartilhado: local.compartilhado || plano.compartilhado,
+            criadoPor: local.criadoPor ?? plano.criadoPor,
+            incluirDevocionais: base.incluirDevocionais,
+            devocionalAntes: base.devocionalAntes,
+          );
+          final conteudoMudou =
+              remotoMaisNovo &&
+              (mesclado.titulo != local.titulo ||
+                  !_mesmaLista(mesclado.livros, local.livros) ||
+                  mesclado.dias != local.dias);
+          if (conteudoMudou ||
+              mesclado.compartilhado != local.compartilhado ||
+              mesclado.criadoPor != local.criadoPor ||
+              mesclado.incluirDevocionais != local.incluirDevocionais ||
+              mesclado.devocionalAntes != local.devocionalAntes) {
+            _planos[idx] = mesclado;
+            // Livros ou dias vieram de uma edição remota mais nova: os dias
+            // deste aparelho foram marcados sobre a montagem antiga (ver
+            // `atualizarPlano`, mesma limpeza para a edição local).
+            if (conteudoMudou) _planosLidos.remove(plano.id);
             mudou = true;
           }
           continue;
