@@ -204,4 +204,14 @@ void main() {
       ]);
     });
   });
+
+  test('posicaoNoCanon segue a ordem do canon e dá -1 para slug desconhecido',
+      () {
+    expect(posicaoNoCanon('genesis'), 0);
+    expect(posicaoNoCanon('apocalipse'), canon.length - 1);
+    for (var i = 0; i < canon.length; i++) {
+      expect(posicaoNoCanon(canon[i].slug), i);
+    }
+    expect(posicaoNoCanon('nao-existe'), -1);
+  });
 }

@@ -1,9 +1,11 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show FlutterError;
 import 'package:flutter/services.dart' show rootBundle;
 
 import 'canon.dart';
 import 'modelos.dart';
+import 'registro.dart';
 
 /// Leitura dos assets, com cache em memória.
 ///
@@ -67,7 +69,11 @@ class Conteudo {
       final dados = json.decode(cru) as Map<String, dynamic>;
       _livros[slug] = dados;
       return dados;
-    } catch (_) {
+    } on FlutterError {
+      // Asset ausente: livro ainda não traduzido, o estado esperado.
+      return null;
+    } catch (erro, pilha) {
+      _registrarAssetQuebrado('assets/biblia/$slug.json', erro, pilha);
       return null;
     } finally {
       _tentouLivro[slug] = true;
@@ -141,9 +147,7 @@ class Conteudo {
   Future<List<DiaDoPlano>> plano({bool bissexto = false}) async {
     final cacheado = bissexto ? _planoBissexto : _planoComum;
     if (cacheado != null) return cacheado;
-    final arquivo = bissexto
-        ? 'cronograma_bissexto.json'
-        : 'cronograma.json';
+    final arquivo = bissexto ? 'cronograma_bissexto.json' : 'cronograma.json';
     final cru = await rootBundle.loadString('assets/$arquivo');
     final dias = [
       for (final d in json.decode(cru) as List)
@@ -273,7 +277,14 @@ class Conteudo {
       _promessas = (json.decode(cru) as Map<String, dynamic>).map(
         (chave, valor) => MapEntry(chave, valor as Map<String, dynamic>),
       );
-    } catch (_) {
+    } on FlutterError {
+      _promessas = null;
+    } catch (erro, pilha) {
+      _registrarAssetQuebrado(
+        'assets/devocionais/promessas_de_deus.json',
+        erro,
+        pilha,
+      );
       _promessas = null;
     } finally {
       _tentouPromessas = true;
@@ -360,53 +371,70 @@ class Conteudo {
   /// capítulo. Vazio se [aquecerIndiceDeDevocionais] ainda não terminou, ou
   /// se nenhum devocional cita este capítulo — os dois casos são o mesmo
   /// "nada a mostrar" para quem monta um plano (ver [montarPlanoDeLeitura]).
-  List<ItemDeDevocional> devocionaisDoCapitulo(String livroSlug, int capitulo) =>
-      _indiceDeDevocionais?['$livroSlug-$capitulo'] ?? const [];
+  List<ItemDeDevocional> devocionaisDoCapitulo(
+    String livroSlug,
+    int capitulo,
+  ) => _indiceDeDevocionais?['$livroSlug-$capitulo'] ?? const [];
 
   /// Busca nos devocionais de Spurgeon (Manhã, Noite e Promessas de Deus).
   ///
-  /// Diferente de [buscar]: síncrona e sem teto. Os dois corpora somam 366 +
-  /// 366 registros já cacheados por completo depois da primeira leitura —
-  /// 2 MB, não os 4,7 MB da Bíblia inteira — então uma varredura completa
-  /// não pesa o bastante para precisar de stream nem de limite de resultados.
-  /// Sem paginação; adicionar se um dia ficar lento de ver na tela.
+  /// Diferente de [buscar]: sem stream e sem teto. Os dois corpora somam
+  /// 366 + 366 registros — 2 MB, não os 4,7 MB da Bíblia inteira — então uma
+  /// varredura completa não precisa de stream nem de limite de resultados,
+  /// desde que o texto já venha normalizado (ver [_devocionaisParaBusca]).
   Future<List<AchadoDevocional>> buscarDevocionais(String termo) async {
     final alvo = _normalizar(termo);
     if (alvo.length < 3) return const [];
     final expressao = _regexDePalavra(alvo);
+    return [
+      for (final item in await _devocionaisParaBusca())
+        if (expressao.hasMatch(item.titulo) || expressao.hasMatch(item.texto))
+          item.achado,
+    ];
+  }
 
+  /// Cada devocional com título e texto já normalizados, montado na primeira
+  /// busca. Normalizar os 2 MB de novo a cada busca custava umas 25 vezes a
+  /// varredura em si (medido na VM: ~120 ms contra 5 ms), num bloco único
+  /// que trava a interface — a busca da Bíblia não precisa disto porque vem
+  /// em stream, e a pausa entre um livro e outro deixa a tela respirar.
+  List<({AchadoDevocional achado, String titulo, String texto})>? _paraBusca;
+
+  Future<List<({AchadoDevocional achado, String titulo, String texto})>>
+  _devocionaisParaBusca() async {
+    final pronto = _paraBusca;
+    if (pronto != null) return pronto;
     final devocionais = await _carregarDevocionais();
     final promessas = await _carregarPromessas();
-    final achados = <AchadoDevocional>[];
+    final itens = <({AchadoDevocional achado, String titulo, String texto})>[];
 
-    void conferir(String leitura, String data, Map<String, dynamic> entrada) {
+    void incluir(String leitura, String data, Map<String, dynamic> entrada) {
       final titulo = entrada['titulo'] as String? ?? '';
       final texto = entrada['devocional'] as String? ?? '';
-      if (expressao.hasMatch(_normalizar(titulo)) ||
-          expressao.hasMatch(_normalizar(texto))) {
-        achados.add(
-          AchadoDevocional(
-            leitura: leitura,
-            data: data,
-            titulo: titulo,
-            texto: texto,
-          ),
-        );
-      }
+      itens.add((
+        achado: AchadoDevocional(
+          leitura: leitura,
+          data: data,
+          titulo: titulo,
+          texto: texto,
+        ),
+        titulo: _normalizar(titulo),
+        texto: _normalizar(texto),
+      ));
     }
 
     for (final MapEntry(key: data, value: dia) in devocionais.entries) {
       for (final periodo in Periodo.values) {
         final entrada = dia[periodo.chave] as Map<String, dynamic>?;
-        if (entrada != null) conferir(periodo.chave, data, entrada);
+        if (entrada != null) incluir(periodo.chave, data, entrada);
       }
     }
     if (promessas != null) {
       for (final MapEntry(key: data, value: entrada) in promessas.entries) {
-        conferir('promessas', data, entrada);
+        incluir('promessas', data, entrada);
       }
     }
-    return achados;
+    return _paraBusca = itens;
   }
 
   /// Introdução de um livro. Devolve nulo quando ainda não foi escrita.
@@ -416,7 +444,10 @@ class Conteudo {
     try {
       final cru = await rootBundle.loadString('assets/introducoes/$slug.json');
       introducao = Introducao.doJson(json.decode(cru) as Map<String, dynamic>);
-    } catch (_) {
+    } on FlutterError {
+      introducao = null;
+    } catch (erro, pilha) {
+      _registrarAssetQuebrado('assets/introducoes/$slug.json', erro, pilha);
       introducao = null;
     }
     _introducoes[slug] = introducao;
@@ -440,7 +471,10 @@ class Conteudo {
       final dados = json.decode(cru) as Map<String, dynamic>;
       _comentarios[slug] = dados;
       return dados;
-    } catch (_) {
+    } on FlutterError {
+      return null;
+    } catch (erro, pilha) {
+      _registrarAssetQuebrado('assets/comentarios/$slug.json', erro, pilha);
       return null;
     } finally {
       _tentouComentario[slug] = true;
@@ -498,6 +532,16 @@ class Conteudo {
       }
     }
   }
+
+  /// Asset ausente (`FlutterError`) é o estado esperado de conteúdo ainda
+  /// não escrito e fica em silêncio; qualquer outra falha — JSON quebrado,
+  /// esquema errado — é um arquivo publicado corrompido, que sem este
+  /// registro sumiria da tela do mesmo jeito, sem ninguém saber por quê.
+  static void _registrarAssetQuebrado(
+    String caminho,
+    Object erro,
+    StackTrace pilha,
+  ) => Registro.erro('Conteudo: $caminho', erro, pilha);
 
   /// Busca sem acento e sem caixa: procurar "coracao" precisa achar "coração".
   /// Pública porque a tela de busca usa a mesma normalização para realçar o termo

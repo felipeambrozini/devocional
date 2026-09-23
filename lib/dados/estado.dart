@@ -387,8 +387,8 @@ class Estado extends ChangeNotifier {
     // Ordem canônica, depois capítulo e versículo: a lista de favoritos lê como
     // uma Bíblia, não como um histórico de cliques.
     lista.sort((a, b) {
-      final ordemA = canon.indexWhere((l) => l.slug == a.livro);
-      final ordemB = canon.indexWhere((l) => l.slug == b.livro);
+      final ordemA = posicaoNoCanon(a.livro);
+      final ordemB = posicaoNoCanon(b.livro);
       if (ordemA != ordemB) return ordemA.compareTo(ordemB);
       if (a.capitulo != b.capitulo) return a.capitulo.compareTo(b.capitulo);
       return a.versiculo.compareTo(b.versiculo);

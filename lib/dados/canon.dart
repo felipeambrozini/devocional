@@ -29,14 +29,14 @@ class Livro {
 
 enum Testamento { antigo, novo }
 
-  // ignore: deprecated_member_use
-  final _digitosInicio = RegExp(r'^\d+');
-  // ignore: deprecated_member_use
-  final _faixaVersiculos = RegExp(r'^(\d+)(?:[-,](\d+))?');
-  // ignore: deprecated_member_use
-  final _separadorDeReferencias = RegExp(r'[,;]\s*|\s+e\s+');
-  // ignore: deprecated_member_use
-  final _numeroOuFaixa = RegExp(r'^\d+(-\d+)?$');
+// ignore: deprecated_member_use
+final _digitosInicio = RegExp(r'^\d+');
+// ignore: deprecated_member_use
+final _faixaVersiculos = RegExp(r'^(\d+)(?:[-,](\d+))?');
+// ignore: deprecated_member_use
+final _separadorDeReferencias = RegExp(r'[,;]\s*|\s+e\s+');
+// ignore: deprecated_member_use
+final _numeroOuFaixa = RegExp(r'^\d+(-\d+)?$');
 
 const _at = Testamento.antigo;
 const _nt = Testamento.novo;
@@ -247,6 +247,16 @@ final Map<String, Livro> _porSlug = {for (final l in canon) l.slug: l};
 
 Livro? livroPorSlug(String slug) => _porSlug[slug];
 
+final Map<String, int> _posicaoPorSlug = {
+  for (var i = 0; i < canon.length; i++) canon[i].slug: i,
+};
+
+/// Posição do livro na ordem canônica (0 = Gênesis), ou -1 para um slug
+/// desconhecido — o mesmo contrato do `canon.indexWhere` que substitui, sem
+/// varrer os 66 livros a cada chamada (a ordenação das marcações fazia duas
+/// varreduras por comparação).
+int posicaoNoCanon(String slug) => _posicaoPorSlug[slug] ?? -1;
+
 /// Nome de exibição a partir do slug, com o próprio slug como último recurso para
 /// que uma referência desconhecida apareça na tela em vez de sumir.
 String nomeDoLivro(String slug) => _porSlug[slug]?.nome ?? slug;
@@ -322,8 +332,12 @@ Livro? livroDaReferencia(String referencia) => _livroEPrefixo(referencia)?.$1;
   final (livro, prefixo) = encontrado;
   final partes = referencia.substring(prefixo.length + 1).split(':');
   if (partes.length != 2) return null;
-  final capitulo = int.tryParse(_digitosInicio.firstMatch(partes[0])?.group(0) ?? '');
-  final versiculo = int.tryParse(_digitosInicio.firstMatch(partes[1])?.group(0) ?? '');
+  final capitulo = int.tryParse(
+    _digitosInicio.firstMatch(partes[0])?.group(0) ?? '',
+  );
+  final versiculo = int.tryParse(
+    _digitosInicio.firstMatch(partes[1])?.group(0) ?? '',
+  );
   if (capitulo == null || versiculo == null) return null;
   return (livro, capitulo, versiculo);
 }
@@ -338,7 +352,9 @@ Livro? livroDaReferencia(String referencia) => _livroEPrefixo(referencia)?.$1;
   final (livro, prefixo) = encontrado;
   final partes = referencia.substring(prefixo.length + 1).split(':');
   if (partes.length != 2) return null;
-  final capitulo = int.tryParse(_digitosInicio.firstMatch(partes[0])?.group(0) ?? '');
+  final capitulo = int.tryParse(
+    _digitosInicio.firstMatch(partes[0])?.group(0) ?? '',
+  );
   final match = _faixaVersiculos.firstMatch(partes[1]);
   if (capitulo == null || match == null) return null;
   final deVersiculo = int.parse(match.group(1)!);

@@ -132,7 +132,7 @@ class BibliaControlador extends ChangeNotifier {
       return;
     }
     // Passa para o livro vizinho em vez de travar no fim do último capítulo.
-    final ordem = canon.indexWhere((l) => l.slug == livro);
+    final ordem = posicaoNoCanon(livro);
     final vizinho = ordem + passo;
     if (vizinho < 0 || vizinho >= canon.length) return;
     final novoLivro = canon[vizinho];

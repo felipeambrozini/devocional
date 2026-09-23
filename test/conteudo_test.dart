@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:felipe_ambrozini/dados/canon.dart';
 import 'package:felipe_ambrozini/dados/conteudo.dart';
 import 'package:felipe_ambrozini/dados/modelos.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_test/flutter_test.dart';
 
 /// Estes testes leem os assets do disco. Não são um teste de widget: são a garantia
@@ -360,6 +361,23 @@ void main() {
       await Conteudo.instancia.aquecerIndiceDeDevocionais();
       // Números não é citado por nenhum devocional nos assets atuais.
       expect(Conteudo.instancia.devocionaisDoCapitulo('numeros', 36), isEmpty);
+    });
+  });
+
+  group('asset que falta', () {
+    // Conteúdo ainda não escrito é o estado esperado e fica em silêncio; só
+    // um arquivo publicado quebrado (JSON inválido) vira registro de erro.
+    // Sem este teste, se o bundle lançasse outra coisa que não FlutterError
+    // para asset ausente, cada livro sem introdução encheria o Sentry.
+    test('não é registrado como erro', () async {
+      final linhas = <String>[];
+      final original = debugPrint;
+      debugPrint = (mensagem, {wrapWidth}) => linhas.add(mensagem ?? '');
+      addTearDown(() => debugPrint = original);
+
+      expect(await Conteudo.instancia.introducao('nao-existe'), isNull);
+      expect(await Conteudo.instancia.comentario('nao-existe', 1, 1), isNull);
+      expect(linhas.where((l) => l.contains('Conteudo:')), isEmpty);
     });
   });
 }
