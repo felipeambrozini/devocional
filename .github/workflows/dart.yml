@@ -16,7 +16,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # Fixado por SHA, como nos outros workflows: uma tag pode ser movida
+      # para outro commit, o SHA não.
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       # Projeto Flutter: precisa do Flutter SDK, não só do Dart, senão o
       # pub resolve falha em pacotes que exigem o SDK do Flutter (ex.:
@@ -24,6 +26,7 @@ jobs:
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
+          cache: true
 
       - name: Install dependencies
         run: flutter pub get

@@ -21,6 +21,13 @@ on:
 permissions:
   contents: read
 
+# Dois pushes seguidos distribuíam dois APKs aos testadores, o mais velho às
+# vezes chegando por último. O push mais novo cancela o build anterior, que
+# já nasceu desatualizado.
+concurrency:
+  group: distribute-android
+  cancel-in-progress: true
+
 jobs:
   distribute:
     name: Build & Distribute Android
@@ -34,6 +41,7 @@ jobs:
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
+          cache: true
 
       - name: Decode Keystore
         env:

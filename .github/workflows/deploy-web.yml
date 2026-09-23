@@ -35,7 +35,14 @@ jobs:
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
+          # Guarda o SDK e o pub-cache entre execuções: sem isto cada push
+          # baixava o Flutter inteiro de novo.
+          cache: true
       - run: flutter pub get
+      # O mesmo gate do dart.yml e do distribute-android.yml, antes de
+      # publicar: os workflows rodam em paralelo no mesmo push, então sem
+      # este passo um erro do analyzer não impedia o deploy do site.
+      - run: flutter analyze
       - run: flutter test
       # Preenche os placeholders de web/firebase-messaging-sw.js com os mesmos
       # secrets do Firebase usados no --dart-define abaixo — um service
