@@ -394,9 +394,8 @@ final _router = GoRouter(
     // as cartas pelo convite ao WhatsApp sem o recurso). Só o chat de cada
     // persona continua trancado por link direto — é ele que chama a API
     // paga, a mesma restrição que esconde os balões.
-    const caminhosDeChat = ['/charles-spurgeon', '/felipe-ambrozini'];
     if (!Recursos.conversas &&
-        caminhosDeChat.any((c) => state.uri.path.startsWith(c))) {
+        todasAsPersonas.any((p) => state.uri.path.startsWith('/${p.slug}'))) {
       return '/hoje';
     }
     return null;
@@ -415,40 +414,24 @@ final _router = GoRouter(
     // o chat ficaria sem o botão de voltar. A raiz abre o histórico da
     // persona (ver `lib/telas/historico.dart`); cada conversa é um filho,
     // `conversa` para uma nova e `conversa/:id` para uma específica.
-    GoRoute(
-      path: '/charles-spurgeon',
-      builder: (context, state) => TelaHistorico(persona: personaSpurgeon),
-      routes: [
-        GoRoute(
-          path: 'conversa',
-          builder: (context, state) => TelaChat(persona: personaSpurgeon),
-        ),
-        GoRoute(
-          path: 'conversa/:id',
-          builder: (context, state) => TelaChat(
-            persona: personaSpurgeon,
-            conversaId: state.pathParameters['id'],
+    for (final persona in todasAsPersonas)
+      GoRoute(
+        path: '/${persona.slug}',
+        builder: (context, state) => TelaHistorico(persona: persona),
+        routes: [
+          GoRoute(
+            path: 'conversa',
+            builder: (context, state) => TelaChat(persona: persona),
           ),
-        ),
-      ],
-    ),
-    GoRoute(
-      path: '/felipe-ambrozini',
-      builder: (context, state) => TelaHistorico(persona: personaFelipe),
-      routes: [
-        GoRoute(
-          path: 'conversa',
-          builder: (context, state) => TelaChat(persona: personaFelipe),
-        ),
-        GoRoute(
-          path: 'conversa/:id',
-          builder: (context, state) => TelaChat(
-            persona: personaFelipe,
-            conversaId: state.pathParameters['id'],
+          GoRoute(
+            path: 'conversa/:id',
+            builder: (context, state) => TelaChat(
+              persona: persona,
+              conversaId: state.pathParameters['id'],
+            ),
           ),
-        ),
-      ],
-    ),
+        ],
+      ),
     GoRoute(
       path: '/sobre',
       // Sobre não é aba: a navegação inferior tem seis destinos, e o caminho

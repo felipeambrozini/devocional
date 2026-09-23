@@ -151,21 +151,35 @@ class PlanoDoUsuario {
     return total;
   }
 
-  PlanoDoUsuario compartilhadoComo(bool novo) => PlanoDoUsuario(
+  /// Uma cópia com os campos dados trocados; os omitidos (null) ficam. O id
+  /// não entra: é a identidade do plano, não algo que se edita.
+  PlanoDoUsuario copyWith({
+    String? titulo,
+    List<String>? livros,
+    int? dias,
+    DateTime? criadoEm,
+    DateTime? atualizadoEm,
+    bool? compartilhado,
+    String? criadoPor,
+    bool? incluirDevocionais,
+    bool? devocionalAntes,
+  }) => PlanoDoUsuario(
     id: id,
-    titulo: titulo,
-    livros: livros,
-    dias: dias,
-    criadoEm: criadoEm,
-    // Virar compartilhado não é uma edição de conteúdo: preserva o instante,
-    // para não fazer este lado "ganhar" de uma edição de verdade mais nova
-    // no próximo fundirPlanos.
-    atualizadoEm: atualizadoEm,
-    compartilhado: novo,
-    criadoPor: criadoPor,
-    incluirDevocionais: incluirDevocionais,
-    devocionalAntes: devocionalAntes,
+    titulo: titulo ?? this.titulo,
+    livros: livros ?? this.livros,
+    dias: dias ?? this.dias,
+    criadoEm: criadoEm ?? this.criadoEm,
+    atualizadoEm: atualizadoEm ?? this.atualizadoEm,
+    compartilhado: compartilhado ?? this.compartilhado,
+    criadoPor: criadoPor ?? this.criadoPor,
+    incluirDevocionais: incluirDevocionais ?? this.incluirDevocionais,
+    devocionalAntes: devocionalAntes ?? this.devocionalAntes,
   );
+
+  /// Virar compartilhado não é uma edição de conteúdo: o [atualizadoEm]
+  /// fica, para este lado não "ganhar" de uma edição de verdade mais nova no
+  /// próximo `fundirPlanos`.
+  PlanoDoUsuario compartilhadoComo(bool novo) => copyWith(compartilhado: novo);
 
   Map<String, dynamic> paraJson() => {
     'id': id,

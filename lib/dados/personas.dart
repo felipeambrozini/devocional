@@ -172,3 +172,8 @@ const personaFelipe = Persona(
       'Responda em português, em primeira pessoa, como o próprio Felipe '
       'aconselhando, escrevendo e ajudando.',
 );
+
+/// As duas personas, na ordem da tela (Spurgeon à esquerda, Felipe à
+/// direita). As rotas de chat em `main.dart` saem desta lista: uma persona
+/// nova ganha histórico, conversa nova e conversa por id sem copiar rota.
+const todasAsPersonas = [personaSpurgeon, personaFelipe];

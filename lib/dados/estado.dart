@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -523,36 +524,24 @@ class Estado extends ChangeNotifier {
     final atual = _planos[i];
     final novosLivros = livros ?? atual.livros;
     final novosDias = dias ?? atual.dias;
-    final atualizado = PlanoDoUsuario(
-      id: atual.id,
-      titulo: titulo?.trim().isNotEmpty == true ? titulo!.trim() : atual.titulo,
+    final atualizado = atual.copyWith(
+      titulo: titulo?.trim().isNotEmpty == true ? titulo!.trim() : null,
       livros: novosLivros,
       dias: novosDias,
-      criadoEm: atual.criadoEm,
       // Uma edição de verdade: marca agora, para fundirPlanos saber que este
       // lado é o mais novo quando o mesmo plano existir noutro aparelho.
       atualizadoEm: DateTime.now(),
-      compartilhado: atual.compartilhado,
-      criadoPor: atual.criadoPor,
-      incluirDevocionais: incluirDevocionais ?? atual.incluirDevocionais,
-      devocionalAntes: devocionalAntes ?? atual.devocionalAntes,
+      incluirDevocionais: incluirDevocionais,
+      devocionalAntes: devocionalAntes,
     );
     _planos[i] = atualizado;
     final mudouODiaADia =
-        !_mesmaLista(novosLivros, atual.livros) || novosDias != atual.dias;
+        !listEquals(novosLivros, atual.livros) || novosDias != atual.dias;
     if (mudouODiaADia) _planosLidos.remove(id);
     notifyListeners();
     await _gravarPlanos();
     if (mudouODiaADia) await _gravarPlanosLidos();
     return atualizado;
-  }
-
-  bool _mesmaLista(List<String> a, List<String> b) {
-    if (a.length != b.length) return false;
-    for (var i = 0; i < a.length; i++) {
-      if (a[i] != b[i]) return false;
-    }
-    return true;
   }
 
   Future<void> removerPlano(String id) async {
@@ -777,22 +766,15 @@ class Estado extends ChangeNotifier {
           final local = _planos[idx];
           final remotoMaisNovo = plano.atualizadoEm.isAfter(local.atualizadoEm);
           final base = remotoMaisNovo ? plano : local;
-          final mesclado = PlanoDoUsuario(
-            id: local.id,
-            titulo: base.titulo,
-            livros: base.livros,
-            dias: base.dias,
+          final mesclado = base.copyWith(
             criadoEm: local.criadoEm,
-            atualizadoEm: base.atualizadoEm,
             compartilhado: local.compartilhado || plano.compartilhado,
             criadoPor: local.criadoPor ?? plano.criadoPor,
-            incluirDevocionais: base.incluirDevocionais,
-            devocionalAntes: base.devocionalAntes,
           );
           final conteudoMudou =
               remotoMaisNovo &&
               (mesclado.titulo != local.titulo ||
-                  !_mesmaLista(mesclado.livros, local.livros) ||
+                  !listEquals(mesclado.livros, local.livros) ||
                   mesclado.dias != local.dias);
           if (conteudoMudou ||
               mesclado.compartilhado != local.compartilhado ||

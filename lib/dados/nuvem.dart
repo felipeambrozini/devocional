@@ -387,10 +387,16 @@ class Nuvem extends ChangeNotifier {
       notifyListeners();
       if (usuario == null) return;
 
+      // Uma leitura só do documento para as quatro sincronias: cada uma pega
+      // o próprio campo dela, em vez de quatro idas ao Firestore por login.
+      // Seguro porque a Sincronia só chama `puxar` uma vez, em `comecar`.
+      final uid = usuario.uid;
+      final documento = _lerDocumento(uid);
+
       final sincronia = Sincronia(
         estado: estado,
-        puxar: () => _puxar(usuario.uid),
-        empurrar: (copia) => _empurrar(usuario.uid, copia),
+        puxar: () => _campo(documento, 'copia'),
+        empurrar: (copia) => _empurrarCampo(uid, 'copia', copia),
         aoMudarSituacao: notifyListeners,
       );
       _sincronia = sincronia;
@@ -400,8 +406,8 @@ class Nuvem extends ChangeNotifier {
         estado: estado,
         serializar: estado.serializarConversas,
         fundir: estado.fundirConversas,
-        puxar: () => _puxarConversas(usuario.uid),
-        empurrar: (copia) => _empurrarConversas(usuario.uid, copia),
+        puxar: () => _campo(documento, 'conversas'),
+        empurrar: (copia) => _empurrarCampo(uid, 'conversas', copia),
         aoMudarSituacao: notifyListeners,
       );
       _sincroniaDeConversas = sincroniaDeConversas;
@@ -428,8 +434,8 @@ class Nuvem extends ChangeNotifier {
             noite: hora(estado.minutosLembreteNoite),
           );
         },
-        puxar: () => _puxarLembretes(usuario.uid),
-        empurrar: (copia) => _empurrarLembretes(usuario.uid, copia),
+        puxar: () => _campo(documento, 'lembretes'),
+        empurrar: (copia) => _empurrarCampo(uid, 'lembretes', copia),
         aoMudarSituacao: notifyListeners,
       );
       _sincroniaDeLembretes = sincroniaDeLembretes;
@@ -439,25 +445,13 @@ class Nuvem extends ChangeNotifier {
         estado: estado,
         serializar: estado.serializarPlanos,
         fundir: estado.fundirPlanos,
-        puxar: () => _puxarPlanos(usuario.uid),
-        empurrar: (copia) => _empurrarPlanos(usuario.uid, copia),
+        puxar: () => _campo(documento, 'planos'),
+        empurrar: (copia) => _empurrarCampo(uid, 'planos', copia),
         aoMudarSituacao: notifyListeners,
       );
       _sincroniaDePlanos = sincroniaDePlanos;
       unawaited(sincroniaDePlanos.comecar());
     });
-  }
-
-  Future<String?> _puxar(String uid) async {
-    final doc = await FirebaseFirestore.instance
-        .collection(_colecao)
-        .doc(uid)
-        .get();
-    final copia = doc.data()?['copia'];
-    if (copia == null) return null;
-    // Guardado como mapa no Firestore, não como string: assim a cópia se lê
-    // no console do Firebase quando alguém disser "sumiu uma nota".
-    return json.encode(copia);
   }
 
   @override
@@ -470,61 +464,32 @@ class Nuvem extends ChangeNotifier {
     super.dispose();
   }
 
-  Future<void> _empurrar(String uid, String copiaJson) =>
-      FirebaseFirestore.instance.collection(_colecao).doc(uid).set({
-        'copia': json.decode(copiaJson),
-        'atualizadoEm': FieldValue.serverTimestamp(),
-        // Sem merge os dois domínios se apagariam um ao outro: a cópia e as
-        // conversas escrevem no mesmo documento, e o `set` sem opções
-        // substituiria o documento inteiro.
-      }, SetOptions(merge: true));
-
-  Future<String?> _puxarConversas(String uid) async {
+  Future<Map<String, dynamic>?> _lerDocumento(String uid) async {
     final doc = await FirebaseFirestore.instance
         .collection(_colecao)
         .doc(uid)
         .get();
-    final conversas = doc.data()?['conversas'];
-    if (conversas == null) return null;
-    return json.encode(conversas);
+    return doc.data();
   }
 
-  Future<void> _empurrarConversas(String uid, String copiaJson) =>
-      FirebaseFirestore.instance.collection(_colecao).doc(uid).set({
-        'conversas': json.decode(copiaJson),
-        'atualizadoEm': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-
-  Future<String?> _puxarLembretes(String uid) async {
-    final doc = await FirebaseFirestore.instance
-        .collection(_colecao)
-        .doc(uid)
-        .get();
-    final lembretes = doc.data()?['lembretes'];
-    if (lembretes == null) return null;
-    return json.encode(lembretes);
+  /// O [campo] do documento como JSON, ou null se a conta ainda não o tem.
+  /// Guardado como mapa no Firestore, não como string: assim a cópia se lê
+  /// no console do Firebase quando alguém disser "sumiu uma nota".
+  Future<String?> _campo(
+    Future<Map<String, dynamic>?> documento,
+    String campo,
+  ) async {
+    final valor = (await documento)?[campo];
+    return valor == null ? null : json.encode(valor);
   }
 
-  Future<void> _empurrarLembretes(String uid, String copiaJson) =>
+  Future<void> _empurrarCampo(String uid, String campo, String copiaJson) =>
       FirebaseFirestore.instance.collection(_colecao).doc(uid).set({
-        'lembretes': json.decode(copiaJson),
+        campo: json.decode(copiaJson),
         'atualizadoEm': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-
-  Future<String?> _puxarPlanos(String uid) async {
-    final doc = await FirebaseFirestore.instance
-        .collection(_colecao)
-        .doc(uid)
-        .get();
-    final planos = doc.data()?['planos'];
-    if (planos == null) return null;
-    return json.encode(planos);
-  }
-
-  Future<void> _empurrarPlanos(String uid, String copiaJson) =>
-      FirebaseFirestore.instance.collection(_colecao).doc(uid).set({
-        'planos': json.decode(copiaJson),
-        'atualizadoEm': FieldValue.serverTimestamp(),
+        // Sem merge os domínios se apagariam uns aos outros: a cópia, as
+        // conversas, os lembretes e os planos escrevem no mesmo documento,
+        // e o `set` sem opções substituiria o documento inteiro.
       }, SetOptions(merge: true));
 
   /// Chamar como tearoff no `onTap`, nunca dentro de `() async { ... }`: o
