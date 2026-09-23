@@ -644,7 +644,8 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
   (gitignored) e entram via `dotenv.env['CHAVE']` no `firebase_options.dart`.
   O CI usa `--dart-define-from-file=.env.json` ou secrets do GitHub.
   As chaves são públicas por desenho: quem protege os dados são as regras do
-  Firestore (`firestore.rules`, publicado à mão) e a lista de domínios autorizados.
+  Firestore (`firestore.rules`, publicado pelo CI a cada push) e a lista de
+  domínios autorizados.
 - **Nome do pacote** trocado para `com.felipeambrozini.devocional` (09/08/2026),
   refletido no `android/app/build.gradle.kts`.
 - **FAQ e Política de privacidade** (20/08/2026): `lib/telas/faq.dart` e
@@ -774,10 +775,21 @@ desinstalar antes de instalar de novo.
 ## Publicação na web
 
 O deploy é pelo GitHub Actions (`.github/workflows/deploy-web.yml`), com o
-Flutter fixo em 3.44.9, para o Firebase Hosting — e junto, `firestore:rules`
-(`firebase deploy --only hosting,firestore:rules`), então uma mudança em
-`firestore.rules` só vale a partir do próximo deploy da web, não é preciso
-publicar à mão no console. O site mora em
+Flutter fixo em 3.44.9, para o Firebase Hosting — e junto, as regras e as
+functions (`firebase deploy --only hosting,firestore:rules,storage,functions`),
+então uma mudança em `firestore.rules` ou `storage.rules` vai para produção no
+próximo push, sem publicar à mão no console. Por isso, antes de mexer nelas,
+rode os testes de regras no emulador (precisa de Java):
+
+```bash
+npm --prefix test_regras install
+```
+
+```bash
+npm --prefix test_regras test
+```
+
+O site mora em
 `www.felipeambrozini.com.br/devocional/` (um nível abaixo da raiz do domínio; o
 build vai para `public/devocional` e o rewrite em `firebase.json` cuida do
 SPA). O build usa `--base-href /devocional/` e as chaves de API vêm dos

@@ -3,8 +3,9 @@ rules_version = '2';
 // Regras do Firestore para a conta na nuvem do app devocional. Ver
 // lib/dados/nuvem.dart para o código que lê e grava aqui.
 //
-// Publicadas à mão no console do Firebase (Firestore Database > Regras), ou
-// com `firebase deploy --only firestore:rules`. Este arquivo é a fonte da
+// Publicadas a cada push na main pelo CI (.github/workflows/deploy-web.yml,
+// `firebase deploy --only ...,firestore:rules,...`) — ou seja, qualquer
+// mudança aqui vai para produção no próximo push. Este arquivo é a fonte da
 // verdade; não editar o console e este arquivo em separado.
 //
 // Contrato do documento usuarios/{uid} (ver nuvem.dart):
@@ -102,9 +103,12 @@ service cloud.firestore {
 
       // Conversas: mapa de personas com teto de chaves. O submapa `apagadas`
       // (lápides de exclusão) também é tipado e limitado quando presente.
+      // `is map` antes de `.size()`: `.size()` também responde para string
+      // e lista, e sem o tipo um cliente torto gravava uma string no campo
+      // — o próprio app quebrava ao ler o documento de volta.
       function conversasValidas() {
         let cs = request.resource.data.conversas;
-        return cs.size() < 5000 &&
+        return cs is map && cs.size() < 5000 &&
             (!('apagadas' in cs) ||
                 (cs.apagadas is map && cs.apagadas.size() < 5000));
       }
@@ -224,7 +228,20 @@ service cloud.firestore {
                 request.resource.data.devocionalAntes is bool);
       }
 
+      // Os campos são exatamente os que `PlanosNaNuvem.compartilhar` grava:
+      // sem o hasOnly, a criação aceitava qualquer campo extra até o teto de
+      // 1 MiB. Os dois bools de devocionais são opcionais (documentos de
+      // antes deles não os têm), mas quando vêm precisam ser bool — antes só
+      // a edição checava o tipo.
       allow create: if google() &&
+          request.resource.data.keys().hasOnly([
+            'titulo', 'livros', 'dias', 'incluirDevocionais',
+            'devocionalAntes', 'criadoPor', 'criadoEm', 'participantes'
+          ]) &&
+          (!('incluirDevocionais' in request.resource.data) ||
+              request.resource.data.incluirDevocionais is bool) &&
+          (!('devocionalAntes' in request.resource.data) ||
+              request.resource.data.devocionalAntes is bool) &&
           request.resource.data.criadoPor == request.auth.uid &&
           request.resource.data.criadoEm is timestamp &&
           request.resource.data.titulo is string &&
@@ -234,6 +251,11 @@ service cloud.firestore {
           request.resource.data.dias is int &&
           request.resource.data.dias >= 1 && request.resource.data.dias <= 730 &&
           'participantes' in request.resource.data &&
+          request.resource.data.participantes is map &&
+          // hasOnly sozinho aceitava `{}` (o vazio cabe em qualquer lista),
+          // e minhaEntradaValida aceita a entrada ausente (é o "sair"): o
+          // plano nascia sem o próprio criador, que não conseguia mais lê-lo.
+          request.auth.uid in request.resource.data.participantes &&
           request.resource.data.participantes.keys()
               .hasOnly([request.auth.uid]) &&
           minhaEntradaValida(request.auth.uid);
@@ -300,7 +322,10 @@ service cloud.firestore {
       // dado aqui é o de menor risco do banco (token + horário; sem nada de
       // usuário; token tem ~140 caracteres, inviável de adivinhar), então o
       // teto de abuso — reescrever o lembrete de um token conhecido — é
-      // aceitável. Todas as outras coleções continuam exigindo App Check.
+      // aceitável. Nenhuma outra regra deste arquivo checa `request.app`:
+      // nas outras coleções a proteção é o login Google e o dono do
+      // documento; exigir App Check nelas depende só da imposição no
+      // console, que vale para o serviço inteiro, não por coleção.
       allow create, update: if valido();
       // get, não read: sem 'list', quem passar por aqui não colhe os tokens
       // de todo mundo; o app só faz .doc(token).get().

@@ -83,6 +83,9 @@ docs/
 functions/node_modules/
 functions/lib/
 
+# Testes de regras do Firebase (test_regras/)
+test_regras/node_modules/
+
 
 
 sentry.properties

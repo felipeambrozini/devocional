@@ -4,8 +4,9 @@ rules_version = '2';
 // Nuvem.atualizarFoto em lib/dados/nuvem.dart para o código que grava aqui.
 //
 // Publicadas junto com firestore.rules a cada push na main
-// (.github/workflows/deploy-web.yml, `--only ...,storage:rules,...`). Este
-// arquivo é a fonte da verdade; não editar o console em separado.
+// (.github/workflows/deploy-web.yml, `--only ...,storage,...` — "storage",
+// não "storage:rules"; o workflow explica por quê). Este arquivo é a fonte
+// da verdade; não editar o console em separado.
 service firebase.storage {
   match /b/{bucket}/o {
     // Um arquivo por conta, nomeado pelo próprio uid — só o dono grava.
@@ -15,12 +16,22 @@ service firebase.storage {
     // A linguagem de regras não aceita wildcard + sufixo literal no mesmo
     // segmento ("{uid}.jpg" não compila) — captura o nome inteiro e compara.
     match /fotos_de_perfil/{arquivo} {
+      function dono() {
+        return request.auth != null &&
+            arquivo == request.auth.uid + '.jpg' &&
+            request.auth.token.firebase.sign_in_provider == 'google.com';
+      }
+
       allow read: if true;
-      allow write: if request.auth != null &&
-          arquivo == request.auth.uid + '.jpg' &&
-          request.auth.token.firebase.sign_in_provider == 'google.com' &&
+      // create/update e delete separados: num delete não existe
+      // `request.resource`, e um `allow write` único com as checagens de
+      // tamanho e tipo abaixo negava o delete do próprio dono — o
+      // `Nuvem.removerFoto` lançava permissão negada para quem já tinha
+      // enviado uma foto.
+      allow create, update: if dono() &&
           request.resource.size < 5 * 1024 * 1024 &&
           request.resource.contentType == 'image/jpeg';
+      allow delete: if dono();
     }
     // Áudios pré-gerados da voz (Bíblia, devocional, introduções) — ver
     // lib/dados/voz.dart (Voz._urlParaChave). Leitura pública, escrita só

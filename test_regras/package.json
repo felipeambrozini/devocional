@@ -1,0 +1,13 @@
+{
+  "name": "test-regras",
+  "private": true,
+  "description": "Testes de firestore.rules e storage.rules no emulador do Firebase",
+  "type": "module",
+  "scripts": {
+    "test": "cd .. && firebase emulators:exec --only firestore,storage --project demo-regras \"node test_regras/regras.test.mjs\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "firebase": "^12.19.0"
+  }
+}
