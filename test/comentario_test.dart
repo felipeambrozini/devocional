@@ -75,7 +75,7 @@ void main() {
               greaterThan(20),
               reason: '$referencia tem texto curto demais',
             );
-            for (final proibido in ['—', '–', '--']) {
+            for (final proibido in ['—', '–', '--', ' -', '- ']) {
               expect(
                 corpo,
                 isNot(contains(proibido)),

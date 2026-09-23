@@ -72,7 +72,7 @@ void main() {
       test('não usa travessão em lugar nenhum', () {
         // Restrição explícita do formato: só vírgula, ponto e vírgula e ponto.
         for (final (titulo, corpo) in introducao.secoes) {
-          for (final proibido in ['—', '–', '--']) {
+          for (final proibido in ['—', '–', '--', ' -', '- ']) {
             expect(
               corpo,
               isNot(contains(proibido)),

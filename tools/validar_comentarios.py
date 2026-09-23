@@ -13,7 +13,7 @@ Cada problema sai no formato:  <slug> <cap>:<ver>  [TIPO]  detalhe
 Verificacoes (fonte: skill spurgeon-comentarios):
   - estrutura espelhada em assets/biblia/<slug>.json (capitulo/versiculo existem,
     slug e nome do livro casam com a Biblia interna)
-  - sem travessao (em dash, en dash, duplo hifen)
+  - sem travessao (em dash, en dash, duplo hifen, hifen solto)
   - sem caracteres CJK/cirilicos (corrupcao de geracao)
   - sem markdown, sem quebra de linha (paragrafo unico)
   - sem frases de molde genericas (lote "template")
@@ -96,7 +96,7 @@ LIXO_TOKENS = {
 
 CJK = re.compile(r"[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]")
 CIRILICO = re.compile(r"[\u0400-\u04ff]")
-TRAVESSAO = re.compile(r"\u2014|\u2015|\u2013|--")
+TRAVESSAO = re.compile(r"\u2014|\u2015|\u2013|--| -|- ")
 MARKDOWN = re.compile(r"\*\*|(^|\n)\s*#+")
 SALVE_ERRO = re.compile(r"\ba? ?salve \u00e9", re.IGNORECASE)
 SALVE_AVISO = re.compile(r"\bsalve\b", re.IGNORECASE)
@@ -139,7 +139,7 @@ def valida_texto(texto: str):
     if "\n" in limpo:
         erros.append("[QUEBRA-LINHA] mais de um paragrafo")
     if TRAVESSAO.search(texto):
-        erros.append("[TRAVESSAO] em dash/en dash/duplo hifen proibido")
+        erros.append("[TRAVESSAO] em dash/en dash/duplo hifen/hifen solto proibido")
     if CJK.search(texto) or CIRILICO.search(texto):
         erros.append("[CARACTERES-ESTRANHOS] CJK/cirilico no meio do texto")
     if MARKDOWN.search(texto):
