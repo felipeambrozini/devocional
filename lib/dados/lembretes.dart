@@ -14,6 +14,7 @@ import 'package:timezone/timezone.dart' as tz;
 
 import 'estado.dart';
 import 'modelos.dart' show ModoDoTema;
+import 'recursos.dart';
 import 'registro.dart';
 
 /// Chave pública do Web Push (Console do Firebase > Cloud Messaging > Web
@@ -183,6 +184,13 @@ Future<void> _mostrarPush(Map<String, dynamic> dados) async {
   final titulo = dados['titulo'] as String?;
   final corpo = dados['corpo'] as String?;
   if (chave == null || titulo == null || corpo == null) return;
+
+  // Push chegou, mas a leitura pode ter sido desligada no painel depois
+  // de o token ter sido registrado: não exibe o que o admin tirou do ar.
+  if (chave == 'leitura' && !Recursos.cronograma) return;
+  if (chave == 'manha' && !Recursos.devocionalManha) return;
+  if (chave == 'noite' && !Recursos.devocionalNoite) return;
+  if (chave == 'promessas' && !Recursos.promessas) return;
 
   final agora = DateTime.now();
   final alvo = int.tryParse('${dados['minutos']}');
@@ -587,30 +595,41 @@ class LembretesReais implements Lembretes {
       hora.minute + atrasoDoFallbackMinutos,
     );
 
-    await _armar(
-      id: _idAlarmeManha,
-      chave: 'manha',
-      titulo: 'Devocional da Manhã',
-      quando: as(manha),
-    );
-    await _armar(
-      id: _idAlarmePromessas,
-      chave: 'promessas',
-      titulo: 'Promessas de Deus',
-      quando: as(promessas),
-    );
-    await _armar(
-      id: _idAlarmeLeitura,
-      chave: 'leitura',
-      titulo: 'Leitura do Dia',
-      quando: as(leitura),
-    );
-    await _armar(
-      id: _idAlarmeNoite,
-      chave: 'noite',
-      titulo: 'Devocional da Noite',
-      quando: as(noite),
-    );
+    // Reserva local só para o que está ligado: sem isto, um alarme
+    // dispararia e levaria a uma tela com o cartão de "desativada
+    // temporariamente", o mesmo beco que `_abrirLeituraDoLembrete` evita.
+    if (Recursos.devocionalManha) {
+      await _armar(
+        id: _idAlarmeManha,
+        chave: 'manha',
+        titulo: 'Devocional da Manhã',
+        quando: as(manha),
+      );
+    }
+    if (Recursos.promessas) {
+      await _armar(
+        id: _idAlarmePromessas,
+        chave: 'promessas',
+        titulo: 'Promessas de Deus',
+        quando: as(promessas),
+      );
+    }
+    if (Recursos.cronograma) {
+      await _armar(
+        id: _idAlarmeLeitura,
+        chave: 'leitura',
+        titulo: 'Leitura do Dia',
+        quando: as(leitura),
+      );
+    }
+    if (Recursos.devocionalNoite) {
+      await _armar(
+        id: _idAlarmeNoite,
+        chave: 'noite',
+        titulo: 'Devocional da Noite',
+        quando: as(noite),
+      );
+    }
   }
 
   Future<void> _armar({

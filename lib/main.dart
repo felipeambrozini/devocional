@@ -63,13 +63,26 @@ final navigatorKey = GlobalKey<NavigatorState>();
 /// abre no dia de hoje sozinho) e Devocional, na leitura certa, para as
 /// outras três. `chave` é "manha", "promessas", "leitura" ou "noite" — ver o
 /// contrato em `lib/dados/lembretes.dart`.
+///
+/// Respeita os interruptores do painel: tocar num lembrete de leitura
+/// desligada não abre a tela desativada (que mostra o cartão de
+/// "desativada temporariamente" em `TelaDevocional`) — cai na Hoje, como se
+/// o lembrete não existisse, em vez de levar a um beco sem conteúdo.
 void _abrirLeituraDoLembrete(String chave) {
   if (chave == 'leitura') {
+    if (!Recursos.cronograma) {
+      _router.go('/hoje');
+      return;
+    }
     _router.go('/plano');
     return;
   }
   final leitura = Leitura.values.where((l) => l.name == chave).firstOrNull;
   if (leitura == null) return;
+  if (!leituraAtiva(leitura)) {
+    _router.go('/hoje');
+    return;
+  }
   _router.go('/${leitura.name}');
 }
 

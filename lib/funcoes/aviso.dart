@@ -83,7 +83,7 @@ void mostrarErroNo(
 /// O corpo comum dos quatro avisos.
 ///
 /// O ScaffoldMessenger tem um timer próprio para isso, mas ele nunca nasce
-/// quando o SnackBar tem ação (bug do Flutter 3.44.9, reproduzido em teste):
+/// quando o SnackBar tem ação (bug do Flutter, reproduzido em teste):
 /// um "Desfazer" ou um "Tentar de novo" deixava o aviso na tela para sempre.
 /// Então o fechamento sai daqui, e o `closed` do aviso garante que um fechar
 /// tardio não leva junto um aviso mais novo mostrado no meio do caminho.

@@ -49,17 +49,19 @@ mesmo código).
 - **Conta Google (Web, Android e iOS)**: opcional — favoritos, notas, progresso e
   planos sobem sozinhos para a conta de quem entrar, para não perder nada se o
   navegador limpar o armazenamento e para o mesmo plano aparecer no celular e
-  na web. O Android e iOS também sincronizam; ver `nuvemSuportada` em `lib/dados/nuvem.dart`.
-  Quem entra vê o próprio avatar (foto da conta Google, ou a inicial do nome
-  sem foto) na saudação da aba Hoje, e pode trocar a foto tocando nele
+  na web. Quem entra vê o próprio avatar (foto da conta Google, ou a inicial do
+  nome sem foto) na saudação da aba Hoje, e pode trocar a foto tocando nele
   (câmera ou galeria).
 - **Busca** no texto da Bíblia e nos devocionais, em duas abas.
 - **Tamanho do texto** ajustável e **tema claro ou escuro**, pela barra do leitor
   ou do devocional. O padrão segue o aparelho, e dá para fixar um dos dois.
-- **Lembrete diário**, opcional, em Android e web: notificação de Manhã e
-  Promessas de Deus e outra de Noite, cada uma num horário ajustável, com o
-  versículo do dia no corpo da notificação, abrindo a leitura certa ao ser
-  tocada.
+- **Lembrete diário**, opcional, em Android e web: 4 horários ajustáveis —
+  Manhã, Noite, Promessas de Deus e Leitura do Dia (cronograma) —, push de uma
+  Cloud Function agendada mais uma reserva local no Android. A notificação traz
+  só a referência do dia ("Venha ler a reflexão para sua manhã em Gênesis
+  1:2"), sem o versículo no corpo (recusado de propósito, ver abaixo), e abre
+  a leitura certa ao ser tocada — se a leitura estiver desligada no painel,
+  cai na Hoje.
 - Layout responsivo: barra de navegação embaixo no celular, trilho lateral em
   janela larga (a partir de 720px), coluna de leitura com largura confortável
   e centralizada no desktop.
@@ -73,7 +75,7 @@ mesmo código).
 
 | Aba | Conteúdo |
 |---|---|
-| Hoje | Saudação, prévia das três leituras do dia, leitura do cronograma, progresso do ano, atalho para continuar de onde parou |
+| Hoje | Saudação, prévia das três leituras do dia, leitura do cronograma, progresso do ano |
 | Bíblia | Leitor por capítulo, os 66 livros, introdução de cada um |
 | Devocional | Manhã, Noite e Promessas de Deus, com calendário |
 | Plano | Cronograma anual por mês, com marcação de lido; Meus Planos (personalizados e compartilhados) |
@@ -99,19 +101,20 @@ plano compartilhado.
   planos), igual em todas as plataformas, sem banco. Quem entra com a
   conta Google (Android, iOS ou web) também espelha favoritos, notas, progresso
   e planos num documento do Firestore — ver a conta na nuvem, acima.
-- `share_plus` para compartilhar um versículo. O lembrete diário é híbrido,
-  Android e web (ver `lembretesSuportados` em `lib/dados/lembretes.dart`):
-  push de uma Cloud Function agendada via `firebase_messaging`, mais
-  `flutter_local_notifications` + `flutter_timezone` + `timezone` para o
-  alarme local de reserva no Android, no fuso detectado — ver a seção
-  Lembretes diários abaixo.
+- `share_plus` para compartilhar um versículo ou exportar a cópia. O lembrete
+  diário é híbrido, Android e web (ver `lembretesSuportados` em
+  `lib/dados/lembretes.dart`): push de uma Cloud Function agendada via
+  `firebase_messaging`, mais `flutter_local_notifications` + `flutter_timezone` +
+  `timezone` para o alarme local de reserva no Android, no fuso detectado — ver
+  a seção Lembretes diários abaixo. O lembrete respeita os interruptores do
+  painel: leitura desligada não dispara nem abre.
 - `go_router` para as rotas por aba, com `StatefulShellRoute.indexedStack` (a
   `Moldura` continua preservando a rolagem e o capítulo aberto de cada aba,
   como o `IndexedStack` antigo fazia).
 - `firebase_core` + `firebase_auth` + `cloud_firestore` para a conta na
-  nuvem, só chamados quando `nuvemSuportada` (`lib/dados/nuvem.dart`).
-  `firebase_storage` guarda a foto de perfil trocada pelo avatar da Hoje;
-  `image_picker` escolhe a foto na câmera ou na galeria.
+  nuvem (sempre disponível, sem gating por plataforma). `firebase_storage`
+  guarda a foto de perfil trocada pelo avatar da Hoje; `image_picker` escolhe
+  a foto na câmera ou na galeria.
 - `http` fala direto com a Gemini API (`gemini-3.5-flash-lite`, tier gratuito;
   nome fixo, não o alias `gemini-flash-latest`, que pode migrar para fora do
   grátis sem aviso) para o chat das duas personas (`lib/dados/ia.dart`). Chave
@@ -156,9 +159,12 @@ test/          testes de unidade e de widget
 
 ## Conteúdo
 
-Todo o conteúdo já está carregado e verificado. Não há tarefa de conteúdo
-pendente, e a infraestrutura de tradução (pasta `tools/`) foi removida do
-repositório: a BKJ e os devocionais não serão traduzidos de novo.
+Todo o conteúdo bíblico e devocional já está carregado e verificado; os
+comentários de Spurgeon por versículo seguem em escrita, verso a verso, pelos
+66 livros. A geração de áudio e os scripts de validação moram em `tools/`
+(`icones.py`, `validar_comentarios.py`, `detectar_molde.py`,
+`validar_audio.py`) — o pacote histórico `audio_gen/` (geração de TTS) ficou
+fora do repo em `C:\Users\USER\audio_gen_*` e não é versionado aqui.
 
 | Conteúdo | Situação |
 |---|---|
@@ -227,11 +233,11 @@ motivo novo.
 - **Lembretes em iOS** — recusado por ora: o lembrete híbrido (push + reserva
   local) já cobre Android e web (ver acima e "Lembretes diários" abaixo);
   iOS exigiria a chave APNs que este projeto não tem cadastrada no Console.
-- **Offline de verdade na web** — investigado e recusado: o Flutter 3.44
-  removeu o cache automático do service worker gerado e o CanvasKit carrega de
-  CDN por padrão; fazer direito exigiria um service worker próprio contra um
-  mecanismo que o próprio Flutter avisa que vai descontinuar. Não reabrir sem
-  o Flutter trazer de volta um jeito suportado.
+- **Offline de verdade na web** — investigado e recusado: o Flutter removeu o
+  cache automático do service worker gerado e o CanvasKit carrega de CDN por
+  padrão; fazer direito exigiria um service worker próprio contra um mecanismo
+  que o próprio Flutter avisa que vai descontinuar. Não reabrir sem o Flutter
+  trazer de volta um jeito suportado.
 - **Sincronização entre aparelhos** — a cópia por exportar/importar cobria o
   risco real (perder as notas). Reaberta em 09/08/2026 quando o motivo mudou
   (o app passou a ser compartilhado com dezenas de pessoas): a conta Google
@@ -402,11 +408,11 @@ motivo novo.
 - **O `index.html` é editado à mão, e o `web: false` da splash é de propósito**:
   a abertura da web já está resolvida à mão; deixar o gerador mexer ali
   sobrescreveria isso.
-- **A versão do Flutter é fixa (`3.44.9`), não `stable`** (desde 08/08/2026),
-  porque uma release nova podia quebrar o deploy web sem nenhuma mudança no
-  repositório. Fixado em `.fvmrc` e no `deploy-web.yml`
-  (`subosito/flutter-action@v2`, `flutter-version: 3.44.9`). **Atualizar nos
-  dois lugares ao mesmo tempo** e rodar a suíte local antes de comitar.
+- **A versão do Flutter segue o canal `stable`** (`.fvmrc` com `"flutter":
+  "stable"` e `subosito/flutter-action@v2` com `flutter-version: stable`):
+  a escolha deliberada é acompanhar o estável mais recente, não travar numa
+  patch antiga. **Atualizar o `.fvmrc` quando o `stable` local mudar** e rodar
+  a suíte antes de comitar.
 - **`AreaDeSelecaoComCompartilhar` (`lib/widgets/area_de_selecao.dart`, 20/08/2026)
   envolve `SelectionArea` e acrescenta "Compartilhar" ao menu de seleção**,
   usada no Devocional e, na web, no corpo aberto do cartão de introdução do
@@ -734,10 +740,10 @@ flutter run
 ```
 
 Para o app ter acesso à nuvem (conta Google) e à IA, crie um `.env.json` com
-as chaves (baseado no `.env.json` do repositório). O VS Code carrega no F5 via
-`--dart-define-from-file=.env.json` (`.vscode/launch.json`). Sem ele, o app
-abre normal e degrada só nesses recursos. O SDK é gerido pelo FVM (ver
-`.fvmrc`), na versão fixa 3.44.9.
+as chaves (baseado no `.env.example.json` da raiz — copie e preencha). O VS
+Code carrega no F5 via `--dart-define-from-file=.env.json`
+(`.vscode/launch.json`). Sem ele, o app abre normal e degrada só nesses
+recursos. O SDK é gerido pelo FVM (ver `.fvmrc`), canal `stable`.
 
 ## Testes e análise
 
@@ -754,11 +760,11 @@ flutter build apk --dart-define-from-file=.env.json
 # Web
 flutter build web --dart-define-from-file=.env.json
 ```
-(O `.env.json` deve conter todas as chaves: `FIREBASE_API_KEY_WEB`,
-`FIREBASE_API_KEY_ANDROID`, `FIREBASE_API_KEY_IOS`, `GEMINI_API_KEY_WEB`,
-`GEMINI_API_KEY_ANDROID`, `AUDIO_BASE_URL`,
-`SENTRY_DSN`, `EMAIL_DE_CONTATO`, etc. — ver SECURITY.md §3.1 para a lista
-completa e o motivo de cada uma.)
+(O `.env.json` deve conter todas as chaves — ver `.env.example.json` na raiz
+para a lista completa e `SECURITY.md §3.1` para o motivo de cada uma:
+`FIREBASE_API_KEY_*`, `GEMINI_API_KEY_*`, `AUDIO_BASE_URL`, `FCM_VAPID_KEY`,
+`RECAPTCHA_V3_SITE_KEY`, `SENTRY_DSN`, `EMAIL_DE_CONTATO`, `WHATSAPP_NUMERO`,
+etc.)
 
 Ícone do app, favicon e tela de abertura são gerados a partir das fontes em
 `assets/icone/`; nunca editados à mão:
@@ -784,10 +790,11 @@ desinstalar antes de instalar de novo.
 ## Publicação na web
 
 O deploy é pelo GitHub Actions (`.github/workflows/deploy-web.yml`), com o
-Flutter fixo em 3.44.9, para o Firebase Hosting — e junto, as regras e as
-functions (`firebase deploy --only hosting,firestore:rules,storage,functions`),
-então uma mudança em `firestore.rules` ou `storage.rules` vai para produção no
-próximo push, sem publicar à mão no console. Por isso, antes de mexer nelas,
+Flutter no canal `stable` (ver `.fvmrc`), para o Firebase Hosting — e junto,
+as regras e as functions
+(`firebase deploy --only hosting,firestore:rules,storage,functions`), então uma
+mudança em `firestore.rules` ou `storage.rules` vai para produção no próximo
+push, sem publicar à mão no console. Por isso, antes de mexer nelas,
 rode os testes de regras no emulador (precisa de Java):
 
 ```bash
@@ -799,14 +806,15 @@ npm --prefix test_regras test
 ```
 
 O site mora em
-`www.felipeambrozini.com.br/devocional/` (um nível abaixo da raiz do domínio; o
-build vai para `public/devocional` e o rewrite em `firebase.json` cuida do
-SPA). O build usa `--base-href /devocional/` e as chaves de API vêm dos
-Secrets do repositório: `FIREBASE_API_KEY_WEB`, `GEMINI_API_KEY_WEB` e
-`AUDIO_BASE_URL` (precisam estar cadastrados em Settings → Secrets and
-variables, no environment `github-pages`). O deploy usa
-`FIREBASE_SERVICE_ACCOUNT` (JSON da conta de serviço do Firebase). As actions
-estão fixadas em commit SHA completo, não em tag mutável.
+`www.felipeambrozini.com.br/devocional/` (Firebase Hosting, não GitHub Pages;
+um nível abaixo da raiz do domínio; o build vai para `public/devocional` e o
+rewrite em `firebase.json` cuida do SPA). O build usa `--base-href
+/devocional/` e as chaves de API vêm dos Secrets do repositório (cerca de 22
+`--dart-define`, ver `.env.example.json` e `SECURITY.md §3.1` — entre elas
+`FIREBASE_API_KEY_WEB`, `GEMINI_API_KEY_WEB`, `AUDIO_BASE_URL`). O deploy usa
+`FIREBASE_SERVICE_ACCOUNT` (JSON da conta de serviço do Firebase) e publica
+`hosting,firestore:rules,storage,functions` juntos. As actions estão fixadas em
+commit SHA completo, não em tag mutável.
 
 Cache: `index.html`, `flutter_bootstrap.js`, `main.dart.js`, os manifestos de
 assets (`FontManifest.json`, `AssetManifest*`) e as fontes do FontAwesome saem

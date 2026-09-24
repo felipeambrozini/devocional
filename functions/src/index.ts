@@ -144,6 +144,22 @@ export const enviarLembretes = onSchedule(
   {schedule: "* * * * *", timeZone: "Etc/UTC"},
   async () => {
     const db = getFirestore();
+
+    // Interruptores do painel (ver lib/dados/config_admin.dart): sem o
+    // documento vale ligado, igual no app — um documento velho nunca desliga
+    // um recurso novo por acidente. Uma leitura só por minuto para não punir
+    // o Firestore a cada lembrete.
+    let rec: Record<string, unknown> | null = null;
+    try {
+      const r = await db.doc("config/recursos").get();
+      rec = r.exists ? (r.data() as Record<string, unknown>) : null;
+    } catch {}
+    const ligado = (k: string) => (rec?.[k] as boolean | undefined) ?? true;
+    const manhaAtiva = ligado("manhaAtivo");
+    const noiteAtiva = ligado("noiteAtivo");
+    const promessasAtiva = ligado("promessasAtivo");
+    const cronogramaAtivo = ligado("cronogramaAtivo");
+
     const snap = await db.collection(COLECAO).get();
     console.log(`${snap.size} lembrete(s) cadastrado(s).`);
 
@@ -181,7 +197,7 @@ export const enviarLembretes = onSchedule(
       type Slot = "manha" | "promessas" | "leitura" | "noite";
       const pendentes: {slot: Slot; message: Message}[] = [];
 
-      if (deveEnviar(local.minutoDoDia, d.minutosManha, d.ultimoEnvioManha, local.diaISO)) {
+      if (manhaAtiva && deveEnviar(local.minutoDoDia, d.minutosManha, d.ultimoEnvioManha, local.diaISO)) {
         if (conteudoDia.m) {
           pendentes.push({
             slot: "manha",
@@ -191,7 +207,7 @@ export const enviarLembretes = onSchedule(
         }
       }
 
-      if (deveEnviar(local.minutoDoDia, minutosPromessas, (d as any).ultimoEnvioPromessas, local.diaISO)) {
+      if (promessasAtiva && deveEnviar(local.minutoDoDia, minutosPromessas, (d as any).ultimoEnvioPromessas, local.diaISO)) {
         if (conteudoDia.p?.r) {
           pendentes.push({
             slot: "promessas",
@@ -201,7 +217,7 @@ export const enviarLembretes = onSchedule(
         }
       }
 
-      if (deveEnviar(local.minutoDoDia, minutosLeitura, (d as any).ultimoEnvioLeitura, local.diaISO)) {
+      if (cronogramaAtivo && deveEnviar(local.minutoDoDia, minutosLeitura, (d as any).ultimoEnvioLeitura, local.diaISO)) {
         const ano = Number(local.diaISO.slice(0, 4));
         const leituraLabel = ehBissexto(ano)
           ? (conteudoDia.lb ?? conteudoDia.l)
@@ -215,7 +231,7 @@ export const enviarLembretes = onSchedule(
         }
       }
 
-      if (deveEnviar(local.minutoDoDia, d.minutosNoite, d.ultimoEnvioNoite, local.diaISO)) {
+      if (noiteAtiva && deveEnviar(local.minutoDoDia, d.minutosNoite, d.ultimoEnvioNoite, local.diaISO)) {
         if (conteudoDia.n) {
           pendentes.push({
             slot: "noite",

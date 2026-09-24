@@ -130,7 +130,7 @@ void main() {
     expect(find.text('Dia marcado como lido.'), findsOneWidget);
 
     // O aviso some sozinho: o "Desfazer" é a saída opcional, não a única.
-    // (Regressão do bug do Flutter 3.44.9: o timer do ScaffoldMessenger nunca
+    // (Regressão do bug do Flutter: o timer do ScaffoldMessenger nunca
     // nasce quando o SnackBar tem ação; o fechamento sai de mostrarAviso.)
     await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();

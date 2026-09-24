@@ -53,8 +53,8 @@ Não há mais chave de Text-to-Speech: o áudio virou MP3 pré-gerado (ver `lib/
 ### 3.2 Proteção de Chaves Públicas
 Conforme a arquitetura padrão para aplicações no lado do cliente (Web e Mobile), as chaves do Firebase e do Google Cloud presentes nos artefatos de compilação são consideradas públicas por desenho. A segurança dos serviços é assegurada por:
 
-1. **Restrição de Origem no Google Cloud Console:** As chaves de API da Web são restritas por referenciador HTTP ao domínio de produção (`https://www.felipeambrozini.com.br/*`) e ao domínio do próprio projeto Firebase. Como o cabeçalho de referenciador é forjável por um cliente fora do navegador, as APIs Gemini e Text-to-Speech contam ainda com cota diária e alerta de faturamento no projeto, que é o limite efetivo de abuso.
-2. **Restrição de Escopo de APIs:** As chaves do serviço de voz (Text-to-Speech) e de inteligência artificial possuem escopo limitado estritamente às APIs necessárias para a execução do app.
+1. **Restrição de Origem no Google Cloud Console:** As chaves de API da Web são restritas por referenciador HTTP ao domínio de produção (`https://www.felipeambrozini.com.br/*`) e ao domínio do próprio projeto Firebase. Como o cabeçalho de referenciador é forjável por um cliente fora do navegador, a API Gemini conta ainda com cota diária e alerta de faturamento no projeto, que é o limite efetivo de abuso.
+2. **Restrição de Escopo de APIs:** A chave da API Gemini possui escopo limitado estritamente à API de inteligência artificial necessária para o chat.
 3. **Regras do Banco de Dados:** O acesso aos dados no Firestore independe da chave de API, sendo controlado integralmente pelas regras de autenticação do backend do Firebase.
 
 ### 3.3 Firebase App Check
@@ -76,7 +76,7 @@ O lembrete diário é híbrido: uma Cloud Function agendada (`functions/src/inde
 
 - **Cabeçalhos de Segurança no Hosting:** O `firebase.json` define `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` negando geolocalização, câmera, microfone, pagamento e USB, e `Content-Security-Policy: frame-ancestors 'none'` (proteção contra *clickjacking*). O HTTPS e o `Strict-Transport-Security` são reforçados sobre o padrão do Firebase Hosting.
 - **Fixação de Commit SHA no GitHub Actions:** Todas as ações do GitHub Actions utilizadas no fluxo de *deploy* automatizado (`.github/workflows/deploy-web.yml`) estão fixadas pelo SHA completo do *commit*, prevenindo riscos associados a *tags* mutáveis.
-- **Versão Imutável do SDK:** A versão do SDK do Flutter é mantida fixa em `3.44.9` via `.fvmrc` e no pipeline de integração contínua, garantindo reproduzibilidade e prevenindo quebras não auditadas.
+- **Versão do SDK:** O projeto acompanha o canal `stable` do Flutter (`.fvmrc` e `deploy-web.yml` com `flutter-version: stable`), não uma patch travada.
 - **Segredos do Repositório:** As chaves de compilação de produção são gerenciadas através dos *GitHub Secrets* e disponibilizadas exclusivamente durante o processo de compilação automatizada.
 - **Job agendado do lembrete diário:** não é um workflow do GitHub Actions — é a Cloud Function `enviarLembretes` (`functions/src/index.ts`), publicada por `deploy-web.yml` junto com `hosting` e `firestore:rules` (`firebase deploy --only hosting,firestore:rules,functions`), autenticada com o mesmo `FIREBASE_SERVICE_ACCOUNT` do deploy — nenhum segredo novo para esse fluxo.
 

@@ -4,7 +4,7 @@
 
 ## Platform
 
-android
+android, web
 
 ## Users
 
@@ -106,9 +106,10 @@ vitoriana dele, tratando o leitor por "tu".
   comentário do dia com um link que reabre a mesma leitura.
 - Layout responsivo: barra inferior no celular, trilho lateral a partir de
   720px; gesto de deslizar troca capítulo no celular, setas na web.
-- Lembrete híbrido, Android e web: push de Cloud Function agendada, mais
-  reserva local no Android; versículo no corpo da notificação recusado de
-  propósito — ver README.md.
+- Lembrete híbrido, Android e web (4 horários: Manhã, Noite, Promessas e Leitura
+  do Dia): push de Cloud Function agendada, mais reserva local no Android;
+  só a referência do dia no corpo ("em Gênesis 1:2"), versículo recusado de
+  propósito — ver README.md. Respeita os interruptores do painel.
 - Regras de texto do produto: sem travessões em nenhum texto do app e sem
   aspas curvas (só aspas retas); voz vitoriana de Spurgeon tratando o leitor
   por "tu"; citações bíblicas no registro BKJ do app.
@@ -117,7 +118,7 @@ vitoriana dele, tratando o leitor por "tu".
   a chave APNs no Console — Android e web já têm), offline de verdade na
   web, sincronização fora da conta Google. Áudio foi recusado no início e
   revisto depois (ver Operating Context).
-- Flutter fixo na versão 3.44.9 (`.fvmrc` e `deploy-web.yml`).
+- Flutter no canal `stable` (`.fvmrc` e `deploy-web.yml`).
 
 ## Brand Commitments
 
@@ -148,9 +149,9 @@ vitoriana dele, tratando o leitor por "tu".
 - Conteúdo todo carregado e verificado (README): BKJ 1611 com 31.102
   versículos, batendo exatamente com o canon; Manhã e Noite com 366 dias completos;
   Promessas de Deus 366/366; cronograma 365/366 dias; 66 introduções completas;
-  comentário de Spurgeon por versículo completo nos 66 livros
-  (assets/comentarios/) — cobertura total, 31.102 comentários (um por
-  versículo), com `tools/validar_comentarios.py` zerado (0 erros, 0 avisos).
+  comentários de Spurgeon por versículo em escrita, verso a verso, pelos 66 livros
+  (`assets/comentarios/`, em andamento — ver `tools/validar_comentarios.py` e
+  `tools/detectar_molde.py`).
 - Suíte de testes em `test/` cobre canon, bissexto, tema (contrastes WCAG),
   fontes, lembretes e comportamento de plataforma.
 - Links de canais do Felipe (YouTube e Instagram) na tela Sobre.
