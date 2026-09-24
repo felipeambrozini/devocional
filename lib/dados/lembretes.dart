@@ -121,7 +121,7 @@ bool pushAindaVale({required int minutoAgora, required int minutoAlvo}) =>
 /// status é tratado como máscara alfa — a cor do PNG é sempre descartada e
 /// repintada pelo sistema — então trocar de arquivo por tema não muda nada
 /// visível e só era uma fonte a mais de `PlatformException(invalid_icon)`.
-const _iconeLembrete = 'ic_lembete';
+const _iconeLembrete = 'ic_lembrete';
 
 /// Mesmo par de destaque de `lib/estilo/cores.dart` (`DevocionalCores.dourado`/
 /// `DevocionalCores.bronze`), duplicado aqui em vez de importado: `lib/data` não
