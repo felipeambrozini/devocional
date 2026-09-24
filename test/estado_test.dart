@@ -180,6 +180,16 @@ void main() {
     });
   });
 
+  group('velocidade da voz', () {
+    test('persiste entre aberturas', () async {
+      final estado = await Estado.abrir();
+      expect(estado.velocidadeDaVoz, 1.0);
+
+      await estado.definirVelocidadeDaVoz(1.5);
+      expect((await reabrir()).velocidadeDaVoz, 1.5);
+    });
+  });
+
   group('claro ou escuro', () {
     test('comeca seguindo o aparelho e persiste a escolha', () async {
       final estado = await Estado.abrir();

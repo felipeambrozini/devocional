@@ -26,6 +26,7 @@ class Estado extends ChangeNotifier {
   static const _kMarcacoes = 'marcacoes';
   static const _kUltima = 'ultima_leitura';
   static const _kEscala = 'escala_de_leitura';
+  static const _kVelocidadeDaVoz = 'velocidade_da_voz';
   // Pública (as outras são privadas de propósito): a notificação do lembrete
   // precisa ler o tema escolhido para colorir o destaque no Android, mesmo
   // com o app morto (ver `_corDoTema` em lib/dados/lembretes.dart).
@@ -64,6 +65,10 @@ class Estado extends ChangeNotifier {
 
   /// Multiplicador do tamanho do texto de leitura. Ver [escalasDeLeitura].
   double _escalaDeLeitura = 1.0;
+
+  /// Velocidade da leitura em voz alta. Quem valida é a `Voz`, que conhece
+  /// as velocidades possíveis (ver `Voz.restaurarVelocidade`).
+  double _velocidadeDaVoz = 1.0;
 
   /// Claro, escuro ou o do aparelho. Padrão: o do aparelho.
   ModoDoTema _modoDoTema = ModoDoTema.sistema;
@@ -151,6 +156,7 @@ class Estado extends ChangeNotifier {
     if (escala != null && escalasDeLeitura.contains(escala)) {
       _escalaDeLeitura = escala;
     }
+    _velocidadeDaVoz = _prefs.getDouble(_kVelocidadeDaVoz) ?? 1.0;
 
     final modo = _prefs.getString(chaveModoDoTema);
     _modoDoTema = ModoDoTema.values.firstWhere(
@@ -321,6 +327,17 @@ class Estado extends ChangeNotifier {
     _escalaDeLeitura = nova;
     notifyListeners();
     await _prefs.setDouble(_kEscala, nova);
+  }
+
+  double get velocidadeDaVoz => _velocidadeDaVoz;
+
+  /// Sem notifyListeners de propósito: quem desenha a velocidade é a `Voz`,
+  /// e notificar o Estado redesenharia todas as abas e faria as sincronias
+  /// conferirem a cópia por uma preferência que nem sobe para a nuvem.
+  Future<void> definirVelocidadeDaVoz(double nova) async {
+    if (nova == _velocidadeDaVoz) return;
+    _velocidadeDaVoz = nova;
+    await _prefs.setDouble(_kVelocidadeDaVoz, nova);
   }
 
   // --- ajuda de primeira visita ------------------------------------------- //

@@ -166,6 +166,9 @@ Future<void> _iniciar() async {
   if (kIsWeb) usePathUrlStrategy();
 
   final estado = await Estado.abrir();
+  Voz.instancia
+    ..restaurarVelocidade(estado.velocidadeDaVoz)
+    ..aoMudarVelocidade = estado.definirVelocidadeDaVoz;
 
   // Aplica a resposta já salva (ou a ausência dela) ao Sentry antes de mais
   // nada: `Registro.envioRemotoPermitido` é quem o `beforeSend` de `main()`

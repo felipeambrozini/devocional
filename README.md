@@ -439,8 +439,9 @@ motivo novo.
   andamento.
 - **Velocidade da leitura em voz** (`Voz.proximaVelocidade`, 22/09/2026): tocando
   ou pausada, a pílula mostra um "1x" entre o rótulo e o X; cada toque passa
-  para 1,25x → 1,5x → 1,75x → 2x → 1x. A velocidade vale para a sessão do app
-  inteira (não volta a 1x a cada capítulo), mas não é salva entre aberturas.
+  para 1,25x → 1,5x → 1,75x → 2x → 1x. A velocidade vale para o app
+  inteiro (não volta a 1x a cada capítulo) e é salva entre aberturas
+  (`Estado.velocidadeDaVoz`, restaurada em `Voz.restaurarVelocidade`).
 
 - **Devocionais dentro do plano personalizado** (31/08/2026): `Conteudo` ganhou
   `aquecerIndiceDeDevocionais()`/`devocionaisDoCapitulo(livro, capítulo)`, um
@@ -521,7 +522,7 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
   (37 KB, 366 dias) gerado dos JSONs do app só com referência/título.
   Regenerar se o conteúdo anual mudar.
 - **Ícone único no Android, tema só na cor de destaque**: um só drawable
-  (`ic_lembete`) para a notificação inteira — desde o Android 5 (API 21) o
+   (`ic_lembrete`) para a notificação inteira — desde o Android 5 (API 21) o
   ícone pequeno da barra de status é máscara alfa, a cor do PNG é sempre
   descartada e repintada pelo sistema, então variar o arquivo por tema não
   mudava nada visível e só era mais uma fonte de

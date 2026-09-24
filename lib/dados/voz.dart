@@ -264,15 +264,30 @@ class Voz extends ChangeNotifier {
 
   double _velocidade = 1.0;
 
-  /// Vale para a sessão do app inteira, não por leitura: quem ouve em 1,5x
-  /// não quer voltar a 1x a cada capítulo.
+  /// Vale para o app inteiro, não por leitura, e sobrevive a fechar e abrir
+  /// o app: quem ouve em 1,5x não quer voltar a 1x a cada capítulo, nem a
+  /// cada dia.
   double get velocidade => _velocidade;
+
+  /// Quem guarda a escolha entre aberturas do app — o [Estado], ligado em
+  /// `main.dart`. Um callback, e não um import: a Voz não depende da camada
+  /// de preferências, e os testes dela continuam sem Estado nenhum.
+  Future<void> Function(double velocidade)? aoMudarVelocidade;
+
+  /// Volta à velocidade guardada da última vez. Um valor fora de
+  /// [velocidades] (gravado por uma versão futura, ou corrompido) é
+  /// ignorado, e fica o 1x.
+  void restaurarVelocidade(double guardada) {
+    if (velocidades.contains(guardada)) _velocidade = guardada;
+  }
 
   /// Passa para a próxima de [velocidades], voltando a 1x depois de 2x.
   Future<void> proximaVelocidade() async {
     final atual = velocidades.indexOf(_velocidade);
     _velocidade = velocidades[(atual + 1) % velocidades.length];
     notifyListeners();
+    final guardar = aoMudarVelocidade;
+    if (guardar != null) unawaited(guardar(_velocidade));
     try {
       await _player?.setSpeed(_velocidade);
     } catch (_) {}
