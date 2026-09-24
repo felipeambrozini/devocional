@@ -126,6 +126,18 @@ void main() {
       );
     });
 
+    test('lista ordenada e reaproveitada, e invalida ao mudar', () async {
+      final estado = await Estado.abrir();
+      await estado.alternarFavorito('joao', 3, 16);
+      // Acessos seguidos devolvem o mesmo cache, sem reordenar.
+      expect(identical(estado.marcacoes, estado.marcacoes), isTrue);
+      await estado.alternarFavorito('genesis', 1, 1);
+      expect(
+        estado.marcacoes.map((m) => m.chave),
+        ['genesis/1/1', 'joao/3/16'],
+      );
+    });
+
     test('remover apaga a marcacao inteira', () async {
       final estado = await Estado.abrir();
       await estado.definirNota('joao', 1, 1, 'nota');

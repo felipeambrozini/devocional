@@ -270,6 +270,24 @@ void main() {
     });
   });
 
+  group('buscar na Biblia', () {
+    test('duas passadas devolvem os mesmos achados', () async {
+      // O texto normalizado fica em cache por livro depois da primeira
+      // passada: a segunda precisa devolver exatamente o mesmo.
+      final primeira = await Conteudo.instancia
+          .buscar('deus', limite: 3)
+          .toList();
+      expect(primeira, hasLength(3));
+      final segunda = await Conteudo.instancia
+          .buscar('deus', limite: 3)
+          .toList();
+      expect(
+        segunda.map((a) => '${a.livro}:${a.capitulo}:${a.versiculo}'),
+        primeira.map((a) => '${a.livro}:${a.capitulo}:${a.versiculo}'),
+      );
+    });
+  });
+
   group('devocional Promessas de Deus', () {
     test('a referencia de todo dia resolve livro, capitulo e versiculo(s)', () {
       // Promessas de Deus agora também busca o versículo ao vivo, para a pessoa

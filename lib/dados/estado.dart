@@ -60,6 +60,16 @@ class Estado extends ChangeNotifier {
   /// Favoritos e notas, indexados por [Marcacao.chave].
   Map<String, Marcacao> _marcacoes = {};
 
+  /// A ordenação de [marcacoes] pronta: a tela de notas lê a lista 3 vezes
+  /// por build, e reordenar a cada acesso era o custo dominante. Nulo = sujo;
+  /// todo método que mexe em `_marcacoes` invalida (ver os `= null` em
+  /// `alternarFavorito`, `definirNota`, `removerMarcacao` e `importar`).
+  List<Marcacao>? _marcacoesOrdenadas;
+
+  /// Invalida o cache de [marcacoes]. Chamar depois de qualquer mexida em
+  /// `_marcacoes`, antes do `notifyListeners`.
+  void _sujarMarcacoes() => _marcacoesOrdenadas = null;
+
   /// Onde a leitura parou, para o botão "continuar".
   (String, int)? _ultimaLeitura;
 
@@ -400,6 +410,8 @@ class Estado extends ChangeNotifier {
   // --- favoritos e notas --------------------------------------------------- //
 
   List<Marcacao> get marcacoes {
+    final prontas = _marcacoesOrdenadas;
+    if (prontas != null) return prontas;
     final lista = _marcacoes.values.toList();
     // Ordem canônica, depois capítulo e versículo: a lista de favoritos lê como
     // uma Bíblia, não como um histórico de cliques.
@@ -410,7 +422,9 @@ class Estado extends ChangeNotifier {
       if (a.capitulo != b.capitulo) return a.capitulo.compareTo(b.capitulo);
       return a.versiculo.compareTo(b.versiculo);
     });
-    return lista;
+    // A lista devolvida é o próprio cache: quem recebe só lê (a tela de notas
+    // filtra por cima). Todo método que mexe em `_marcacoes` invalida.
+    return _marcacoesOrdenadas = lista;
   }
 
   List<Marcacao> get comNota =>
@@ -442,6 +456,7 @@ class Estado extends ChangeNotifier {
       // do usuário, então ela manda: o favorito permanece enquanto houver nota.
       return;
     }
+    _sujarMarcacoes();
     notifyListeners();
     await _gravarMarcacoes();
   }
@@ -464,12 +479,14 @@ class Estado extends ChangeNotifier {
     } else {
       _marcacoes[base.chave] = base.comNota(nota.trim());
     }
+    _sujarMarcacoes();
     notifyListeners();
     await _gravarMarcacoes();
   }
 
   Future<void> removerMarcacao(Marcacao marcacao) async {
     if (_marcacoes.remove(marcacao.chave) == null) return;
+    _sujarMarcacoes();
     notifyListeners();
     await _gravarMarcacoes();
   }
@@ -910,6 +927,7 @@ class Estado extends ChangeNotifier {
       if (dia is String && _lidos.add(dia)) novosDias++;
     }
 
+    _sujarMarcacoes();
     notifyListeners();
     await _gravarMarcacoes();
     await _prefs.setStringList(_kLidos, _lidos.toList()..sort());

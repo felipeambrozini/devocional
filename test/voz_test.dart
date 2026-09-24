@@ -51,4 +51,12 @@ void main() {
       expect(guardadas, [1.25]);
     });
   });
+
+  group('streams', () {
+    test('sem player, posicao e duracao devolvem a mesma instancia', () {
+      final voz = Voz.instancia;
+      expect(identical(voz.posicao, voz.posicao), isTrue);
+      expect(identical(voz.duracao, voz.duracao), isTrue);
+    });
+  });
 }

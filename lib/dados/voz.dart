@@ -293,20 +293,23 @@ class Voz extends ChangeNotifier {
     } catch (_) {}
   }
 
+  /// Instâncias vazias compartilhadas: sem player nem leitor, cada acesso a
+  /// [posicao]/[duracao] alocava um `Stream.empty()` novo e o StreamBuilder
+  /// resubscrevia à toa. Broadcast para o botão e a barra de progresso
+  /// poderem assinar a mesma instância sem derrubar um ao outro.
+  static final _posicaoVazia = Stream<Duration>.empty().asBroadcastStream();
+  static final _duracaoVazia = Stream<Duration?>.empty().asBroadcastStream();
+
   /// A posição da leitura atual, para a linha fina de progresso do botão. Sem
   /// player (nos testes não há plataforma de áudio) a stream fica vazia e
   /// nada é desenhado.
   Stream<Duration> get posicao =>
-      _leitorDeAudio?.posicao ??
-      _player?.positionStream ??
-      Stream<Duration>.empty();
+      _leitorDeAudio?.posicao ?? _player?.positionStream ?? _posicaoVazia;
 
   /// A duração total do áudio carregado, que junto com [posicao] vira o
   /// progresso. É nula até o player conhecer o áudio.
   Stream<Duration?> get duracao =>
-      _leitorDeAudio?.duracao ??
-      _player?.durationStream ??
-      Stream<Duration?>.empty();
+      _leitorDeAudio?.duracao ?? _player?.durationStream ?? _duracaoVazia;
 
   /// A posição atual da leitura, em Duration. No leitor de testes, a posição
   /// é a que o teste ajustou no campo [LeitorDeAudio.posicaoAtual]; sem

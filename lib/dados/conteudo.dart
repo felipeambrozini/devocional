@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate' show Isolate;
 
 import 'package:flutter/foundation.dart' show FlutterError;
 import 'package:flutter/services.dart' show rootBundle;
@@ -170,13 +171,21 @@ class Conteudo {
     return null;
   }
 
+  /// Decodifica um JSON grande fora da thread da interface. Manhã e Noite
+  /// (1,5 MB), Promessas (535 KB) e os comentários de Salmos (1,5 MB)
+  /// travariam um frame na decodificação síncrona. Os assets pequenos
+  /// (cronograma, introduções, livros da Bíblia) continuam diretos: neles
+  /// o custo de subir um isolate supera o da decodificação.
+  static Future<Map<String, dynamic>> _decodificarGrande(String cru) =>
+      Isolate.run(() => json.decode(cru) as Map<String, dynamic>);
+
   Future<Map<String, Map<String, dynamic>>> _carregarDevocionais() async {
     final cacheado = _devocionais;
     if (cacheado != null) return cacheado;
     final cru = await rootBundle.loadString(
       'assets/devocionais/manha_e_noite.json',
     );
-    final dados = (json.decode(cru) as Map<String, dynamic>).map(
+    final dados = (await _decodificarGrande(cru)).map(
       (chave, valor) => MapEntry(chave, valor as Map<String, dynamic>),
     );
     _devocionais = dados;
@@ -274,7 +283,7 @@ class Conteudo {
       final cru = await rootBundle.loadString(
         'assets/devocionais/promessas_de_deus.json',
       );
-      _promessas = (json.decode(cru) as Map<String, dynamic>).map(
+      _promessas = (await _decodificarGrande(cru)).map(
         (chave, valor) => MapEntry(chave, valor as Map<String, dynamic>),
       );
     } on FlutterError {
@@ -468,7 +477,7 @@ class Conteudo {
     if (_tentouComentario[slug] == true) return null;
     try {
       final cru = await rootBundle.loadString('assets/comentarios/$slug.json');
-      final dados = json.decode(cru) as Map<String, dynamic>;
+      final dados = await _decodificarGrande(cru);
       _comentarios[slug] = dados;
       return dados;
     } on FlutterError {
@@ -504,6 +513,46 @@ class Conteudo {
   /// ocorrências na Bíblia inteira, e a pessoa não tinha como saber que faltava.
   static const limiteDeBusca = 300;
 
+  /// Versículos de um livro com o texto já normalizado, montado na primeira
+  /// busca que varre o livro. Normalizar os ~31 mil versículos a cada busca
+  /// custava a maior parte do tempo (o mesmo que [_paraBusca] resolveu nos
+  /// devocionais). O cache é por livro, então a primeira passada continua em
+  /// stream — a pausa entre um livro e outro deixa a tela respirar — e as
+  /// seguintes reaproveitam tudo.
+  final Map<
+    String,
+    List<({int capitulo, int versiculo, String texto, String normalizado})>
+  >
+  _bibliaParaBusca = {};
+
+  List<({int capitulo, int versiculo, String texto, String normalizado})>
+  _versiculosParaBusca(
+    String slug,
+    Map<String, dynamic> dados,
+    int totalDeCapitulos,
+  ) {
+    final prontos = _bibliaParaBusca[slug];
+    if (prontos != null) return prontos;
+    final lista =
+        <({int capitulo, int versiculo, String texto, String normalizado})>[];
+    final capitulos = dados['capitulos'] as Map<String, dynamic>;
+    for (var n = 1; n <= totalDeCapitulos; n++) {
+      final cap = capitulos['$n'] as Map<String, dynamic>?;
+      if (cap == null) continue;
+      for (final entrada
+          in (cap['versiculos'] as Map<String, dynamic>).entries) {
+        final texto = entrada.value as String;
+        lista.add((
+          capitulo: n,
+          versiculo: int.parse(entrada.key),
+          texto: texto,
+          normalizado: _normalizar(texto),
+        ));
+      }
+    }
+    return _bibliaParaBusca[slug] = lista;
+  }
+
   Stream<Achado> buscar(String termo, {int limite = limiteDeBusca}) async* {
     final alvo = _normalizar(termo);
     if (alvo.length < 3) return;
@@ -512,22 +561,19 @@ class Conteudo {
     for (final livro in canon) {
       final dados = await _carregarLivro(livro.slug);
       if (dados == null) continue;
-      final capitulos = dados['capitulos'] as Map<String, dynamic>;
-      for (var n = 1; n <= livro.capitulos; n++) {
-        final cap = capitulos['$n'] as Map<String, dynamic>?;
-        if (cap == null) continue;
-        for (final entrada
-            in (cap['versiculos'] as Map<String, dynamic>).entries) {
-          final texto = entrada.value as String;
-          if (expressao.hasMatch(_normalizar(texto))) {
-            yield Achado(
-              livro: livro.slug,
-              capitulo: n,
-              versiculo: int.parse(entrada.key),
-              texto: texto,
-            );
-            if (++total >= limite) return;
-          }
+      for (final versiculo in _versiculosParaBusca(
+        livro.slug,
+        dados,
+        livro.capitulos,
+      )) {
+        if (expressao.hasMatch(versiculo.normalizado)) {
+          yield Achado(
+            livro: livro.slug,
+            capitulo: versiculo.capitulo,
+            versiculo: versiculo.versiculo,
+            texto: versiculo.texto,
+          );
+          if (++total >= limite) return;
         }
       }
     }

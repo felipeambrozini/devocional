@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../dados/config_admin.dart';
 import '../dados/nuvem.dart';
 import '../dados/recursos.dart';
+import '../dados/registro.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
 import '../widgets/widgets.dart';
@@ -58,7 +59,8 @@ class _TelaAdminState extends State<TelaAdmin> {
     setState(() => _salvando.add(campo));
     try {
       await ConfigAdmin.instancia.definir(campo, valor);
-    } catch (_) {
+    } catch (erro, pilha) {
+      Registro.erro('Admin.alternar:$campo', erro, pilha);
       if (mounted) {
         mostrarErro(
           context,
@@ -86,7 +88,8 @@ class _TelaAdminState extends State<TelaAdmin> {
       // Erro de digitação volta para o campo, não só para o aviso: o foco
       // fica onde se corrige.
       if (mounted) setState(() => _erroDoEmail = erro.message);
-    } catch (_) {
+    } catch (erro, pilha) {
+      Registro.erro('Admin.adicionarEmail', erro, pilha);
       if (mounted) {
         mostrarErro(context, 'Não foi possível adicionar. Tente de novo.');
       }
@@ -106,7 +109,8 @@ class _TelaAdminState extends State<TelaAdmin> {
     try {
       await ConfigAdmin.instancia.removerEmail(email);
       if (mounted) mostrarAviso(context, 'Acesso removido.');
-    } catch (_) {
+    } catch (erro, pilha) {
+      Registro.erro('Admin.removerEmail', erro, pilha);
       if (mounted) {
         mostrarErro(context, 'Não foi possível remover. Tente de novo.');
       }
