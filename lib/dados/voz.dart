@@ -405,6 +405,16 @@ class Voz extends ChangeNotifier {
     } on VozExcecao {
       rethrow;
     } catch (erro, pilha) {
+      if (_ehInterrupcaoOuRedeEsperada(erro)) {
+        // `PlayerInterruptedException: Connection aborted` é falha transitória
+        // de rede / cancelamento de `setAudioSource` por um `parar()` ou troca
+        // de capítulo logo em seguida. Não é bug e não deve poluir o Sentry
+        // (ver evento de 23/09 22:24 UTC). Se já foi superado por outra
+        // versão, é só cancelamento silencioso; senão, vira mensagem amigável
+        // para o botão mostrar "Tentar de novo".
+        if (versao != _versao) return;
+        throw const VozExcecao(_erroDeTocagem);
+      }
       Registro.erro('Voz.tocar', erro, pilha);
       throw const VozExcecao(_erroDeTocagem);
     } finally {
@@ -414,6 +424,19 @@ class Voz extends ChangeNotifier {
         notifyListeners();
       }
     }
+  }
+
+  bool _ehInterrupcaoOuRedeEsperada(Object erro) {
+    // just_audio lança `PlayerInterruptedException` quando um `load` é
+    // interrompido por outro `load`/`stop` (toque rápido em Parar/troca de
+    // capítulo). No Android o `MethodChannel` embrulha como
+    // `PlatformException(Connection aborted)`. Ambos são esperados.
+    if (erro is PlayerInterruptedException) return true;
+    final texto = erro.toString().toLowerCase();
+    return texto.contains('connection aborted') ||
+        texto.contains('playerinterrupted') ||
+        texto.contains('connection reset') ||
+        texto.contains('socketexception');
   }
 
   /// Para a leitura, se houver uma; também cancela um carregamento no meio.
