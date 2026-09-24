@@ -32,6 +32,8 @@ service cloud.firestore {
     // Contrato do documento config/recursos:
     //   conversasAtivas          bool — kill switch global do chat
     //   emailsComConversas       list de string — allowlist do chat
+    //   emailsComPlanos          list de string — allowlist dos planos (vazia:
+    //                            só o interruptor global decide)
     //   planoPersonalizadoAtivo  bool — aba "Meus planos"
     //   cronogramaAtivo          bool — aba "Cronograma" dentro do Plano
     //   manhaAtivo               bool — devocional da manhã
@@ -55,7 +57,8 @@ service cloud.firestore {
       function formaValida() {
         let dados = request.resource.data;
         let soOsCampos = dados.keys().hasOnly([
-          'conversasAtivas', 'emailsComConversas', 'planoPersonalizadoAtivo',
+          'conversasAtivas', 'emailsComConversas', 'emailsComPlanos',
+          'planoPersonalizadoAtivo',
           'cronogramaAtivo', 'manhaAtivo', 'noiteAtivo', 'promessasAtivo',
           'ouvirTextosAtivo', 'atualizadoEm'
         ]);
@@ -66,8 +69,10 @@ service cloud.firestore {
             (!('noiteAtivo' in dados) || dados.noiteAtivo is bool) &&
             (!('promessasAtivo' in dados) || dados.promessasAtivo is bool) &&
             (!('ouvirTextosAtivo' in dados) || dados.ouvirTextosAtivo is bool);
-        let emailsOk = !('emailsComConversas' in dados) ||
-            (dados.emailsComConversas is list && dados.emailsComConversas.size() < 5000);
+        let emailsOk = (!('emailsComConversas' in dados) ||
+            (dados.emailsComConversas is list && dados.emailsComConversas.size() < 5000)) &&
+            (!('emailsComPlanos' in dados) ||
+            (dados.emailsComPlanos is list && dados.emailsComPlanos.size() < 5000));
         return soOsCampos && boolOk && emailsOk &&
             dados.atualizadoEm is timestamp;
       }

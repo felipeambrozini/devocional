@@ -209,6 +209,9 @@ class PlanoControlador extends ChangeNotifier {
   }
 
   Future<void> alternarDia(BuildContext context, int dia) async {
+    // O total de dias do plano, para saber quando ele termina (ver
+    // [_avisarConclusao]): sem plano carregado não há o que concluir.
+    final total = plano?.diasDoPlano.length ?? 0;
     if (compartilhado) {
       if (!Nuvem.instancia.logado) {
         if (context.mounted) {
@@ -222,12 +225,21 @@ class PlanoControlador extends ChangeNotifier {
       final atual = {...meusLidos()};
       final novo = {...atual};
       if (!novo.remove(dia)) novo.add(dia);
+      final marcou = novo.contains(dia);
       await estado.substituirLidosDoPlano(planoId, novo);
       try {
         await PlanosNaNuvem.instancia.gravarDias(
           planoId,
           novo.toList()..sort(),
         );
+        if (context.mounted) {
+          _avisarConclusao(
+            context,
+            marcou: marcou,
+            lidos: novo.length,
+            total: total,
+          );
+        }
       } on PlanosNaNuvemExcecao catch (erro) {
         // Devolve o espelho ao que o documento diz: sem rede a marcação não
         // aconteceu de verdade.
@@ -235,8 +247,30 @@ class PlanoControlador extends ChangeNotifier {
         if (context.mounted) mostrarErro(context, erro.mensagem);
       }
     } else {
+      final marcou = !estado.foiLidoNoPlano(planoId, dia);
       await estado.alternarLidoNoPlano(planoId, dia);
+      if (context.mounted) {
+        _avisarConclusao(
+          context,
+          marcou: marcou,
+          lidos: meusLidos().length,
+          total: total,
+        );
+      }
     }
+  }
+
+  /// Mensagem discreta ao fechar o último dia do plano: sem streak, sem
+  /// cobrança, só o ponto final. Só quando marcou (desmarcar o último dia
+  /// não celebra) e só na transição para o plano cheio.
+  void _avisarConclusao(
+    BuildContext context, {
+    required bool marcou,
+    required int lidos,
+    required int total,
+  }) {
+    if (!marcou || total <= 0 || lidos < total) return;
+    if (context.mounted) mostrarAviso(context, 'Você concluiu este plano.');
   }
 
   Future<void> compartilhar(BuildContext context) async {

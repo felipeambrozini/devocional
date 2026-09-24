@@ -10,7 +10,8 @@ import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
 import '../widgets/widgets.dart';
 
-/// Painel admin: interruptores de cada recurso e a allowlist do chat.
+/// Painel admin: interruptores de cada recurso e as allowlists do chat e dos
+/// planos.
 ///
 /// Só web e só a conta do dono (ver `Recursos.adminNaWeb`): fora da web ou
 /// sem esse login, a rota `/admin` redireciona para `/hoje` (ver `main.dart`)
@@ -27,20 +28,10 @@ class TelaAdmin extends StatefulWidget {
 }
 
 class _TelaAdminState extends State<TelaAdmin> {
-  final _email = TextEditingController();
-  bool _adicionando = false;
-  String? _erroDoEmail;
-
   /// Campos com escrita no voo. Um por linha: o switch desabilita e mostra o
   /// giro até o Firestore responder, para o toque não parecer morto nem
   /// duplicar a escrita.
   final _salvando = <String>{};
-
-  @override
-  void dispose() {
-    _email.dispose();
-    super.dispose();
-  }
 
   Future<void> _alternar(String campo, String rotulo, bool valor) async {
     if (_salvando.contains(campo)) return;
@@ -71,49 +62,6 @@ class _TelaAdminState extends State<TelaAdmin> {
       }
     } finally {
       if (mounted) setState(() => _salvando.remove(campo));
-    }
-  }
-
-  Future<void> _adicionar() async {
-    if (_adicionando) return;
-    setState(() {
-      _adicionando = true;
-      _erroDoEmail = null;
-    });
-    try {
-      await ConfigAdmin.instancia.adicionarEmail(_email.text);
-      _email.clear();
-      if (mounted) mostrarAviso(context, 'E-mail liberado.');
-    } on FormatException catch (erro) {
-      // Erro de digitação volta para o campo, não só para o aviso: o foco
-      // fica onde se corrige.
-      if (mounted) setState(() => _erroDoEmail = erro.message);
-    } catch (erro, pilha) {
-      Registro.erro('Admin.adicionarEmail', erro, pilha);
-      if (mounted) {
-        mostrarErro(context, 'Não foi possível adicionar. Tente de novo.');
-      }
-    } finally {
-      if (mounted) setState(() => _adicionando = false);
-    }
-  }
-
-  Future<void> _remover(String email) async {
-    final pode = await confirmar(
-      context,
-      titulo: 'Remover acesso?',
-      conteudo: '$email perde o chat na hora.',
-      rotuloDaAcao: 'Remover',
-    );
-    if (!pode || !mounted) return;
-    try {
-      await ConfigAdmin.instancia.removerEmail(email);
-      if (mounted) mostrarAviso(context, 'Acesso removido.');
-    } catch (erro, pilha) {
-      Registro.erro('Admin.removerEmail', erro, pilha);
-      if (mounted) {
-        mostrarErro(context, 'Não foi possível remover. Tente de novo.');
-      }
     }
   }
 
@@ -160,7 +108,6 @@ class _TelaAdminState extends State<TelaAdmin> {
   Widget _conteudo(BuildContext context) {
     final tema = Theme.of(context).textTheme;
     final config = ConfigAdmin.instancia;
-    final emails = config.emailsComConversas;
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         DevocionalEspacamento.sp20,
@@ -256,12 +203,139 @@ class _TelaAdminState extends State<TelaAdmin> {
         const SizedBox(height: DevocionalEspacamento.sp24),
         const DevocionalFilete(largura: 64),
         const SizedBox(height: DevocionalEspacamento.sp16),
-        Text('E-mails com conversas', style: tema.headlineSmall),
+        _SecaoDeEmails(
+          titulo: 'E-mails com conversas',
+          legendaVazia: 'Ninguém liberado ainda.',
+          legendaCheia: (n) =>
+              '$n ${n == 1 ? 'conta liberada' : 'contas liberadas'}.',
+          emails: config.emailsComConversas,
+          textoDeRemocao: (email) => '$email perde o chat na hora.',
+          aoAdicionar: ConfigAdmin.instancia.adicionarEmail,
+          aoRemover: ConfigAdmin.instancia.removerEmail,
+          contextoDeErro: 'Admin.emailsComConversas',
+          autofocus: true,
+        ),
+        const SizedBox(height: DevocionalEspacamento.sp24),
+        const DevocionalFilete(largura: 64),
+        const SizedBox(height: DevocionalEspacamento.sp16),
+        _SecaoDeEmails(
+          titulo: 'E-mails com planos',
+          legendaVazia:
+              'Lista vazia: vale só o interruptor de planos acima. Com o '
+              'primeiro e-mail, só quem está aqui cria planos.',
+          legendaCheia: (n) =>
+              '$n ${n == 1 ? 'conta liberada' : 'contas liberadas'}.',
+          emails: config.emailsComPlanos,
+          textoDeRemocao: (email) => '$email perde os planos na hora.',
+          aoAdicionar: ConfigAdmin.instancia.adicionarEmailAosPlanos,
+          aoRemover: ConfigAdmin.instancia.removerEmailDosPlanos,
+          contextoDeErro: 'Admin.emailsComPlanos',
+        ),
+      ],
+    );
+  }
+}
+
+/// Uma allowlist do painel: título, contagem, campo de adicionar e a lista
+/// com remover. Estado próprio (campo, giro, erro) por seção: as duas seções
+/// da tela não dividem controlador, senão digitar numa espelhava na outra.
+/// Extraída da seção de conversas quando os planos ganharam a sua.
+class _SecaoDeEmails extends StatefulWidget {
+  const _SecaoDeEmails({
+    required this.titulo,
+    required this.legendaVazia,
+    required this.legendaCheia,
+    required this.emails,
+    required this.textoDeRemocao,
+    required this.aoAdicionar,
+    required this.aoRemover,
+    required this.contextoDeErro,
+    this.autofocus = false,
+  });
+
+  final String titulo;
+  final String legendaVazia;
+  final String Function(int total) legendaCheia;
+  final List<String> emails;
+  final String Function(String email) textoDeRemocao;
+  final Future<void> Function(String email) aoAdicionar;
+  final Future<void> Function(String email) aoRemover;
+  final String contextoDeErro;
+
+  /// Só a primeira seção pede foco ao abrir: dois campos com autofocus
+  /// brigariam pelo teclado.
+  final bool autofocus;
+
+  @override
+  State<_SecaoDeEmails> createState() => _SecaoDeEmailsState();
+}
+
+class _SecaoDeEmailsState extends State<_SecaoDeEmails> {
+  final _email = TextEditingController();
+  bool _adicionando = false;
+  String? _erroDoEmail;
+
+  @override
+  void dispose() {
+    _email.dispose();
+    super.dispose();
+  }
+
+  Future<void> _adicionar() async {
+    if (_adicionando) return;
+    setState(() {
+      _adicionando = true;
+      _erroDoEmail = null;
+    });
+    try {
+      await widget.aoAdicionar(_email.text);
+      _email.clear();
+      if (mounted) mostrarAviso(context, 'E-mail liberado.');
+    } on FormatException catch (erro) {
+      // Erro de digitação volta para o campo, não só para o aviso: o foco
+      // fica onde se corrige.
+      if (mounted) setState(() => _erroDoEmail = erro.message);
+    } catch (erro, pilha) {
+      Registro.erro(widget.contextoDeErro, erro, pilha);
+      if (mounted) {
+        mostrarErro(context, 'Não foi possível adicionar. Tente de novo.');
+      }
+    } finally {
+      if (mounted) setState(() => _adicionando = false);
+    }
+  }
+
+  Future<void> _remover(String email) async {
+    final pode = await confirmar(
+      context,
+      titulo: 'Remover acesso?',
+      conteudo: widget.textoDeRemocao(email),
+      rotuloDaAcao: 'Remover',
+    );
+    if (!pode || !mounted) return;
+    try {
+      await widget.aoRemover(email);
+      if (mounted) mostrarAviso(context, 'Acesso removido.');
+    } catch (erro, pilha) {
+      Registro.erro(widget.contextoDeErro, erro, pilha);
+      if (mounted) {
+        mostrarErro(context, 'Não foi possível remover. Tente de novo.');
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(widget.titulo, style: tema.headlineSmall),
         const SizedBox(height: DevocionalEspacamento.sp4),
         Text(
-          emails.isEmpty
-              ? 'Ninguém liberado ainda.'
-              : '${emails.length} ${emails.length == 1 ? 'conta liberada' : 'contas liberadas'}.',
+          widget.emails.isEmpty
+              ? widget.legendaVazia
+              : widget.legendaCheia(widget.emails.length),
           style: tema.bodySmall,
         ),
         const SizedBox(height: DevocionalEspacamento.sp8),
@@ -280,7 +354,7 @@ class _TelaAdminState extends State<TelaAdmin> {
                 textCapitalization: TextCapitalization.none,
                 autocorrect: false,
                 enableSuggestions: false,
-                autofocus: true,
+                autofocus: widget.autofocus,
                 enabled: !_adicionando,
                 autofillHints: const [AutofillHints.email],
                 decoration: InputDecoration(
@@ -304,7 +378,7 @@ class _TelaAdminState extends State<TelaAdmin> {
           ],
         ),
         const SizedBox(height: DevocionalEspacamento.sp8),
-        for (final email in emails)
+        for (final email in widget.emails)
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: FaIcon(

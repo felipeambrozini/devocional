@@ -37,6 +37,25 @@ class Recursos {
   /// Override para teste, mesmo padrão de [conversasForcado].
   static bool? planoPersonalizadoForcado;
 
+  /// Override para teste: mesmo motivo de [conversasForcado] — sem login de
+  /// verdade, a allowlist recusaria sempre.
+  static bool? planosForcado;
+
+  /// Se a conta aberta pode criar planos próprios. Igual às Conversas, com
+  /// uma diferença: lista vazia mantém o comportamento atual — só o
+  /// interruptor global [planoPersonalizado] decide. A allowlist só
+  /// restringe quando o admin começa a usá-la (primeiro e-mail adicionado);
+  /// antes disso ninguém perde acesso por um documento vazio.
+  static bool get planos {
+    final forcado = planosForcado;
+    if (forcado != null) return forcado;
+    if (!planoPersonalizado) return false;
+    if (ConfigAdmin.instancia.emailsComPlanos.isEmpty) return true;
+    final email = Nuvem.instancia.email?.trim().toLowerCase();
+    if (email == null || email.isEmpty) return false;
+    return ConfigAdmin.instancia.emailsComPlanos.contains(email);
+  }
+
   /// Botão "Ouvir" nos textos (Bíblia, devocional, introduções, notas).
   static bool get ouvirTextos =>
       ouvirTextosForcado ?? ConfigAdmin.instancia.ouvirTextosAtivo;

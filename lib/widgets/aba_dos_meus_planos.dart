@@ -14,7 +14,7 @@ import '../widgets/widgets.dart';
 /// um novo.
 ///
 /// A aba fica visível para todo mundo — só o conteúdo muda com a conta e com
-/// [Recursos.planoPersonalizado], mesma filosofia de gating de `conversas.dart`:
+/// [Recursos.planos], mesma filosofia de gating de `conversas.dart`:
 /// explicar o que falta e como pedir, nunca esconder a aba em silêncio.
 class DevocionalAbaDosMeusPlanos extends StatelessWidget {
   const DevocionalAbaDosMeusPlanos({super.key});
@@ -33,7 +33,7 @@ class DevocionalAbaDosMeusPlanos extends StatelessWidget {
             onEntrar: () {},
           );
         }
-        if (!Recursos.planoPersonalizado) {
+        if (!Recursos.planos) {
           return const DevocionalCartaoDePedirAcesso(
             icone: FontAwesomeIcons.calendarPlus,
             descricao:

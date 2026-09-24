@@ -639,6 +639,45 @@ void main() {
       expect(find.text('1 de 30 dias lidos'), findsOneWidget);
     });
 
+    testWidgets('marcar o último dia mostra o aviso de conclusão', (
+      tester,
+    ) async {
+      // Mensagem discreta ao fechar o plano: sem streak, sem cobrança, só o
+      // ponto final. Um plano de 1 dia conclui no primeiro (e único) toque.
+      await tester.runAsync(() => Conteudo.instancia.plano(bissexto: false));
+      final estado = Estado(await SharedPreferences.getInstance());
+      Nuvem.instancia.logadoForcado = true;
+      addTearDown(() => Nuvem.instancia.logadoForcado = null);
+      await estado.criarPlano(
+        titulo: 'João relâmpago',
+        livros: ['joao'],
+        dias: 1,
+      );
+      await tester.pumpWidget(
+        EscopoDoEstado(
+          estado: estado,
+          child: MaterialApp.router(
+            routerConfig: _routerDoPlano(estado, DateTime(2027, 2, 15)),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Meus planos'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('João relâmpago'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Marcar como lido').first);
+      // Sem settle: ele consumiria o timer de 3s que esconde o aviso e o
+      // teste veria a tela já sem ele.
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('Você concluiu este plano.'), findsOneWidget);
+      // Consome o timer de 3s que esconde o aviso: terminar o teste com
+      // ele pendente falha o invariante do framework.
+      await tester.pump(const Duration(seconds: 4));
+    });
+
     testWidgets(
       'trocar de aba e voltar para Planos mostra a lista, não o plano aberto '
       'antes de trocar',

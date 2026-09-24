@@ -280,9 +280,11 @@ motivo novo.
 - **Toda tela distingue carregando, erro e vazio** (`AvisoDeErro` em
   `lib/widgets/aviso_vazio.dart`); o padrão antigo confundia os três e
   deixava o spinner girando para sempre.
-- **A cópia de segurança das notas vai pela área de transferência**, não por
-  arquivo, para não ramificar por plataforma. Importar **funde**, nunca
-  substitui; em conflito vence quem tem nota.
+- **A cópia de segurança das notas sai pela folha de compartilhar**, não por
+  arquivo, para não ramificar por plataforma. O texto é o mesmo de antes (o
+  que o importar sabe ler, colando), então a simetria continua: a folha tem
+  Copiar, e quem prefere o app de Notas manda direto para lá. Importar
+  **funde**, nunca substitui; em conflito vence quem tem nota.
 - **A busca das Marcações filtra referência e nota, não o corpo do versículo**
   — o texto é carregado sob demanda, e trazer todos para uma busca em memória
   derrubaria o carregamento tardio. Limitação deliberada, documentada em
@@ -367,12 +369,18 @@ motivo novo.
   para todo mundo antes da hora custaria sem controle — convidar alguém é
   adicionar o e-mail no painel, sem versionar e-mail nenhum no repositório e
   sem trocar secret de build (o `--dart-define=EMAILS_COM_CONVERSAS` antigo
-  saiu de vez; antes de o documento carregar o chat fica fechado). Sem
-  `firebase_remote_config`: o Firestore que
-  o app já usa é o servidor de configuração. Cada interruptor tem o seu
-  `*Forcado` (mesmo padrão de `Lembretes.instancia`, mutável) só para teste —
-  o login de verdade nunca roda no ambiente de teste, e sem o override os
-  testes de Conversas e dos balões não veriam o recurso.
+   saiu de vez; antes de o documento carregar o chat fica fechado). Sem
+   `firebase_remote_config`: o Firestore que
+   o app já usa é o servidor de configuração. Cada interruptor tem o seu
+   `*Forcado` (mesmo padrão de `Lembretes.instancia`, mutável) só para teste —
+   o login de verdade nunca roda no ambiente de teste, e sem o override os
+   testes de Conversas e dos balões não veriam o recurso.
+ - **Planos próprios têm allowlist de e-mail igual à do chat**
+   (`emailsComPlanos`, `Recursos.planos`): com a lista vazia vale só o
+   interruptor global, como sempre foi; com o primeiro e-mail adicionado no
+   painel, só quem está nela cria planos. O cartão de pedir acesso é o mesmo
+   (WhatsApp), e a seção do painel é a mesma peça da do chat
+   (`_SecaoDeEmails` em `lib/telas/admin.dart`).
 - **A aba Conversas é visível para todo mundo; só o chat em si é que
   continua trancado pela allowlist** (04/09/2026): antes, `Recursos.conversas`
   também escondia a aba inteira (barra, trilho e a rota `/conversas`) —

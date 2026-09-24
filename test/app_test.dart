@@ -346,6 +346,32 @@ void main() {
     expect(find.text('Promessas de Deus'), findsWidgets);
   });
 
+  testWidgets('a Hoje esconde o cartão do cronograma com a flag desligada', (
+    tester,
+  ) async {
+    // O cartão da leitura do dia (e o progresso do ano) obedecem
+    // Recursos.cronograma, igual ao BotaoDeVoz com ouvirTextos: desligar no
+    // painel tira a Hoje do cronograma sem tocar nas outras leituras.
+    Recursos.cronogramaForcado = false;
+    addTearDown(() => Recursos.cronogramaForcado = null);
+    await aquecerAssets(tester);
+    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Progresso do ano'), findsNothing);
+    // A Hoje continua de pé, só sem o cronograma: a saudação segue à vista.
+    expect(
+      find.byWidgetPredicate(
+        (w) =>
+            w is Text &&
+            (w.data == 'Bom dia' ||
+                w.data == 'Boa tarde' ||
+                w.data == 'Boa noite'),
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('a Hoje estreita não estoura a linha do progresso do ano', (
     tester,
   ) async {
@@ -468,6 +494,43 @@ void main() {
       '/sobre',
     );
   });
+
+  testWidgets(
+    'a folha de ajustes esconde o áudio offline com o Ouvir desligado',
+    (tester) async {
+      // Baixar áudio sem o botão de ouvir é peso morto no disco: a seção
+      // some junto, na hora, sem esconder o resto da folha.
+      Future<void> abrirFolha() async {
+        await tester.tap(find.byType(DevocionalBotaoDeAjustes));
+        await tester.pumpAndSettle();
+      }
+
+      // Fecha tocando a barreira no topo, fora da folha (o centro dela é
+      // coberto pela própria folha e o toque cairia nela, não na barreira),
+      // e prova que fechou: o navigatorKey é global (ver main.dart) e uma
+      // folha aberta aqui sobrevive ao pumpWidget do próximo teste,
+      // cobrindo a tela dele.
+      Future<void> fecharFolha() async {
+        await tester.tapAt(const Offset(20, 20));
+        await tester.pumpAndSettle();
+        expect(find.text('Tamanho do texto'), findsNothing);
+      }
+
+      await aquecerAssets(tester);
+      await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+      await tester.pumpAndSettle();
+
+      await abrirFolha();
+      expect(find.text('Áudio offline'), findsWidgets);
+      await fecharFolha();
+
+      Recursos.ouvirTextosForcado = false;
+      addTearDown(() => Recursos.ouvirTextosForcado = null);
+      await abrirFolha();
+      expect(find.text('Áudio offline'), findsNothing);
+      await fecharFolha();
+    },
+  );
 
   testWidgets('o balão do chat abre o histórico e atualiza a URL', (
     tester,

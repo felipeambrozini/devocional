@@ -146,7 +146,17 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 // demanda, sem esconder que existe.
                 if (lembretesSuportados)
                   _SecaoDeLembretesExpansivel(estado: estado),
-                if (!kIsWeb) _SecaoAudioOfflineExpansivel(),
+                // Baixar áudio com o Ouvir desligado não faz sentido: o botão
+                // some em toda parte (ver BotaoDeVoz) e o download viraria
+                // peso morto no disco. O Listenable é só desta seção para o
+                // resto da folha não remontar a cada aviso da configuração.
+                if (!kIsWeb)
+                  ListenableBuilder(
+                    listenable: ConfigAdmin.instancia,
+                    builder: (context, _) => Recursos.ouvirTextos
+                        ? _SecaoAudioOfflineExpansivel()
+                        : const SizedBox.shrink(),
+                  ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
                     DevocionalEspacamento.sp20,

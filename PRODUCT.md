@@ -45,7 +45,7 @@ vitoriana dele, tratando o leitor por "tu".
   ajustáveis: push de uma Cloud Function agendada, mais um alarme local de
   reserva no Android para o caso de o push não chegar.
 - Cópia de segurança de favoritos, notas e progresso por exportar/importar
-  (área de transferência); conta Google em todas as plataformas, para
+  (folha de compartilhar); conta Google em todas as plataformas, para
   espelhar na nuvem.
 - Navegação: abas Hoje, Bíblia, Devocional, Plano, Notas e Conversas; Sobre
   (créditos, canais e ajuda), Perguntas frequentes, Política de privacidade e
@@ -58,7 +58,9 @@ vitoriana dele, tratando o leitor por "tu".
   em telas largas.
 - Painel admin (`/admin`, só web e só a conta do dono): liga/desliga cada
   recurso na hora (conversas, planos personalizados, cronograma, cada leitura
-  do devocional, ouvir textos) e edita a allowlist de e-mails do chat.
+  do devocional, ouvir textos) e edita as allowlists de e-mails do chat e dos
+  planos (a dos planos só restringe quando tem o primeiro e-mail; vazia,
+  vale o interruptor global).
   Ferramenta de operação, não parte da leitura diária — por isso é a única
   exceção à regra de "um app só em todas as plataformas".
 - Leitura em voz alta (MP3 pré-gerados, voz que remete ao tom de Charles

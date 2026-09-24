@@ -69,4 +69,29 @@ void main() {
       expect(Recursos.adminNaWeb, isFalse);
     });
   });
+
+  group('Recursos.planos', () {
+    tearDown(() {
+      Recursos.planosForcado = null;
+      Recursos.planoPersonalizadoForcado = null;
+      ConfigAdmin.instancia.redefinirParaTeste();
+    });
+
+    test('forcado tem prioridade sobre todo o resto', () {
+      Recursos.planosForcado = false;
+      ConfigAdmin.instancia.definirParaTeste(emailsPlanos: const []);
+      expect(Recursos.planos, isFalse);
+    });
+
+    test('lista vazia mantém o interruptor global', () {
+      expect(Recursos.planos, isTrue);
+      Recursos.planoPersonalizadoForcado = false;
+      expect(Recursos.planos, isFalse);
+    });
+
+    test('lista em uso sem login fecha', () {
+      ConfigAdmin.instancia.definirParaTeste(emailsPlanos: ['a@x.com']);
+      expect(Recursos.planos, isFalse);
+    });
+  });
 }

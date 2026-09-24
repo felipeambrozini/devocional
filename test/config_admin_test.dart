@@ -52,16 +52,19 @@ void main() {
       expect(ConfigAdmin.instancia.carregado, isTrue);
       expect(ConfigAdmin.instancia.conversasAtivas, isTrue);
       expect(ConfigAdmin.instancia.emailsComConversas, isEmpty);
+      expect(ConfigAdmin.instancia.emailsComPlanos, isEmpty);
     });
 
     test('aplica valores, normaliza e-mails e mantém ligado o ausente', () {
       ConfigAdmin.instancia.aplicarMapa({
         'conversasAtivas': false,
         'emailsComConversas': ['B@x.com', 'a@x.com'],
+        'emailsComPlanos': ['C@x.com', 'a@x.com'],
         'manhaAtivo': false,
       });
       expect(ConfigAdmin.instancia.conversasAtivas, isFalse);
       expect(ConfigAdmin.instancia.emailsComConversas, ['a@x.com', 'b@x.com']);
+      expect(ConfigAdmin.instancia.emailsComPlanos, ['a@x.com', 'c@x.com']);
       expect(ConfigAdmin.instancia.manhaAtivo, isFalse);
       expect(ConfigAdmin.instancia.cronogramaAtivo, isTrue);
     });

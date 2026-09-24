@@ -64,13 +64,26 @@ class DevocionalBalcaoDeMensagem extends StatelessWidget {
                       )
                     : Border(left: BorderSide(color: cor.primary, width: 3)),
               ),
-              child: Text(
-                mensagem.texto,
-                style: tema.bodyMedium?.copyWith(
-                  color: cor.onSurface,
-                  height: 1.5,
-                ),
-              ),
+              // A resposta da persona é selecionável: copiar um trecho (ou
+              // mandar para o app de Notas pela folha nativa do aparelho) é
+              // o jeito de guardar o que ela disse, já que a conversa mora
+              // só neste aparelho. A pergunta do visitante continua Text
+              // puro: ela já está no campo de entrada, é só rolar.
+              child: usuario
+                  ? Text(
+                      mensagem.texto,
+                      style: tema.bodyMedium?.copyWith(
+                        color: cor.onSurface,
+                        height: 1.5,
+                      ),
+                    )
+                  : SelectableText(
+                      mensagem.texto,
+                      style: tema.bodyMedium?.copyWith(
+                        color: cor.onSurface,
+                        height: 1.5,
+                      ),
+                    ),
             ),
           ),
         ],

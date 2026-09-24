@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../controladores/notas_controlador.dart';
 import '../dados/estado.dart';
@@ -148,21 +148,21 @@ class _TelaNotasState extends State<TelaNotas> {
   }
 }
 
-/// Área de transferência, não arquivo. Favoritos, notas e progresso
-/// vivem no SharedPreferences, que na web é o localStorage e o navegador limpa
-/// sozinho sob pressão de espaço; texto escrito à mão não pode existir num lugar
-/// só. `share_plus` já é dependência do app (usado para compartilhar um
-/// versículo, em `biblia.dart`), mas exportar por arquivo trocaria o
-/// "importar" por escolher um arquivo em vez de colar, e o de colar continua
-/// sendo o caminho simétrico: mesma caixa de texto serve para exportar e para
-/// importar. Se um dia precisar de arquivo de verdade, o caminho é
+/// A cópia sai pela folha de compartilhar, não pela área de transferência.
+/// Favoritos, notas e progresso vivem no SharedPreferences, que na web é o
+/// localStorage e o navegador limpa sozinho sob pressão de espaço; texto
+/// escrito à mão não pode existir num lugar só. O texto é o mesmo de antes
+/// (o que o "importar" abaixo sabe ler, colando), então a simetria
+/// exportar/importar continua: a folha de compartilhar tem Copiar, e quem
+/// prefere o app de Notas manda direto para lá sem passar pelo copiar-colar.
+/// Se um dia precisar de arquivo de verdade, o caminho é
 /// `SharePlus.instance.share(ShareParams(files: [...]))`.
 Future<void> _exportar(BuildContext context, Estado estado) async {
   final mensageiro = ScaffoldMessenger.of(context);
-  await Clipboard.setData(ClipboardData(text: estado.exportar()));
+  await SharePlus.instance.share(ShareParams(text: estado.exportar()));
   mostrarAvisoNo(
     mensageiro,
-    'Copiado. Cole num e-mail ou no app de Notas do aparelho para guardar — '
+    'Cópia enviada. Para guardar, salve no app de Notas — '
     'depois, é colando aqui de novo que você importa.',
   );
 }

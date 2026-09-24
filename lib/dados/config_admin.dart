@@ -25,6 +25,7 @@ class ConfigAdmin extends ChangeNotifier {
 
   bool _conversasAtivas = true;
   List<String> _emails = const [];
+  List<String> _emailsPlanos = const [];
   bool _planoPersonalizadoAtivo = true;
   bool _cronogramaAtivo = true;
   bool _manhaAtivo = true;
@@ -39,6 +40,11 @@ class ConfigAdmin extends ChangeNotifier {
 
   bool get conversasAtivas => _conversasAtivas;
   List<String> get emailsComConversas => List.unmodifiable(_emails);
+
+  /// Quem pode criar planos próprios quando a allowlist está em uso (ver
+  /// `Recursos.planos`): vazia mantém o comportamento atual, só o
+  /// interruptor global decide.
+  List<String> get emailsComPlanos => List.unmodifiable(_emailsPlanos);
   bool get planoPersonalizadoAtivo => _planoPersonalizadoAtivo;
   bool get cronogramaAtivo => _cronogramaAtivo;
   bool get manhaAtivo => _manhaAtivo;
@@ -94,6 +100,7 @@ class ConfigAdmin extends ChangeNotifier {
 
     _conversasAtivas = ligado('conversasAtivas');
     _emails = normalizarEmails(mapa['emailsComConversas']);
+    _emailsPlanos = normalizarEmails(mapa['emailsComPlanos']);
     _planoPersonalizadoAtivo = ligado('planoPersonalizadoAtivo');
     _cronogramaAtivo = ligado('cronogramaAtivo');
     _manhaAtivo = ligado('manhaAtivo');
@@ -126,6 +133,7 @@ class ConfigAdmin extends ChangeNotifier {
   void definirParaTeste({
     bool? conversasAtivas,
     List<String>? emails,
+    List<String>? emailsPlanos,
     bool? planoPersonalizadoAtivo,
     bool? cronogramaAtivo,
     bool? manhaAtivo,
@@ -136,6 +144,7 @@ class ConfigAdmin extends ChangeNotifier {
   }) {
     if (conversasAtivas != null) _conversasAtivas = conversasAtivas;
     if (emails != null) _emails = normalizarEmails(emails);
+    if (emailsPlanos != null) _emailsPlanos = normalizarEmails(emailsPlanos);
     if (planoPersonalizadoAtivo != null) {
       _planoPersonalizadoAtivo = planoPersonalizadoAtivo;
     }
@@ -153,6 +162,7 @@ class ConfigAdmin extends ChangeNotifier {
   void redefinirParaTeste() {
     _conversasAtivas = true;
     _emails = const [];
+    _emailsPlanos = const [];
     _planoPersonalizadoAtivo = true;
     _cronogramaAtivo = true;
     _manhaAtivo = true;
@@ -205,7 +215,15 @@ class ConfigAdmin extends ChangeNotifier {
     'emailsComConversas': FieldValue.arrayUnion([validarEmail(cru)]),
   });
 
+  Future<void> adicionarEmailAosPlanos(String cru) => _gravar({
+    'emailsComPlanos': FieldValue.arrayUnion([validarEmail(cru)]),
+  });
+
   Future<void> removerEmail(String email) => _gravar({
     'emailsComConversas': FieldValue.arrayRemove([email.trim().toLowerCase()]),
+  });
+
+  Future<void> removerEmailDosPlanos(String email) => _gravar({
+    'emailsComPlanos': FieldValue.arrayRemove([email.trim().toLowerCase()]),
   });
 }
