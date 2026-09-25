@@ -89,3 +89,6 @@ test_regras/node_modules/
 
 
 sentry.properties
+
+# Lotes e saídas temporárias da reescrita dos comentários de Spurgeon
+tools/comentarios/trabalho/
