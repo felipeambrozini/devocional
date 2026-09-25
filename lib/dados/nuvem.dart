@@ -275,6 +275,16 @@ class Nuvem extends ChangeNotifier {
   StreamSubscription<User?>? _assinatura;
   bool _pronta = false;
 
+  /// Se o Firebase Auth já disse se há sessão salva — o primeiro evento de
+  /// `authStateChanges`, que chega logo depois do `initializeApp` (na web,
+  /// assim que a sessão volta do armazenamento do navegador). É isto, e não
+  /// [_pronta], que libera nome, foto e [logado]: a identidade não depende do
+  /// App Check, só o Firestore depende. Com os dois no mesmo portão, a Hoje
+  /// dizia "Bom dia" sem o nome por até 30 s a cada abertura, e parecia que a
+  /// conta tinha saído.
+  bool _sessaoConhecida = false;
+  StreamSubscription<User?>? _assinaturaDaSessao;
+
   /// Só para testes de widget: força [logado] sem depender de um Firebase de
   /// verdade, que os testes não inicializam. null (padrão) deixa a resposta
   /// de verdade, vinda do Firebase.
@@ -282,20 +292,20 @@ class Nuvem extends ChangeNotifier {
   bool? logadoForcado;
 
   bool get logado =>
-      logadoForcado ?? (_pronta && FirebaseAuth.instance.currentUser != null);
+      logadoForcado ??
+      (_sessaoConhecida && FirebaseAuth.instance.currentUser != null);
 
-  /// Se [iniciar] já terminou (Firebase + App Check prontos). Antes disso
-  /// ninguém sabe se há sessão em cache: [logado] vale false por falta de
-  /// resposta, não por resposta — e desenhar "Entrar" aí mostra um convite
-  /// que some sozinho segundos depois, quando a sessão volta (ver
-  /// `_BotaoDeConta` em `lib/telas/hoje.dart`).
+  /// Se [iniciar] já terminou (Firebase + App Check prontos) — o que libera
+  /// o Firestore, não a identidade (ver [_sessaoConhecida]).
   bool get pronta => _pronta;
 
-  /// A conta ainda pode estar restaurando: nem pronta, nem com override de
-  /// teste. É o estado em que o cabeçalho mostra espera em vez de "Entrar".
-  bool get carregandoConta => logadoForcado == null && !_pronta;
+  /// A sessão salva ainda não voltou: sem override de teste e sem o primeiro
+  /// evento do Auth. Antes disso [logado] vale false por falta de resposta,
+  /// não por resposta, e o cabeçalho mostra espera em vez de um "Entrar" que
+  /// sumiria sozinho (ver `_BotaoDeConta` em `lib/telas/hoje.dart`).
+  bool get carregandoConta => logadoForcado == null && !_sessaoConhecida;
   String? get email =>
-      _pronta ? FirebaseAuth.instance.currentUser?.email : null;
+      _sessaoConhecida ? FirebaseAuth.instance.currentUser?.email : null;
 
   /// Se [entrar] está em andamento, para os botões de "Entrar" mostrarem um
   /// spinner e ficarem desabilitados — sem isto o toque parecia não fazer
@@ -309,12 +319,13 @@ class Nuvem extends ChangeNotifier {
   /// O uid de quem está com a conta aberta, para saber se é o criador de um
   /// plano compartilhado (ver `excluirPlano`/`sairDoPlano` em
   /// `lib/funcoes/planos_acoes.dart`). null sem conta, ou antes de [iniciar].
-  String? get uid => _pronta ? FirebaseAuth.instance.currentUser?.uid : null;
+  String? get uid =>
+      _sessaoConhecida ? FirebaseAuth.instance.currentUser?.uid : null;
 
   /// Primeiro nome de quem entrou, para a saudação de `_Cabecalho` em
   /// `hoje.dart`. null sem conta, ou se a conta Google não devolveu nome.
   String? get primeiroNome {
-    final nome = _pronta
+    final nome = _sessaoConhecida
         ? FirebaseAuth.instance.currentUser?.displayName
         : null;
     return nome?.trim().split(_espacos).firstOrNull;
@@ -323,7 +334,7 @@ class Nuvem extends ChangeNotifier {
   /// Foto de perfil da conta Google de quem entrou, para o avatar de
   /// `_Cabecalho` em `hoje.dart`. null sem conta, ou sem foto no Google.
   String? get fotoUrl =>
-      _pronta ? FirebaseAuth.instance.currentUser?.photoURL : null;
+      _sessaoConhecida ? FirebaseAuth.instance.currentUser?.photoURL : null;
 
   /// Só o núcleo do Firebase (`Firebase.initializeApp`), sem o resto de
   /// [iniciar] — para quem precisa do app default já registrado antes de
@@ -335,6 +346,12 @@ class Nuvem extends ChangeNotifier {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    // Só identidade, sem Firestore: pode ouvir antes do App Check. Qualquer
+    // mudança de conta (a sessão que volta, entrar, sair) redesenha a UI.
+    _assinaturaDaSessao = FirebaseAuth.instance.authStateChanges().listen((_) {
+      _sessaoConhecida = true;
+      notifyListeners();
+    });
   }
 
   /// Prepara o Firebase e liga a sincronização ao estado de login. Chamar uma
@@ -472,6 +489,7 @@ class Nuvem extends ChangeNotifier {
   @override
   void dispose() {
     _assinatura?.cancel();
+    _assinaturaDaSessao?.cancel();
     _sincronia?.parar();
     _sincroniaDeConversas?.parar();
     _sincroniaDeLembretes?.parar();
