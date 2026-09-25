@@ -30,7 +30,7 @@ dependencies:
   # push da Cloud Function agendada (functions/) via token FCM gravado no
   # Firestore, em Android e web; no Android ainda há alarme local de reserva
   # pelo flutter_local_notifications abaixo.
-  firebase_messaging: ^16.6.0
+  firebase_messaging: ^16.7.0
   # Alarme local de reserva do lembrete no Android (horário + 5 min): se o
   # push não chegar, o próprio aparelho avisa com o mesmo conteúdo. Fora da
   # web — lá a exibição é do service worker.
