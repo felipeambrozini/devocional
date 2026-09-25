@@ -1,12 +1,16 @@
 import 'dart:convert';
-import 'dart:isolate' show Isolate;
 
-import 'package:flutter/foundation.dart' show FlutterError;
+import 'package:flutter/foundation.dart' show FlutterError, compute;
 import 'package:flutter/services.dart' show rootBundle;
 
 import 'canon.dart';
 import 'modelos.dart';
 import 'registro.dart';
+
+/// Decodifica o corpo de um asset grande. Função de módulo (não closure)
+/// de propósito: é o que o [compute] aceita levar ao isolate.
+Map<String, dynamic> _decodificarMapa(String cru) =>
+    json.decode(cru) as Map<String, dynamic>;
 
 /// Leitura dos assets, com cache em memória.
 ///
@@ -176,8 +180,14 @@ class Conteudo {
   /// travariam um frame na decodificação síncrona. Os assets pequenos
   /// (cronograma, introduções, livros da Bíblia) continuam diretos: neles
   /// o custo de subir um isolate supera o da decodificação.
+  ///
+  /// Via [compute], não `Isolate.run` direto: a web não tem isolates e o
+  /// `Isolate.run` estoura lá, apagando os devocionais só na web (só a
+  /// decodificação grande usava esse caminho; o resto do app continuava
+  /// normal). O `compute` abre isolate no celular e decodifica na thread
+  /// principal na web, com a mesma chamada.
   static Future<Map<String, dynamic>> _decodificarGrande(String cru) =>
-      Isolate.run(() => json.decode(cru) as Map<String, dynamic>);
+      compute(_decodificarMapa, cru);
 
   Future<Map<String, Map<String, dynamic>>> _carregarDevocionais() async {
     final cacheado = _devocionais;
