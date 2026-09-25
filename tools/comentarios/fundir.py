@@ -28,17 +28,20 @@ def main():
     sys.stdout.reconfigure(encoding='utf-8')
     nomes = sys.argv[1:]
     pendentes = [n for n in nomes if not pronto(n)]
-    por_livro = {}
+    por_livro, nomes_dos_livros = {}, {}
     for nome in nomes:
         if nome in pendentes:
             continue
-        slug = json.loads((TRABALHO / 'lotes' / f'{nome}.json').read_text(encoding='utf-8'))['slug']
+        lote = json.loads((TRABALHO / 'lotes' / f'{nome}.json').read_text(encoding='utf-8'))
+        slug = lote['slug']
+        nomes_dos_livros[slug] = lote['book']
         saida = json.loads((TRABALHO / 'saida' / f'{nome}.json').read_text(encoding='utf-8'))
         for cap, versiculos in saida.items():
             por_livro.setdefault(slug, {}).setdefault(cap, {}).update(versiculos)
     for slug, capitulos in por_livro.items():
         arquivo = RAIZ / 'assets' / 'comentarios' / f'{slug}.json'
-        dados = json.loads(arquivo.read_text(encoding='utf-8'))
+        dados = (json.loads(arquivo.read_text(encoding='utf-8')) if arquivo.exists()
+                 else {'slug': slug, 'book': nomes_dos_livros[slug], 'capitulos': {}})
         for cap, versiculos in capitulos.items():
             dados['capitulos'].setdefault(cap, {}).update(versiculos)
         dados['capitulos'] = {
