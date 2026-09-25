@@ -51,7 +51,9 @@ mesmo código).
   navegador limpar o armazenamento e para o mesmo plano aparecer no celular e
   na web. Quem entra vê o próprio avatar (foto da conta Google, ou a inicial do
   nome sem foto) na saudação da aba Hoje, e pode trocar a foto tocando nele
-  (câmera ou galeria).
+  (câmera ou galeria). Ao abrir, enquanto a sessão restaura do disco (segundos
+  no Android), o cabeçalho mostra "Verificando conta" em vez do botão Entrar —
+  que só aparece quando se sabe que não há sessão.
 - **Busca** no texto da Bíblia e nos devocionais, em duas abas.
 - **Tamanho do texto** ajustável e **tema claro ou escuro**, pela barra do leitor
   ou do devocional. O padrão segue o aparelho, e dá para fixar um dos dois.

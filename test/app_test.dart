@@ -4,6 +4,7 @@ import 'package:felipe_ambrozini/dados/audio_offline.dart';
 import 'package:felipe_ambrozini/dados/conteudo.dart';
 import 'package:felipe_ambrozini/dados/estado.dart';
 import 'package:felipe_ambrozini/dados/modelos.dart';
+import 'package:felipe_ambrozini/dados/nuvem.dart';
 import 'package:felipe_ambrozini/dados/personas.dart';
 import 'package:felipe_ambrozini/dados/recursos.dart';
 import 'package:felipe_ambrozini/dados/voz.dart';
@@ -344,6 +345,28 @@ void main() {
       ),
     );
     expect(find.text('Promessas de Deus'), findsWidgets);
+  });
+
+  testWidgets('o cabeçalho espera a conta restaurar em vez de oferecer Entrar', (
+    tester,
+  ) async {
+    // Sem iniciar() nem override, a sessão pode estar voltando do disco: o
+    // cabeçalho mostra espera, não um "Entrar" que sumiria sozinho — era essa
+    // a cara de "deslogou ao fechar o app".
+    await aquecerAssets(tester);
+    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Entrar'), findsNothing);
+    expect(find.text('Sair'), findsNothing);
+    expect(find.byTooltip('Verificando conta…'), findsOneWidget);
+
+    // Deslogado de verdade (override), o convite aparece.
+    Nuvem.instancia.logadoForcado = false;
+    addTearDown(() => Nuvem.instancia.logadoForcado = null);
+    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+    await tester.pumpAndSettle();
+    expect(find.text('Entrar'), findsOneWidget);
   });
 
   testWidgets('a Hoje esconde o cartão do cronograma com a flag desligada', (

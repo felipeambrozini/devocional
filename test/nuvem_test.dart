@@ -9,6 +9,24 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
+  group('estado da conta antes do iniciar', () {
+    tearDown(() => Nuvem.instancia.logadoForcado = null);
+
+    test('sem iniciar nem override, a conta está restaurando', () {
+      final nuvem = Nuvem.instancia;
+      expect(nuvem.pronta, isFalse);
+      expect(nuvem.logado, isFalse);
+      expect(nuvem.carregandoConta, isTrue);
+    });
+
+    test('override de teste dispensa a espera', () {
+      final nuvem = Nuvem.instancia;
+      nuvem.logadoForcado = false;
+      expect(nuvem.carregandoConta, isFalse);
+      expect(nuvem.logado, isFalse);
+    });
+  });
+
   /// Deixa o `Timer(Duration.zero)` da [Sincronia] disparar. Duas voltas do
   /// laço de eventos: uma para o Timer chamar `_enviar`, outra para o `await`
   /// de dentro dele (a closure `empurrar`) completar.

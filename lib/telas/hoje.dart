@@ -303,8 +303,10 @@ class _Cabecalho extends StatelessWidget {
   }
 }
 
-/// Entrar ou sair da conta, no fim do cabeçalho da Hoje. Uma linha só para
-/// os dois estados, nunca os dois ao mesmo tempo: convite para entrar, ou o
+/// Entrar, sair ou esperar, no fim do cabeçalho da Hoje. Três estados, nunca
+/// dois ao mesmo tempo: a espera enquanto a sessão pode estar restaurando
+/// (sem ela, o "Entrar" aparecia e sumia sozinho segundos depois, parecendo
+/// que o app tinha deslogado sozinho ao fechar), o convite para entrar, ou o
 /// botão "Sair" de quem já entrou (o e-mail fica no Sobre, em "Conta e
 /// privacidade").
 class _BotaoDeConta extends StatelessWidget {
@@ -315,25 +317,44 @@ class _BotaoDeConta extends StatelessWidget {
     final nuvem = Nuvem.instancia;
     return ListenableBuilder(
       listenable: nuvem,
-      builder: (context, _) => nuvem.logado
-          ? DevocionalBotaoTerciario.icon(
-              onPressed: () => _sairDaConta(context),
-              icon: const FaIcon(FontAwesomeIcons.rightFromBracket, size: 18),
-              label: const Text('Sair'),
-            )
-          : DevocionalBotaoSecundario.icon(
-              onPressed: nuvem.entrando
-                  ? null
-                  : () => entrarNaConta(context, nuvem),
-              icon: nuvem.entrando
-                  ? const SizedBox(
-                      width: DevocionalEspacamento.sp18,
-                      height: DevocionalEspacamento.sp18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const FaIcon(FontAwesomeIcons.google, size: 16),
-              label: const Text('Entrar'),
+      builder: (context, _) {
+        if (nuvem.logado) {
+          return DevocionalBotaoTerciario.icon(
+            onPressed: () => _sairDaConta(context),
+            icon: const FaIcon(FontAwesomeIcons.rightFromBracket, size: 18),
+            label: const Text('Sair'),
+          );
+        }
+        if (nuvem.carregandoConta) {
+          // Espera estática, sem animação: a restauração leva 20-30s no
+          // Android, e um giro indeterminado queimaria bateria à toa no
+          // cabeçalho de toda abertura (além de nunca assentar em teste).
+          return Tooltip(
+            message: 'Verificando conta…',
+            child: Semantics(
+              label: 'Verificando conta',
+              child: FaIcon(
+                FontAwesomeIcons.hourglassStart,
+                size: 16,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
+          );
+        }
+        return DevocionalBotaoSecundario.icon(
+          onPressed: nuvem.entrando
+              ? null
+              : () => entrarNaConta(context, nuvem),
+          icon: nuvem.entrando
+              ? const SizedBox(
+                  width: DevocionalEspacamento.sp18,
+                  height: DevocionalEspacamento.sp18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const FaIcon(FontAwesomeIcons.google, size: 16),
+          label: const Text('Entrar'),
+        );
+      },
     );
   }
 }

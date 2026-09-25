@@ -283,6 +283,17 @@ class Nuvem extends ChangeNotifier {
 
   bool get logado =>
       logadoForcado ?? (_pronta && FirebaseAuth.instance.currentUser != null);
+
+  /// Se [iniciar] já terminou (Firebase + App Check prontos). Antes disso
+  /// ninguém sabe se há sessão em cache: [logado] vale false por falta de
+  /// resposta, não por resposta — e desenhar "Entrar" aí mostra um convite
+  /// que some sozinho segundos depois, quando a sessão volta (ver
+  /// `_BotaoDeConta` em `lib/telas/hoje.dart`).
+  bool get pronta => _pronta;
+
+  /// A conta ainda pode estar restaurando: nem pronta, nem com override de
+  /// teste. É o estado em que o cabeçalho mostra espera em vez de "Entrar".
+  bool get carregandoConta => logadoForcado == null && !_pronta;
   String? get email =>
       _pronta ? FirebaseAuth.instance.currentUser?.email : null;
 
@@ -374,6 +385,10 @@ class Nuvem extends ChangeNotifier {
     }
 
     _pronta = true;
+    // Avisa já, sem esperar o primeiro evento do `authStateChanges` abaixo:
+    // com sessão em cache ele chega logo, mas sem sessão (deslogado de
+    // verdade) a UI saberia tarde que pode mostrar o "Entrar".
+    notifyListeners();
 
     _assinatura = FirebaseAuth.instance.authStateChanges().listen((usuario) {
       _sincronia?.parar();
