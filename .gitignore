@@ -63,16 +63,15 @@ graphify-out/
 # invisível pro git, e só os que já existiam antes desta linha continuavam
 # rastreados.
 .claude/*
-!.claude/skills/
-.claude/skills/*
-!.claude/skills/spurgeon-introducao/
-!.claude/skills/spurgeon-comentarios/
-!.claude/skills/feature-flag-gate/
-!.claude/skills/release-checklist/
+!.claude/skills
 !.claude/agents/
 .github/hooks/
 .github/skills/
-.agents/
+# As skills do projeto ficam em .agents/skills/ (.claude/skills é atalho para
+# lá). Só as do próprio projeto entram no git; impeccable é de terceiros.
+.agents/*
+!.agents/skills/
+.agents/skills/impeccable/
 .codex/
 .impeccable/
 docs/
