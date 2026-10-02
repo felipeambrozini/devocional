@@ -162,7 +162,7 @@ String _mensagemDeErro(http.Response resposta) {
   }
   if (resposta.statusCode == 403) {
     return 'A inteligência artificial recusou o pedido (chave sem permissão '
-        'para este modelo). Isto não se resolve sozinho — avise quem mantém '
+        'para este modelo). Isto não se resolve sozinho: avise quem mantém '
         'o app.';
   }
   return 'A inteligência artificial não respondeu agora. Tente de novo em '

@@ -131,22 +131,19 @@ class _AbaDevocionais extends StatefulWidget {
 }
 
 class _AbaDevocionaisState extends State<_AbaDevocionais> {
-  final _filtroDeData = TextEditingController();
+  /// A data digitada e a leitura escolhida são campos de estado, e não a
+  /// leitura de um controlador dentro de um getter: com o controlador, cada
+  /// tecla-digitada era um `setState` sem nome, e o filtro inteiro rodava a
+  /// cada caractere sem nada mudar de fato.
+  String _data = '';
   String? _filtroDeLeitura;
 
-  @override
-  void dispose() {
-    _filtroDeData.dispose();
-    super.dispose();
-  }
-
   List<AchadoDevocional> get _filtrados {
-    final data = _filtroDeData.text.trim();
     return widget.achados.where((a) {
       if (_filtroDeLeitura != null && a.leitura != _filtroDeLeitura) {
         return false;
       }
-      if (data.isNotEmpty && !a.data.contains(data)) return false;
+      if (_data.isNotEmpty && !a.data.contains(_data)) return false;
       return true;
     }).toList();
   }
@@ -210,8 +207,11 @@ class _AbaDevocionaisState extends State<_AbaDevocionais> {
             children: [
               Expanded(
                 child: TextField(
-                  controller: _filtroDeData,
-                  onChanged: (_) => setState(() {}),
+                  onChanged: (valor) {
+                    final data = valor.trim();
+                    if (data == _data) return;
+                    setState(() => _data = data);
+                  },
                   decoration: const InputDecoration(
                     hintText: 'Data (DD-MM)',
                     prefixIcon: Icon(Icons.calendar_today, size: 16),

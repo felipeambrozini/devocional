@@ -7,6 +7,7 @@ import '../controladores/notas_controlador.dart';
 import '../dados/estado.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
+import '../funcoes/dialogos.dart';
 import '../widgets/widgets.dart';
 
 /// Favoritos e anotações, em duas abas, com busca.
@@ -162,55 +163,24 @@ Future<void> _exportar(BuildContext context, Estado estado) async {
   await SharePlus.instance.share(ShareParams(text: estado.exportar()));
   mostrarAvisoNo(
     mensageiro,
-    'Cópia enviada. Para guardar, salve no app de Notas — '
+    'Cópia enviada. Para guardar, salve no app de Notas; '
     'depois, é colando aqui de novo que você importa.',
   );
 }
 
 Future<void> _importar(BuildContext context, Estado estado) async {
-  final controle = TextEditingController();
   final texto = await showDialog<String>(
     context: context,
-    builder: (dialogo) => AlertDialog(
-      title: Text(
-        'Importar cópia',
-        style: Theme.of(dialogo).textTheme.headlineSmall,
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const DevocionalFilete(largura: 64),
-          const SizedBox(height: DevocionalEspacamento.sp12),
-          Text(
-            'Cole aqui o texto exportado. Nada é apagado: a cópia se junta ao '
-            'que já está no aparelho.',
-            style: Theme.of(dialogo).textTheme.bodySmall,
-          ),
-          const SizedBox(height: DevocionalEspacamento.sp12),
-          TextField(
-            controller: controle,
-            // Mesmo padrão da busca: no celular o teclado cobriria o diálogo.
-            autofocus: !kIsWeb,
-            maxLines: 6,
-            minLines: 4,
-            decoration: const InputDecoration(
-              labelText: 'Texto exportado',
-              border: OutlineInputBorder(),
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        DevocionalBotaoTerciario(
-          onPressed: () => Navigator.pop(dialogo),
-          child: const Text('Cancelar'),
-        ),
-        DevocionalBotaoPrimario(
-          onPressed: () => Navigator.pop(dialogo, controle.text),
-          child: const Text('Importar'),
-        ),
-      ],
+    builder: (_) => DialogoDeTexto(
+      titulo: 'Importar cópia',
+      rotuloDoCampo: 'Texto exportado',
+      rotuloDaAcao: 'Importar',
+      descricao:
+          'Cole aqui o texto exportado. Nada é apagado: a cópia se junta ao '
+          'que já está no aparelho.',
+      linhasMin: 4,
+      // Mesmo padrão da busca: no celular o teclado cobriria o diálogo.
+      autofocus: !kIsWeb,
     ),
   );
   if (texto == null || texto.trim().isEmpty || !context.mounted) return;

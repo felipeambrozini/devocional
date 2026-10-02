@@ -178,166 +178,187 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
 Future<List<String>?> mostrarSeletorDeLivros(
   BuildContext context, {
   required List<String> jaEscolhidos,
-}) {
-  final busca = TextEditingController();
-  final selecionados = <String>{...jaEscolhidos};
-  final antigos = [
+}) => showDialog<List<String>>(
+  context: context,
+  builder: (_) => _SeletorDeLivros(jaEscolhidos: jaEscolhidos),
+);
+
+/// O conteúdo do diálogo é um `StatefulWidget`, e não um `StatefulBuilder`
+/// com um `TextEditingController` criado na função que abre o diálogo: um
+/// controlador precisa de um dono com `dispose`, e o dono tem de ser o `State`
+/// do conteúdo. Criado fora e descartado no `finally` do `Future`, ele morre
+/// com a rota ainda na transição de saída, e o campo da rota morta ainda o
+/// usa.
+class _SeletorDeLivros extends StatefulWidget {
+  const _SeletorDeLivros({required this.jaEscolhidos});
+
+  final List<String> jaEscolhidos;
+
+  @override
+  State<_SeletorDeLivros> createState() => _SeletorDeLivrosState();
+}
+
+class _SeletorDeLivrosState extends State<_SeletorDeLivros> {
+  static final _antigos = [
     for (final livro in canon)
       if (livro.testamento == Testamento.antigo) livro,
   ];
-  final novos = [
+  static final _novos = [
     for (final livro in canon)
       if (livro.testamento == Testamento.novo) livro,
   ];
-  return showDialog<List<String>>(
-    context: context,
-    builder: (dialogContext) => StatefulBuilder(
-      builder: (dialogContext, setDialogState) {
-        final termo = Conteudo.normalizar(busca.text);
-        final livros = [
-          for (final livro in canon)
-            if (termo.isEmpty ||
-                Conteudo.normalizar(livro.nome).contains(termo))
-              livro,
-        ];
 
-        bool todosMarcados(List<Livro> grupo) =>
-            grupo.every((livro) => selecionados.contains(livro.slug));
-        bool nenhumMarcado(List<Livro> grupo) =>
-            grupo.every((livro) => !selecionados.contains(livro.slug));
-        void alternarTestamento(List<Livro> grupo) {
-          if (todosMarcados(grupo)) {
-            selecionados.removeAll(grupo.map((livro) => livro.slug));
-          } else {
-            selecionados.addAll(grupo.map((livro) => livro.slug));
-          }
+  final _busca = TextEditingController();
+  final _selecionados = <String>{};
+
+  @override
+  void initState() {
+    super.initState();
+    _selecionados.addAll(widget.jaEscolhidos);
+  }
+
+  @override
+  void dispose() {
+    _busca.dispose();
+    super.dispose();
+  }
+
+  bool _todosMarcados(List<Livro> grupo) =>
+      grupo.every((livro) => _selecionados.contains(livro.slug));
+  bool _nenhumMarcado(List<Livro> grupo) =>
+      grupo.every((livro) => !_selecionados.contains(livro.slug));
+
+  Widget _atalhoDeTestamento(List<Livro> grupo, String nome) {
+    return CheckboxListTile(
+      dense: true,
+      tristate: true,
+      controlAffinity: ListTileControlAffinity.leading,
+      title: Text(nome),
+      subtitle: Text(
+        '${grupo.length} ${grupo.length == 1 ? 'livro' : 'livros'}',
+      ),
+      value: _todosMarcados(grupo)
+          ? true
+          : _nenhumMarcado(grupo)
+          ? false
+          : null,
+      onChanged: (_) => setState(() {
+        final slugs = grupo.map((livro) => livro.slug).toList();
+        if (_todosMarcados(grupo)) {
+          _selecionados.removeAll(slugs);
+        } else {
+          _selecionados.addAll(slugs);
         }
+      }),
+    );
+  }
 
-        Widget atalhoDeTestamento(List<Livro> grupo, String nome) {
-          final todos = todosMarcados(grupo);
-          return CheckboxListTile(
-            dense: true,
-            tristate: true,
-            controlAffinity: ListTileControlAffinity.leading,
-            title: Text(nome),
-            subtitle: Text(
-              '${grupo.length} ${grupo.length == 1 ? 'livro' : 'livros'}',
+  @override
+  Widget build(BuildContext context) {
+    final termo = Conteudo.normalizar(_busca.text);
+    final livros = [
+      for (final livro in canon)
+        if (termo.isEmpty || Conteudo.normalizar(livro.nome).contains(termo))
+          livro,
+    ];
+    return AlertDialog(
+      title: Text(
+        'Escolher livros (${_selecionados.length} de ${canon.length})',
+        style: Theme.of(context).textTheme.headlineSmall,
+      ),
+      content: SizedBox(
+        width: larguraDeDialogo(context, 460),
+        height: 480,
+        child: Column(
+          children: [
+            DevocionalBusca(
+              controller: _busca,
+              // Mesmo padrão da aba de busca: no celular o teclado cobriria a
+              // lista de 66 livros antes de qualquer intenção.
+              autofocus: !kIsWeb,
+              hintText: 'Buscar livro',
+              onChanged: (_) => setState(() {}),
+              border: const OutlineInputBorder(),
             ),
-            value: todos
-                ? true
-                : nenhumMarcado(grupo)
-                ? false
-                : null,
-            onChanged: (_) => setDialogState(() => alternarTestamento(grupo)),
-          );
-        }
-
-        return AlertDialog(
-          title: Text(
-            'Escolher livros (${selecionados.length} de ${canon.length})',
-            style: Theme.of(dialogContext).textTheme.headlineSmall,
-          ),
-          content: SizedBox(
-            width: larguraDeDialogo(dialogContext, 460),
-            height: 480,
-            child: Column(
-              children: [
-                DevocionalBusca(
-                  controller: busca,
-                  // Mesmo padrão da aba de busca: no celular o teclado
-                  // cobriria a lista de 66 livros antes de qualquer intenção.
-                  autofocus: !kIsWeb,
-                  hintText: 'Buscar livro',
-                  onChanged: (_) => setDialogState(() {}),
-                  border: const OutlineInputBorder(),
+            const SizedBox(height: DevocionalEspacamento.sp12),
+            _atalhoDeTestamento(_antigos, 'Antigo Testamento'),
+            _atalhoDeTestamento(_novos, 'Novo Testamento'),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: DevocionalEspacamento.sp16,
+              ),
+              child: Text(
+                'Caixa cheia marca o testamento inteiro. Traço quer dizer que só parte dele está marcada.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
-                const SizedBox(height: DevocionalEspacamento.sp12),
-                atalhoDeTestamento(antigos, 'Antigo Testamento'),
-                atalhoDeTestamento(novos, 'Novo Testamento'),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DevocionalEspacamento.sp16,
-                  ),
-                  child: Text(
-                    'Caixa cheia marca o testamento inteiro. Traço quer dizer que só parte dele está marcada.',
-                    style: Theme.of(dialogContext).textTheme.bodySmall
-                        ?.copyWith(
-                          color: Theme.of(
-                            dialogContext,
-                          ).colorScheme.onSurfaceVariant,
-                        ),
-                  ),
-                ),
-                const Divider(),
-                Expanded(
-                  child: livros.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Text('Nenhum livro encontrado.'),
-                              const SizedBox(height: DevocionalEspacamento.sp8),
-                              DevocionalBotaoTerciario(
-                                onPressed: () =>
-                                    setDialogState(() => busca.clear()),
-                                child: const Text('Limpar busca'),
-                              ),
-                            ],
+              ),
+            ),
+            const Divider(),
+            Expanded(
+              child: livros.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('Nenhum livro encontrado.'),
+                          const SizedBox(height: DevocionalEspacamento.sp8),
+                          DevocionalBotaoTerciario(
+                            onPressed: () => setState(_busca.clear),
+                            child: const Text('Limpar busca'),
                           ),
-                        )
-                      : ListView.builder(
-                          itemCount: livros.length,
-                          itemBuilder: (context, i) {
-                            final livro = livros[i];
-                            return CheckboxListTile(
-                              dense: true,
-                              title: Text(livro.nome),
-                              subtitle: Text(
-                                '${livro.capitulos} '
-                                '${livro.capitulos == 1 ? 'capítulo' : 'capítulos'}',
-                              ),
-                              value: selecionados.contains(livro.slug),
-                              onChanged: (marcado) {
-                                setDialogState(() {
-                                  if (marcado == true) {
-                                    selecionados.add(livro.slug);
-                                  } else {
-                                    selecionados.remove(livro.slug);
-                                  }
-                                });
-                              },
-                            );
-                          },
-                        ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            DevocionalBotaoTerciario(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancelar'),
-            ),
-            DevocionalBotaoPrimario(
-              // Sem livro não há plano: o botão só acende com 1+ marcado,
-              // em vez de confirmar vazio e avisar depois.
-              onPressed: selecionados.isEmpty
-                  ? null
-                  : () => Navigator.pop(dialogContext, [
-                      // Mantém a ordem de leitura que já existia; o novo entra
-                      // no fim, em ordem canônica.
-                      for (final slug in jaEscolhidos)
-                        if (selecionados.contains(slug)) slug,
-                      for (final livro in canon)
-                        if (selecionados.contains(livro.slug) &&
-                            !jaEscolhidos.contains(livro.slug))
-                          livro.slug,
-                    ]),
-              child: const Text('Confirmar'),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: livros.length,
+                      itemBuilder: (context, i) {
+                        final livro = livros[i];
+                        return CheckboxListTile(
+                          dense: true,
+                          title: Text(livro.nome),
+                          subtitle: Text(
+                            '${livro.capitulos} '
+                            '${livro.capitulos == 1 ? 'capítulo' : 'capítulos'}',
+                          ),
+                          value: _selecionados.contains(livro.slug),
+                          onChanged: (marcado) => setState(() {
+                            if (marcado == true) {
+                              _selecionados.add(livro.slug);
+                            } else {
+                              _selecionados.remove(livro.slug);
+                            }
+                          }),
+                        );
+                      },
+                    ),
             ),
           ],
-        );
-      },
-    ),
-  );
+        ),
+      ),
+      actions: [
+        DevocionalBotaoTerciario(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        DevocionalBotaoPrimario(
+          // Sem livro não há plano: o botão só acende com 1+ marcado, em vez
+          // de confirmar vazio e avisar depois.
+          onPressed: _selecionados.isEmpty
+              ? null
+              : () => Navigator.pop(context, [
+                  // Mantém a ordem de leitura que já existia; o novo entra no
+                  // fim, em ordem canônica.
+                  for (final slug in widget.jaEscolhidos)
+                    if (_selecionados.contains(slug)) slug,
+                  for (final livro in canon)
+                    if (_selecionados.contains(livro.slug) &&
+                        !widget.jaEscolhidos.contains(livro.slug))
+                      livro.slug,
+                ]),
+          child: const Text('Confirmar'),
+        ),
+      ],
+    );
+  }
 }

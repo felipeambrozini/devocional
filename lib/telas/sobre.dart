@@ -137,7 +137,7 @@ class _TelaSobreState extends State<TelaSobre> {
                     title: const Text('Erro técnico e uso anônimo'),
                     subtitle: const Text(
                       'Sentry (erro) e Analytics (uso por tela), sem '
-                      'identificar você — ver Política de privacidade.',
+                      'identificar você. Ver Política de privacidade.',
                     ),
                     value: estado.aceiteDeColeta ?? false,
                     onChanged: (permitido) async {
@@ -466,7 +466,7 @@ Future<void> _relatarProblema() async {
     queryParameters: {
       'subject': 'Devocional: relatar um problema',
       'body':
-          'Versão ${info.version}+${info.buildNumber} — $plataforma\n\n'
+          'Versão ${info.version}+${info.buildNumber}, $plataforma\n\n'
           'Descreva o que aconteceu:\n',
     },
   );

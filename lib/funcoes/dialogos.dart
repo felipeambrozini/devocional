@@ -1,25 +1,87 @@
 import 'package:flutter/material.dart';
 
+import '../estilo/espacamento.dart';
 import '../widgets/botao.dart';
+import '../widgets/filete.dart';
 import 'aviso.dart';
 
-/// Editor de nota de um versículo. Devolve o texto salvo, ou nulo se cancelado.
-Future<String?> editarNota(
-  BuildContext context, {
-  required String referencia,
-  required String notaAtual,
-}) {
-  final controle = TextEditingController(text: notaAtual);
-  return showDialog<String>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(referencia, style: Theme.of(context).textTheme.headlineSmall),
-      content: TextField(
-        controller: controle,
-        autofocus: true,
-        maxLines: 6,
-        minLines: 3,
-        decoration: const InputDecoration(hintText: 'Sua anotação'),
+/// Diálogo de uma caixa de texto só: título, um texto de apoio opcional e o
+/// campo. Devolve o texto digitado, ou nulo se cancelado.
+///
+/// O campo mora num `State` porque o `TextEditingController` dele precisa de
+/// um `dispose` depois que a rota saiu de vez. Criado na função que abre o
+/// diálogo e descartado no `finally` do `Future`, ele morre com a transição de
+/// saída ainda rodando, e o `EditableText` da rota morta ainda o usa.
+class DialogoDeTexto extends StatefulWidget {
+  const DialogoDeTexto({
+    super.key,
+    required this.titulo,
+    required this.rotuloDoCampo,
+    required this.rotuloDaAcao,
+    this.textoInicial = '',
+    this.descricao,
+    this.linhasMin = 3,
+    this.linhasMax = 6,
+    this.autofocus = true,
+  });
+
+  final String titulo;
+  final String rotuloDoCampo;
+  final String rotuloDaAcao;
+  final String textoInicial;
+
+  /// Texto de apoio acima do campo; sem ele o diálogo é só título e campo.
+  final String? descricao;
+  final int linhasMin;
+  final int linhasMax;
+  final bool autofocus;
+
+  @override
+  State<DialogoDeTexto> createState() => _DialogoDeTextoState();
+}
+
+class _DialogoDeTextoState extends State<DialogoDeTexto> {
+  final _controle = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _controle.text = widget.textoInicial;
+  }
+
+  @override
+  void dispose() {
+    _controle.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    final descricao = widget.descricao;
+    return AlertDialog(
+      title: Text(widget.titulo, style: tema.textTheme.headlineSmall),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const DevocionalFilete(largura: 64),
+          const SizedBox(height: DevocionalEspacamento.sp12),
+          if (descricao != null) ...[
+            Text(descricao, style: tema.textTheme.bodySmall),
+            const SizedBox(height: DevocionalEspacamento.sp12),
+          ],
+          TextField(
+            controller: _controle,
+            autofocus: widget.autofocus,
+            maxLines: widget.linhasMax,
+            minLines: widget.linhasMin,
+            decoration: InputDecoration(
+              labelText: widget.rotuloDoCampo,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+        ],
       ),
       actions: [
         DevocionalBotaoTerciario(
@@ -27,13 +89,28 @@ Future<String?> editarNota(
           child: const Text('Cancelar'),
         ),
         DevocionalBotaoPrimario(
-          onPressed: () => Navigator.pop(context, controle.text),
-          child: const Text('Salvar'),
+          onPressed: () => Navigator.pop(context, _controle.text),
+          child: Text(widget.rotuloDaAcao),
         ),
       ],
-    ),
-  );
+    );
+  }
 }
+
+/// Editor de nota de um versículo. Devolve o texto salvo, ou nulo se cancelado.
+Future<String?> editarNota(
+  BuildContext context, {
+  required String referencia,
+  required String notaAtual,
+}) => showDialog<String>(
+  context: context,
+  builder: (_) => DialogoDeTexto(
+    titulo: referencia,
+    rotuloDoCampo: 'Sua anotação',
+    rotuloDaAcao: 'Salvar',
+    textoInicial: notaAtual,
+  ),
+);
 
 /// Confirmação antes de remover uma marcação. Devolve true só se o usuário confirmar.
 Future<bool> confirmarRemocao(

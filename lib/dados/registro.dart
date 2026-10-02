@@ -53,6 +53,17 @@ abstract final class Registro {
     }
   }
 
+  /// Registra um evento esperado, sem ser falha: vai só para o console.
+  ///
+  /// Diferente de [erro] de propósito: uma notificação que chegou, um push
+  /// recebido, uma chave consultada são o app funcionando, e mandá-los para o
+  /// arquivo e para o Sentry encheria o relatório de ruído que existe para
+  /// achar o que quebrou. Sem [inicializar] e sem rede, para poder chamar de
+  /// qualquer isolate e em qualquer plataforma.
+  static void traco(String origem, String detalhe) {
+    debugPrint('[$origem] $detalhe');
+  }
+
   /// Registra um erro: sempre no console (`debugPrint`) e no arquivo quando
   /// [inicializar] já preparou um; manda ao Sentry quando [envioRemotoPermitido].
   static void erro(String origem, Object erro, [StackTrace? pilha]) {

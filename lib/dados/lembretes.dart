@@ -4,7 +4,7 @@ import 'dart:ui' show DartPluginRegistrant, PlatformDispatcher;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart'
-    show TargetPlatform, debugPrint, defaultTargetPlatform, kDebugMode, kIsWeb;
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart' show Brightness, Color, TimeOfDay;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -176,9 +176,9 @@ NotificationDetails _detalhesLocais(String icone, Color cor) =>
 /// de fundo (isolate à parte, app morto) e com o app aberto (`onMessage`).
 /// Na web quem exibe é o service worker, não aqui.
 Future<void> _mostrarPush(Map<String, dynamic> dados) async {
-  if (kDebugMode) {
-    debugPrint('Lembretes.push recebido: $dados');
-  }
+  // Só a chave do slot, e não o mapa inteiro: o payload vem da Function e
+  // despejá-lo inteiro no console burro já expôs dado do dia sem necessidade.
+  Registro.traco('Lembretes.push', '${dados['chave']}');
   if (!_ehAndroid) return;
   final chave = dados['chave'] as String?;
   final titulo = dados['titulo'] as String?;

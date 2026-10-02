@@ -78,7 +78,7 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                   'Este aplicativo não tem anúncio e não vende nem '
                   'compartilha dados com terceiros para fins de '
                   'publicidade. Com sua permissão, ele pode enviar erro '
-                  'técnico e uso anônimo por tela — ver "Uso anônimo e '
+                  'técnico e uso anônimo por tela: ver "Uso anônimo e '
                   'erro técnico" abaixo. O que segue é a lista completa do '
                   'que é guardado, onde e por quê.',
                   style: tema.bodyLarge?.copyWith(height: 1.7),
@@ -160,7 +160,7 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                   titulo: 'Leitura em voz alta',
                   texto:
                       'O áudio de cada capítulo, devocional e introdução é '
-                      'gravado com antecedência e servido pronto — nenhum '
+                      'gravado com antecedência e servido pronto: nenhum '
                       'texto é enviado a um serviço de voz na hora de tocar. '
                       'Quem baixa uma categoria para ouvir sem internet '
                       '(em Ajustes) guarda esses arquivos de áudio no próprio '
@@ -216,7 +216,7 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                   titulo: 'Contato',
                   texto:
                       'Dúvidas sobre esta política podem ser enviadas pelos '
-                      'canais listados em Sobre — YouTube, Instagram e, '
+                      'canais listados em Sobre: YouTube, Instagram e, '
                       'quando disponível, "Relatar um problema".',
                 ),
               ],

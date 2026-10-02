@@ -8,6 +8,7 @@ import '../dados/config_admin.dart';
 import '../dados/eventos.dart';
 import '../dados/personas.dart';
 import '../dados/recursos.dart';
+import '../dados/registro.dart';
 import '../dados/voz.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
@@ -69,7 +70,9 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
     var offline = false;
     try {
       offline = await AudioOffline.instancia.temOffline(widget.chave);
-    } catch (_) {}
+    } catch (erro, pilha) {
+      Registro.erro('Voz: conferir offline de ${widget.chave}', erro, pilha);
+    }
     if (offline) {
       if (mounted) {
         setState(() {
@@ -82,7 +85,9 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
     var remoto = DisponibilidadeRemota.semRede;
     try {
       remoto = await Voz.instancia.disponibilidadeRemota(widget.chave);
-    } catch (_) {}
+    } catch (erro, pilha) {
+      Registro.erro('Voz: conferir remoto de ${widget.chave}', erro, pilha);
+    }
     if (mounted) {
       setState(() {
         _disponivel = remoto == DisponibilidadeRemota.existe;
@@ -328,7 +333,7 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
                   const SizedBox(width: DevocionalEspacamento.sp6),
                   Flexible(
                     child: Text(
-                      'Sem conexão — toque para tentar',
+                      'Sem conexão. Toque para tentar',
                       overflow: TextOverflow.ellipsis,
                       style: tema.labelMedium?.copyWith(
                         color: cor.onSurfaceVariant,

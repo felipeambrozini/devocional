@@ -290,7 +290,11 @@ class Voz extends ChangeNotifier {
     if (guardar != null) unawaited(guardar(_velocidade));
     try {
       await _player?.setSpeed(_velocidade);
-    } catch (_) {}
+    } catch (erro, pilha) {
+      // A velocidade na UI e na preferência já valem; o player recusou. Fica
+      // registrado porque é a plataforma de áudio que falhou, não o toque.
+      Registro.erro('Voz: setSpeed $_velocidade', erro, pilha);
+    }
   }
 
   /// Instâncias vazias compartilhadas: sem player nem leitor, cada acesso a
@@ -473,7 +477,9 @@ class Voz extends ChangeNotifier {
     if (player == null) return;
     try {
       await player.pause();
-    } catch (_) {}
+    } catch (erro, pilha) {
+      Registro.erro('Voz: pausar', erro, pilha);
+    }
   }
 
   /// Tenta retomar a leitura pausada sem recriar a source: se o player já
@@ -540,7 +546,12 @@ class Voz extends ChangeNotifier {
       final local = _caminhoLocalParaChave(chave);
       final f = File('${dir.path}/$local');
       if (await f.exists()) return f.uri.toString();
-    } catch (_) {}
+    } catch (erro, pilha) {
+      // Sem caminho local (path_provider sem registro, disco cheio): segue
+      // pela URL, que é o comportamento de sempre. Registrado porque
+      // significa que o áudio offline não vai funcionar para esta chave.
+      Registro.erro('Voz: arquivo offline de $chave', erro, pilha);
+    }
     return url;
   }
 
@@ -703,7 +714,9 @@ class Voz extends ChangeNotifier {
     if (player == null) return;
     try {
       await player.stop();
-    } catch (_) {}
+    } catch (erro, pilha) {
+      Registro.erro('Voz: silenciar', erro, pilha);
+    }
   }
 
   Duration? _posicaoDoLeitor() {
