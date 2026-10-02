@@ -35,7 +35,9 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
     if (alvo == null) return;
     Scrollable.ensureVisible(
       alvo,
-      duration: const Duration(milliseconds: 300),
+      duration: MediaQuery.disableAnimationsOf(alvo)
+          ? Duration.zero
+          : const Duration(milliseconds: 300),
       curve: Curves.easeOut,
     );
   }

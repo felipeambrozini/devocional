@@ -66,9 +66,9 @@ class DevocionalCartaoDeLeitura extends StatelessWidget {
     );
     return DevocionalCartao(
       padding: const EdgeInsets.all(DevocionalEspacamento.sp20),
-      // Igual à Bíblia: o texto vira selecionável e copiável, e "Compartilhar"
-      // entra no próprio menu de seleção. Ver DevocionalAreaDeSelecaoComCompartilhar.
-      child: DevocionalAreaDeSelecaoComCompartilhar(
+      // O texto vira selecionável e copiável; o Compartilhar fica só no botão
+      // do cartão, uma rota única em vez de duas entradas para a mesma ação.
+      child: SelectionArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

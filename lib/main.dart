@@ -30,11 +30,11 @@ import 'dados/url_da_pagina.dart';
 import 'dados/voz.dart';
 import 'estilo/tema.dart';
 import 'funcoes/lembretes_acoes.dart';
+import 'funcoes/movimento.dart';
 import 'telas/aceite_de_coleta.dart';
 import 'telas/admin.dart';
 import 'telas/biblia.dart';
 import 'telas/chat.dart';
-import 'telas/conversas.dart';
 import 'telas/devocional.dart';
 import 'telas/faq.dart';
 import 'telas/historico.dart';
@@ -289,9 +289,8 @@ class _Destino {
     this.caminho,
     this.icone,
     this.iconeAtivo,
-    this.tela, {
-    this.mostrarNoRail = true,
-  });
+    this.tela,
+  );
 
   final String rotulo;
 
@@ -303,10 +302,6 @@ class _Destino {
   final FaIconData icone;
   final FaIconData iconeAtivo;
   final Widget tela;
-
-  /// Em telas largas os balões de conversa substituem a aba: esconder este
-  /// destino do NavigationRail mantém a navegação limpa.
-  final bool mostrarNoRail;
 }
 
 const _destinos = <_Destino>[
@@ -345,14 +340,6 @@ const _destinos = <_Destino>[
     FontAwesomeIcons.solidBookmark,
     TelaNotas(),
   ),
-  _Destino(
-    'Conversas',
-    'conversas',
-    FontAwesomeIcons.comments,
-    FontAwesomeIcons.solidComments,
-    TelaConversas(),
-    mostrarNoRail: false,
-  ),
 ];
 
 /// Um nó de foco por aba, criados uma vez para o app inteiro, não por
@@ -370,12 +357,12 @@ final _escoposDasAbas = [
 ];
 
 /// Cada aba com o próprio caminho (`/hoje`, `/biblia`, `/devocional`,
-/// `/plano`, `/notas`, `/conversas`), para abrir direto por link e sobreviver
+/// `/plano`, `/notas`), para abrir direto por link e sobreviver
 /// a um F5 — o Firebase Hosting devolve o index.html para qualquer caminho sob
 /// `/devocional/` (rewrite em firebase.json). Sobre e as conversas também têm
 /// URL própria, fora do shell: são telas empurradas por cima das abas, não
-/// abas. "Conversas" tem `mostrarNoRail: false`: em telas largas os balões de
-/// conversa substituem a aba no NavigationRail, mas a rota continua ativa.
+/// abas. Não há mais uma aba Conversas: os balões flutuantes abrem o chat em
+/// qualquer largura de tela.
 ///
 /// `StatefulShellRoute.indexedStack`, não rotas soltas: rotas soltas
 /// trocariam de aba reconstruindo a Moldura do zero, perdendo a rolagem e o
@@ -406,8 +393,7 @@ final _router = GoRouter(
     if (state.uri.path.startsWith('/admin') && !Recursos.adminNaWeb) {
       return '/hoje';
     }
-    // A aba Conversas é livre para todo mundo (ver TelaConversas, que troca
-    // as cartas pelo convite ao WhatsApp sem o recurso). Só o chat de cada
+    // Só o chat de cada
     // persona continua trancado por link direto — é ele que chama a API
     // paga, a mesma restrição que esconde os balões.
     if (!Recursos.conversas &&
@@ -644,7 +630,9 @@ class _AppDevocionalState extends State<AppDevocional>
         routerConfig: _router,
         title: 'Devocional',
         debugShowCheckedModeBanner: false,
-        builder: (context, child) => _ComBaloes(child: child!),
+        builder: (context, child) => _EsconderMovimento(
+          child: _ComBaloes(child: child!),
+        ),
         // Os dois temas vão sempre montados, e o `themeMode` escolhe. Assim
         // "Automático" funciona de verdade: o sistema pode virar o modo com o
         // app aberto, e o MaterialApp troca sozinho, sem passar pelo Estado.
@@ -668,6 +656,25 @@ class _AppDevocionalState extends State<AppDevocional>
         ],
         supportedLocales: [const Locale('pt', 'BR')],
       ),
+    );
+  }
+}
+
+/// Web: `prefers-reduced-motion: reduce` não chegava ao `MediaQuery`, e as
+/// transições de rota e rolagens que leem `disableAnimationsOf` continuavam
+/// animadas. Aqui o MediaQuery é sobrescrito uma vez, na raiz, e toda a
+/// árvore passa a respeitar a preferência (Android/iOS já a anunciam sozinhos).
+class _EsconderMovimento extends StatelessWidget {
+  const _EsconderMovimento({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!prefereReduzirMovimento) return child;
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(disableAnimations: true),
+      child: child,
     );
   }
 }
@@ -719,9 +726,9 @@ class Moldura extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Reage ao login e à configuração remota: Conversas pode aparecer ou
-    // sumir assim que a conta autorizada entra ou sai, ou o admin desliga o
-    // recurso, sem esperar uma troca de aba.
+    // Reage ao login e à configuração remota: os balões de conversa podem
+    // aparecer ou sumir assim que a conta autorizada entra ou sai, ou o admin
+    // desliga o recurso, sem esperar uma troca de aba.
     return ListenableBuilder(
       listenable: Listenable.merge([Nuvem.instancia, ConfigAdmin.instancia]),
       builder: (context, _) => _conteudo(context),
@@ -740,9 +747,6 @@ class Moldura extends StatelessWidget {
     // cada tela limita o próprio corpo, e a moldura ocupa a janela como um app
     // da web deve.
     if (!largo) {
-      // Em tela estreita não há faixa de retratos de conversa nem balões
-      // flutuantes: as conversas moram na aba Conversas, e o texto de leitura
-      // não disputa viewport com ninguém.
       return Scaffold(
         body: navigationShell,
         bottomNavigationBar: NavigationBar(
@@ -763,25 +767,12 @@ class Moldura extends StatelessWidget {
       );
     }
 
-    // Em telas largas os balões de conversa substituem a aba: o rail omite
-    // Conversas para não duplicar a entrada do chat. Mas sem o recurso
-    // liberado (ver Recursos.conversas) os balões não aparecem — aí a aba
-    // volta a ser a única porta de entrada, mesmo em tela larga.
-    final destinosDoRail = [
-      for (final d in destinosVisiveis)
-        if (d.mostrarNoRail ||
-            (d.caminho == 'conversas' && !Recursos.conversas))
-          d,
-    ];
-    // O índice de destinosDoRail não é o de navigationShell/_destinos: o
-    // rail omite Conversas quando os balões estão no ar, então um clamp
-    // direto do índice cheio caía sobre o último item que sobrou ("Notas")
-    // sempre que a aba atual era justamente a Conversas omitida. Acha a
-    // posição pelo caminho da aba atual; -1 (Conversas escondida) não
-    // destaca nenhum item do rail, que é o estado visual certo — a conversa
-    // está aberta nos balões flutuantes, não numa aba dele.
+    // O índice dos destinos do rail é o de navigationShell/_destinos: o
+    // rail poderia ter itens a menos, então um clamp direto do índice cheio
+    // cairia sobre o último item que sobrou ("Notas"). Acha a posição pelo
+    // caminho da aba atual; -1 (não achou) não destaca nenhum item do rail.
     final caminhoAtual = _destinos[navigationShell.currentIndex].caminho;
-    final indiceNoRail = destinosDoRail.indexWhere(
+    final indiceNoRail = destinosVisiveis.indexWhere(
       (d) => d.caminho == caminhoAtual,
     );
 
@@ -791,10 +782,10 @@ class Moldura extends StatelessWidget {
           NavigationRail(
             selectedIndex: indiceNoRail == -1 ? null : indiceNoRail,
             onDestinationSelected: (i) =>
-                _irParaAba(_destinos.indexOf(destinosDoRail[i])),
+                _irParaAba(_destinos.indexOf(destinosVisiveis[i])),
             labelType: NavigationRailLabelType.all,
             destinations: [
-              for (final d in destinosDoRail)
+              for (final d in destinosVisiveis)
                 NavigationRailDestination(
                   icon: FaIcon(d.icone),
                   selectedIcon: FaIcon(d.iconeAtivo),
@@ -875,13 +866,10 @@ class _ObservadorDeTelas extends NavigatorObserver {
 
 final _observadorDeTelas = _ObservadorDeTelas();
 
-/// Pendura os dois balões de conversa por cima das telas largas: Spurgeon à
+/// Pendura os dois balões de conversa por cima das telas: Spurgeon à
 /// esquerda, Felipe à direita.
 ///
-/// Em tela estreita não existem: as conversas entram pela aba Conversas, e um
-/// balão flutuante por cima do texto de leitura não volta. Em telas largas os
-/// balões substituem a aba no NavigationRail — que omite "Conversas" —, mas a
-/// rota `/conversas` continua ativa para quem chega por link direto. Somem
+/// É a única porta de entrada do chat em qualquer largura de tela. Somem
 /// quando [camadasFlutuantes] passa de zero, e reaparecem quando a camada
 /// fecha.
 class _ComBaloes extends StatelessWidget {
@@ -904,11 +892,11 @@ class _ComBaloes extends StatelessWidget {
       builder: (context, _) {
         if (!Recursos.conversas) return child;
         return LayoutBuilder(
+          // Os balões acompanham a largura: na faixa larga ficam nos cantos
+          // inferiores por cima da leitura; em tela estreita sobem para não
+          // cobrir a barra de navegação.
           builder: (context, constraints) {
-            // Tela estreita: os retratos estão na faixa da Moldura, não aqui.
-            // Este overlay só existe para as telas largas, onde os cantos de
-            // baixo ficam vazios e o balão não tampa a leitura.
-            if (constraints.maxWidth < larguraDeTelaLarga) return child;
+            final largo = constraints.maxWidth >= larguraDeTelaLarga;
             return Stack(
               children: [
                 child,
@@ -922,12 +910,9 @@ class _ComBaloes extends StatelessWidget {
                       OverlayEntry(
                         builder: (context) => Stack(
                           children: [
-                            // Em tela larga quem ocupa o canto esquerdo é o
-                            // trilho lateral: o balão dele pula para dentro do
-                            // conteúdo, e o da direita fica na esquina.
                             Positioned(
-                              left: 96,
-                              bottom: 12,
+                              left: largo ? 96 : 12,
+                              bottom: largo ? 12 : 96,
                               child: DevocionalBalaoDeChat(
                                 persona: personaSpurgeon,
                                 onTap: () => _abrirChat(personaSpurgeon),
@@ -935,7 +920,7 @@ class _ComBaloes extends StatelessWidget {
                             ),
                             Positioned(
                               right: 12,
-                              bottom: 12,
+                              bottom: largo ? 12 : 96,
                               child: DevocionalBalaoDeChat(
                                 persona: personaFelipe,
                                 onTap: () => _abrirChat(personaFelipe),

@@ -47,15 +47,16 @@ vitoriana dele, tratando o leitor por "tu".
 - Cópia de segurança de favoritos, notas e progresso por exportar/importar
   (folha de compartilhar); conta Google em todas as plataformas, para
   espelhar na nuvem.
-- Navegação: abas Hoje, Bíblia, Devocional, Plano, Notas e Conversas; Sobre
+- Navegação: abas Hoje, Bíblia, Devocional, Plano e Notas; Sobre
   (créditos, canais e ajuda), Perguntas frequentes, Política de privacidade e
   Termos de serviço moram na folha de ajustes. Na web cada aba tem URL própria;
   `/sobre`, `/faq`, `/privacidade`, `/termos` e cada conversa também, e links diretos no formato
   `?ler=joao.3.16` abrem um versículo (`?plano=<id>` abre um plano
   compartilhado).
 - Conversas com IA (Gemini): duas personas, Charles Spurgeon e Felipe
-  Ambrozini, com histórico salvo por conversa; aba no celular, balão flutuante
-  em telas largas.
+  Ambrozini, com histórico salvo por conversa; dois balões flutuantes
+  (Spurgeon e Felipe) abrem o chat em todas as larguras de tela, sem aba
+  própria.
 - Painel admin (`/admin`, só web e só a conta do dono): liga/desliga cada
   recurso na hora (conversas, planos personalizados, cronograma, cada leitura
   do devocional, ouvir textos) e edita as allowlists de e-mails do chat e dos
@@ -90,20 +91,21 @@ vitoriana dele, tratando o leitor por "tu".
 - Bíblia BKJ 1611 completa.
 - Favoritos, notas, copiar e compartilhar por versículo; busca em duas abas
   (Bíblia e devocionais); a busca das marcações filtra referência e nota, não
-  o corpo do versículo (deliberado).
+  o corpo do versículo (deliberado). A aba de devocionais da busca tem
+  filtro por data (DD-MM) e por leitura (Manhã, Noite, Promessas).
 - A referência da epígrafe do devocional (na Hoje e no Devocional) é um alvo
   de toque: abre a Bíblia no capítulo citado, com os versículos destacados.
 - Comentário de Spurgeon por versículo: a folha de ações do versículo na
   Bíblia (Favoritar, Copiar, Anotar) mostra o comentário quando já estiver
   escrito; ausência é o estado esperado onde o projeto ainda não chegou, não
   um erro.
-- Texto selecionável e copiável na Bíblia, no Devocional e na Introdução. No
-  Devocional e na Introdução, o menu de seleção (o clique forte que já abre a
+- Texto selecionável e copiável na Bíblia, no Devocional e na Introdução. Na
+  Introdução, o menu de seleção (o clique forte que já abre a
   seleção) ganha um botão de Compartilhar para o trecho escolhido; na
   Bíblia, Compartilhar continua só pelo toque no versículo (a mesma folha de
   Favoritar, Copiar, Anotar). No Devocional (Manhã, Noite e Promessas de
-  Deus), um botão de Compartilhar no cartão manda título, citação e
-  comentário do dia com um link que reabre a mesma leitura.
+  Deus), o Compartilhar ficou só no botão do cartão, que manda título,
+  citação e comentário do dia com um link que reabre a mesma leitura.
 - Layout responsivo: barra inferior no celular, trilho lateral a partir de
   720px; gesto de deslizar troca capítulo no celular, setas na web.
 - Lembrete híbrido, Android e web (4 horários: Manhã, Noite, Promessas e Leitura
@@ -175,6 +177,10 @@ vitoriana dele, tratando o leitor por "tu".
    local é frágil (navegador).
 
 ## Accessibility & Inclusion
+
+- Movimento: `prefers-reduced-motion` na web força `MediaQuery.disableAnimations`
+  na raiz, e as rolagens que animam leem isso (Android/iOS já sinalizam pelo
+  próprio MediaQuery quando o usuário liga "reduzir animações").
 
 - Contraste WCAG garantido por teste (`test/tema_test.dart` falha se
   clarearem o bronze ou piorarem os pares anotados).

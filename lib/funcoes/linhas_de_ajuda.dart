@@ -13,7 +13,7 @@ List<String> get linhasDeAjuda => [
   'O Devocional traz Manhã, Promessas e Noite, e vira sozinho com o horário.',
   '"Ler tudo" abre a leitura do dia inteira.',
   if (Recursos.conversas)
-    'Na aba Conversas, o chat com Spurgeon e com Felipe: pergunte sobre a '
+    'Nos balões de conversa, o chat com Spurgeon e com Felipe: pergunte sobre a '
         'Palavra, peça uma aplicação, desabafe.',
   'O retrato de Spurgeon no começo do capítulo e da introdução lê o texto '
       'na voz dele: toque para ouvir, e toque de novo para encerrar.',

@@ -111,7 +111,7 @@ class _TelaBuscaState extends State<TelaBusca> {
   }
 }
 
-class _AbaDevocionais extends StatelessWidget {
+class _AbaDevocionais extends StatefulWidget {
   const _AbaDevocionais({
     required this.termoBuscado,
     required this.achados,
@@ -127,22 +127,48 @@ class _AbaDevocionais extends StatelessWidget {
   final VoidCallback aoTentarDeNovo;
 
   @override
+  State<_AbaDevocionais> createState() => _AbaDevocionaisState();
+}
+
+class _AbaDevocionaisState extends State<_AbaDevocionais> {
+  final _filtroDeData = TextEditingController();
+  String? _filtroDeLeitura;
+
+  @override
+  void dispose() {
+    _filtroDeData.dispose();
+    super.dispose();
+  }
+
+  List<AchadoDevocional> get _filtrados {
+    final data = _filtroDeData.text.trim();
+    return widget.achados.where((a) {
+      if (_filtroDeLeitura != null && a.leitura != _filtroDeLeitura) {
+        return false;
+      }
+      if (data.isNotEmpty && !a.data.contains(data)) return false;
+      return true;
+    }).toList();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (erro) {
-      return DevocionalErroDeBusca(aoTentarDeNovo: aoTentarDeNovo);
+    if (widget.erro) {
+      return DevocionalErroDeBusca(aoTentarDeNovo: widget.aoTentarDeNovo);
     }
-    if (termoBuscado.isEmpty) {
+    if (widget.termoBuscado.isEmpty) {
       return const DevocionalAvisoVazio(
         icone: FontAwesomeIcons.bookOpen,
         titulo: 'Busque nos devocionais',
         detalhe: 'Manhã e Noite e Promessas de Deus, na voz de Spurgeon.',
       );
     }
-    if (achados.isEmpty && !buscando) {
+    final lista = _filtrados;
+    if (lista.isEmpty && !widget.buscando) {
       return DevocionalAvisoVazio(
         icone: FontAwesomeIcons.magnifyingGlassMinus,
         titulo: 'Nada encontrado',
-        detalhe: 'Nenhum devocional com "$termoBuscado".',
+        detalhe: 'Nenhum devocional com "${widget.termoBuscado}".',
       );
     }
 
@@ -159,17 +185,58 @@ class _AbaDevocionais extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  '${achados.length} ${achados.length == 1 ? 'resultado' : 'resultados'}',
+                  '${lista.length} ${lista.length == 1 ? 'resultado' : 'resultados'}',
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
               ),
               const SizedBox(width: DevocionalEspacamento.sp10),
-              if (buscando)
+              if (widget.buscando)
                 const SizedBox(
                   width: 13,
                   height: 13,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            DevocionalEspacamento.sp16,
+            0,
+            DevocionalEspacamento.sp16,
+            DevocionalEspacamento.sp8,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _filtroDeData,
+                  onChanged: (_) => setState(() {}),
+                  decoration: const InputDecoration(
+                    hintText: 'Data (DD-MM)',
+                    prefixIcon: Icon(Icons.calendar_today, size: 16),
+                    isDense: true,
+                  ),
+                ),
+              ),
+              const SizedBox(width: DevocionalEspacamento.sp8),
+              DropdownButton<String?>(
+                value: _filtroDeLeitura,
+                hint: const Text('Leitura'),
+                onChanged: (v) => setState(() => _filtroDeLeitura = v),
+                items: [
+                  const DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('Todas'),
+                  ),
+                  const DropdownMenuItem(value: 'manha', child: Text('Manhã')),
+                  const DropdownMenuItem(value: 'noite', child: Text('Noite')),
+                  const DropdownMenuItem(
+                    value: 'promessas',
+                    child: Text('Promessas'),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -181,11 +248,11 @@ class _AbaDevocionais extends StatelessWidget {
               DevocionalEspacamento.sp16,
               DevocionalEspacamento.sp32,
             ),
-            itemCount: achados.length,
+            itemCount: lista.length,
             separatorBuilder: (_, _) => const Divider(height: DevocionalEspacamento.sp18),
             itemBuilder: (context, i) => _ItemDeAchadoDevocional(
-              achado: achados[i],
-              termo: termoBuscado,
+              achado: lista[i],
+              termo: widget.termoBuscado,
             ),
           ),
         ),

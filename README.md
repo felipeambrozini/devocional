@@ -34,8 +34,8 @@ mesmo código).
   ouvir offline, nos Ajustes ("Áudio offline").
 - **Conversas com IA**: duas personas para conversar, Charles Spurgeon e
   Felipe Ambrozini, cada uma com o próprio jeito de falar (Gemini). Histórico
-  salvo por conversa; aba própria no celular, balões flutuantes nas telas
-  largas.
+   salvo por conversa; os dois balões flutuantes (Spurgeon e Felipe) são a
+   porta de entrada do chat em todas as larguras de tela.
 - **Introduções aos 66 livros**, na voz de Spurgeon, com título formal do livro
   vindo da BKJ 1611.
 - **Favoritos e notas**: qualquer versículo pode ser marcado, anotado, copiado ou
@@ -83,14 +83,13 @@ mesmo código).
 | Devocional | Manhã, Noite e Promessas de Deus, com calendário |
 | Plano | Cronograma anual por mês, com marcação de lido; Meus Planos (personalizados e compartilhados) |
 | Notas | Favoritos e anotações |
-| Conversas | Chat com Spurgeon e Felipe (IA); em tela larga vira balão flutuante no lugar da aba |
 
 Sobre (créditos, fonte da tradução, canais e ajuda), Perguntas frequentes,
 Política de privacidade e Termos de serviço não são abas: moram no fim da
 folha de ajustes, com URL própria cada uma.
 
 Na web, cada aba tem a própria URL (`/hoje`, `/biblia`, `/devocional`,
-`/plano`, `/notas`, `/conversas`) — dá para abrir, atualizar ou compartilhar
+`/plano`, `/notas`) — dá para abrir, atualizar ou compartilhar
 qualquer uma direto; `/sobre`, `/faq`, `/privacidade`, `/termos` e cada conversa
 (`/charles-spurgeon`, `/felipe-ambrozini`) também têm URL própria. `?ler=joao.3.16`
 na URL abre esse versículo por cima da aba, e `?plano=<id>` (ou
@@ -147,7 +146,7 @@ lib/
                `dados/modelos.dart`
   controladores/ um controller por tela (biblia, busca, chat, devocional,
                notas, novo plano, plano, sobre)
-  telas/       uma tela por arquivo (hoje, bíblia, devocional, plano, notas, busca, conversas, sobre...)
+  telas/       uma tela por arquivo (hoje, bíblia, devocional, plano, notas, busca, sobre...)
   widgets/     widgets compartilhados entre telas, um por arquivo, reunidos no
                barril `widgets/widgets.dart`
   funcoes/     funções livres sem widget próprio (avisos, diálogos, ações que
@@ -390,20 +389,14 @@ motivo novo.
    painel, só quem está nela cria planos. O cartão de pedir acesso é o mesmo
    (WhatsApp), e a seção do painel é a mesma peça da do chat
    (`_SecaoDeEmails` em `lib/telas/admin.dart`).
-- **A aba Conversas é visível para todo mundo; só o chat em si é que
-  continua trancado pela allowlist** (04/09/2026): antes, `Recursos.conversas`
-  também escondia a aba inteira (barra, trilho e a rota `/conversas`) —
-  monetizar o único gasto real do app (a API do Gemini) exige que quem não
-  está na allowlist veja a aba e saiba que ela existe, para pedir acesso.
-  `TelaConversas` (`lib/telas/conversas.dart`) troca as cartas de cada
-  persona pelo convite ao WhatsApp quando `Recursos.conversas` é falso, com
-  o número vindo de `--dart-define=WHATSAPP_NUMERO` (mesmo padrão do
-  `EMAIL_DE_CONTATO`, vazio esconde o botão). O `redirect` do `GoRouter`
-  (`lib/main.dart`) só trava mais `/charles-spurgeon` e `/felipe-ambrozini` —
-  o chat de fato —, não mais `/conversas`. Em tela larga, onde os balões
-  substituem a aba no `NavigationRail`, a aba volta para o rail quando os
-  balões não aparecem (sem o recurso), senão telas largas sem allowlist não
-  teriam nenhuma porta de entrada.
+- **O chat é a única porta de entrada dos balões** (02/10/2026): não existe
+  mais aba Conversas (nem a rota `/conversas`); os dois balões flutuantes
+  aparecem em todas as larguras de tela e abrem o histórico de cada persona.
+  `Recursos.conversas` esconde os balões; o `redirect` do `GoRouter`
+  (`lib/main.dart`) trava só `/charles-spurgeon` e `/felipe-ambrozini` —
+  o chat de fato. Links velhos para `/conversas` caem no errorBuilder, que
+  volta para a Hoje. Antes existia uma aba visível para todo mundo com o
+  convite ao WhatsApp para pedir acesso; esse caminho saiu junto com a aba.
 - **`web/index.html` tem fundo marrom e um marcador de carregamento**, retirado
   no evento `flutter-first-frame` (o Flutter acrescenta a `flutter-view` ao
   body em vez de limpar). As duas cores do fundo são por
