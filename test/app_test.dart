@@ -1073,10 +1073,14 @@ void main() {
   });
 
   testWidgets(
-    'abrir /conversas numa janela larga cai na Hoje',
+    'abrir /conversas numa janela larga não destaca nenhuma aba do trilho',
     (tester) async {
-      // Não há mais rota /conversas: o link velho cai no errorBuilder, que
-      // volta para a primeira aba em vez de mostrar a tela de erro.
+      // O trilho omite Conversas quando os balões flutuantes estão no ar
+      // (Recursos.conversas, forçado true no setUp). Chegar em /conversas
+      // por link ou rota direta não deve acender "Notas" só por ser o
+      // último item que sobrou no trilho depois do corte — bug corrigido:
+      // o índice cheio (5, o de Conversas) não podia ser usado direto contra
+      // a lista já sem Conversas (5 itens, índices 0 a 4).
       tester.view.physicalSize = const Size(1600, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -1092,8 +1096,8 @@ void main() {
       final trilho = tester.widget<NavigationRail>(find.byType(NavigationRail));
       expect(
         trilho.selectedIndex,
-        0,
-        reason: 'a Hoje é a primeira aba do trilho',
+        isNull,
+        reason: 'nenhuma aba do trilho corresponde à conversa aberta',
       );
     },
   );

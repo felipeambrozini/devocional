@@ -47,16 +47,15 @@ vitoriana dele, tratando o leitor por "tu".
 - Cópia de segurança de favoritos, notas e progresso por exportar/importar
   (folha de compartilhar); conta Google em todas as plataformas, para
   espelhar na nuvem.
-- Navegação: abas Hoje, Bíblia, Devocional, Plano e Notas; Sobre
+- Navegação: abas Hoje, Bíblia, Devocional, Plano, Notas e Conversas; Sobre
   (créditos, canais e ajuda), Perguntas frequentes, Política de privacidade e
   Termos de serviço moram na folha de ajustes. Na web cada aba tem URL própria;
   `/sobre`, `/faq`, `/privacidade`, `/termos` e cada conversa também, e links diretos no formato
   `?ler=joao.3.16` abrem um versículo (`?plano=<id>` abre um plano
   compartilhado).
 - Conversas com IA (Gemini): duas personas, Charles Spurgeon e Felipe
-  Ambrozini, com histórico salvo por conversa; dois balões flutuantes
-  (Spurgeon e Felipe) abrem o chat em todas as larguras de tela, sem aba
-  própria.
+  Ambrozini, com histórico salvo por conversa; aba no celular, balão flutuante
+  em telas largas.
 - Painel admin (`/admin`, só web e só a conta do dono): liga/desliga cada
   recurso na hora (conversas, planos personalizados, cronograma, cada leitura
   do devocional, ouvir textos) e edita as allowlists de e-mails do chat e dos

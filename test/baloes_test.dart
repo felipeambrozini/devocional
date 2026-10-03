@@ -187,7 +187,7 @@ void main() {
     }
   });
 
-  testWidgets('em tela estreita, os balões flutuantes são a entrada do chat', (
+  testWidgets('em tela estreita, a aba Conversas é a entrada do chat', (
     tester,
   ) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
@@ -200,10 +200,16 @@ void main() {
       await tester.pumpWidget(AppDevocional(estado: estado));
       await tester.pumpAndSettle();
 
-      // Os dois balões aparecem também no celular, como na web.
-      expect(find.byType(DevocionalBalaoDeChat), findsNWidgets(2));
+      // Sem faixa nem balão: nada de retrato por cima do texto de leitura.
+      expect(find.byType(DevocionalBalaoDeChat), findsNothing);
 
-      await tester.tap(find.byTooltip('Conversas com Charles Spurgeon'));
+      await tester.tap(find.text('Conversas'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Charles Spurgeon'), findsOneWidget);
+      expect(find.text('Felipe Ambrozini'), findsOneWidget);
+
+      await tester.tap(find.text('Charles Spurgeon'));
       await tester.pumpAndSettle();
 
       expect(find.text('Começar conversa'), findsOneWidget);
