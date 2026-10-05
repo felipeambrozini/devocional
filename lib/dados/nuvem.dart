@@ -397,7 +397,9 @@ class Nuvem extends ChangeNotifier {
           onTimeout: () => null,
         );
       } catch (erro, pilha) {
-        Registro.erro('Nuvem.iniciar', erro, pilha);
+        // "App attestation failed" (iOS sem o provedor, simulador, device
+        // bloqueado) é esperado em certas máquinas: não vira erro no Sentry.
+        Registro.esperado('Nuvem.iniciar', erro, pilha);
       }
     }
 

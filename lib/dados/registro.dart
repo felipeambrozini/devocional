@@ -64,6 +64,16 @@ abstract final class Registro {
     debugPrint('[$origem] $detalhe');
   }
 
+  /// Registra uma falha conhecida e esperada em certas condições (device
+  /// sem App Attest, simulador, provedor de attestation indisponível): vai
+  /// para o console e o arquivo, mas nunca para o Sentry — lá ela viraria
+  /// ruído em vez de sinal.
+  static void esperado(String origem, Object erro, [StackTrace? pilha]) {
+    final linha = formatarLinha(origem, erro, pilha);
+    debugPrint(linha);
+    _gravarNoArquivo(linha);
+  }
+
   /// Registra um erro: sempre no console (`debugPrint`) e no arquivo quando
   /// [inicializar] já preparou um; manda ao Sentry quando [envioRemotoPermitido].
   static void erro(String origem, Object erro, [StackTrace? pilha]) {
@@ -80,6 +90,10 @@ abstract final class Registro {
         ),
       );
     }
+    _gravarNoArquivo(linha);
+  }
+
+  static void _gravarNoArquivo(String linha) {
     final arquivo = _arquivo;
     if (arquivo == null) return;
     try {
