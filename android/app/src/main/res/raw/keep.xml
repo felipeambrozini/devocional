@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O ícone da notificação é referenciado só do Dart
+     (AndroidInitializationSettings('ic_lembrete') em lembretes.dart), sem
+     nenhuma XML que o shrinkResources do R8 consiga rastrear — sem este
+     tools:keep, o release apaga o drawable e a inicialização do plugin
+     falha com PlatformException(invalid_icon). -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_lembrete" />

@@ -539,7 +539,12 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
   (37 KB, 366 dias) gerado dos JSONs do app só com referência/título.
   Regenerar se o conteúdo anual mudar.
 - **Ícone único no Android, tema só na cor de destaque**: um só drawable
-   (`ic_lembrete`) para a notificação inteira — desde o Android 5 (API 21) o
+   (`ic_lembrete`) para a notificação inteira — presente no
+   `res/raw/keep.xml` via `tools:keep`, porque o shrinkResources do R8 (que
+   roda no release) apagaria o drawable por não ver referência em nenhuma
+   XML — só o Dart aponta para ele — e aí `AndroidInitializationSettings`
+   falharia com `PlatformException(invalid_icon)` no release; desde o
+   Android 5 (API 21) o
   ícone pequeno da barra de status é máscara alfa, a cor do PNG é sempre
   descartada e repintada pelo sistema, então variar o arquivo por tema não
   mudava nada visível e só era mais uma fonte de
