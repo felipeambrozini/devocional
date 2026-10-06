@@ -64,7 +64,7 @@ Além da chave, o app se identifica ao Firestore e ao Auth com uma prova de que 
 - **Android:** Play Integrity, por atestação do próprio Google Play — sem chave de app.
 - **iOS:** App Attest, com retorno a DeviceCheck em versões anteriores ao iOS 14 — sem chave de app.
 
-A falha em ativar o App Check (site key ausente durante a migração, domínio ainda não registrado no console) não impede o app de abrir; a sincronização e o login simplesmente continuam sem essa camada extra até a configuração ser concluída no console do Firebase.
+A falha em ativar o App Check (site key ausente durante a migração, domínio ainda não registrado no console) não impede o app de abrir; a sincronização e o login simplesmente continuam sem essa camada extra até a configuração ser concluída no console do Firebase. O token é revalidado (force refresh) na retomada do app e, uma vez por sincronização, quando o Firestore responde PERMISSION_DENIED — cenário típico de token expirado com o app suspenso.
 
 ### 3.4 Lembrete Diário — Push com Reserva Local no Android
 

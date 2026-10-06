@@ -601,6 +601,15 @@ class _AppDevocionalState extends State<AppDevocional>
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState estado) {
+    // Token do App Check pode ter expirado com o app suspenso — sem isto, o
+    // Firestore nega (PERMISSION_DENIED) até o processo ser reiniciado.
+    if (estado == AppLifecycleState.resumed) {
+      unawaited(Nuvem.instancia.revalidarAppCheck());
+    }
+  }
+
+  @override
   void dispose() {
     widget.estado.removeListener(_conferirTema);
     WidgetsBinding.instance.removeObserver(this);

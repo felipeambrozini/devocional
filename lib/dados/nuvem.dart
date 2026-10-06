@@ -360,6 +360,54 @@ class Nuvem extends ChangeNotifier {
   /// Falhar aqui (projeto ainda não configurado, sem rede) não pode impedir o
   /// app de abrir — mesma regra do fuso horário em `lembretes.dart`. Por isso
   /// o erro só é engolido, nunca propagado.
+  Future<void> _assegurarTokenAppCheck() async {
+    try {
+      await FirebaseAppCheck.instance.activate(
+        providerWeb: ReCaptchaV3Provider(_recaptchaSiteKey),
+        providerAndroid: const AndroidPlayIntegrityProvider(),
+        // Com fallback para DeviceCheck: o app aceita iOS 13 (Podfile), e
+        // App Attest sozinho exige iOS 14+.
+        providerApple: const AppleAppAttestWithDeviceCheckFallbackProvider(),
+      );
+      // activate() resolve assim que o provedor é registrado, não quando o
+      // primeiro token chega — a troca com o reCAPTCHA/Play Integrity ainda
+      // é assíncrona. Sem este getToken() explícito, quem assina
+      // authStateChanges (aqui e em PlanosNaNuvem) e já tem sessão em cache
+      // dispara a primeira consulta ao Firestore antes do token existir, e
+      // o Firestore nega com PERMISSION_DENIED.
+      //
+      // Com timeout: sem rede ou com o provedor emperrado, `getToken()`
+      // pode nunca resolver, e sem prazo `_pronta` nunca vira true — a
+      // sincronia, os planos e o admin ficam mudos para sempre em vez de
+      // só começarem sem nuvem.
+      await FirebaseAppCheck.instance.getToken().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => null,
+      );
+    } catch (erro, pilha) {
+      // "App attestation failed" (iOS sem o provedor, simulador, device
+      // bloqueado) é esperado em certas máquinas: não vira erro no Sentry.
+      Registro.esperado('Nuvem.iniciar', erro, pilha);
+    }
+  }
+
+  /// Revalida o token do App Check fora do ciclo de abertura — na retomada
+  /// do app e depois de um PERMISSION_DENIED que pode ter sido token
+  /// expirado. Se a atestação do aparelho falha de verdade, isso só
+  /// registra e segue: ninguém fica travado aqui esperando.
+  Future<void> revalidarAppCheck() async {
+    try {
+      // forceRefresh: sem isso o SDK devolve o token cacheado (ou nada, se
+      // a primeira tentativa falhou) e a revalidação vira ritual — o que
+      // importa é forçar uma nova atestação.
+      await FirebaseAppCheck.instance
+          .getToken(true)
+          .timeout(const Duration(seconds: 10), onTimeout: () => null);
+    } catch (erro, pilha) {
+      Registro.esperado('Nuvem.revalidarAppCheck', erro, pilha);
+    }
+  }
+
   Future<void> iniciar(Estado estado) async {
     try {
       await iniciarFirebase();
@@ -372,35 +420,11 @@ class Nuvem extends ChangeNotifier {
     // cliente forjado com as mesmas chaves públicas. Erro aqui (chave errada,
     // domínio ainda não liberado no console) não pode impedir o app de abrir
     // — mesma regra do Firebase.initializeApp acima.
+    // O activate+getToken fica em _assegurarTokenAppCheck para a retomada
+    // do app e as falhas de PERMISSION_DENIED poderem revalidar sem
+    // duplicar a sequência.
     if (kIsWeb ? _recaptchaSiteKey.isNotEmpty : true) {
-      try {
-        await FirebaseAppCheck.instance.activate(
-          providerWeb: ReCaptchaV3Provider(_recaptchaSiteKey),
-          providerAndroid: const AndroidPlayIntegrityProvider(),
-          // Com fallback para DeviceCheck: o app aceita iOS 13 (Podfile), e
-          // App Attest sozinho exige iOS 14+.
-          providerApple: const AppleAppAttestWithDeviceCheckFallbackProvider(),
-        );
-        // activate() resolve assim que o provedor é registrado, não quando o
-        // primeiro token chega — a troca com o reCAPTCHA/Play Integrity ainda
-        // é assíncrona. Sem este getToken() explícito, quem assina
-        // authStateChanges (aqui e em PlanosNaNuvem) e já tem sessão em cache
-        // dispara a primeira consulta ao Firestore antes do token existir, e
-        // o Firestore nega com PERMISSION_DENIED.
-        //
-        // Com timeout: sem rede ou com o provedor emperrado, `getToken()`
-        // pode nunca resolver, e sem prazo `_pronta` nunca vira true — a
-        // sincronia, os planos e o admin ficam mudos para sempre em vez de
-        // só começarem sem nuvem.
-        await FirebaseAppCheck.instance.getToken().timeout(
-          const Duration(seconds: 10),
-          onTimeout: () => null,
-        );
-      } catch (erro, pilha) {
-        // "App attestation failed" (iOS sem o provedor, simulador, device
-        // bloqueado) é esperado em certas máquinas: não vira erro no Sentry.
-        Registro.esperado('Nuvem.iniciar', erro, pilha);
-      }
+      await _assegurarTokenAppCheck();
     }
 
     _pronta = true;

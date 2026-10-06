@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 
 import 'canon.dart';
 import 'estado.dart';
+import 'nuvem.dart';
 import 'planos.dart';
 import 'registro.dart';
 
@@ -69,7 +70,7 @@ class PlanosNaNuvem {
   /// Traz para o espelho local todos os planos em que o usuário participa,
   /// com os próprios dias lidos. Sem isto, um plano criado ou aceito noutro
   /// navegador nunca apareceria na lista de Meus Planos daqui.
-  Future<void> _puxarOsMeus(String uid) async {
+  Future<void> _puxarOsMeus(String uid, {bool jaRevalidou = false}) async {
     final estado = _estado;
     if (estado == null) return;
     try {
@@ -102,6 +103,15 @@ class PlanosNaNuvem {
       // Sem rede ou sem permissão: o espelho local continua intacto, e a
       // próxima entrada na conta tenta de novo. Falhar aqui não pode
       // derrubar nada (mesma regra da sincronia da Nuvem).
+      if (erro is FirebaseException &&
+          erro.code == 'permission-denied' &&
+          !jaRevalidou) {
+        // PERMISSION_DENIED com sessão válida geralmente é token do App
+        // Check expirado: revalida e tenta uma única vez de novo. Sem
+        // isto, o plano do usuário só voltaria depois de reiniciar o app.
+        await Nuvem.instancia.revalidarAppCheck();
+        return _puxarOsMeus(uid, jaRevalidou: true);
+      }
       Registro.erro('PlanosNaNuvem.sincronizar', erro, pilha);
     }
   }
