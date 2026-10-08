@@ -15,10 +15,10 @@ void main() {
     });
   });
 
-  test(
-    'envioRemotoPermitido começa desligado — nada de Sentry sem aceite',
-    () {
-      expect(Registro.envioRemotoPermitido, isFalse);
-    },
-  );
+  test('erro só vai para console e arquivo local — sem envio remoto', () {
+    // Sem Sentry e sem Analytics: registrar nunca depende de rede nem de
+    // aceite. O formato da linha continua valendo para o arquivo local.
+    final linha = formatarLinha('Teste', 'algo quebrou', null);
+    expect(linha, contains('Teste: algo quebrou'));
+  });
 }

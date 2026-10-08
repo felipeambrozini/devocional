@@ -9,10 +9,9 @@ import '../widgets/widgets.dart';
 /// A aba Conversas: a porta de entrada do chat no celular e no computador.
 ///
 /// A aba fica visível para todo mundo — só o conteúdo muda com
-/// [Recursos.conversas]: quem está na allowlist vê a carta de cada persona
-/// (o mesmo caminho que os balões das telas largas empurram, ver `_ComBaloes`
-/// em `main.dart`); quem não está vê o convite para pedir acesso pelo
-/// WhatsApp, porque cada conversa chama a API paga do Gemini.
+/// [Recursos.conversas]: quem está na allowlist vê a carta de cada persona;
+/// quem não está vê o convite para pedir acesso pelo WhatsApp, porque cada
+/// conversa chama a API paga do Gemini.
 class TelaConversas extends StatelessWidget {
   const TelaConversas({super.key});
 

@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../controladores/biblia_controlador.dart';
 import '../dados/canon.dart';
@@ -14,6 +13,7 @@ import '../dados/modelos.dart';
 import '../dados/voz.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
+import '../funcoes/cartao_imagem.dart';
 import '../funcoes/dialogos.dart';
 import '../widgets/widgets.dart';
 
@@ -657,7 +657,20 @@ class _AcoesDoVersiculo {
       title: const Text('Compartilhar'),
       onTap: () async {
         final navegador = Navigator.of(folha);
-        await SharePlus.instance.share(ShareParams(text: _textoDoVersiculo));
+        final mensageiro = ScaffoldMessenger.of(folha);
+        try {
+          // Cartão-imagem com o texto junto: rende no WhatsApp e no
+          // Instagram, onde texto puro morre sem rosto. O texto que acompanha
+          // é o mesmo de Copiar, com o link que reabre o versículo.
+          await compartilharCartao(
+            texto: '"$texto"',
+            referencia: '$referencia:$numero',
+            link: linkDoVersiculo(livro, capituloNumero, numero),
+            textoParaAcompanhar: _textoDoVersiculo,
+          );
+        } catch (_) {
+          mostrarErroNo(mensageiro, 'Não foi possível compartilhar.');
+        }
         navegador.pop();
       },
     );

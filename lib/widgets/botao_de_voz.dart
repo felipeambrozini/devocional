@@ -5,7 +5,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../dados/audio_offline.dart';
 import '../dados/config_admin.dart';
-import '../dados/eventos.dart';
 import '../dados/personas.dart';
 import '../dados/recursos.dart';
 import '../dados/registro.dart';
@@ -350,16 +349,10 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
   }
 
   Future<void> _alternar(BuildContext context, Voz voz) async {
-    // [Voz.alternar] tanto inicia quanto para, conforme o estado atual: só
-    // conta como "iniciada" quando este toque não está prestes a parar uma
-    // leitura já em andamento na mesma chave.
-    final vaiParar =
-        voz.tocandoChave == widget.chave && (voz.tocando || voz.carregando);
-    if (!vaiParar) unawaited(registrarOuvirIniciado());
+    // [Voz.alternar] tanto inicia quanto para, conforme o estado atual.
     try {
       await voz.alternar(widget.chave);
     } on VozExcecao catch (erro) {
-      if (!vaiParar) unawaited(registrarOuvirFalhou());
       if (context.mounted) _avisarErro(context, voz, erro);
     }
   }

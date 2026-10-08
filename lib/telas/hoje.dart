@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../dados/estado.dart';
 import '../dados/config_admin.dart';
@@ -109,102 +108,6 @@ String _saudacaoPelaHora(int hora) {
   return 'Boa noite';
 }
 
-/// As opções da folha de `_escolherFoto`: as duas fontes do `ImagePicker`
-/// mais "remover", que só faz sentido quando já existe uma foto.
-enum _AcaoDeFoto { camera, galeria, remover }
-
-/// Deixa escolher entre câmera, galeria ou remover a foto atual — tudo num
-/// toque no avatar de `_Cabecalho`.
-Future<void> _escolherFoto(BuildContext context) async {
-  final temFoto = Nuvem.instancia.fotoUrl != null;
-  final acao = await showModalBottomSheet<_AcaoDeFoto>(
-    context: context,
-    builder: (folha) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              DevocionalEspacamento.sp20,
-              DevocionalEspacamento.sp20,
-              DevocionalEspacamento.sp20,
-              DevocionalEspacamento.sp8,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Foto de perfil',
-                  style: Theme.of(folha).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: DevocionalEspacamento.sp8),
-                const DevocionalFilete(largura: 64),
-              ],
-            ),
-          ),
-          ListTile(
-            leading: FaIcon(
-              FontAwesomeIcons.camera,
-              color: Theme.of(folha).colorScheme.primary,
-            ),
-            title: const Text('Câmera'),
-            onTap: () => Navigator.pop(folha, _AcaoDeFoto.camera),
-          ),
-          ListTile(
-            leading: FaIcon(
-              FontAwesomeIcons.images,
-              color: Theme.of(folha).colorScheme.primary,
-            ),
-            title: const Text('Galeria'),
-            onTap: () => Navigator.pop(folha, _AcaoDeFoto.galeria),
-          ),
-          if (temFoto)
-            ListTile(
-              leading: FaIcon(
-                FontAwesomeIcons.trash,
-                color: Theme.of(folha).colorScheme.primary,
-              ),
-              title: const Text('Remover foto'),
-              onTap: () => Navigator.pop(folha, _AcaoDeFoto.remover),
-            ),
-        ],
-      ),
-    ),
-  );
-  if (acao == null || !context.mounted) return;
-
-  final mensageiro = ScaffoldMessenger.of(context);
-  if (acao == _AcaoDeFoto.remover) {
-    try {
-      await Nuvem.instancia.removerFoto();
-    } catch (erro, pilha) {
-      Registro.erro('_escolherFoto', erro, pilha);
-      mostrarErroNo(mensageiro, 'Não foi possível remover a foto.');
-    }
-    return;
-  }
-
-  final arquivo = await ImagePicker().pickImage(
-    source: acao == _AcaoDeFoto.camera
-        ? ImageSource.camera
-        : ImageSource.gallery,
-    // Foto de perfil não precisa da resolução da câmera; menor já poupa
-    // banda no upload e no carregamento do avatar depois.
-    maxWidth: 512,
-    imageQuality: 85,
-  );
-  if (arquivo == null || !context.mounted) return;
-
-  try {
-    await Nuvem.instancia.atualizarFoto(await arquivo.readAsBytes());
-  } catch (erro, pilha) {
-    Registro.erro('_escolherFoto', erro, pilha);
-    mostrarErroNo(mensageiro, 'Não foi possível atualizar a foto.');
-  }
-}
-
 /// Confirma e executa o logout. Um toque no "Sair" não pode deslogar sem
 /// pergunta: na web, o espelho na nuvem é a proteção contra o navegador
 /// limpar o armazenamento local, e derrubar a sessão desarma essa proteção.
@@ -248,31 +151,21 @@ class _Cabecalho extends StatelessWidget {
         return Row(
           children: [
             if (nuvem.logado) ...[
-              // Sem rótulo, "trocar foto" só se descobria tocando: o papel de
-              // botão e o nome vão na semântica, e a dica no toque longo.
-              Semantics(
-                button: true,
-                label: 'Trocar foto de perfil',
-                child: GestureDetector(
-                  onTap: () => _escolherFoto(context),
-                  child: Tooltip(
-                    message: 'Trocar foto de perfil',
-                    child: CircleAvatar(
-                      radius: 30,
-                      backgroundImage: nuvem.fotoUrl != null
-                          ? NetworkImage(nuvem.fotoUrl!)
-                          : null,
-                      child: nuvem.fotoUrl == null
-                          ? Text(
-                              (nome ?? '?').substring(0, 1).toUpperCase(),
-                              style: tema.headlineMedium?.copyWith(
-                                color: cor.primary,
-                              ),
-                            )
-                          : null,
-                    ),
-                  ),
-                ),
+              // Avatar só exibição: a foto do Google quando há, senão a
+              // inicial do nome. Sem toque, sem upload.
+              CircleAvatar(
+                radius: 30,
+                backgroundImage: nuvem.fotoUrl != null
+                    ? NetworkImage(nuvem.fotoUrl!)
+                    : null,
+                child: nuvem.fotoUrl == null
+                    ? Text(
+                        (nome ?? '?').substring(0, 1).toUpperCase(),
+                        style: tema.headlineMedium?.copyWith(
+                          color: cor.primary,
+                        ),
+                      )
+                    : null,
               ),
               const SizedBox(width: DevocionalEspacamento.sp14),
             ],

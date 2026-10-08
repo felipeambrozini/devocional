@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../dados/modelos.dart';
 import '../estilo/espacamento.dart';
+import '../funcoes/aviso.dart';
 import '../funcoes/capa_biblia.dart';
+import '../funcoes/cartao_imagem.dart';
 import '../funcoes/citacao.dart';
 import '../telas/biblia.dart';
 import '../widgets/widgets.dart';
@@ -128,9 +129,27 @@ class DevocionalCartaoDeLeitura extends StatelessWidget {
                     FontAwesomeIcons.arrowUpFromBracket,
                     color: cor.primary,
                   ),
-                  onPressed: () => SharePlus.instance.share(
-                    ShareParams(text: _textoParaCompartilhar),
-                  ),
+                  onPressed: () async {
+                    // A imagem leva só título e citação (o comentário inteiro
+                    // viraria um cartaz ilegível); o comentário viaja no texto
+                    // que acompanha, com o link que reabre a leitura.
+                    final citacao = textoDeCitacao(dev);
+                    try {
+                      await compartilharCartao(
+                        texto: citacao.isEmpty ? '"$titulo"' : '"$citacao"',
+                        referencia: titulo,
+                        link: link,
+                        textoParaAcompanhar: _textoParaCompartilhar,
+                      );
+                    } catch (_) {
+                      if (context.mounted) {
+                        mostrarErroNo(
+                          ScaffoldMessenger.of(context),
+                          'Não foi possível compartilhar.',
+                        );
+                      }
+                    }
+                  },
                 ),
               ],
             ),

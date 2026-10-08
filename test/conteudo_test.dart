@@ -386,7 +386,7 @@ void main() {
     // Conteúdo ainda não escrito é o estado esperado e fica em silêncio; só
     // um arquivo publicado quebrado (JSON inválido) vira registro de erro.
     // Sem este teste, se o bundle lançasse outra coisa que não FlutterError
-    // para asset ausente, cada livro sem introdução encheria o Sentry.
+    // para asset ausente, cada livro sem introdução viraria erro no registro.
     test('não é registrado como erro', () async {
       final linhas = <String>[];
       final original = debugPrint;

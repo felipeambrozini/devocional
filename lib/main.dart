@@ -11,14 +11,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 // propósito: no-op fora da web, implementação de verdade só nela.
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:go_router/go_router.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'dados/canon.dart';
-import 'dados/coleta.dart';
 import 'dados/config_admin.dart';
 import 'dados/estado.dart';
 import 'dados/espelho_do_tema.dart';
-import 'dados/eventos.dart';
 import 'dados/lembretes.dart';
 import 'dados/modelos.dart';
 import 'dados/nuvem.dart';
@@ -31,7 +28,6 @@ import 'dados/voz.dart';
 import 'estilo/tema.dart';
 import 'funcoes/lembretes_acoes.dart';
 import 'funcoes/movimento.dart';
-import 'telas/aceite_de_coleta.dart';
 import 'telas/admin.dart';
 import 'telas/biblia.dart';
 import 'telas/chat.dart';
@@ -49,9 +45,8 @@ import 'telas/sobre.dart';
 import 'telas/termos.dart';
 import 'widgets/widgets.dart';
 
-/// DSN do Sentry (ver Registro.erro e o `beforeSend` abaixo). Vazio localiza
-/// o SDK em modo no-op — mesmo padrão de [audioBaseUrl].
-const _sentryDsn = String.fromEnvironment('SENTRY_DSN');
+/// Ponto de entrada do app: sem coleta remota (sem Sentry, sem Analytics).
+/// Erro vai para console e arquivo local (ver `Registro`), nunca para rede.
 
 /// De módulo, e não de um State: o toque numa notificação chega por um
 /// callback do plugin que não tem `BuildContext` de tela nenhuma, e pode
@@ -136,27 +131,10 @@ void _abrirPlanoDoLink(Estado estado) {
 /// Tudo dentro de uma zona só, para [Registro] pegar também o que escapa de
 /// um `try`/`catch` — inclusive o que os `unawaited(...)` abaixo derrubam
 /// depois do primeiro quadro, já fora da pilha de chamada do `main`.
-///
-/// O SDK do Sentry precisa estar de pé antes de qualquer erro poder
-/// acontecer, então envolve tudo — mas sem DSN (`_sentryDsn` vazio, build
-/// local sem `--dart-define`) ele mesmo vira no-op. O portão de verdade
-/// (usuário aceitou ou não) é o `beforeSend`: sem ele, um erro na tela de
-/// aceite antes da resposta chegaria ao Sentry mesmo sem permissão.
 Future<void> main() async {
-  await SentryFlutter.init(
-    (options) {
-      options.dsn = _sentryDsn;
-      // Só erro, sem rastreamento de performance: não é o que este app
-      // precisa, e cobraria cota por engano.
-      options.tracesSampleRate = 0;
-      options.sendDefaultPii = false;
-      options.beforeSend = (event, hint) =>
-          Registro.envioRemotoPermitido ? event : null;
-    },
-    appRunner: () => runZonedGuarded(
-      _iniciar,
-      (erro, pilha) => Registro.erro('Zona', erro, pilha),
-    ),
+  runZonedGuarded(
+    _iniciar,
+    (erro, pilha) => Registro.erro('Zona', erro, pilha),
   );
 }
 
@@ -184,13 +162,6 @@ Future<void> _iniciar() async {
     ..restaurarVelocidade(estado.velocidadeDaVoz)
     ..aoMudarVelocidade = estado.definirVelocidadeDaVoz;
 
-  // Aplica a resposta já salva (ou a ausência dela) ao Sentry antes de mais
-  // nada: `Registro.envioRemotoPermitido` é quem o `beforeSend` de `main()`
-  // consulta, e um erro pode acontecer a qualquer momento daqui em diante.
-  // O lado do Analytics ainda não faz nada aqui — sem Firebase inicializado,
-  // `aplicarAceiteDeColeta` só ajusta essa flag e volta.
-  unawaited(aplicarAceiteDeColeta(estado.aceiteDeColeta));
-
   // Awaited, ao contrário do resto da Nuvem abaixo: Auth e Firestore lançam
   // se chamados antes do app default do Firebase estar registrado. Sem
   // isto, a sincronia quebra com "FirebaseException" toda vez — não uma
@@ -198,9 +169,6 @@ Future<void> _iniciar() async {
   // terminar.
   try {
     await Nuvem.instancia.iniciarFirebase();
-    // Com o Firebase de pé, repete a chamada: agora sim dá para ligar (ou
-    // manter desligada) a coleta do Analytics de verdade.
-    unawaited(aplicarAceiteDeColeta(estado.aceiteDeColeta));
   } catch (erro, pilha) {
     Registro.erro('Nuvem.iniciar', erro, pilha);
   }
@@ -258,14 +226,6 @@ Future<void> _iniciar() async {
       (_) => _abrirLeituraDoLembreteDoLink(),
     );
   }
-
-  // Por último, depois de qualquer link ou notificação já ter aberto a
-  // leitura certa: o diálogo de aceite (TelaDeAceiteDeColeta) não deve
-  // competir com o destino que o usuário pediu ao tocar.
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    final context = navigatorKey.currentState?.context;
-    if (context != null) unawaited(mostrarAceiteDeColetaSeNecessario(context));
-  });
 }
 
 /// Abre a leitura do parâmetro `lembrete` da URL (`?lembrete=manha`) — como o
@@ -290,9 +250,8 @@ class _Destino {
     this.caminho,
     this.icone,
     this.iconeAtivo,
-    this.tela, {
-    this.mostrarNoRail = true,
-  });
+    this.tela,
+  );
 
   final String rotulo;
 
@@ -304,10 +263,6 @@ class _Destino {
   final FaIconData icone;
   final FaIconData iconeAtivo;
   final Widget tela;
-
-  /// Em telas largas os balões de conversa substituem a aba: esconder este
-  /// destino do NavigationRail mantém a navegação limpa.
-  final bool mostrarNoRail;
 }
 
 const _destinos = <_Destino>[
@@ -352,7 +307,6 @@ const _destinos = <_Destino>[
     FontAwesomeIcons.comments,
     FontAwesomeIcons.solidComments,
     TelaConversas(),
-    mostrarNoRail: false,
   ),
 ];
 
@@ -375,8 +329,7 @@ final _escoposDasAbas = [
 /// a um F5 — o Firebase Hosting devolve o index.html para qualquer caminho sob
 /// `/devocional/` (rewrite em firebase.json). Sobre e as conversas também têm
 /// URL própria, fora do shell: são telas empurradas por cima das abas, não
-/// abas. "Conversas" tem `mostrarNoRail: false`: em telas largas os balões de
-/// conversa substituem a aba no NavigationRail, mas a rota continua ativa.
+/// abas.
 ///
 /// `StatefulShellRoute.indexedStack`, não rotas soltas: rotas soltas
 /// trocariam de aba reconstruindo a Moldura do zero, perdendo a rolagem e o
@@ -389,7 +342,7 @@ final _escoposDasAbas = [
 /// dentro do GoRouter mas deixava a barra de endereço presa na aba — o
 /// go_router só reflete na URL as navegações por `go`/`goBranch`; imperativas
 /// (push, pushReplacement, replace) ficam de fora por padrão, para trás.
-/// Com ela ligada, o push do balão do chat também escreve a URL (e devolve
+/// Com ela ligada, o push do chat também escreve a URL (e devolve
 /// ao fechar), e as abas continuam no `goBranch` de sempre.
 final _router = GoRouter(
   navigatorKey: navigatorKey,
@@ -410,14 +363,14 @@ final _router = GoRouter(
     // A aba Conversas é livre para todo mundo (ver TelaConversas, que troca
     // as cartas pelo convite ao WhatsApp sem o recurso). Só o chat de cada
     // persona continua trancado por link direto — é ele que chama a API
-    // paga, a mesma restrição que esconde os balões.
+    // paga.
     if (!Recursos.conversas &&
         todasAsPersonas.any((p) => state.uri.path.startsWith('/${p.slug}'))) {
       return '/hoje';
     }
     return null;
   },
-  observers: [_observadorDeCamadas, _observadorDaVoz, _observadorDeTelas],
+  observers: [_observadorDaVoz],
   errorBuilder: (context, state) {
     // Rota desconhecida (link velho, digitado ou com caminho corrompido):
     // voltar para a primeira aba em vez da tela de erro padrão do go_router.
@@ -427,7 +380,7 @@ final _router = GoRouter(
   routes: [
     // Os chats não são abas: abrem por cima de tudo e merecem URL própria,
     // para sobreviver ao F5 e para um link compartilhado reabrir a conversa.
-    // O balão empurra com `push`, não `go`: `go` trocaria a pilha inteira e
+    // A carta empurra com `push`, não `go`: `go` trocaria a pilha inteira e
     // o chat ficaria sem o botão de voltar. A raiz abre o histórico da
     // persona (ver `lib/telas/historico.dart`); cada conversa é um filho,
     // `conversa` para uma nova e `conversa/:id` para uma específica.
@@ -655,7 +608,7 @@ class _AppDevocionalState extends State<AppDevocional>
         title: 'Devocional',
         debugShowCheckedModeBanner: false,
         builder: (context, child) => _EsconderMovimento(
-          child: _ComBaloes(child: child!),
+          child: child!,
         ),
         // Os dois temas vão sempre montados, e o `themeMode` escolhe. Assim
         // "Automático" funciona de verdade: o sistema pode virar o modo com o
@@ -749,19 +702,10 @@ class Moldura extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    // Reage ao login e à configuração remota: Conversas pode aparecer ou
-    // sumir assim que a conta autorizada entra ou sai, ou o admin desliga o
-    // recurso, sem esperar uma troca de aba.
-    return ListenableBuilder(
-      listenable: Listenable.merge([Nuvem.instancia, ConfigAdmin.instancia]),
-      builder: (context, _) => _conteudo(context),
-    );
-  }
+  Widget build(BuildContext context) => _conteudo(context);
 
   Widget _conteudo(BuildContext context) {
     final largo = telaLarga(context);
-    final destinosVisiveis = _destinos;
 
     // A DevocionalLarguraDeLeitura não fica aqui. Envolvendo o shell inteiro, ela prendia
     // também a AppBar e a régua de meses do Plano numa faixa de 720 px no meio da
@@ -771,19 +715,18 @@ class Moldura extends StatelessWidget {
     // cada tela limita o próprio corpo, e a moldura ocupa a janela como um app
     // da web deve.
     if (!largo) {
-      // Em tela estreita não há faixa de retratos de conversa nem balões
-      // flutuantes: as conversas moram na aba Conversas, e o texto de leitura
-      // não disputa viewport com ninguém.
+      // Em tela estreita as conversas moram na aba Conversas, e o texto de
+      // leitura não disputa viewport com ninguém.
       return Scaffold(
         body: navigationShell,
         bottomNavigationBar: NavigationBar(
           selectedIndex: navigationShell.currentIndex.clamp(
             0,
-            destinosVisiveis.length - 1,
+            _destinos.length - 1,
           ),
           onDestinationSelected: _irParaAba,
           destinations: [
-            for (final d in destinosVisiveis)
+            for (final d in _destinos)
               NavigationDestination(
                 icon: FaIcon(d.icone),
                 selectedIcon: FaIcon(d.iconeAtivo),
@@ -794,38 +737,17 @@ class Moldura extends StatelessWidget {
       );
     }
 
-    // Em telas largas os balões de conversa substituem a aba: o rail omite
-    // Conversas para não duplicar a entrada do chat. Mas sem o recurso
-    // liberado (ver Recursos.conversas) os balões não aparecem — aí a aba
-    // volta a ser a única porta de entrada, mesmo em tela larga.
-    final destinosDoRail = [
-      for (final d in destinosVisiveis)
-        if (d.mostrarNoRail ||
-            (d.caminho == 'conversas' && !Recursos.conversas))
-          d,
-    ];
-    // O índice de destinosDoRail não é o de navigationShell/_destinos: o
-    // rail omite Conversas quando os balões estão no ar, então um clamp
-    // direto do índice cheio caía sobre o último item que sobrou ("Notas")
-    // sempre que a aba atual era justamente a Conversas omitida. Acha a
-    // posição pelo caminho da aba atual; -1 (Conversas escondida) não
-    // destaca nenhum item do rail, que é o estado visual certo — a conversa
-    // está aberta nos balões flutuantes, não numa aba dele.
-    final caminhoAtual = _destinos[navigationShell.currentIndex].caminho;
-    final indiceNoRail = destinosDoRail.indexWhere(
-      (d) => d.caminho == caminhoAtual,
-    );
-
+    // Em telas largas a aba Conversas continua no trilho: uma entrada só
+    // para o chat, sem atalho flutuante duplicado.
     return Scaffold(
       body: Row(
         children: [
           NavigationRail(
-            selectedIndex: indiceNoRail == -1 ? null : indiceNoRail,
-            onDestinationSelected: (i) =>
-                _irParaAba(_destinos.indexOf(destinosDoRail[i])),
+            selectedIndex: navigationShell.currentIndex,
+            onDestinationSelected: _irParaAba,
             labelType: NavigationRailLabelType.all,
             destinations: [
-              for (final d in destinosDoRail)
+              for (final d in _destinos)
                 NavigationRailDestination(
                   icon: FaIcon(d.icone),
                   selectedIcon: FaIcon(d.iconeAtivo),
@@ -840,34 +762,6 @@ class Moldura extends StatelessWidget {
     );
   }
 }
-
-/// Conta as camadas que flutuam por cima das telas (folha de ajustes, diálogo,
-/// seletor de horário) para [camadasFlutuantes] de `lib/telas/chat.dart`: são
-/// rotas que não tapam a tela, e por cima delas os balões de conversa
-/// atrapalham. Rota opaca (uma tela de verdade, como uma leitura) não mexe no
-/// contador: é exatamente por cima dela que os balões devem aparecer. O
-/// próprio chat cuida do próprio contador, por isso a [TelaChat] não passa
-/// por aqui.
-class _ObservadorDeCamadas extends NavigatorObserver {
-  bool _eTransparente(Route route) => route is ModalRoute && !route.opaque;
-
-  @override
-  void didPush(Route route, Route? previousRoute) {
-    if (_eTransparente(route)) camadasFlutuantes.value++;
-  }
-
-  @override
-  void didPop(Route route, Route? previousRoute) {
-    // O travamento é só defesa: um `didPop` órfão de um push que o observador
-    // não viu (alguma rota criada antes dele) não pode deixar o contador no
-    // negativo e esconder os balões para sempre.
-    if (_eTransparente(route) && camadasFlutuantes.value > 0) {
-      camadasFlutuantes.value--;
-    }
-  }
-}
-
-final _observadorDeCamadas = _ObservadorDeCamadas();
 
 /// Para a voz de Spurgeon quando uma rota opaca cobre a leitura: busca, a
 /// introdução, o chat, uma leitura aberta por link. O botão de parar fica
@@ -884,105 +778,3 @@ class _ObservadorDaVoz extends NavigatorObserver {
 }
 
 final _observadorDaVoz = _ObservadorDaVoz();
-
-/// Loga `screen_view` a cada troca de rota (ver [registrarTelaVista]), para
-/// saber em que tela alguém travou — o go_router já preenche
-/// `route.settings.name` com o caminho completo da rota (`/biblia`,
-/// `/plano`...), sem precisar declarar `name:` em cada `GoRoute`.
-class _ObservadorDeTelas extends NavigatorObserver {
-  void _registrar(Route<Object?> route) {
-    final nome = route.settings.name;
-    if (nome != null && nome.isNotEmpty) unawaited(registrarTelaVista(nome));
-  }
-
-  @override
-  void didPush(Route route, Route? previousRoute) => _registrar(route);
-
-  @override
-  void didReplace({Route? newRoute, Route? oldRoute}) {
-    if (newRoute != null) _registrar(newRoute);
-  }
-}
-
-final _observadorDeTelas = _ObservadorDeTelas();
-
-/// Pendura os dois balões de conversa por cima das telas largas: Spurgeon à
-/// esquerda, Felipe à direita.
-///
-/// Em tela estreita não existem: as conversas entram pela aba Conversas, e um
-/// balão flutuante por cima do texto de leitura não volta. Em telas largas os
-/// balões substituem a aba no NavigationRail — que omite "Conversas" —, mas a
-/// rota `/conversas` continua ativa para quem chega por link direto. Somem
-/// quando [camadasFlutuantes] passa de zero, e reaparecem quando a camada
-/// fecha.
-class _ComBaloes extends StatelessWidget {
-  const _ComBaloes({required this.child});
-
-  final Widget child;
-
-  void _abrirChat(Persona persona) {
-    _router.push('/${persona.slug}');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: Listenable.merge([
-        camadasFlutuantes,
-        Nuvem.instancia,
-        ConfigAdmin.instancia,
-      ]),
-      builder: (context, _) {
-        if (!Recursos.conversas) return child;
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            // Tela estreita: os retratos estão na faixa da Moldura, não aqui.
-            // Este overlay só existe para as telas largas, onde os cantos de
-            // baixo ficam vazios e o balão não tampa a leitura.
-            if (constraints.maxWidth < larguraDeTelaLarga) return child;
-            return Stack(
-              children: [
-                child,
-                if (camadasFlutuantes.value == 0) ...[
-                  // O Tooltip do balão exige um Overlay por cima, e aqui
-                  // estamos fora do Navigator (que é quem provê o Overlay do
-                  // app). Este Overlay aninhado existe só para os balões e as
-                  // suas dicas; nada de rota ou diálogo nasce aqui dentro.
-                  Overlay(
-                    initialEntries: [
-                      OverlayEntry(
-                        builder: (context) => Stack(
-                          children: [
-                            // Em tela larga quem ocupa o canto esquerdo é o
-                            // trilho lateral: o balão dele pula para dentro do
-                            // conteúdo, e o da direita fica na esquina.
-                            Positioned(
-                              left: 96,
-                              bottom: 12,
-                              child: DevocionalBalaoDeChat(
-                                persona: personaSpurgeon,
-                                onTap: () => _abrirChat(personaSpurgeon),
-                              ),
-                            ),
-                            Positioned(
-                              right: 12,
-                              bottom: 12,
-                              child: DevocionalBalaoDeChat(
-                                persona: personaFelipe,
-                                onTap: () => _abrirChat(personaFelipe),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-}

@@ -7,7 +7,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../controladores/sobre_controlador.dart';
-import '../dados/coleta.dart';
 import '../dados/conteudo.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
@@ -87,8 +86,7 @@ class _TelaSobreState extends State<TelaSobre> {
               ),
               const SizedBox(height: DevocionalEspacamento.sp24),
               // Ajuda e Conta e privacidade vêm primeiro: são a razão mais
-              // comum de abrir Sobre (ajuda, mudar o consentimento de coleta,
-              // apagar dados). O que é crédito/leitura de referência (fontes,
+              // comum de abrir Sobre (ajuda, apagar dados). O que é crédito/leitura de referência (fontes,
               // voz, biografia, canais) vem depois, colapsado.
               Semantics(
                 header: true,
@@ -121,32 +119,9 @@ class _TelaSobreState extends State<TelaSobre> {
                   ),
                   onTap: _relatarProblema,
                 ),
-              // O aceite (ver TelaDeAceiteDeColeta) só pergunta uma vez; este
-              // switch é como a política de privacidade promete "mudar de
-              // ideia depois" sem exigir apagar dados do app inteiro.
-              ListenableBuilder(
-                listenable: EscopoDoEstado.de(context),
-                builder: (context, _) {
-                  final estado = EscopoDoEstado.de(context);
-                  return SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    secondary: FaIcon(
-                      FontAwesomeIcons.chartLine,
-                      color: cor.primary,
-                    ),
-                    title: const Text('Erro técnico e uso anônimo'),
-                    subtitle: const Text(
-                      'Sentry (erro) e Analytics (uso por tela), sem '
-                      'identificar você. Ver Política de privacidade.',
-                    ),
-                    value: estado.aceiteDeColeta ?? false,
-                    onChanged: (permitido) async {
-                      await estado.definirAceiteDeColeta(permitido);
-                      await aplicarAceiteDeColeta(permitido);
-                    },
-                  );
-                },
-              ),
+              // Sem coleta remota neste app (sem Sentry, sem Analytics):
+              // erro fica no console e em arquivo local. "Relatar um
+              // problema" abaixo abre e-mail com a versão já preenchida.
               const SizedBox(height: DevocionalEspacamento.sp32),
               Semantics(
                 header: true,

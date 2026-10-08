@@ -14,7 +14,6 @@ export 'area_de_selecao.dart';
 export 'aviso_de_corte.dart';
 export 'aviso_de_perda.dart';
 export 'aviso_vazio.dart';
-export 'balao_de_chat.dart';
 export 'balcao_de_mensagem.dart';
 export 'barra_de_capitulo.dart';
 export 'boas_vindas.dart';

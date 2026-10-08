@@ -30,12 +30,13 @@ import '../widgets/widgets.dart';
 /// FORM: redesenho da superfície do chat no mundo estabelecido da Estante,
 /// direção fixada pelo usuário (carta enquadrada pelo DevocionalFilete); sem sorteio.
 
-/// Quantas camadas flutuantes estão abertas (folha de ajustes, diálogo, o
-/// próprio chat). Os balões somem quando o número passa de zero: não faz
-/// sentido ter o botão do chat por cima do próprio chat, nem por cima de uma
-/// folha que precisa da tela inteira. Quem soma e subtrai: o observador de
-/// rotas em `main.dart` para folhas e diálogos, e a [TelaChat] para si mesma.
-final camadasFlutuantes = ValueNotifier<int>(0);
+/// O chat com uma persona: histórico da conversa, campo de mensagem e a
+/// resposta da inteligência artificial gratuita.
+///
+/// [conversaId] é a conversa que este chat abre; null abre uma conversa nova,
+/// que só nasce (com o próprio id) na primeira pergunta. A lista de
+/// conversas fica em `lib/telas/historico.dart`, e é de lá que este chat é
+/// empurrado, junto com a URL que o F5 e o link compartilhado reabrem.
 
 /// O aviso de que o teto de mensagens cortou as falas mais antigas. O mesmo
 /// texto na snackbar do momento do corte e na nota quieta no topo da conversa:
@@ -70,25 +71,13 @@ class _TelaChatState extends State<TelaChat> {
   @override
   void initState() {
     super.initState();
-    // O chat é uma tela empurrada por cima das abas, e os balões são irmãos
-    // do Navigator: sem isto, o botão do chat flutuaria por cima do chat.
-    // O aviso precisa sair do meio do build: incrementar aqui dentro
-    // notificaria os balões enquanto a árvore ainda monta o chat, e o
-    // framework proíbe marcar um widget para reconstruir nessa fase (assert
-    // em debug). Depois do frame o efeito é o mesmo, sem a exceção.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      camadasFlutuantes.value++;
       _controller.iniciar(context);
     });
   }
 
   @override
   void dispose() {
-    // O dispose também roda dentro do build (o do desmonte da rota), então a
-    // contagem volta depois do frame, como no initState.
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => camadasFlutuantes.value--,
-    );
     _controller.dispose();
     super.dispose();
   }

@@ -18,8 +18,8 @@ Apenas a versão mais recente em execução no ambiente de produção (Web via F
 
 O aplicativo foi projetado com o princípio de exposição mínima de dados e processamento prioritariamente local.
 
-### 2.1 Ausência de Cookies e Publicidade
-O aplicativo **não grava nenhum cookie**, não tem anúncio e não vende nem compartilha dados com terceiros para fins de publicidade. Na web, as preferências e o progresso ficam no `localStorage` (via `shared_preferences`) e a sessão do Firebase Auth no `IndexedDB` — armazenamento estritamente necessário ao funcionamento, sob o domínio do próprio app. Por isso não há banner de consentimento de cookies: não existe cookie de terceiro nem finalidade de rastreamento que o exija sob a LGPD. A coleta remota opcional (erro e uso anônimo) é descrita em 2.4, à parte, porque depende de aceite explícito do usuário.
+### 2.1 Ausência de Cookies, Publicidade e Coleta Remota
+O aplicativo **não grava nenhum cookie**, não tem anúncio, não vende nem compartilha dados com terceiros para fins de publicidade e **não tem coleta remota de erro nem de uso**: sem Sentry, sem Analytics, sem diálogo de aceite. Erro fica no console e, fora da web, em arquivo local (`lib/dados/registro.dart`); "Relatar um problema" (Sobre) abre e-mail com a versão já preenchida. Na web, as preferências e o progresso ficam no `localStorage` (via `shared_preferences`) e a sessão do Firebase Auth no `IndexedDB` — armazenamento estritamente necessário ao funcionamento, sob o domínio do próprio app. Por isso não há banner de consentimento de cookies: não existe cookie de terceiro nem finalidade de rastreamento que o exija sob a LGPD.
 
 ### 2.2 Armazenamento Local
 Progresso de leitura, anotações e versículos favoritos são salvos localmente por meio do `shared_preferences` em todas as plataformas (Android, iOS e web). Quem não entra com conta usa o app inteiro assim, sem nada saindo do aparelho.
@@ -27,24 +27,23 @@ Progresso de leitura, anotações e versículos favoritos são salvos localmente
 ### 2.3 Sincronização na Nuvem e Autenticação
 - **Plataformas:** A sincronização com a nuvem (Firebase) está disponível em Android, iOS e web — `nuvemSuportada` (`lib/dados/nuvem.dart`) não distingue plataforma. O login nativo (Android/iOS) usa `GoogleSignIn.instance.authenticate()` mais `signInWithCredential`; a web usa `signInWithPopup` em desktop e `signInWithRedirect` em navegador mobile, onde o popup falha ao trocar o token com a janela original por causa do armazenamento particionado do navegador.
 - **Segurança no Firestore:** Cada usuário autenticado possui acesso exclusivo ao seu próprio documento localizado no caminho `usuarios/{uid}`.
-- **Regras de Acesso:** O acesso aos dados no Cloud Firestore é protegido por regras rígidas de segurança (`firestore.rules`), garantindo que apenas o proprietário autenticado (`request.auth.uid == userId`) possa ler ou escrever em seu respetivo documento. A remoção de dados locais não apaga registros na nuvem, atuando a sincronização por fusão (*merge*). Apagar a conta (Sobre → Conta e privacidade) remove também a foto de perfil e a participação em planos compartilhados, além do documento e da própria conta.
+- **Regras de Acesso:** O acesso aos dados no Cloud Firestore é protegido por regras rígidas de segurança (`firestore.rules`), garantindo que apenas o proprietário autenticado (`request.auth.uid == userId`) possa ler ou escrever em seu respetivo documento. A remoção de dados locais não apaga registros na nuvem, atuando a sincronização por fusão (*merge*). Apagar a conta (Sobre → Conta e privacidade) remove também a participação em planos compartilhados, além do documento e da própria conta.
 
-### 2.4 Coleta Remota Opcional (Sentry e Analytics)
-Na primeira abertura, o app pergunta se o usuário autoriza o envio de dois tipos de informação sem identificação: erro técnico (Sentry, web e Android) e uso anônimo por tela (Firebase Analytics). As duas ficam desligadas por padrão — `Registro.envioRemotoPermitido` começa `false` e o `beforeSend` do Sentry descarta qualquer evento até a resposta chegar (`lib/main.dart`); a aplicação da escolha aos dois SDKs vive em `lib/dados/coleta.dart`, único ponto que liga Firebase Analytics à decisão do usuário. A resposta pode ser revista a qualquer momento em Sobre. Nenhum dos dois canais recebe o texto lido, escrito ou de conversas.
+### 2.4 Sem Coleta Remota (sem Sentry, sem Analytics)
+O app não envia erro técnico nem uso para fora do aparelho: não há SDK de reporte nem de medição, e por isso não há diálogo de aceite nem interruptor em Sobre. O registro local (`lib/dados/registro.dart`) grava no console e, fora da web, em arquivo no aparelho. Nenhum canal de diagnóstico recebe o texto lido, escrito ou de conversas — porque nenhum canal de diagnóstico existe.
 
 ---
 
 ## 3. Gestão de Chaves de API e Segredos
 
 ### 3.1 Injeção de Variáveis em Tempo de Compilação
-As chaves e parâmetros necessários para o funcionamento dos serviços integrados (Firebase, IA Gemini, Sentry) não são mantidos estáticos no código-fonte. Eles são injetados exclusivamente em tempo de compilação via parâmetros `--dart-define`, lidos por `String.fromEnvironment` em `lib/dados/google.dart`, `lib/firebase_options.dart` e nos poucos outros pontos que os usam diretamente. Nenhum trafega como *asset* do aplicativo — o arquivo local `.env.json` serve apenas ao `--dart-define-from-file` durante o desenvolvimento e nunca é empacotado no build:
+As chaves e parâmetros necessários para o funcionamento dos serviços integrados (Firebase, IA Gemini) não são mantidos estáticos no código-fonte. Eles são injetados exclusivamente em tempo de compilação via parâmetros `--dart-define`, lidos por `String.fromEnvironment` em `lib/dados/google.dart`, `lib/firebase_options.dart` e nos poucos outros pontos que os usam diretamente. Nenhum trafega como *asset* do aplicativo — o arquivo local `.env.json` serve apenas ao `--dart-define-from-file` durante o desenvolvimento e nunca é empacotado no build:
 
 - `FIREBASE_API_KEY_WEB`, `FIREBASE_API_KEY_ANDROID`, `FIREBASE_API_KEY_IOS`
 - `GEMINI_API_KEY_WEB`, `GEMINI_API_KEY_ANDROID`, `GEMINI_API_KEY_IOS`
 - `FCM_VAPID_KEY` (chave pública do Web Push, para o lembrete diário na web)
 - `AUDIO_BASE_URL` (origem dos MP3 pré-gerados da leitura em voz alta)
 - `RECAPTCHA_V3_SITE_KEY` (App Check na web, ver 3.3)
-- `SENTRY_DSN` (destino do reporte de erro remoto, ver 2.4 — vazio localiza o SDK em modo no-op)
 - `EMAIL_DE_CONTATO` (destino de "Relatar um problema" em Sobre; vazio esconde o item)
 - `WHATSAPP_NUMERO` (destino do botão "Falar no WhatsApp" em Conversas, para quem pede acesso fora da allowlist; vazio esconde o botão)
 

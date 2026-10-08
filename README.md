@@ -36,12 +36,13 @@ mesmo código).
   capítulo da Bíblia, o leitor vira a página e o próximo começa sozinho.
 - **Conversas com IA**: duas personas para conversar, Charles Spurgeon e
   Felipe Ambrozini, cada uma com o próprio jeito de falar (Gemini). Histórico
-  salvo por conversa; aba própria no celular, balões flutuantes nas telas
-  largas.
+  salvo por conversa, numa aba própria em todas as plataformas.
 - **Introduções aos 66 livros**, na voz de Spurgeon, com título formal do livro
   vindo da BKJ 1611.
 - **Favoritos e notas**: qualquer versículo pode ser marcado, anotado, copiado ou
-  compartilhado; tela própria lista os favoritos e os que têm anotação, com
+  compartilhado — o compartilhar gera um cartão-imagem na identidade do app
+  (fundo couro, filete dourado) com o texto junto, pronto para WhatsApp e
+  Instagram; tela própria lista os favoritos e os que têm anotação, com
   busca por referência ou por texto da nota, e exporta uma cópia de segurança
   de tudo (favoritos, notas e progresso) para reimportar em outro aparelho.
 - **Comentário de Spurgeon por versículo**: a mesma folha que abre ao tocar um
@@ -52,8 +53,7 @@ mesmo código).
   planos sobem sozinhos para a conta de quem entrar, para não perder nada se o
   navegador limpar o armazenamento e para o mesmo plano aparecer no celular e
   na web. Quem entra vê o próprio avatar (foto da conta Google, ou a inicial do
-  nome sem foto) na saudação da aba Hoje, e pode trocar a foto tocando nele
-  (câmera ou galeria). Ao abrir, nome e foto voltam assim que o Firebase Auth
+  nome sem foto) na saudação da aba Hoje. Ao abrir, nome e foto voltam assim que o Firebase Auth
   restaura a sessão salva — sem esperar o App Check, que só o Firestore
   precisa. Nesse instante curto o cabeçalho mostra "Verificando conta" em vez
   do botão Entrar, que só aparece quando se sabe que não há sessão.
@@ -85,7 +85,7 @@ mesmo código).
 | Devocional | Manhã, Noite e Promessas de Deus, com calendário |
 | Plano | Cronograma anual por mês, com marcação de lido; Meus Planos (personalizados e compartilhados) |
 | Notas | Favoritos e anotações |
-| Conversas | Chat com Spurgeon e Felipe (IA); em tela larga vira balão flutuante no lugar da aba |
+| Conversas | Chat com Spurgeon e Felipe (IA), numa aba própria em todas as plataformas |
 
 Sobre (créditos, fonte da tradução, canais e ajuda), Perguntas frequentes,
 Política de privacidade e Termos de serviço não são abas: moram no fim da
@@ -106,7 +106,8 @@ plano compartilhado.
   planos), igual em todas as plataformas, sem banco. Quem entra com a
   conta Google (Android, iOS ou web) também espelha favoritos, notas, progresso
   e planos num documento do Firestore — ver a conta na nuvem, acima.
-- `share_plus` para compartilhar um versículo ou exportar a cópia. O lembrete
+- `share_plus` para compartilhar um versículo (cartão-imagem + texto, ver
+  `lib/funcoes/cartao_imagem.dart`) ou exportar a cópia. O lembrete
   diário é híbrido, Android e web (ver `lembretesSuportados` em
   `lib/dados/lembretes.dart`): push de uma Cloud Function agendada via
   `firebase_messaging`, mais `flutter_local_notifications` + `flutter_timezone` +
@@ -117,9 +118,7 @@ plano compartilhado.
   `Moldura` continua preservando a rolagem e o capítulo aberto de cada aba,
   como o `IndexedStack` antigo fazia).
 - `firebase_core` + `firebase_auth` + `cloud_firestore` para a conta na
-  nuvem (sempre disponível, sem gating por plataforma). `firebase_storage`
-  guarda a foto de perfil trocada pelo avatar da Hoje; `image_picker` escolhe
-  a foto na câmera ou na galeria.
+  nuvem (sempre disponível, sem gating por plataforma).
 - `http` fala direto com a Gemini API (`gemini-3.5-flash-lite`, tier gratuito;
   nome fixo, não o alias `gemini-flash-latest`, que pode migrar para fora do
   grátis sem aviso) para o chat das duas personas (`lib/dados/ia.dart`). Chave
@@ -300,8 +299,12 @@ motivo novo.
   — o texto é carregado sob demanda, e trazer todos para uma busca em memória
   derrubaria o carregamento tardio. Limitação deliberada, documentada em
   `lib/telas/notas.dart`.
-- **Compartilhar e Copiar usam o mesmo texto formatado** (`_textoDoVersiculo`
-  em `lib/telas/biblia.dart`). Em teste, `Clipboard.getData` trava para sempre;
+- **Compartilhar gera cartão-imagem** (`lib/funcoes/cartao_imagem.dart`): o
+  versículo (na Bíblia) ou a citação (no Devocional) sai como PNG na identidade
+  do app, com o texto de sempre junto (e o link que reabre a leitura); na web,
+  cai para texto puro, que é o que o share da web suporta. Copiar continua só
+  texto (`_textoDoVersiculo` em `lib/telas/biblia.dart`). Em teste,
+  `Clipboard.getData` trava para sempre;
   a forma de verificar é um `setMockMethodCallHandler` capturando o argumento
   de `Clipboard.setData`.
 - **A assinatura de Spurgeon é tinta dourada chapada (`#E3C567`)**, tingida
@@ -310,10 +313,8 @@ motivo novo.
 - **O avatar da Hoje é a foto da conta Google de quem entrou, nunca uma
   imagem fixa do app** (20/08/2026) — antes era a foto do Felipe embutida no
   app, escondida na web. `Nuvem.fotoUrl` lê `FirebaseAuth.currentUser?.photoURL`;
-  sem conta ou sem foto, cai na inicial do nome. Tocar no avatar sobe uma
-  foto nova (câmera ou galeria, `image_picker`) para `fotos_de_perfil/{uid}.jpg`
-  no Firebase Storage (`storage.rules`: um arquivo por conta, só o dono
-  grava, leitura pública porque a URL vai direto num `NetworkImage`).
+  sem conta ou sem foto, cai na inicial do nome. Só exibição: sem toque, sem
+  upload, sem Storage.
 - **Plano que só existia no celular não aparecia na web** (02/09/2026):
   `Sincronia.comecar()` em `lib/dados/nuvem.dart` puxava a cópia da conta,
   fundia com a local e só então passava a ouvir o `Estado` — mas comparando
@@ -370,7 +371,7 @@ motivo novo.
   (aba "Meus planos"), `ouvirTextos` (`BotaoDeVoz`, único ponto de entrada
   da leitura em voz alta), `cronograma` (aba "Cronograma"), `devocionalManha`,
   `devocionalNoite`, `promessas` (cada leitura em separado) e `conversas` (o
-  chat de cada persona, os balões flutuantes e as rotas
+  chat de cada persona e as rotas
   `/charles-spurgeon`, `/felipe-ambrozini`). Os valores moram no Firestore
   (`config/recursos`, ver `lib/dados/config_admin.dart`) e o painel `/admin`
   (só web e só a conta do dono, com entrada na folha de ajustes) os edita na
@@ -385,7 +386,7 @@ motivo novo.
    o app já usa é o servidor de configuração. Cada interruptor tem o seu
    `*Forcado` (mesmo padrão de `Lembretes.instancia`, mutável) só para teste —
    o login de verdade nunca roda no ambiente de teste, e sem o override os
-   testes de Conversas e dos balões não veriam o recurso.
+   testes de Conversas não veriam o recurso.
  - **Planos próprios têm allowlist de e-mail igual à do chat**
    (`emailsComPlanos`, `Recursos.planos`): com a lista vazia vale só o
    interruptor global, como sempre foi; com o primeiro e-mail adicionado no
@@ -402,10 +403,8 @@ motivo novo.
   o número vindo de `--dart-define=WHATSAPP_NUMERO` (mesmo padrão do
   `EMAIL_DE_CONTATO`, vazio esconde o botão). O `redirect` do `GoRouter`
   (`lib/main.dart`) só trava mais `/charles-spurgeon` e `/felipe-ambrozini` —
-  o chat de fato —, não mais `/conversas`. Em tela larga, onde os balões
-  substituem a aba no `NavigationRail`, a aba volta para o rail quando os
-  balões não aparecem (sem o recurso), senão telas largas sem allowlist não
-  teriam nenhuma porta de entrada.
+  o chat de fato —, não mais `/conversas`. A aba Conversas é a única porta de
+  entrada em todas as larguras, sem atalho flutuante duplicado.
 - **`web/index.html` tem fundo marrom e um marcador de carregamento**, retirado
   no evento `flutter-first-frame` (o Flutter acrescenta a `flutter-view` ao
   body em vez de limpar). As duas cores do fundo são por
@@ -600,9 +599,9 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
   folha de ajustes, como os créditos de um aplicativo costumam ficar.
 - **Aba Conversas** (19/08/2026): as conversas ganharam a própria aba
   (`/conversas`), com uma carta por persona abrindo o histórico por `push`
-  (`/charles-spurgeon`, `/felipe-ambrozini`). A seção Conversas da folha de
-  ajustes perdeu as duas entradas e ficou só com o interruptor dos balões e a
-  dica, que valem para as telas largas.
+  (`/charles-spurgeon`, `/felipe-ambrozini`). É a única entrada do chat em
+  todas as plataformas e larguras (os balões flutuantes das telas largas
+  foram removidos: duas entradas para o mesmo chat).
 - **`usePathUrlStrategy()`** vem de `package:flutter_web_plugins/url_strategy.dart`,
   não do barril `flutter_web_plugins.dart` (o barril puxa `dart:ui_web` sem
   condicional e quebra a compilação para a VM, que é o que o `flutter test`
@@ -700,11 +699,12 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
   Um rodapé só em HTML, dentro de `<noscript>`, repete esses links (YouTube,
   Instagram, FAQ, privacidade, termos) para rastreador e leitor de tela sem
   JavaScript — sem aparecer para quem usa o app normalmente.
-- **Sem Google Analytics ou outra ferramenta de análise de terceiros, de
+- **Sem Google Analytics, Sentry ou outra ferramenta de terceiros, de
   propósito** — o `llms.txt` declara publicamente "sem ferramenta de análise
-  de uso de terceiros"; adicionar uma quebraria essa promessa. Não reabrir sem
-  primeiro decidir remover essa linha do `llms.txt` e da política de
-  privacidade.
+  de uso de terceiros". Erro fica no console e em arquivo local
+  (`lib/dados/registro.dart`); "Relatar um problema" (Sobre) abre e-mail com
+  a versão já preenchida. Não reabrir sem primeiro decidir remover essa linha
+  do `llms.txt` e da política de privacidade.
 
 ### Ícone, splash e fontes
 
@@ -773,7 +773,7 @@ flutter build web --dart-define-from-file=.env.json
 (O `.env.json` deve conter todas as chaves — ver `.env.example.json` na raiz
 para a lista completa e `SECURITY.md §3.1` para o motivo de cada uma:
 `FIREBASE_API_KEY_*`, `GEMINI_API_KEY_*`, `AUDIO_BASE_URL`, `FCM_VAPID_KEY`,
-`RECAPTCHA_V3_SITE_KEY`, `SENTRY_DSN`, `EMAIL_DE_CONTATO`, `WHATSAPP_NUMERO`,
+`RECAPTCHA_V3_SITE_KEY`, `EMAIL_DE_CONTATO`, `WHATSAPP_NUMERO`,
 etc.)
 
 Ícone do app, favicon e tela de abertura são gerados a partir das fontes em

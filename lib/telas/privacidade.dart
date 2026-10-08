@@ -8,7 +8,7 @@ import '../widgets/widgets.dart';
 /// Política de privacidade completa: a versão longa do resumo que já vive em
 /// Sobre, com URL própria para quem chega por um link direto ou por exigência
 /// de uma conta Google. Todo item aqui espelha o que o código de fato faz
-/// (`lib/dados/nuvem.dart`, `lib/dados/conversas.dart` e `lib/dados/coleta.dart`),
+/// (`lib/dados/nuvem.dart` e `lib/dados/conversas.dart`),
 /// não uma promessa separada do comportamento real.
 class TelaPrivacidade extends StatefulWidget {
   const TelaPrivacidade({super.key});
@@ -23,7 +23,6 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
   final _planos = GlobalKey();
   final _chat = GlobalKey();
   final _voz = GlobalKey();
-  final _usoAnonimo = GlobalKey();
   final _appGenuino = GlobalKey();
   final _apagar = GlobalKey();
   final _contato = GlobalKey();
@@ -62,7 +61,6 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
               'Planos de leitura compartilhados': _planos,
               if (chat) 'Chat com inteligência artificial': _chat,
               'Leitura em voz alta': _voz,
-              'Uso anônimo e erro técnico': _usoAnonimo,
               'Verificação de app genuíno': _appGenuino,
               'Apagar seus dados': _apagar,
               'Contato': _contato,
@@ -77,9 +75,8 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                 Text(
                   'Este aplicativo não tem anúncio e não vende nem '
                   'compartilha dados com terceiros para fins de '
-                  'publicidade. Com sua permissão, ele pode enviar erro '
-                  'técnico e uso anônimo por tela: ver "Uso anônimo e '
-                  'erro técnico" abaixo. O que segue é a lista completa do '
+                  'publicidade. Também não tem coleta de erro nem de uso: '
+                  'sem Sentry, sem Analytics. O que segue é a lista completa do '
                   'que é guardado, onde e por quê.',
                   style: tema.bodyLarge?.copyWith(height: 1.7),
                 ),
@@ -115,9 +112,9 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                             'do identificador da conta, quatro coisas para '
                             'a nuvem do projeto (Firebase): favoritos, '
                             'anotações, dias de leitura marcados e o '
-                            'histórico das conversas do chat com IA. A foto '
-                            'de perfil, quando trocada pela câmera ou pela '
-                            'galeria, fica hospedada na mesma nuvem. Nunca '
+                            'histórico das conversas do chat com IA. O avatar '
+                            'mostra a foto da conta Google, sem upload '
+                            'próprio. Nunca '
                             'sobe o texto da Bíblia ou do devocional que '
                             'você lê, nem o horário em que lê. Quem não '
                             'entra com conta usa o aplicativo do mesmo '
@@ -125,9 +122,9 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                       : 'Entrar com a conta Google sobe, além do e-mail e '
                             'do identificador da conta, três coisas para a '
                             'nuvem do projeto (Firebase): favoritos, '
-                            'anotações e dias de leitura marcados. A foto '
-                            'de perfil, quando trocada pela câmera ou pela '
-                            'galeria, fica hospedada na mesma nuvem. Nunca '
+                            'anotações e dias de leitura marcados. O avatar '
+                            'mostra a foto da conta Google, sem upload '
+                            'próprio. Nunca '
                             'sobe o texto da Bíblia ou do devocional que '
                             'você lê, nem o horário em que lê. Quem não '
                             'entra com conta usa o aplicativo do mesmo '
@@ -168,20 +165,6 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                       'mesma tela.',
                 ),
                 DevocionalSecaoDeTexto(
-                  key: _usoAnonimo,
-                  titulo: 'Uso anônimo e erro técnico',
-                  texto:
-                      'Na primeira vez que abre o app, você escolhe se '
-                      'autoriza o envio de dois tipos de informação sem '
-                      'identificar você: erros técnicos (com o Sentry), '
-                      'para achar e corrigir falhas, e uso anônimo por tela '
-                      '(com o Google Analytics), para saber onde as pessoas '
-                      'travam ou desistem. As duas ficam desligadas até '
-                      'você responder, e nenhuma delas manda o texto que '
-                      'você lê ou escreve. Dá para mudar de ideia depois '
-                      'em Sobre.',
-                ),
-                DevocionalSecaoDeTexto(
                   key: _appGenuino,
                   titulo: 'Verificação de app genuíno',
                   texto:
@@ -197,15 +180,15 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                       ? 'Quem tem conta pode apagar a cópia salva na nuvem em '
                             'Sobre, na seção Conta e privacidade: o botão remove '
                             'favoritos, anotações, progresso e conversas sincronizados, '
-                            'a foto de perfil, a participação em planos '
+                            'a participação em planos '
                             'compartilhados e a própria conta, sem tocar no que está '
                             'no aparelho ou navegador. Para apagar o que ficou só '
                             'localmente, basta limpar os dados do aplicativo ou do '
                             'site pelo próprio sistema ou navegador.'
                       : 'Quem tem conta pode apagar a cópia salva na nuvem em '
                             'Sobre, na seção Conta e privacidade: o botão remove '
-                            'favoritos, anotações e progresso sincronizados, a foto '
-                            'de perfil, a participação em planos compartilhados e a '
+                            'favoritos, anotações e progresso sincronizados, '
+                            'a participação em planos compartilhados e a '
                             'própria conta, sem tocar no que está no aparelho ou '
                             'navegador. Para apagar o que ficou só localmente, basta '
                             'limpar os dados do aplicativo ou do site pelo próprio '

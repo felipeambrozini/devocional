@@ -1,9 +1,7 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:path_provider/path_provider.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Tamanho máximo do arquivo antes de recomeçar do zero.
 ///
@@ -22,24 +20,14 @@ String formatarLinha(String origem, Object erro, StackTrace? pilha) {
 
 /// Grava erros num arquivo no aparelho, para investigar depois de o app já
 /// ter fechado — o que só `debugPrint` não permite fora do Android Studio
-/// conectado no momento da falha — e manda ao Sentry, para chegar sem
-/// depender de alguém relatar.
+/// conectado no momento da falha.
 ///
 /// Só escreve em arquivo fora da web: não há onde persistir um arquivo lá
 /// (mesmo motivo de [lembretesSuportados] em `lembretes.dart`), e o console
 /// do navegador já cumpre esse papel. `debugPrint` continua valendo em
-/// qualquer plataforma. O Sentry funciona nas duas (web e Android), mas só
-/// depois do aceite do usuário — ver [envioRemotoPermitido] e o `beforeSend`
-/// montado em `main.dart`.
+/// qualquer plataforma.
 abstract final class Registro {
   static File? _arquivo;
-
-  /// Portão do envio ao Sentry. `false` por padrão: sem aceite explícito
-  /// (ver `Estado.aceiteDeColeta` e `TelaDeAceiteDeColeta`), nenhum evento
-  /// sai, mesmo com o SDK já inicializado — o SDK precisa estar de pé antes
-  /// da resposta do usuário chegar, então o filtro fica aqui e no
-  /// `beforeSend`, não na inicialização.
-  static bool envioRemotoPermitido = false;
 
   /// Prepara o arquivo de registro. Chamar uma vez, no início do app.
   static Future<void> inicializar() async {
@@ -57,8 +45,7 @@ abstract final class Registro {
   ///
   /// Diferente de [erro] de propósito: uma notificação que chegou, um push
   /// recebido, uma chave consultada são o app funcionando, e mandá-los para o
-  /// arquivo e para o Sentry encheria o relatório de ruído que existe para
-  /// achar o que quebrou. Sem [inicializar] e sem rede, para poder chamar de
+  /// arquivo encheria de ruído o registro que existe para achar o que quebrou. Sem [inicializar] e sem rede, para poder chamar de
   /// qualquer isolate e em qualquer plataforma.
   static void traco(String origem, String detalhe) {
     debugPrint('[$origem] $detalhe');
@@ -66,8 +53,7 @@ abstract final class Registro {
 
   /// Registra uma falha conhecida e esperada em certas condições (device
   /// sem App Attest, simulador, provedor de attestation indisponível): vai
-  /// para o console e o arquivo, mas nunca para o Sentry — lá ela viraria
-  /// ruído em vez de sinal.
+  /// para o console e o arquivo, sem canal remoto.
   static void esperado(String origem, Object erro, [StackTrace? pilha]) {
     final linha = formatarLinha(origem, erro, pilha);
     debugPrint(linha);
@@ -75,21 +61,11 @@ abstract final class Registro {
   }
 
   /// Registra um erro: sempre no console (`debugPrint`) e no arquivo quando
-  /// [inicializar] já preparou um; manda ao Sentry quando [envioRemotoPermitido].
+  /// [inicializar] já preparou um. Sem envio remoto: o app não tem coleta
+  /// de erro nem de uso (ver PRIVACIDADE, sem Sentry e sem Analytics).
   static void erro(String origem, Object erro, [StackTrace? pilha]) {
     final linha = formatarLinha(origem, erro, pilha);
     debugPrint(linha);
-    if (envioRemotoPermitido) {
-      // Sem await: registrar um erro não pode esperar rede. O próprio SDK
-      // enfileira e tenta de novo por conta própria.
-      unawaited(
-        Sentry.captureException(
-          erro,
-          stackTrace: pilha,
-          hint: Hint.withMap({'origem': origem}),
-        ),
-      );
-    }
     _gravarNoArquivo(linha);
   }
 

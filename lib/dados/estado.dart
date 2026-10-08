@@ -33,8 +33,6 @@ class Estado extends ChangeNotifier {
   // com o app morto (ver `_corDoTema` em lib/dados/lembretes.dart).
   static const chaveModoDoTema = 'modo_do_tema';
   static const _kAjudaDispensada = 'ajuda_dispensada';
-  static const _kAceiteDeColeta = 'aceite_de_coleta';
-  static const _kBaloesTooltipDispensado = 'baloes_tooltip_dispensado';
   static const _kSwipeTooltipDispensado = 'swipe_tooltip_dispensado';
   static const _kSetasDoRodape = 'setas_do_rodape';
   static const _kLembretesAtivos = 'lembretes_ativos';
@@ -91,13 +89,6 @@ class Estado extends ChangeNotifier {
 
   /// A primeira visita ainda não dispensou o cartão "Como usar" da Hoje.
   bool _ajudaDispensada = false;
-
-  /// `null` = ainda não respondeu (ver TelaDeAceiteDeColeta); `true`/`false`
-  /// é a resposta já dada.
-  bool? _aceiteDeColeta;
-
-  /// Se o tooltip de primeiro uso dos balões já foi dispensado.
-  bool _baloesTooltipDispensado = false;
 
   /// Se o tooltip de primeiro uso do deslize para trocar capítulo já foi dispensado.
   bool _swipeTooltipDispensado = false;
@@ -182,10 +173,6 @@ class Estado extends ChangeNotifier {
     );
 
     _ajudaDispensada = _prefs.getBool(_kAjudaDispensada) ?? false;
-    _aceiteDeColeta = _prefs.getBool(_kAceiteDeColeta);
-
-    _baloesTooltipDispensado =
-        _prefs.getBool(_kBaloesTooltipDispensado) ?? false;
 
     _swipeTooltipDispensado = _prefs.getBool(_kSwipeTooltipDispensado) ?? false;
 
@@ -301,18 +288,6 @@ class Estado extends ChangeNotifier {
     await _prefs.setInt(_kMinutosLembreteNoite, minutosNoite);
   }
 
-  // --- balões de conversa ---------------------------------------------------- //
-
-  bool get baloesTooltipDispensado => _baloesTooltipDispensado;
-
-  /// Tooltip de primeiro uso dos balões: depois de "Entendi", não volta nunca mais.
-  Future<void> dispensarBalcaoTooltip() async {
-    if (_baloesTooltipDispensado) return;
-    _baloesTooltipDispensado = true;
-    notifyListeners();
-    await _prefs.setBool(_kBaloesTooltipDispensado, true);
-  }
-
   bool get swipeTooltipDispensado => _swipeTooltipDispensado;
 
   /// Tooltip de primeiro uso do deslize: depois de "Entendi", não volta nunca mais.
@@ -379,21 +354,6 @@ class Estado extends ChangeNotifier {
     _ajudaDispensada = true;
     notifyListeners();
     await _prefs.setBool(_kAjudaDispensada, true);
-  }
-
-  // --- aceite de coleta remota --------------------------------------------- //
-
-  /// `null` enquanto o usuário não respondeu ao diálogo de aceite — é o sinal
-  /// para [mostrarAceiteDeColetaSeNecessario] mostrá-lo. Só grava a escolha;
-  /// quem liga ou desliga o Sentry e o Analytics de verdade é
-  /// `aplicarAceiteDeColeta` (lib/dados/coleta.dart), que este arquivo não
-  /// importa de propósito — `Estado` não conhece Firebase.
-  bool? get aceiteDeColeta => _aceiteDeColeta;
-
-  Future<void> definirAceiteDeColeta(bool aceito) async {
-    _aceiteDeColeta = aceito;
-    notifyListeners();
-    await _prefs.setBool(_kAceiteDeColeta, aceito);
   }
 
   // --- progresso do cronograma --------------------------------------------- //

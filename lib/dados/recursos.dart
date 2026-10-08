@@ -90,14 +90,14 @@ class Recursos {
   /// Override para teste, mesmo padrão de [conversasForcado].
   static bool? promessasForcado;
 
-  /// Override para teste: os testes de balões e chat não fazem login de
+  /// Override para teste: os testes do chat não fazem login de
   /// verdade (`Nuvem.iniciar` nunca roda neles), então sem isto a allowlist
   /// vazia recusaria sempre e nenhum deles veria o recurso. Em produção fica
   /// `null` e vale a allowlist real.
   static bool? conversasForcado;
 
-  /// Se a conta aberta pode usar Conversas (chat com as personas) e ver os
-  /// balões flutuantes. Em teste: o chat chama a API paga do Gemini, e abrir
+  /// Se a conta aberta pode usar Conversas (chat com as personas na aba).
+  /// Em teste: o chat chama a API paga do Gemini, e abrir
   /// para todo mundo antes da hora custaria sem controle.
   ///
   /// A allowlist mora no Firestore (`config/recursos`, campo

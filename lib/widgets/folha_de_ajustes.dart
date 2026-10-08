@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import '../dados/audio_offline.dart';
 import '../dados/config_admin.dart';
 import '../dados/estado.dart';
-import '../dados/eventos.dart';
 import '../dados/lembretes.dart';
 import '../dados/modelos.dart';
 import '../dados/nuvem.dart';
@@ -425,13 +424,8 @@ class _SecaoAudioOfflineExpansivel extends StatelessWidget {
 
 /// Áudio offline: baixa os MP3 pré-gerados para ouvir sem rede.
 /// Ordem fixa pedida: Bíblia, Introdução, Manhã e Noite, Promessas.
-/// Baixa a categoria e registra os dois eventos de uso ao redor do download
-/// real (`AudioOffline.baixarCategoria` não sabe de Analytics — ver o
-/// limite entre dado e coleta em lib/dados/eventos.dart).
 Future<void> _baixarComEvento(AudioOffline off, String categoria) async {
-  unawaited(registrarDownloadIniciado(categoria));
   await off.baixarCategoria(categoria);
-  if (off.erro == null) unawaited(registrarDownloadConcluido(categoria));
 }
 
 class _SecaoAudioOffline {

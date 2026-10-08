@@ -2,7 +2,7 @@ import 'package:felipe_ambrozini/dados/conteudo.dart';
 import 'package:felipe_ambrozini/dados/estado.dart';
 import 'package:felipe_ambrozini/dados/recursos.dart';
 import 'package:felipe_ambrozini/main.dart';
-import 'package:felipe_ambrozini/widgets/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -16,8 +16,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    // O login de verdade nunca roda no ambiente de teste; sem isto, o balão
-    // que este teste toca ficaria escondido (ver Recursos.conversas).
+    // O login de verdade nunca roda no ambiente de teste; sem isto, o chat
+    // ficaria trancado (ver Recursos.conversas).
     Recursos.conversasForcado = true;
   });
   tearDown(() => Recursos.conversasForcado = null);
@@ -55,7 +55,9 @@ void main() {
 
     chamadas.clear();
 
-    await tester.tap(find.byType(DevocionalBalaoDeChat).first);
+    GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/conversas');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Charles Spurgeon').first);
     await tester.pumpAndSettle();
 
     expect(
@@ -69,8 +71,8 @@ void main() {
 
     expect(
       chamadas,
-      contains(('/hoje', false)),
-      reason: 'fechar o histórico tem de devolver a URL ao motor',
+      contains(('/conversas', false)),
+      reason: 'fechar o histórico tem de devolver a URL à aba Conversas',
     );
   });
 }

@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show ChangeNotifier;
 
 import 'estado.dart';
-import 'eventos.dart';
 import 'ia.dart';
 import 'modelos.dart';
 import 'personas.dart';
@@ -104,7 +103,6 @@ class Conversador extends ChangeNotifier {
       return;
     }
     _ultimoEnvio = agora;
-    unawaited(registrarChatMensagem(persona.id));
     // Uma conversa reaberta pelo histórico já chega com [conversaId]: a
     // primeira mensagem enviada nela precisa continuar essa conversa, não
     // abrir outra vazia. Só quando não há [conversaId] (chat novo) é que

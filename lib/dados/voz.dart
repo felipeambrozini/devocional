@@ -412,7 +412,7 @@ class Voz extends ChangeNotifier {
       if (_ehInterrupcaoOuRedeEsperada(erro)) {
         // `PlayerInterruptedException: Connection aborted` é falha transitória
         // de rede / cancelamento de `setAudioSource` por um `parar()` ou troca
-        // de capítulo logo em seguida. Não é bug e não deve poluir o Sentry
+        // de capítulo logo em seguida. Não é bug e não deve poluir o registro
         // (ver evento de 23/09 22:24 UTC). Se já foi superado por outra
         // versão, é só cancelamento silencioso; senão, vira mensagem amigável
         // para o botão mostrar "Tentar de novo".

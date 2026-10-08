@@ -1,9 +1,6 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import '../dados/estado.dart';
-import '../dados/eventos.dart';
 import 'aviso.dart';
 
 /// Marca ou desmarca o dia como lido e oferece voltar no mesmo gesto.
@@ -19,7 +16,6 @@ void alternarLidoComDesfazer(
 ) {
   final estavaLido = estado.foiLido(chave);
   estado.alternarLido(chave);
-  if (!estavaLido) unawaited(registrarDiaMarcado());
   // Confirmação de um toque só, não um erro: aparece e some sozinho, sem
   // depender do "Desfazer" para fechar.
   mostrarAviso(

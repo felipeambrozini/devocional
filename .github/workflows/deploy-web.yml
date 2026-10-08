@@ -83,7 +83,6 @@ jobs:
             --dart-define=GEMINI_API_KEY_ANDROID=${{ secrets.GEMINI_API_KEY_ANDROID }} \
             --dart-define=GEMINI_API_KEY_IOS=${{ secrets.GEMINI_API_KEY_IOS }} \
             --dart-define=AUDIO_BASE_URL=${{ secrets.AUDIO_BASE_URL }} \
-            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }} \
             --dart-define=EMAIL_DE_CONTATO=${{ secrets.EMAIL_DE_CONTATO }} \
             --dart-define=WHATSAPP_NUMERO=${{ secrets.WHATSAPP_NUMERO }} \
             --dart-define=RECAPTCHA_V3_SITE_KEY=${{ secrets.RECAPTCHA_V3_SITE_KEY }} \

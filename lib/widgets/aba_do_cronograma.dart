@@ -1,12 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 // ScrollCacheExtent ainda não é reexportado por material.dart nesta versão.
 import 'package:flutter/rendering.dart';
 
 import '../dados/conteudo.dart';
 import '../dados/estado.dart';
-import '../dados/eventos.dart';
 import '../dados/modelos.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/datas.dart';
@@ -197,9 +194,7 @@ class _DevocionalAbaDoCronogramaState
                       lido: estado.foiLido(dia.data),
                       destacar: ehHoje,
                       aoAlternar: () {
-                        final estavaLido = estado.foiLido(dia.data);
                         estado.alternarLido(dia.data);
-                        if (!estavaLido) unawaited(registrarDiaMarcado());
                       },
                     );
                   },

@@ -5,10 +5,10 @@ import '../estilo/espacamento.dart';
 
 /// O retrato de uma persona num anel do metal — a gramática única dos três
 /// pontos que mostram quem fala: as entradas de conversa (a carta da aba
-/// Conversas e o topo do histórico), o botão de voz da leitura e o balão
-/// flutuante do chat (`chat.dart`). Anel de 1,5 na cor primária, folga entre
-/// o anel e a foto, e o corte alinhado ao topo que preserva o cabelo (a foto
-/// é mais alta que larga). Sem o asset, a inicial ocupa o lugar.
+/// Conversas e o topo do histórico) e o botão de voz da leitura. Anel de 1,5
+/// na cor primária, folga entre o anel e a foto, e o corte alinhado ao topo
+/// que preserva o cabelo (a foto é mais alta que larga). Sem o asset, a
+/// inicial ocupa o lugar.
 class DevocionalRetratoDePersona extends StatelessWidget {
   const DevocionalRetratoDePersona({
     super.key,
@@ -23,7 +23,7 @@ class DevocionalRetratoDePersona extends StatelessWidget {
 
   /// A folga entre o anel dourado e a foto: sem ela a foto preenche o círculo
   /// até a borda e o cabelo encosta no aro. As entradas de conversa usam a
-  /// apertada; botão de voz e balão usam [DevocionalEspacamento.sp3].
+  /// apertada; o botão de voz usa [DevocionalEspacamento.sp3].
   final double folga;
 
   /// Dentro de um botão cujo rótulo já diz o que faz, a imagem é enfeite:

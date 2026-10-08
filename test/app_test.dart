@@ -118,8 +118,8 @@ class _LeitorFalsoDoApp implements LeitorDeAudio {
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    // O login de verdade nunca roda no ambiente de teste; sem isto, Conversas
-    // e os balões ficariam escondidos em todos os testes deste arquivo (ver
+    // O login de verdade nunca roda no ambiente de teste; sem isto, o chat
+    // ficaria trancado em todos os testes deste arquivo (ver
     // Recursos.conversas).
     Recursos.conversasForcado = true;
     Voz.baseUrlForTest = 'https://test.audio';
@@ -555,24 +555,19 @@ void main() {
     },
   );
 
-  testWidgets('o balão do chat abre o histórico e atualiza a URL', (
+  testWidgets('a carta do chat abre o histórico e atualiza a URL', (
     tester,
   ) async {
-    // O balão empurra a TelaHistorico pelo GoRouter (não por um Navigator
+    // A carta empurra a TelaHistorico pelo GoRouter (não por um Navigator
     // cru): além de abrir o conteúdo, a barra de endereço precisa acompanhar
     // e voltar junto quando o histórico fecha.
     await aquecerAssets(tester);
     await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
     await tester.pumpAndSettle();
 
-    // O router é global e os testes rodam no mesmo processo: a URL de partida
-    // é a que o teste anterior deixou, então se compara com ela, não com uma
-    // aba fixa.
-    final partida = GoRouter.of(
-      tester.element(find.byType(Scaffold).first),
-    ).state.uri.path;
-
-    await tester.tap(find.byType(DevocionalBalaoDeChat).first);
+    GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/conversas');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Charles Spurgeon').first);
     await tester.pumpAndSettle();
 
     expect(find.text('Charles Spurgeon'), findsWidgets);
@@ -589,8 +584,8 @@ void main() {
 
     expect(
       GoRouter.of(tester.element(find.byType(Scaffold).first)).state.uri.path,
-      partida,
-      reason: 'fechar o histórico devolve a URL à localização de origem',
+      '/conversas',
+      reason: 'fechar o histórico devolve a URL à aba Conversas',
     );
   });
 
@@ -827,7 +822,9 @@ void main() {
   Future<void> abrirHistorico(WidgetTester tester, Estado estado) async {
     await tester.pumpWidget(AppDevocional(estado: estado));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(DevocionalBalaoDeChat).first);
+    GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/conversas');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Charles Spurgeon').first);
     await tester.pumpAndSettle();
   }
 
@@ -913,18 +910,11 @@ void main() {
     expect(find.text('Outra'), findsOneWidget);
     expect(estado.conversasDe('spurgeon'), hasLength(1));
 
-    // O Desfazer devolve a conversa apagada, como no favorito. Os balões
-    // flutuantes ficam por cima do aviso nas telas largas e cobririam a ação:
-    // esconde-os pelo mecanismo do próprio app (ver _ComBaloes em main.dart).
-    camadasFlutuantes.value++;
-    addTearDown(() => camadasFlutuantes.value = 0);
-    await tester.pumpAndSettle();
+    // O Desfazer devolve a conversa apagada, como no favorito.
     await tester.tap(find.widgetWithText(SnackBarAction, 'Desfazer'));
     await tester.pumpAndSettle();
     expect(find.text('Uma'), findsOneWidget);
     expect(estado.conversasDe('spurgeon'), hasLength(2));
-    camadasFlutuantes.value--;
-    await tester.pumpAndSettle();
 
     // Apagando de novo e deixando o aviso expirar, a remoção fica.
     await tester.tap(
@@ -982,17 +972,12 @@ void main() {
     );
     expect(estado.conversasDe('spurgeon'), isEmpty);
 
-    // O Desfazer devolve as duas, na ordem. Os balões flutuantes ficam por
-    // cima do aviso nas telas largas: esconde-os pelo mecanismo do app.
-    camadasFlutuantes.value++;
-    addTearDown(() => camadasFlutuantes.value = 0);
-    await tester.pumpAndSettle();
+    // O Desfazer devolve as duas, na ordem.
     await tester.tap(find.widgetWithText(SnackBarAction, 'Desfazer'));
     await tester.pumpAndSettle();
     expect(find.text('Uma'), findsOneWidget);
     expect(find.text('Outra'), findsOneWidget);
     expect(estado.conversasDe('spurgeon'), hasLength(2));
-    camadasFlutuantes.value--;
     // O aviso fecha sozinho por timer: avança o relógio para não deixar o
     // timer pendente no fim do teste.
     await tester.pump(duracaoDeAviso);
@@ -1073,14 +1058,11 @@ void main() {
   });
 
   testWidgets(
-    'abrir /conversas numa janela larga não destaca nenhuma aba do trilho',
+    'abrir /conversas numa janela larga destaca a aba Conversas no trilho',
     (tester) async {
-      // O trilho omite Conversas quando os balões flutuantes estão no ar
-      // (Recursos.conversas, forçado true no setUp). Chegar em /conversas
-      // por link ou rota direta não deve acender "Notas" só por ser o
-      // último item que sobrou no trilho depois do corte — bug corrigido:
-      // o índice cheio (5, o de Conversas) não podia ser usado direto contra
-      // a lista já sem Conversas (5 itens, índices 0 a 4).
+      // A aba Conversas é a única porta de entrada do chat em todas as
+      // larguras: chegar em /conversas por link tem de acender a aba
+      // Conversas no trilho (índice 5), nunca "Notas" por engano.
       tester.view.physicalSize = const Size(1600, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -1096,8 +1078,8 @@ void main() {
       final trilho = tester.widget<NavigationRail>(find.byType(NavigationRail));
       expect(
         trilho.selectedIndex,
-        isNull,
-        reason: 'nenhuma aba do trilho corresponde à conversa aberta',
+        5,
+        reason: 'a aba Conversas corresponde à conversa aberta',
       );
     },
   );

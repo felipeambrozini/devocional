@@ -52,11 +52,6 @@ dependencies:
   firebase_core: ^4.14.0
   firebase_auth: ^6.6.1
   cloud_firestore: ^6.9.0
-  # Onde a foto de perfil escolhida na câmera ou galeria é hospedada, para
-  # virar a photoURL da conta (ver Nuvem.atualizarFoto em lib/dados/nuvem.dart).
-  firebase_storage: ^13.5.0
-  # Escolher a foto de perfil da câmera ou da galeria (ver hoje.dart).
-  image_picker: ^1.2.3
   # Cada aba com o próprio caminho na URL, e Sobre e as conversas também
   # (ver lib/main.dart). Pacote da própria equipe do Flutter, não um clone de
   # terceiro.
@@ -79,19 +74,9 @@ dependencies:
   # Cálculo de horário por fuso para armar o alarme do lembrete na hora certa
   # do aparelho (lib/dados/lembretes.dart).
   timezone: ^0.11.1
-  # Reporte de erro remoto (ver Registro.erro em lib/dados/registro.dart): sem
-  # isto, um erro na web — onde estão a maioria dos usuários — não deixava
-  # rastro nenhum. Um SDK só cobre web e Android; o Crashlytics não existe no
-  # Flutter Web. Só entra em produção depois do aceite em [FoiceDeAceite]
-  # (lib/telas/aceite_de_coleta.dart).
-  sentry_flutter: ^9.29.0
-  # Uso anônimo por tela e evento, para saber onde alguém trava sem ferramenta
-  # de terceiro nem anúncio. Mesmo portão de aceite do Sentry acima.
-  firebase_analytics: ^12.5.0
   font_awesome_flutter: ^11.0.0
 
 dev_dependencies:
-  sentry_dart_plugin: ^3.4.0
   flutter_test:
     sdk: flutter
 
@@ -183,10 +168,3 @@ flutter:
     - family: Montserrat
       fonts:
         - asset: assets/fontes/Montserrat-Variable.ttf
-
-
-sentry:
-  upload_debug_symbols: true
-  upload_source_maps: true
-  project: devocional
-  org: felipe-ambrozini

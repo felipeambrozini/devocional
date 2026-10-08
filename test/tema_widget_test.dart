@@ -97,7 +97,7 @@ void main() {
     }
 
     // A folha rola: as escolhas mais baixas precisam entrar na tela antes do
-    // toque, como nas outras folhas do app (ver baloes_test.dart).
+    // toque, como nas outras folhas do app.
     await tester.ensureVisible(find.text(ModoDoTema.claro.rotulo));
     await tester.pumpAndSettle();
     await tester.tap(find.text(ModoDoTema.claro.rotulo));

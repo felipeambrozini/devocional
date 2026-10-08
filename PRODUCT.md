@@ -54,8 +54,8 @@ vitoriana dele, tratando o leitor por "tu".
   `?ler=joao.3.16` abrem um versículo (`?plano=<id>` abre um plano
   compartilhado).
 - Conversas com IA (Gemini): duas personas, Charles Spurgeon e Felipe
-  Ambrozini, com histórico salvo por conversa; aba no celular, balão flutuante
-  em telas largas.
+  Ambrozini, com histórico salvo por conversa, numa aba própria em todas as
+  plataformas e larguras.
 - Painel admin (`/admin`, só web e só a conta do dono): liga/desliga cada
   recurso na hora (conversas, planos personalizados, cronograma, cada leitura
   do devocional, ouvir textos) e edita as allowlists de e-mails do chat e dos
@@ -85,13 +85,16 @@ vitoriana dele, tratando o leitor por "tu".
   virar outro trecho da Bíblia). Só vale para planos do usuário, não para o
   cronograma anual fixo.
 - Avatar da conta (foto do Google ou inicial do nome) na saudação da aba
-  Hoje, com foto trocável pela câmera ou galeria.
+  Hoje, só exibição, sem upload.
+- Compartilhar gera cartão-imagem (fundo couro, filete dourado) com o texto
+  junto: versículo na Bíblia, citação no Devocional; na web cai para texto.
 - Só em pt_BR; conteúdo vem de JSON locais em `assets/`, carregado sob demanda.
 
 ## Capabilities and Constraints
 
 - Bíblia BKJ 1611 completa.
-- Favoritos, notas, copiar e compartilhar por versículo; busca em duas abas
+- Favoritos, notas, copiar e compartilhar por versículo (compartilhar gera
+  cartão-imagem + texto com link); busca em duas abas
   (Bíblia e devocionais); a busca das marcações filtra referência e nota, não
   o corpo do versículo (deliberado). A aba de devocionais da busca tem
   filtro por data (DD-MM) e por leitura (Manhã, Noite, Promessas).

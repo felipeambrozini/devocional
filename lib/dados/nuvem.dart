@@ -1,12 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart'
     show
         ChangeNotifier,
@@ -331,8 +329,9 @@ class Nuvem extends ChangeNotifier {
     return nome?.trim().split(_espacos).firstOrNull;
   }
 
-  /// Foto de perfil da conta Google de quem entrou, para o avatar de
-  /// `_Cabecalho` em `hoje.dart`. null sem conta, ou sem foto no Google.
+  /// Avatar da conta: a foto do Google quando há, senão a inicial do nome
+  /// (ver `_Cabecalho` em `hoje.dart`). Sem upload próprio: o app nunca
+  /// hospeda foto, só exibe a da conta.
   String? get fotoUrl =>
       _sessaoConhecida ? FirebaseAuth.instance.currentUser?.photoURL : null;
 
@@ -386,7 +385,7 @@ class Nuvem extends ChangeNotifier {
       );
     } catch (erro, pilha) {
       // "App attestation failed" (iOS sem o provedor, simulador, device
-      // bloqueado) é esperado em certas máquinas: não vira erro no Sentry.
+      // bloqueado) é esperado em certas máquinas: vai só para o registro local.
       Registro.esperado('Nuvem.iniciar', erro, pilha);
     }
   }
@@ -613,41 +612,6 @@ class Nuvem extends ChangeNotifier {
     }
   }
 
-  /// Sobe a foto escolhida na câmera ou galeria (`_escolherFoto` em
-  /// `hoje.dart`) para o Storage e atualiza a photoURL da conta com o link.
-  /// `fotoUrl` lê direto do `currentUser`, então o `notifyListeners` aqui é o
-  /// único jeito de repintar o avatar sem esperar um evento do Auth.
-  Future<void> atualizarFoto(Uint8List bytes) async {
-    final usuario = FirebaseAuth.instance.currentUser;
-    if (usuario == null) return;
-    final referencia = FirebaseStorage.instance.ref(
-      'fotos_de_perfil/${usuario.uid}.jpg',
-    );
-    await referencia.putData(
-      bytes,
-      SettableMetadata(contentType: 'image/jpeg'),
-    );
-    await usuario.updatePhotoURL(await referencia.getDownloadURL());
-    notifyListeners();
-  }
-
-  /// Volta ao avatar da inicial: apaga o arquivo do Storage (se houver — a
-  /// foto pode ter vindo direto da conta Google, sem nunca passar por
-  /// [atualizarFoto]) e limpa a photoURL da conta.
-  Future<void> removerFoto() async {
-    final usuario = FirebaseAuth.instance.currentUser;
-    if (usuario == null) return;
-    try {
-      await FirebaseStorage.instance
-          .ref('fotos_de_perfil/${usuario.uid}.jpg')
-          .delete();
-    } on FirebaseException catch (erro) {
-      if (erro.code != 'object-not-found') rethrow;
-    }
-    await usuario.updatePhotoURL(null);
-    notifyListeners();
-  }
-
   Future<void> sair() async {
     // Despeja o que ainda aguardava o debounce antes de derrubar a sessão:
     // o signOut para a sincronia, e a última mudança não pode ficar presa no
@@ -662,14 +626,12 @@ class Nuvem extends ChangeNotifier {
   /// Apaga o documento da conta e a conta em si. O que está no navegador não
   /// é tocado — só o que subiu para a nuvem.
   ///
-  /// Antes do documento e da conta, limpa os dois rastros que ficariam para
-  /// trás: a foto de perfil (pública no Storage) e a própria participação em
-  /// planos compartilhados (nome e progresso ficariam visíveis aos outros
+  /// Antes do documento e da conta, limpa a participação em planos
+  /// compartilhados (nome e progresso ficariam visíveis aos outros
   /// participantes, sem chance de limpeza depois de a conta sumir).
   Future<void> apagarDados() async {
     final usuario = FirebaseAuth.instance.currentUser;
     if (usuario == null) return;
-    await removerFoto();
     await PlanosNaNuvem.instancia.sairDeTodosOsPlanos(usuario.uid);
     await FirebaseFirestore.instance
         .collection(_colecao)

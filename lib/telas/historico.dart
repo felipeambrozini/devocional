@@ -14,7 +14,7 @@ import '../widgets/widgets.dart';
 /// da mais recente à mais antiga, com o título (a primeira pergunta) e a data
 /// da última fala.
 ///
-/// É o que o balão do chat abre (ver `_ComBaloes` em `main.dart`), e de onde
+/// É o que a carta da aba Conversas abre, e de onde
 /// se começa uma conversa nova ou se abre uma antiga. Cada conversa tem o
 /// próprio botão de apagar, e o topo tem o de apagar tudo. Depois da mudança
 /// de uma conversa só por persona, esta tela é onde o usuário escolhe com
