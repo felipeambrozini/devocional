@@ -47,23 +47,19 @@ async function caso(nome, promessa) {
 const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0]);
 const fotoDaAlice = (ctx) => ref(ctx.storage(), 'fotos_de_perfil/alice.jpg');
 
-// --- Storage: foto de perfil ------------------------------------------- //
-await caso('dono envia a própria foto jpeg',
-  assertSucceeds(uploadBytes(fotoDaAlice(alice), jpeg, {contentType: 'image/jpeg'})));
-await caso('dono APAGA a própria foto (o bug corrigido)',
-  assertSucceeds(deleteObject(fotoDaAlice(alice))));
-await uploadBytes(fotoDaAlice(alice), jpeg, {contentType: 'image/jpeg'});
-await caso('dono troca a foto regravando o mesmo arquivo',
-  assertSucceeds(uploadBytes(fotoDaAlice(alice), jpeg, {contentType: 'image/jpeg'})));
-await caso('foto de 5 MiB ou mais é recusada',
-  assertFails(uploadBytes(fotoDaAlice(alice), new Uint8Array(5 * 1024 * 1024),
-    {contentType: 'image/jpeg'})));
+// --- Storage: sem upload próprio (só áudio público) ---------------------- //
+// O avatar é só exibição (foto da conta Google): nada sobe para o Storage —
+// upload e delete em `fotos_de_perfil/` são negados para todo mundo,
+// inclusive o dono. O único caminho com leitura é `audio/` (MP3 pré-gerados,
+// escrita só por deploy).
+await caso('dono NÃO envia foto (upload próprio removido)',
+  assertFails(uploadBytes(fotoDaAlice(alice), jpeg, {contentType: 'image/jpeg'})));
+await caso('dono NÃO apaga foto (nada para apagar)',
+  assertFails(deleteObject(fotoDaAlice(alice))));
 await caso('outro usuário não apaga a foto alheia',
   assertFails(deleteObject(fotoDaAlice(bob))));
 await caso('anônimo não apaga foto',
   assertFails(deleteObject(fotoDaAlice(anonimo))));
-await caso('dono não envia png',
-  assertFails(uploadBytes(fotoDaAlice(alice), jpeg, {contentType: 'image/png'})));
 await caso('ninguém sobe arquivo com o nome de outro uid',
   assertFails(uploadBytes(ref(bob.storage(), 'fotos_de_perfil/alice.jpg'), jpeg,
     {contentType: 'image/jpeg'})));
