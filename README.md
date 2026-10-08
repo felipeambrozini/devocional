@@ -31,7 +31,9 @@ mesmo código).
   Noite, Promessas de Deus e as introduções, numa voz que remete ao tom de
   Charles Spurgeon (não é clone da voz do Felipe), em MP3 pré-gerado
   (hospedado em `AUDIO_BASE_URL`). Fora da web dá para baixar por categoria e
-  ouvir offline, nos Ajustes ("Áudio offline").
+  ouvir offline, nos Ajustes ("Áudio offline"). Nos Ajustes também dá para
+  ligar "Ouvir capítulos em sequência" (desligado por padrão): ao terminar um
+  capítulo da Bíblia, o leitor vira a página e o próximo começa sozinho.
 - **Conversas com IA**: duas personas para conversar, Charles Spurgeon e
   Felipe Ambrozini, cada uma com o próprio jeito de falar (Gemini). Histórico
   salvo por conversa; aba própria no celular, balões flutuantes nas telas

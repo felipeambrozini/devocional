@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -41,8 +43,23 @@ class _TelaBibliaState extends State<TelaBiblia> {
     capituloInicial: widget.capituloInicial,
   );
 
+  /// A reprodução contínua mora no controller; a assinatura mora aqui porque
+  /// precisa do ciclo de vida da tela (cancela no dispose) e do context da
+  /// rota da frente (ver `aoConcluirAudio`).
+  StreamSubscription<String>? _assinaturaConclusoes;
+
+  @override
+  void initState() {
+    super.initState();
+    _assinaturaConclusoes = Voz.instancia.conclusoes.listen((chave) {
+      if (!mounted) return;
+      _controller.aoConcluirAudio(context, chave);
+    });
+  }
+
   @override
   void dispose() {
+    _assinaturaConclusoes?.cancel();
     _controller.dispose();
     super.dispose();
   }

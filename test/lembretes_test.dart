@@ -236,7 +236,10 @@ void main() {
 
         // A seção Lembretes vem dentro de ExpansionTile colapsado por padrão.
         // Tapa no primeiro ExpansionTile da lista (há 2: Lembretes e Áudio).
+        // O ensureVisible vem antes do toque: o conteúdo acima (leitura, voz)
+        // pode deixar a seção fora da viewport.
         final tile = find.byType(ExpansionTile).first;
+        await tester.ensureVisible(tile);
         await tester.tap(tile);
         await tester.pumpAndSettle();
 
@@ -277,7 +280,10 @@ void main() {
 
         // A seção Lembretes vem dentro de ExpansionTile colapsado por padrão.
         // Tapa no primeiro ExpansionTile da lista (há 2: Lembretes e Áudio).
+        // O ensureVisible vem antes do toque: o conteúdo acima (leitura, voz)
+        // pode deixar a seção fora da viewport.
         final tile = find.byType(ExpansionTile).first;
+        await tester.ensureVisible(tile);
         await tester.tap(tile);
         await tester.pumpAndSettle();
 

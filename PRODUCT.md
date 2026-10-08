@@ -66,6 +66,9 @@ vitoriana dele, tratando o leitor por "tu".
 - Leitura em voz alta (MP3 pré-gerados, voz que remete ao tom de Charles
   Spurgeon): narra capítulos da Bíblia, os dois devocionais, Promessas de
   Deus e as introduções; download opcional para ouvir offline fora da web.
+  Opt-in nos Ajustes ("Ouvir capítulos em sequência", desligado por padrão):
+  ao terminar um capítulo da Bíblia, o leitor avança e o próximo começa
+  sozinho; devocionais, introduções e comentários nunca encadeiam.
 - Planos personalizados: escolher livros e a duração; compartilháveis por
   link, com progresso de cada participante (exige conta Google). O seletor
   tem atalhos para o Antigo e o Novo Testamento inteiros, e com 2+ livros dá

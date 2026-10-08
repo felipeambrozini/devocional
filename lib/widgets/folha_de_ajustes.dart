@@ -130,6 +130,30 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 // rodapé nem existe. Leitura é o assunto do bloco de cima,
                 // por isso as setas fecham este primeiro grupo.
                 if (kIsWeb) ..._SecaoDasSetas(estado: estado).montar(context),
+                // Ouvir em sequência sem o Ouvir ligado não faz sentido: o
+                // botão some em toda parte (ver BotaoDeVoz) e a cadeia nunca
+                // andaria. O Listenable é só desta linha, mesmo padrão da
+                // seção de áudio offline abaixo.
+                ListenableBuilder(
+                  listenable: ConfigAdmin.instancia,
+                  builder: (context, _) => Recursos.ouvirTextos
+                      ? SwitchListTile(
+                          contentPadding:
+                              const EdgeInsets.symmetric(
+                            horizontal: DevocionalEspacamento.sp20,
+                          ),
+                          title: const Text('Ouvir capítulos em sequência'),
+                          subtitle: const Text(
+                            'Ao terminar um capítulo da Bíblia, o próximo '
+                            'começa sozinho. Desligado, cada capítulo termina '
+                            'em silêncio.',
+                          ),
+                          value: estado.reproducaoContinua,
+                          onChanged: (novo) =>
+                              estado.definirReproducaoContinua(novo),
+                        )
+                      : const SizedBox.shrink(),
+                ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
                     DevocionalEspacamento.sp20,

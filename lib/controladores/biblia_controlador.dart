@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
+import '../dados/audio_offline.dart';
 import '../dados/canon.dart';
 import '../dados/estado.dart';
+import '../dados/recursos.dart';
 import '../dados/voz.dart';
 import '../funcoes/aviso.dart';
 import '../telas/busca.dart';
@@ -125,18 +127,82 @@ class BibliaControlador extends ChangeNotifier {
     if (rolagem.hasClients) rolagem.jumpTo(0);
   }
 
-  void passarCapitulo(BuildContext context, int passo) {
+  /// O capítulo vizinho ao atual, atravessando a fronteira do livro como
+  /// [passarCapitulo] — null nos extremos do canon (antes de Gênesis 1,
+  /// depois de Apocalipse 22). Extraído para a reprodução contínua decidir
+  /// antes de virar a página, sem duplicar a travessia.
+  (String, int)? proximoCapitulo(int passo) {
     final destino = capitulo + passo;
-    if (destino >= 1 && destino <= livroAtual.capitulos) {
-      irPara(context, livro, destino);
-      return;
-    }
+    if (destino >= 1 && destino <= livroAtual.capitulos) return (livro, destino);
     // Passa para o livro vizinho em vez de travar no fim do último capítulo.
     final ordem = posicaoNoCanon(livro);
     final vizinho = ordem + passo;
-    if (vizinho < 0 || vizinho >= canon.length) return;
+    if (vizinho < 0 || vizinho >= canon.length) return null;
     final novoLivro = canon[vizinho];
-    irPara(context, novoLivro.slug, passo > 0 ? 1 : novoLivro.capitulos);
+    return (novoLivro.slug, passo > 0 ? 1 : novoLivro.capitulos);
+  }
+
+  void passarCapitulo(BuildContext context, int passo) {
+    final destino = proximoCapitulo(passo);
+    if (destino == null) return;
+    irPara(context, destino.$1, destino.$2);
+  }
+
+  /// Se há áudio tocável para [chave] agora: offline em disco ou remoto
+  /// confirmado — a mesma checagem que o botão de ouvir faz antes de
+  /// aparecer. A cadeia consulta antes de virar a página para nunca emendar
+  /// num erro no meio da sequência.
+  Future<bool> _temAudioPara(String chave) async {
+    try {
+      if (await AudioOffline.instancia.temOffline(chave)) return true;
+    } catch (_) {
+      // Segue para a checagem remota.
+    }
+    return await Voz.instancia.disponibilidadeRemota(chave) ==
+        DisponibilidadeRemota.existe;
+  }
+
+  /// Encadeia o próximo capítulo quando uma leitura termina sozinha e a
+  /// reprodução contínua está ligada (ver [Estado.reproducaoContinua]).
+  ///
+  /// Só capítulos da Bíblia (`capitulo:`) encadeiam, e só quando esta tela
+  /// ainda é a da frente mostrando aquele capítulo: sem isto, duas
+  /// instâncias do leitor (a aba e um versículo aberto por link) tocariam o
+  /// próximo duas vezes, e o segundo toque pararia o primeiro.
+  Future<void> aoConcluirAudio(
+    BuildContext context,
+    String chaveConcluida,
+  ) async {
+    if (ModalRoute.of(context)?.isCurrent != true) return;
+    if (!context.mounted) return;
+    final estado = EscopoDoEstado.de(context);
+    if (!estado.reproducaoContinua) return;
+    if (!Recursos.ouvirTextos) return;
+    if (chaveConcluida != chaveDeCapitulo(livro, capitulo)) return;
+    final ciclo = WidgetsBinding.instance.lifecycleState;
+    if (ciclo == AppLifecycleState.paused ||
+        ciclo == AppLifecycleState.detached) {
+      return;
+    }
+    final proximo = proximoCapitulo(1);
+    if (proximo == null) return;
+    final proximaChave = chaveDeCapitulo(proximo.$1, proximo.$2);
+    if (!await _temAudioPara(proximaChave)) return;
+    if (!context.mounted) return;
+    passarCapitulo(context, 1);
+    if (!context.mounted) return;
+    try {
+      await Voz.instancia.alternar(proximaChave);
+    } on VozExcecao catch (erro) {
+      if (context.mounted) {
+        mostrarAviso(
+          context,
+          erro.mensagem,
+          rotuloDeAcao: 'Tentar de novo',
+          aoAgir: () => Voz.instancia.alternar(proximaChave),
+        );
+      }
+    }
   }
 
   void abrirBusca(BuildContext context) => Navigator.push(
