@@ -17,6 +17,12 @@ const obrasDaBiblioteca = [
         'Uma palavra sincera a quem busca a salvação pelo Senhor Jesus Cristo',
     capa: 'assets/imagens/capa_somente_pela_graca.webp',
   ),
+  ObraDaBiblioteca(
+    slug: 'alfabeto_de_ouro',
+    titulo: 'Alfabeto de Ouro',
+    subtitulo: 'Comentário devocional ao Salmo 119, letra por letra',
+    capa: 'assets/imagens/capa_alfabeto_de_ouro.webp',
+  ),
 ];
 
 ObraDaBiblioteca? obraPorSlug(String slug) {

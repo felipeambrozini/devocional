@@ -64,19 +64,21 @@ void main() {
       expect(arquivos, {for (final obra in obrasDaBiblioteca) obra.slug});
     });
 
-    test('capítulos com título e parágrafos, sem travessão nem aspa curva', () {
-      expect(capitulos, hasLength(20));
+    test('capítulos com título e parágrafos, sem travessão nem aspa curva', () async {
+      const totalDeCapitulos = {'somente_pela_graca': 20, 'alfabeto_de_ouro': 23};
       final proibidos = RegExp('[—–‘’“”]');
-      for (final (indice, capitulo) in capitulos.indexed) {
-        expect(capitulo.titulo.trim(), isNotEmpty, reason: 'capítulo $indice');
-        expect(capitulo.paragrafos, isNotEmpty, reason: 'capítulo $indice');
-        for (final texto in [capitulo.titulo, ...capitulo.paragrafos]) {
-          expect(texto.trim(), isNotEmpty);
-          expect(
-            proibidos.hasMatch(texto),
-            isFalse,
-            reason: 'capítulo $indice',
-          );
+      for (final obra in obrasDaBiblioteca) {
+        final livro = (await Biblioteca.instancia.capitulos(obra.slug))!;
+        expect(livro, hasLength(totalDeCapitulos[obra.slug]), reason: obra.slug);
+        for (final (indice, capitulo) in livro.indexed) {
+          final onde = '${obra.slug}, capítulo $indice';
+          expect(capitulo.titulo.trim(), isNotEmpty, reason: onde);
+          expect(capitulo.paragrafos, isNotEmpty, reason: onde);
+          for (final texto in [capitulo.titulo, ...capitulo.paragrafos]) {
+            expect(texto.trim(), isNotEmpty, reason: onde);
+            expect(proibidos.hasMatch(texto), isFalse, reason: onde);
+            expect(texto.contains('[['), isFalse, reason: '$onde: marcador sobrando');
+          }
         }
       }
     });

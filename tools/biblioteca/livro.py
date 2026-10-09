@@ -44,6 +44,21 @@ def extrair_capitulos(texto: str, blocos_de_capa: int) -> list[dict]:
     return capitulos
 
 
+# A BKJ do Salmo 119 traz, no fim do ultimo versiculo de cada oitava, o nome da
+# proxima letra hebraica ("... de todo. BETH."). Dentro de um livro isso aparece
+# no meio do texto, entao sai na expansao.
+LETRAS_HEBRAICAS = {
+    "BETH", "GIMEL", "DALETH", "HE", "VAU", "ZAIN", "CHETH", "TETH", "JOD", "CAPH",
+    "LAMED", "MEM", "NUN", "SAMECH", "AIN", "PE", "TZADDI", "KOPH", "RESH", "SCHIN", "TAU",
+}
+
+
+def versiculo_sem_letra(ref: str) -> str:
+    texto = versiculo_bkj(ref)
+    corpo, _, ultima = texto.rpartition(" ")
+    return corpo if ultima.removesuffix(".") in LETRAS_HEBRAICAS else texto
+
+
 def expandir(paragrafo: str) -> str:
     """Troca um marcador de versiculo pelo texto da BKJ; outro paragrafo passa direto."""
     achado = MARCADOR.match(paragrafo)
@@ -51,9 +66,9 @@ def expandir(paragrafo: str) -> str:
         return paragrafo
     livro_e_capitulo, primeiro, ultimo = achado[1], int(achado[2]), achado[3]
     if ultimo is None:
-        return f"{primeiro}. {versiculo_bkj(f'{livro_e_capitulo}:{primeiro}')}"
+        return f"{primeiro}. {versiculo_sem_letra(f'{livro_e_capitulo}:{primeiro}')}"
     return " ".join(
-        f"{n} {versiculo_bkj(f'{livro_e_capitulo}:{n}')}"
+        f"{n} {versiculo_sem_letra(f'{livro_e_capitulo}:{n}')}"
         for n in range(primeiro, int(ultimo) + 1)
     )
 
