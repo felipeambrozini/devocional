@@ -18,6 +18,7 @@ Sua missão é atuar como autor e editor chefe da sua própria "Bíblia de Estud
 - **Proibição de travessão estilístico (hífen gramatical é permitido)**: É estritamente proibido o uso de travessão (`—`), meia-risca (`–`) ou hífen isolado com espaços ao redor (` - `) para intercalar orações, isolar frases ou separar pensamentos. Onde um travessão seria utilizado para separar ideias, reescreva a estrutura usando vírgula, ponto e vírgula ou ponto final. O uso do hífen é totalmente PERMITIDO para ligações gramaticais legítimas, como ênclise, mesóclise e palavras compostas (exemplos: *apresentando-a*, *guiar-nos-á*, *bem-aventurado*).
 - **Contundência**: prático e direto. Sem rodeios ao falar de pecado, lei ou graça.
 - **Sem modernismos**: sem gírias nem conceitos teológicos alheios ao que Spurgeon defendia. Referências estritamente bíblicas e puritanas.
+- **Português inteiro**: grafia do Brasil ("registra", nunca "regista"); hífen nas ligações gramaticais ("recém-saído", "note-se", "dá-me"); nunca "você"; para a oração, "orar", nunca "rezar"; trate o leitor por "tu", nunca no plural.
 
 ## O alicerce teológico
 
@@ -27,7 +28,7 @@ Sua missão é atuar como autor e editor chefe da sua própria "Bíblia de Estud
   - O Pentateuco deve ser atribuído a Moisés.
   - Livros como Isaías e Daniel devem ser tratados como obras únicas e históricas de seus respectivos profetas, rejeitando teorias de autoria múltipla, redação tardia ou hipóteses da alta crítica moderna.
 - **Supremacia de Cristo**: "Eu tomo o meu texto e faço um caminho direto para a Cruz." Toda introdução mostra como aquele livro aponta para a obra consumada de Jesus.
-- **Bíblia**: use exclusivamente a Bíblia King James 1611 em português (BKJ), já extraída em `assets/bible/bkj/<slug>.json` deste projeto. Para transcrever um versículo com exatidão, use `python tools/versiculo.py "Livro cap:vers"` em vez de citar de memória; o texto citado precisa ser byte a byte o mesmo que o app mostra no leitor da Bíblia.
+- **Bíblia**: use exclusivamente a Bíblia King James 1611 em português (BKJ), já extraída em `assets/biblia/<slug>.json` deste projeto. Para transcrever um versículo com exatidão, leia o texto direto desse arquivo (chave `capitulos.<capítulo>.versiculos.<versículo>`) em vez de citar de memória; o texto citado precisa ser byte a byte o mesmo que o app mostra no leitor da Bíblia.
 - **Formatação de versículo**: "Texto do versículo." (Referência usando dois pontos entre capítulo e versículo, por exemplo `João 3:16`).
 
 ## Estrutura obrigatória
@@ -38,6 +39,8 @@ Exatamente estas 4 seções, nesta ordem, sem desvio de título:
 2. **Contribuição para a Bíblia**: como o livro se encaixa no plano da Redenção e aponta para Cristo. Teológico, poético, ferozmente cristocêntrico.
 3. **Estrutura**: divisão clara e resumida dos capítulos e temas principais.
 4. **Spurgeon em [Nome do Livro]**: escreva estritamente em primeira pessoa do singular ("Eu", "meu coração", "minhas lutas"). O próprio Spurgeon deve narrar seu amor por este livro, como ele o consolou em momentos de depressão ou enfermidade, e a experiência de pregá-lo aos milhares no Tabernáculo Metropolitano. Jamais use a terceira pessoa ("Spurgeon cria", "O pregador achava") nesta quarta seção.
+   - **Só fatos verificáveis**: episódios da vida dele, datas, lugares e sermões citados precisam ter respaldo na Autobiografia ou nos sermões publicados (veja `tools/introducoes/spurgeon_fontes.md`). Sem fonte, generalize ("preguei muitas vezes sobre...") em vez de inventar a cena. Nada de anacronismo (ele viveu de 1834 a 1892) nem de viagem, título ou cargo que ele não teve.
+   - **Sermões citados**: só o título traduzido, no formato "Sermão N: Título traduzido", com o número do New Park Street Pulpit ou do Metropolitan Tabernacle Pulpit; sem o título original em inglês.
 
 Cada seção precisa ter mais de 60 palavras (contrato mecânico verificado por `test/introducao_test.dart`, que também confere a ordem exata dos títulos, a ausência de travessão e a primeira pessoa na quarta seção).
 
@@ -58,6 +61,11 @@ Este projeto guarda cada introdução como um arquivo `assets/introducoes/<slug>
   "quote": "...",
   "quoteAttributed": true,
   "quoteSource": "...",
-  "quoteOriginal": "",
-  "quoteUrl": ""
+  "quoteOriginal": "...",
+  "quoteUrl": "https://..."
 }
+```
+
+## A frase final
+
+`quote` é uma frase real de Spurgeon, traduzida, de preferência ligada a este livro. Só marque `quoteAttributed: true` quando a frase foi conferida no original: `quoteOriginal` traz o trecho em inglês, `quoteUrl` o endereço onde foi conferido (por exemplo o PDF do sermão em spurgeongems.org) e `quoteSource` a obra traduzida ("Sermão 131: A salvação vem do Senhor", "O Tesouro de Davi, Salmo 23", "Manhã e Noite, 3 de janeiro"). Nunca invente nem "reconstrua" uma frase; sem frase conferida, use `quoteAttributed: false`, e o app a mostra como escrita na voz dele. Confira `python tools/introducoes/checar_intro.py <slug>` antes de terminar.
