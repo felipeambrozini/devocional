@@ -8,5 +8,6 @@ export 'modelos/busca.dart';
 export 'modelos/chat.dart';
 export 'modelos/cronograma.dart';
 export 'modelos/devocional.dart';
+export 'modelos/livro_da_biblioteca.dart';
 export 'modelos/marcacoes.dart';
 export 'modelos/preferencias.dart';

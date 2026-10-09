@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 
 import '../controladores/devocional_controlador.dart';
 import '../dados/canon.dart';
@@ -150,6 +151,12 @@ class _TelaDevocionalState extends State<TelaDevocional> {
               DevocionalBotaoDeBusca(
                 aoBuscar: () => _controller.abrirBusca(context),
               ),
+              if (Recursos.biblioteca)
+                IconButton(
+                  tooltip: 'Biblioteca',
+                  icon: const FaIcon(FontAwesomeIcons.book),
+                  onPressed: () => context.push('/biblioteca'),
+                ),
               // Sem menu de uma opção só: com a volta para hoje no banner, a
               // única ação do canto é escolher a data, e ela vai direto.
               DevocionalBotaoDeData(

@@ -30,12 +30,15 @@ import 'funcoes/lembretes_acoes.dart';
 import 'funcoes/movimento.dart';
 import 'telas/admin.dart';
 import 'telas/biblia.dart';
+import 'telas/biblioteca.dart';
 import 'telas/chat.dart';
 import 'telas/conversas.dart';
 import 'telas/devocional.dart';
 import 'telas/faq.dart';
 import 'telas/historico.dart';
 import 'telas/hoje.dart';
+import 'telas/leitor_de_livro.dart';
+import 'telas/livro.dart';
 import 'telas/meu_plano.dart';
 import 'telas/notas.dart';
 import 'telas/novo_plano.dart';
@@ -360,6 +363,10 @@ final _router = GoRouter(
     if (state.uri.path.startsWith('/admin') && !Recursos.adminNaWeb) {
       return '/hoje';
     }
+    // Biblioteca desligada no painel: o link direto volta para a Hoje.
+    if (state.uri.path.startsWith('/biblioteca') && !Recursos.biblioteca) {
+      return '/hoje';
+    }
     // A aba Conversas é livre para todo mundo (ver TelaConversas, que troca
     // as cartas pelo convite ao WhatsApp sem o recurso). Só o chat de cada
     // persona continua trancado por link direto — é ele que chama a API
@@ -411,6 +418,28 @@ final _router = GoRouter(
       builder: (context, state) => const TelaSobre(),
     ),
     GoRoute(path: '/faq', builder: (context, state) => const TelaFAQ()),
+    // A biblioteca não é aba (a barra de baixo já tem seis destinos): a estante,
+    // o sumário e o capítulo abrem por cima, cada um com URL própria.
+    GoRoute(
+      path: '/biblioteca',
+      builder: (context, state) => const TelaBiblioteca(),
+      routes: [
+        GoRoute(
+          path: ':slug',
+          builder: (context, state) =>
+              TelaDoLivro(slug: state.pathParameters['slug']!),
+          routes: [
+            GoRoute(
+              path: ':capitulo',
+              builder: (context, state) => TelaLeitorDeLivro(
+                slug: state.pathParameters['slug']!,
+                capitulo: int.tryParse(state.pathParameters['capitulo']!) ?? 0,
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
     GoRoute(path: '/admin', builder: (context, state) => const TelaAdmin()),
     GoRoute(
       path: '/privacidade',

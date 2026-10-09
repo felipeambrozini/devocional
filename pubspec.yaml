@@ -147,6 +147,7 @@ flutter:
     - assets/biblia/
     - assets/devocionais/
     - assets/introducoes/
+    - assets/livros/
     - assets/comentarios/
     - assets/imagens/
     - assets/cronograma.json

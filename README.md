@@ -14,6 +14,9 @@ mesmo código).
   - **Promessas de Deus** (*Faith's Checkbook*), uma promessa bíblica por dia,
     com título, referência e comentário.
   - Calendário para ver o devocional de qualquer data, passada ou futura.
+- **Biblioteca** de livros de Spurgeon, lidos por capítulo, com continuar de onde
+  parou, progresso por livro, destaques e notas por parágrafo (ver "A
+  Biblioteca" abaixo). Começa com *Somente pela Graça*.
 - **Cronograma de leitura anual**, 365 dias (366 em ano bissexto), agrupado por
   mês, com marcação de lido e barra de progresso do ano.
 - **Planos personalizados**: escolher um ou mais livros e em quantos dias, com
@@ -86,6 +89,9 @@ mesmo código).
 | Notas | Favoritos e anotações |
 | Conversas | Chat com Spurgeon e Felipe (IA), numa aba própria em todas as plataformas |
 
+A Biblioteca também não é aba: abre pela Hoje ou pelo Devocional, com URL
+(`/biblioteca`, `/biblioteca/<slug>`, `/biblioteca/<slug>/<n>`).
+
 Sobre (créditos, fonte da tradução, canais e ajuda), Perguntas frequentes,
 Política de privacidade e Termos de serviço não são abas: moram no fim da
 folha de ajustes, com URL própria cada uma.
@@ -156,7 +162,7 @@ lib/
                bronze), espacamento.dart (ritmo de espaçamento) e tema.dart
                (monta o ThemeData)
   main.dart    navegação (barra/trilho), rotas e ponto de entrada
-assets/        Bíblia interna, devocionais, introduções, cronograma, imagens, fontes
+assets/        Bíblia interna, devocionais, introduções, livros, cronograma, imagens, fontes
 test/          testes de unidade e de widget
 ```
 
@@ -174,6 +180,7 @@ fora do repo em `C:\Users\USER\audio_gen_*` e não é versionado aqui.
 | Manhã e Noite | 366 dias, todos com manhã e noite (732 entradas) |
 | Promessas de Deus | 366 de 366 traduzidos |
 | Cronograma anual | 365 dias (366 em ano bissexto), 449 faixas |
+| Biblioteca | *Somente pela Graça*: 20 seções, 34 mil palavras, auditado por inteiro |
 | 66 introduções | Completas, revisadas em fatos e linguagem; a frase final de cada uma conferida no original |
 | Comentários por versículo | 31.102, um por versículo, escritos e validados livro a livro |
 
@@ -221,6 +228,47 @@ Candidatos a revisão manual, se algum dia houver versão editorial.
   propósito, porque é a BKJ 1611 e precisa continuar byte a byte igual ao asset.
 - Nenhuma construção retórica virou tique: "Aqui está" é o mais comum, com
   19/66, abaixo do teto de 22/66.
+
+### A Biblioteca (livros de Spurgeon)
+
+Livros de Spurgeon em domínio público, traduzidos para o app e lidos por
+capítulo. Não é aba (a barra de baixo já tem seis destinos): abre pelo cartão
+da Hoje ou pelo ícone de livro do Devocional, e tem URL própria (`/biblioteca`,
+`/biblioteca/<slug>` para o sumário, `/biblioteca/<slug>/<n>` para o capítulo
+*n*, a partir de 1). O interruptor `bibliotecaAtiva` do painel liga e desliga
+(`Recursos.biblioteca`); link direto com ela desligada volta para a Hoje.
+
+- **Catálogo**: `obrasDaBiblioteca` em `lib/dados/biblioteca.dart` (slug,
+  título, subtítulo e caminho da capa). Um livro só entra aí depois de
+  traduzido e auditado por inteiro; a estante não mostra livro pela metade. O
+  slug é em português, no padrão de `manha_e_noite.json`, e vale para o
+  arquivo, a URL e a capa.
+- **Asset**: `assets/livros/<slug>.json`, `{slug, capitulos: [{titulo,
+  paragrafos: []}]}`. Carregado sob demanda, um livro por vez.
+- **Capa**: `assets/imagens/capa_<slug>.webp`, 225x300, na linha das capas
+  de Manhã e Noite e Promessas. Sem o arquivo, aparece uma capa tipográfica.
+- **O que o usuário guarda** (`lib/dados/leitura_de_livros.dart`, dentro do
+  `Estado`): onde parou (capítulo e fração da rolagem, para o "continuar de
+  onde parei"), capítulos lidos e destaques com nota por parágrafo. Tudo local
+  no aparelho por enquanto: **ainda não sobe para a nuvem** (isso mexe no
+  contrato do documento `usuarios/{uid}` em `firestore.rules`, e entra numa
+  etapa própria, com revisão das regras).
+- **Fonte e tradução**: o texto em inglês vem do CCEL (domínio público) e a
+  tradução é nossa; as edições em português existentes não são livres. Os
+  versículos **não são traduzidos de novo**: toda citação da Escritura é
+  copiada literalmente da BKJ do app. Registro de Spurgeon ao leitor ("tu"),
+  português do Brasil, sem travessão e sem aspas curvas.
+- **Pipeline** (`tools/biblioteca/`):
+  1. `livro.py --extrair <slug> <txt>` gera `<slug>_en.json`.
+  2. A tradução fica em `<slug>_pt/NN.json` (NN = índice do capítulo + 1), um
+     arquivo por capítulo, com os mesmos parágrafos do inglês e o campo
+     `citacoes` (`{ref, trecho}`, cada trecho literal da BKJ).
+  3. `checar_capitulo.py <slug> <índice>` confere paridade de parágrafos,
+     proibições e as citações contra a BKJ.
+  4. `auditar_livro.py <slug>` roda tudo no livro e acusa citação sem
+     registro, trecho entre aspas fora da BKJ, frases perdidas e suspeitas de
+     português de Portugal.
+  5. `livro.py --montar <slug>` valida e grava `assets/livros/<slug>.json`.
 
 ## Decisões que não devem ser refeitas
 
@@ -376,7 +424,8 @@ motivo novo.
   `lib/dados/recursos.dart` reúne os interruptores — `planoPersonalizado`
   (aba "Meus planos"), `ouvirTextos` (`BotaoDeVoz`, único ponto de entrada
   da leitura em voz alta), `cronograma` (aba "Cronograma"), `devocionalManha`,
-  `devocionalNoite`, `promessas` (cada leitura em separado) e `conversas` (o
+  `devocionalNoite`, `promessas` (cada leitura em separado), `biblioteca` (os
+  livros de Spurgeon e as rotas `/biblioteca`) e `conversas` (o
   chat de cada persona e as rotas
   `/charles-spurgeon`, `/felipe-ambrozini`). Os valores moram no Firestore
   (`config/recursos`, ver `lib/dados/config_admin.dart`) e o painel `/admin`

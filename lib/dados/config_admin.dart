@@ -32,6 +32,7 @@ class ConfigAdmin extends ChangeNotifier {
   bool _noiteAtivo = true;
   bool _promessasAtivo = true;
   bool _ouvirTextosAtivo = true;
+  bool _bibliotecaAtiva = true;
 
   /// Se algum snapshot (ou mapa de teste) já foi aplicado. Antes disso os
   /// getters valem os padrões acima, e `Recursos.conversas` usa o
@@ -51,6 +52,7 @@ class ConfigAdmin extends ChangeNotifier {
   bool get noiteAtivo => _noiteAtivo;
   bool get promessasAtivo => _promessasAtivo;
   bool get ouvirTextosAtivo => _ouvirTextosAtivo;
+  bool get bibliotecaAtiva => _bibliotecaAtiva;
   bool get carregado => _carregado;
 
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _assinatura;
@@ -107,6 +109,7 @@ class ConfigAdmin extends ChangeNotifier {
     _noiteAtivo = ligado('noiteAtivo');
     _promessasAtivo = ligado('promessasAtivo');
     _ouvirTextosAtivo = ligado('ouvirTextosAtivo');
+    _bibliotecaAtiva = ligado('bibliotecaAtiva');
     _carregado = true;
     notifyListeners();
   }
@@ -140,6 +143,7 @@ class ConfigAdmin extends ChangeNotifier {
     bool? noiteAtivo,
     bool? promessasAtivo,
     bool? ouvirTextosAtivo,
+    bool? bibliotecaAtiva,
     bool carregado = true,
   }) {
     if (conversasAtivas != null) _conversasAtivas = conversasAtivas;
@@ -153,6 +157,7 @@ class ConfigAdmin extends ChangeNotifier {
     if (noiteAtivo != null) _noiteAtivo = noiteAtivo;
     if (promessasAtivo != null) _promessasAtivo = promessasAtivo;
     if (ouvirTextosAtivo != null) _ouvirTextosAtivo = ouvirTextosAtivo;
+    if (bibliotecaAtiva != null) _bibliotecaAtiva = bibliotecaAtiva;
     _carregado = carregado;
     notifyListeners();
   }
@@ -169,6 +174,7 @@ class ConfigAdmin extends ChangeNotifier {
     _noiteAtivo = true;
     _promessasAtivo = true;
     _ouvirTextosAtivo = true;
+    _bibliotecaAtiva = true;
     _carregado = false;
     notifyListeners();
   }
@@ -190,6 +196,7 @@ class ConfigAdmin extends ChangeNotifier {
       'noiteAtivo',
       'promessasAtivo',
       'ouvirTextosAtivo',
+      'bibliotecaAtiva',
     };
     if (!conhecidos.contains(campo)) {
       throw ArgumentError('Campo desconhecido: $campo');

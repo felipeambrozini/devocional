@@ -110,6 +110,11 @@ vitoriana dele, tratando o leitor por "tu".
   Favoritar, Copiar, Anotar). No Devocional (Manhã, Noite e Promessas de
   Deus), o Compartilhar ficou só no botão do cartão, que manda título,
   citação e comentário do dia com um link que reabre a mesma leitura.
+- Biblioteca de livros de Spurgeon em domínio público, traduzidos para o app
+  (começa com *Somente pela Graça*): leitura por capítulo, continuar de onde
+  parou, progresso por livro e destaques com nota por parágrafo. Os versículos
+  citados saem da BKJ do app, nunca de tradução nova. Não é aba; abre pela
+  Hoje e pelo Devocional, e o painel admin a liga e desliga.
 - Layout responsivo: barra inferior no celular, trilho lateral a partir de
   720px; gesto de deslizar troca capítulo no celular, setas na web.
 - Lembrete híbrido, Android e web (4 horários: Manhã, Noite, Promessas e Leitura

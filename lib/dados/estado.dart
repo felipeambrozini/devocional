@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'canon.dart';
 import 'conversas.dart';
+import 'leitura_de_livros.dart';
 import 'modelos.dart';
 import 'planos.dart';
 import 'registro.dart';
@@ -19,6 +20,7 @@ import 'registro.dart';
 class Estado extends ChangeNotifier {
   Estado(this._prefs) {
     conversas = Conversas.ler(_prefs, notifyListeners);
+    leituraDeLivros = LeituraDeLivros.ler(_prefs, notifyListeners);
     _lerTudo();
   }
 
@@ -123,6 +125,11 @@ class Estado extends ChangeNotifier {
   /// no fim da classe), para que a notificação e a sincronia com a nuvem
   /// continuem ouvindo um único ChangeNotifier.
   late final Conversas conversas;
+
+  /// Posição, capítulos lidos e destaques dos livros da biblioteca. Mora em
+  /// `lib/dados/leitura_de_livros.dart`; as telas falam com ele por aqui para
+  /// continuarem ouvindo um único ChangeNotifier.
+  late final LeituraDeLivros leituraDeLivros;
 
   static Future<Estado> abrir() async =>
       Estado(await SharedPreferences.getInstance());

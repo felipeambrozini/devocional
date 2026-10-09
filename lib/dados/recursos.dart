@@ -63,6 +63,13 @@ class Recursos {
   /// Override para teste, mesmo padrão de [conversasForcado].
   static bool? ouvirTextosForcado;
 
+  /// A Biblioteca: os livros de Spurgeon, lidos por capítulo.
+  static bool get biblioteca =>
+      bibliotecaForcado ?? ConfigAdmin.instancia.bibliotecaAtiva;
+
+  /// Override para teste, mesmo padrão de [conversasForcado].
+  static bool? bibliotecaForcado;
+
   /// Cronograma anual (aba "Cronograma" dentro do Plano).
   static bool get cronograma =>
       cronogramaForcado ?? ConfigAdmin.instancia.cronogramaAtivo;

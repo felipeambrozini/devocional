@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 
 import '../dados/estado.dart';
+import '../dados/biblioteca.dart';
 import '../dados/config_admin.dart';
 import '../dados/modelos.dart';
 import '../dados/nuvem.dart';
@@ -87,12 +89,35 @@ class _TelaHojeState extends State<TelaHoje> {
                       leitura: Leitura.promessas,
                     ),
                   ],
+                  if (Recursos.biblioteca) ...[
+                    const SizedBox(height: DevocionalEspacamento.sp16),
+                    const _CartaoDaBiblioteca(),
+                  ],
                 ],
               );
             },
           ),
         ),
       ),
+    );
+  }
+}
+
+/// A Biblioteca na Hoje: o livro em que a leitura parou, ou o primeiro da
+/// estante para quem ainda não começou nenhum. Abre o sumário do livro.
+class _CartaoDaBiblioteca extends StatelessWidget {
+  const _CartaoDaBiblioteca();
+
+  @override
+  Widget build(BuildContext context) {
+    final leitura = EscopoDoEstado.de(context).leituraDeLivros;
+    final obra = obrasDaBiblioteca.firstWhere(
+      (o) => leitura.posicaoDe(o.slug) != null,
+      orElse: () => obrasDaBiblioteca.first,
+    );
+    return DevocionalCartaoDaObra(
+      obra: obra,
+      aoAbrir: () => context.push('/biblioteca/${obra.slug}'),
     );
   }
 }

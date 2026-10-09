@@ -200,6 +200,14 @@ class _TelaAdminState extends State<TelaAdmin> {
             aoMudar: (novo) =>
                 _alternar('ouvirTextosAtivo', 'Ouvir textos', novo),
           ),
+        if (config.carregado)
+          _Interruptor(
+            titulo: 'Biblioteca',
+            subtitulo: 'Os livros de Spurgeon, na Hoje e no Devocional.',
+            valor: config.bibliotecaAtiva,
+            salvando: _salvando.contains('bibliotecaAtiva'),
+            aoMudar: (novo) => _alternar('bibliotecaAtiva', 'Biblioteca', novo),
+          ),
         const SizedBox(height: DevocionalEspacamento.sp24),
         const DevocionalFilete(largura: 64),
         const SizedBox(height: DevocionalEspacamento.sp16),
