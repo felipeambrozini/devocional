@@ -47,8 +47,7 @@ mesmo código).
   de tudo (favoritos, notas e progresso) para reimportar em outro aparelho.
 - **Comentário de Spurgeon por versículo**: a mesma folha que abre ao tocar um
   versículo (Favoritar, Copiar, Anotar) mostra também o comentário de Charles
-  Spurgeon para aquele versículo, quando já estiver escrito — projeto em
-  andamento, verso a verso, pelos 66 livros da Bíblia.
+  Spurgeon para aquele versículo, nos 31.102 versículos dos 66 livros.
 - **Conta Google (Web, Android e iOS)**: opcional — favoritos, notas, progresso e
   planos sobem sozinhos para a conta de quem entrar, para não perder nada se o
   navegador limpar o armazenamento e para o mesmo plano aparecer no celular e
@@ -163,9 +162,8 @@ test/          testes de unidade e de widget
 
 ## Conteúdo
 
-Todo o conteúdo bíblico e devocional já está carregado e verificado; os
-comentários de Spurgeon por versículo seguem em escrita, verso a verso, pelos
-66 livros. A geração de áudio e os scripts de validação moram em `tools/`
+Todo o conteúdo bíblico e devocional já está carregado e verificado, inclusive
+os comentários de Spurgeon por versículo. A geração de áudio e os scripts de validação moram em `tools/`
 (`icones.py`, `validar_comentarios.py`, `detectar_molde.py`,
 `validar_audio.py`) — o pacote histórico `audio_gen/` (geração de TTS) ficou
 fora do repo em `C:\Users\USER\audio_gen_*` e não é versionado aqui.
@@ -176,7 +174,8 @@ fora do repo em `C:\Users\USER\audio_gen_*` e não é versionado aqui.
 | Manhã e Noite | 366 dias, todos com manhã e noite (732 entradas) |
 | Promessas de Deus | 366 de 366 traduzidos |
 | Cronograma anual | 365 dias (366 em ano bissexto), 449 faixas |
-| 66 introduções | Completas, com as frases aplicadas e o tom calibrado (56,3 "!" por 10 mil palavras) |
+| 66 introduções | Completas, revisadas em fatos e linguagem; a frase final de cada uma conferida no original |
+| Comentários por versículo | 31.102, um por versículo, escritos e validados livro a livro |
 
 Regras que valem para os assets anuais (`assets/devocionais/*.json` e
 `assets/cronograma*.json`):
@@ -204,8 +203,15 @@ Candidatos a revisão manual, se algum dia houver versão editorial.
 
 ### As 66 introduções
 
-- As **frases** das introduções vieram de uma lista do usuário, cada uma com a
-  referência registrada (só a de Salmos foi conferida na fonte primária).
+- As **frases** finais foram conferidas no original em inglês em out/2026: cada
+  uma traz `quoteOriginal` e `quoteUrl` (spurgeon.org, ccel.org), e a fonte
+  traduzida no formato "Sermão N: Título traduzido". Frase sem original
+  conferido não pode ir com `quoteAttributed: true`.
+- Os **fatos** (autoria tradicional, capítulos, episódios bíblicos e da vida de
+  Spurgeon) foram revisados contra `tools/introducoes/spurgeon_fontes.md`; a
+  seção "Spurgeon em [Livro]" só conta episódio com fonte.
+  `python tools/introducoes/checar_intro.py <slug>` confere citações da BKJ,
+  pontuação, vocabulário e o formato da frase.
 - O **tom** foi calibrado em 07/08/2026 para soar como Spurgeon de verdade
   (355 pontos de exclamação em 63.042 palavras, 56,3 por 10 mil): ajustes
   pontuais de clímax, quase todos em "Contribuição para a Bíblia" e "Spurgeon
