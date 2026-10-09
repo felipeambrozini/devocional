@@ -46,10 +46,10 @@ if intro.get('quoteAttributed'):
         erros.append('[FRASE] frase atribuída sem quoteOriginal (texto em inglês) e quoteUrl (onde foi conferida)')
     if re.search(r'\b(The|the|of|and|Sermon|Morning and Evening)\b', fonte):
         erros.append(f'[FONTE] "{fonte}" tem título em inglês; traduza (sermão: "Sermão N: Título traduzido"; obra: "O Tesouro de Davi, Salmo 4")')
-    if 'Sermão' in fonte and not re.match(r'Sermão \d+: \S', fonte):
+    if 'Sermão' in fonte and not re.match(r'Sermão \d+(-\d+)?: \S', fonte):
         erros.append(f'[FONTE] "{fonte}" fora do formato "Sermão N: Título traduzido"')
 for i, sec in enumerate(secoes):
-    for m in re.finditer(r'\bSermão (?!\d+: |do Monte)', sec['body']):
+    for m in re.finditer(r'\bSermão (?!\d+(-\d+)?: |do Monte)', sec['body']):
         erros.append(f'[FONTE] {sec["heading"]}: sermão citado fora do formato "Sermão N: Título traduzido"')
         break
 print('\n'.join(erros) if erros else f'OK {slug}')

@@ -40,7 +40,7 @@ Exatamente estas 4 seções, nesta ordem, sem desvio de título:
 3. **Estrutura**: divisão clara e resumida dos capítulos e temas principais.
 4. **Spurgeon em [Nome do Livro]**: escreva estritamente em primeira pessoa do singular ("Eu", "meu coração", "minhas lutas"). O próprio Spurgeon deve narrar seu amor por este livro, como ele o consolou em momentos de depressão ou enfermidade, e a experiência de pregá-lo aos milhares no Tabernáculo Metropolitano. Jamais use a terceira pessoa ("Spurgeon cria", "O pregador achava") nesta quarta seção.
    - **Só fatos verificáveis**: episódios da vida dele, datas, lugares e sermões citados precisam ter respaldo na Autobiografia ou nos sermões publicados (veja `tools/introducoes/spurgeon_fontes.md`). Sem fonte, generalize ("preguei muitas vezes sobre...") em vez de inventar a cena. Nada de anacronismo (ele viveu de 1834 a 1892) nem de viagem, título ou cargo que ele não teve.
-   - **Sermões citados**: só o título traduzido, no formato "Sermão N: Título traduzido", com o número do New Park Street Pulpit ou do Metropolitan Tabernacle Pulpit; sem o título original em inglês.
+   - **Sermões citados**: só o título traduzido, no formato "Sermão N: Título traduzido" (ou "Sermão N-M" quando o sermão ocupa dois números), com o número do New Park Street Pulpit ou do Metropolitan Tabernacle Pulpit; sem o título original em inglês.
 
 Cada seção precisa ter mais de 60 palavras (contrato mecânico verificado por `test/introducao_test.dart`, que também confere a ordem exata dos títulos, a ausência de travessão e a primeira pessoa na quarta seção).
 
