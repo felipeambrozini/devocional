@@ -49,7 +49,7 @@ if intro.get('quoteAttributed'):
     if 'Sermão' in fonte and not re.match(r'Sermão \d+: \S', fonte):
         erros.append(f'[FONTE] "{fonte}" fora do formato "Sermão N: Título traduzido"')
 for i, sec in enumerate(secoes):
-    for m in re.finditer(r'\bSermão (?!\d+: )', sec['body']):
+    for m in re.finditer(r'\bSermão (?!\d+: |do Monte)', sec['body']):
         erros.append(f'[FONTE] {sec["heading"]}: sermão citado fora do formato "Sermão N: Título traduzido"')
         break
 print('\n'.join(erros) if erros else f'OK {slug}')
