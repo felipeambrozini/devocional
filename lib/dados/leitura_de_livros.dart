@@ -25,6 +25,7 @@ class LeituraDeLivros {
   }
 
   static const _kPosicoes = 'livros_posicoes';
+  static const _kRecentes = 'livros_recentes';
   static const _kLidos = 'livros_lidos';
   static const _kDestaques = 'livros_destaques';
 
@@ -32,10 +33,17 @@ class LeituraDeLivros {
   final VoidCallback _aoMudar;
 
   Map<String, PosicaoNoLivro> _posicoes = {};
+
+  /// Os livros em que a leitura foi registrada, do mais recente ao mais antigo:
+  /// é a lista que a Hoje mostra.
+  List<String> _recentes = [];
   Map<String, Set<int>> _lidos = {};
   Map<String, DestaqueDeLivro> _destaques = {};
 
   void _ler() {
+    _recentes = _lerAssunto(_kRecentes, (cru) {
+      return [for (final slug in json.decode(cru) as List) slug as String];
+    }, <String>[]);
     _posicoes = _lerAssunto(_kPosicoes, (cru) {
       final mapa = json.decode(cru) as Map<String, dynamic>;
       return {
@@ -74,17 +82,31 @@ class LeituraDeLivros {
 
   PosicaoNoLivro? posicaoDe(String slug) => _posicoes[slug];
 
+  /// Os livros que o usuário começou a ler, do mais recente ao mais antigo.
+  List<String> get livrosEmLeitura => [
+    for (final slug in _recentes)
+      if (_posicoes.containsKey(slug)) slug,
+  ];
+
+  /// O livro em que se leu por último, ou nulo se nenhum foi iniciado.
+  String? get ultimoLivro => livrosEmLeitura.firstOrNull;
+
   Future<void> registrarPosicao(
     String slug,
     int capitulo,
     double fracao,
   ) async {
     final mudouDeCapitulo = _posicoes[slug]?.capitulo != capitulo;
+    final mudouDeLivro = _recentes.firstOrNull != slug;
+    if (mudouDeLivro) _recentes = [slug, ..._recentes.where((s) => s != slug)];
     _posicoes[slug] = PosicaoNoLivro(
       capitulo: capitulo,
       fracao: fracao.clamp(0.0, 1.0),
     );
-    if (mudouDeCapitulo) _aoMudar();
+    if (mudouDeCapitulo || mudouDeLivro) _aoMudar();
+    if (mudouDeLivro) {
+      await _prefs.setString(_kRecentes, json.encode(_recentes));
+    }
     await _prefs.setString(
       _kPosicoes,
       json.encode({

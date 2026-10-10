@@ -8,6 +8,7 @@ import 'package:felipe_ambrozini/dados/recursos.dart';
 import 'package:felipe_ambrozini/telas/biblioteca.dart';
 import 'package:felipe_ambrozini/telas/leitor_de_livro.dart';
 import 'package:felipe_ambrozini/telas/livro.dart';
+import 'package:felipe_ambrozini/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -98,6 +99,23 @@ void main() {
       expect(posicao.capitulo, 3);
       expect(posicao.fracao, 0.4);
       expect(reaberto.leituraDeLivros.posicaoDe('outro'), isNull);
+    });
+
+    test('lembra o último livro em que se leu, e nenhum antes de começar', () async {
+      final estado = await abrirEstado();
+      expect(estado.leituraDeLivros.ultimoLivro, isNull);
+
+      await estado.leituraDeLivros.registrarPosicao('alfabeto_de_ouro', 0, 0);
+      await estado.leituraDeLivros.registrarPosicao(slug, 2, 0.5);
+      expect(estado.leituraDeLivros.ultimoLivro, slug);
+      await estado.leituraDeLivros.registrarPosicao('alfabeto_de_ouro', 1, 0);
+      expect(estado.leituraDeLivros.ultimoLivro, 'alfabeto_de_ouro');
+
+      expect(estado.leituraDeLivros.livrosEmLeitura, ['alfabeto_de_ouro', slug]);
+
+      final reaberto = await abrirEstado();
+      expect(reaberto.leituraDeLivros.ultimoLivro, 'alfabeto_de_ouro');
+      expect(reaberto.leituraDeLivros.livrosEmLeitura, ['alfabeto_de_ouro', slug]);
     });
 
     test('só a troca de capítulo avisa os ouvintes, não a rolagem', () async {
@@ -284,6 +302,36 @@ void main() {
       await tester.pumpAndSettle();
       expect(estado.leituraDeLivros.foiLido(slug, 1), isTrue);
       expect(find.text('Capítulo lido'), findsOneWidget);
+    });
+
+    testWidgets('a Hoje mostra nada, um cartão ou uma lista horizontal', (
+      tester,
+    ) async {
+      final estado = await abrirEstado();
+      Future<void> mostrar(List<ObraDaBiblioteca> obras) async {
+        await tester.pumpWidget(
+          EscopoDoEstado(
+            estado: estado,
+            child: MaterialApp(
+              home: Scaffold(
+                body: DevocionalLivrosEmLeitura(obras: obras, aoAbrir: (_) {}),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+      }
+
+      await mostrar([]);
+      expect(find.byType(DevocionalCartaoDaObra), findsNothing);
+
+      await mostrar([obrasDaBiblioteca.first]);
+      expect(find.byType(DevocionalCartaoDaObra), findsOneWidget);
+      expect(find.text('Seus livros'), findsNothing);
+
+      await mostrar(obrasDaBiblioteca);
+      expect(find.text('Seus livros'), findsOneWidget);
+      expect(find.byType(DevocionalCartaoDaObra), findsNWidgets(2));
     });
 
     testWidgets('com a leitura começada o sumário oferece continuar', (

@@ -297,7 +297,7 @@ void main() {
     // Sobre não é mais aba: o rail tem cinco destinos (Conversas fica nos
     // balões de conversa), e os créditos moram na folha de ajustes (ver o
     // teste seguinte).
-    for (final rotulo in ['Hoje', 'Bíblia', 'Devocional', 'Plano', 'Notas']) {
+    for (final rotulo in ['Hoje', 'Bíblia', 'Devocional', 'Plano', 'Biblioteca']) {
       expect(find.text(rotulo), findsWidgets, reason: rotulo);
     }
     // A saudação depende do relógio, então aceita as três formas. Sem conta

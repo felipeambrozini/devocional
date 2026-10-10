@@ -15,10 +15,15 @@ class DevocionalCartaoDaObra extends StatelessWidget {
     super.key,
     required this.obra,
     required this.aoAbrir,
+    this.compacto = false,
   });
 
   final ObraDaBiblioteca obra;
   final VoidCallback aoAbrir;
+
+  /// Sem o subtítulo e com o título em até duas linhas: cabe numa lista
+  /// horizontal de altura fixa.
+  final bool compacto;
 
   @override
   Widget build(BuildContext context) {
@@ -40,10 +45,17 @@ class DevocionalCartaoDaObra extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(obra.titulo, style: tema.titleLarge),
+                    Text(
+                      obra.titulo,
+                      style: compacto ? tema.titleMedium : tema.titleLarge,
+                      maxLines: compacto ? 2 : null,
+                      overflow: compacto ? TextOverflow.ellipsis : null,
+                    ),
                     const SizedBox(height: DevocionalEspacamento.sp4),
-                    Text(obra.subtitulo, style: tema.bodySmall),
-                    const SizedBox(height: DevocionalEspacamento.sp12),
+                    if (!compacto) ...[
+                      Text(obra.subtitulo, style: tema.bodySmall),
+                      const SizedBox(height: DevocionalEspacamento.sp12),
+                    ],
                     DevocionalCarregaUmaVez<List<CapituloDoLivro>?>(
                       chave: obra.slug,
                       carregar: () => Biblioteca.instancia.capitulos(obra.slug),

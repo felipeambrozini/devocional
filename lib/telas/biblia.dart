@@ -142,6 +142,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
                 DevocionalBotaoDeBusca(
                   aoBuscar: () => _controller.abrirBusca(context),
                 ),
+                const DevocionalBotaoDeNotas(),
                 DevocionalBotaoDeAjustes(estado: estado),
               ],
             ),

@@ -86,11 +86,11 @@ mesmo código).
 | Bíblia | Leitor por capítulo, os 66 livros, introdução de cada um |
 | Devocional | Manhã, Noite e Promessas de Deus, com calendário |
 | Plano | Cronograma anual por mês, com marcação de lido; Meus Planos (personalizados e compartilhados) |
-| Notas | Favoritos e anotações |
+| Biblioteca | Os livros de Spurgeon: estante, sumário e leitor por capítulo |
 | Conversas | Chat com Spurgeon e Felipe (IA), numa aba própria em todas as plataformas |
 
-A Biblioteca também não é aba: abre pela Hoje ou pelo Devocional, com URL
-(`/biblioteca`, `/biblioteca/<slug>`, `/biblioteca/<slug>/<n>`).
+Notas não é aba: abre pelo ícone de marcador na barra de cima do Devocional e
+da Bíblia, com URL própria (`/notas`).
 
 Sobre (créditos, fonte da tradução, canais e ajuda), Perguntas frequentes,
 Política de privacidade e Termos de serviço não são abas: moram no fim da
@@ -98,7 +98,7 @@ folha de ajustes, com URL própria cada uma.
 
 Na web, cada aba tem a própria URL (`/hoje`, `/biblia`, `/devocional`,
 `/plano`, `/notas`, `/conversas`) — dá para abrir, atualizar ou compartilhar
-qualquer uma direto; `/sobre`, `/faq`, `/privacidade`, `/termos` e cada conversa
+qualquer uma direto; `/notas`, `/sobre`, `/faq`, `/privacidade`, `/termos` e cada conversa
 (`/charles-spurgeon`, `/felipe-ambrozini`) também têm URL própria. `?ler=joao.3.16`
 na URL abre esse versículo por cima da aba, e `?plano=<id>` (ou
 `?plano=<slug>-<id>`, com o título do plano na frente só por estética) abre um
@@ -232,11 +232,12 @@ Candidatos a revisão manual, se algum dia houver versão editorial.
 ### A Biblioteca (livros de Spurgeon)
 
 Livros de Spurgeon em domínio público, traduzidos para o app e lidos por
-capítulo. Não é aba (a barra de baixo já tem seis destinos): abre pelo cartão
-da Hoje ou pelo ícone de livro do Devocional, e tem URL própria (`/biblioteca`,
+capítulo. É uma aba da barra de baixo (no lugar de Notas): a Hoje mostra o
+último livro iniciado, e cada nível tem URL própria (`/biblioteca`,
 `/biblioteca/<slug>` para o sumário, `/biblioteca/<slug>/<n>` para o capítulo
 *n*, a partir de 1). O interruptor `bibliotecaAtiva` do painel liga e desliga
-(`Recursos.biblioteca`); link direto com ela desligada volta para a Hoje.
+(`Recursos.biblioteca`); desligada, a aba mostra um aviso e o link direto
+para um livro volta para a estante.
 
 - **Catálogo**: `obrasDaBiblioteca` em `lib/dados/biblioteca.dart` (slug,
   título, subtítulo e caminho da capa). Um livro só entra aí depois de

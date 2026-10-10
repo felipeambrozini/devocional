@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 
 import '../dados/estado.dart';
 import 'folha_de_ajustes.dart';
@@ -180,4 +181,17 @@ class DevocionalBotaoTerciario extends StatelessWidget {
     }
     return TextButton(onPressed: onPressed, child: child!);
   }
+}
+
+/// Abre as Notas (favoritos e anotações). Não é aba: fica na barra de cima do
+/// Devocional e da Bíblia e abre a tela por cima.
+class DevocionalBotaoDeNotas extends StatelessWidget {
+  const DevocionalBotaoDeNotas({super.key});
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: 'Notas',
+    icon: const FaIcon(FontAwesomeIcons.bookmark),
+    onPressed: () => context.push('/notas'),
+  );
 }

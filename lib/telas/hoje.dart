@@ -30,6 +30,10 @@ class _TelaHojeState extends State<TelaHoje> {
     final agora = DateTime.now();
     final estado = EscopoDoEstado.de(context);
     final periodo = Periodo.pelaHora(agora.hour);
+    final livrosEmLeitura = [
+      for (final slug in estado.leituraDeLivros.livrosEmLeitura)
+        ?obraPorSlug(slug),
+    ];
 
     return Scaffold(
       body: SafeArea(
@@ -89,9 +93,22 @@ class _TelaHojeState extends State<TelaHoje> {
                       leitura: Leitura.promessas,
                     ),
                   ],
-                  if (Recursos.biblioteca) ...[
+                  // Os livros que o usuário começou a ler: nenhum, não mostra
+                  // nada; um, o cartão; mais de um, uma lista horizontal. A
+                  // estante inteira fica na aba Biblioteca.
+                  if (Recursos.biblioteca && livrosEmLeitura.isNotEmpty) ...[
                     const SizedBox(height: DevocionalEspacamento.sp16),
-                    const _CartaoDaBiblioteca(),
+                    DevocionalLivrosEmLeitura(
+                      obras: livrosEmLeitura,
+                      aoAbrir: (obra) {
+                        final capitulo =
+                            estado.leituraDeLivros
+                                .posicaoDe(obra.slug)
+                                ?.capitulo ??
+                            0;
+                        context.go('/biblioteca/${obra.slug}/${capitulo + 1}');
+                      },
+                    ),
                   ],
                 ],
               );
@@ -99,25 +116,6 @@ class _TelaHojeState extends State<TelaHoje> {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// A Biblioteca na Hoje: o livro em que a leitura parou, ou o primeiro da
-/// estante para quem ainda não começou nenhum. Abre o sumário do livro.
-class _CartaoDaBiblioteca extends StatelessWidget {
-  const _CartaoDaBiblioteca();
-
-  @override
-  Widget build(BuildContext context) {
-    final leitura = EscopoDoEstado.de(context).leituraDeLivros;
-    final obra = obrasDaBiblioteca.firstWhere(
-      (o) => leitura.posicaoDe(o.slug) != null,
-      orElse: () => obrasDaBiblioteca.first,
-    );
-    return DevocionalCartaoDaObra(
-      obra: obra,
-      aoAbrir: () => context.push('/biblioteca/${obra.slug}'),
     );
   }
 }

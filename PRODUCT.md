@@ -113,8 +113,10 @@ vitoriana dele, tratando o leitor por "tu".
 - Biblioteca de livros de Spurgeon em domínio público, traduzidos para o app
   (começa com *Somente pela Graça*): leitura por capítulo, continuar de onde
   parou, progresso por livro e destaques com nota por parágrafo. Os versículos
-  citados saem da BKJ do app, nunca de tradução nova. Não é aba; abre pela
-  Hoje e pelo Devocional, e o painel admin a liga e desliga.
+  citados saem da BKJ do app, nunca de tradução nova. É uma aba da barra de
+  baixo (no lugar de Notas, que virou um ícone na barra de cima do Devocional
+  e da Bíblia); a Hoje mostra o último livro iniciado; o painel admin a liga e
+  desliga.
 - Layout responsivo: barra inferior no celular, trilho lateral a partir de
   720px; gesto de deslizar troca capítulo no celular, setas na web.
 - Lembrete híbrido, Android e web (4 horários: Manhã, Noite, Promessas e Leitura

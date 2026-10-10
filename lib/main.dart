@@ -298,11 +298,11 @@ const _destinos = <_Destino>[
     TelaPlano(),
   ),
   _Destino(
-    'Notas',
-    'notas',
-    FontAwesomeIcons.bookmark,
-    FontAwesomeIcons.solidBookmark,
-    TelaNotas(),
+    'Biblioteca',
+    'biblioteca',
+    FontAwesomeIcons.bookBookmark,
+    FontAwesomeIcons.bookBookmark,
+    TelaBiblioteca(),
   ),
   _Destino(
     'Conversas',
@@ -328,7 +328,7 @@ final _escoposDasAbas = [
 ];
 
 /// Cada aba com o próprio caminho (`/hoje`, `/biblia`, `/devocional`,
-/// `/plano`, `/notas`, `/conversas`), para abrir direto por link e sobreviver
+/// `/plano`, `/biblioteca`, `/conversas`), para abrir direto por link e sobreviver
 /// a um F5 — o Firebase Hosting devolve o index.html para qualquer caminho sob
 /// `/devocional/` (rewrite em firebase.json). Sobre e as conversas também têm
 /// URL própria, fora do shell: são telas empurradas por cima das abas, não
@@ -363,9 +363,10 @@ final _router = GoRouter(
     if (state.uri.path.startsWith('/admin') && !Recursos.adminNaWeb) {
       return '/hoje';
     }
-    // Biblioteca desligada no painel: o link direto volta para a Hoje.
-    if (state.uri.path.startsWith('/biblioteca') && !Recursos.biblioteca) {
-      return '/hoje';
+    // Biblioteca desligada no painel: a aba mostra o aviso, e o link direto
+    // para um livro volta para a estante.
+    if (state.uri.path.startsWith('/biblioteca/') && !Recursos.biblioteca) {
+      return '/biblioteca';
     }
     // A aba Conversas é livre para todo mundo (ver TelaConversas, que troca
     // as cartas pelo convite ao WhatsApp sem o recurso). Só o chat de cada
@@ -418,28 +419,9 @@ final _router = GoRouter(
       builder: (context, state) => const TelaSobre(),
     ),
     GoRoute(path: '/faq', builder: (context, state) => const TelaFAQ()),
-    // A biblioteca não é aba (a barra de baixo já tem seis destinos): a estante,
-    // o sumário e o capítulo abrem por cima, cada um com URL própria.
-    GoRoute(
-      path: '/biblioteca',
-      builder: (context, state) => const TelaBiblioteca(),
-      routes: [
-        GoRoute(
-          path: ':slug',
-          builder: (context, state) =>
-              TelaDoLivro(slug: state.pathParameters['slug']!),
-          routes: [
-            GoRoute(
-              path: ':capitulo',
-              builder: (context, state) => TelaLeitorDeLivro(
-                slug: state.pathParameters['slug']!,
-                capitulo: int.tryParse(state.pathParameters['capitulo']!) ?? 0,
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
+    // Notas não é aba (a barra de baixo tem seis destinos): abre por cima, pelo
+    // ícone de marcador da barra de cima do Devocional e da Bíblia.
+    GoRoute(path: '/notas', builder: (context, state) => const TelaNotas()),
     GoRoute(path: '/admin', builder: (context, state) => const TelaAdmin()),
     GoRoute(
       path: '/privacidade',
@@ -485,6 +467,38 @@ final _router = GoRouter(
                       ),
                     ),
                   ),
+              ],
+            )
+          else if (d.caminho == 'biblioteca')
+            // O sumário e o capítulo moram dentro da aba, cada um com URL própria:
+            // a barra de baixo continua à vista e o F5 reabre o capítulo.
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/${d.caminho}',
+                  builder: (context, state) =>
+                      FocusScope(node: _escoposDasAbas[i], child: d.tela),
+                  routes: [
+                    GoRoute(
+                      path: ':slug',
+                      builder: (context, state) =>
+                          TelaDoLivro(slug: state.pathParameters['slug']!),
+                      routes: [
+                        GoRoute(
+                          path: ':capitulo',
+                          builder: (context, state) => TelaLeitorDeLivro(
+                            slug: state.pathParameters['slug']!,
+                            capitulo:
+                                int.tryParse(
+                                  state.pathParameters['capitulo']!,
+                                ) ??
+                                0,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ],
             )
           else if (d.caminho == 'plano')
