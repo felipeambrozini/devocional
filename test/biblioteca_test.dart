@@ -10,6 +10,7 @@ import 'package:felipe_ambrozini/telas/leitor_de_livro.dart';
 import 'package:felipe_ambrozini/telas/livro.dart';
 import 'package:felipe_ambrozini/widgets/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -65,24 +66,38 @@ void main() {
       expect(arquivos, {for (final obra in obrasDaBiblioteca) obra.slug});
     });
 
-    test('capítulos com título e parágrafos, sem travessão nem aspa curva', () async {
-      const totalDeCapitulos = {'somente_pela_graca': 20, 'alfabeto_de_ouro': 23};
-      final proibidos = RegExp('[—–‘’“”]');
-      for (final obra in obrasDaBiblioteca) {
-        final livro = (await Biblioteca.instancia.capitulos(obra.slug))!;
-        expect(livro, hasLength(totalDeCapitulos[obra.slug]), reason: obra.slug);
-        for (final (indice, capitulo) in livro.indexed) {
-          final onde = '${obra.slug}, capítulo $indice';
-          expect(capitulo.titulo.trim(), isNotEmpty, reason: onde);
-          expect(capitulo.paragrafos, isNotEmpty, reason: onde);
-          for (final texto in [capitulo.titulo, ...capitulo.paragrafos]) {
-            expect(texto.trim(), isNotEmpty, reason: onde);
-            expect(proibidos.hasMatch(texto), isFalse, reason: onde);
-            expect(texto.contains('[['), isFalse, reason: '$onde: marcador sobrando');
+    test(
+      'capítulos com título e parágrafos, sem travessão nem aspa curva',
+      () async {
+        const totalDeCapitulos = {
+          'somente_pela_graca': 20,
+          'alfabeto_de_ouro': 23,
+        };
+        final proibidos = RegExp('[—–‘’“”]');
+        for (final obra in obrasDaBiblioteca) {
+          final livro = (await Biblioteca.instancia.capitulos(obra.slug))!;
+          expect(
+            livro,
+            hasLength(totalDeCapitulos[obra.slug]),
+            reason: obra.slug,
+          );
+          for (final (indice, capitulo) in livro.indexed) {
+            final onde = '${obra.slug}, capítulo $indice';
+            expect(capitulo.titulo.trim(), isNotEmpty, reason: onde);
+            expect(capitulo.paragrafos, isNotEmpty, reason: onde);
+            for (final texto in [capitulo.titulo, ...capitulo.paragrafos]) {
+              expect(texto.trim(), isNotEmpty, reason: onde);
+              expect(proibidos.hasMatch(texto), isFalse, reason: onde);
+              expect(
+                texto.contains('[['),
+                isFalse,
+                reason: '$onde: marcador sobrando',
+              );
+            }
           }
         }
-      }
-    });
+      },
+    );
 
     test('livro que não existe devolve nulo, sem lançar', () async {
       expect(await Biblioteca.instancia.capitulos('nao_existe'), isNull);
@@ -101,22 +116,31 @@ void main() {
       expect(reaberto.leituraDeLivros.posicaoDe('outro'), isNull);
     });
 
-    test('lembra o último livro em que se leu, e nenhum antes de começar', () async {
-      final estado = await abrirEstado();
-      expect(estado.leituraDeLivros.ultimoLivro, isNull);
+    test(
+      'lembra o último livro em que se leu, e nenhum antes de começar',
+      () async {
+        final estado = await abrirEstado();
+        expect(estado.leituraDeLivros.ultimoLivro, isNull);
 
-      await estado.leituraDeLivros.registrarPosicao('alfabeto_de_ouro', 0, 0);
-      await estado.leituraDeLivros.registrarPosicao(slug, 2, 0.5);
-      expect(estado.leituraDeLivros.ultimoLivro, slug);
-      await estado.leituraDeLivros.registrarPosicao('alfabeto_de_ouro', 1, 0);
-      expect(estado.leituraDeLivros.ultimoLivro, 'alfabeto_de_ouro');
+        await estado.leituraDeLivros.registrarPosicao('alfabeto_de_ouro', 0, 0);
+        await estado.leituraDeLivros.registrarPosicao(slug, 2, 0.5);
+        expect(estado.leituraDeLivros.ultimoLivro, slug);
+        await estado.leituraDeLivros.registrarPosicao('alfabeto_de_ouro', 1, 0);
+        expect(estado.leituraDeLivros.ultimoLivro, 'alfabeto_de_ouro');
 
-      expect(estado.leituraDeLivros.livrosEmLeitura, ['alfabeto_de_ouro', slug]);
+        expect(estado.leituraDeLivros.livrosEmLeitura, [
+          'alfabeto_de_ouro',
+          slug,
+        ]);
 
-      final reaberto = await abrirEstado();
-      expect(reaberto.leituraDeLivros.ultimoLivro, 'alfabeto_de_ouro');
-      expect(reaberto.leituraDeLivros.livrosEmLeitura, ['alfabeto_de_ouro', slug]);
-    });
+        final reaberto = await abrirEstado();
+        expect(reaberto.leituraDeLivros.ultimoLivro, 'alfabeto_de_ouro');
+        expect(reaberto.leituraDeLivros.livrosEmLeitura, [
+          'alfabeto_de_ouro',
+          slug,
+        ]);
+      },
+    );
 
     test('só a troca de capítulo avisa os ouvintes, não a rolagem', () async {
       final estado = await abrirEstado();
@@ -245,19 +269,57 @@ void main() {
       expect(find.text(capitulos.first.titulo), findsOneWidget);
     });
 
-    testWidgets('o leitor mostra o capítulo e troca pelo rodapé', (
+    testWidgets('o leitor mostra o capítulo e troca pelas setas do teclado', (
       tester,
     ) async {
       final estado = await abrir(tester, '/biblioteca/$slug/1');
       expect(find.text('Capítulo 1 de 20'), findsOneWidget);
       expect(find.text(capitulos[0].titulo), findsOneWidget);
 
-      await tester.tap(find.byTooltip('Próximo capítulo'));
+      // No toque não há barra de setas no rodapé (só na web, se ligada).
+      expect(find.byTooltip('Próximo capítulo'), findsNothing);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
       await tester.pumpAndSettle();
       expect(find.text('Capítulo 2 de 20'), findsOneWidget);
       expect(find.text(capitulos[1].titulo), findsOneWidget);
       // Abrir o capítulo é o que o "continuar" da estante vai ler.
       expect(estado.leituraDeLivros.posicaoDe(slug)!.capitulo, 1);
+    });
+
+    testWidgets('deslizar troca de capítulo e dá para desfazer', (
+      tester,
+    ) async {
+      await abrir(tester, '/biblioteca/$slug/1');
+
+      await tester.timedDrag(
+        find.byType(SingleChildScrollView).first,
+        const Offset(-400, 0),
+        const Duration(milliseconds: 200),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Capítulo 2 de 20'), findsOneWidget);
+      expect(find.text('Desfazer'), findsOneWidget);
+
+      await tester.tap(find.text('Desfazer'));
+      await tester.pumpAndSettle();
+      expect(find.text('Capítulo 1 de 20'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 6));
+    });
+
+    testWidgets('no primeiro capítulo, voltar não faz nada', (tester) async {
+      await abrir(tester, '/biblioteca/$slug/1');
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+      await tester.pumpAndSettle();
+      expect(find.text('Capítulo 1 de 20'), findsOneWidget);
+
+      await tester.timedDrag(
+        find.byType(SingleChildScrollView).first,
+        const Offset(400, 0),
+        const Duration(milliseconds: 200),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Capítulo 1 de 20'), findsOneWidget);
     });
 
     testWidgets('capítulo fora da faixa avisa em vez de quebrar', (

@@ -70,7 +70,9 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                   child: Text('Tamanho do texto', style: tema.headlineSmall),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: DevocionalEspacamento.sp20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DevocionalEspacamento.sp20,
+                  ),
                   child: Wrap(
                     spacing: DevocionalEspacamento.sp8,
                     runSpacing: DevocionalEspacamento.sp8,
@@ -110,7 +112,9 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                   child: Text('Aparência', style: tema.headlineSmall),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: DevocionalEspacamento.sp20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DevocionalEspacamento.sp20,
+                  ),
                   child: Wrap(
                     spacing: DevocionalEspacamento.sp8,
                     runSpacing: DevocionalEspacamento.sp8,
@@ -137,8 +141,7 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                   listenable: ConfigAdmin.instancia,
                   builder: (context, _) => Recursos.ouvirTextos
                       ? SwitchListTile(
-                          contentPadding:
-                              const EdgeInsets.symmetric(
+                          contentPadding: const EdgeInsets.symmetric(
                             horizontal: DevocionalEspacamento.sp20,
                           ),
                           title: const Text('Ouvir capítulos em sequência'),
@@ -409,7 +412,11 @@ class _SecaoAudioOfflineExpansivel extends StatelessWidget {
     return Theme(
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
-        leading: FaIcon(FontAwesomeIcons.headphones, color: cor.primary, size: 18),
+        leading: FaIcon(
+          FontAwesomeIcons.headphones,
+          color: cor.primary,
+          size: 18,
+        ),
         title: const Text('Áudio offline'),
         subtitle: Text(
           'Baixe para ouvir sem internet',
@@ -442,7 +449,9 @@ class _SecaoAudioOffline {
         child: Text('Áudio offline', style: tema.headlineSmall),
       ),
       Padding(
-        padding: const EdgeInsets.symmetric(horizontal: DevocionalEspacamento.sp20),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DevocionalEspacamento.sp20,
+        ),
         child: Text(
           'Baixe para ouvir sem internet. Na ordem: Bíblia, Introdução, Manhã e Noite, Promessas. O player usa o arquivo local quando existir, senão baixa da nuvem.',
           style: Theme.of(context).textTheme.bodySmall,
@@ -484,8 +493,9 @@ class _SecaoAudioOffline {
                     final faltam = total - baixados;
                     final estimativaMb = mediaBytes == null || faltam <= 0
                         ? null
-                        : (mediaBytes * faltam / (1024 * 1024))
-                              .toStringAsFixed(1);
+                        : (mediaBytes * faltam / (1024 * 1024)).toStringAsFixed(
+                            1,
+                          );
                     return ListTile(
                       title: Text(rotulos[cat]!),
                       subtitle: baixandoEste
@@ -523,7 +533,9 @@ class _SecaoAudioOffline {
                 ),
               if (off.erro != null)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: DevocionalEspacamento.sp20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DevocionalEspacamento.sp20,
+                  ),
                   child: Text(
                     off.erro!,
                     style: TextStyle(
@@ -579,7 +591,7 @@ class _SecaoDasSetas {
       SwitchListTile(
         title: const Text('Setas para virar o capítulo'),
         subtitle: const Text(
-          'Os botões ‹ › no rodapé da Bíblia. Sem elas, o teclado vira '
+          'Os botões ‹ › no rodapé da Bíblia e dos livros. Sem elas, o teclado vira '
           'o capítulo: setas esquerda e direita, Enter ou espaço.',
         ),
         value: estado.setasDoRodape,

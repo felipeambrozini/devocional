@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
@@ -7,6 +9,7 @@ import '../dados/biblioteca.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
 import '../estilo/espacamento.dart';
+import '../funcoes/aviso.dart';
 import '../funcoes/dialogos.dart';
 import '../widgets/widgets.dart';
 
@@ -118,6 +121,44 @@ class _CapituloAbertoState extends State<_CapituloAberto> {
   void _irPara(int indice) =>
       context.pushReplacement('/biblioteca/$_slug/${indice + 1}');
 
+  /// Passa [passo] capítulos (1 ou -1); nos extremos do livro não faz nada.
+  void _passar(int passo) {
+    final destino = widget.indice + passo;
+    if (destino < 0 || destino >= widget.capitulos.length) return;
+    _irPara(destino);
+  }
+
+  /// Arrastar na horizontal passa de capítulo, com as regras da Bíblia: o
+  /// corpo é um detector horizontal em volta de uma rolagem vertical, então o
+  /// horizontal precisa vencer o vertical por 2,5x, senão um flick durante a
+  /// rolagem trocaria de capítulo em silêncio. Oferece "Desfazer": o deslize é
+  /// o único jeito de trocar no toque, e um acidente não pode custar o lugar.
+  void _aoArrastar(DragEndDetails detalhe) {
+    final horizontal = detalhe.primaryVelocity ?? 0;
+    final vertical = detalhe.velocity.pixelsPerSecond.dy;
+    if (horizontal.abs() < 250) return;
+    if (vertical.abs() * 2.5 > horizontal.abs()) return;
+    final destino = widget.indice + (horizontal < 0 ? 1 : -1);
+    if (destino < 0 || destino >= widget.capitulos.length) return;
+
+    final estado = widget.estado;
+    if (!estado.swipeTooltipDispensado) estado.dispensarSwipeTooltip();
+    // A tela atual sai de cena na troca: o aviso e o desfazer usam o que foi
+    // pego antes dela.
+    final mensageiro = ScaffoldMessenger.of(context);
+    final roteador = GoRouter.of(context);
+    final slug = _slug;
+    final anterior = widget.indice;
+    _irPara(destino);
+    mostrarAvisoNo(
+      mensageiro,
+      widget.capitulos[destino].titulo,
+      rotuloDeAcao: 'Desfazer',
+      aoAgir: () =>
+          roteador.pushReplacement('/biblioteca/$slug/${anterior + 1}'),
+    );
+  }
+
   void _voltarAoSumario() =>
       context.canPop() ? context.pop() : context.go('/biblioteca/$_slug');
 
@@ -169,6 +210,16 @@ class _CapituloAbertoState extends State<_CapituloAberto> {
                 if (folha.mounted) Navigator.pop(folha);
               },
             ),
+            ListTile(
+              leading: FaIcon(FontAwesomeIcons.copy, color: cor.primary),
+              title: const Text('Copiar'),
+              onTap: () async {
+                await Clipboard.setData(
+                  ClipboardData(text: _capitulo.paragrafos[paragrafo]),
+                );
+                if (folha.mounted) Navigator.pop(folha);
+              },
+            ),
           ],
         ),
       ),
@@ -182,81 +233,119 @@ class _CapituloAbertoState extends State<_CapituloAberto> {
     final tema = Theme.of(context).textTheme;
     final destaques = leitura.destaquesDe(_slug, widget.indice);
     final lido = leitura.foiLido(_slug, widget.indice);
+    // Só no toque o texto vira selecionável: na web a seleção por arrasto
+    // disputaria a arena com o gesto de capítulo (e "Copiar" fica na folha do
+    // parágrafo). A área de seleção envolve o detector de arrasto, e não o
+    // contrário: o reconhecedor mais fundo da árvore ganha a disputa, como na
+    // Bíblia.
+    Widget comSelecao(Widget filho) =>
+        kIsWeb ? filho : DevocionalAreaDeSelecaoComCompartilhar(child: filho);
 
-    return Scaffold(
-      appBar: DevocionalAppBar(
-        title: Text(widget.obra.titulo, overflow: TextOverflow.ellipsis),
-        actions: [
-          IconButton(
-            tooltip: 'Capítulos',
-            icon: const FaIcon(FontAwesomeIcons.listUl),
-            onPressed: _voltarAoSumario,
-          ),
-          DevocionalBotaoDeAjustes(estado: estado),
-        ],
-      ),
-      body: DevocionalLarguraDeLeitura(
-        child: NotificationListener<ScrollEndNotification>(
-          onNotification: (_) {
-            _controlador.guardarPosicao();
-            return false;
-          },
-          child: SingleChildScrollView(
-            controller: _controlador.rolagem,
-            padding: const EdgeInsets.fromLTRB(
-              DevocionalEspacamento.sp16,
-              DevocionalEspacamento.sp8,
-              DevocionalEspacamento.sp16,
-              DevocionalEspacamento.sp32,
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.arrowRight): () => _passar(1),
+        const SingleActivator(LogicalKeyboardKey.arrowLeft): () => _passar(-1),
+      },
+      child: Scaffold(
+        appBar: DevocionalAppBar(
+          title: Text(widget.obra.titulo, overflow: TextOverflow.ellipsis),
+          actions: [
+            IconButton(
+              tooltip: 'Capítulos',
+              icon: const FaIcon(FontAwesomeIcons.listUl),
+              onPressed: _voltarAoSumario,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            DevocionalBotaoDeAjustes(estado: estado),
+          ],
+        ),
+        body: DevocionalLarguraDeLeitura(
+          child: Focus(
+            autofocus: true,
+            child: Stack(
               children: [
-                Text(
-                  'Capítulo ${widget.indice + 1} de ${widget.capitulos.length}',
-                  style: tema.labelMedium,
-                ),
-                const SizedBox(height: DevocionalEspacamento.sp4),
-                Text(_capitulo.titulo, style: tema.headlineMedium),
-                const SizedBox(height: DevocionalEspacamento.sp14),
-                const DevocionalFilete(),
-                const SizedBox(height: DevocionalEspacamento.sp16),
-                DevocionalAreaDeSelecaoComCompartilhar(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      for (final (n, paragrafo) in _capitulo.paragrafos.indexed)
-                        _Paragrafo(
-                          texto: paragrafo,
-                          destaque: destaques[n],
-                          aoTocar: () => _abrirAcoes(n),
+                comSelecao(
+                  GestureDetector(
+                    onHorizontalDragEnd: _aoArrastar,
+                    child: NotificationListener<ScrollEndNotification>(
+                      onNotification: (_) {
+                        _controlador.guardarPosicao();
+                        return false;
+                      },
+                      child: SingleChildScrollView(
+                        controller: _controlador.rolagem,
+                        padding: const EdgeInsets.fromLTRB(
+                          DevocionalEspacamento.sp16,
+                          DevocionalEspacamento.sp8,
+                          DevocionalEspacamento.sp16,
+                          DevocionalEspacamento.sp32,
                         ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: DevocionalEspacamento.sp16),
-                Center(
-                  child: DevocionalBotaoTerciario.icon(
-                    onPressed: () => leitura.alternarLido(_slug, widget.indice),
-                    icon: FaIcon(
-                      lido
-                          ? FontAwesomeIcons.circleCheck
-                          : FontAwesomeIcons.circle,
-                      size: 14,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Capítulo ${widget.indice + 1} de ${widget.capitulos.length}',
+                              style: tema.labelMedium,
+                            ),
+                            const SizedBox(height: DevocionalEspacamento.sp4),
+                            Text(_capitulo.titulo, style: tema.headlineMedium),
+                            const SizedBox(height: DevocionalEspacamento.sp14),
+                            const DevocionalFilete(),
+                            const SizedBox(height: DevocionalEspacamento.sp16),
+                            KeyedSubtree(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  for (final (n, paragrafo)
+                                      in _capitulo.paragrafos.indexed)
+                                    _Paragrafo(
+                                      texto: paragrafo,
+                                      destaque: destaques[n],
+                                      aoTocar: () => _abrirAcoes(n),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: DevocionalEspacamento.sp16),
+                            Center(
+                              child: DevocionalBotaoTerciario.icon(
+                                onPressed: () =>
+                                    leitura.alternarLido(_slug, widget.indice),
+                                icon: FaIcon(
+                                  lido
+                                      ? FontAwesomeIcons.circleCheck
+                                      : FontAwesomeIcons.circle,
+                                  size: 14,
+                                ),
+                                label: Text(
+                                  lido ? 'Capítulo lido' : 'Marcar como lido',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    label: Text(lido ? 'Capítulo lido' : 'Marcar como lido'),
                   ),
                 ),
+                // A alça é um indício de que dá para deslizar, não um controle.
+                if (!kIsWeb)
+                  DevocionalAlcaDeDeslize(
+                    primeiraVez: !estado.swipeTooltipDispensado,
+                  ),
               ],
             ),
           ),
         ),
-      ),
-      bottomNavigationBar: DevocionalBarraDeCapitulo(
-        podeVoltar: widget.indice > 0,
-        podeAvancar: _temProximo,
-        aoVoltar: () => _irPara(widget.indice - 1),
-        aoAvancar: () => _irPara(widget.indice + 1),
+        // Como na Bíblia: no celular o deslize já troca de capítulo, e a barra
+        // só existe na web, se a opção das setas estiver ligada nos ajustes.
+        bottomNavigationBar: kIsWeb && estado.setasDoRodape
+            ? DevocionalBarraDeCapitulo(
+                podeVoltar: widget.indice > 0,
+                podeAvancar: _temProximo,
+                aoVoltar: () => _passar(-1),
+                aoAvancar: () => _passar(1),
+              )
+            : null,
       ),
     );
   }

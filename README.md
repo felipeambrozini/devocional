@@ -244,6 +244,12 @@ para um livro volta para a estante.
   traduzido e auditado por inteiro; a estante não mostra livro pela metade. O
   slug é em português, no padrão de `manha_e_noite.json`, e vale para o
   arquivo, a URL e a capa.
+- **Trocar de capítulo**: o mesmo comportamento da Bíblia. No celular, arrastar
+  na horizontal (com "Desfazer" e a alça de deslize na borda); no teclado, as
+  setas esquerda e direita; na web, a barra de setas no rodapé quando a opção
+  "Setas para virar o capítulo" dos ajustes está ligada. Na web o texto não é
+  selecionável (a seleção por arrasto brigaria com o gesto), e "Copiar" fica na
+  folha do parágrafo.
 - **Asset**: `assets/livros/<slug>.json`, `{slug, capitulos: [{titulo,
   paragrafos: []}]}`. Carregado sob demanda, um livro por vez.
 - **Capa**: `assets/imagens/capa_<slug>.webp`, 225x300, na linha das capas
