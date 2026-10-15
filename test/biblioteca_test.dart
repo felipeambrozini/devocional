@@ -76,6 +76,7 @@ void main() {
           'alfabeto_de_ouro': 23,
           'o_ganhador_de_almas': 15,
           'ao_redor_do_portao_estreito': 12,
+          'conversas_de_joao_lavrador': 25,
         };
         final proibidos = RegExp('[—–‘’“”]');
         for (final obra in obrasDaBiblioteca) {

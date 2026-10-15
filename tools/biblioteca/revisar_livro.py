@@ -76,7 +76,7 @@ def revisar(slug: str) -> None:
                 continue
             total_en += len(en.split())
             total_pt += len(pt.split())
-            if len(en.split()) >= 40 and len(pt.split()) < 0.6 * len(en.split()):
+            if len(en.split()) >= 40 and len(pt.split()) < 0.8 * len(en.split()):
                 encurtados.append(f"cap {i} p{n}: {len(en.split())}->{len(pt.split())} palavras")
             if quantidade_de_frases(en) >= 4 and quantidade_de_frases(pt) <= quantidade_de_frases(en) - 2:
                 frases_perdidas.append(f"cap {i} p{n}")
@@ -108,7 +108,7 @@ def revisar(slug: str) -> None:
     print(f"parecem versiculo mas nao sao literais da BKJ: {len(suspeitas)}")
     for linha in suspeitas[:30]:
         print("  ", linha)
-    print(f"paragrafos muito encurtados (<60%): {len(encurtados)}", encurtados[:8])
+    print(f"paragrafos encurtados (<80%): {len(encurtados)}", encurtados[:8])
     print(f"frases perdidas: {len(frases_perdidas)}", frases_perdidas[:8])
     print(f"ingles solto: {len(ingles_solto)}", ingles_solto[:8])
     print(f"portugues de Portugal fora de aspas: {len(portugal)}", portugal[:8], f"| voce: {vocesx}")

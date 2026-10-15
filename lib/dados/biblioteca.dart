@@ -35,6 +35,12 @@ const obrasDaBiblioteca = [
     subtitulo: 'Uma conversa amiga com quem busca a salvação',
     capa: 'assets/imagens/capa_ao_redor_do_portao_estreito.webp',
   ),
+  ObraDaBiblioteca(
+    slug: 'conversas_de_joao_lavrador',
+    titulo: 'Conversas de João Lavrador',
+    subtitulo: 'Conselhos simples para gente simples',
+    capa: 'assets/imagens/capa_conversas_de_joao_lavrador.webp',
+  ),
 ];
 
 ObraDaBiblioteca? obraPorSlug(String slug) {
