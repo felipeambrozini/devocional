@@ -78,6 +78,7 @@ void main() {
           'ao_redor_do_portao_estreito': 12,
           'conversas_de_joao_lavrador': 25,
           'retratos_de_joao_lavrador': 39,
+          'segundo_a_promessa': 20,
         };
         final proibidos = RegExp('[—–‘’“”]');
         for (final obra in obrasDaBiblioteca) {
