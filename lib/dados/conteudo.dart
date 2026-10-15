@@ -153,7 +153,7 @@ class Conteudo {
     final cacheado = bissexto ? _planoBissexto : _planoComum;
     if (cacheado != null) return cacheado;
     final arquivo = bissexto ? 'cronograma_bissexto.json' : 'cronograma.json';
-    final cru = await rootBundle.loadString('assets/$arquivo');
+    final cru = await rootBundle.loadString('assets/planos/$arquivo');
     final dias = [
       for (final d in json.decode(cru) as List)
         DiaDoPlano.doJson(d as Map<String, dynamic>),

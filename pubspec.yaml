@@ -150,8 +150,7 @@ flutter:
     - assets/livros/
     - assets/comentarios/
     - assets/imagens/
-    - assets/cronograma.json
-    - assets/cronograma_bissexto.json
+    - assets/planos/
 
   # Cinzel e Montserrat empacotadas localmente: o google_fonts baixa a fonte na
   # primeira execução, e um aparelho sem internet (ou sem DNS, comum em emulador)

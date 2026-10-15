@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Lê o asset direto do disco. Um teste de dados não precisa subir um app inteiro
 /// só para validar o conteúdo de um JSON.
-List<DiaDoPlano> carregarPlano([String caminho = 'assets/cronograma.json']) {
+List<DiaDoPlano> carregarPlano([String caminho = 'assets/planos/cronograma.json']) {
   final cru = File(caminho).readAsStringSync();
   return [
     for (final d in json.decode(cru) as List)
@@ -112,7 +112,7 @@ void main() {
   });
 
   group('cronograma bissexto', () {
-    final planoBissexto = carregarPlano('assets/cronograma_bissexto.json');
+    final planoBissexto = carregarPlano('assets/planos/cronograma_bissexto.json');
 
     test('tem exatamente 366 dias, um por data do ano incluindo 29-02', () {
       expect(planoBissexto.length, 366);

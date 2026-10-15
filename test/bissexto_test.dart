@@ -73,7 +73,7 @@ void main() {
         );
 
         final plano =
-            json.decode(File('assets/cronograma.json').readAsStringSync())
+            json.decode(File('assets/planos/cronograma.json').readAsStringSync())
                 as List;
         final datas = plano
             .map((d) => (d as Map<String, dynamic>)['date'])
@@ -86,7 +86,7 @@ void main() {
     test('o cronograma bissexto tem 366 dias, incluindo 29-02', () {
       final plano =
           json.decode(
-                File('assets/cronograma_bissexto.json').readAsStringSync(),
+                File('assets/planos/cronograma_bissexto.json').readAsStringSync(),
               )
               as List;
       final datas = plano
@@ -102,8 +102,8 @@ void main() {
       // O número não é solto: é o divisor do progresso e o rótulo da tela Hoje,
       // então tem de bater com a contagem do asset correspondente.
       for (final (ano, arquivo) in [
-        (2027, 'assets/cronograma.json'),
-        (2028, 'assets/cronograma_bissexto.json'),
+        (2027, 'assets/planos/cronograma.json'),
+        (2028, 'assets/planos/cronograma_bissexto.json'),
       ]) {
         final plano = json.decode(File(arquivo).readAsStringSync()) as List;
         expect(
