@@ -23,6 +23,12 @@ const obrasDaBiblioteca = [
     subtitulo: 'Comentário devocional ao Salmo 119, letra por letra',
     capa: 'assets/imagens/capa_alfabeto_de_ouro.webp',
   ),
+  ObraDaBiblioteca(
+    slug: 'o_ganhador_de_almas',
+    titulo: 'O Ganhador de Almas',
+    subtitulo: 'Como conduzir os pecadores ao Salvador',
+    capa: 'assets/imagens/capa_o_ganhador_de_almas.webp',
+  ),
 ];
 
 ObraDaBiblioteca? obraPorSlug(String slug) {

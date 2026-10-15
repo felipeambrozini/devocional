@@ -74,6 +74,7 @@ void main() {
         const totalDeCapitulos = {
           'somente_pela_graca': 20,
           'alfabeto_de_ouro': 23,
+          'o_ganhador_de_almas': 15,
         };
         final proibidos = RegExp('[—–‘’“”]');
         for (final obra in obrasDaBiblioteca) {
@@ -632,7 +633,7 @@ void main() {
       expect(find.byType(DevocionalCartaoDaObra), findsOneWidget);
       expect(find.text('Seus livros'), findsNothing);
 
-      await mostrar(obrasDaBiblioteca);
+      await mostrar(obrasDaBiblioteca.take(2).toList());
       expect(find.text('Seus livros'), findsOneWidget);
       expect(find.byType(DevocionalCartaoDaObra), findsNWidgets(2));
     });
