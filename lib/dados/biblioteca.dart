@@ -41,6 +41,12 @@ const obrasDaBiblioteca = [
     subtitulo: 'Conselhos simples para gente simples',
     capa: 'assets/imagens/capa_conversas_de_joao_lavrador.webp',
   ),
+  ObraDaBiblioteca(
+    slug: 'retratos_de_joao_lavrador',
+    titulo: 'Retratos de João Lavrador',
+    subtitulo: 'Mais conselhos simples para gente simples',
+    capa: 'assets/imagens/capa_retratos_de_joao_lavrador.webp',
+  ),
 ];
 
 ObraDaBiblioteca? obraPorSlug(String slug) {

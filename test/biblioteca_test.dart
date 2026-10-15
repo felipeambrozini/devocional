@@ -77,6 +77,7 @@ void main() {
           'o_ganhador_de_almas': 15,
           'ao_redor_do_portao_estreito': 12,
           'conversas_de_joao_lavrador': 25,
+          'retratos_de_joao_lavrador': 39,
         };
         final proibidos = RegExp('[—–‘’“”]');
         for (final obra in obrasDaBiblioteca) {
