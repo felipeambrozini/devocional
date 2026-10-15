@@ -29,6 +29,12 @@ const obrasDaBiblioteca = [
     subtitulo: 'Como conduzir os pecadores ao Salvador',
     capa: 'assets/imagens/capa_o_ganhador_de_almas.webp',
   ),
+  ObraDaBiblioteca(
+    slug: 'ao_redor_do_portao_estreito',
+    titulo: 'Ao Redor do Portão Estreito',
+    subtitulo: 'Uma conversa amiga com quem busca a salvação',
+    capa: 'assets/imagens/capa_ao_redor_do_portao_estreito.webp',
+  ),
 ];
 
 ObraDaBiblioteca? obraPorSlug(String slug) {

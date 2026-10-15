@@ -75,6 +75,7 @@ void main() {
           'somente_pela_graca': 20,
           'alfabeto_de_ouro': 23,
           'o_ganhador_de_almas': 15,
+          'ao_redor_do_portao_estreito': 12,
         };
         final proibidos = RegExp('[—–‘’“”]');
         for (final obra in obrasDaBiblioteca) {
