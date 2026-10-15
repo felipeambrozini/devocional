@@ -270,6 +270,11 @@ class Nuvem extends ChangeNotifier {
   /// (`serializarPlanos`): sem isto um plano criado no celular nunca aparecia
   /// na web, mesmo com a mesma conta — era só local.
   Sincronia? _sincroniaDePlanos;
+
+  /// Posição, capítulos lidos, leituras concluídas e destaques dos livros da
+  /// biblioteca, no campo `livros` do mesmo documento: a leitura é da conta, e
+  /// celular e web logados mostram a mesma coisa.
+  Sincronia? _sincroniaDeLivros;
   StreamSubscription<User?>? _assinatura;
   bool _pronta = false;
 
@@ -441,6 +446,8 @@ class Nuvem extends ChangeNotifier {
       _sincroniaDeLembretes = null;
       _sincroniaDePlanos?.parar();
       _sincroniaDePlanos = null;
+      _sincroniaDeLivros?.parar();
+      _sincroniaDeLivros = null;
       notifyListeners();
       if (usuario == null) return;
 
@@ -508,6 +515,17 @@ class Nuvem extends ChangeNotifier {
       );
       _sincroniaDePlanos = sincroniaDePlanos;
       unawaited(sincroniaDePlanos.comecar());
+
+      final sincroniaDeLivros = Sincronia(
+        estado: estado,
+        serializar: estado.serializarLeituraDeLivros,
+        fundir: estado.fundirLeituraDeLivros,
+        puxar: () => _campo(documento, 'livros'),
+        empurrar: (copia) => _empurrarCampo(uid, 'livros', copia),
+        aoMudarSituacao: notifyListeners,
+      );
+      _sincroniaDeLivros = sincroniaDeLivros;
+      unawaited(sincroniaDeLivros.comecar());
     });
   }
 
@@ -519,6 +537,7 @@ class Nuvem extends ChangeNotifier {
     _sincroniaDeConversas?.parar();
     _sincroniaDeLembretes?.parar();
     _sincroniaDePlanos?.parar();
+    _sincroniaDeLivros?.parar();
     super.dispose();
   }
 
@@ -620,6 +639,7 @@ class Nuvem extends ChangeNotifier {
     await _sincroniaDeConversas?.despejar();
     await _sincroniaDeLembretes?.despejar();
     await _sincroniaDePlanos?.despejar();
+    await _sincroniaDeLivros?.despejar();
     await FirebaseAuth.instance.signOut();
   }
 

@@ -33,18 +33,31 @@ class CapituloDoLivro {
 /// Onde a leitura de um livro parou: o capítulo (a partir de 0) e quanto dele
 /// já foi rolado, de 0 a 1. Fração e não parágrafo porque o tamanho da letra
 /// muda a altura do texto, e a fração continua apontando para o mesmo ponto.
+///
+/// [em] é o momento do registro (milissegundos desde 1970): ordena os livros em
+/// leitura e decide, na fusão com a nuvem, qual aparelho leu por último.
 class PosicaoNoLivro {
-  const PosicaoNoLivro({required this.capitulo, required this.fracao});
+  const PosicaoNoLivro({
+    required this.capitulo,
+    required this.fracao,
+    this.em = 0,
+  });
 
   factory PosicaoNoLivro.doJson(Map<String, dynamic> json) => PosicaoNoLivro(
     capitulo: json['capitulo'] as int,
     fracao: (json['fracao'] as num).toDouble().clamp(0.0, 1.0),
+    em: json['em'] as int? ?? 0,
   );
 
   final int capitulo;
   final double fracao;
+  final int em;
 
-  Map<String, dynamic> paraJson() => {'capitulo': capitulo, 'fracao': fracao};
+  Map<String, dynamic> paraJson() => {
+    'capitulo': capitulo,
+    'fracao': fracao,
+    'em': em,
+  };
 }
 
 /// Parágrafo grifado pelo usuário, com nota opcional. Por parágrafo inteiro:
@@ -56,6 +69,7 @@ class DestaqueDeLivro {
     required this.capitulo,
     required this.paragrafo,
     this.nota = '',
+    this.em = 0,
   });
 
   factory DestaqueDeLivro.doJson(Map<String, dynamic> json) => DestaqueDeLivro(
@@ -63,12 +77,16 @@ class DestaqueDeLivro {
     capitulo: json['capitulo'] as int,
     paragrafo: json['paragrafo'] as int,
     nota: json['nota'] as String? ?? '',
+    em: json['em'] as int? ?? 0,
   );
 
   final String slug;
   final int capitulo;
   final int paragrafo;
   final String nota;
+
+  /// Momento da última mudança, para a fusão com a nuvem ficar com o mais novo.
+  final int em;
 
   /// Identidade estável usada como chave de armazenamento.
   String get chave => '$slug/$capitulo/$paragrafo';
@@ -78,12 +96,14 @@ class DestaqueDeLivro {
     'capitulo': capitulo,
     'paragrafo': paragrafo,
     'nota': nota,
+    'em': em,
   };
 
-  DestaqueDeLivro comNota(String novaNota) => DestaqueDeLivro(
+  DestaqueDeLivro comNota(String novaNota, int novoEm) => DestaqueDeLivro(
     slug: slug,
     capitulo: capitulo,
     paragrafo: paragrafo,
     nota: novaNota,
+    em: novoEm,
   );
 }

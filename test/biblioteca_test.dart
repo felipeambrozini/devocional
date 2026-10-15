@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:felipe_ambrozini/dados/biblioteca.dart';
 import 'package:felipe_ambrozini/dados/config_admin.dart';
 import 'package:felipe_ambrozini/dados/estado.dart';
+import 'package:felipe_ambrozini/dados/leitura_de_livros.dart';
 import 'package:felipe_ambrozini/dados/modelos.dart';
 import 'package:felipe_ambrozini/dados/recursos.dart';
 import 'package:felipe_ambrozini/telas/biblioteca.dart';
@@ -142,19 +144,26 @@ void main() {
       },
     );
 
-    test('só a troca de capítulo avisa os ouvintes, não a rolagem', () async {
-      final estado = await abrirEstado();
-      var avisos = 0;
-      estado.addListener(() => avisos++);
+    test(
+      'só avisa os ouvintes quando o capítulo muda ou a rolagem anda um quarto',
+      () async {
+        final estado = await abrirEstado();
+        var avisos = 0;
+        estado.addListener(() => avisos++);
 
-      await estado.leituraDeLivros.registrarPosicao(slug, 1, 0);
-      expect(avisos, 1);
-      await estado.leituraDeLivros.registrarPosicao(slug, 1, 0.3);
-      await estado.leituraDeLivros.registrarPosicao(slug, 1, 0.6);
-      expect(avisos, 1);
-      await estado.leituraDeLivros.registrarPosicao(slug, 2, 0);
-      expect(avisos, 2);
-    });
+        await estado.leituraDeLivros.registrarPosicao(slug, 1, 0);
+        expect(avisos, 1);
+        await estado.leituraDeLivros.registrarPosicao(slug, 1, 0.1);
+        await estado.leituraDeLivros.registrarPosicao(slug, 1, 0.2);
+        expect(avisos, 1);
+        await estado.leituraDeLivros.registrarPosicao(slug, 1, 0.3);
+        expect(avisos, 2);
+        await estado.leituraDeLivros.registrarPosicao(slug, 1, 0.4);
+        expect(avisos, 2);
+        await estado.leituraDeLivros.registrarPosicao(slug, 2, 0);
+        expect(avisos, 3);
+      },
+    );
 
     test('a fração fica entre 0 e 1', () async {
       final estado = await abrirEstado();
@@ -203,6 +212,184 @@ void main() {
         );
       },
     );
+
+    group('sincronia com a conta', () {
+      /// Um segundo aparelho: outro armazenamento, vazio.
+      Future<Estado> outroAparelho() async {
+        SharedPreferences.setMockInitialValues({});
+        return abrirEstado();
+      }
+
+      test('a cópia fundida em outro aparelho traz a mesma leitura', () async {
+        final celular = await abrirEstado();
+        final leitura = celular.leituraDeLivros;
+        await leitura.registrarPosicao(slug, 4, 0.5);
+        await leitura.alternarLido(slug, 3);
+        await leitura.definirNota(slug, 3, 1, 'boa');
+        final copia = leitura.serializar();
+
+        final web = await outroAparelho();
+        await web.leituraDeLivros.fundir(copia);
+        expect(web.leituraDeLivros.posicaoDe(slug)!.capitulo, 4);
+        expect(web.leituraDeLivros.foiLido(slug, 3), isTrue);
+        expect(web.leituraDeLivros.destaquesDe(slug, 3)[1]!.nota, 'boa');
+        expect(web.leituraDeLivros.serializar(), copia);
+      });
+
+      test(
+        'na mesma volta os lidos se somam e vale a posição mais recente',
+        () async {
+          final celular = await abrirEstado();
+          await celular.leituraDeLivros.registrarPosicao(slug, 2, 0);
+          await celular.leituraDeLivros.alternarLido(slug, 1);
+          final copiaDoCelular = celular.leituraDeLivros.serializar();
+
+          final web = await outroAparelho();
+          await web.leituraDeLivros.alternarLido(slug, 2);
+          await web.leituraDeLivros.registrarPosicao(slug, 6, 0.2);
+          await web.leituraDeLivros.fundir(copiaDoCelular);
+          expect(web.leituraDeLivros.posicaoDe(slug)!.capitulo, 6);
+          expect(web.leituraDeLivros.quantosLidos(slug), 2);
+        },
+      );
+
+      test(
+        'terminar o livro em outro aparelho zera a leitura antiga daqui',
+        () async {
+          final web = await abrirEstado();
+          await web.leituraDeLivros.registrarPosicao(slug, 5, 0.5);
+          await web.leituraDeLivros.alternarLido(slug, 4);
+
+          final celular = await outroAparelho();
+          await celular.leituraDeLivros.registrarPosicao(slug, 19, 0);
+          await celular.leituraDeLivros.concluir(slug);
+
+          await web.leituraDeLivros.fundir(
+            celular.leituraDeLivros.serializar(),
+          );
+          expect(web.leituraDeLivros.posicaoDe(slug), isNull);
+          expect(web.leituraDeLivros.quantosLidos(slug), 0);
+          expect(web.leituraDeLivros.vezesConcluido(slug), 1);
+        },
+      );
+
+      test(
+        'uma cópia de uma volta anterior não desfaz o que já foi terminado',
+        () async {
+          final antigo = await abrirEstado();
+          await antigo.leituraDeLivros.registrarPosicao(slug, 3, 0);
+          final copiaAntiga = antigo.leituraDeLivros.serializar();
+
+          final atual = await outroAparelho();
+          await atual.leituraDeLivros.registrarPosicao(slug, 19, 0);
+          await atual.leituraDeLivros.concluir(slug);
+          await atual.leituraDeLivros.fundir(copiaAntiga);
+          expect(atual.leituraDeLivros.posicaoDe(slug), isNull);
+          expect(atual.leituraDeLivros.vezesConcluido(slug), 1);
+        },
+      );
+
+      test(
+        'no mesmo parágrafo vale o destaque mais novo, e os outros se somam',
+        () async {
+          final celular = await abrirEstado();
+          await celular.leituraDeLivros.definirNota(slug, 1, 0, 'primeira');
+          final copia = celular.leituraDeLivros.serializar();
+
+          final web = await outroAparelho();
+          await web.leituraDeLivros.alternarDestaque(slug, 2, 4);
+          await Future<void>.delayed(const Duration(milliseconds: 5));
+          await web.leituraDeLivros.definirNota(slug, 1, 0, 'segunda');
+          await web.leituraDeLivros.fundir(copia);
+          expect(web.leituraDeLivros.destaquesDe(slug, 1)[0]!.nota, 'segunda');
+          expect(web.leituraDeLivros.destaquesDe(slug, 2).keys, [4]);
+        },
+      );
+
+      test(
+        'da cópia só entra o que é confiável, e uma entrada torta não impede as outras',
+        () async {
+          final estado = await abrirEstado();
+          final copia = jsonEncode({
+            'versao': 1,
+            'livros': {
+              'livro_que_nao_existe': {
+                'concluidas': 1,
+                'lidos': [1],
+              },
+              slug: {'concluidas': 'torta'},
+              'alfabeto_de_ouro': {
+                'concluidas': 0,
+                'posicao': {'capitulo': 3, 'fracao': 0.2, 'em': 5},
+                'lidos': [-4, 2, 99999999],
+              },
+            },
+            'destaques': [
+              {
+                'slug': slug,
+                'capitulo': -1,
+                'paragrafo': 0,
+                'nota': 'x',
+                'em': 1,
+              },
+              {
+                'slug': slug,
+                'capitulo': 1,
+                'paragrafo': 0,
+                'nota': 'ok',
+                'em': 1,
+              },
+            ],
+          });
+          await estado.leituraDeLivros.fundir(copia);
+          final leitura = estado.leituraDeLivros;
+          expect(leitura.posicaoDe('livro_que_nao_existe'), isNull);
+          expect(leitura.posicaoDe('alfabeto_de_ouro')!.capitulo, 3);
+          expect(leitura.quantosLidos('alfabeto_de_ouro'), 1);
+          expect(leitura.todosOsDestaques.map((d) => d.nota), ['ok']);
+        },
+      );
+
+      test('um carimbo de tempo no futuro não ganha todas as fusões', () async {
+        final estado = await abrirEstado();
+        final futuro =
+            DateTime.now().millisecondsSinceEpoch + 10 * 24 * 3600 * 1000;
+        await estado.leituraDeLivros.fundir(
+          jsonEncode({
+            'versao': 1,
+            'livros': {
+              slug: {
+                'concluidas': 0,
+                'posicao': {'capitulo': 2, 'fracao': 0.5, 'em': futuro},
+                'lidos': <int>[],
+              },
+            },
+            'destaques': <Object>[],
+          }),
+        );
+        expect(
+          estado.leituraDeLivros.posicaoDe(slug)!.em,
+          lessThan(futuro),
+          reason: 'o carimbo é limitado a um dia à frente',
+        );
+      });
+
+      test('a nota é limitada, para não encher o documento da conta', () async {
+        final estado = await abrirEstado();
+        await estado.leituraDeLivros.definirNota(slug, 0, 0, 'a' * 3000);
+        expect(
+          estado.leituraDeLivros.destaquesDe(slug, 0)[0]!.nota.length,
+          LeituraDeLivros.tamanhoMaximoDaNota,
+        );
+      });
+
+      test('uma cópia estragada não derruba a leitura daqui', () async {
+        final estado = await abrirEstado();
+        await estado.leituraDeLivros.registrarPosicao(slug, 1, 0);
+        await estado.leituraDeLivros.fundir('isto não é json');
+        expect(estado.leituraDeLivros.posicaoDe(slug)!.capitulo, 1);
+      });
+    });
 
     test('destaque liga e desliga, e uma nota segura o destaque', () async {
       final estado = await abrirEstado();

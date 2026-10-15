@@ -260,10 +260,15 @@ para um livro volta para a estante.
   de Manhã e Noite e Promessas. Sem o arquivo, aparece uma capa tipográfica.
 - **O que o usuário guarda** (`lib/dados/leitura_de_livros.dart`, dentro do
   `Estado`): onde parou (capítulo e fração da rolagem, para o "continuar de
-  onde parei"), capítulos lidos e destaques com nota por parágrafo. Tudo local
-  no aparelho por enquanto: **ainda não sobe para a nuvem** (isso mexe no
-  contrato do documento `usuarios/{uid}` em `firestore.rules`, e entra numa
-  etapa própria, com revisão das regras).
+  onde parei"), capítulos lidos e destaques com nota por parágrafo. Fica no aparelho e, **com a conta Google, sobe para a nuvem**
+  (campo `livros` do documento `usuarios/{uid}`, com a regra em `firestore.rules`):
+  celular e web logados mostram o mesmo progresso. Por livro, a "volta" (quantas
+  vezes foi terminado) maior vence por inteiro; na mesma volta, os capítulos
+  lidos se somam e vale a posição mais recente; os destaques se somam e, no
+  mesmo parágrafo, vale a mudança mais nova. Tirar um destaque não sincroniza
+  (mesma limitação das marcações da Bíblia). O que vem da conta é conferido
+  (livro do catálogo, números em faixa, carimbo de tempo sem futuro) e a nota
+  tem no máximo 2.000 caracteres, por causa do teto de 1 MiB do documento.
 - **Fonte e tradução**: o texto em inglês vem do CCEL (domínio público) e a
   tradução é nossa; as edições em português existentes não são livres. Os
   versículos **não são traduzidos de novo**: toda citação da Escritura é

@@ -131,6 +131,14 @@ class Estado extends ChangeNotifier {
   /// continuarem ouvindo um único ChangeNotifier.
   late final LeituraDeLivros leituraDeLivros;
 
+  /// O que a conta guarda dos livros (campo `livros` do documento do usuário).
+  /// Repassa à [leituraDeLivros], como as conversas: a sincronia fala com o
+  /// Estado e continua ouvindo um único ChangeNotifier.
+  String serializarLeituraDeLivros() => leituraDeLivros.serializar();
+
+  Future<void> fundirLeituraDeLivros(String remota) =>
+      leituraDeLivros.fundir(remota);
+
   static Future<Estado> abrir() async =>
       Estado(await SharedPreferences.getInstance());
 

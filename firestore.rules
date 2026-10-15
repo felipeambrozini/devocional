@@ -15,6 +15,8 @@ rules_version = '2';
 //   lembretes   mapa — horários do lembrete, serializado à parte
 //   planos      mapa — planos do usuário (sem precisar compartilhar), com
 //               {planos: list, planos_lidos: map}
+//   livros      mapa — leitura dos livros da biblioteca, com {versao: int,
+//               livros: map, destaques: list}
 //   atualizadoEm timestamp do servidor, gravado em toda escrita
 // O documento pode nascer só com copia ou só com conversas (cada sincronia
 // escreve os próprios campos com merge), por isso os campos opcionais são
@@ -139,16 +141,29 @@ service cloud.firestore {
             p.planos_lidos is map && p.planos_lidos.size() < 5000;
       }
 
+      // Leitura dos livros da biblioteca (ver lib/dados/leitura_de_livros.dart):
+      // posição, capítulos lidos e leituras concluídas por livro, e os
+      // destaques com nota. Mapa e lista com teto, como os planos.
+      function livrosValidos() {
+        let l = request.resource.data.livros;
+        return l is map &&
+            l.keys().hasOnly(['versao', 'livros', 'destaques']) &&
+            l.versao is int &&
+            l.livros is map && l.livros.size() < 500 &&
+            l.destaques is list && l.destaques.size() < 5000;
+      }
+
       // Forma e tipo do documento, para um cliente torto não gravar lixo no
       // próprio documento nem inflar o projeto com campos fora do contrato.
       function valido() {
         let dados = request.resource.data;
-        let soOsCampos = dados.keys().hasOnly(['copia', 'conversas', 'lembretes', 'planos', 'atualizadoEm']);
+        let soOsCampos = dados.keys().hasOnly(['copia', 'conversas', 'lembretes', 'planos', 'livros', 'atualizadoEm']);
         let copiaOk = !('copia' in dados) || copiaValida();
         let conversasOk = !('conversas' in dados) || conversasValidas();
         let lembretesOk = !('lembretes' in dados) || lembretesValidos();
         let planosOk = !('planos' in dados) || planosValidos();
-        return soOsCampos && copiaOk && conversasOk && lembretesOk && planosOk &&
+        let livrosOk = !('livros' in dados) || livrosValidos();
+        return soOsCampos && copiaOk && conversasOk && lembretesOk && planosOk && livrosOk &&
             dados.atualizadoEm is timestamp;
       }
 
@@ -158,7 +173,7 @@ service cloud.firestore {
       allow create: if dono() && valido();
       allow update: if dono() && valido() &&
           request.resource.data.diff(resource.data).affectedKeys()
-              .hasOnly(['copia', 'conversas', 'lembretes', 'planos', 'atualizadoEm']);
+              .hasOnly(['copia', 'conversas', 'lembretes', 'planos', 'livros', 'atualizadoEm']);
       allow delete: if dono();
       allow read: if dono();
     }
