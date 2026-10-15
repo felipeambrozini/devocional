@@ -77,6 +77,12 @@ const obrasDaBiblioteca = [
     subtitulo: 'Para pais e mestres',
     capa: 'assets/imagens/capa_pescadores_de_criancas.webp',
   ),
+  ObraDaBiblioteca(
+    slug: 'o_santo_e_o_seu_salvador',
+    titulo: 'O Santo e o Seu Salvador',
+    subtitulo: 'O progresso da alma no conhecimento de Jesus',
+    capa: 'assets/imagens/capa_o_santo_e_o_seu_salvador.webp',
+  ),
 ];
 
 ObraDaBiblioteca? obraPorSlug(String slug) {
