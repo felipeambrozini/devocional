@@ -65,6 +65,12 @@ const obrasDaBiblioteca = [
     subtitulo: 'Uma exposição popular do Evangelho de Mateus',
     capa: 'assets/imagens/capa_o_evangelho_do_reino.webp',
   ),
+  ObraDaBiblioteca(
+    slug: 'licoes_aos_meus_alunos',
+    titulo: 'Lições aos Meus Alunos',
+    subtitulo: 'Para ministros e pregadores',
+    capa: 'assets/imagens/capa_licoes_aos_meus_alunos.webp',
+  ),
 ];
 
 ObraDaBiblioteca? obraPorSlug(String slug) {

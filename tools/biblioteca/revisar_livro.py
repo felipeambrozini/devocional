@@ -103,15 +103,15 @@ def revisar(slug: str) -> None:
     print(f"estrutura: {len(original) - len(com_problema)}/{len(original)} OK"
           + (f"; com problema: {com_problema}" if com_problema else ""))
     print(f"citacoes entre aspas na BKJ sem registro: {len(sem_registro)}")
-    for linha in sem_registro[:8]:
+    for linha in sem_registro[:200]:
         print("  ", linha)
     print(f"parecem versiculo mas nao sao literais da BKJ: {len(suspeitas)}")
-    for linha in suspeitas[:30]:
+    for linha in suspeitas[:200]:
         print("  ", linha)
-    print(f"paragrafos encurtados (<80%): {len(encurtados)}", encurtados[:8])
-    print(f"frases perdidas: {len(frases_perdidas)}", frases_perdidas[:8])
-    print(f"ingles solto: {len(ingles_solto)}", ingles_solto[:8])
-    print(f"portugues de Portugal fora de aspas: {len(portugal)}", portugal[:8], f"| voce: {vocesx}")
+    print(f"paragrafos encurtados (<80%): {len(encurtados)}", encurtados)
+    print(f"frases perdidas: {len(frases_perdidas)}", frases_perdidas)
+    print(f"ingles solto: {len(ingles_solto)}", ingles_solto)
+    print(f"portugues de Portugal fora de aspas: {len(portugal)}", portugal, f"| voce: {vocesx}")
 
 
 if __name__ == "__main__":
