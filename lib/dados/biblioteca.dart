@@ -53,6 +53,12 @@ const obrasDaBiblioteca = [
     subtitulo: 'O modo do Senhor tratar o seu povo escolhido',
     capa: 'assets/imagens/capa_segundo_a_promessa.webp',
   ),
+  ObraDaBiblioteca(
+    slug: 'o_maior_combate_do_mundo',
+    titulo: 'O Maior Combate do Mundo',
+    subtitulo: 'A última conferência de Spurgeon aos pastores',
+    capa: 'assets/imagens/capa_o_maior_combate_do_mundo.webp',
+  ),
 ];
 
 ObraDaBiblioteca? obraPorSlug(String slug) {
