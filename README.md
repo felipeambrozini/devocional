@@ -180,7 +180,7 @@ fora do repo em `C:\Users\USER\audio_gen_*` e não é versionado aqui.
 | Manhã e Noite | 366 dias, todos com manhã e noite (732 entradas) |
 | Promessas de Deus | 366 de 366 traduzidos |
 | Cronograma anual | 365 dias (366 em ano bissexto), 449 faixas |
-| Biblioteca | *Somente pela Graça*: 20 seções, 34 mil palavras, auditado por inteiro |
+| Biblioteca | 9 livros de Spurgeon traduzidos e revisados: *Somente pela Graça*, *Alfabeto de Ouro*, *O Ganhador de Almas*, *Ao Redor do Portão Estreito*, *Conversas* e *Retratos de João Lavrador*, *Segundo a Promessa*, *O Maior Combate do Mundo* e *O Evangelho do Reino* |
 | 66 introduções | Completas, revisadas em fatos e linguagem; a frase final de cada uma conferida no original |
 | Comentários por versículo | 31.102, um por versículo, escritos e validados livro a livro |
 
@@ -284,7 +284,13 @@ para um livro volta para a estante.
   4. `auditar_livro.py <slug>` roda tudo no livro e acusa citação sem
      registro, trecho entre aspas fora da BKJ, frases perdidas e suspeitas de
      português de Portugal.
-  5. `livro.py --montar <slug>` valida e grava `assets/livros/<slug>.json`.
+  5. `revisar_livro.py <slug>` resume a revisão para ler de uma vez (razão de
+     tamanho, citações sem registro, trechos que parecem versículo mas não são
+     literais da BKJ, parágrafos encurtados, inglês solto, português de Portugal).
+     `checar_en.py <slug>` confere o inglês extraído antes de traduzir. A
+     omissão de frases é o erro mais comum do tradutor: parágrafo com muito menos
+     palavras ou frases que o original se refaz por inteiro.
+  6. `livro.py --montar <slug>` valida e grava `assets/livros/<slug>.json`.
 
 ## Decisões que não devem ser refeitas
 
