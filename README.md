@@ -180,7 +180,7 @@ fora do repo em `C:\Users\USER\audio_gen_*` e não é versionado aqui.
 | Manhã e Noite | 366 dias, todos com manhã e noite (732 entradas) |
 | Promessas de Deus | 366 de 366 traduzidos |
 | Cronograma anual | 365 dias (366 em ano bissexto), 449 faixas |
-| Biblioteca | 10 livros de Spurgeon traduzidos e revisados: *Somente pela Graça*, *Alfabeto de Ouro*, *O Ganhador de Almas*, *Ao Redor do Portão Estreito*, *Conversas* e *Retratos de João Lavrador*, *Segundo a Promessa*, *O Maior Combate do Mundo*, *O Evangelho do Reino* e *Lições aos Meus Alunos* |
+| Biblioteca | 11 livros de Spurgeon traduzidos e revisados: *Somente pela Graça*, *Alfabeto de Ouro*, *O Ganhador de Almas*, *Ao Redor do Portão Estreito*, *Conversas* e *Retratos de João Lavrador*, *Segundo a Promessa*, *O Maior Combate do Mundo*, *O Evangelho do Reino*, *Lições aos Meus Alunos* e *Pescadores de Crianças* |
 | 66 introduções | Completas, revisadas em fatos e linguagem; a frase final de cada uma conferida no original |
 | Comentários por versículo | 31.102, um por versículo, escritos e validados livro a livro |
 

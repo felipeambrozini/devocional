@@ -80,7 +80,7 @@ void main() {
           'retratos_de_joao_lavrador': 39,
           'segundo_a_promessa': 20,
           'o_maior_combate_do_mundo': 4,
-          'o_evangelho_do_reino': 28, 'licoes_aos_meus_alunos': 31};
+          'o_evangelho_do_reino': 28, 'licoes_aos_meus_alunos': 31, 'pescadores_de_criancas': 23};
         final proibidos = RegExp('[—–‘’“”]');
         for (final obra in obrasDaBiblioteca) {
           final livro = (await Biblioteca.instancia.capitulos(obra.slug))!;
