@@ -80,6 +80,7 @@ void main() {
           'retratos_de_joao_lavrador': 39,
           'segundo_a_promessa': 20,
           'o_maior_combate_do_mundo': 4,
+          'o_evangelho_do_reino': 28,
         };
         final proibidos = RegExp('[—–‘’“”]');
         for (final obra in obrasDaBiblioteca) {
