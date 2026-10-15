@@ -95,7 +95,7 @@ class _CapituloAbertoState extends State<_CapituloAberto> {
 
   CapituloDoLivro get _capitulo => widget.capitulos[widget.indice];
   String get _slug => widget.obra.slug;
-  bool get _temProximo => widget.indice < widget.capitulos.length - 1;
+  bool get _ehUltimo => widget.indice == widget.capitulos.length - 1;
 
   @override
   void initState() {
@@ -121,11 +121,39 @@ class _CapituloAbertoState extends State<_CapituloAberto> {
   void _irPara(int indice) =>
       context.pushReplacement('/biblioteca/$_slug/${indice + 1}');
 
-  /// Passa [passo] capítulos (1 ou -1); nos extremos do livro não faz nada.
+  /// Passa [passo] capítulos (1 ou -1). Antes do primeiro não faz nada; depois
+  /// do último, termina a leitura (ver [_terminarLeitura]).
   void _passar(int passo) {
     final destino = widget.indice + passo;
-    if (destino < 0 || destino >= widget.capitulos.length) return;
+    if (destino < 0) return;
+    if (destino >= widget.capitulos.length) {
+      _terminarLeitura();
+      return;
+    }
     _irPara(destino);
+  }
+
+  /// Do último capítulo para a frente: termina o livro e recomeça do início.
+  /// Pede confirmação porque zera o progresso, e um deslize acidental não pode
+  /// custar os capítulos marcados.
+  Future<void> _terminarLeitura() async {
+    final confirmou = await confirmar(
+      context,
+      titulo: 'Terminar a leitura?',
+      conteudo:
+          '${widget.obra.titulo} será dado como lido e a leitura recomeça do '
+          'primeiro capítulo. Seus destaques e notas continuam guardados.',
+      rotuloDaAcao: 'Terminar',
+    );
+    if (!confirmou || !mounted) return;
+    final mensageiro = ScaffoldMessenger.of(context);
+    final roteador = GoRouter.of(context);
+    await widget.estado.leituraDeLivros.concluir(_slug);
+    roteador.pushReplacement('/biblioteca/$_slug/1');
+    mostrarAvisoNo(
+      mensageiro,
+      'Você terminou ${widget.obra.titulo}. A leitura recomeçou do início.',
+    );
   }
 
   /// Arrastar na horizontal passa de capítulo, com as regras da Bíblia: o
@@ -139,7 +167,11 @@ class _CapituloAbertoState extends State<_CapituloAberto> {
     if (horizontal.abs() < 250) return;
     if (vertical.abs() * 2.5 > horizontal.abs()) return;
     final destino = widget.indice + (horizontal < 0 ? 1 : -1);
-    if (destino < 0 || destino >= widget.capitulos.length) return;
+    if (destino < 0) return;
+    if (destino >= widget.capitulos.length) {
+      _terminarLeitura();
+      return;
+    }
 
     final estado = widget.estado;
     if (!estado.swipeTooltipDispensado) estado.dispensarSwipeTooltip();
@@ -306,6 +338,19 @@ class _CapituloAbertoState extends State<_CapituloAberto> {
                               ),
                             ),
                             const SizedBox(height: DevocionalEspacamento.sp16),
+                            if (_ehUltimo) ...[
+                              Center(
+                                child: DevocionalBotaoPrimario.icon(
+                                  onPressed: _terminarLeitura,
+                                  icon: const FaIcon(
+                                    FontAwesomeIcons.flagCheckered,
+                                    size: 16,
+                                  ),
+                                  label: const Text('Terminar a leitura'),
+                                ),
+                              ),
+                              const SizedBox(height: DevocionalEspacamento.sp8),
+                            ],
                             Center(
                               child: DevocionalBotaoTerciario.icon(
                                 onPressed: () =>
@@ -341,7 +386,7 @@ class _CapituloAbertoState extends State<_CapituloAberto> {
         bottomNavigationBar: kIsWeb && estado.setasDoRodape
             ? DevocionalBarraDeCapitulo(
                 podeVoltar: widget.indice > 0,
-                podeAvancar: _temProximo,
+                podeAvancar: true,
                 aoVoltar: () => _passar(-1),
                 aoAvancar: () => _passar(1),
               )

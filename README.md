@@ -250,6 +250,10 @@ para um livro volta para a estante.
   "Setas para virar o capítulo" dos ajustes está ligada. Na web o texto não é
   selecionável (a seleção por arrasto brigaria com o gesto), e "Copiar" fica na
   folha do parágrafo.
+- **Terminar a leitura**: no último capítulo, avançar (gesto, seta ou o botão
+  "Terminar a leitura") pede confirmação, dá o livro como lido e recomeça do
+  primeiro capítulo, com a posição e os capítulos lidos zerados; destaques e
+  notas ficam. O livro sai de "Seus livros" na Hoje até a leitura recomeçar.
 - **Asset**: `assets/livros/<slug>.json`, `{slug, capitulos: [{titulo,
   paragrafos: []}]}`. Carregado sob demanda, um livro por vez.
 - **Capa**: `assets/imagens/capa_<slug>.webp`, 225x300, na linha das capas

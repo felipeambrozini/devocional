@@ -177,6 +177,33 @@ void main() {
       expect(reaberto.leituraDeLivros.quantosLidos(slug), 1);
     });
 
+    test(
+      'concluir zera a leitura do livro e guarda destaques e notas',
+      () async {
+        final estado = await abrirEstado();
+        final leitura = estado.leituraDeLivros;
+        await leitura.registrarPosicao('alfabeto_de_ouro', 0, 0);
+        await leitura.registrarPosicao(slug, 19, 0.9);
+        await leitura.alternarLido(slug, 19);
+        await leitura.definirNota(slug, 19, 0, 'minha nota');
+
+        await leitura.concluir(slug);
+        expect(leitura.posicaoDe(slug), isNull);
+        expect(leitura.quantosLidos(slug), 0);
+        expect(leitura.livrosEmLeitura, ['alfabeto_de_ouro']);
+        expect(leitura.destaquesDe(slug, 19)[0]!.nota, 'minha nota');
+
+        final reaberto = await abrirEstado();
+        expect(reaberto.leituraDeLivros.posicaoDe(slug), isNull);
+        expect(reaberto.leituraDeLivros.quantosLidos(slug), 0);
+        expect(reaberto.leituraDeLivros.livrosEmLeitura, ['alfabeto_de_ouro']);
+        expect(
+          reaberto.leituraDeLivros.destaquesDe(slug, 19)[0]!.nota,
+          'minha nota',
+        );
+      },
+    );
+
     test('destaque liga e desliga, e uma nota segura o destaque', () async {
       final estado = await abrirEstado();
       final leitura = estado.leituraDeLivros;
@@ -320,6 +347,33 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Capítulo 1 de 20'), findsOneWidget);
+    });
+
+    testWidgets('do último capítulo, avançar termina a leitura e recomeça', (
+      tester,
+    ) async {
+      final estado = await abrir(tester, '/biblioteca/$slug/20');
+      await estado.leituraDeLivros.alternarLido(slug, 19);
+      expect(find.text('Terminar a leitura'), findsOneWidget);
+
+      // Cancelar não muda nada.
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+      expect(find.text('Terminar a leitura?'), findsOneWidget);
+      await tester.tap(find.text('Cancelar'));
+      await tester.pumpAndSettle();
+      expect(find.text('Capítulo 20 de 20'), findsOneWidget);
+      expect(estado.leituraDeLivros.foiLido(slug, 19), isTrue);
+
+      // Confirmar termina e volta ao primeiro capítulo, com o progresso zerado.
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Terminar'));
+      await tester.pumpAndSettle();
+      expect(find.text('Capítulo 1 de 20'), findsOneWidget);
+      expect(find.textContaining('Você terminou'), findsOneWidget);
+      expect(estado.leituraDeLivros.quantosLidos(slug), 0);
+      await tester.pump(const Duration(seconds: 6));
     });
 
     testWidgets('capítulo fora da faixa avisa em vez de quebrar', (

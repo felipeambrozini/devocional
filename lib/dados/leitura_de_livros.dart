@@ -107,12 +107,7 @@ class LeituraDeLivros {
     if (mudouDeLivro) {
       await _prefs.setString(_kRecentes, json.encode(_recentes));
     }
-    await _prefs.setString(
-      _kPosicoes,
-      json.encode({
-        for (final e in _posicoes.entries) e.key: e.value.paraJson(),
-      }),
-    );
+    await _gravarPosicoes();
   }
 
   // --- capítulos lidos ------------------------------------------------------ //
@@ -126,13 +121,36 @@ class LeituraDeLivros {
     final lidos = _lidos[slug] ??= {};
     if (!lidos.remove(capitulo)) lidos.add(capitulo);
     _aoMudar();
-    await _prefs.setString(
-      _kLidos,
-      json.encode({
-        for (final e in _lidos.entries) e.key: e.value.toList()..sort(),
-      }),
-    );
+    await _gravarLidos();
   }
+
+  /// Termina a leitura do livro e a recomeça: o livro sai de "em leitura", a
+  /// posição e os capítulos lidos voltam ao zero. Destaques e notas ficam: são
+  /// trabalho do usuário, e valem também na próxima leitura.
+  Future<void> concluir(String slug) async {
+    _posicoes.remove(slug);
+    _lidos.remove(slug);
+    _recentes = [
+      for (final s in _recentes)
+        if (s != slug) s,
+    ];
+    _aoMudar();
+    await _gravarPosicoes();
+    await _gravarLidos();
+    await _prefs.setString(_kRecentes, json.encode(_recentes));
+  }
+
+  Future<void> _gravarPosicoes() => _prefs.setString(
+    _kPosicoes,
+    json.encode({for (final e in _posicoes.entries) e.key: e.value.paraJson()}),
+  );
+
+  Future<void> _gravarLidos() => _prefs.setString(
+    _kLidos,
+    json.encode({
+      for (final e in _lidos.entries) e.key: e.value.toList()..sort(),
+    }),
+  );
 
   // --- destaques e notas ---------------------------------------------------- //
 
