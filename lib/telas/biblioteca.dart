@@ -31,20 +31,23 @@ class TelaBiblioteca extends StatelessWidget {
                 detalhe: 'A Biblioteca está desativada temporariamente.',
               )
             : DevocionalLarguraDeLeitura(
-                child: ListView(
+                child: ListView.separated(
                   padding: const EdgeInsets.fromLTRB(
                     DevocionalEspacamento.sp16,
                     DevocionalEspacamento.sp8,
                     DevocionalEspacamento.sp16,
                     DevocionalEspacamento.sp32,
                   ),
-                  children: [
-                    for (final obra in obrasDaBiblioteca)
-                      DevocionalCartaoDaObra(
-                        obra: obra,
-                        aoAbrir: () => context.push('/biblioteca/${obra.slug}'),
-                      ),
-                  ],
+                  itemCount: obrasDaBiblioteca.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(height: DevocionalEspacamento.sp12),
+                  itemBuilder: (context, indice) {
+                    final obra = obrasDaBiblioteca[indice];
+                    return DevocionalCartaoDaObra(
+                      obra: obra,
+                      aoAbrir: () => context.push('/biblioteca/${obra.slug}'),
+                    );
+                  },
                 ),
               ),
       ),

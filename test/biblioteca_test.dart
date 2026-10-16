@@ -7,6 +7,7 @@ import 'package:felipe_ambrozini/dados/estado.dart';
 import 'package:felipe_ambrozini/dados/leitura_de_livros.dart';
 import 'package:felipe_ambrozini/dados/modelos.dart';
 import 'package:felipe_ambrozini/dados/recursos.dart';
+import 'package:felipe_ambrozini/estilo/espacamento.dart';
 import 'package:felipe_ambrozini/telas/biblioteca.dart';
 import 'package:felipe_ambrozini/telas/leitor_de_livro.dart';
 import 'package:felipe_ambrozini/telas/livro.dart';
@@ -80,7 +81,11 @@ void main() {
           'retratos_de_joao_lavrador': 39,
           'segundo_a_promessa': 20,
           'o_maior_combate_do_mundo': 4,
-          'o_evangelho_do_reino': 28, 'licoes_aos_meus_alunos': 31, 'pescadores_de_criancas': 23, 'o_santo_e_o_seu_salvador': 13};
+          'o_evangelho_do_reino': 28,
+          'licoes_aos_meus_alunos': 31,
+          'pescadores_de_criancas': 23,
+          'o_santo_e_o_seu_salvador': 13,
+        };
         final proibidos = RegExp('[—–‘’“”]');
         for (final obra in obrasDaBiblioteca) {
           final livro = (await Biblioteca.instancia.capitulos(obra.slug))!;
@@ -487,6 +492,19 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Começar a ler'), findsOneWidget);
       expect(find.text(capitulos.first.titulo), findsOneWidget);
+    });
+
+    testWidgets('os cartões da estante têm espaço entre si', (tester) async {
+      await abrir(tester, '/biblioteca');
+      final cartoes = find.byType(DevocionalCartaoDaObra);
+      expect(cartoes, findsAtLeastNWidgets(2));
+
+      final primeiro = tester.getRect(cartoes.at(0));
+      final segundo = tester.getRect(cartoes.at(1));
+      expect(
+        segundo.top - primeiro.bottom,
+        greaterThanOrEqualTo(DevocionalEspacamento.sp12),
+      );
     });
 
     testWidgets('o leitor mostra o capítulo e troca pelas setas do teclado', (
