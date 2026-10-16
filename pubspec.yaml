@@ -41,7 +41,7 @@ dependencies:
   # transitiva dos plugins web; direta para o código poder importar.
   web: ^1.1.1
   # Detecta o fuso do aparelho e arma os alarmes na hora certa nele.
-  flutter_timezone: ^5.1.0
+  flutter_timezone: ^5.1.1
   # Abre o link do canal (YouTube, Instagram) na tela Sobre no navegador do
   # sistema. Mesma família de pacotes do share_plus: mantido pela equipe do
   # Flutter, funciona igual em todas as plataformas sem ramificação.
