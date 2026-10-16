@@ -593,6 +593,32 @@ void main() {
       await tester.pump(const Duration(seconds: 6));
     });
 
+    testWidgets(
+      'terminar o livro rolando o capítulo sobrevive a fechar o app',
+      (tester) async {
+        final estado = await abrir(tester, '/biblioteca/$slug/20');
+        await estado.leituraDeLivros.alternarLido(slug, 18);
+
+        // Lê até o fim: cada pausa da rolagem grava a posição do capítulo.
+        await tester.scrollUntilVisible(find.text('Terminar a leitura'), 500);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Terminar a leitura'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Terminar'));
+        await tester.pumpAndSettle();
+        await tester.pump(const Duration(seconds: 6));
+
+        // "Fechar e abrir o app": lê do disco de novo, sem passar pela memória.
+        final reaberta = LeituraDeLivros.ler(
+          await SharedPreferences.getInstance(),
+          () {},
+        );
+        expect(reaberta.posicaoDe(slug), isNull);
+        expect(reaberta.quantosLidos(slug), 0);
+        expect(reaberta.vezesConcluido(slug), 1);
+      },
+    );
+
     testWidgets('capítulo fora da faixa avisa em vez de quebrar', (
       tester,
     ) async {
