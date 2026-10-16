@@ -21,10 +21,19 @@ class LeitorDeLivroControlador {
 
   final rolagem = ScrollController();
 
+  bool _encerrado = false;
+
+  /// Depois de terminar o livro este capítulo ainda existe por alguns quadros
+  /// (a transição de tela), e uma rolagem que acabe nesse intervalo refaria a
+  /// posição que `concluir` acabou de apagar. Encerrado, o controlador para de
+  /// escrever.
+  void encerrar() => _encerrado = true;
+
   /// Chamar depois do primeiro desenho: só então o texto tem altura. Volta ao
   /// ponto em que o capítulo foi deixado, e marca o capítulo como o atual do
   /// livro (é o que o "continuar" da estante lê).
   void iniciar() {
+    if (_encerrado) return;
     final posicao = estado.leituraDeLivros.posicaoDe(slug);
     if (posicao?.capitulo == capitulo) {
       _rolarPara(posicao!.fracao);
@@ -35,6 +44,7 @@ class LeitorDeLivroControlador {
 
   /// Guarda quanto do capítulo já foi rolado. Chamar quando a rolagem para.
   void guardarPosicao() {
+    if (_encerrado) return;
     estado.leituraDeLivros.registrarPosicao(slug, capitulo, _fracaoAtual);
   }
 

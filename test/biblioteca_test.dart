@@ -576,14 +576,20 @@ void main() {
       expect(find.text('Capítulo 20 de 20'), findsOneWidget);
       expect(estado.leituraDeLivros.foiLido(slug, 19), isTrue);
 
-      // Confirmar termina e volta ao primeiro capítulo, com o progresso zerado.
+      // Confirmar termina, volta à estante e deixa o livro fora de "em
+      // leitura": o capítulo 1 só abre, e grava a posição, quando o usuário
+      // abrir o livro de novo.
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
       await tester.pumpAndSettle();
       await tester.tap(find.text('Terminar'));
       await tester.pumpAndSettle();
-      expect(find.text('Capítulo 1 de 20'), findsOneWidget);
+      expect(find.byType(TelaBiblioteca), findsOneWidget);
+      expect(find.textContaining('Capítulo 1 de 20'), findsNothing);
       expect(find.textContaining('Você terminou'), findsOneWidget);
       expect(estado.leituraDeLivros.quantosLidos(slug), 0);
+      expect(estado.leituraDeLivros.posicaoDe(slug), isNull);
+      expect(estado.leituraDeLivros.livrosEmLeitura, isNot(contains(slug)));
+      expect(estado.leituraDeLivros.vezesConcluido(slug), 1);
       await tester.pump(const Duration(seconds: 6));
     });
 

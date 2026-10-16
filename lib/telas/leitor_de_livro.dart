@@ -133,9 +133,11 @@ class _CapituloAbertoState extends State<_CapituloAberto> {
     _irPara(destino);
   }
 
-  /// Do último capítulo para a frente: termina o livro e recomeça do início.
-  /// Pede confirmação porque zera o progresso, e um deslize acidental não pode
-  /// custar os capítulos marcados.
+  /// Do último capítulo para a frente: termina o livro, zera a leitura e volta
+  /// à estante. Abrir o capítulo 1 aqui marcaria o livro como "em leitura" de
+  /// novo (é o `iniciar` do capítulo que grava a posição), desfazendo o
+  /// recomeço. Pede confirmação porque zera o progresso, e um deslize
+  /// acidental não pode custar os capítulos marcados.
   Future<void> _terminarLeitura() async {
     final confirmou = await confirmar(
       context,
@@ -148,11 +150,13 @@ class _CapituloAbertoState extends State<_CapituloAberto> {
     if (!confirmou || !mounted) return;
     final mensageiro = ScaffoldMessenger.of(context);
     final roteador = GoRouter.of(context);
+    _controlador.encerrar();
     await widget.estado.leituraDeLivros.concluir(_slug);
-    roteador.pushReplacement('/biblioteca/$_slug/1');
+    roteador.go('/biblioteca');
     mostrarAvisoNo(
       mensageiro,
-      'Você terminou ${widget.obra.titulo}. A leitura recomeçou do início.',
+      'Você terminou ${widget.obra.titulo}. Ao abrir o livro de novo, a '
+      'leitura recomeça do primeiro capítulo.',
     );
   }
 
