@@ -169,10 +169,10 @@ test/          testes de unidade e de widget
 ## Conteúdo
 
 Todo o conteúdo bíblico e devocional já está carregado e verificado, inclusive
-os comentários de Spurgeon por versículo. A geração de áudio e os scripts de validação moram em `tools/`
-(`icones.py`, `validar_comentarios.py`, `detectar_molde.py`,
-`validar_audio.py`) — o pacote histórico `audio_gen/` (geração de TTS) ficou
-fora do repo em `C:\Users\USER\audio_gen_*` e não é versionado aqui.
+os comentários de Spurgeon por versículo. Os scripts de apoio moram em `tools/` (`icones.py`,
+`validar_comentarios.py`, `detectar_molde.py`). A geração de áudio (TTS) e a
+validação dos MP3 com Whisper ficam fora do repo, em `C:\Users\USER\audio_gen`,
+e não são versionadas aqui.
 
 | Conteúdo | Situação |
 |---|---|
@@ -291,6 +291,9 @@ para um livro volta para a estante.
      omissão de frases é o erro mais comum do tradutor: parágrafo com muito menos
      palavras ou frases que o original se refaz por inteiro.
   6. `livro.py --montar <slug>` valida e grava `assets/livros/<slug>.json`.
+  Os JSON de trabalho (`<slug>_en.json` e `<slug>_pt/`) só existem enquanto o livro
+  está sendo traduzido: depois do `--montar`, o que vale é o asset, e eles saem do
+  repositório (ficam no histórico do Git).
 
 ## Decisões que não devem ser refeitas
 
