@@ -63,6 +63,26 @@ void main() {
     });
   });
 
+  group('sincronia com a conta', () {
+    test(
+      'o envio de cada campo substitui o campo inteiro, sem mesclar mapas',
+      () {
+        // `merge: true` mescla mapas por dentro: uma chave que a cópia nova
+        // deixou de ter continua na nuvem. Terminar um livro tira a `posicao`
+        // da cópia, e com a mescla ela ficava lá e voltava ao abrir o app.
+        final nuvem = fontes.firstWhere(
+          (arquivo) => arquivo.caminho == 'lib/dados/nuvem.dart',
+        );
+        final codigo = _codigoPorLinha(
+          nuvem.fonte,
+        ).map((linha) => linha.texto).join('\n');
+
+        expect(codigo, isNot(contains('merge: true')));
+        expect(codigo, contains('mergeFields: [campo'));
+      },
+    );
+  });
+
   group('Regra dos Papéis', () {
     test('nenhuma tela nem widget lê a paleta direto', () {
       final achados = <String>[];

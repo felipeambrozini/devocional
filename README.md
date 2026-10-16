@@ -277,6 +277,12 @@ para um livro volta para a estante.
   (mesma limitação das marcações da Bíblia). O que vem da conta é conferido
   (livro do catálogo, números em faixa, carimbo de tempo sem futuro) e a nota
   tem no máximo 2.000 caracteres, por causa do teto de 1 MiB do documento.
+  O envio de cada campo (`_empurrarCampo` em `lib/dados/nuvem.dart`) usa
+  `SetOptions(mergeFields: [...])` e não `merge: true`: a mescla do Firestore
+  une os mapas por dentro, e a `posicao` que "Terminar a leitura" tira da cópia
+  continuava na nuvem e trazia o livro de volta ao abrir o app. Quem já tinha
+  terminado um livro antes dessa correção ainda tem a posição velha na conta;
+  terminar o livro de novo a apaga.
 - **Fonte e tradução**: o texto em inglês vem do CCEL (domínio público) e a
   tradução é nossa; as edições em português existentes não são livres. Os
   versículos **não são traduzidos de novo**: toda citação da Escritura é

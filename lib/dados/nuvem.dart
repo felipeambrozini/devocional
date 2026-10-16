@@ -561,13 +561,21 @@ class Nuvem extends ChangeNotifier {
   }
 
   Future<void> _empurrarCampo(String uid, String campo, String copiaJson) =>
-      FirebaseFirestore.instance.collection(_colecao).doc(uid).set({
-        campo: json.decode(copiaJson),
-        'atualizadoEm': FieldValue.serverTimestamp(),
-        // Sem merge os domínios se apagariam uns aos outros: a cópia, as
-        // conversas, os lembretes e os planos escrevem no mesmo documento,
-        // e o `set` sem opções substituiria o documento inteiro.
-      }, SetOptions(merge: true));
+      FirebaseFirestore.instance.collection(_colecao).doc(uid).set(
+        {
+          campo: json.decode(copiaJson),
+          'atualizadoEm': FieldValue.serverTimestamp(),
+        },
+        // `mergeFields`, e não `merge: true`: o documento é compartilhado
+        // pelos domínios (cópia, conversas, lembretes, planos e livros), então
+        // o `set` sem opções apagaria os outros; mas `merge: true` também
+        // mescla os mapas POR DENTRO, e uma chave que a cópia nova deixou de
+        // ter continuava na nuvem. Foi o "Terminar a leitura": a cópia sem
+        // `posicao` não apagava a `posicao` antiga, e o livro reaparecia na
+        // posição do último capítulo ao abrir o app. Com `mergeFields` cada
+        // campo da lista é substituído por inteiro, e os demais ficam.
+        SetOptions(mergeFields: [campo, 'atualizadoEm']),
+      );
 
   /// Chamar como tearoff no `onTap`, nunca dentro de `() async { ... }`: o
   /// navegador só deixa abrir a janela de login dentro do gesto do usuário, e
