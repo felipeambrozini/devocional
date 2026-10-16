@@ -506,19 +506,26 @@ motivo novo.
   a suíte antes de comitar.
 - **`AreaDeSelecaoComCompartilhar` (`lib/widgets/area_de_selecao.dart`, 20/08/2026)
   envolve `SelectionArea` e acrescenta "Compartilhar" ao menu de seleção**,
-  usada no Devocional e, na web, no corpo aberto do cartão de introdução do
-  livro: o texto vira selecionável e copiável
+  usada no Devocional e no corpo aberto do cartão de introdução do
+  livro dentro do leitor da Bíblia: o texto vira selecionável e copiável
   de fábrica, e o mesmo clique forte que abre a seleção nativa ganha um botão
   a mais para compartilhar o trecho escolhido (via `share_plus`, sem
   formatação de referência — a seleção pode não bater com um parágrafo
   inteiro). `SelectableRegionState` não expõe o texto selecionado
   publicamente; o widget captura pelo `onSelectionChanged` do `SelectionArea`
-  e lê o valor mais recente ao montar o menu. **O leitor da Bíblia no toque
-  não usa esse
-  widget** — ali o `SelectionArea` continua puro (só seleção e cópia
-  nativas; o cartão de introdução herda a área do leitor), e Compartilhar continua exclusivo da folha de ações do versículo
-  (Favoritar, Copiar, Compartilhar, Anotar; ver abaixo), aberta pelo toque na
-  linha.
+  e lê o valor mais recente ao montar o menu. **O texto dos versículos no
+  leitor da Bíblia não é selecionável**: ali o toque longo seleciona versículos
+  (abaixo), e a seleção de palavras brigaria com ele. Compartilhar um
+  versículo vive na folha de ações (Favoritar, Copiar, Compartilhar, Anotar),
+  aberta pelo toque na linha, e na barra da seleção.
+- **Selecionar vários versículos do capítulo** (`BibliaControlador.selecionados`,
+  `_BarraDaSelecao` em `lib/telas/biblia.dart`): toque longo num versículo
+  entra no modo de seleção, e nele o toque simples marca ou desmarca. A barra
+  de baixo mostra a contagem e oferece Copiar e Compartilhar (cartão-imagem,
+  como o de um versículo). A referência junta os vizinhos em faixa
+  ("João 3:16-18, 20", `referenciaDeVersiculos` em `lib/dados/canon.dart`), o
+  texto sai na ordem do capítulo e o link aponta para o primeiro marcado.
+  "Voltar", o X da barra e a troca de capítulo saem do modo.
 - **O cartão do Devocional tem um botão de Compartilhar próprio** (`_CartaoDeLeitura`
   em `lib/telas/devocional.dart`, 31/08/2026), ao lado do `BotaoDeVoz`: manda
   título, citação (`textoDeCitacao`, extraído de `lib/funcoes/citacao.dart`

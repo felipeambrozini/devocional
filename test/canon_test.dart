@@ -59,8 +59,10 @@ void main() {
       for (final livro in canon) {
         final titulo = tituloDaIntroducao(livro);
         expect(titulo, startsWith('Introdução '), reason: livro.slug);
-        expect(titulo.substring('Introdução '.length),
-            matches(RegExp(r'^[àa]')));
+        expect(
+          titulo.substring('Introdução '.length),
+          matches(RegExp(r'^[àa]')),
+        );
         expect(titulo.contains(':'), isFalse, reason: livro.slug);
       }
     });
@@ -164,6 +166,16 @@ void main() {
       expect(alvoDoLink('joao.3.16.extra'), isNull);
     });
 
+    test('referencia de varios versiculos junta os vizinhos em faixa', () {
+      expect(referenciaDeVersiculos('João 3', [16]), 'João 3:16');
+      expect(
+        referenciaDeVersiculos('João 3', [18, 16, 17, 20]),
+        'João 3:16-18, 20',
+      );
+      expect(referenciaDeVersiculos('João 3', [1, 3, 5]), 'João 3:1, 3, 5');
+      expect(referenciaDeVersiculos('João 3', [2, 2, 3]), 'João 3:2-3');
+    });
+
     test('link de um versiculo eh o inverso de alvoDoLink', () {
       final link = linkDoVersiculo('joao', 3, 16);
       expect(link, '$enderecoDoSite?ler=joao.3.16');
@@ -205,13 +217,15 @@ void main() {
     });
   });
 
-  test('posicaoNoCanon segue a ordem do canon e dá -1 para slug desconhecido',
-      () {
-    expect(posicaoNoCanon('genesis'), 0);
-    expect(posicaoNoCanon('apocalipse'), canon.length - 1);
-    for (var i = 0; i < canon.length; i++) {
-      expect(posicaoNoCanon(canon[i].slug), i);
-    }
-    expect(posicaoNoCanon('nao-existe'), -1);
-  });
+  test(
+    'posicaoNoCanon segue a ordem do canon e dá -1 para slug desconhecido',
+    () {
+      expect(posicaoNoCanon('genesis'), 0);
+      expect(posicaoNoCanon('apocalipse'), canon.length - 1);
+      for (var i = 0; i < canon.length; i++) {
+        expect(posicaoNoCanon(canon[i].slug), i);
+      }
+      expect(posicaoNoCanon('nao-existe'), -1);
+    },
+  );
 }

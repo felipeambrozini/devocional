@@ -446,3 +446,27 @@ const enderecoDoSite = 'https://www.felipeambrozini.com.br/devocional/';
 /// texto de Copiar e Compartilhar em `biblia.dart`.
 String linkDoVersiculo(String slug, int capitulo, int versiculo) =>
     '$enderecoDoSite?ler=$slug.$capitulo.$versiculo';
+
+/// A referência de vários versículos do mesmo capítulo, juntando os vizinhos
+/// em faixa: "João 3:16-18, 20" para os versículos 16, 17, 18 e 20, em
+/// qualquer ordem de entrada. [referenciaDoCapitulo] é "João 3".
+String referenciaDeVersiculos(
+  String referenciaDoCapitulo,
+  Iterable<int> versiculos,
+) {
+  final ordenados = versiculos.toSet().toList()..sort();
+  final trechos = <String>[];
+  var i = 0;
+  while (i < ordenados.length) {
+    var fim = i;
+    while (fim + 1 < ordenados.length &&
+        ordenados[fim + 1] == ordenados[fim] + 1) {
+      fim++;
+    }
+    trechos.add(
+      fim == i ? '${ordenados[i]}' : '${ordenados[i]}-${ordenados[fim]}',
+    );
+    i = fim + 1;
+  }
+  return '$referenciaDoCapitulo:${trechos.join(', ')}';
+}

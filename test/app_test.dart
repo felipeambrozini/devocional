@@ -297,7 +297,13 @@ void main() {
     // Sobre não é mais aba: o rail tem cinco destinos (Conversas fica nos
     // balões de conversa), e os créditos moram na folha de ajustes (ver o
     // teste seguinte).
-    for (final rotulo in ['Hoje', 'Bíblia', 'Devocional', 'Plano', 'Biblioteca']) {
+    for (final rotulo in [
+      'Hoje',
+      'Bíblia',
+      'Devocional',
+      'Plano',
+      'Biblioteca',
+    ]) {
       expect(find.text(rotulo), findsWidgets, reason: rotulo);
     }
     // A saudação depende do relógio, então aceita as três formas. Sem conta
@@ -347,27 +353,28 @@ void main() {
     expect(find.text('Promessas de Deus'), findsWidgets);
   });
 
-  testWidgets('o cabeçalho espera a conta restaurar em vez de oferecer Entrar', (
-    tester,
-  ) async {
-    // Sem iniciar() nem override, a sessão pode estar voltando do disco: o
-    // cabeçalho mostra espera, não um "Entrar" que sumiria sozinho — era essa
-    // a cara de "deslogou ao fechar o app".
-    await aquecerAssets(tester);
-    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'o cabeçalho espera a conta restaurar em vez de oferecer Entrar',
+    (tester) async {
+      // Sem iniciar() nem override, a sessão pode estar voltando do disco: o
+      // cabeçalho mostra espera, não um "Entrar" que sumiria sozinho — era essa
+      // a cara de "deslogou ao fechar o app".
+      await aquecerAssets(tester);
+      await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Entrar'), findsNothing);
-    expect(find.text('Sair'), findsNothing);
-    expect(find.byTooltip('Verificando conta…'), findsOneWidget);
+      expect(find.text('Entrar'), findsNothing);
+      expect(find.text('Sair'), findsNothing);
+      expect(find.byTooltip('Verificando conta…'), findsOneWidget);
 
-    // Deslogado de verdade (override), o convite aparece.
-    Nuvem.instancia.logadoForcado = false;
-    addTearDown(() => Nuvem.instancia.logadoForcado = null);
-    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
-    await tester.pumpAndSettle();
-    expect(find.text('Entrar'), findsOneWidget);
-  });
+      // Deslogado de verdade (override), o convite aparece.
+      Nuvem.instancia.logadoForcado = false;
+      addTearDown(() => Nuvem.instancia.logadoForcado = null);
+      await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+      await tester.pumpAndSettle();
+      expect(find.text('Entrar'), findsOneWidget);
+    },
+  );
 
   testWidgets('a Hoje esconde o cartão do cronograma com a flag desligada', (
     tester,
@@ -1155,6 +1162,50 @@ void main() {
     );
     expect(coluna.width, 720);
     expect(coluna.center.dx, closeTo(800, 2), reason: 'centralizada na janela');
+  });
+
+  testWidgets('toque longo num versículo inicia a seleção de vários', (
+    tester,
+  ) async {
+    // Alta o bastante para os dois primeiros versículos ficarem acima da barra.
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await aquecerAssets(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: EscopoDoEstado(
+          estado: await estadoLimpo(),
+          child: const TelaBiblia(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    Finder versiculo(String inicio) => find.byWidgetPredicate(
+      (w) => w is RichText && w.text.toPlainText().contains(inicio),
+    );
+
+    await tester.longPress(versiculo('No princípio, Deus criou'));
+    await tester.pumpAndSettle();
+    expect(find.text('1 versículo'), findsOneWidget);
+
+    // Já no modo de seleção, o toque simples marca em vez de abrir a folha.
+    await tester.tap(versiculo('E a terra era sem forma'));
+    await tester.pumpAndSettle();
+    expect(find.text('2 versículos'), findsOneWidget);
+    expect(find.text('Favoritar'), findsNothing);
+
+    await tester.tap(find.byTooltip('Cancelar seleção'));
+    await tester.pumpAndSettle();
+    expect(find.text('2 versículos'), findsNothing);
+
+    // Fora do modo, o toque simples continua abrindo a folha de ações.
+    await tester.tap(versiculo('No princípio, Deus criou'));
+    await tester.pumpAndSettle();
+    expect(find.text('Favoritar'), findsOneWidget);
   });
 
   testWidgets('o leitor abre Gênesis 1 e mostra o texto da BKJ', (

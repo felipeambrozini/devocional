@@ -47,6 +47,24 @@ class BibliaControlador extends ChangeNotifier {
 
   Livro get livroAtual => livroPorSlug(livro) ?? canon.first;
 
+  /// Versículos do capítulo aberto marcados para copiar ou compartilhar de
+  /// uma vez. Não vazio é o próprio modo de seleção: tocar num versículo
+  /// passa a marcar em vez de abrir a folha de ações.
+  final selecionados = <int>{};
+
+  bool get selecionando => selecionados.isNotEmpty;
+
+  void alternarSelecao(int numero) {
+    if (!selecionados.remove(numero)) selecionados.add(numero);
+    notifyListeners();
+  }
+
+  void limparSelecao() {
+    if (!selecionando) return;
+    selecionados.clear();
+    notifyListeners();
+  }
+
   /// Se vale a pena gastar uma faixa do rodapé com os chevrons de capítulo.
   ///
   /// No celular não vale: deslizar já passa a página, e a barra ficava logo
@@ -122,6 +140,7 @@ class BibliaControlador extends ChangeNotifier {
     }
     livro = novoLivro;
     capitulo = novoCapitulo;
+    selecionados.clear();
     notifyListeners();
     EscopoDoEstado.de(context).registrarLeitura(novoLivro, novoCapitulo);
     if (rolagem.hasClients) rolagem.jumpTo(0);
@@ -133,7 +152,9 @@ class BibliaControlador extends ChangeNotifier {
   /// antes de virar a página, sem duplicar a travessia.
   (String, int)? proximoCapitulo(int passo) {
     final destino = capitulo + passo;
-    if (destino >= 1 && destino <= livroAtual.capitulos) return (livro, destino);
+    if (destino >= 1 && destino <= livroAtual.capitulos) {
+      return (livro, destino);
+    }
     // Passa para o livro vizinho em vez de travar no fim do último capítulo.
     final ordem = posicaoNoCanon(livro);
     final vizinho = ordem + passo;

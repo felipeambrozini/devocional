@@ -107,70 +107,77 @@ class _TelaBibliaState extends State<TelaBiblia> {
             const SingleActivator(LogicalKeyboardKey.keyF, control: true): () =>
                 _controller.abrirBusca(context),
           },
-          child: Scaffold(
-            appBar: DevocionalAppBar(
-              title: Tooltip(
-                message: 'Toque para escolher livro',
-                child: DevocionalBotaoTerciario(
-                  onPressed: () => _controller.abrirSeletor(context),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Flexible com reticências porque a barra tem duas ações e um
-                      // livro de nome longo em celular estreito estouraria a linha.
-                      Flexible(
-                        child: Text(
-                          '${_controller.livroAtual.nome} $capitulo',
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).appBarTheme.titleTextStyle,
+          // "Voltar" sai da seleção antes de sair da tela.
+          child: PopScope(
+            canPop: !_controller.selecionando,
+            onPopInvokedWithResult: (_, _) => _controller.limparSelecao(),
+            child: Scaffold(
+              appBar: DevocionalAppBar(
+                title: Tooltip(
+                  message: 'Toque para escolher livro',
+                  child: DevocionalBotaoTerciario(
+                    onPressed: () => _controller.abrirSeletor(context),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Flexible com reticências porque a barra tem duas ações e um
+                        // livro de nome longo em celular estreito estouraria a linha.
+                        Flexible(
+                          child: Text(
+                            '${_controller.livroAtual.nome} $capitulo',
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).appBarTheme.titleTextStyle,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: DevocionalEspacamento.sp8),
-                      FaIcon(
-                        FontAwesomeIcons.chevronDown,
-                        color: cor.primary,
-                        size: 20,
-                      ),
-                    ],
+                        const SizedBox(width: DevocionalEspacamento.sp8),
+                        FaIcon(
+                          FontAwesomeIcons.chevronDown,
+                          color: cor.primary,
+                          size: 20,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
+                actions: [
+                  DevocionalIndicadorDeVozNaBarra(
+                    chave: chaveDeCapitulo(livro, capitulo),
+                  ),
+                  DevocionalBotaoDeBusca(
+                    aoBuscar: () => _controller.abrirBusca(context),
+                  ),
+                  const DevocionalBotaoDeNotas(),
+                  DevocionalBotaoDeAjustes(estado: estado),
+                ],
               ),
-              actions: [
-                DevocionalIndicadorDeVozNaBarra(
-                  chave: chaveDeCapitulo(livro, capitulo),
-                ),
-                DevocionalBotaoDeBusca(
-                  aoBuscar: () => _controller.abrirBusca(context),
-                ),
-                const DevocionalBotaoDeNotas(),
-                DevocionalBotaoDeAjustes(estado: estado),
-              ],
-            ),
-            body: Focus(
-              autofocus: true,
-              child: DevocionalLarguraDeLeitura(
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: DevocionalCarregaUmaVez<Capitulo>(
-                        chave: '$livro/$capitulo',
-                        carregar: () =>
-                            Conteudo.instancia.capitulo(livro, capitulo),
-                        construir: (context, snap) =>
-                            _corpoDoCapitulo(context, estado, snap),
+              body: Focus(
+                autofocus: true,
+                child: DevocionalLarguraDeLeitura(
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: DevocionalCarregaUmaVez<Capitulo>(
+                          chave: '$livro/$capitulo',
+                          carregar: () =>
+                              Conteudo.instancia.capitulo(livro, capitulo),
+                          construir: (context, snap) =>
+                              _corpoDoCapitulo(context, estado, snap),
+                        ),
                       ),
-                    ),
-                    if (_controller.semGestoDeToque && estado.setasDoRodape)
-                      DevocionalBarraDeCapitulo(
-                        podeVoltar:
-                            !(livro == canon.first.slug && capitulo == 1),
-                        podeAvancar:
-                            !(livro == canon.last.slug &&
-                                capitulo == canon.last.capitulos),
-                        aoVoltar: () => _controller.passarCapitulo(context, -1),
-                        aoAvancar: () => _controller.passarCapitulo(context, 1),
-                      ),
-                  ],
+                      if (_controller.semGestoDeToque && estado.setasDoRodape)
+                        DevocionalBarraDeCapitulo(
+                          podeVoltar:
+                              !(livro == canon.first.slug && capitulo == 1),
+                          podeAvancar:
+                              !(livro == canon.last.slug &&
+                                  capitulo == canon.last.capitulos),
+                          aoVoltar: () =>
+                              _controller.passarCapitulo(context, -1),
+                          aoAvancar: () =>
+                              _controller.passarCapitulo(context, 1),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -218,26 +225,36 @@ class _TelaBibliaState extends State<TelaBiblia> {
             ? null
             : _controller.chaveDoAlvoDeRolagem,
         aoAbrirCapitulos: () => _controller.abrirGradeDeCapitulos(context),
+        selecionados: _controller.selecionados,
+        aoAlternarSelecao: _controller.alternarSelecao,
       ),
     );
-    // Só no toque o texto vira selecionável: por lá o dedo escolhe com um
-    // toque e seleciona com pressão longa, sem brigar com o deslize de
-    // capítulo. No mouse (web) a seleção por arrasto disputaria a arena com o
-    // gesto de capítulo, então lá Copiar pela folha do versículo continua
-    // sendo o caminho.
-    final corpoLeitura = _controller.semGestoDeToque
-        ? leitor
-        : SelectionArea(child: leitor);
+    // O texto não é selecionável (SelectionArea): no toque, o toque longo é a
+    // entrada do modo de seleção de versículos, e a seleção de palavras
+    // brigaria com ele. Copiar vive na folha do versículo e na barra da
+    // seleção.
     return ListenableBuilder(
       listenable: estado,
-      builder: (context, _) => Stack(
+      builder: (context, _) => Column(
         children: [
-          corpoLeitura,
-          // A alça é um indício de que dá para deslizar, não um controle:
-          // quem desliza usa a tela inteira como alvo de toque.
-          if (!kIsWeb)
-            DevocionalAlcaDeDeslize(
-              primeiraVez: !estado.swipeTooltipDispensado,
+          Expanded(
+            child: Stack(
+              children: [
+                leitor,
+                // A alça é um indício de que dá para deslizar, não um
+                // controle: quem desliza usa a tela inteira como alvo de toque.
+                if (!kIsWeb)
+                  DevocionalAlcaDeDeslize(
+                    primeiraVez: !estado.swipeTooltipDispensado,
+                  ),
+              ],
+            ),
+          ),
+          if (_controller.selecionando)
+            _BarraDaSelecao(
+              capitulo: capitulo,
+              selecionados: _controller.selecionados,
+              aoFechar: _controller.limparSelecao,
             ),
         ],
       ),
@@ -253,9 +270,16 @@ class _Leitor extends StatelessWidget {
     this.alvoDeRolagem,
     this.chaveDoAlvoDeRolagem,
     this.aoAbrirCapitulos,
+    required this.selecionados,
+    required this.aoAlternarSelecao,
   });
 
   final Capitulo capitulo;
+
+  /// Versículos marcados para copiar ou compartilhar juntos; ver
+  /// [BibliaControlador.selecionados].
+  final Set<int> selecionados;
+  final ValueChanged<int> aoAlternarSelecao;
   final ScrollController rolagem;
   final (int, int)? destacar;
 
@@ -380,6 +404,9 @@ class _Leitor extends StatelessWidget {
           numero: numero,
           texto: texto,
           noRecorte: noRecorte,
+          selecionando: selecionados.isNotEmpty,
+          selecionado: selecionados.contains(numero),
+          aoAlternarSelecao: () => aoAlternarSelecao(numero),
         );
       },
     );
@@ -397,6 +424,9 @@ class _LinhaDeVersiculo extends StatelessWidget {
     required this.numero,
     required this.texto,
     required this.noRecorte,
+    required this.selecionando,
+    required this.selecionado,
+    required this.aoAlternarSelecao,
   });
 
   final String livro;
@@ -405,6 +435,11 @@ class _LinhaDeVersiculo extends StatelessWidget {
   final int numero;
   final String texto;
   final bool noRecorte;
+
+  /// Há versículos marcados no capítulo: o toque marca em vez de abrir a folha.
+  final bool selecionando;
+  final bool selecionado;
+  final VoidCallback aoAlternarSelecao;
 
   @override
   Widget build(BuildContext context) {
@@ -421,18 +456,26 @@ class _LinhaDeVersiculo extends StatelessWidget {
           '$referencia:$numero'
           '${marcacao == null ? '' : ', favoritado'}'
           '${temNota ? ', com anotação' : ''}',
-      selected: marcacao != null,
-      hint: 'Toque para favoritar, anotar ou copiar',
+      selected: selecionando ? selecionado : marcacao != null,
+      hint: selecionando
+          ? 'Toque para marcar ou desmarcar'
+          : 'Toque para favoritar, anotar ou copiar; toque longo para '
+                'selecionar vários',
       child: InkWell(
-        onTap: () => _abrirAcoesDoVersiculo(
-          context,
-          estado,
-          livro: livro,
-          capituloNumero: capituloNumero,
-          referencia: referencia,
-          numero: numero,
-          texto: texto,
-        ),
+        // Toque longo é a entrada do modo de seleção; dentro dele, marcar e
+        // desmarcar é o toque simples.
+        onLongPress: selecionando ? null : aoAlternarSelecao,
+        onTap: selecionando
+            ? aoAlternarSelecao
+            : () => _abrirAcoesDoVersiculo(
+                context,
+                estado,
+                livro: livro,
+                capituloNumero: capituloNumero,
+                referencia: referencia,
+                numero: numero,
+                texto: texto,
+              ),
         borderRadius: BorderRadius.circular(12),
         child: Container(
           // 12 e não 7: com bodyLarge em 17 e altura 1.6, um versículo de uma
@@ -444,8 +487,13 @@ class _LinhaDeVersiculo extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            color: marcacao != null
+            color: selecionado
+                ? cor.primary.withValues(alpha: 0.18)
+                : marcacao != null
                 ? cor.outline.withValues(alpha: 0.18)
+                : null,
+            border: selecionado
+                ? Border.all(color: cor.primary, width: 1.5)
                 : null,
           ),
           child: Column(
@@ -703,9 +751,125 @@ class _AcoesDoVersiculo {
   /// O mesmo texto para Copiar e Compartilhar. O link vale em qualquer
   /// plataforma, não só na web: é assim que quem recebe chega direto ao
   /// versículo, mesmo copiado ou compartilhado do celular numa live.
-  String get _textoDoVersiculo =>
-      '"$texto"\n$referencia:$numero\n'
-      '${linkDoVersiculo(livro, capituloNumero, numero)}';
+  String get _textoDoVersiculo => _textoCitado(
+    texto: texto,
+    referencia: '$referencia:$numero',
+    link: linkDoVersiculo(livro, capituloNumero, numero),
+  );
+}
+
+String _textoCitado({
+  required String texto,
+  required String referencia,
+  required String link,
+}) => '"$texto"\n$referencia\n$link';
+
+/// A barra de baixo do modo de seleção: quantos versículos estão marcados e
+/// as ações que valem para todos eles. Copiar e Compartilhar usam o mesmo
+/// texto da folha de um versículo só, com a referência em faixa
+/// ("João 3:16-18") e o link do primeiro versículo marcado.
+class _BarraDaSelecao extends StatelessWidget {
+  const _BarraDaSelecao({
+    required this.capitulo,
+    required this.selecionados,
+    required this.aoFechar,
+  });
+
+  final Capitulo capitulo;
+  final Set<int> selecionados;
+  final VoidCallback aoFechar;
+
+  String get _referencia =>
+      referenciaDeVersiculos(capitulo.referencia, selecionados);
+
+  /// Os textos dos marcados na ordem do capítulo, não na ordem dos toques.
+  String get _texto => capitulo.versiculos
+      .where((v) => selecionados.contains(v.$1))
+      .map((v) => v.$2)
+      .join(' ');
+
+  String get _link => linkDoVersiculo(
+    capitulo.livro,
+    capitulo.numero,
+    (selecionados.toList()..sort()).first,
+  );
+
+  Future<void> _copiar(BuildContext context) async {
+    final mensageiro = ScaffoldMessenger.of(context);
+    await Clipboard.setData(
+      ClipboardData(
+        text: _textoCitado(texto: _texto, referencia: _referencia, link: _link),
+      ),
+    );
+    aoFechar();
+    mostrarAvisoNo(mensageiro, 'Versículos copiados.');
+  }
+
+  Future<void> _compartilhar(BuildContext context) async {
+    final mensageiro = ScaffoldMessenger.of(context);
+    try {
+      await compartilharCartao(
+        texto: '"$_texto"',
+        referencia: _referencia,
+        link: _link,
+        textoParaAcompanhar: _textoCitado(
+          texto: _texto,
+          referencia: _referencia,
+          link: _link,
+        ),
+      );
+    } catch (_) {
+      mostrarErroNo(mensageiro, 'Não foi possível compartilhar.');
+    }
+    aoFechar();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme;
+    return Material(
+      color: cor.surfaceContainerHigh,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: DevocionalEspacamento.sp8,
+            vertical: DevocionalEspacamento.sp4,
+          ),
+          child: Row(
+            children: [
+              IconButton(
+                tooltip: 'Cancelar seleção',
+                onPressed: aoFechar,
+                icon: const FaIcon(FontAwesomeIcons.xmark),
+              ),
+              Expanded(
+                child: Text(
+                  selecionados.length == 1
+                      ? '1 versículo'
+                      : '${selecionados.length} versículos',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              IconButton(
+                tooltip: 'Copiar',
+                onPressed: () => _copiar(context),
+                icon: FaIcon(FontAwesomeIcons.copy, color: cor.primary),
+              ),
+              IconButton(
+                tooltip: 'Compartilhar',
+                onPressed: () => _compartilhar(context),
+                icon: FaIcon(
+                  FontAwesomeIcons.arrowUpFromBracket,
+                  color: cor.primary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 Future<void> _abrirAcoesDoVersiculo(

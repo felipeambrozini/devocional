@@ -104,10 +104,9 @@ class _AberturaDeLivroState extends State<DevocionalAberturaDeLivro> {
 
 /// O corpo aberto do cartão de abertura: voz, seções e frase final, com o
 /// texto selecionável para copiar. Se já há uma área de seleção acima (o
-/// leitor da Bíblia no toque, o devocional), ela é reaproveitada — aninhar
-/// outra aqui truncaria a seleção que cruza a borda do cartão. Na web não há
-/// área acima: o leitor abre mão da seleção no mouse porque o arrasto disputa
-/// com o deslize de capítulo, então o corpo carrega a própria
+/// devocional), ela é reaproveitada — aninhar outra aqui truncaria a seleção
+/// que cruza a borda do cartão. No leitor da Bíblia não há área acima: o
+/// toque longo ali é a seleção de versículos, então o corpo carrega a própria
 /// [DevocionalAreaDeSelecaoComCompartilhar].
 class _IntroducaoAberta extends StatelessWidget {
   const _IntroducaoAberta({required this.slug, required this.introducao});
