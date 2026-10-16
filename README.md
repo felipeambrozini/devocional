@@ -173,8 +173,11 @@ test/          testes de unidade e de widget
 ## Conteúdo
 
 Todo o conteúdo bíblico e devocional já está carregado e verificado, inclusive
-os comentários de Spurgeon por versículo. Os scripts de apoio moram em `tools/` (`icones.py`,
-`validar_comentarios.py`, `detectar_molde.py`). A geração de áudio (TTS) e a
+os comentários de Spurgeon por versículo. Os scripts de apoio moram em `tools/`:
+`icones.py`, `validar_comentarios.py` (31.102 comentários, 0 erros; confere
+estrutura, citações contra a BKJ e proibições) e `introducoes/checar_intro.py`
+(as 66 introduções passam). Os dois ficam como rede de proteção para quando um
+texto for editado. A geração de áudio (TTS) e a
 validação dos MP3 com Whisper ficam fora do repo, em `C:\Users\USER\audio_gen`,
 e não são versionadas aqui.
 

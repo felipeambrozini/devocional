@@ -179,7 +179,10 @@ def valida_citacoes(texto: str, corpus_biblia: str):
     inicial e reticencia final, porque a citacao pode iniciar a frase).
     O corpus deve chegar aqui ja em minusculas."""
     erros = []
-    for citacao in re.findall(r'"([^"\n]{10,})"', texto):
+    # Pareia as aspas em sequência (1ª com 2ª, 3ª com 4ª) e só depois descarta as
+    # curtas; com {10,} no padrão, "ele" e "tu" na mesma frase faziam o texto
+    # entre eles virar uma citação falsa.
+    for citacao in re.findall(r'"([^"\n]*)"', texto):
         segmento = citacao.strip()
         segmento = re.sub(r"[.\u2026]+$", "", segmento).strip()
         if len(segmento) < 10:
