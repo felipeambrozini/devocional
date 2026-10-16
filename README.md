@@ -39,7 +39,11 @@ mesmo código).
   capítulo da Bíblia, o leitor vira a página e o próximo começa sozinho.
 - **Conversas com IA**: duas personas para conversar, Charles Spurgeon e
   Felipe Ambrozini, cada uma com o próprio jeito de falar (Gemini). Histórico
-  salvo por conversa, numa aba própria em todas as plataformas.
+  salvo por conversa, numa aba própria em todas as plataformas. A persona do
+  Spurgeon leva no sistema uma ficha de fatos verificados da vida dele, os
+  limites do que ele nunca fez nem poderia saber (anacronismos, viagens,
+  títulos, frases apócrifas) e a regra de não inventar datas, nomes nem
+  citações; a ficha vem de `tools/introducoes/spurgeon_fontes.md`.
 - **Introduções aos 66 livros**, na voz de Spurgeon, com título formal do livro
   vindo da BKJ 1611.
 - **Favoritos e notas**: qualquer versículo pode ser marcado, anotado, copiado ou
