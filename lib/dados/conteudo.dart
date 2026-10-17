@@ -195,9 +195,9 @@ class Conteudo {
     final cru = await rootBundle.loadString(
       'assets/devocionais/manha_e_noite.json',
     );
-    final dados = (await _decodificarGrande(cru)).map(
-      (chave, valor) => MapEntry(chave, valor as Map<String, dynamic>),
-    );
+    final dados = (await _decodificarGrande(
+      cru,
+    )).map((chave, valor) => MapEntry(chave, valor as Map<String, dynamic>));
     _devocionais = dados;
     return dados;
   }
@@ -293,9 +293,9 @@ class Conteudo {
       final cru = await rootBundle.loadString(
         'assets/devocionais/promessas_de_deus.json',
       );
-      _promessas = (await _decodificarGrande(cru)).map(
-        (chave, valor) => MapEntry(chave, valor as Map<String, dynamic>),
-      );
+      _promessas = (await _decodificarGrande(
+        cru,
+      )).map((chave, valor) => MapEntry(chave, valor as Map<String, dynamic>));
     } on FlutterError {
       _promessas = null;
     } catch (erro, pilha) {

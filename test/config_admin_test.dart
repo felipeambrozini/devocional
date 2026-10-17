@@ -27,10 +27,7 @@ void main() {
 
   group('validarEmail', () {
     test('aceita e devolve normalizado', () {
-      expect(
-        ConfigAdmin.validarEmail('  Ana@Exemplo.com '),
-        'ana@exemplo.com',
-      );
+      expect(ConfigAdmin.validarEmail('  Ana@Exemplo.com '), 'ana@exemplo.com');
     });
 
     test('recusa vazio, sem arroba e com espaço', () {
@@ -39,10 +36,7 @@ void main() {
         () => ConfigAdmin.validarEmail('sem-arroba'),
         throwsFormatException,
       );
-      expect(
-        () => ConfigAdmin.validarEmail('a @x.com'),
-        throwsFormatException,
-      );
+      expect(() => ConfigAdmin.validarEmail('a @x.com'), throwsFormatException);
     });
   });
 

@@ -8,7 +8,11 @@ import 'package:flutter/material.dart';
 /// o `ShaderMask` suaviza a quinta linha para o fundo (o `dstIn` usa só o
 /// alfa do gradiente, preservando a cor do texto).
 class DevocionalComFadeAoFim extends StatelessWidget {
-  const DevocionalComFadeAoFim({super.key, required this.texto, required this.estilo});
+  const DevocionalComFadeAoFim({
+    super.key,
+    required this.texto,
+    required this.estilo,
+  });
 
   final String texto;
   final TextStyle? estilo;

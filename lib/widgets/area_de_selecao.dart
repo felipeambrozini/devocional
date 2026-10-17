@@ -10,7 +10,10 @@ import 'package:share_plus/share_plus.dart';
 /// introdução, sem uma referência única por trás. Usada igual nas três
 /// telas de leitura (Bíblia, Devocional, Introdução).
 class DevocionalAreaDeSelecaoComCompartilhar extends StatefulWidget {
-  const DevocionalAreaDeSelecaoComCompartilhar({super.key, required this.child});
+  const DevocionalAreaDeSelecaoComCompartilhar({
+    super.key,
+    required this.child,
+  });
 
   final Widget child;
 

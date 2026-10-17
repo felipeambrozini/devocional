@@ -179,7 +179,9 @@ class _TelaChatState extends State<TelaChat> {
                           // A conversa abre como página: o DevocionalFilete que abre cada
                           // leitura da Estante sinaliza onde o fio começa.
                           return const Padding(
-                            padding: EdgeInsets.only(bottom: DevocionalEspacamento.sp18),
+                            padding: EdgeInsets.only(
+                              bottom: DevocionalEspacamento.sp18,
+                            ),
                             child: Center(child: DevocionalFilete(largura: 64)),
                           );
                         }

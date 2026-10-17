@@ -153,20 +153,17 @@ void main() {
         },
       );
 
-      test(
-        '$nome: o botão de voz ativo tem o metal legível sobre o próprio '
-        'fundo',
-        () {
-          // O estado ativo do botão de ouvir usa o anel do metal (ícone e
-          // rótulo em primary) sobre surfaceContainerHighest. Se alguém
-          // trocar o par por um tom sem contraste, o teste avisa.
-          final cor = construirTema(brilho: brilho).colorScheme;
-          expect(
-            contraste(cor.primary, cor.surfaceContainerHighest),
-            greaterThan(4.5),
-          );
-        },
-      );
+      test('$nome: o botão de voz ativo tem o metal legível sobre o próprio '
+          'fundo', () {
+        // O estado ativo do botão de ouvir usa o anel do metal (ícone e
+        // rótulo em primary) sobre surfaceContainerHighest. Se alguém
+        // trocar o par por um tom sem contraste, o teste avisa.
+        final cor = construirTema(brilho: brilho).colorScheme;
+        expect(
+          contraste(cor.primary, cor.surfaceContainerHighest),
+          greaterThan(4.5),
+        );
+      });
     }
 
     test('o destaque é o tom mais distante do fundo nas duas paletas', () {

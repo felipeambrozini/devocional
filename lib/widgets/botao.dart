@@ -61,7 +61,11 @@ class DevocionalBotaoDeData extends StatelessWidget {
 /// preenchido com o check assim que já foi. Usado no cartão de um dia
 /// qualquer (DevocionalCartaoDeDia) e na prévia da leitura de hoje.
 class DevocionalBotaoDeLido extends StatelessWidget {
-  const DevocionalBotaoDeLido({super.key, required this.lido, required this.aoAlternar});
+  const DevocionalBotaoDeLido({
+    super.key,
+    required this.lido,
+    required this.aoAlternar,
+  });
 
   final bool lido;
   final VoidCallback aoAlternar;
@@ -110,7 +114,11 @@ class DevocionalBotaoPrimario extends StatelessWidget {
     final icone = icon;
     final rotulo = label;
     if (icone != null && rotulo != null) {
-      return FilledButton.icon(onPressed: onPressed, icon: icone, label: rotulo);
+      return FilledButton.icon(
+        onPressed: onPressed,
+        icon: icone,
+        label: rotulo,
+      );
     }
     return FilledButton(onPressed: onPressed, child: child);
   }
@@ -144,7 +152,11 @@ class DevocionalBotaoSecundario extends StatelessWidget {
     final icone = icon;
     final rotulo = label;
     if (icone != null && rotulo != null) {
-      return OutlinedButton.icon(onPressed: onPressed, icon: icone, label: rotulo);
+      return OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: icone,
+        label: rotulo,
+      );
     }
     return OutlinedButton(onPressed: onPressed, child: child);
   }

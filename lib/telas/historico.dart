@@ -153,7 +153,9 @@ class TelaHistorico extends StatelessWidget {
             );
           }
           return ListView.separated(
-            padding: const EdgeInsets.symmetric(vertical: DevocionalEspacamento.sp8),
+            padding: const EdgeInsets.symmetric(
+              vertical: DevocionalEspacamento.sp8,
+            ),
             itemCount: conversas.length,
             separatorBuilder: (context, _) => Divider(
               height: 1,

@@ -23,7 +23,7 @@ class Marcacao {
   /// Identidade estável usada como chave de armazenamento.
   String get chave => '$livro/$capitulo/$versiculo';
 
-  String get referencia => '${nomeDoLivro(livro)} $capitulo:$versiculo';
+  String get referencia => '${nomeNaReferencia(livro)} $capitulo:$versiculo';
 
   Map<String, dynamic> paraJson() => {
     'livro': livro,

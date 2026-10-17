@@ -29,13 +29,19 @@ class TelaFAQ extends StatelessWidget {
             ConfigAdmin.instancia,
           ]),
           builder: (context, _) => ListView(
-            padding: const EdgeInsets.fromLTRB(DevocionalEspacamento.sp20, DevocionalEspacamento.sp16, DevocionalEspacamento.sp20, DevocionalEspacamento.sp40),
+            padding: const EdgeInsets.fromLTRB(
+              DevocionalEspacamento.sp20,
+              DevocionalEspacamento.sp16,
+              DevocionalEspacamento.sp20,
+              DevocionalEspacamento.sp40,
+            ),
             children: [
               Text('Perguntas frequentes', style: tema.displayMedium),
               const SizedBox(height: DevocionalEspacamento.sp8),
               const DevocionalFilete(largura: 64),
               const SizedBox(height: DevocionalEspacamento.sp16),
-              for (final pergunta in _perguntas(Recursos.conversas)) DevocionalPergunta(pergunta),
+              for (final pergunta in _perguntas(Recursos.conversas))
+                DevocionalPergunta(pergunta),
               const SizedBox(height: DevocionalEspacamento.sp16),
               ListTile(
                 contentPadding: EdgeInsets.zero,

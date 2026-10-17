@@ -249,7 +249,8 @@ class _AbaDevocionaisState extends State<_AbaDevocionais> {
               DevocionalEspacamento.sp32,
             ),
             itemCount: lista.length,
-            separatorBuilder: (_, _) => const Divider(height: DevocionalEspacamento.sp18),
+            separatorBuilder: (_, _) =>
+                const Divider(height: DevocionalEspacamento.sp18),
             itemBuilder: (context, i) => _ItemDeAchadoDevocional(
               achado: lista[i],
               termo: widget.termoBuscado,

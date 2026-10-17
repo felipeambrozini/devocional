@@ -261,6 +261,11 @@ int posicaoNoCanon(String slug) => _posicaoPorSlug[slug] ?? -1;
 /// que uma referência desconhecida apareça na tela em vez de sumir.
 String nomeDoLivro(String slug) => _porSlug[slug]?.nome ?? slug;
 
+/// Nome do livro numa referência a um capítulo ou versículo: "Salmo 23:1", no
+/// singular, porque cita um único salmo (o livro continua "Salmos").
+String nomeNaReferencia(String slug) =>
+    slug == 'salmos' ? 'Salmo' : nomeDoLivro(slug);
+
 const _contracoesDaPreposicaoA = <String, String>{
   'O ': 'ao ',
   'A ': 'à ',
@@ -298,6 +303,7 @@ const _apelidosDeLivro = <String, String>{
   'Ex': 'exodo',
   'Isa': 'isaias',
   'Cantares': 'cantares',
+  'Salmo': 'salmos',
 };
 
 /// Sem diferenciar maiúsculas: o Devocional reescreve a referência do dia com o

@@ -6,7 +6,11 @@ import '../telas/biblia.dart';
 import '../telas/busca.dart';
 
 class DevocionalItemDeAchado extends StatelessWidget {
-  const DevocionalItemDeAchado({super.key, required this.achado, required this.termo});
+  const DevocionalItemDeAchado({
+    super.key,
+    required this.achado,
+    required this.termo,
+  });
 
   final Achado achado;
   final String termo;
@@ -28,7 +32,10 @@ class DevocionalItemDeAchado extends StatelessWidget {
       ),
       borderRadius: BorderRadius.circular(12),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: DevocionalEspacamento.sp4, horizontal: DevocionalEspacamento.sp4),
+        padding: const EdgeInsets.symmetric(
+          vertical: DevocionalEspacamento.sp4,
+          horizontal: DevocionalEspacamento.sp4,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -133,9 +133,7 @@ class _TelaAdminState extends State<TelaAdmin> {
         // ela, só o giro: nada se liga nem desliga antes de saber a verdade.
         if (!config.carregado)
           const Padding(
-            padding: EdgeInsets.symmetric(
-              vertical: DevocionalEspacamento.sp24,
-            ),
+            padding: EdgeInsets.symmetric(vertical: DevocionalEspacamento.sp24),
             child: Center(child: CircularProgressIndicator()),
           ),
         if (config.carregado)

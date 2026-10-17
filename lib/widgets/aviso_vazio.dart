@@ -45,7 +45,10 @@ class DevocionalAvisoVazio extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
-            if (acao != null) ...[const SizedBox(height: DevocionalEspacamento.sp12), acao!],
+            if (acao != null) ...[
+              const SizedBox(height: DevocionalEspacamento.sp12),
+              acao!,
+            ],
           ],
         ),
       ),

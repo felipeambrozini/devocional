@@ -121,7 +121,10 @@ class DevocionalCartaoDeLeitura extends StatelessWidget {
                 // o layout quebra — sumindo com o botão de voz e o de
                 // compartilhar ao lado.
                 Flexible(
-                  child: DevocionalBotaoDeVoz(chave: vozChave, referencia: vozReferencia),
+                  child: DevocionalBotaoDeVoz(
+                    chave: vozChave,
+                    referencia: vozReferencia,
+                  ),
                 ),
                 IconButton(
                   tooltip: 'Compartilhar',

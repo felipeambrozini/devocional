@@ -66,7 +66,9 @@ Future<bool> editarPlano(
   final mudouODiaADia =
       edicao.livros.length != plano.livros.length ||
       edicao.dias != plano.dias ||
-      !edicao.livros.asMap().entries.every((e) => e.value == plano.livros[e.key]);
+      !edicao.livros.asMap().entries.every(
+        (e) => e.value == plano.livros[e.key],
+      );
   if (plano.compartilhado) {
     try {
       await PlanosNaNuvem.instancia.atualizar(

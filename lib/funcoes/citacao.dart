@@ -98,7 +98,9 @@ class _ReferenciaDaCitacao extends StatelessWidget {
         borderRadius: BorderRadius.circular(4),
         onTap: aoAbrir,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: DevocionalEspacamento.sp2),
+          padding: const EdgeInsets.symmetric(
+            vertical: DevocionalEspacamento.sp2,
+          ),
           child: Text(rotulo, style: estilo),
         ),
       ),

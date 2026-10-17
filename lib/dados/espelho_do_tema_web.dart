@@ -22,7 +22,10 @@ Future<void> espelharTemaParaNotificacoes({required bool escuro}) async {
   try {
     final cache = await web.window.caches.open(_nomeDoCache).toDart;
     await cache
-        .put(_chaveDoTema.toJS, web.Response((escuro ? 'escuro' : 'claro').toJS))
+        .put(
+          _chaveDoTema.toJS,
+          web.Response((escuro ? 'escuro' : 'claro').toJS),
+        )
         .toDart;
   } catch (_) {
     // Espelho é melhor-esforço: sem ele (navegador sem Cache Storage,

@@ -76,7 +76,10 @@ class DevocionalErroDeResposta extends StatelessWidget {
                     ),
                     TextButton.icon(
                       onPressed: () => aoTentarDeNovo(),
-                      icon: const FaIcon(FontAwesomeIcons.arrowsRotate, size: 18),
+                      icon: const FaIcon(
+                        FontAwesomeIcons.arrowsRotate,
+                        size: 18,
+                      ),
                       label: const Text('Tentar de novo'),
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(

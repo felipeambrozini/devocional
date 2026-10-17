@@ -52,7 +52,12 @@ class DevocionalAbaBiblia extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(DevocionalEspacamento.sp16, 0, DevocionalEspacamento.sp16, DevocionalEspacamento.sp8),
+          padding: const EdgeInsets.fromLTRB(
+            DevocionalEspacamento.sp16,
+            0,
+            DevocionalEspacamento.sp16,
+            DevocionalEspacamento.sp8,
+          ),
           child: Row(
             children: [
               // A busca para no teto e a lista fica cortada. Dizer só "300
@@ -78,15 +83,24 @@ class DevocionalAbaBiblia extends StatelessWidget {
         ),
         Expanded(
           child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(DevocionalEspacamento.sp16, 0, DevocionalEspacamento.sp16, DevocionalEspacamento.sp32),
+            padding: const EdgeInsets.fromLTRB(
+              DevocionalEspacamento.sp16,
+              0,
+              DevocionalEspacamento.sp16,
+              DevocionalEspacamento.sp32,
+            ),
             itemCount: achados.length + (temReferencia ? 1 : 0),
-            separatorBuilder: (_, _) => const Divider(height: DevocionalEspacamento.sp18),
+            separatorBuilder: (_, _) =>
+                const Divider(height: DevocionalEspacamento.sp18),
             itemBuilder: (context, i) {
               if (temReferencia && i == 0) {
                 return DevocionalCartaoDeReferencia(referencia: referencia!);
               }
               final indice = temReferencia ? i - 1 : i;
-              return DevocionalItemDeAchado(achado: achados[indice], termo: termoBuscado);
+              return DevocionalItemDeAchado(
+                achado: achados[indice],
+                termo: termoBuscado,
+              );
             },
           ),
         ),

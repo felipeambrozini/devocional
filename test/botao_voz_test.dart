@@ -19,11 +19,7 @@ void main() {
   });
 
   Widget montar({String chave = 'capitulo:joao.3'}) => MaterialApp(
-    home: Scaffold(
-      body: DevocionalBotaoDeVoz(
-        chave: chave,
-      ),
-    ),
+    home: Scaffold(body: DevocionalBotaoDeVoz(chave: chave)),
   );
 
   group('DevocionalBotaoDeVoz', () {
@@ -35,10 +31,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.text('Ouvir'), findsOneWidget);
-      expect(
-        find.bySemanticsLabel('Ouvir na voz de Spurgeon'),
-        findsOneWidget,
-      );
+      expect(find.bySemanticsLabel('Ouvir na voz de Spurgeon'), findsOneWidget);
       semantica.dispose();
     });
 
@@ -52,18 +45,15 @@ void main() {
       expect(find.text('Ouvir'), findsNothing);
     });
 
-    testWidgets(
-      'com base configurada mas o arquivo ainda não gerado (HEAD não '
-      'encontra), o botão não aparece',
-      (tester) async {
-        Voz.disponibilidadeRemotaParaTeste = false;
-        addTearDown(() => Voz.disponibilidadeRemotaParaTeste = null);
-        await tester.pumpWidget(montar());
-        await tester.pump(const Duration(milliseconds: 500));
+    testWidgets('com base configurada mas o arquivo ainda não gerado (HEAD não '
+        'encontra), o botão não aparece', (tester) async {
+      Voz.disponibilidadeRemotaParaTeste = false;
+      addTearDown(() => Voz.disponibilidadeRemotaParaTeste = null);
+      await tester.pumpWidget(montar());
+      await tester.pump(const Duration(milliseconds: 500));
 
-        expect(find.text('Ouvir'), findsNothing);
-      },
-    );
+      expect(find.text('Ouvir'), findsNothing);
+    });
 
     testWidgets(
       'sem rede para checar (não sem áudio), o botão aparece desabilitado '

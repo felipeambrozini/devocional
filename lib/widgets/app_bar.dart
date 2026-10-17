@@ -9,7 +9,12 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 /// de trocar. Assumir a mesma decisão aqui é o único jeito de pôr o ícone
 /// certo nela.
 class DevocionalAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const DevocionalAppBar({super.key, required this.title, this.actions, this.bottom});
+  const DevocionalAppBar({
+    super.key,
+    required this.title,
+    this.actions,
+    this.bottom,
+  });
 
   final Widget title;
   final List<Widget>? actions;

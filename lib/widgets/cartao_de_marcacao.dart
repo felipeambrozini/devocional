@@ -39,7 +39,12 @@ class DevocionalCartaoDeMarcacao extends StatelessWidget {
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(DevocionalEspacamento.sp16, DevocionalEspacamento.sp12, DevocionalEspacamento.sp8, DevocionalEspacamento.sp12),
+          padding: const EdgeInsets.fromLTRB(
+            DevocionalEspacamento.sp16,
+            DevocionalEspacamento.sp12,
+            DevocionalEspacamento.sp8,
+            DevocionalEspacamento.sp12,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

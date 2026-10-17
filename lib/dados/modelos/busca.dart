@@ -13,7 +13,7 @@ class Achado {
   final int versiculo;
   final String texto;
 
-  String get referencia => '${nomeDoLivro(livro)} $capitulo:$versiculo';
+  String get referencia => '${nomeNaReferencia(livro)} $capitulo:$versiculo';
 }
 
 /// Um resultado de busca nos devocionais (Manhã, Noite ou Promessas de Deus).

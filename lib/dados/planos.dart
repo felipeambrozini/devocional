@@ -26,7 +26,28 @@ class DiaDePlanoDoUsuario {
       if (item is ItemDeCapitulo) item.faixa,
   ];
 
-  String get rotulo => faixas.map((f) => f.rotulo).join(', ');
+  /// Rótulo curto do dia: capítulos seguidos do mesmo livro voltam a aparecer
+  /// juntos ("Gênesis 1-3"), embora cada um tenha o seu botão.
+  String get rotulo {
+    final juntas = <Faixa>[];
+    for (final faixa in faixas) {
+      final anterior = juntas.isEmpty ? null : juntas.last;
+      if (anterior != null &&
+          anterior.livro == faixa.livro &&
+          !anterior.porVersiculo &&
+          !faixa.porVersiculo &&
+          anterior.ateCapitulo + 1 == faixa.deCapitulo) {
+        juntas[juntas.length - 1] = Faixa(
+          livro: faixa.livro,
+          deCapitulo: anterior.deCapitulo,
+          ateCapitulo: faixa.ateCapitulo,
+        );
+      } else {
+        juntas.add(faixa);
+      }
+    }
+    return juntas.map((f) => f.rotulo).join(', ');
+  }
 }
 
 /// Um plano de leitura criado pelo usuário na aba Meus Planos.
@@ -284,31 +305,12 @@ List<ItemDoDia> _itensComDevocionais(List<Faixa> faixas, bool antes) {
   return itens;
 }
 
-/// Capítulos consecutivos do mesmo livro viram uma faixa; a troca de livro
-/// (ou um salto de capítulo, impossível aqui porque o trecho é contíguo)
-/// fecha a faixa anterior.
-List<Faixa> _agruparEmFaixas(List<(String, int)> trecho) {
-  final faixas = <Faixa>[];
-  String? livroAtual;
-  var de = 0;
-  var ate = 0;
-  for (final (livro, capitulo) in trecho) {
-    if (livro == livroAtual && capitulo == ate + 1) {
-      ate = capitulo;
-    } else {
-      if (livroAtual != null) {
-        faixas.add(Faixa(livro: livroAtual, deCapitulo: de, ateCapitulo: ate));
-      }
-      livroAtual = livro;
-      de = capitulo;
-      ate = capitulo;
-    }
-  }
-  if (livroAtual != null) {
-    faixas.add(Faixa(livro: livroAtual, deCapitulo: de, ateCapitulo: ate));
-  }
-  return faixas;
-}
+/// Cada capítulo ganha a sua faixa — e o seu botão —, mesmo quando o trecho
+/// do dia tem vários seguidos do mesmo livro.
+List<Faixa> _agruparEmFaixas(List<(String, int)> trecho) => [
+  for (final (livro, capitulo) in trecho)
+    Faixa(livro: livro, deCapitulo: capitulo, ateCapitulo: capitulo),
+];
 
 /// Os nomes dos livros num resumo curto para listas: "Gênesis", "Gênesis e
 /// Êxodo" ou "Gênesis, Êxodo e mais 3 livros".

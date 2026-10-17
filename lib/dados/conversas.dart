@@ -152,7 +152,10 @@ class Conversas {
   /// Uma conversa nova e vazia, já com o título da primeira pergunta. O chat
   /// chama isto na primeira mensagem e passa a registrar nela; a conversa só
   /// existe no histórico depois de alguém falar.
-  Future<Conversa> novaConversa(String persona, {required String titulo}) async {
+  Future<Conversa> novaConversa(
+    String persona, {
+    required String titulo,
+  }) async {
     final conversa = Conversa(
       id: _novoIdDeConversa(),
       titulo: titulo,
@@ -457,7 +460,10 @@ class Conversas {
             if (m.id.isNotEmpty && ids.add(m.id)) m,
         ];
         if (novas.isNotEmpty) {
-          conversa = conversa.comMensagemDeTodas(novas, teto: maxMensagensPorConversa);
+          conversa = conversa.comMensagemDeTodas(
+            novas,
+            teto: maxMensagensPorConversa,
+          );
           lista[lista.indexWhere((c) => c.id == id)] = conversa;
           mudouNesta = true;
         }

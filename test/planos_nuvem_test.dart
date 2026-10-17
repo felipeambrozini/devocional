@@ -33,10 +33,7 @@ void main() {
     });
 
     test('com slug na frente, devolve só o último trecho', () {
-      expect(
-        idDoParametroDePlano('genesis-em-30-dias-abc123'),
-        'abc123',
-      );
+      expect(idDoParametroDePlano('genesis-em-30-dias-abc123'), 'abc123');
     });
 
     test('é o inverso de linkDoPlano', () {

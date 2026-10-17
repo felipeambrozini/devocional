@@ -99,10 +99,7 @@ void main() {
 
       // O toque no favorito nao pode destruir texto que o usuario escreveu.
       await estado.alternarFavorito('salmos', 23, 1);
-      expect(
-        estado.marcacaoDe('salmos', 23, 1)?.nota,
-        'Anotacao importante',
-      );
+      expect(estado.marcacaoDe('salmos', 23, 1)?.nota, 'Anotacao importante');
     });
 
     test('nota vazia limpa o texto mas conserva o favorito', () async {
@@ -132,10 +129,10 @@ void main() {
       // Acessos seguidos devolvem o mesmo cache, sem reordenar.
       expect(identical(estado.marcacoes, estado.marcacoes), isTrue);
       await estado.alternarFavorito('genesis', 1, 1);
-      expect(
-        estado.marcacoes.map((m) => m.chave),
-        ['genesis/1/1', 'joao/3/16'],
-      );
+      expect(estado.marcacoes.map((m) => m.chave), [
+        'genesis/1/1',
+        'joao/3/16',
+      ]);
     });
 
     test('remover apaga a marcacao inteira', () async {
@@ -238,38 +235,38 @@ void main() {
       expect(marcacoes, 2);
       expect(dias, 2);
       expect(destino.ehFavorito('joao', 3, 16), isTrue);
-      expect(
-        destino.marcacaoDe('romanos', 8, 28)?.nota,
-        'para meditar',
-      );
+      expect(destino.marcacaoDe('romanos', 8, 28)?.nota, 'para meditar');
       expect(destino.diasLidos, 2);
 
       // E sobreviveu ao disco, nao ficou so na memoria.
       expect((await reabrir()).diasLidos, 2);
     });
 
-    test('importar funde em vez de substituir, e nao apaga nota local', () async {
-      final estado = await Estado.abrir();
-      await estado.definirNota('joao', 3, 16, 'nota daqui');
-      await estado.alternarLido('01-01');
+    test(
+      'importar funde em vez de substituir, e nao apaga nota local',
+      () async {
+        final estado = await Estado.abrir();
+        await estado.definirNota('joao', 3, 16, 'nota daqui');
+        await estado.alternarLido('01-01');
 
-      final outra = await () async {
-        SharedPreferences.setMockInitialValues({});
-        final e = await Estado.abrir();
-        await e.alternarFavorito('joao', 3, 16);
-        await e.alternarLido('04-07');
-        return e.exportar();
-      }();
+        final outra = await () async {
+          SharedPreferences.setMockInitialValues({});
+          final e = await Estado.abrir();
+          await e.alternarFavorito('joao', 3, 16);
+          await e.alternarLido('04-07');
+          return e.exportar();
+        }();
 
-      final (_, dias) = await estado.importar(outra);
-      expect(dias, 1, reason: 'so o dia que faltava');
-      expect(estado.diasLidos, 2, reason: '01-01 continua marcado');
-      expect(
-        estado.marcacaoDe('joao', 3, 16)?.nota,
-        'nota daqui',
-        reason: 'a nota local nao pode ser apagada por um favorito sem nota',
-      );
-    });
+        final (_, dias) = await estado.importar(outra);
+        expect(dias, 1, reason: 'so o dia que faltava');
+        expect(estado.diasLidos, 2, reason: '01-01 continua marcado');
+        expect(
+          estado.marcacaoDe('joao', 3, 16)?.nota,
+          'nota daqui',
+          reason: 'a nota local nao pode ser apagada por um favorito sem nota',
+        );
+      },
+    );
 
     test('importar duas vezes nao duplica nada', () async {
       final estado = await Estado.abrir();
@@ -442,11 +439,10 @@ void main() {
       await estado.restaurarConversa('spurgeon', cheia);
       final restaurada = estado.conversaDe('spurgeon', a.id);
       expect(restaurada, isNotNull);
-      expect(
-        restaurada!.mensagens.map((m) => m.id),
-        ['1', '2'],
-        reason: 'o Desfazer devolve o fio inteiro, não só o título',
-      );
+      expect(restaurada!.mensagens.map((m) => m.id), [
+        '1',
+        '2',
+      ], reason: 'o Desfazer devolve o fio inteiro, não só o título');
       expect(restaurada.titulo, cheia.titulo);
 
       final mapa =
@@ -513,11 +509,10 @@ void main() {
 
       await estado.restaurarConversas('spurgeon', antes);
       final depois = estado.conversasDe('spurgeon');
-      expect(
-        depois.map((c) => c.id),
-        [b.id, a.id],
-        reason: 'o Desfazer devolve a lista na ordem em que estava',
-      );
+      expect(depois.map((c) => c.id), [
+        b.id,
+        a.id,
+      ], reason: 'o Desfazer devolve a lista na ordem em que estava');
       expect(depois.first.mensagens.single.texto, 'dois');
 
       final mapa =
@@ -606,11 +601,10 @@ void main() {
       });
       await estado.fundirConversas(remota);
 
-      expect(
-        estado.mensagensDe('spurgeon', c.id).map((m) => m.id),
-        ['a', 'b'],
-        reason: 'a remota que já existia não duplica',
-      );
+      expect(estado.mensagensDe('spurgeon', c.id).map((m) => m.id), [
+        'a',
+        'b',
+      ], reason: 'a remota que já existia não duplica');
       expect(estado.mensagensDe('spurgeon', 'outra').single.id, 'c');
       expect(
         (await reabrir()).mensagensDe('spurgeon', c.id).length,
@@ -931,5 +925,4 @@ void main() {
       expect(apagadas['conv-b'], 3);
     });
   });
-
 }

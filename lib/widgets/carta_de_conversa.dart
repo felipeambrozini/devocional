@@ -9,7 +9,11 @@ import 'retrato_de_persona.dart';
 /// Uma carta da aba Conversas: o retrato no anel, o nome em Cinzel e o que
 /// aquela conversa é, tudo como um alvo só que abre o histórico da persona.
 class DevocionalCartaDeConversa extends StatelessWidget {
-  const DevocionalCartaDeConversa({super.key, required this.persona, required this.sobre});
+  const DevocionalCartaDeConversa({
+    super.key,
+    required this.persona,
+    required this.sobre,
+  });
 
   final Persona persona;
   final String sobre;

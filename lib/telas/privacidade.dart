@@ -66,7 +66,12 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
               'Contato': _contato,
             };
             return ListView(
-              padding: const EdgeInsets.fromLTRB(DevocionalEspacamento.sp20, DevocionalEspacamento.sp16, DevocionalEspacamento.sp20, DevocionalEspacamento.sp40),
+              padding: const EdgeInsets.fromLTRB(
+                DevocionalEspacamento.sp20,
+                DevocionalEspacamento.sp16,
+                DevocionalEspacamento.sp20,
+                DevocionalEspacamento.sp40,
+              ),
               children: [
                 Text('Política de privacidade', style: tema.displayMedium),
                 const SizedBox(height: DevocionalEspacamento.sp8),

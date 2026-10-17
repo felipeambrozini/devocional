@@ -35,7 +35,10 @@ class DevocionalCartaoDeReferencia extends StatelessWidget {
       ),
       borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: DevocionalEspacamento.sp10, horizontal: DevocionalEspacamento.sp4),
+        padding: const EdgeInsets.symmetric(
+          vertical: DevocionalEspacamento.sp10,
+          horizontal: DevocionalEspacamento.sp4,
+        ),
         child: Row(
           children: [
             FaIcon(FontAwesomeIcons.arrowRight, size: 18, color: cor.primary),

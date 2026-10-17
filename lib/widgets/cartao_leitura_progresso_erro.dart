@@ -5,7 +5,10 @@ import 'cartao.dart';
 import 'filete.dart';
 
 class DevocionalCartaoLeituraProgressoErro extends StatelessWidget {
-  const DevocionalCartaoLeituraProgressoErro({super.key, required this.mensagem});
+  const DevocionalCartaoLeituraProgressoErro({
+    super.key,
+    required this.mensagem,
+  });
   final String mensagem;
 
   @override

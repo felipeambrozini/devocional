@@ -10,7 +10,11 @@ import '../telas/devocional.dart';
 /// texto, e o Wrap passa para uma segunda linha em telas muito estreitas em
 /// vez de cortar.
 class DevocionalAlternadorDeLeitura extends StatelessWidget {
-  const DevocionalAlternadorDeLeitura({super.key, required this.atual, required this.ao});
+  const DevocionalAlternadorDeLeitura({
+    super.key,
+    required this.atual,
+    required this.ao,
+  });
 
   final Leitura atual;
   final ValueChanged<Leitura> ao;

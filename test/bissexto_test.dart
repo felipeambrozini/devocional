@@ -73,7 +73,9 @@ void main() {
         );
 
         final plano =
-            json.decode(File('assets/planos/cronograma.json').readAsStringSync())
+            json.decode(
+                  File('assets/planos/cronograma.json').readAsStringSync(),
+                )
                 as List;
         final datas = plano
             .map((d) => (d as Map<String, dynamic>)['date'])
@@ -86,7 +88,9 @@ void main() {
     test('o cronograma bissexto tem 366 dias, incluindo 29-02', () {
       final plano =
           json.decode(
-                File('assets/planos/cronograma_bissexto.json').readAsStringSync(),
+                File(
+                  'assets/planos/cronograma_bissexto.json',
+                ).readAsStringSync(),
               )
               as List;
       final datas = plano

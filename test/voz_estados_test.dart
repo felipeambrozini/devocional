@@ -86,53 +86,55 @@ void main() {
   }
 
   group('máquina de estados da voz', () {
-    test('dois toques rápidos na mesma chave pedem o áudio uma vez só', () async {
-      final recebidas = <String>[];
-      final sub = Voz.instancia.conclusoes.listen(recebidas.add);
-      final primeiro = Voz.instancia.alternar(
-        'capitulo:a.1',
-      );
-      await Voz.instancia.alternar(
-        'capitulo:a.1',
-      );
-      await primeiro;
-      await esperarAvisos();
+    test(
+      'dois toques rápidos na mesma chave pedem o áudio uma vez só',
+      () async {
+        final recebidas = <String>[];
+        final sub = Voz.instancia.conclusoes.listen(recebidas.add);
+        final primeiro = Voz.instancia.alternar('capitulo:a.1');
+        await Voz.instancia.alternar('capitulo:a.1');
+        await primeiro;
+        await esperarAvisos();
 
-      expect(leitor.toques, 0, reason: 'o segundo toque cancelou antes de o áudio tocar');
-      expect(recebidas, isEmpty, reason: 'o toque cancelou o preparo');
-      expect(Voz.instancia.tocando, isFalse);
-      expect(Voz.instancia.carregando, isFalse);
-      expect(Voz.instancia.tocandoChave, isNull);
-      await sub.cancel();
-    });
+        expect(
+          leitor.toques,
+          0,
+          reason: 'o segundo toque cancelou antes de o áudio tocar',
+        );
+        expect(recebidas, isEmpty, reason: 'o toque cancelou o preparo');
+        expect(Voz.instancia.tocando, isFalse);
+        expect(Voz.instancia.carregando, isFalse);
+        expect(Voz.instancia.tocandoChave, isNull);
+        await sub.cancel();
+      },
+    );
 
-    test('tocar noutra chave no meio do preparo substitui a carga em voo', () async {
-      final recebidas = <String>[];
-      final sub = Voz.instancia.conclusoes.listen(recebidas.add);
-      final primeira = Voz.instancia.alternar(
-        'capitulo:b.2',
-      );
-      final segunda = Voz.instancia.alternar(
-        'capitulo:c.3',
-      );
-      expect(Voz.instancia.carregando, isTrue);
-      expect(Voz.instancia.tocandoChave, 'capitulo:c.3');
+    test(
+      'tocar noutra chave no meio do preparo substitui a carga em voo',
+      () async {
+        final recebidas = <String>[];
+        final sub = Voz.instancia.conclusoes.listen(recebidas.add);
+        final primeira = Voz.instancia.alternar('capitulo:b.2');
+        final segunda = Voz.instancia.alternar('capitulo:c.3');
+        expect(Voz.instancia.carregando, isTrue);
+        expect(Voz.instancia.tocandoChave, 'capitulo:c.3');
 
-      leitor.encerrar();
-      await primeira;
-      await segunda;
-      await esperarAvisos();
+        leitor.encerrar();
+        await primeira;
+        await segunda;
+        await esperarAvisos();
 
-      expect(recebidas, ['capitulo:c.3'], reason: 'só a chave que ficou no ar merece o fim');
-      await sub.cancel();
-    });
+        expect(recebidas, [
+          'capitulo:c.3',
+        ], reason: 'só a chave que ficou no ar merece o fim');
+        await sub.cancel();
+      },
+    );
 
     test('cancelar durante o preparo limpa o estado sem avisar fim', () async {
       final recebidas = <String>[];
       final sub = Voz.instancia.conclusoes.listen(recebidas.add);
-      final pendente = Voz.instancia.alternar(
-        'capitulo:d.4',
-      );
+      final pendente = Voz.instancia.alternar('capitulo:d.4');
       await Voz.instancia.parar();
       await pendente;
       await esperarAvisos();
@@ -144,88 +146,91 @@ void main() {
       await sub.cancel();
     });
 
-    test('só o fim natural avisa "concluída": interrupção e parada manual não', () async {
-      final recebidas = <String>[];
-      final sub = Voz.instancia.conclusoes.listen(recebidas.add);
+    test(
+      'só o fim natural avisa "concluída": interrupção e parada manual não',
+      () async {
+        final recebidas = <String>[];
+        final sub = Voz.instancia.conclusoes.listen(recebidas.add);
 
-      final natural = Voz.instancia.alternar(
-        'capitulo:e.5',
-      );
-      leitor.encerrar();
-      await natural;
+        final natural = Voz.instancia.alternar('capitulo:e.5');
+        leitor.encerrar();
+        await natural;
 
-      final interrompida = Voz.instancia.alternar(
-        'capitulo:f.6',
-      );
-      leitor.concluida = false;
-      leitor.encerrar();
-      await interrompida;
+        final interrompida = Voz.instancia.alternar('capitulo:f.6');
+        leitor.concluida = false;
+        leitor.encerrar();
+        await interrompida;
 
-      final manual = Voz.instancia.alternar(
-        'capitulo:g.7',
-      );
-      await Voz.instancia.parar();
-      await manual;
-      await esperarAvisos();
+        final manual = Voz.instancia.alternar('capitulo:g.7');
+        await Voz.instancia.parar();
+        await manual;
+        await esperarAvisos();
 
-      expect(recebidas, ['capitulo:e.5']);
-      await sub.cancel();
-    });
+        expect(recebidas, ['capitulo:e.5']);
+        await sub.cancel();
+      },
+    );
 
-    test('tocar de novo na chave recém-parada dentro do debounce não reinicia', () async {
-      final recebidas = <String>[];
-      final sub = Voz.instancia.conclusoes.listen(recebidas.add);
+    test(
+      'tocar de novo na chave recém-parada dentro do debounce não reinicia',
+      () async {
+        final recebidas = <String>[];
+        final sub = Voz.instancia.conclusoes.listen(recebidas.add);
 
-      final primeira = Voz.instancia.alternar(
-        'capitulo:h.8',
-      );
-      leitor.encerrar();
-      await primeira;
+        final primeira = Voz.instancia.alternar('capitulo:h.8');
+        leitor.encerrar();
+        await primeira;
 
-      final segunda = Voz.instancia.alternar(
-        'capitulo:h.8',
-      );
-      await pumpEventQueue();
-      await Voz.instancia.parar();
-      await segunda;
+        final segunda = Voz.instancia.alternar('capitulo:h.8');
+        await pumpEventQueue();
+        await Voz.instancia.parar();
+        await segunda;
 
-      final terceira = Voz.instancia.alternar(
-        'capitulo:h.8',
-      );
-      await terceira;
-      await esperarAvisos();
+        final terceira = Voz.instancia.alternar('capitulo:h.8');
+        await terceira;
+        await esperarAvisos();
 
-      expect(leitor.toques, 2, reason: 'a terceira chamada morreu no debounce, sem recomeçar');
-      expect(recebidas, ['capitulo:h.8']);
-      await sub.cancel();
-    });
+        expect(
+          leitor.toques,
+          2,
+          reason: 'a terceira chamada morreu no debounce, sem recomeçar',
+        );
+        expect(recebidas, ['capitulo:h.8']);
+        await sub.cancel();
+      },
+    );
 
-    test('retomar devolve a leitura da cache, da posição em que parou e sem cair no debounce', () async {
-      final recebidas = <String>[];
-      final sub = Voz.instancia.conclusoes.listen(recebidas.add);
+    test(
+      'retomar devolve a leitura da cache, da posição em que parou e sem cair no debounce',
+      () async {
+        final recebidas = <String>[];
+        final sub = Voz.instancia.conclusoes.listen(recebidas.add);
 
-      final primeira = Voz.instancia.alternar(
-        'capitulo:i.9',
-      );
-      leitor.encerrar();
-      await primeira;
-      await Voz.instancia.parar();
+        final primeira = Voz.instancia.alternar('capitulo:i.9');
+        leitor.encerrar();
+        await primeira;
+        await Voz.instancia.parar();
 
-      leitor.posicaoAtual = const Duration(minutes: 3);
-      final retomou = Voz.instancia.retomar(
-        'capitulo:i.9',
-        de: const Duration(minutes: 3),
-      );
-      leitor.encerrar();
-      final retomadaComSucesso = await retomou;
-      await esperarAvisos();
+        leitor.posicaoAtual = const Duration(minutes: 3);
+        final retomou = Voz.instancia.retomar(
+          'capitulo:i.9',
+          de: const Duration(minutes: 3),
+        );
+        leitor.encerrar();
+        final retomadaComSucesso = await retomou;
+        await esperarAvisos();
 
-      expect(retomadaComSucesso, isTrue);
-      expect(leitor.toques, 2, reason: 'a retomada toca de novo, apesar do debounce da parada');
-      expect(leitor.ultimoDe, const Duration(minutes: 3));
-      expect(recebidas, ['capitulo:i.9', 'capitulo:i.9']);
-      await sub.cancel();
-    });
+        expect(retomadaComSucesso, isTrue);
+        expect(
+          leitor.toques,
+          2,
+          reason: 'a retomada toca de novo, apesar do debounce da parada',
+        );
+        expect(leitor.ultimoDe, const Duration(minutes: 3));
+        expect(recebidas, ['capitulo:i.9', 'capitulo:i.9']);
+        await sub.cancel();
+      },
+    );
 
     test('retomar sem o áudio na cache não toca nada', () async {
       final retomou = await Voz.instancia.retomar('capitulo:sem-cache.1');
@@ -236,107 +241,138 @@ void main() {
       expect(Voz.instancia.tocandoChave, isNull);
     });
 
-    test('alternar com posição pula o áudio para onde a leitura parou', () async {
-      final leitura = Voz.instancia.alternar(
-        'capitulo:k.11',
-      );
-      await esperarAvisos();
-      expect(Voz.instancia.tocando, isTrue);
+    test(
+      'alternar com posição pula o áudio para onde a leitura parou',
+      () async {
+        final leitura = Voz.instancia.alternar('capitulo:k.11');
+        await esperarAvisos();
+        expect(Voz.instancia.tocando, isTrue);
 
-      leitor.posicaoAtual = const Duration(minutes: 5);
-      leitor.pausarDeFora();
-      await esperarAvisos();
-      expect(Voz.instancia.pausado, isTrue);
+        leitor.posicaoAtual = const Duration(minutes: 5);
+        leitor.pausarDeFora();
+        await esperarAvisos();
+        expect(Voz.instancia.pausado, isTrue);
 
-      final retomada = Voz.instancia.alternar(
-        'capitulo:k.11',
-      );
-      leitor.encerrar();
-      await retomada;
-      await leitura;
-      await esperarAvisos();
+        final retomada = Voz.instancia.alternar('capitulo:k.11');
+        leitor.encerrar();
+        await retomada;
+        await leitura;
+        await esperarAvisos();
 
-      expect(leitor.ultimoDe, const Duration(minutes: 5), reason: 'a retomada começa de onde a leitura parou, não do zero');
-      expect(leitor.toques, 2);
-      expect(Voz.instancia.tocando, isFalse);
-      expect(Voz.instancia.carregando, isFalse);
-    });
+        expect(
+          leitor.ultimoDe,
+          const Duration(minutes: 5),
+          reason: 'a retomada começa de onde a leitura parou, não do zero',
+        );
+        expect(leitor.toques, 2);
+        expect(Voz.instancia.tocando, isFalse);
+        expect(Voz.instancia.carregando, isFalse);
+      },
+    );
 
-    test('uma pausa de fora vira "Pausado", e tocar de novo retoma de onde parou', () async {
-      final recebidas = <String>[];
-      final sub = Voz.instancia.conclusoes.listen(recebidas.add);
+    test(
+      'uma pausa de fora vira "Pausado", e tocar de novo retoma de onde parou',
+      () async {
+        final recebidas = <String>[];
+        final sub = Voz.instancia.conclusoes.listen(recebidas.add);
 
-      final leitura = Voz.instancia.alternar(
-        'capitulo:l.12',
-      );
-      await esperarAvisos();
-      expect(Voz.instancia.tocando, isTrue);
+        final leitura = Voz.instancia.alternar('capitulo:l.12');
+        await esperarAvisos();
+        expect(Voz.instancia.tocando, isTrue);
 
-      leitor.posicaoAtual = const Duration(minutes: 5);
-      leitor.pausarDeFora();
-      await esperarAvisos();
+        leitor.posicaoAtual = const Duration(minutes: 5);
+        leitor.pausarDeFora();
+        await esperarAvisos();
 
-      expect(Voz.instancia.tocando, isFalse);
-      expect(Voz.instancia.pausado, isTrue, reason: 'uma pausa de fora vira o estado "Pausado"');
-      expect(Voz.instancia.tocandoChave, 'capitulo:l.12', reason: 'a sessão pausada continua viva, esperando retomar');
-      expect(Voz.instancia.carregando, isFalse);
-      expect(recebidas, isEmpty, reason: 'uma pausa de fora não é um fim: não há "Leitura concluída."');
+        expect(Voz.instancia.tocando, isFalse);
+        expect(
+          Voz.instancia.pausado,
+          isTrue,
+          reason: 'uma pausa de fora vira o estado "Pausado"',
+        );
+        expect(
+          Voz.instancia.tocandoChave,
+          'capitulo:l.12',
+          reason: 'a sessão pausada continua viva, esperando retomar',
+        );
+        expect(Voz.instancia.carregando, isFalse);
+        expect(
+          recebidas,
+          isEmpty,
+          reason: 'uma pausa de fora não é um fim: não há "Leitura concluída."',
+        );
 
-      final retomada = Voz.instancia.alternar(
-        'capitulo:l.12',
-      );
-      await esperarAvisos();
+        final retomada = Voz.instancia.alternar('capitulo:l.12');
+        await esperarAvisos();
 
-      expect(Voz.instancia.pausado, isFalse);
-      expect(Voz.instancia.tocando, isTrue, reason: 'o toque na sessão pausada retoma a leitura');
-      expect(leitor.toques, 2);
-      expect(leitor.ultimoDe, const Duration(minutes: 5), reason: 'o retomar começa de onde a leitura parou, não do zero');
+        expect(Voz.instancia.pausado, isFalse);
+        expect(
+          Voz.instancia.tocando,
+          isTrue,
+          reason: 'o toque na sessão pausada retoma a leitura',
+        );
+        expect(leitor.toques, 2);
+        expect(
+          leitor.ultimoDe,
+          const Duration(minutes: 5),
+          reason: 'o retomar começa de onde a leitura parou, não do zero',
+        );
 
-      leitor.encerrar();
-      await esperarAvisos();
-      expect(recebidas, ['capitulo:l.12']);
-      await retomada;
-      await leitura;
-      await sub.cancel();
-    });
+        leitor.encerrar();
+        await esperarAvisos();
+        expect(recebidas, ['capitulo:l.12']);
+        await retomada;
+        await leitura;
+        await sub.cancel();
+      },
+    );
 
-    test('o botão de pausa manual pausa a leitura, e o toque seguinte retoma de onde parou', () async {
-      final leitura = Voz.instancia.alternar(
-        'capitulo:l.13',
-      );
-      await esperarAvisos();
-      expect(Voz.instancia.tocando, isTrue);
+    test(
+      'o botão de pausa manual pausa a leitura, e o toque seguinte retoma de onde parou',
+      () async {
+        final leitura = Voz.instancia.alternar('capitulo:l.13');
+        await esperarAvisos();
+        expect(Voz.instancia.tocando, isTrue);
 
-      leitor.posicaoAtual = const Duration(minutes: 2);
-      await Voz.instancia.pausar();
-      await esperarAvisos();
+        leitor.posicaoAtual = const Duration(minutes: 2);
+        await Voz.instancia.pausar();
+        await esperarAvisos();
 
-      expect(Voz.instancia.tocando, isFalse);
-      expect(Voz.instancia.pausado, isTrue, reason: 'a pausa manual vira o mesmo estado "Pausado"');
-      expect(Voz.instancia.tocandoChave, 'capitulo:l.13', reason: 'a sessão pausada continua viva, esperando retomar');
+        expect(Voz.instancia.tocando, isFalse);
+        expect(
+          Voz.instancia.pausado,
+          isTrue,
+          reason: 'a pausa manual vira o mesmo estado "Pausado"',
+        );
+        expect(
+          Voz.instancia.tocandoChave,
+          'capitulo:l.13',
+          reason: 'a sessão pausada continua viva, esperando retomar',
+        );
 
-      final retomada = Voz.instancia.alternar(
-        'capitulo:l.13',
-      );
-      await esperarAvisos();
+        final retomada = Voz.instancia.alternar('capitulo:l.13');
+        await esperarAvisos();
 
-      expect(Voz.instancia.pausado, isFalse);
-      expect(Voz.instancia.tocando, isTrue);
-      expect(leitor.ultimoDe, const Duration(minutes: 2), reason: 'a retomada volta de onde a pausa manual parou, não do zero');
+        expect(Voz.instancia.pausado, isFalse);
+        expect(Voz.instancia.tocando, isTrue);
+        expect(
+          leitor.ultimoDe,
+          const Duration(minutes: 2),
+          reason: 'a retomada volta de onde a pausa manual parou, não do zero',
+        );
 
-      leitor.encerrar();
-      await esperarAvisos();
-      await retomada;
-      await leitura;
-    });
+        leitor.encerrar();
+        await esperarAvisos();
+        await retomada;
+        await leitura;
+      },
+    );
 
     test('parar() encerra uma sessão pausada de vez', () async {
       final recebidas = <String>[];
       final sub = Voz.instancia.conclusoes.listen(recebidas.add);
 
-      final leitura = Voz.instancia.alternar(
-        'capitulo:m.13',
-      );
+      final leitura = Voz.instancia.alternar('capitulo:m.13');
       await esperarAvisos();
       leitor.pausarDeFora();
       await esperarAvisos();
@@ -351,72 +387,84 @@ void main() {
       await sub.cancel();
     });
 
-    test('o áudio que fica pronto com a janela escondida não começa sozinho', () async {
-      final recebidas = <String>[];
-      final sub = Voz.instancia.conclusoes.listen(recebidas.add);
-      Voz.instancia.primeiroPlanoParaTestes = false;
-      addTearDown(() => Voz.instancia.primeiroPlanoParaTestes = null);
+    test(
+      'o áudio que fica pronto com a janela escondida não começa sozinho',
+      () async {
+        final recebidas = <String>[];
+        final sub = Voz.instancia.conclusoes.listen(recebidas.add);
+        Voz.instancia.primeiroPlanoParaTestes = false;
+        addTearDown(() => Voz.instancia.primeiroPlanoParaTestes = null);
 
-      final leitura = Voz.instancia.alternar(
-        'capitulo:n.14',
-      );
-      await esperarAvisos();
+        final leitura = Voz.instancia.alternar('capitulo:n.14');
+        await esperarAvisos();
 
-      expect(Voz.instancia.tocando, isFalse);
-      expect(Voz.instancia.carregando, isFalse);
-      expect(Voz.instancia.tocandoChave, isNull);
-      expect(leitor.toques, 0, reason: 'tocar com a janela escondida seria tocar para ninguém');
-      expect(recebidas, isEmpty, reason: 'não tocou, não há fim: nada de "Leitura concluída."');
-      await leitura;
+        expect(Voz.instancia.tocando, isFalse);
+        expect(Voz.instancia.carregando, isFalse);
+        expect(Voz.instancia.tocandoChave, isNull);
+        expect(
+          leitor.toques,
+          0,
+          reason: 'tocar com a janela escondida seria tocar para ninguém',
+        );
+        expect(
+          recebidas,
+          isEmpty,
+          reason: 'não tocou, não há fim: nada de "Leitura concluída."',
+        );
+        await leitura;
 
-      Voz.instancia.primeiroPlanoParaTestes = true;
-      final segunda = Voz.instancia.alternar(
-        'capitulo:n.14',
-      );
-      leitor.encerrar();
-      await segunda;
-      await esperarAvisos();
+        Voz.instancia.primeiroPlanoParaTestes = true;
+        final segunda = Voz.instancia.alternar('capitulo:n.14');
+        leitor.encerrar();
+        await segunda;
+        await esperarAvisos();
 
-      expect(leitor.toques, 1);
-      expect(recebidas, ['capitulo:n.14']);
-      await sub.cancel();
-    });
+        expect(leitor.toques, 1);
+        expect(recebidas, ['capitulo:n.14']);
+        await sub.cancel();
+      },
+    );
 
-    test('trocar de chave durante a leitura: o preparo novo não herda "tocando", e o retry não vira parar', () async {
-      final primeira = Voz.instancia.alternar(
-        'capitulo:o.15',
-      );
-      await esperarAvisos();
-      expect(Voz.instancia.tocando, isTrue);
+    test(
+      'trocar de chave durante a leitura: o preparo novo não herda "tocando", e o retry não vira parar',
+      () async {
+        final primeira = Voz.instancia.alternar('capitulo:o.15');
+        await esperarAvisos();
+        expect(Voz.instancia.tocando, isTrue);
 
-      final segunda = Voz.instancia.alternar(
-        'capitulo:p.16',
-      );
-      await esperarAvisos();
+        final segunda = Voz.instancia.alternar('capitulo:p.16');
+        await esperarAvisos();
 
-      expect(Voz.instancia.tocando, isFalse, reason: 'o "tocando" da sessão antiga morre na troca');
-      expect(Voz.instancia.carregando, isTrue);
-      expect(Voz.instancia.tocandoChave, 'capitulo:p.16');
-      await primeira;
+        expect(
+          Voz.instancia.tocando,
+          isFalse,
+          reason: 'o "tocando" da sessão antiga morre na troca',
+        );
+        expect(Voz.instancia.carregando, isTrue);
+        expect(Voz.instancia.tocandoChave, 'capitulo:p.16');
+        await primeira;
 
-      // Segunda ainda carregando, encerra como falha de rede simulada:
-      // força parar para limpar estado
-      await Voz.instancia.parar();
-      await segunda;
-      await esperarAvisos();
-      expect(Voz.instancia.tocando, isFalse);
-      expect(Voz.instancia.carregando, isFalse);
-      expect(Voz.instancia.tocandoChave, isNull, reason: 'o estado mentiroso não fica preso após o erro');
+        // Segunda ainda carregando, encerra como falha de rede simulada:
+        // força parar para limpar estado
+        await Voz.instancia.parar();
+        await segunda;
+        await esperarAvisos();
+        expect(Voz.instancia.tocando, isFalse);
+        expect(Voz.instancia.carregando, isFalse);
+        expect(
+          Voz.instancia.tocandoChave,
+          isNull,
+          reason: 'o estado mentiroso não fica preso após o erro',
+        );
 
-      final retry = Voz.instancia.alternar(
-        'capitulo:p.16',
-      );
-      leitor.encerrar();
-      await retry;
-      await esperarAvisos();
+        final retry = Voz.instancia.alternar('capitulo:p.16');
+        leitor.encerrar();
+        await retry;
+        await esperarAvisos();
 
-      expect(leitor.toques, 2);
-      expect(Voz.instancia.tocando, isFalse);
-    });
+        expect(leitor.toques, 2);
+        expect(Voz.instancia.tocando, isFalse);
+      },
+    );
   });
 }

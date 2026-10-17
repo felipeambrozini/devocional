@@ -102,19 +102,18 @@ void main() {
       expect(find.textContaining('Ir para'), findsNothing);
     });
 
-    testWidgets(
-      'digitar sozinho já busca, sem precisar tocar no botão',
-      (tester) async {
-        await abrir(tester);
+    testWidgets('digitar sozinho já busca, sem precisar tocar no botão', (
+      tester,
+    ) async {
+      await abrir(tester);
 
-        await tester.enterText(find.byType(TextField), 'amor');
-        // Sem tap no botão: só o atraso do debounce deve disparar a busca.
-        await tester.pump(const Duration(milliseconds: 500));
-        await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'amor');
+      // Sem tap no botão: só o atraso do debounce deve disparar a busca.
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
 
-        expect(find.textContaining('resultado'), findsOneWidget);
-      },
-    );
+      expect(find.textContaining('resultado'), findsOneWidget);
+    });
 
     testWidgets(
       'a aba Devocionais acha um termo só de Manhã/Noite ou Promessas',
@@ -139,7 +138,7 @@ void main() {
         await tester.tap(find.textContaining('Promessas de Deus'));
         await tester.pumpAndSettle();
 
-       expect(find.byType(TelaDevocional), findsOneWidget);
+        expect(find.byType(TelaDevocional), findsOneWidget);
       },
     );
   });
@@ -159,8 +158,7 @@ void main() {
       final children = (resultado).children!;
       expect(children, isNotEmpty);
 
-      final textos =
-          children.map((span) => (span as TextSpan).text).join();
+      final textos = children.map((span) => (span as TextSpan).text).join();
       expect(textos, contains('Deus'));
     });
 
@@ -168,15 +166,11 @@ void main() {
       final tema = ThemeData.light().textTheme;
       final cor = ThemeData.light().colorScheme;
 
-      final resultado = destacar(
-        'amor',
-        'amor',
-        tema,
-        cor,
-      );
+      final resultado = destacar('amor', 'amor', tema, cor);
 
-      final textos =
-          ((resultado).children!).map((span) => (span as TextSpan).text).join();
+      final textos = ((resultado).children!)
+          .map((span) => (span as TextSpan).text)
+          .join();
       expect(textos, 'amor');
     });
 
@@ -203,15 +197,11 @@ void main() {
       final tema = ThemeData.light().textTheme;
       final cor = ThemeData.light().colorScheme;
 
-      final resultado = destacar(
-        'texto sem o termo buscado',
-        'xyz',
-        tema,
-        cor,
-      );
+      final resultado = destacar('texto sem o termo buscado', 'xyz', tema, cor);
 
-      final textos =
-          ((resultado).children!).map((span) => (span as TextSpan).text).join();
+      final textos = ((resultado).children!)
+          .map((span) => (span as TextSpan).text)
+          .join();
       expect(textos, 'texto sem o termo buscado');
     });
   });

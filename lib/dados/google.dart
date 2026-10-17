@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:google_api_headers/google_api_headers.dart';
 
 /// Chaves de API do Google, uma por plataforma, porque cada uma prova a

@@ -3,11 +3,14 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('TipoDeDevocional', () {
-    test('rota bate com o path das 3 leituras (/manha, /noite, /promessas)', () {
-      expect(TipoDeDevocional.manha.rota, 'manha');
-      expect(TipoDeDevocional.noite.rota, 'noite');
-      expect(TipoDeDevocional.promessa.rota, 'promessas');
-    });
+    test(
+      'rota bate com o path das 3 leituras (/manha, /noite, /promessas)',
+      () {
+        expect(TipoDeDevocional.manha.rota, 'manha');
+        expect(TipoDeDevocional.noite.rota, 'noite');
+        expect(TipoDeDevocional.promessa.rota, 'promessas');
+      },
+    );
   });
 
   group('ItemDoDia', () {

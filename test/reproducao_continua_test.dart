@@ -138,12 +138,11 @@ void main() {
       WidgetTester tester, {
       required String livro,
       required List<int> capitulos,
-    }) =>
-        tester.runAsync(() async {
-          for (final n in capitulos) {
-            await Conteudo.instancia.capitulo(livro, n);
-          }
-        });
+    }) => tester.runAsync(() async {
+      for (final n in capitulos) {
+        await Conteudo.instancia.capitulo(livro, n);
+      }
+    });
 
     Future<void> montar(
       WidgetTester tester,
@@ -155,10 +154,7 @@ void main() {
         MaterialApp(
           home: EscopoDoEstado(
             estado: estado,
-            child: TelaBiblia(
-              livroInicial: livro,
-              capituloInicial: capitulo,
-            ),
+            child: TelaBiblia(livroInicial: livro, capituloInicial: capitulo),
           ),
         ),
       );
@@ -167,10 +163,8 @@ void main() {
 
     // O título do capítulo aparece duas vezes (barra e corpo): o recorte
     // pela AppBar diz onde o leitor está.
-    Finder tituloNaBarra(String texto) => find.descendant(
-      of: find.byType(AppBar),
-      matching: find.text(texto),
-    );
+    Finder tituloNaBarra(String texto) =>
+        find.descendant(of: find.byType(AppBar), matching: find.text(texto));
 
     // O `alternar` só retorna no fim do áudio, e o preparo mostra um giro
     // indeterminado (animação perpétua): um `pumpAndSettle` ali travaria.

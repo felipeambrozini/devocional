@@ -7,7 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Lê o asset direto do disco. Um teste de dados não precisa subir um app inteiro
 /// só para validar o conteúdo de um JSON.
-List<DiaDoPlano> carregarPlano([String caminho = 'assets/planos/cronograma.json']) {
+List<DiaDoPlano> carregarPlano([
+  String caminho = 'assets/planos/cronograma.json',
+]) {
   final cru = File(caminho).readAsStringSync();
   return [
     for (final d in json.decode(cru) as List)
@@ -72,18 +74,24 @@ void main() {
         expect(primeiro.ateCapitulo, 119);
         expect(primeiro.deVersiculo, 1);
         expect(primeiro.ateVersiculo, 56);
-        expect(primeiro.rotulo, 'Salmos 119:1-56');
+        expect(primeiro.rotulo, 'Salmo 119:1-56');
         // O capitulo inteiro seria 176 versiculos; a faixa nao pode virar isso.
         expect(primeiro.capitulos.length, 1);
       },
     );
 
-    test('dia com varios livros gera uma faixa por livro, na ordem escrita', () {
+    test('dia com varios livros gera uma faixa por capitulo, na ordem escrita', () {
       final dia = plano.firstWhere((d) => d.data == '28-07');
       expect(dia.rotulo, 'Obadias 1, 2 Reis 1 a 4');
       // O '2' de '2 Reis' nao pode ser lido como capitulo de Obadias, que tem so um.
-      expect(dia.faixas.map((f) => f.livro), ['obadias', '2reis']);
-      expect(dia.faixas.last.deCapitulo, 1);
+      expect(dia.faixas.map((f) => f.livro), [
+        'obadias',
+        '2reis',
+        '2reis',
+        '2reis',
+        '2reis',
+      ]);
+      expect(dia.faixas[1].deCapitulo, 1);
       expect(dia.faixas.last.ateCapitulo, 4);
     });
 
@@ -99,7 +107,12 @@ void main() {
 
     test('livros numerados nao sao confundidos com os de nome parecido', () {
       final dia = plano.firstWhere((d) => d.data == '02-03');
-      expect(dia.faixas.map((f) => f.livro), ['1joao', '2joao', '3joao']);
+      expect(dia.faixas.map((f) => f.livro), [
+        '1joao',
+        '1joao',
+        '2joao',
+        '3joao',
+      ]);
     });
 
     test('rotulo de faixa e legivel na tela', () {
@@ -112,7 +125,9 @@ void main() {
   });
 
   group('cronograma bissexto', () {
-    final planoBissexto = carregarPlano('assets/planos/cronograma_bissexto.json');
+    final planoBissexto = carregarPlano(
+      'assets/planos/cronograma_bissexto.json',
+    );
 
     test('tem exatamente 366 dias, um por data do ano incluindo 29-02', () {
       expect(planoBissexto.length, 366);

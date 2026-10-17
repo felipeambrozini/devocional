@@ -35,7 +35,9 @@ class DevocionalCabecalhoDoPlano extends StatelessWidget {
             const SizedBox(height: DevocionalEspacamento.sp12),
             Text('$lidos de $totalDeDias dias lidos', style: tema.labelMedium),
             const SizedBox(height: DevocionalEspacamento.sp6),
-            DevocionalProgressoFino(valor: totalDeDias == 0 ? 0 : lidos / totalDeDias),
+            DevocionalProgressoFino(
+              valor: totalDeDias == 0 ? 0 : lidos / totalDeDias,
+            ),
           ],
         ),
       ),

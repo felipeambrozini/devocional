@@ -7,7 +7,11 @@ import '../widgets/widgets.dart';
 
 /// As duas abas de quem tem conta: o cronograma anual e os planos próprios.
 class DevocionalAbasDoPlano extends StatelessWidget {
-  const DevocionalAbasDoPlano({super.key, required this.hoje, required this.acaoDeAjustes});
+  const DevocionalAbasDoPlano({
+    super.key,
+    required this.hoje,
+    required this.acaoDeAjustes,
+  });
 
   final DateTime? hoje;
   final Widget acaoDeAjustes;

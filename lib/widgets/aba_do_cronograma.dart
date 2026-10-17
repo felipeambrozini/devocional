@@ -24,8 +24,8 @@ class DevocionalAbaDoCronograma extends StatefulWidget {
       _DevocionalAbaDoCronogramaState();
 }
 
-class _DevocionalAbaDoCronogramaState
-    extends State<DevocionalAbaDoCronograma> with AutomaticKeepAliveClientMixin {
+class _DevocionalAbaDoCronogramaState extends State<DevocionalAbaDoCronograma>
+    with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -118,7 +118,9 @@ class _DevocionalAbaDoCronogramaState
               for (var m = 1; m <= 12; m++)
                 Padding(
                   key: _chavesDeMes[m - 1],
-                  padding: const EdgeInsets.only(right: DevocionalEspacamento.sp8),
+                  padding: const EdgeInsets.only(
+                    right: DevocionalEspacamento.sp8,
+                  ),
                   child: ChoiceChip(
                     label: Text(meses[m - 1]),
                     selected: m == _mes,
@@ -151,8 +153,9 @@ class _DevocionalAbaDoCronogramaState
                   return const Center(child: CircularProgressIndicator());
                 }
                 final dias = snap.data!.where((d) => d.mes == _mes).toList();
-                final lidosNoMes =
-                    dias.where((d) => estado.foiLido(d.data)).length;
+                final lidosNoMes = dias
+                    .where((d) => estado.foiLido(d.data))
+                    .length;
                 _rolarAteHoje();
 
                 return ListView.separated(
@@ -175,7 +178,9 @@ class _DevocionalAbaDoCronogramaState
                   itemBuilder: (context, i) {
                     if (i == 0) {
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: DevocionalEspacamento.sp6),
+                        padding: const EdgeInsets.only(
+                          bottom: DevocionalEspacamento.sp6,
+                        ),
                         child: Text(
                           '$lidosNoMes de ${dias.length} dias concluídos em '
                           '${meses[_mes - 1]}',
@@ -184,8 +189,7 @@ class _DevocionalAbaDoCronogramaState
                       );
                     }
                     final dia = dias[i - 1];
-                    final ehHoje =
-                        dia.mes == hoje.month && dia.dia == hoje.day;
+                    final ehHoje = dia.mes == hoje.month && dia.dia == hoje.day;
                     return DevocionalCartaoDeDia(
                       key: ehHoje ? _chaveDeHoje : null,
                       numero: dia.dia,

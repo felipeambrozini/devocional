@@ -62,7 +62,9 @@ class DevocionalCartaoLeituraProgresso extends StatelessWidget {
           Wrap(
             spacing: DevocionalEspacamento.sp8,
             runSpacing: DevocionalEspacamento.sp8,
-            children: [for (final f in dia.faixas) DevocionalBotaoDeFaixa(faixa: f)],
+            children: [
+              for (final f in dia.faixas) DevocionalBotaoDeFaixa(faixa: f),
+            ],
           ),
           const SizedBox(height: DevocionalEspacamento.sp20),
           const DevocionalFilete(),

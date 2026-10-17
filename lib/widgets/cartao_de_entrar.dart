@@ -65,7 +65,9 @@ class DevocionalCartaoDeEntrar extends StatelessWidget {
                             ? const SizedBox(
                                 width: DevocionalEspacamento.sp18,
                                 height: DevocionalEspacamento.sp18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const FaIcon(FontAwesomeIcons.google, size: 18),
                         label: const Text('Entrar com Google'),

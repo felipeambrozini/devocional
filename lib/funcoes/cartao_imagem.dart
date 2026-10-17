@@ -61,18 +61,8 @@ Future<Uint8List> gerarImagemDoCartao({
   required String referencia,
   String? rodape,
 }) async {
-  final marca = _pintor(
-    'DEVOCIONAL',
-    tamanho: 34,
-    cor: _apoio,
-    espacamento: 8,
-  );
-  final corpo = _pintor(
-    texto,
-    tamanho: 54,
-    cor: _corTexto,
-    italico: true,
-  );
+  final marca = _pintor('DEVOCIONAL', tamanho: 34, cor: _apoio, espacamento: 8);
+  final corpo = _pintor(texto, tamanho: 54, cor: _corTexto, italico: true);
   final assinatura = _pintor(
     referencia,
     tamanho: 46,
@@ -93,10 +83,7 @@ Future<Uint8List> gerarImagemDoCartao({
 
   final gravador = ui.PictureRecorder();
   final tela = Canvas(gravador);
-  tela.drawRect(
-    Rect.fromLTWH(0, 0, _largura, altura),
-    Paint()..color = _fundo,
-  );
+  tela.drawRect(Rect.fromLTWH(0, 0, _largura, altura), Paint()..color = _fundo);
   var y = _margem;
   marca.paint(tela, Offset(_margem, y));
   y += marca.height + espaco;
@@ -133,7 +120,8 @@ Future<void> compartilharCartao({
   String? textoParaAcompanhar,
 }) async {
   final acompanhamento =
-      textoParaAcompanhar ?? '$texto\n$referencia${link == null ? '' : '\n$link'}';
+      textoParaAcompanhar ??
+      '$texto\n$referencia${link == null ? '' : '\n$link'}';
   if (kIsWeb) {
     await SharePlus.instance.share(ShareParams(text: acompanhamento));
     return;

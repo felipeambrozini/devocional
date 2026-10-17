@@ -20,11 +20,19 @@ class DevocionalLista extends StatelessWidget {
   Widget build(BuildContext context) {
     if (itens.isEmpty) return vazio;
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(DevocionalEspacamento.sp16, DevocionalEspacamento.sp16, DevocionalEspacamento.sp16, DevocionalEspacamento.sp32),
+      padding: const EdgeInsets.fromLTRB(
+        DevocionalEspacamento.sp16,
+        DevocionalEspacamento.sp16,
+        DevocionalEspacamento.sp16,
+        DevocionalEspacamento.sp32,
+      ),
       itemCount: itens.length,
-      separatorBuilder: (_, _) => const SizedBox(height: DevocionalEspacamento.sp10),
-      itemBuilder: (context, i) =>
-          DevocionalCartaoDeMarcacao(marcacao: itens[i], mostrarNota: mostrarNota),
+      separatorBuilder: (_, _) =>
+          const SizedBox(height: DevocionalEspacamento.sp10),
+      itemBuilder: (context, i) => DevocionalCartaoDeMarcacao(
+        marcacao: itens[i],
+        mostrarNota: mostrarNota,
+      ),
     );
   }
 }

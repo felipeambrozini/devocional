@@ -19,13 +19,16 @@ import 'package:flutter/foundation.dart'
 // Gemini e TTS em lib/dados/google.dart — e não por asset, que iria ao ar
 // junto com o bundle.
 const _firebaseApiKeyWeb = String.fromEnvironment('FIREBASE_API_KEY_WEB');
-const _firebaseApiKeyAndroid = String.fromEnvironment('FIREBASE_API_KEY_ANDROID');
+const _firebaseApiKeyAndroid = String.fromEnvironment(
+  'FIREBASE_API_KEY_ANDROID',
+);
 const _firebaseApiKeyIos = String.fromEnvironment('FIREBASE_API_KEY_IOS');
 const _firebaseAppIdWeb = String.fromEnvironment('FIREBASE_APP_ID_WEB');
 const _firebaseAppIdAndroid = String.fromEnvironment('FIREBASE_APP_ID_ANDROID');
 const _firebaseAppIdIos = String.fromEnvironment('FIREBASE_APP_ID_IOS');
-const _firebaseMessagingSenderId =
-    String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID');
+const _firebaseMessagingSenderId = String.fromEnvironment(
+  'FIREBASE_MESSAGING_SENDER_ID',
+);
 const _firebaseProjectId = String.fromEnvironment('FIREBASE_PROJECT_ID');
 
 /// Tem que ser o domínio de produção (`www.felipeambrozini.com.br`), nunca o
@@ -36,8 +39,12 @@ const _firebaseProjectId = String.fromEnvironment('FIREBASE_PROJECT_ID');
 /// `/__/auth/*` na própria origem quando o domínio custom está conectado ao
 /// projeto, por isso apontar para cá funciona sem configuração extra.
 const _firebaseAuthDomain = String.fromEnvironment('FIREBASE_AUTH_DOMAIN');
-const _firebaseStorageBucket = String.fromEnvironment('FIREBASE_STORAGE_BUCKET');
-const _firebaseMeasurementId = String.fromEnvironment('FIREBASE_MEASUREMENT_ID');
+const _firebaseStorageBucket = String.fromEnvironment(
+  'FIREBASE_STORAGE_BUCKET',
+);
+const _firebaseMeasurementId = String.fromEnvironment(
+  'FIREBASE_MEASUREMENT_ID',
+);
 const _firebaseIosClientId = String.fromEnvironment('FIREBASE_IOS_CLIENT_ID');
 const _firebaseIosBundleId = String.fromEnvironment('FIREBASE_IOS_BUNDLE_ID');
 
@@ -74,30 +81,30 @@ class DefaultFirebaseOptions {
   }
 
   static FirebaseOptions get web => FirebaseOptions(
-        apiKey: _firebaseApiKeyWeb,
-        appId: _firebaseAppIdWeb,
-        messagingSenderId: _firebaseMessagingSenderId,
-        projectId: _firebaseProjectId,
-        authDomain: _firebaseAuthDomain,
-        storageBucket: _firebaseStorageBucket,
-        measurementId: _firebaseMeasurementId,
-      );
+    apiKey: _firebaseApiKeyWeb,
+    appId: _firebaseAppIdWeb,
+    messagingSenderId: _firebaseMessagingSenderId,
+    projectId: _firebaseProjectId,
+    authDomain: _firebaseAuthDomain,
+    storageBucket: _firebaseStorageBucket,
+    measurementId: _firebaseMeasurementId,
+  );
 
   static FirebaseOptions get android => FirebaseOptions(
-        apiKey: _firebaseApiKeyAndroid,
-        appId: _firebaseAppIdAndroid,
-        messagingSenderId: _firebaseMessagingSenderId,
-        projectId: _firebaseProjectId,
-        storageBucket: _firebaseStorageBucket,
-      );
+    apiKey: _firebaseApiKeyAndroid,
+    appId: _firebaseAppIdAndroid,
+    messagingSenderId: _firebaseMessagingSenderId,
+    projectId: _firebaseProjectId,
+    storageBucket: _firebaseStorageBucket,
+  );
 
   static FirebaseOptions get ios => FirebaseOptions(
-        apiKey: _firebaseApiKeyIos,
-        appId: _firebaseAppIdIos,
-        messagingSenderId: _firebaseMessagingSenderId,
-        projectId: _firebaseProjectId,
-        storageBucket: _firebaseStorageBucket,
-        iosClientId: _firebaseIosClientId,
-        iosBundleId: _firebaseIosBundleId,
-      );
+    apiKey: _firebaseApiKeyIos,
+    appId: _firebaseAppIdIos,
+    messagingSenderId: _firebaseMessagingSenderId,
+    projectId: _firebaseProjectId,
+    storageBucket: _firebaseStorageBucket,
+    iosClientId: _firebaseIosClientId,
+    iosBundleId: _firebaseIosBundleId,
+  );
 }

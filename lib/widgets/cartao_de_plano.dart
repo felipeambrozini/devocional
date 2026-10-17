@@ -52,15 +52,12 @@ class DevocionalCartaoDePlano extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text(
-                      plano.titulo,
-                      style: tema.titleMedium,
-                    ),
-                  ),
+                  Expanded(child: Text(plano.titulo, style: tema.titleMedium)),
                   if (plano.compartilhado)
                     Padding(
-                      padding: const EdgeInsets.only(top: DevocionalEspacamento.sp2),
+                      padding: const EdgeInsets.only(
+                        top: DevocionalEspacamento.sp2,
+                      ),
                       child: Tooltip(
                         message: 'Plano compartilhado por link',
                         child: FaIcon(
@@ -102,10 +99,7 @@ class DevocionalCartaoDePlano extends StatelessWidget {
                 style: tema.labelMedium?.copyWith(color: cor.onSurfaceVariant),
               ),
               const SizedBox(height: DevocionalEspacamento.sp10),
-              Text(
-                '$lidos de $dias dias lidos',
-                style: tema.labelMedium,
-              ),
+              Text('$lidos de $dias dias lidos', style: tema.labelMedium),
               const SizedBox(height: DevocionalEspacamento.sp6),
               DevocionalProgressoFino(valor: dias == 0 ? 0 : lidos / dias),
             ],

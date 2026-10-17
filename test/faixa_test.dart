@@ -58,11 +58,7 @@ void main() {
   });
 
   testWidgets('faixa de capítulo abre o capítulo sem recorte', (tester) async {
-    final faixa = Faixa(
-      livro: 'salmos',
-      deCapitulo: 119,
-      ateCapitulo: 119,
-    );
+    final faixa = Faixa(livro: 'salmos', deCapitulo: 119, ateCapitulo: 119);
 
     await abrirComFaixa(tester, faixa);
 
@@ -71,41 +67,44 @@ void main() {
     expect(find.text('Salmos 119'), findsWidgets);
   });
 
-  testWidgets('DevocionalBotaoDeDevocional mostra o nome do tipo e navega para a rota '
-      'e data certas', (tester) async {
-    final roteador = GoRouter(
-      initialLocation: '/inicio',
-      routes: [
-        GoRoute(
-          path: '/inicio',
-          builder: (context, state) => const Scaffold(
-            body: DevocionalBotaoDeDevocional(
-              tipo: TipoDeDevocional.noite,
-              chaveDoDia: '25-12',
+  testWidgets(
+    'DevocionalBotaoDeDevocional mostra o nome do tipo e navega para a rota '
+    'e data certas',
+    (tester) async {
+      final roteador = GoRouter(
+        initialLocation: '/inicio',
+        routes: [
+          GoRoute(
+            path: '/inicio',
+            builder: (context, state) => const Scaffold(
+              body: DevocionalBotaoDeDevocional(
+                tipo: TipoDeDevocional.noite,
+                chaveDoDia: '25-12',
+              ),
             ),
           ),
-        ),
-        GoRoute(
-          path: '/noite',
-          builder: (context, state) =>
-              Text('data=${state.uri.queryParameters['data']}'),
-        ),
-      ],
-    );
-    await tester.pumpWidget(MaterialApp.router(routerConfig: roteador));
+          GoRoute(
+            path: '/noite',
+            builder: (context, state) =>
+                Text('data=${state.uri.queryParameters['data']}'),
+          ),
+        ],
+      );
+      await tester.pumpWidget(MaterialApp.router(routerConfig: roteador));
 
-    expect(find.text('Noite'), findsOneWidget);
-    await tester.tap(find.byType(DevocionalBotaoDeDevocional));
-    await tester.pumpAndSettle();
+      expect(find.text('Noite'), findsOneWidget);
+      await tester.tap(find.byType(DevocionalBotaoDeDevocional));
+      await tester.pumpAndSettle();
 
-    final ano = DateTime.now().year;
-    expect(find.text('data=$ano-12-25'), findsOneWidget);
-    // Regressão: abrir o devocional a partir de um plano trocava de aba com
-    // go e perdia a volta para o plano. Com push, voltar desempilha para a
-    // origem (/inicio aqui, /plano/:id no app).
-    expect(roteador.canPop(), isTrue);
-    roteador.pop();
-    await tester.pumpAndSettle();
-    expect(find.text('Noite'), findsOneWidget);
-  });
+      final ano = DateTime.now().year;
+      expect(find.text('data=$ano-12-25'), findsOneWidget);
+      // Regressão: abrir o devocional a partir de um plano trocava de aba com
+      // go e perdia a volta para o plano. Com push, voltar desempilha para a
+      // origem (/inicio aqui, /plano/:id no app).
+      expect(roteador.canPop(), isTrue);
+      roteador.pop();
+      await tester.pumpAndSettle();
+      expect(find.text('Noite'), findsOneWidget);
+    },
+  );
 }

@@ -650,9 +650,7 @@ class _AppDevocionalState extends State<AppDevocional>
         routerConfig: _router,
         title: 'Devocional',
         debugShowCheckedModeBanner: false,
-        builder: (context, child) => _EsconderMovimento(
-          child: child!,
-        ),
+        builder: (context, child) => _EsconderMovimento(child: child!),
         // Os dois temas vão sempre montados, e o `themeMode` escolhe. Assim
         // "Automático" funciona de verdade: o sistema pode virar o modo com o
         // app aberto, e o MaterialApp troca sozinho, sem passar pelo Estado.

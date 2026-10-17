@@ -70,12 +70,7 @@ void main() {
   ) async {
     final estado = Estado(await SharedPreferences.getInstance());
     await estado.definirNota('joao', 3, 16, 'o amor de Deus');
-    await estado.definirNota(
-      'salmos',
-      23,
-      1,
-      'o Senhor é meu pastor',
-    );
+    await estado.definirNota('salmos', 23, 1, 'o Senhor é meu pastor');
     await montar(tester, estado);
 
     await tester.enterText(find.byType(TextField), 'pastor');
@@ -83,7 +78,7 @@ void main() {
     await tester.tap(find.text('Notas (1)'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Salmos 23:1'), findsOneWidget);
+    expect(find.textContaining('Salmo 23:1'), findsOneWidget);
     expect(find.textContaining('João 3:16'), findsNothing);
   });
 

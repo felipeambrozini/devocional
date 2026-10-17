@@ -5,4 +5,5 @@
 /// costura condicional de `espelho_do_tema.dart`.
 library;
 
-export 'url_da_pagina_io.dart' if (dart.library.js_interop) 'url_da_pagina_web.dart';
+export 'url_da_pagina_io.dart'
+    if (dart.library.js_interop) 'url_da_pagina_web.dart';

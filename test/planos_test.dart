@@ -84,7 +84,7 @@ void main() {
 
     test('distribui com diferença de no máximo um capítulo por dia', () {
       final dias = montarPlanoDeLeitura(livros: ['salmos'], dias: 60);
-      final tamanhos = [for (final d in dias) d.faixas.single.capitulos.length];
+      final tamanhos = [for (final d in dias) d.faixas.length];
       expect(tamanhos.reduce((a, b) => a + b), 150);
       expect(tamanhos, everyElement(inInclusiveRange(2, 3)));
     });
@@ -121,23 +121,26 @@ void main() {
       );
     });
 
-    test('capítulos do mesmo livro no mesmo dia viram uma faixa só', () {
-      final primeiro = montarPlanoDeLeitura(
-        livros: ['genesis'],
-        dias: 10,
-      ).first;
-      expect(primeiro.faixas, hasLength(1));
-      expect(primeiro.faixas.single.rotulo, 'Gênesis 1-5');
-    });
+    test(
+      'cada capítulo do dia tem a sua faixa, e o rótulo do dia os junta',
+      () {
+        final primeiro = montarPlanoDeLeitura(
+          livros: ['genesis'],
+          dias: 10,
+        ).first;
+        expect(primeiro.faixas, hasLength(5));
+        expect(primeiro.faixas.first.rotulo, 'Gênesis 1');
+        expect(primeiro.rotulo, 'Gênesis 1-5');
+      },
+    );
 
-    test('a virada de livro quebra a faixa', () {
+    test('a virada de livro aparece separada no rótulo do dia', () {
       final dias = montarPlanoDeLeitura(livros: ['genesis', 'exodo'], dias: 3);
       expect(dias, hasLength(3));
       final segundo = dias[1];
-      expect(segundo.faixas, hasLength(2));
-      expect(segundo.faixas.first.rotulo, 'Gênesis 31-50');
-      expect(segundo.faixas.last.rotulo, 'Êxodo 1-10');
-      expect(dias[2].faixas.single.rotulo, 'Êxodo 11-40');
+      expect(segundo.faixas, hasLength(30));
+      expect(segundo.rotulo, 'Gênesis 31-50, Êxodo 1-10');
+      expect(dias[2].rotulo, 'Êxodo 11-40');
     });
 
     test('segue a ordem dada em livros, não a canônica', () {
@@ -295,19 +298,26 @@ void main() {
       expect(plano.livros, ['genesis']);
     });
 
-    test('doJsonDaNuvem é compartilhado por definição e usa o criadoEm dado', () {
-      final criadoEm = DateTime(2027, 5, 1);
-      final plano = PlanoDoUsuario.doJsonDaNuvem(
-        {'titulo': 'Nuvem', 'livros': ['exodo'], 'dias': 40},
-        id: 'doc-1',
-        criadoEm: criadoEm,
-      );
-      expect(plano.id, 'doc-1');
-      expect(plano.titulo, 'Nuvem');
-      expect(plano.compartilhado, isTrue);
-      expect(plano.criadoEm, criadoEm);
-      expect(plano.totalDeCapitulos, 40);
-    });
+    test(
+      'doJsonDaNuvem é compartilhado por definição e usa o criadoEm dado',
+      () {
+        final criadoEm = DateTime(2027, 5, 1);
+        final plano = PlanoDoUsuario.doJsonDaNuvem(
+          {
+            'titulo': 'Nuvem',
+            'livros': ['exodo'],
+            'dias': 40,
+          },
+          id: 'doc-1',
+          criadoEm: criadoEm,
+        );
+        expect(plano.id, 'doc-1');
+        expect(plano.titulo, 'Nuvem');
+        expect(plano.compartilhado, isTrue);
+        expect(plano.criadoEm, criadoEm);
+        expect(plano.totalDeCapitulos, 40);
+      },
+    );
 
     test('totalDeCapitulos soma os capítulos dos livros', () {
       final plano = PlanoDoUsuario(
@@ -396,22 +406,37 @@ void main() {
   });
 
   group('planos do usuário no Estado', () {
-    test('criarPlano põe o mais novo na frente, com título padrão, e persiste', () async {
-      final estado = await Estado.abrir();
-      final a = await estado.criarPlano(titulo: '', livros: ['genesis'], dias: 30);
-      final b = await estado.criarPlano(titulo: 'Meu plano', livros: ['salmos'], dias: 10);
-      expect(a.titulo, 'Gênesis em 30 dias');
-      expect(b.titulo, 'Meu plano');
-      expect(estado.planosDoUsuario.map((p) => p.id), [b.id, a.id]);
+    test(
+      'criarPlano põe o mais novo na frente, com título padrão, e persiste',
+      () async {
+        final estado = await Estado.abrir();
+        final a = await estado.criarPlano(
+          titulo: '',
+          livros: ['genesis'],
+          dias: 30,
+        );
+        final b = await estado.criarPlano(
+          titulo: 'Meu plano',
+          livros: ['salmos'],
+          dias: 10,
+        );
+        expect(a.titulo, 'Gênesis em 30 dias');
+        expect(b.titulo, 'Meu plano');
+        expect(estado.planosDoUsuario.map((p) => p.id), [b.id, a.id]);
 
-      final relido = await reabrir();
-      expect(relido.planosDoUsuario, hasLength(2));
-      expect(relido.planosDoUsuario.first.titulo, 'Meu plano');
-    });
+        final relido = await reabrir();
+        expect(relido.planosDoUsuario, hasLength(2));
+        expect(relido.planosDoUsuario.first.titulo, 'Meu plano');
+      },
+    );
 
     test('alternarLidoNoPlano marca, desmarca e persiste', () async {
       final estado = await Estado.abrir();
-      final plano = await estado.criarPlano(titulo: '', livros: ['genesis'], dias: 5);
+      final plano = await estado.criarPlano(
+        titulo: '',
+        livros: ['genesis'],
+        dias: 5,
+      );
       expect(estado.foiLidoNoPlano(plano.id, 1), isFalse);
 
       await estado.alternarLidoNoPlano(plano.id, 1);
@@ -430,7 +455,11 @@ void main() {
 
     test('removerPlano apaga o plano e o progresso, e persiste', () async {
       final estado = await Estado.abrir();
-      final plano = await estado.criarPlano(titulo: '', livros: ['genesis'], dias: 5);
+      final plano = await estado.criarPlano(
+        titulo: '',
+        livros: ['genesis'],
+        dias: 5,
+      );
       await estado.alternarLidoNoPlano(plano.id, 3);
       await estado.removerPlano(plano.id);
       expect(estado.planosDoUsuario, isEmpty);
@@ -438,21 +467,32 @@ void main() {
       expect((await reabrir()).planosDoUsuario, isEmpty);
     });
 
-    test('substituirLidosDoPlano troca o conjunto inteiro e persiste', () async {
-      final estado = await Estado.abrir();
-      final plano = await estado.criarPlano(titulo: '', livros: ['genesis'], dias: 5);
-      await estado.alternarLidoNoPlano(plano.id, 1);
-      await estado.substituirLidosDoPlano(plano.id, {2, 3});
-      expect(estado.foiLidoNoPlano(plano.id, 1), isFalse);
-      expect(estado.foiLidoNoPlano(plano.id, 2), isTrue);
-      expect(estado.diasLidosDoPlano(plano.id), 2);
-      expect((await reabrir()).diasLidosDoPlano(plano.id), 2);
-    });
+    test(
+      'substituirLidosDoPlano troca o conjunto inteiro e persiste',
+      () async {
+        final estado = await Estado.abrir();
+        final plano = await estado.criarPlano(
+          titulo: '',
+          livros: ['genesis'],
+          dias: 5,
+        );
+        await estado.alternarLidoNoPlano(plano.id, 1);
+        await estado.substituirLidosDoPlano(plano.id, {2, 3});
+        expect(estado.foiLidoNoPlano(plano.id, 1), isFalse);
+        expect(estado.foiLidoNoPlano(plano.id, 2), isTrue);
+        expect(estado.diasLidosDoPlano(plano.id), 2);
+        expect((await reabrir()).diasLidosDoPlano(plano.id), 2);
+      },
+    );
 
     test('aplicarPlanoDaNuvem adiciona na frente com os dias lidos', () async {
       final estado = await Estado.abrir();
       final plano = PlanoDoUsuario.doJsonDaNuvem(
-        {'titulo': 'Nuvem', 'livros': ['exodo'], 'dias': 40},
+        {
+          'titulo': 'Nuvem',
+          'livros': ['exodo'],
+          'dias': 40,
+        },
         id: 'doc-1',
         criadoEm: DateTime(2027),
       );
@@ -463,88 +503,116 @@ void main() {
       expect((await reabrir()).planosDoUsuario.single.id, 'doc-1');
     });
 
-    test('aplicarPlanoDaNuvem substitui no lugar, sem mudar a posição', () async {
-      final estado = await Estado.abrir();
-      final local = await estado.criarPlano(titulo: 'Local', livros: ['genesis'], dias: 30);
-      final outro = await estado.criarPlano(titulo: 'Outro', livros: ['salmos'], dias: 10);
-      // A lista está [outro, local]: reabrir pelo link não pode saltar o local
-      // para a frente a cada abertura.
-      final daNuvem = PlanoDoUsuario.doJsonDaNuvem(
-        {'titulo': 'Local (atualizado)', 'livros': ['genesis'], 'dias': 30},
-        id: local.id,
-        criadoEm: DateTime(2027),
-      );
-      await estado.aplicarPlanoDaNuvem(daNuvem, lidos: {1});
-      expect(estado.planosDoUsuario.map((p) => p.id), [outro.id, local.id]);
-      expect(estado.planosDoUsuario.last.titulo, 'Local (atualizado)');
-      expect(estado.diasLidosDoPlano(local.id), 1);
-    });
+    test(
+      'aplicarPlanoDaNuvem substitui no lugar, sem mudar a posição',
+      () async {
+        final estado = await Estado.abrir();
+        final local = await estado.criarPlano(
+          titulo: 'Local',
+          livros: ['genesis'],
+          dias: 30,
+        );
+        final outro = await estado.criarPlano(
+          titulo: 'Outro',
+          livros: ['salmos'],
+          dias: 10,
+        );
+        // A lista está [outro, local]: reabrir pelo link não pode saltar o local
+        // para a frente a cada abertura.
+        final daNuvem = PlanoDoUsuario.doJsonDaNuvem(
+          {
+            'titulo': 'Local (atualizado)',
+            'livros': ['genesis'],
+            'dias': 30,
+          },
+          id: local.id,
+          criadoEm: DateTime(2027),
+        );
+        await estado.aplicarPlanoDaNuvem(daNuvem, lidos: {1});
+        expect(estado.planosDoUsuario.map((p) => p.id), [outro.id, local.id]);
+        expect(estado.planosDoUsuario.last.titulo, 'Local (atualizado)');
+        expect(estado.diasLidosDoPlano(local.id), 1);
+      },
+    );
 
     test('marcarCompartilhado persiste o flag', () async {
       final estado = await Estado.abrir();
-      final plano = await estado.criarPlano(titulo: '', livros: ['genesis'], dias: 5);
+      final plano = await estado.criarPlano(
+        titulo: '',
+        livros: ['genesis'],
+        dias: 5,
+      );
       await estado.marcarCompartilhado(plano.id);
       expect(estado.planosDoUsuario.single.compartilhado, isTrue);
       expect((await reabrir()).planosDoUsuario.single.compartilhado, isTrue);
     });
 
-    test('criarPlano aceita e persiste incluirDevocionais/devocionalAntes', () async {
-      final estado = await Estado.abrir();
-      final plano = await estado.criarPlano(
-        titulo: '',
-        livros: ['genesis'],
-        dias: 30,
-        incluirDevocionais: true,
-        devocionalAntes: false,
-      );
-      expect(plano.incluirDevocionais, isTrue);
-      expect(plano.devocionalAntes, isFalse);
+    test(
+      'criarPlano aceita e persiste incluirDevocionais/devocionalAntes',
+      () async {
+        final estado = await Estado.abrir();
+        final plano = await estado.criarPlano(
+          titulo: '',
+          livros: ['genesis'],
+          dias: 30,
+          incluirDevocionais: true,
+          devocionalAntes: false,
+        );
+        expect(plano.incluirDevocionais, isTrue);
+        expect(plano.devocionalAntes, isFalse);
 
-      final relido = await reabrir();
-      final planoRelido = relido.planosDoUsuario.single;
-      expect(planoRelido.incluirDevocionais, isTrue);
-      expect(planoRelido.devocionalAntes, isFalse);
-    });
+        final relido = await reabrir();
+        final planoRelido = relido.planosDoUsuario.single;
+        expect(planoRelido.incluirDevocionais, isTrue);
+        expect(planoRelido.devocionalAntes, isFalse);
+      },
+    );
 
-    test('atualizarPlano renomeia e liga/desliga devocionais, e persiste', () async {
-      final estado = await Estado.abrir();
-      final plano = await estado.criarPlano(
-        titulo: 'Nome original',
-        livros: ['genesis'],
-        dias: 30,
-      );
+    test(
+      'atualizarPlano renomeia e liga/desliga devocionais, e persiste',
+      () async {
+        final estado = await Estado.abrir();
+        final plano = await estado.criarPlano(
+          titulo: 'Nome original',
+          livros: ['genesis'],
+          dias: 30,
+        );
 
-      final atualizado = await estado.atualizarPlano(
-        plano.id,
-        titulo: 'Nome novo',
-        incluirDevocionais: true,
-        devocionalAntes: false,
-      );
-      expect(atualizado.titulo, 'Nome novo');
-      expect(atualizado.incluirDevocionais, isTrue);
-      expect(atualizado.devocionalAntes, isFalse);
-      // Livros e dias não mudam: atualizarPlano não mexe neles.
-      expect(atualizado.livros, plano.livros);
-      expect(atualizado.dias, plano.dias);
-      expect(estado.planosDoUsuario.single.titulo, 'Nome novo');
+        final atualizado = await estado.atualizarPlano(
+          plano.id,
+          titulo: 'Nome novo',
+          incluirDevocionais: true,
+          devocionalAntes: false,
+        );
+        expect(atualizado.titulo, 'Nome novo');
+        expect(atualizado.incluirDevocionais, isTrue);
+        expect(atualizado.devocionalAntes, isFalse);
+        // Livros e dias não mudam: atualizarPlano não mexe neles.
+        expect(atualizado.livros, plano.livros);
+        expect(atualizado.dias, plano.dias);
+        expect(estado.planosDoUsuario.single.titulo, 'Nome novo');
 
-      final relido = await reabrir();
-      final planoRelido = relido.planosDoUsuario.single;
-      expect(planoRelido.titulo, 'Nome novo');
-      expect(planoRelido.incluirDevocionais, isTrue);
-      expect(planoRelido.devocionalAntes, isFalse);
-    });
+        final relido = await reabrir();
+        final planoRelido = relido.planosDoUsuario.single;
+        expect(planoRelido.titulo, 'Nome novo');
+        expect(planoRelido.incluirDevocionais, isTrue);
+        expect(planoRelido.devocionalAntes, isFalse);
+      },
+    );
 
-    test('atualizarPlano com título em branco mantém o nome anterior', () async {
-      final estado = await Estado.abrir();
-      final plano = await estado.criarPlano(
-        titulo: 'Nome original',
-        livros: ['genesis'],
-        dias: 30,
-      );
-      final atualizado = await estado.atualizarPlano(plano.id, titulo: '   ');
-      expect(atualizado.titulo, 'Nome original');
-    });
+    test(
+      'atualizarPlano com título em branco mantém o nome anterior',
+      () async {
+        final estado = await Estado.abrir();
+        final plano = await estado.criarPlano(
+          titulo: 'Nome original',
+          livros: ['genesis'],
+          dias: 30,
+        );
+        final atualizado = await estado.atualizarPlano(plano.id, titulo: '   ');
+        expect(atualizado.titulo, 'Nome original');
+      },
+    );
 
     test('armazenamento corrompido não impede o app de abrir', () async {
       SharedPreferences.setMockInitialValues({
@@ -838,7 +906,8 @@ void main() {
                   routes: [
                     GoRoute(
                       path: 'novo',
-                      builder: (context, state) => TelaNovoPlano(estado: estado),
+                      builder: (context, state) =>
+                          TelaNovoPlano(estado: estado),
                     ),
                   ],
                 ),
@@ -975,9 +1044,7 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      await tester.tap(
-        find.widgetWithText(OutlinedButton, 'Escolher livros'),
-      );
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Escolher livros'));
       await tester.pumpAndSettle();
       await marcarLivro('Gênesis');
       await marcarLivro('Êxodo');
@@ -1005,53 +1072,51 @@ void main() {
   });
 
   group('editar plano', () {
-    testWidgets(
-      'menu de opções renomeia o plano local',
-      (tester) async {
-        final estado = Estado(await SharedPreferences.getInstance());
-        final plano = await estado.criarPlano(
-          titulo: 'Nome original',
-          livros: ['genesis'],
-          dias: 30,
-        );
+    testWidgets('menu de opções renomeia o plano local', (tester) async {
+      final estado = Estado(await SharedPreferences.getInstance());
+      final plano = await estado.criarPlano(
+        titulo: 'Nome original',
+        livros: ['genesis'],
+        dias: 30,
+      );
 
-        await tester.pumpWidget(
-          MaterialApp(
-            home: EscopoDoEstado(
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EscopoDoEstado(
+            estado: estado,
+            child: TelaDeUmPlano(
               estado: estado,
-              child: TelaDeUmPlano(
-                estado: estado,
-                planoId: plano.id,
-                plano: plano,
-              ),
+              planoId: plano.id,
+              plano: plano,
             ),
           ),
-        );
-        await tester.pumpAndSettle();
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        await tester.tap(find.byTooltip('Opções do plano'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Editar plano'));
-        await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Opções do plano'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Editar plano'));
+      await tester.pumpAndSettle();
 
-        await tester.enterText(
-          find.widgetWithText(TextField, 'Nome do plano'),
-          'Nome editado',
-        );
-        await tester.tap(find.text('Salvar'));
-        await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Nome do plano'),
+        'Nome editado',
+      );
+      await tester.tap(find.text('Salvar'));
+      await tester.pumpAndSettle();
 
-        expect(estado.planosDoUsuario.single.titulo, 'Nome editado');
-        // Livros e dias não foram tocados no formulário: sem confirmação de
-        // reinício de progresso, o plano continua com os mesmos.
-        expect(estado.planosDoUsuario.single.livros, plano.livros);
-        expect(estado.planosDoUsuario.single.dias, plano.dias);
-        expect(find.text('Nome editado'), findsOneWidget);
-      },
-    );
+      expect(estado.planosDoUsuario.single.titulo, 'Nome editado');
+      // Livros e dias não foram tocados no formulário: sem confirmação de
+      // reinício de progresso, o plano continua com os mesmos.
+      expect(estado.planosDoUsuario.single.livros, plano.livros);
+      expect(estado.planosDoUsuario.single.dias, plano.dias);
+      expect(find.text('Nome editado'), findsOneWidget);
+    });
 
-    testWidgets('mudar os dias avisa no editor e salva sem outro diálogo',
-        (tester) async {
+    testWidgets('mudar os dias avisa no editor e salva sem outro diálogo', (
+      tester,
+    ) async {
       final estado = Estado(await SharedPreferences.getInstance());
       final plano = await estado.criarPlano(
         titulo: 'Gênesis',
@@ -1092,7 +1157,8 @@ void main() {
       expect(estado.planosDoUsuario.single.dias, 10);
     });
 
-    testWidgets('cancelar o editor não muda nada', (tester) async {      final estado = Estado(await SharedPreferences.getInstance());
+    testWidgets('cancelar o editor não muda nada', (tester) async {
+      final estado = Estado(await SharedPreferences.getInstance());
       final plano = await estado.criarPlano(
         titulo: 'Nome original',
         livros: ['genesis'],

@@ -23,10 +23,19 @@ class DevocionalAvisoDePerda extends StatelessWidget {
     return Container(
       width: double.infinity,
       color: cor.surfaceContainerHighest,
-      padding: const EdgeInsets.fromLTRB(DevocionalEspacamento.sp16, DevocionalEspacamento.sp10, DevocionalEspacamento.sp8, DevocionalEspacamento.sp10),
+      padding: const EdgeInsets.fromLTRB(
+        DevocionalEspacamento.sp16,
+        DevocionalEspacamento.sp10,
+        DevocionalEspacamento.sp8,
+        DevocionalEspacamento.sp10,
+      ),
       child: Row(
         children: [
-          FaIcon(FontAwesomeIcons.circleInfo, color: cor.onSurfaceVariant, size: 20),
+          FaIcon(
+            FontAwesomeIcons.circleInfo,
+            color: cor.onSurfaceVariant,
+            size: 20,
+          ),
           const SizedBox(width: DevocionalEspacamento.sp12),
           Expanded(
             child: ListenableBuilder(
@@ -39,7 +48,10 @@ class DevocionalAvisoDePerda extends StatelessWidget {
               ),
             ),
           ),
-          DevocionalBotaoTerciario(onPressed: onExportar, child: const Text('Exportar')),
+          DevocionalBotaoTerciario(
+            onPressed: onExportar,
+            child: const Text('Exportar'),
+          ),
         ],
       ),
     );

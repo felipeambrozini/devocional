@@ -126,7 +126,9 @@ class _ListaDeLivros extends StatelessWidget {
           )
           .toList();
       return ListView(
-        padding: const EdgeInsets.symmetric(horizontal: DevocionalEspacamento.sp16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DevocionalEspacamento.sp16,
+        ),
         children: [
           if (achados.isEmpty)
             Padding(
@@ -154,7 +156,9 @@ class _ListaDeLivros extends StatelessWidget {
     final novo = canon.where((l) => l.testamento == Testamento.novo).toList();
 
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: DevocionalEspacamento.sp16),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DevocionalEspacamento.sp16,
+      ),
       children: [
         _tituloDeSecao(context, 'Antigo Testamento'),
         _grade(antigo),

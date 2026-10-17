@@ -170,10 +170,7 @@ class _TelaSobreState extends State<TelaSobre> {
               ),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: FaIcon(
-                  FontAwesomeIcons.fileLines,
-                  color: cor.primary,
-                ),
+                leading: FaIcon(FontAwesomeIcons.fileLines, color: cor.primary),
                 title: const Text('Termos de serviço'),
                 onTap: () => GoRouter.of(context).push('/termos'),
               ),
@@ -243,8 +240,7 @@ class _TelaSobreState extends State<TelaSobre> {
                   ),
                   const SizedBox(height: DevocionalEspacamento.sp10),
                   DevocionalCarregaUmaVez<Capitulo>(
-                    chave:
-                        'voz-demo-salmos-23-${_controller.tentativasDaDemo}',
+                    chave: 'voz-demo-salmos-23-${_controller.tentativasDaDemo}',
                     carregar: () => Conteudo.instancia.capitulo('salmos', 23),
                     construir: (context, snap) {
                       if (snap.hasError) {

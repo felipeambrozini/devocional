@@ -26,55 +26,56 @@ void main() {
     });
   }
 
-  testWidgets('o cartão de ajuda aparece na primeira visita e some com Entendi', (
-    tester,
-  ) async {
-    await aquecerAssets(tester);
-    final estado = Estado(await SharedPreferences.getInstance());
-    // O cartão cresceu com as linhas de ajuda e a Hoje abre com as duas
-    // leituras do dia no topo: numa janela de 800x900 o cartão nasce além
-    // da área que a lista constrói. Rola até ele, como o visitante faria,
-    // antes de conferir e tocar.
-    await tester.binding.setSurfaceSize(const Size(800, 900));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(AppDevocional(estado: estado));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'o cartão de ajuda aparece na primeira visita e some com Entendi',
+    (tester) async {
+      await aquecerAssets(tester);
+      final estado = Estado(await SharedPreferences.getInstance());
+      // O cartão cresceu com as linhas de ajuda e a Hoje abre com as duas
+      // leituras do dia no topo: numa janela de 800x900 o cartão nasce além
+      // da área que a lista constrói. Rola até ele, como o visitante faria,
+      // antes de conferir e tocar.
+      await tester.binding.setSurfaceSize(const Size(800, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(AppDevocional(estado: estado));
+      await tester.pumpAndSettle();
 
-    // O GoRouter navega ate Hoje num frame: a lista nao existe ate a rota
-    // aterrar. Espera-a antes de rolar e tocar, senao o scroll nao encontra
-    // nada e o tap cai no espaco vazio.
-    for (var i = 0; i < 50 && find.byType(ListView).evaluate().isEmpty; i++) {
-      await tester.pump(const Duration(milliseconds: 20));
-    }
-    await tester.pumpAndSettle();
+      // O GoRouter navega ate Hoje num frame: a lista nao existe ate a rota
+      // aterrar. Espera-a antes de rolar e tocar, senao o scroll nao encontra
+      // nada e o tap cai no espaco vazio.
+      for (var i = 0; i < 50 && find.byType(ListView).evaluate().isEmpty; i++) {
+        await tester.pump(const Duration(milliseconds: 20));
+      }
+      await tester.pumpAndSettle();
 
-    // O cartão fica abaixo das leituras do dia na 800×900: rola até ele para
-    // construí-lo (scrollUntilVisible materializa, não basta visto que o
-    // ListView já o constrói adiante do visitável), depois garante que está de
-    // fato à mostra antes de tocar.
-    await tester.scrollUntilVisible(
-      find.text('Entendi'),
-      300,
-      scrollable: find.descendant(
-        of: find.byType(ListView),
-        matching: find.byType(Scrollable),
-      ),
-    );
-    await tester.ensureVisible(find.text('Entendi'));
-    await tester.pumpAndSettle();
+      // O cartão fica abaixo das leituras do dia na 800×900: rola até ele para
+      // construí-lo (scrollUntilVisible materializa, não basta visto que o
+      // ListView já o constrói adiante do visitável), depois garante que está de
+      // fato à mostra antes de tocar.
+      await tester.scrollUntilVisible(
+        find.text('Entendi'),
+        300,
+        scrollable: find.descendant(
+          of: find.byType(ListView),
+          matching: find.byType(Scrollable),
+        ),
+      );
+      await tester.ensureVisible(find.text('Entendi'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Como usar'), findsOneWidget);
-    expect(find.text('Entendi'), findsOneWidget);
+      expect(find.text('Como usar'), findsOneWidget);
+      expect(find.text('Entendi'), findsOneWidget);
 
-    await tester.tap(find.text('Entendi'));
-    await tester.pumpAndSettle();
-    expect(find.text('Como usar'), findsNothing);
+      await tester.tap(find.text('Entendi'));
+      await tester.pumpAndSettle();
+      expect(find.text('Como usar'), findsNothing);
 
-    // E não volta: a escolha fica gravada no estado.
-    await tester.pumpWidget(AppDevocional(estado: estado));
-    await tester.pumpAndSettle();
-    expect(find.text('Como usar'), findsNothing);
-  });
+      // E não volta: a escolha fica gravada no estado.
+      await tester.pumpWidget(AppDevocional(estado: estado));
+      await tester.pumpAndSettle();
+      expect(find.text('Como usar'), findsNothing);
+    },
+  );
 
   testWidgets('o aviso de dia marcado aparece e some sozinho em 3s', (
     tester,
@@ -104,7 +105,7 @@ void main() {
 
     final botaoMarcar = find.byTooltip('Marcar como lido');
     final botaoDesmarcar = find.byTooltip('Desmarcar');
-    
+
     if (botaoMarcar.evaluate().isNotEmpty) {
       expect(botaoMarcar, findsOneWidget);
       await tester.ensureVisible(botaoMarcar);
@@ -116,14 +117,16 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(botaoDesmarcar);
       await tester.pumpAndSettle();
-      
+
       final botaoMarcar2 = find.byTooltip('Marcar como lido');
       expect(botaoMarcar2, findsOneWidget);
       await tester.ensureVisible(botaoMarcar2);
       await tester.pumpAndSettle();
       await tester.tap(botaoMarcar2);
     } else {
-      fail('Nem "Marcar como lido" nem "Desmarcar" encontrado. Verifique se o FutureBuilder completou.');
+      fail(
+        'Nem "Marcar como lido" nem "Desmarcar" encontrado. Verifique se o FutureBuilder completou.',
+      );
     }
     await tester.pumpAndSettle();
 

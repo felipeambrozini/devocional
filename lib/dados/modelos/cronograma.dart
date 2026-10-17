@@ -31,11 +31,19 @@ class Faixa {
   Iterable<int> get capitulos =>
       Iterable.generate(ateCapitulo - deCapitulo + 1, (i) => deCapitulo + i);
 
+  /// Cada capítulo ganha o seu botão; faixa por versículo fica como está.
+  List<Faixa> get divididaPorCapitulo => porVersiculo
+      ? [this]
+      : [
+          for (final capitulo in capitulos)
+            Faixa(livro: livro, deCapitulo: capitulo, ateCapitulo: capitulo),
+        ];
+
   String get rotulo {
-    final nome = nomeDoLivro(livro);
+    final nome = nomeNaReferencia(livro);
     if (porVersiculo) return '$nome $deCapitulo:$deVersiculo-$ateVersiculo';
     if (deCapitulo == ateCapitulo) return '$nome $deCapitulo';
-    return '$nome $deCapitulo-$ateCapitulo';
+    return '${nomeDoLivro(livro)} $deCapitulo-$ateCapitulo';
   }
 }
 
@@ -51,7 +59,7 @@ class DiaDoPlano {
     rotulo: json['label'] as String,
     faixas: [
       for (final f in json['ranges'] as List)
-        Faixa.doJson(f as Map<String, dynamic>),
+        ...Faixa.doJson(f as Map<String, dynamic>).divididaPorCapitulo,
     ],
   );
 

@@ -12,7 +12,9 @@ const _tamanhoMaximo = 512 * 1024;
 /// A linha gravada para um erro, no formato do arquivo — separado da escrita
 /// em si para dar para testar o formato sem tocar em disco.
 String formatarLinha(String origem, Object erro, StackTrace? pilha) {
-  final buffer = StringBuffer('[${DateTime.now().toIso8601String()}] $origem: $erro');
+  final buffer = StringBuffer(
+    '[${DateTime.now().toIso8601String()}] $origem: $erro',
+  );
   if (pilha != null) buffer.write('\n$pilha');
   buffer.writeln();
   return buffer.toString();

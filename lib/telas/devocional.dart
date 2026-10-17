@@ -173,11 +173,17 @@ class _TelaDevocionalState extends State<TelaDevocional> {
               children: [
                 if (!ehHoje)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: DevocionalEspacamento.sp12),
+                    padding: const EdgeInsets.only(
+                      bottom: DevocionalEspacamento.sp12,
+                    ),
                     child: Center(
                       child: DevocionalBotaoTerciario.icon(
-                        onPressed: () => _controller.irPara(context, leitura, hoje),
-                        icon: const FaIcon(FontAwesomeIcons.calendarCheck, size: 14),
+                        onPressed: () =>
+                            _controller.irPara(context, leitura, hoje),
+                        icon: const FaIcon(
+                          FontAwesomeIcons.calendarCheck,
+                          size: 14,
+                        ),
                         label: const Text('Voltar para hoje'),
                       ),
                     ),

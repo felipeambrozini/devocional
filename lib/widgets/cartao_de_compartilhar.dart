@@ -42,7 +42,9 @@ class DevocionalCartaoDeCompartilhar extends StatelessWidget {
             DevocionalBotaoSecundario.icon(
               onPressed: aoCompartilhar,
               icon: FaIcon(
-                compartilhado ? FontAwesomeIcons.link : FontAwesomeIcons.shareNodes,
+                compartilhado
+                    ? FontAwesomeIcons.link
+                    : FontAwesomeIcons.shareNodes,
               ),
               label: Text(compartilhado ? 'Copiar link' : 'Compartilhar'),
             ),

@@ -22,7 +22,10 @@ class TelaDoLivro extends StatelessWidget {
 
     return Scaffold(
       appBar: DevocionalAppBar(
-        title: Text(obra?.titulo ?? 'Biblioteca', overflow: TextOverflow.ellipsis),
+        title: Text(
+          obra?.titulo ?? 'Biblioteca',
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: [DevocionalBotaoDeAjustes(estado: estado)],
       ),
       body: obra == null
@@ -61,7 +64,10 @@ class _Sumario extends StatelessWidget {
   Widget build(BuildContext context) {
     final leitura = EscopoDoEstado.de(context).leituraDeLivros;
     final posicao = leitura.posicaoDe(obra.slug);
-    final capituloAtual = (posicao?.capitulo ?? 0).clamp(0, capitulos.length - 1);
+    final capituloAtual = (posicao?.capitulo ?? 0).clamp(
+      0,
+      capitulos.length - 1,
+    );
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
@@ -73,15 +79,19 @@ class _Sumario extends StatelessWidget {
       children: [
         DevocionalCartaoDaObra(
           obra: obra,
-          aoAbrir: () => context.push('/biblioteca/${obra.slug}/${capituloAtual + 1}'),
+          aoAbrir: () =>
+              context.push('/biblioteca/${obra.slug}/${capituloAtual + 1}'),
         ),
         const SizedBox(height: DevocionalEspacamento.sp16),
         Align(
           alignment: Alignment.centerLeft,
           child: DevocionalBotaoPrimario.icon(
-            onPressed: () => context.push('/biblioteca/${obra.slug}/${capituloAtual + 1}'),
+            onPressed: () =>
+                context.push('/biblioteca/${obra.slug}/${capituloAtual + 1}'),
             icon: const FaIcon(FontAwesomeIcons.bookOpenReader, size: 16),
-            label: Text(posicao == null ? 'Começar a ler' : 'Continuar de onde parei'),
+            label: Text(
+              posicao == null ? 'Começar a ler' : 'Continuar de onde parei',
+            ),
           ),
         ),
         const SizedBox(height: DevocionalEspacamento.sp20),
@@ -91,7 +101,8 @@ class _Sumario extends StatelessWidget {
             titulo: capitulo.titulo,
             lido: leitura.foiLido(obra.slug, indice),
             parouAqui: posicao?.capitulo == indice,
-            aoAbrir: () => context.push('/biblioteca/${obra.slug}/${indice + 1}'),
+            aoAbrir: () =>
+                context.push('/biblioteca/${obra.slug}/${indice + 1}'),
           ),
       ],
     );
@@ -125,7 +136,11 @@ class _LinhaDoCapitulo extends StatelessWidget {
         width: 28,
         child: Center(
           child: lido
-              ? FaIcon(FontAwesomeIcons.circleCheck, size: 18, color: cor.secondary)
+              ? FaIcon(
+                  FontAwesomeIcons.circleCheck,
+                  size: 18,
+                  color: cor.secondary,
+                )
               : Text('$numero', style: tema.labelLarge),
         ),
       ),
