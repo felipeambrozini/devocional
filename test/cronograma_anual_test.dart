@@ -74,26 +74,29 @@ void main() {
         expect(primeiro.ateCapitulo, 119);
         expect(primeiro.deVersiculo, 1);
         expect(primeiro.ateVersiculo, 56);
-        expect(primeiro.rotulo, 'Salmo 119:1-56');
+        expect(primeiro.rotulo, 'Salmo 119:1 a 56');
         // O capitulo inteiro seria 176 versiculos; a faixa nao pode virar isso.
         expect(primeiro.capitulos.length, 1);
       },
     );
 
-    test('dia com varios livros gera uma faixa por capitulo, na ordem escrita', () {
-      final dia = plano.firstWhere((d) => d.data == '28-07');
-      expect(dia.rotulo, 'Obadias 1, 2 Reis 1 a 4');
-      // O '2' de '2 Reis' nao pode ser lido como capitulo de Obadias, que tem so um.
-      expect(dia.faixas.map((f) => f.livro), [
-        'obadias',
-        '2reis',
-        '2reis',
-        '2reis',
-        '2reis',
-      ]);
-      expect(dia.faixas[1].deCapitulo, 1);
-      expect(dia.faixas.last.ateCapitulo, 4);
-    });
+    test(
+      'dia com varios livros gera uma faixa por capitulo, na ordem escrita',
+      () {
+        final dia = plano.firstWhere((d) => d.data == '28-07');
+        expect(dia.rotulo, 'Obadias 1, 2 Reis 1 a 4');
+        // O '2' de '2 Reis' nao pode ser lido como capitulo de Obadias, que tem so um.
+        expect(dia.faixas.map((f) => f.livro), [
+          'obadias',
+          '2reis',
+          '2reis',
+          '2reis',
+          '2reis',
+        ]);
+        expect(dia.faixas[1].deCapitulo, 1);
+        expect(dia.faixas.last.ateCapitulo, 4);
+      },
+    );
 
     test('capitulos avulsos do mesmo livro nao viram uma faixa continua', () {
       final dia = plano.firstWhere((d) => d.data == '12-06');
@@ -119,7 +122,7 @@ void main() {
       const umCapitulo = Faixa(livro: 'joao', deCapitulo: 3, ateCapitulo: 3);
       const varios = Faixa(livro: 'marcos', deCapitulo: 1, ateCapitulo: 3);
       expect(umCapitulo.rotulo, 'João 3');
-      expect(varios.rotulo, 'Marcos 1-3');
+      expect(varios.rotulo, 'Marcos 1 a 3');
       expect(varios.capitulos, [1, 2, 3]);
     });
   });

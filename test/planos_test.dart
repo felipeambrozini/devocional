@@ -130,7 +130,7 @@ void main() {
         ).first;
         expect(primeiro.faixas, hasLength(5));
         expect(primeiro.faixas.first.rotulo, 'Gênesis 1');
-        expect(primeiro.rotulo, 'Gênesis 1-5');
+        expect(primeiro.rotulo, 'Gênesis 1 a 5');
       },
     );
 
@@ -139,8 +139,8 @@ void main() {
       expect(dias, hasLength(3));
       final segundo = dias[1];
       expect(segundo.faixas, hasLength(30));
-      expect(segundo.rotulo, 'Gênesis 31-50, Êxodo 1-10');
-      expect(dias[2].rotulo, 'Êxodo 11-40');
+      expect(segundo.rotulo, 'Gênesis 31 a 50, Êxodo 1 a 10');
+      expect(dias[2].rotulo, 'Êxodo 11 a 40');
     });
 
     test('segue a ordem dada em livros, não a canônica', () {
@@ -1052,7 +1052,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('2 livros escolhidos'), findsOneWidget);
-      expect(find.text('Dia 1 · Gênesis 1-3'), findsOneWidget);
+      expect(find.text('Dia 1 · Gênesis 1 a 3'), findsOneWidget);
 
       await tester.tap(find.text('Alterar ordem de leitura'));
       await tester.pumpAndSettle();
@@ -1067,7 +1067,7 @@ void main() {
       await tester.tap(find.text('Salvar ordem'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Dia 1 · Êxodo 1-3'), findsOneWidget);
+      expect(find.text('Dia 1 · Êxodo 1 a 3'), findsOneWidget);
     });
   });
 

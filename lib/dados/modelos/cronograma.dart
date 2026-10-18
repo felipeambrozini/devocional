@@ -41,12 +41,17 @@ class Faixa {
 
   String get rotulo {
     final nome = nomeNaReferencia(livro);
-    if (porVersiculo) return '$nome $deCapitulo:$deVersiculo-$ateVersiculo';
+    if (porVersiculo) {
+      return '$nome $deCapitulo:${_intervalo(deVersiculo!, ateVersiculo!)}';
+    }
     if (deCapitulo == ateCapitulo) return '$nome $deCapitulo';
-    final separador = ateCapitulo == deCapitulo + 1 ? ' e ' : '-';
-    return '${nomeDoLivro(livro)} $deCapitulo$separador$ateCapitulo';
+    return '${nomeDoLivro(livro)} ${_intervalo(deCapitulo, ateCapitulo)}';
   }
 }
+
+/// "1 e 2" para números seguidos, "1 a 3" para os demais.
+String _intervalo(int de, int ate) =>
+    ate == de + 1 ? '$de e $ate' : '$de a $ate';
 
 class DiaDoPlano {
   const DiaDoPlano({
