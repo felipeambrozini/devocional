@@ -43,7 +43,8 @@ class Faixa {
     final nome = nomeNaReferencia(livro);
     if (porVersiculo) return '$nome $deCapitulo:$deVersiculo-$ateVersiculo';
     if (deCapitulo == ateCapitulo) return '$nome $deCapitulo';
-    return '${nomeDoLivro(livro)} $deCapitulo-$ateCapitulo';
+    final separador = ateCapitulo == deCapitulo + 1 ? ' e ' : '-';
+    return '${nomeDoLivro(livro)} $deCapitulo$separador$ateCapitulo';
   }
 }
 

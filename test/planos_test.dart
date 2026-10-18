@@ -667,7 +667,7 @@ void main() {
       await tester.tap(find.text('Confirmar'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Dia 1 · Gênesis 1-2'), findsOneWidget);
+      expect(find.text('Dia 1 · Gênesis 1 e 2'), findsOneWidget);
 
       // O formulário ficou mais alto que a viewport do teste: rola até o
       // botão de criar antes de tocar, como um dedo faria. O botão só é

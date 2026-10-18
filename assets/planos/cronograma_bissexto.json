@@ -265,7 +265,7 @@
   },
   {
     "date": "25-01",
-    "label": "Atos 13 a 14",
+    "label": "Atos 13 e 14",
     "ranges": [
       {
         "book": "atos",
@@ -287,7 +287,7 @@
   },
   {
     "date": "27-01",
-    "label": "Tiago 4 a 5, Gálatas 1",
+    "label": "Tiago 4 e 5, Gálatas 1",
     "ranges": [
       {
         "book": "tiago",
@@ -314,7 +314,7 @@
   },
   {
     "date": "29-01",
-    "label": "Gálatas 5 a 6, Atos 15",
+    "label": "Gálatas 5 e 6, Atos 15",
     "ranges": [
       {
         "book": "galatas",
@@ -330,7 +330,7 @@
   },
   {
     "date": "30-01",
-    "label": "Atos 16 a 17",
+    "label": "Atos 16 e 17",
     "ranges": [
       {
         "book": "atos",
@@ -352,7 +352,7 @@
   },
   {
     "date": "01-02",
-    "label": "1 Tessalonicenses 4 a 5, 2 Tessalonicenses 1",
+    "label": "1 Tessalonicenses 4 e 5, 2 Tessalonicenses 1",
     "ranges": [
       {
         "book": "1tessalonicenses",
@@ -368,7 +368,7 @@
   },
   {
     "date": "02-02",
-    "label": "2 Tessalonicenses 2 a 3, Atos 18",
+    "label": "2 Tessalonicenses 2 e 3, Atos 18",
     "ranges": [
       {
         "book": "2tessalonicenses",
@@ -472,7 +472,7 @@
   },
   {
     "date": "11-02",
-    "label": "Atos 20, Romanos 1 a 2",
+    "label": "Atos 20, Romanos 1 e 2",
     "ranges": [
       {
         "book": "atos",
@@ -554,7 +554,7 @@
   },
   {
     "date": "18-02",
-    "label": "Atos 27 a 28",
+    "label": "Atos 27 e 28",
     "ranges": [
       {
         "book": "atos",
@@ -641,7 +641,7 @@
   },
   {
     "date": "25-02",
-    "label": "Tito 2 a 3, 1 Pedro 1 a 2",
+    "label": "Tito 2 e 3, 1 Pedro 1 e 2",
     "ranges": [
       {
         "book": "tito",
@@ -717,7 +717,7 @@
   },
   {
     "date": "02-03",
-    "label": "1 João 4 a 5, 2 João 1, 3 João 1",
+    "label": "1 João 4 e 5, 2 João 1, 3 João 1",
     "ranges": [
       {
         "book": "1joao",
@@ -1200,7 +1200,7 @@
   },
   {
     "date": "14-04",
-    "label": "Levítico 14 a 15",
+    "label": "Levítico 14 e 15",
     "ranges": [
       {
         "book": "levitico",
@@ -1759,7 +1759,7 @@
   },
   {
     "date": "02-06",
-    "label": "1 Samuel 23 a 24, Salmos 54, 63",
+    "label": "1 Samuel 23 e 24, Salmos 54, 63",
     "ranges": [
       {
         "book": "1samuel",
@@ -2438,7 +2438,7 @@
   },
   {
     "date": "16-07",
-    "label": "1 Reis 4 a 6, 2 Crônicas 2 a 3",
+    "label": "1 Reis 4 a 6, 2 Crônicas 2 e 3",
     "ranges": [
       {
         "book": "1reis",
@@ -2454,7 +2454,7 @@
   },
   {
     "date": "17-07",
-    "label": "1 Reis 7 a 8, 2 Crônicas 4 a 5",
+    "label": "1 Reis 7 e 8, 2 Crônicas 4 e 5",
     "ranges": [
       {
         "book": "1reis",
@@ -2486,7 +2486,7 @@
   },
   {
     "date": "19-07",
-    "label": "1 Reis 10 a 11, 2 Crônicas 9",
+    "label": "1 Reis 10 e 11, 2 Crônicas 9",
     "ranges": [
       {
         "book": "1reis",
@@ -2578,7 +2578,7 @@
   },
   {
     "date": "26-07",
-    "label": "1 Reis 21 a 22, 2 Crônicas 17 a 19",
+    "label": "1 Reis 21 e 22, 2 Crônicas 17 a 19",
     "ranges": [
       {
         "book": "1reis",
@@ -2658,7 +2658,7 @@
   },
   {
     "date": "31-07",
-    "label": "2 Reis 12 a 14, 2 Crônicas 24 a 25",
+    "label": "2 Reis 12 a 14, 2 Crônicas 24 e 25",
     "ranges": [
       {
         "book": "2reis",
@@ -2800,7 +2800,7 @@
   },
   {
     "date": "12-08",
-    "label": "2 Reis 16, 2 Crônicas 27 a 28",
+    "label": "2 Reis 16, 2 Crônicas 27 e 28",
     "ranges": [
       {
         "book": "2reis",
@@ -2893,7 +2893,7 @@
   },
   {
     "date": "20-08",
-    "label": "2 Reis 17 a 18",
+    "label": "2 Reis 17 e 18",
     "ranges": [
       {
         "book": "2reis",
@@ -2997,7 +2997,7 @@
   },
   {
     "date": "29-08",
-    "label": "Isaías 65 a 66",
+    "label": "Isaías 65 e 66",
     "ranges": [
       {
         "book": "isaias",
@@ -3008,7 +3008,7 @@
   },
   {
     "date": "30-08",
-    "label": "2 Reis 20 a 21, 2 Crônicas 32 a 33",
+    "label": "2 Reis 20 e 21, 2 Crônicas 32 e 33",
     "ranges": [
       {
         "book": "2reis",
@@ -3035,7 +3035,7 @@
   },
   {
     "date": "01-09",
-    "label": "2 Reis 22 a 23, 2 Crônicas 34 a 35",
+    "label": "2 Reis 22 e 23, 2 Crônicas 34 e 35",
     "ranges": [
       {
         "book": "2reis",
@@ -3216,7 +3216,7 @@
   },
   {
     "date": "17-09",
-    "label": "Jeremias 49 a 50",
+    "label": "Jeremias 49 e 50",
     "ranges": [
       {
         "book": "jeremias",
@@ -3227,7 +3227,7 @@
   },
   {
     "date": "18-09",
-    "label": "Jeremias 51 a 52",
+    "label": "Jeremias 51 e 52",
     "ranges": [
       {
         "book": "jeremias",
@@ -3249,7 +3249,7 @@
   },
   {
     "date": "20-09",
-    "label": "Lamentações 4 a 5",
+    "label": "Lamentações 4 e 5",
     "ranges": [
       {
         "book": "lamentacoes",
@@ -3260,7 +3260,7 @@
   },
   {
     "date": "21-09",
-    "label": "2 Reis 24 a 25, 2 Crônicas 36",
+    "label": "2 Reis 24 e 25, 2 Crônicas 36",
     "ranges": [
       {
         "book": "2reis",
@@ -3592,7 +3592,7 @@
   },
   {
     "date": "18-10",
-    "label": "Ageu 1 a 2, Zacarias 1 a 2",
+    "label": "Ageu 1 e 2, Zacarias 1 e 2",
     "ranges": [
       {
         "book": "ageu",
@@ -3790,7 +3790,7 @@
   },
   {
     "date": "04-11",
-    "label": "Salmos 135 a 136, 146 a 147",
+    "label": "Salmos 135 e 136, 146 e 147",
     "ranges": [
       {
         "book": "salmos",
@@ -3806,7 +3806,7 @@
   },
   {
     "date": "05-11",
-    "label": "Salmos 148 a 150, Malaquias 1 a 2",
+    "label": "Salmos 148 a 150, Malaquias 1 e 2",
     "ranges": [
       {
         "book": "salmos",
@@ -3822,7 +3822,7 @@
   },
   {
     "date": "06-11",
-    "label": "Malaquias 3 a 4, Salmos 91 a 94",
+    "label": "Malaquias 3 e 4, Salmos 91 a 94",
     "ranges": [
       {
         "book": "malaquias",
@@ -3854,7 +3854,7 @@
   },
   {
     "date": "08-11",
-    "label": "Mateus 1 a 2",
+    "label": "Mateus 1 e 2",
     "ranges": [
       {
         "book": "mateus",
@@ -3865,7 +3865,7 @@
   },
   {
     "date": "09-11",
-    "label": "Mateus 3 a 4",
+    "label": "Mateus 3 e 4",
     "ranges": [
       {
         "book": "mateus",
@@ -3909,7 +3909,7 @@
   },
   {
     "date": "13-11",
-    "label": "Mateus 8 a 9",
+    "label": "Mateus 8 e 9",
     "ranges": [
       {
         "book": "mateus",
@@ -3964,7 +3964,7 @@
   },
   {
     "date": "18-11",
-    "label": "Mateus 14 a 15",
+    "label": "Mateus 14 e 15",
     "ranges": [
       {
         "book": "mateus",
@@ -3997,7 +3997,7 @@
   },
   {
     "date": "21-11",
-    "label": "Mateus 18 a 19",
+    "label": "Mateus 18 e 19",
     "ranges": [
       {
         "book": "mateus",
@@ -4030,7 +4030,7 @@
   },
   {
     "date": "24-11",
-    "label": "Mateus 22 a 23",
+    "label": "Mateus 22 e 23",
     "ranges": [
       {
         "book": "mateus",
@@ -4096,7 +4096,7 @@
   },
   {
     "date": "30-11",
-    "label": "Hebreus 1 a 2",
+    "label": "Hebreus 1 e 2",
     "ranges": [
       {
         "book": "hebreus",
@@ -4327,7 +4327,7 @@
   },
   {
     "date": "21-12",
-    "label": "Apocalipse 10 a 11",
+    "label": "Apocalipse 10 e 11",
     "ranges": [
       {
         "book": "apocalipse",
@@ -4371,7 +4371,7 @@
   },
   {
     "date": "25-12",
-    "label": "Apocalipse 15 a 16",
+    "label": "Apocalipse 15 e 16",
     "ranges": [
       {
         "book": "apocalipse",
