@@ -261,6 +261,14 @@ int posicaoNoCanon(String slug) => _posicaoPorSlug[slug] ?? -1;
 /// que uma referência desconhecida apareça na tela em vez de sumir.
 String nomeDoLivro(String slug) => _porSlug[slug]?.nome ?? slug;
 
+/// "7" para um número só, "1 e 2" para números seguidos e "1 a 3" para os
+/// demais: o intervalo como se lê numa referência, sem hífen.
+String intervaloDeNumeros(int de, int ate) => switch (ate - de) {
+  0 => '$de',
+  1 => '$de e $ate',
+  _ => '$de a $ate',
+};
+
 /// Nome do livro numa referência a um capítulo ou versículo: "Salmo 23:1", no
 /// singular, porque cita um único salmo (o livro continua "Salmos").
 String nomeNaReferencia(String slug) =>
@@ -469,9 +477,7 @@ String referenciaDeVersiculos(
         ordenados[fim + 1] == ordenados[fim] + 1) {
       fim++;
     }
-    trechos.add(
-      fim == i ? '${ordenados[i]}' : '${ordenados[i]}-${ordenados[fim]}',
-    );
+    trechos.add(intervaloDeNumeros(ordenados[i], ordenados[fim]));
     i = fim + 1;
   }
   return '$referenciaDoCapitulo:${trechos.join(', ')}';

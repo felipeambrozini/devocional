@@ -241,9 +241,9 @@ class Conteudo {
         ateVersiculo,
       );
       if (texto.isEmpty) continue;
-      final referencia = deVersiculo == ateVersiculo
-          ? '${nomeNaReferencia(livro.slug)} $capitulo:$deVersiculo'
-          : '${nomeNaReferencia(livro.slug)} $capitulo:$deVersiculo-$ateVersiculo';
+      final referencia =
+          '${nomeNaReferencia(livro.slug)} $capitulo:'
+          '${intervaloDeNumeros(deVersiculo, ateVersiculo)}';
       pares.add((referencia, texto));
     }
     if (pares.isEmpty) return dev;

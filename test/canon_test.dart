@@ -170,10 +170,10 @@ void main() {
       expect(referenciaDeVersiculos('João 3', [16]), 'João 3:16');
       expect(
         referenciaDeVersiculos('João 3', [18, 16, 17, 20]),
-        'João 3:16-18, 20',
+        'João 3:16 a 18, 20',
       );
       expect(referenciaDeVersiculos('João 3', [1, 3, 5]), 'João 3:1, 3, 5');
-      expect(referenciaDeVersiculos('João 3', [2, 2, 3]), 'João 3:2-3');
+      expect(referenciaDeVersiculos('João 3', [2, 2, 3]), 'João 3:2 e 3');
     });
 
     test('link de um versiculo eh o inverso de alvoDoLink', () {
