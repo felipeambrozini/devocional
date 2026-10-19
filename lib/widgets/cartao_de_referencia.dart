@@ -19,8 +19,8 @@ class DevocionalCartaoDeReferencia extends StatelessWidget {
     final (livro, capitulo, deVersiculo, ateVersiculo) = referencia;
     final cor = Theme.of(context).colorScheme;
     final rotulo = deVersiculo == ateVersiculo
-        ? '${livro.nome} $capitulo:$deVersiculo'
-        : '${livro.nome} $capitulo:$deVersiculo-$ateVersiculo';
+        ? '${nomeNaReferencia(livro.slug)} $capitulo:$deVersiculo'
+        : '${nomeNaReferencia(livro.slug)} $capitulo:$deVersiculo-$ateVersiculo';
 
     return InkWell(
       onTap: () => Navigator.push(
