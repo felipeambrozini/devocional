@@ -8,6 +8,8 @@
 // bater. (O lembrete diário continua usando Firebase — é híbrido: push via
 // FCM de uma Cloud Function agendada, mais um alarme local de reserva no
 // Android para o caso de o push não chegar; ver lib/dados/lembretes.dart.)
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -28,10 +30,6 @@ android {
         // baixo, e o Gradle recusa o AAR sem isto ligado (checkDebugAarMetadata
         // falha dizendo que a dependência exige desugaring da biblioteca core).
         isCoreLibraryDesugaringEnabled = true
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
     defaultConfig {
@@ -58,6 +56,12 @@ android {
         release {
             signingConfig = signingConfigs.getByName("release")
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_11)
     }
 }
 
