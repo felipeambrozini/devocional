@@ -85,6 +85,7 @@ void main() {
           'licoes_aos_meus_alunos': 31,
           'pescadores_de_criancas': 23,
           'o_santo_e_o_seu_salvador': 13,
+          'tesouro_de_davi': 149,
         };
         final proibidos = RegExp('[—–‘’“”]');
         for (final obra in obrasDaBiblioteca) {
@@ -485,8 +486,14 @@ void main() {
 
     testWidgets('a estante mostra o livro e abre o sumário', (tester) async {
       await abrir(tester, '/biblioteca');
-      expect(find.text('Somente pela Graça'), findsWidgets);
-      expect(find.text('20 capítulos'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('Somente pela Graça'), 300);
+      expect(
+        find.descendant(
+          of: find.widgetWithText(DevocionalCartaoDaObra, 'Somente pela Graça'),
+          matching: find.text('20 capítulos'),
+        ),
+        findsOneWidget,
+      );
 
       await tester.tap(find.text('Somente pela Graça').last);
       await tester.pumpAndSettle();

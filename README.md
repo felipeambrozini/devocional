@@ -187,7 +187,7 @@ e não são versionadas aqui.
 | Manhã e Noite | 366 dias, todos com manhã e noite (732 entradas) |
 | Promessas de Deus | 366 de 366 traduzidos |
 | Cronograma anual | 365 dias (366 em ano bissexto), 449 faixas |
-| Biblioteca | 12 livros de Spurgeon traduzidos e revisados: *Somente pela Graça*, *Alfabeto de Ouro*, *O Ganhador de Almas*, *Ao Redor do Portão Estreito*, *Conversas* e *Retratos de João Lavrador*, *Segundo a Promessa*, *O Maior Combate do Mundo*, *O Evangelho do Reino*, *Lições aos Meus Alunos*, *Pescadores de Crianças* e *O Santo e o Seu Salvador* |
+| Biblioteca | 13 livros de Spurgeon traduzidos e revisados, na ordem de publicação em inglês: *O Santo e o Seu Salvador*, *Tesouro de Davi* (só o texto de Spurgeon, 149 salmos; o Salmo 119 está no *Alfabeto de Ouro*), *Conversas de João Lavrador*, *Lições aos Meus Alunos*, *Retratos de João Lavrador*, *Alfabeto de Ouro*, *Ao Redor do Portão Estreito*, *Somente pela Graça*, *Segundo a Promessa*, *O Maior Combate do Mundo*, *O Evangelho do Reino*, *O Ganhador de Almas* e *Pescadores de Crianças* |
 | 66 introduções | Completas, revisadas em fatos e linguagem; a frase final de cada uma conferida no original |
 | Comentários por versículo | 31.102, um por versículo, escritos e validados livro a livro |
 
