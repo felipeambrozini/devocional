@@ -22,15 +22,15 @@ dependencies:
 
   # Progresso de leitura, favoritos, notas e preferências. Único armazenamento que
   # funciona igual em Android e web sem ramificação de plataforma.
-  shared_preferences: ^2.5.5
+  shared_preferences: ^2.5.6
   # Folha de compartilhar nativa. Android e web de uma vez, sem
   # ramificação de plataforma — mesma razão do shared_preferences acima.
-  share_plus: ^13.3.0
+  share_plus: ^13.3.1
   # Lembrete diário híbrido (ver Lembretes em lib/dados/lembretes.dart):
   # push da Cloud Function agendada (functions/) via token FCM gravado no
   # Firestore, em Android e web; no Android ainda há alarme local de reserva
   # pelo flutter_local_notifications abaixo.
-  firebase_messaging: ^16.6.0
+  firebase_messaging: ^17.0.0
   # Alarme local de reserva do lembrete no Android (horário + 5 min): se o
   # push não chegar, o próprio aparelho avisa com o mesmo conteúdo. Fora da
   # web — lá a exibição é do service worker.
@@ -41,39 +41,39 @@ dependencies:
   # transitiva dos plugins web; direta para o código poder importar.
   web: ^1.1.1
   # Detecta o fuso do aparelho e arma os alarmes na hora certa nele.
-  flutter_timezone: ^5.1.0
+  flutter_timezone: ^5.1.1
   # Abre o link do canal (YouTube, Instagram) na tela Sobre no navegador do
   # sistema. Mesma família de pacotes do share_plus: mantido pela equipe do
   # Flutter, funciona igual em todas as plataformas sem ramificação.
-  url_launcher: ^6.3.2
+  url_launcher: ^6.3.3
   # Conta Google e cópia na nuvem, em todas as plataformas (ver
   # lib/dados/nuvem.dart): o navegador é o caso que mais precisa, porque é a
   # única plataforma que apaga o armazenamento sozinho.
-  firebase_core: ^4.14.0
-  firebase_auth: ^6.6.1
-  cloud_firestore: ^6.9.0
+  firebase_core: ^5.0.0
+  firebase_auth: ^7.0.0
+  cloud_firestore: ^7.0.0
   # Cada aba com o próprio caminho na URL, e Sobre e as conversas também
   # (ver lib/main.dart). Pacote da própria equipe do Flutter, não um clone de
   # terceiro.
-  go_router: ^18.0.1
+  go_router: ^18.1.1
   # Número da versão na tela Sobre (ver lib/telas/sobre.dart). Já entra no
   # build pela google_api_headers, dependência transitiva do Firebase; listar
   # aqui o promove a dependência direta para o código poder importar.
-  package_info_plus: ^10.2.1
+  package_info_plus: ^10.2.2
   # Chamadas HTTP para a Gemini API gratuita (ver lib/dados/ia.dart). Único
   # cliente HTTP do app; funciona igual em Android e web.
   http: ^1.6.0
-  google_api_headers: ^5.3.7
+  google_api_headers: ^5.4.3
   just_audio: ^0.10.6
   google_sign_in: ^7.2.0
-  firebase_app_check: ^0.4.7
+  firebase_app_check: ^0.5.0
   # Onde gravar o arquivo de registro de erros (ver lib/dados/registro.dart).
   # Já era dependência transitiva do Firebase; só promovida a direta para o
   # código poder importar.
   path_provider: ^2.1.6
   # Cálculo de horário por fuso para armar o alarme do lembrete na hora certa
   # do aparelho (lib/dados/lembretes.dart).
-  timezone: ^0.11.1
+  timezone: ^0.11.2
   font_awesome_flutter: ^11.0.0
 
 dev_dependencies:
