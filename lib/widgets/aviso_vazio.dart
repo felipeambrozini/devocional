@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../estilo/espacamento.dart';
+import 'botao.dart';
 
 /// Estado de "ainda não há texto para isto", em vez de uma tela em branco.
 class DevocionalAvisoVazio extends StatelessWidget {
@@ -63,13 +64,27 @@ class DevocionalAvisoVazio extends StatelessWidget {
 /// sem dizer o que houve. Girar é promessa de que algo vai chegar; quando não
 /// vai, a tela precisa dizer isso.
 class DevocionalAvisoDeErro extends StatelessWidget {
-  const DevocionalAvisoDeErro({super.key});
+  const DevocionalAvisoDeErro({super.key, this.aoTentarDeNovo});
+
+  /// Quando existe, o erro oferece "Tentar de novo" em vez de mandar fechar o
+  /// aplicativo: a recuperação fica na tela onde a falha aconteceu.
+  final VoidCallback? aoTentarDeNovo;
 
   @override
-  Widget build(BuildContext context) => DevocionalAvisoVazio(
-    icone: FontAwesomeIcons.triangleExclamation,
-    titulo: 'Não foi possível carregar',
-    detalhe:
-        'Feche e abra o aplicativo. Se continuar, pode faltar um arquivo de conteúdo.',
-  );
+  Widget build(BuildContext context) {
+    final tentarDeNovo = aoTentarDeNovo;
+    return DevocionalAvisoVazio(
+      icone: FontAwesomeIcons.triangleExclamation,
+      titulo: 'Não foi possível carregar',
+      detalhe: tentarDeNovo == null
+          ? 'Feche e abra o aplicativo. Se continuar, pode faltar um arquivo de conteúdo.'
+          : 'Tente de novo. Se continuar, feche e abra o aplicativo.',
+      acao: tentarDeNovo == null
+          ? null
+          : DevocionalBotaoTerciario(
+              onPressed: tentarDeNovo,
+              child: const Text('Tentar de novo'),
+            ),
+    );
+  }
 }

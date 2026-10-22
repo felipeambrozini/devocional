@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../dados/canon.dart';
 import '../estilo/espacamento.dart';
+import '../estilo/toque.dart';
 import '../telas/biblia.dart';
 
 /// Card fixo no topo dos resultados quando o próprio termo digitado é uma
@@ -34,22 +35,25 @@ class DevocionalCartaoDeReferencia extends StatelessWidget {
         ),
       ),
       borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: DevocionalEspacamento.sp10,
-          horizontal: DevocionalEspacamento.sp4,
-        ),
-        child: Row(
-          children: [
-            FaIcon(FontAwesomeIcons.arrowRight, size: 18, color: cor.primary),
-            const SizedBox(width: DevocionalEspacamento.sp10),
-            Text(
-              'Ir para $rotulo',
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(color: cor.primary),
-            ),
-          ],
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: DevocionalToque.minimo),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: DevocionalEspacamento.sp10,
+            horizontal: DevocionalEspacamento.sp4,
+          ),
+          child: Row(
+            children: [
+              FaIcon(FontAwesomeIcons.arrowRight, size: 18, color: cor.primary),
+              const SizedBox(width: DevocionalEspacamento.sp10),
+              Text(
+                'Ir para $rotulo',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(color: cor.primary),
+              ),
+            ],
+          ),
         ),
       ),
     );

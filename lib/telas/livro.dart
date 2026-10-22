@@ -10,14 +10,28 @@ import '../widgets/widgets.dart';
 
 /// O sumário de um livro: os capítulos, o que já foi lido e o botão de
 /// continuar de onde parou.
-class TelaDoLivro extends StatelessWidget {
+class TelaDoLivro extends StatefulWidget {
   const TelaDoLivro({super.key, required this.slug});
 
   final String slug;
 
   @override
+  State<TelaDoLivro> createState() => _TelaDoLivroState();
+}
+
+class _TelaDoLivroState extends State<TelaDoLivro> {
+  /// A chave do carregamento muda a cada "Tentar de novo" para o
+  /// [DevocionalCarregaUmaVez] refazer o future em vez de reusar a falha.
+  var _tentativa = 0;
+
+  void _tentarDeNovo() {
+    Biblioteca.instancia.esquecer(widget.slug);
+    setState(() => _tentativa++);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final obra = obraPorSlug(slug);
+    final obra = obraPorSlug(widget.slug);
     final estado = EscopoDoEstado.de(context);
 
     return Scaffold(
@@ -36,15 +50,15 @@ class TelaDoLivro extends StatelessWidget {
             )
           : DevocionalLarguraDeLeitura(
               child: DevocionalCarregaUmaVez<List<CapituloDoLivro>?>(
-                chave: slug,
-                carregar: () => Biblioteca.instancia.capitulos(slug),
+                chave: '${widget.slug}/$_tentativa',
+                carregar: () => Biblioteca.instancia.capitulos(widget.slug),
                 construir: (context, snap) {
                   if (snap.connectionState != ConnectionState.done) {
                     return const Center(child: CircularProgressIndicator());
                   }
                   final capitulos = snap.data;
                   if (capitulos == null || capitulos.isEmpty) {
-                    return const DevocionalAvisoDeErro();
+                    return DevocionalAvisoDeErro(aoTentarDeNovo: _tentarDeNovo);
                   }
                   return _Sumario(obra: obra, capitulos: capitulos);
                 },
@@ -132,16 +146,26 @@ class _LinhaDoCapitulo extends StatelessWidget {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       onTap: aoAbrir,
-      leading: SizedBox(
-        width: 28,
+      // Largura mínima, não fixa: "Tesouro de Davi" tem 149 capítulos, e um
+      // número de três dígitos (ou a escala de texto aumentada) precisa caber
+      // sem cortar. O centro com widthFactor deixa o alvo crescer pelo conteúdo.
+      leading: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 28),
         child: Center(
+          widthFactor: 1,
           child: lido
               ? FaIcon(
                   FontAwesomeIcons.circleCheck,
                   size: 18,
                   color: cor.secondary,
                 )
-              : Text('$numero', style: tema.labelLarge),
+              : Text(
+                  '$numero',
+                  textAlign: TextAlign.center,
+                  style: tema.labelLarge?.copyWith(
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
         ),
       ),
       title: Text(titulo, style: tema.bodyLarge),

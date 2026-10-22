@@ -113,6 +113,15 @@ class Biblioteca {
   /// livro que ainda está carregando (mesma regra de `Conteudo`).
   final Map<String, bool> _tentou = {};
 
+  /// Esquece o que se sabe de um livro, para o "Tentar de novo" poder ler o
+  /// asset outra vez depois de uma falha. Só deve ser chamado por uma ação
+  /// explícita do usuário: a falha fica guardada para não repetir a leitura a
+  /// cada redesenho.
+  void esquecer(String slug) {
+    _livros.remove(slug);
+    _tentou.remove(slug);
+  }
+
   /// Os capítulos do livro, ou `null` se o asset não existe ou está quebrado.
   Future<List<CapituloDoLivro>?> capitulos(String slug) async {
     final guardado = _livros[slug];

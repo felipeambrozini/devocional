@@ -9,12 +9,13 @@ import '../dados/biblioteca.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
 import '../estilo/espacamento.dart';
+import '../estilo/toque.dart';
 import '../funcoes/aviso.dart';
 import '../funcoes/dialogos.dart';
 import '../widgets/widgets.dart';
 
 /// Um capítulo de um livro da biblioteca. [capitulo] vem da URL, a partir de 1.
-class TelaLeitorDeLivro extends StatelessWidget {
+class TelaLeitorDeLivro extends StatefulWidget {
   const TelaLeitorDeLivro({
     super.key,
     required this.slug,
@@ -25,8 +26,22 @@ class TelaLeitorDeLivro extends StatelessWidget {
   final int capitulo;
 
   @override
+  State<TelaLeitorDeLivro> createState() => _TelaLeitorDeLivroState();
+}
+
+class _TelaLeitorDeLivroState extends State<TelaLeitorDeLivro> {
+  /// A chave do carregamento muda a cada "Tentar de novo" para o
+  /// [DevocionalCarregaUmaVez] refazer o future em vez de reusar a falha.
+  var _tentativa = 0;
+
+  void _tentarDeNovo() {
+    Biblioteca.instancia.esquecer(widget.slug);
+    setState(() => _tentativa++);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final obra = obraPorSlug(slug);
+    final obra = obraPorSlug(widget.slug);
     final estado = EscopoDoEstado.de(context);
 
     Widget aviso(String titulo, [Widget? corpo]) => Scaffold(
@@ -42,17 +57,20 @@ class TelaLeitorDeLivro extends StatelessWidget {
     if (obra == null) return aviso('Livro não encontrado');
 
     return DevocionalCarregaUmaVez<List<CapituloDoLivro>?>(
-      chave: slug,
-      carregar: () => Biblioteca.instancia.capitulos(slug),
+      chave: '${widget.slug}/$_tentativa',
+      carregar: () => Biblioteca.instancia.capitulos(widget.slug),
       construir: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
           return aviso('', const Center(child: CircularProgressIndicator()));
         }
         final capitulos = snap.data;
         if (capitulos == null || capitulos.isEmpty) {
-          return aviso('', const DevocionalAvisoDeErro());
+          return aviso(
+            '',
+            DevocionalAvisoDeErro(aoTentarDeNovo: _tentarDeNovo),
+          );
         }
-        final indice = capitulo - 1;
+        final indice = widget.capitulo - 1;
         if (indice < 0 || indice >= capitulos.length) {
           return aviso('Capítulo não encontrado');
         }
@@ -60,7 +78,7 @@ class TelaLeitorDeLivro extends StatelessWidget {
         // página ao trocar só o parâmetro, e a rolagem do capítulo anterior
         // não pode sobrar no próximo.
         return _CapituloAberto(
-          key: ValueKey('$slug/$indice'),
+          key: ValueKey('${widget.slug}/$indice'),
           estado: estado,
           obra: obra,
           capitulos: capitulos,
@@ -423,43 +441,49 @@ class _Paragrafo extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: DevocionalEspacamento.sp12),
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: aoTocar,
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(
-            DevocionalEspacamento.sp10,
-            DevocionalEspacamento.sp4,
-            DevocionalEspacamento.sp4,
-            DevocionalEspacamento.sp4,
-          ),
-          decoration: BoxDecoration(
-            color: grifado ? cor.surfaceContainerHighest : null,
-            border: Border(
-              left: BorderSide(
-                color: grifado
-                    ? cor.secondary.withValues(alpha: 0.5)
-                    : Colors.transparent,
-                width: 2,
+      child: ConstrainedBox(
+        // O alvo de uma linha curta ficava abaixo dos 48 dp: o mesmo mínimo da
+        // Bíblia vale aqui, inclusive para quem lê com o texto ampliado.
+        constraints: const BoxConstraints(minHeight: DevocionalToque.minimo),
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: aoTocar,
+          child: Container(
+            width: double.infinity,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.fromLTRB(
+              DevocionalEspacamento.sp10,
+              DevocionalEspacamento.sp4,
+              DevocionalEspacamento.sp4,
+              DevocionalEspacamento.sp4,
+            ),
+            decoration: BoxDecoration(
+              color: grifado ? cor.surfaceContainerHighest : null,
+              border: Border(
+                left: BorderSide(
+                  color: grifado
+                      ? cor.secondary.withValues(alpha: 0.5)
+                      : Colors.transparent,
+                  width: 2,
+                ),
               ),
             ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(texto, style: tema.bodyLarge?.copyWith(height: 1.7)),
-              if (nota.isNotEmpty) ...[
-                const SizedBox(height: DevocionalEspacamento.sp8),
-                Text(
-                  nota,
-                  style: tema.bodyMedium?.copyWith(
-                    fontStyle: FontStyle.italic,
-                    color: cor.onSurfaceVariant,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(texto, style: tema.bodyLarge?.copyWith(height: 1.7)),
+                if (nota.isNotEmpty) ...[
+                  const SizedBox(height: DevocionalEspacamento.sp8),
+                  Text(
+                    nota,
+                    style: tema.bodyMedium?.copyWith(
+                      fontStyle: FontStyle.italic,
+                      color: cor.onSurfaceVariant,
+                    ),
                   ),
-                ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

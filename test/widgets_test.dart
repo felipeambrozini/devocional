@@ -1,3 +1,4 @@
+import 'package:felipe_ambrozini/dados/canon.dart';
 import 'package:felipe_ambrozini/funcoes/dialogos.dart';
 import 'package:felipe_ambrozini/widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -110,6 +111,51 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(resultado, isTrue);
+    });
+  });
+
+  group('alvos de toque', () {
+    testWidgets('o cartão de referência tem 48 dp de altura', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: DevocionalCartaoDeReferencia(
+              referencia: (livroPorSlug('genesis')!, 1, 1, 1),
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        tester.getSize(find.byType(DevocionalCartaoDeReferencia)).height,
+        greaterThanOrEqualTo(48),
+      );
+    });
+  });
+
+  group('DevocionalAvisoDeErro', () {
+    testWidgets('sem ação, não promete uma recuperação que não existe', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(home: Scaffold(body: DevocionalAvisoDeErro())),
+      );
+
+      expect(find.text('Tentar de novo'), findsNothing);
+    });
+
+    testWidgets('com ação, oferece Tentar de novo e chama', (tester) async {
+      var tentativas = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: DevocionalAvisoDeErro(aoTentarDeNovo: () => tentativas++),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Tentar de novo'));
+      expect(tentativas, 1);
     });
   });
 
