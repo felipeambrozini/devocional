@@ -444,6 +444,10 @@ class LembretesReais implements Lembretes {
           );
     }
 
+    // O FCM 17 substituiu o token pelo FID em onRegistered; o backend ainda
+    // envia por token (functions/src/index.ts), então mantemos a API antiga
+    // até a migração dos dois lados.
+    // ignore: deprecated_member_use
     _mensageria.onTokenRefresh.listen((tokenNovo) {
       final manha = _ultimaManha;
       final promessas = _ultimaPromessas;
@@ -717,6 +721,9 @@ class LembretesReais implements Lembretes {
   /// caminho em vez de duplicar tratamento em cada método.
   Future<String?> _tokenOuNulo() async {
     try {
+      // Mesmo motivo do onTokenRefresh: o Firestore e a Function ainda usam
+      // o token FCM como identificador.
+      // ignore: deprecated_member_use
       return await _mensageria.getToken(
         vapidKey: _vapidKeyOuNulo(),
         serviceWorkerScriptPath: _servicoWebOuNulo(),
