@@ -1716,7 +1716,7 @@
   },
   {
     "date": "31-05",
-    "label": "1 Samuel 17 a 19, Salmos 59",
+    "label": "1 Samuel 17 a 19, Salmos 59, 1 Crônicas 1 e 2",
     "ranges": [
       {
         "book": "1samuel",
@@ -1727,12 +1727,17 @@
         "book": "salmos",
         "fromChapter": 59,
         "toChapter": 59
+      },
+      {
+        "book": "1cronicas",
+        "fromChapter": 1,
+        "toChapter": 2
       }
     ]
   },
   {
     "date": "01-06",
-    "label": "1 Samuel 20 a 22, Salmos 52, 56",
+    "label": "1 Samuel 20 a 22, Salmos 52, 56, 1 Crônicas 3",
     "ranges": [
       {
         "book": "1samuel",
@@ -1748,12 +1753,17 @@
         "book": "salmos",
         "fromChapter": 56,
         "toChapter": 56
+      },
+      {
+        "book": "1cronicas",
+        "fromChapter": 3,
+        "toChapter": 3
       }
     ]
   },
   {
     "date": "02-06",
-    "label": "1 Samuel 23 e 24, Salmos 54, 63",
+    "label": "1 Samuel 23 e 24, Salmos 54, 63, 1 Crônicas 4 e 5",
     "ranges": [
       {
         "book": "1samuel",
@@ -1769,39 +1779,59 @@
         "book": "salmos",
         "fromChapter": 63,
         "toChapter": 63
+      },
+      {
+        "book": "1cronicas",
+        "fromChapter": 4,
+        "toChapter": 5
       }
     ]
   },
   {
     "date": "03-06",
-    "label": "1 Samuel 25 a 27",
+    "label": "1 Samuel 25 a 27, 1 Crônicas 6 e 7",
     "ranges": [
       {
         "book": "1samuel",
         "fromChapter": 25,
         "toChapter": 27
+      },
+      {
+        "book": "1cronicas",
+        "fromChapter": 6,
+        "toChapter": 7
       }
     ]
   },
   {
     "date": "04-06",
-    "label": "1 Samuel 28 a 31",
+    "label": "1 Samuel 28 a 31, 1 Crônicas 8",
     "ranges": [
       {
         "book": "1samuel",
         "fromChapter": 28,
         "toChapter": 31
+      },
+      {
+        "book": "1cronicas",
+        "fromChapter": 8,
+        "toChapter": 8
       }
     ]
   },
   {
     "date": "05-06",
-    "label": "2 Samuel 1 a 3",
+    "label": "2 Samuel 1 a 3, 1 Crônicas 9 e 10",
     "ranges": [
       {
         "book": "2samuel",
         "fromChapter": 1,
         "toChapter": 3
+      },
+      {
+        "book": "1cronicas",
+        "fromChapter": 9,
+        "toChapter": 10
       }
     ]
   },
@@ -2794,7 +2824,7 @@
   },
   {
     "date": "12-08",
-    "label": "2 Reis 16, 2 Crônicas 27 e 28",
+    "label": "2 Reis 16, 2 Crônicas 27 a 31",
     "ranges": [
       {
         "book": "2reis",
@@ -2804,7 +2834,7 @@
       {
         "book": "2cronicas",
         "fromChapter": 27,
-        "toChapter": 28
+        "toChapter": 31
       }
     ]
   },

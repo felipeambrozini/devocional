@@ -37,8 +37,8 @@ vitoriana dele, tratando o leitor por "tu".
 - Ritmo diário: leitura de Manhã (0h–17h59) e Noite (18h–23h59), virada pelo
   horário fixo do aparelho, não pelo sol do lugar. Calendário permite ver o
   devocional de qualquer data.
-- Cronograma anual: 365 dias (366 em bissexto), 449 faixas, agrupado por mês,
-  com marcação de lido e progresso do ano.
+- Cronograma anual: 365 dias (366 em bissexto), 455 faixas, os 1.189
+  capítulos, agrupado por mês, com marcação de lido e progresso do ano.
 - Tema claro ou escuro (padrão segue o aparelho, dá para fixar) e escala do
   texto de leitura, pelas barras do leitor e do devocional.
 - Lembrete diário opcional (Android e web; fora do iOS por ora), com horários

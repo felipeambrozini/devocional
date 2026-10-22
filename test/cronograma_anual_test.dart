@@ -17,6 +17,28 @@ List<DiaDoPlano> carregarPlano([
   ];
 }
 
+/// Confere que nenhum capítulo do canon ficou de fora do plano, para que uma
+/// edição futura não volte a pular um trecho inteiro (como as genealogias de
+/// 1 Crônicas).
+void conferirCoberturaDoCanon(List<DiaDoPlano> plano) {
+  final lidos = <String, Set<int>>{};
+  for (final dia in plano) {
+    for (final faixa in dia.faixas) {
+      lidos.putIfAbsent(faixa.livro, () => <int>{}).addAll(faixa.capitulos);
+    }
+  }
+  for (final livro in canon) {
+    final capitulos = lidos[livro.slug] ?? const <int>{};
+    for (var capitulo = 1; capitulo <= livro.capitulos; capitulo++) {
+      expect(
+        capitulos,
+        contains(capitulo),
+        reason: 'falta ${livro.nome} $capitulo',
+      );
+    }
+  }
+}
+
 void main() {
   final plano = carregarPlano();
 
@@ -57,6 +79,10 @@ void main() {
           );
         }
       }
+    });
+
+    test('cobre todos os capitulos do canon, sem lacuna', () {
+      conferirCoberturaDoCanon(plano);
     });
 
     test(
@@ -162,6 +188,10 @@ void main() {
           );
         }
       }
+    });
+
+    test('cobre todos os capitulos do canon, sem lacuna', () {
+      conferirCoberturaDoCanon(planoBissexto);
     });
   });
 }
