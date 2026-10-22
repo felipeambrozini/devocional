@@ -299,15 +299,17 @@ service cloud.firestore {
 
     // Lembrete diário do devocional (ver lib/dados/lembretes.dart e
     // functions/src/index.ts). Sem login — o lembrete não pede conta, e por
-    // isso não há uid para checar dono. O id do documento é o próprio token
-    // FCM deste aparelho; a proteção é o formato estrito de valido() mais a
-    // impossibilidade de listar a coleção (ver o comentário junto aos
+    // isso não há uid para checar dono. O id do documento é o FID da
+    // instalação; documentos gravados antes da migração ainda usam o token
+    // FCM como id e campo `token`. A proteção é o formato estrito de valido()
+    // mais a impossibilidade de listar a coleção (ver o comentário junto aos
     // allows — App Check virou opcional aqui por causa de aparelhos sem
-    // Play Integrity). Um token roubado só permite reagendar o lembrete
-    // dele — nada sensível.
+    // Play Integrity). Um identificador roubado só permite reagendar o
+    // lembrete dele — nada sensível.
     //
-    // Contrato do documento lembretes/{token}:
-    //   token                string — igual ao id do documento
+    // Contrato do documento lembretes/{fid}:
+    //   fid                  string — igual ao id do documento (novos)
+    //   token                string — igual ao id (documentos legados)
     //   minutosManha         int — minutos desde meia-noite, 0 a 1439
     //   minutosPromessas     int — idem, slot separado da Manhã
     //   minutosLeitura       int — leitura do dia (cronograma)
@@ -319,14 +321,20 @@ service cloud.firestore {
     //   ultimoEnvioPromessas string — idem, slot Promessas
     //   ultimoEnvioLeitura   string — idem, slot Leitura
     //   ultimoEnvioNoite     string — idem, para o slot da noite
-    match /lembretes/{token} {
+    match /lembretes/{id} {
+      function identificadorConfere() {
+        let dados = request.resource.data;
+        return (dados.keys().hasAny(['fid']) && dados.fid == id) ||
+            (dados.keys().hasAny(['token']) && dados.token == id);
+      }
+
       function valido() {
         let dados = request.resource.data;
         return dados.keys().hasOnly([
-          'token', 'minutosManha', 'minutosPromessas', 'minutosLeitura',
-          'minutosNoite', 'fuso'
+          'fid', 'token', 'minutosManha', 'minutosPromessas',
+          'minutosLeitura', 'minutosNoite', 'fuso'
         ]) &&
-            dados.token == token &&
+            identificadorConfere() &&
             dados.minutosManha is int &&
             dados.minutosManha >= 0 && dados.minutosManha < 1440 &&
             dados.minutosPromessas is int &&
@@ -341,16 +349,16 @@ service cloud.firestore {
       // App Check OPCIONAL nesta coleção, de propósito: aparelhos sem
       // Play Integrity certificado (vários Xiaomi/Samsung) eram rejeitados
       // e nunca conseguiam registrar o lembrete — o push nunca chegava. O
-      // dado aqui é o de menor risco do banco (token + horário; sem nada de
-      // usuário; token tem ~140 caracteres, inviável de adivinhar), então o
-      // teto de abuso — reescrever o lembrete de um token conhecido — é
+      // dado aqui é o de menor risco do banco (identificador + horário; sem
+      // nada de usuário; FID/token são inviáveis de adivinhar), então o teto
+      // de abuso — reescrever o lembrete de um identificador conhecido — é
       // aceitável. Nenhuma outra regra deste arquivo checa `request.app`:
       // nas outras coleções a proteção é o login Google e o dono do
       // documento; exigir App Check nelas depende só da imposição no
       // console, que vale para o serviço inteiro, não por coleção.
       allow create, update: if valido();
-      // get, não read: sem 'list', quem passar por aqui não colhe os tokens
-      // de todo mundo; o app só faz .doc(token).get().
+      // get, não read: sem 'list', quem passar por aqui não colhe os
+      // identificadores de todo mundo; o app só faz .doc(fid).get().
       allow get, delete: if true;
       allow list: if false;
     }

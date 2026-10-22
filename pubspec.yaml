@@ -3,7 +3,7 @@ description: "Aplicativo devocional pessoal: tradução autoral da King James 16
 
 publish_to: 'none' 
 
-version: 1.12.0+22
+version: 1.12.0+2023
 
 environment:
   sdk: ^3.12.0
@@ -27,10 +27,13 @@ dependencies:
   # ramificação de plataforma — mesma razão do shared_preferences acima.
   share_plus: ^13.3.1
   # Lembrete diário híbrido (ver Lembretes em lib/dados/lembretes.dart):
-  # push da Cloud Function agendada (functions/) via token FCM gravado no
-  # Firestore, em Android e web; no Android ainda há alarme local de reserva
+  # push da Cloud Function agendada (functions/) via FID da instalação gravado
+  # no Firestore, em Android e web; no Android ainda há alarme local de reserva
   # pelo flutter_local_notifications abaixo.
   firebase_messaging: ^17.0.0
+  # FID da instalação Firebase, usado como destinatário do push no lugar do
+  # token FCM (o token segue aceito pela Function em documentos antigos).
+  firebase_app_installations: ^0.5.0
   # Alarme local de reserva do lembrete no Android (horário + 5 min): se o
   # push não chegar, o próprio aparelho avisa com o mesmo conteúdo. Fora da
   # web — lá a exibição é do service worker.

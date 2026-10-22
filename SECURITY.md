@@ -67,7 +67,7 @@ A falha em ativar o App Check (site key ausente durante a migração, domínio a
 
 ### 3.4 Lembrete Diário — Push com Reserva Local no Android
 
-O lembrete diário é híbrido: uma Cloud Function agendada (`functions/src/index.ts`, `enviarLembretes`) lê a coleção `lembretes` do Firestore a cada minuto e envia push via FCM em Android e web; no Android, `flutter_local_notifications` ainda arma uma reserva local em T+5 min, para o caso de o push não chegar. A superfície de permissão local se resume a POST_NOTIFICATIONS, concedida em runtime — sem pedir a permissão especial de alarme exato: o agendamento local é sempre inexato de propósito (ver `lib/dados/lembretes.dart`).
+O lembrete diário é híbrido: uma Cloud Function agendada (`functions/src/index.ts`, `enviarLembretes`) lê a coleção `lembretes` do Firestore a cada minuto e envia push via FCM em Android e web; o documento é identificado pelo FID da instalação (o token FCM só permanece nos documentos gravados antes da migração). No Android, `flutter_local_notifications` ainda arma uma reserva local em T+5 min, para o caso de o push não chegar. A superfície de permissão local se resume a POST_NOTIFICATIONS, concedida em runtime — sem pedir a permissão especial de alarme exato: o agendamento local é sempre inexato de propósito (ver `lib/dados/lembretes.dart`).
 
 ---
 

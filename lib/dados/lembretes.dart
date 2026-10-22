@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui' show DartPluginRegistrant, PlatformDispatcher;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_app_installations/firebase_app_installations.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform, kIsWeb;
@@ -20,7 +21,7 @@ import 'registro.dart';
 /// Chave pública do Web Push (Console do Firebase > Cloud Messaging > Web
 /// configuration > Generate key pair). Não é segredo — é a metade pública do
 /// par VAPID — mas segue o padrão `--dart-define` das outras chaves em
-/// `lib/dados/nuvem.dart`. Vazia faz `getToken` falhar só na web.
+/// `lib/dados/nuvem.dart`. Vazia faz `register` falhar só na web.
 const _vapidKey = String.fromEnvironment('FCM_VAPID_KEY');
 
 /// Service worker que o SDK do FCM usa para receber o push na web.
@@ -28,7 +29,7 @@ const _vapidKey = String.fromEnvironment('FCM_VAPID_KEY');
 /// Precisa ser passado à mão: sem ele o SDK registra por conta própria
 /// `/firebase-messaging-sw.js` **na raiz do domínio**, e o app mora em
 /// `/devocional/` — na raiz o Hosting devolve a página 404 em HTML, o
-/// registro falha por tipo MIME e `getToken` lança. Resultado: nenhum token
+/// registro falha por tipo MIME e `register` lança. Resultado: nenhum FID
 /// web chegava ao Firestore, e a Function não tinha para quem enviar.
 ///
 /// Relativo de propósito: resolve contra o `<base href>` de `web/index.html`,
@@ -186,7 +187,7 @@ Future<void> _mostrarPush(Map<String, dynamic> dados) async {
   if (chave == null || titulo == null || corpo == null) return;
 
   // Push chegou, mas a leitura pode ter sido desligada no painel depois
-  // de o token ter sido registrado: não exibe o que o admin tirou do ar.
+  // de o FID ter sido registrado: não exibe o que o admin tirou do ar.
   if (chave == 'leitura' && !Recursos.cronograma) return;
   if (chave == 'manha' && !Recursos.devocionalManha) return;
   if (chave == 'noite' && !Recursos.devocionalNoite) return;
@@ -331,7 +332,7 @@ abstract class Lembretes {
   /// [lembretesSuportados]).
   Future<bool> pedirPermissao();
 
-  /// Grava no Firestore os horários escolhidos e o token deste aparelho — a
+  /// Grava no Firestore os horários escolhidos e o FID deste aparelho — a
   /// Cloud Function agendada (`functions/src/index.ts`) decide quem avisar —
   /// e arma o lembrete local recorrente de reserva (horário + 5 min, todo
   /// dia, sem precisar reabrir o app). Serve tanto para ligar quanto para
@@ -370,17 +371,20 @@ abstract class Lembretes {
 /// em que o push também funciona.
 class LembretesReais implements Lembretes {
   static const _colecao = 'lembretes';
+  static const _chaveMigracaoParaFid = 'lembretes_migrados_para_fid';
 
   final _mensageria = FirebaseMessaging.instance;
+  final _instalacoes = FirebaseInstallations.instance;
   final _locais = FlutterLocalNotificationsPlugin();
 
   /// Horários do último [agendar] bem-sucedido, para regravar o documento
-  /// com o token novo quando o FCM o troca (`onTokenRefresh`) — sem isto, o
-  /// lembrete silenciosamente para de chegar depois de uma renovação.
+  /// com o FID novo quando ele muda (`onIdChange`) — sem isto, o lembrete
+  /// silenciosamente para de chegar depois de uma reinstalação.
   TimeOfDay? _ultimaManha;
   TimeOfDay? _ultimaPromessas;
   TimeOfDay? _ultimaLeitura;
   TimeOfDay? _ultimaNoite;
+  String? _ultimoFid;
   String _ultimoFuso = '';
 
   String? _vapidKeyOuNulo() =>
@@ -444,11 +448,14 @@ class LembretesReais implements Lembretes {
           );
     }
 
-    // O FCM 17 substituiu o token pelo FID em onRegistered; o backend ainda
-    // envia por token (functions/src/index.ts), então mantemos a API antiga
-    // até a migração dos dois lados.
-    // ignore: deprecated_member_use
-    _mensageria.onTokenRefresh.listen((tokenNovo) {
+    // O FID pode mudar ao limpar os dados/reinstalar. O documento antigo
+    // precisa sair junto, senão o mesmo aparelho recebe o push duas vezes.
+    _instalacoes.onIdChange.listen((fid) {
+      final anterior = _ultimoFid;
+      _ultimoFid = fid;
+      if (anterior != null && anterior != fid) {
+        unawaited(_apagarDocumento(anterior));
+      }
       final manha = _ultimaManha;
       final promessas = _ultimaPromessas;
       final leitura = _ultimaLeitura;
@@ -457,7 +464,7 @@ class LembretesReais implements Lembretes {
           promessas != null &&
           leitura != null &&
           noite != null) {
-        unawaited(_gravar(tokenNovo, manha, promessas, leitura, noite));
+        unawaited(_gravar(fid, manha, promessas, leitura, noite));
       }
     });
   }
@@ -510,20 +517,14 @@ class LembretesReais implements Lembretes {
 
     await _armarReservas(manha, promessas, leitura, noite);
 
-    // _tokenOuNulo() já registra o erro se getToken() lançar (comum na web,
-    // sobretudo Safari) — aqui só falta o caso "devolveu nulo sem lançar". A
-    // reserva local já foi armada acima; perder só o registro no servidor.
-    final token = await _tokenOuNulo();
-    if (token == null) {
-      Registro.erro(
-        'Lembretes.token',
-        StateError('getToken veio nulo'),
-        StackTrace.current,
-      );
-      return;
-    }
+    // _fidRegistradoOuNulo() já registra o erro se o registro no FCM falhar
+    // (comum na web, sobretudo Safari). A reserva local já foi armada acima;
+    // perder só o registro no servidor.
+    final fid = await _fidRegistradoOuNulo();
+    if (fid == null) return;
     try {
-      await _gravar(token, manha, promessas, leitura, noite);
+      await _gravar(fid, manha, promessas, leitura, noite);
+      await _limparCadastroLegado(fid);
     } catch (erro, pilha) {
       Registro.erro('Lembretes.gravar', erro, pilha);
     }
@@ -533,7 +534,7 @@ class LembretesReais implements Lembretes {
   /// inclusive apaga `ultimoEnvio*` da Function, o que é desejado: reagendar
   /// vale um reenvio no mesmo dia.
   Future<void> _gravar(
-    String token,
+    String fid,
     TimeOfDay manha,
     TimeOfDay promessas,
     TimeOfDay leitura,
@@ -541,8 +542,9 @@ class LembretesReais implements Lembretes {
   ) async {
     final fuso = await FlutterTimezone.getLocalTimezone();
     _ultimoFuso = fuso.identifier;
-    await FirebaseFirestore.instance.collection(_colecao).doc(token).set({
-      'token': token,
+    _ultimoFid = fid;
+    await FirebaseFirestore.instance.collection(_colecao).doc(fid).set({
+      'fid': fid,
       'minutosManha': manha.hour * 60 + manha.minute,
       'minutosPromessas': promessas.hour * 60 + promessas.minute,
       'minutosLeitura': leitura.hour * 60 + leitura.minute,
@@ -697,40 +699,86 @@ class LembretesReais implements Lembretes {
         unawaited(_locais.cancel(id: id));
       }
     }
-    final token = await _tokenOuNulo();
-    if (token == null) return;
-    await FirebaseFirestore.instance.collection(_colecao).doc(token).delete();
+    final fid = _ultimoFid ?? await _fidOuNulo();
+    if (fid != null) await _apagarDocumento(fid);
+    await _limparCadastroLegado(fid);
   }
 
   @override
   Future<bool> agendados() async {
     if (!lembretesSuportados) return false;
-    final token = await _tokenOuNulo();
-    if (token == null) return false;
+    final fid = _ultimoFid ?? await _fidOuNulo();
+    if (fid == null) return false;
     final doc = await FirebaseFirestore.instance
         .collection(_colecao)
-        .doc(token)
+        .doc(fid)
         .get();
     return doc.exists;
   }
 
-  /// `getToken()` sem exceção: na web (sobretudo Safari) o navegador pode
-  /// lançar em vez de devolver nulo — mesmo motivo do try/catch em
+  /// `getId()` sem exceção: na web (sobretudo Safari) o navegador pode
+  /// lançar em vez de devolver o FID — mesmo motivo do try/catch em
   /// [pedirPermissao] e [agendar]. `null` aqui já é um caso tratado por todo
   /// chamador, então engolir a exceção e devolver `null` reaproveita esse
   /// caminho em vez de duplicar tratamento em cada método.
-  Future<String?> _tokenOuNulo() async {
+  Future<String?> _fidOuNulo() async {
     try {
-      // Mesmo motivo do onTokenRefresh: o Firestore e a Function ainda usam
-      // o token FCM como identificador.
-      // ignore: deprecated_member_use
-      return await _mensageria.getToken(
+      final fid = await _instalacoes.getId();
+      _ultimoFid = fid;
+      return fid;
+    } catch (erro, pilha) {
+      Registro.erro('Lembretes.fid', erro, pilha);
+      return null;
+    }
+  }
+
+  /// Registra este aparelho no FCM e devolve o FID que a Function usa como
+  /// destinatário. `register()` não devolve o ID; o FID vem das Instalações
+  /// do Firebase, que é a mesma instalação usada pelo FCM.
+  Future<String?> _fidRegistradoOuNulo() async {
+    try {
+      await _mensageria.register(
         vapidKey: _vapidKeyOuNulo(),
         serviceWorkerScriptPath: _servicoWebOuNulo(),
       );
     } catch (erro, pilha) {
-      Registro.erro('Lembretes.token', erro, pilha);
+      Registro.erro('Lembretes.registrar', erro, pilha);
       return null;
+    }
+    return _fidOuNulo();
+  }
+
+  /// Migração única dos cadastros antigos por token FCM: o documento novo
+  /// passa a ser o FID, e o antigo precisa sair para o aparelho não receber
+  /// o mesmo push duas vezes. A flag no `SharedPreferences` evita repetir o
+  /// `getToken` (depreciado) a cada abertura do app; se a limpeza falhar,
+  /// tenta de novo na próxima.
+  Future<void> _limparCadastroLegado(String? fid) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool(_chaveMigracaoParaFid) ?? false) return;
+      // ignore: deprecated_member_use
+      final token = await _mensageria.getToken(
+        vapidKey: _vapidKeyOuNulo(),
+        serviceWorkerScriptPath: _servicoWebOuNulo(),
+      );
+      if (token != null && token != fid) {
+        await FirebaseFirestore.instance
+            .collection(_colecao)
+            .doc(token)
+            .delete();
+      }
+      await prefs.setBool(_chaveMigracaoParaFid, true);
+    } catch (erro, pilha) {
+      Registro.erro('Lembretes.migracao', erro, pilha);
+    }
+  }
+
+  Future<void> _apagarDocumento(String id) async {
+    try {
+      await FirebaseFirestore.instance.collection(_colecao).doc(id).delete();
+    } catch (erro, pilha) {
+      Registro.erro('Lembretes.apagar', erro, pilha);
     }
   }
 

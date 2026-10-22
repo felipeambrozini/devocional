@@ -702,7 +702,7 @@ class Estado extends ChangeNotifier {
   });
 
   /// Funde horários remotos vindos da nuvem. Retorna true se algo mudou
-  /// e o chamador deve rearmar os alarmes / regravar o token.
+  /// e o chamador deve rearmar os alarmes / regravar o FID.
   Future<bool> fundirLembretes(String remota) async {
     try {
       final mapa = json.decode(remota) as Map<String, dynamic>;

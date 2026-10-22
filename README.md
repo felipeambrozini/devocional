@@ -633,10 +633,17 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
   `flutter_local_notifications_web` não implementa `zonedSchedule`, então a
   web fica só com o push mesmo. Falhas são isoladas por slot/conteúdo —
   nenhuma derruba o conjunto.
-- **Contrato do Firestore** (`lembretes/{token}`, id = token FCM):
-  `{token, minutosManha, minutosNoite, fuso}` escritos pelo app protegidos
-  por App Check (`request.app != null`), mais `ultimoEnvio*` escritos só pela
-  Function (Admin SDK ignora as regras).
+- **Contrato do Firestore** (`lembretes/{fid}`, id = FID; documentos antigos
+  `lembretes/{token}`, id = token FCM): `{fid, minutosManha, minutosPromessas,
+  minutosLeitura, minutosNoite, fuso}` escritos pelo app, com o identificador
+  igual ao id, mais `ultimoEnvio*` escritos só pela Function (Admin SDK ignora
+  as regras). A proteção é o `hasOnly`/formato estrito de `valido()` e a
+  proibição de `list`; App Check é opcional nesta coleção (aparelhos sem Play
+  Integrity precisam registrar o lembrete).
+- **Identificador é o FID**: o app usa `FirebaseInstallations.getId()` e
+  `onIdChange`, mantém `fid` no documento e, na primeira migração, apaga o
+  documento antigo por token para não receber o push duas vezes. A Function
+  aceita `fid` (novo) e `token` (legado), preferindo `fid`.
 - **Conteúdo da Function**: `functions/src/assets/conteudo-lembretes.json`
   (37 KB, 366 dias) gerado dos JSONs do app só com referência/título.
   Regenerar se o conteúdo anual mudar.
@@ -660,12 +667,13 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
   (sem máscara), a página continua espelhando o tema efetivo no Cache
   Storage (`lib/dados/espelho_do_tema.dart`) e o service worker escolhe entre
   `notificacao-tema-claro/escuro.png`.
-- **O SDK precisa ouvir onde está o service worker**: `getToken` recebe
+- **O SDK precisa ouvir onde está o service worker**: `register` (e o
+  `getToken` da limpeza legada) recebe
   `serviceWorkerScriptPath: 'firebase-messaging-sw.js'` — relativo, para
   resolver contra o `<base href="/devocional/">`. Sem esse argumento o SDK
   registra por conta própria `/firebase-messaging-sw.js` na **raiz** do
   domínio, onde o Hosting devolve a página 404 em HTML: o registro falha por
-  tipo MIME, `getToken` lança e nenhum token web chega ao Firestore — a
+  tipo MIME, o `register` lança e nenhum FID web chega ao Firestore — a
   Function fica sem destinatário e a web inteira some do lembrete.
   `web/index.html` registra o mesmo arquivo no carregamento da página (para o
   `notificationclick` responder com o app fechado); mesmo caminho e mesmo

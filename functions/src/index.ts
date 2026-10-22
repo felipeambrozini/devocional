@@ -6,9 +6,10 @@
 // implementa `zonedSchedule` (lança `UnsupportedError`), então lá não existe
 // reserva local — por isso a cadência apertada: cada minuto de atraso aqui é
 // um minuto de atraso na única notificação que a web recebe.
-// Lê a coleção `lembretes` no Firestore ({token, minutosManha, minutosNoite,
+// Lê a coleção `lembretes` no Firestore ({fid, minutosManha, minutosNoite,
 // fuso}, gravada pelo app; ver lib/dados/lembretes.dart) e envia via FCM uma
-// mensagem **data-only** para quem venceu o horário:
+// mensagem **data-only** para quem venceu o horário. Documentos antigos ainda
+// trazem {token} em vez de {fid}; os dois formatos são aceitos na transição:
 //
 //   - data-only acorda o handler Dart com o app morto no Android, que exibe
 //     via notificação local (o lembrete local recorrente de reserva do
@@ -59,7 +60,10 @@ function ehBissexto(ano: number): boolean {
 const conteudoPorDia = conteudoJson as Record<string, DiaConteudo>;
 
 interface DadosDoLembrete {
-  token: string;
+  /** Firebase Installation ID: destinatário atual do push. */
+  fid?: string;
+  /** Token FCM de documentos gravados antes da migração para FID. */
+  token?: string;
   minutosManha: number;
   minutosPromessas: number;
   minutosLeitura: number;
@@ -69,6 +73,16 @@ interface DadosDoLembrete {
   ultimoEnvioPromessas?: string;
   ultimoEnvioLeitura?: string;
   ultimoEnvioNoite?: string;
+}
+
+type Alvo = {fid: string} | {token: string};
+
+function alvoDe(d: DadosDoLembrete): Alvo | null {
+  if (typeof d.fid === "string" && d.fid.length > 0) return {fid: d.fid};
+  if (typeof d.token === "string" && d.token.length > 0) {
+    return {token: d.token};
+  }
+  return null;
 }
 
 function agoraNoFuso(fuso: string): {
@@ -116,14 +130,14 @@ function deveEnviar(
 }
 
 function mensagem(
-    token: string,
+    alvo: Alvo,
     chave: string,
     titulo: string,
     corpo: string,
     minutosDoSlot: number,
 ): Message {
   return {
-    token,
+    ...alvo,
     // Sem `notification`: data-only é o que acorda o handler no Android e
     // entrega ao service worker na web — cada lado exibe por conta própria.
     android: {priority: "high" as const},
@@ -174,8 +188,9 @@ export const enviarLembretes = onSchedule(
         ? (d as any).minutosPromessas as number : d.minutosManha;
       const minutosLeitura = typeof (d as any).minutosLeitura === "number"
         ? (d as any).minutosLeitura as number : d.minutosManha;
+      const alvo = alvoDe(d);
       if (
-        typeof d.token !== "string" ||
+        alvo === null ||
         typeof d.minutosManha !== "number" ||
         typeof d.minutosNoite !== "number" ||
         typeof d.fuso !== "string"
@@ -201,7 +216,7 @@ export const enviarLembretes = onSchedule(
         if (conteudoDia.m) {
           pendentes.push({
             slot: "manha",
-            message: mensagem(d.token, "manha", "Devocional da Manhã",
+            message: mensagem(alvo, "manha", "Devocional da Manhã",
               `Venha ler a reflexão para sua manhã em ${conteudoDia.m}`, d.minutosManha),
           });
         }
@@ -211,7 +226,7 @@ export const enviarLembretes = onSchedule(
         if (conteudoDia.p?.r) {
           pendentes.push({
             slot: "promessas",
-            message: mensagem(d.token, "promessas", "Promessas de Deus",
+            message: mensagem(alvo, "promessas", "Promessas de Deus",
               `Venha ler a Promessa de Deus para o seu dia em ${conteudoDia.p.r}`, minutosPromessas),
           });
         }
@@ -225,7 +240,7 @@ export const enviarLembretes = onSchedule(
         if (leituraLabel) {
           pendentes.push({
             slot: "leitura",
-            message: mensagem(d.token, "leitura", "Leitura do Dia",
+            message: mensagem(alvo, "leitura", "Leitura do Dia",
               leituraLabel, minutosLeitura),
           });
         }
@@ -235,7 +250,7 @@ export const enviarLembretes = onSchedule(
         if (conteudoDia.n) {
           pendentes.push({
             slot: "noite",
-            message: mensagem(d.token, "noite", "Devocional da Noite",
+            message: mensagem(alvo, "noite", "Devocional da Noite",
               `Venha ler a reflexão para sua noite em ${conteudoDia.n}`, d.minutosNoite),
           });
         }
@@ -248,7 +263,7 @@ export const enviarLembretes = onSchedule(
       );
 
       const slotsOk = new Set<Slot>();
-      let tokenMorto = false;
+      let alvoMorto = false;
       resposta.responses.forEach((r, i) => {
         if (r.success) {
           enviados++;
@@ -258,16 +273,17 @@ export const enviarLembretes = onSchedule(
         const codigo = r.error?.code ?? 0;
         console.error(`Falha ao enviar ${pendentes[i].slot} para ${doc.id}:`,
           r.error?.message);
-        // UNREGISTERED/INVALID_ARGUMENT = token apagado/expirado ou inválido:
-        // nada a fazer além de remover o cadastro. Outros códigos (rede, cota)
-        // são passageiros; a próxima rodada tenta de novo dentro da janela.
+        // UNREGISTERED/INVALID_ARGUMENT = FID/token apagado/expirado ou
+        // inválido: nada a fazer além de remover o cadastro. Outros códigos
+        // (rede, cota) são passageiros; a próxima rodada tenta de novo.
         if (codigo === "messaging/registration-token-not-registered" ||
+            codigo === "messaging/installation-id-not-registered" ||
             codigo === "messaging/invalid-argument") {
-          tokenMorto = true;
+          alvoMorto = true;
         }
       });
 
-      if (tokenMorto) {
+      if (alvoMorto) {
         await doc.ref.delete();
         removidos++;
         continue;
