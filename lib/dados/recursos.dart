@@ -38,22 +38,16 @@ class Recursos {
   static bool? planoPersonalizadoForcado;
 
   /// Override para teste: mesmo motivo de [conversasForcado] — sem login de
-  /// verdade, a allowlist recusaria sempre.
+  /// verdade, os planos ficariam fechados nos testes.
   static bool? planosForcado;
 
-  /// Se a conta aberta pode criar planos próprios. Igual às Conversas, com
-  /// uma diferença: lista vazia mantém o comportamento atual — só o
-  /// interruptor global [planoPersonalizado] decide. A allowlist só
-  /// restringe quando o admin começa a usá-la (primeiro e-mail adicionado);
-  /// antes disso ninguém perde acesso por um documento vazio.
+  /// Se a conta aberta pode criar planos próprios: basta a conta Google
+  /// logada e o interruptor global [planoPersonalizado] ligado. Não há
+  /// allowlist por e-mail — quem entra passa a ver a aba.
   static bool get planos {
     final forcado = planosForcado;
     if (forcado != null) return forcado;
-    if (!planoPersonalizado) return false;
-    if (ConfigAdmin.instancia.emailsComPlanos.isEmpty) return true;
-    final email = Nuvem.instancia.email?.trim().toLowerCase();
-    if (email == null || email.isEmpty) return false;
-    return ConfigAdmin.instancia.emailsComPlanos.contains(email);
+    return planoPersonalizado && Nuvem.instancia.logado;
   }
 
   /// Botão "Ouvir" nos textos (Bíblia, devocional, introduções, notas).

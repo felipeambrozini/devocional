@@ -11,12 +11,10 @@ import 'botao.dart';
 /// número versionado no repositório, e vazio esconde o botão.
 const _numeroWhatsapp = String.fromEnvironment('WHATSAPP_NUMERO');
 
-/// Convite para pedir acesso a um recurso premium por allowlist, quando quem
-/// abre a tela ainda não está nela — mesmo cartão serve Conversas e Meus
-/// Planos, só o ícone, a descrição e a mensagem do WhatsApp mudam. Explicar o
-/// que falta e como pedir é a filosofia de gating do app: esconder a aba em
-/// silêncio (como Meus Planos fazia antes) quebra o próprio convite de
-/// crescimento por WhatsApp que o produto já usa em Conversas.
+/// Convite para pedir acesso ao chat, que ainda depende de allowlist, quando
+/// quem abre a tela não está nela. Explicar o que falta e como pedir é a
+/// filosofia de gating do app: esconder a aba em silêncio quebra o próprio
+/// convite de crescimento por WhatsApp que o produto já usa em Conversas.
 class DevocionalCartaoDePedirAcesso extends StatelessWidget {
   const DevocionalCartaoDePedirAcesso({
     super.key,

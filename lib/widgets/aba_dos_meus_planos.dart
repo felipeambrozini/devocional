@@ -34,14 +34,12 @@ class DevocionalAbaDosMeusPlanos extends StatelessWidget {
           );
         }
         if (!Recursos.planos) {
-          return const DevocionalCartaoDePedirAcesso(
+          return const DevocionalAvisoVazio(
             icone: FontAwesomeIcons.calendarPlus,
-            descricao:
-                'Planos de leitura personalizados são um recurso premium. '
-                'Fale comigo pelo WhatsApp para habilitar o acesso na sua '
-                'conta.',
-            mensagemDoWhatsapp:
-                'Oi Felipe, quero habilitar planos personalizados',
+            titulo: 'Planos indisponíveis',
+            detalhe:
+                'Os planos de leitura personalizados estão desligados no '
+                'momento. Tente de novo mais tarde.',
           );
         }
         return _ListaDePlanos(estado: EscopoDoEstado.de(context));

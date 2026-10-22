@@ -481,12 +481,10 @@ motivo novo.
    `*Forcado` (mesmo padrão de `Lembretes.instancia`, mutável) só para teste —
    o login de verdade nunca roda no ambiente de teste, e sem o override os
    testes de Conversas não veriam o recurso.
- - **Planos próprios têm allowlist de e-mail igual à do chat**
-   (`emailsComPlanos`, `Recursos.planos`): com a lista vazia vale só o
-   interruptor global, como sempre foi; com o primeiro e-mail adicionado no
-   painel, só quem está nela cria planos. O cartão de pedir acesso é o mesmo
-   (WhatsApp), e a seção do painel é a mesma peça da do chat
-   (`_SecaoDeEmails` em `lib/telas/admin.dart`).
+ - **Planos próprios não têm allowlist** (`Recursos.planos`): basta a conta
+   Google logada e o interruptor global `planoPersonalizadoAtivo` ligado —
+   quem entra vê a aba e cria planos. A seção de e-mails dos planos saiu do
+   painel; só a allowlist do chat continua por e-mail.
 - **A aba Conversas é visível para todo mundo; só o chat em si é que
   continua trancado pela allowlist** (04/09/2026): antes, `Recursos.conversas`
   também escondia a aba inteira (barra, trilho e a rota `/conversas`) —

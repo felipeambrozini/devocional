@@ -10,8 +10,7 @@ import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
 import '../widgets/widgets.dart';
 
-/// Painel admin: interruptores de cada recurso e as allowlists do chat e dos
-/// planos.
+/// Painel admin: interruptores de cada recurso e a allowlist do chat.
 ///
 /// Só web e só a conta do dono (ver `Recursos.adminNaWeb`): fora da web ou
 /// sem esse login, a rota `/admin` redireciona para `/hoje` (ver `main.dart`)
@@ -219,33 +218,14 @@ class _TelaAdminState extends State<TelaAdmin> {
           aoAdicionar: ConfigAdmin.instancia.adicionarEmail,
           aoRemover: ConfigAdmin.instancia.removerEmail,
           contextoDeErro: 'Admin.emailsComConversas',
-          autofocus: true,
-        ),
-        const SizedBox(height: DevocionalEspacamento.sp24),
-        const DevocionalFilete(largura: 64),
-        const SizedBox(height: DevocionalEspacamento.sp16),
-        _SecaoDeEmails(
-          titulo: 'E-mails com planos',
-          legendaVazia:
-              'Lista vazia: vale só o interruptor de planos acima. Com o '
-              'primeiro e-mail, só quem está aqui cria planos.',
-          legendaCheia: (n) =>
-              '$n ${n == 1 ? 'conta liberada' : 'contas liberadas'}.',
-          emails: config.emailsComPlanos,
-          textoDeRemocao: (email) => '$email perde os planos na hora.',
-          aoAdicionar: ConfigAdmin.instancia.adicionarEmailAosPlanos,
-          aoRemover: ConfigAdmin.instancia.removerEmailDosPlanos,
-          contextoDeErro: 'Admin.emailsComPlanos',
         ),
       ],
     );
   }
 }
 
-/// Uma allowlist do painel: título, contagem, campo de adicionar e a lista
-/// com remover. Estado próprio (campo, giro, erro) por seção: as duas seções
-/// da tela não dividem controlador, senão digitar numa espelhava na outra.
-/// Extraída da seção de conversas quando os planos ganharam a sua.
+/// A allowlist do chat no painel: título, contagem, campo de adicionar e a
+/// lista com remover.
 class _SecaoDeEmails extends StatefulWidget {
   const _SecaoDeEmails({
     required this.titulo,
@@ -256,7 +236,6 @@ class _SecaoDeEmails extends StatefulWidget {
     required this.aoAdicionar,
     required this.aoRemover,
     required this.contextoDeErro,
-    this.autofocus = false,
   });
 
   final String titulo;
@@ -267,10 +246,6 @@ class _SecaoDeEmails extends StatefulWidget {
   final Future<void> Function(String email) aoAdicionar;
   final Future<void> Function(String email) aoRemover;
   final String contextoDeErro;
-
-  /// Só a primeira seção pede foco ao abrir: dois campos com autofocus
-  /// brigariam pelo teclado.
-  final bool autofocus;
 
   @override
   State<_SecaoDeEmails> createState() => _SecaoDeEmailsState();
@@ -360,7 +335,7 @@ class _SecaoDeEmailsState extends State<_SecaoDeEmails> {
                 textCapitalization: TextCapitalization.none,
                 autocorrect: false,
                 enableSuggestions: false,
-                autofocus: widget.autofocus,
+                autofocus: true,
                 enabled: !_adicionando,
                 autofillHints: const [AutofillHints.email],
                 decoration: InputDecoration(

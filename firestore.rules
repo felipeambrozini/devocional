@@ -34,8 +34,11 @@ service cloud.firestore {
     // Contrato do documento config/recursos:
     //   conversasAtivas          bool — kill switch global do chat
     //   emailsComConversas       list de string — allowlist do chat
-    //   emailsComPlanos          list de string — allowlist dos planos (vazia:
-    //                            só o interruptor global decide)
+    //   emailsComPlanos          list de string — campo legado: a allowlist
+    //                            dos planos saiu (agora basta login Google),
+    //                            mas documentos antigos ainda podem tê-lo — e
+    //                            a escrita com merge reenvia o documento
+    //                            inteiro, então o campo continua tolerado
     //   planoPersonalizadoAtivo  bool — aba "Meus planos"
     //   cronogramaAtivo          bool — aba "Cronograma" dentro do Plano
     //   manhaAtivo               bool — devocional da manhã

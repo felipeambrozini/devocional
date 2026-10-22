@@ -1,4 +1,5 @@
 import 'package:felipe_ambrozini/dados/config_admin.dart';
+import 'package:felipe_ambrozini/dados/nuvem.dart';
 import 'package:felipe_ambrozini/dados/recursos.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -74,23 +75,28 @@ void main() {
     tearDown(() {
       Recursos.planosForcado = null;
       Recursos.planoPersonalizadoForcado = null;
+      Nuvem.instancia.logadoForcado = null;
       ConfigAdmin.instancia.redefinirParaTeste();
     });
 
     test('forcado tem prioridade sobre todo o resto', () {
       Recursos.planosForcado = false;
-      ConfigAdmin.instancia.definirParaTeste(emailsPlanos: const []);
+      Nuvem.instancia.logadoForcado = true;
       expect(Recursos.planos, isFalse);
     });
 
-    test('lista vazia mantém o interruptor global', () {
+    test('sem login fica fechado mesmo com o interruptor ligado', () {
+      expect(Recursos.planos, isFalse);
+    });
+
+    test('com login e interruptor ligado fica aberto', () {
+      Nuvem.instancia.logadoForcado = true;
       expect(Recursos.planos, isTrue);
-      Recursos.planoPersonalizadoForcado = false;
-      expect(Recursos.planos, isFalse);
     });
 
-    test('lista em uso sem login fecha', () {
-      ConfigAdmin.instancia.definirParaTeste(emailsPlanos: ['a@x.com']);
+    test('interruptor global desligado fecha mesmo logado', () {
+      Nuvem.instancia.logadoForcado = true;
+      Recursos.planoPersonalizadoForcado = false;
       expect(Recursos.planos, isFalse);
     });
   });
