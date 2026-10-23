@@ -85,6 +85,12 @@ const obrasDaBiblioteca = [
     capa: 'assets/imagens/capa_o_ganhador_de_almas.webp',
   ),
   ObraDaBiblioteca(
+    slug: 'ate_que_ele_venha',
+    titulo: 'Até que Ele Venha',
+    subtitulo: 'Meditações e discursos para a Ceia do Senhor',
+    capa: 'assets/imagens/capa_ate_que_ele_venha.webp',
+  ),
+  ObraDaBiblioteca(
     slug: 'pescadores_de_criancas',
     titulo: 'Pescadores de Crianças',
     subtitulo: 'Para pais e mestres',

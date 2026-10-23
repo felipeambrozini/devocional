@@ -187,7 +187,7 @@ e não são versionadas aqui.
 | Manhã e Noite | 366 dias, todos com manhã e noite (732 entradas) |
 | Promessas de Deus | 366 de 366 traduzidos |
 | Cronograma anual | 365 dias (366 em ano bissexto), 455 faixas, os 1.189 capítulos |
-| Biblioteca | 13 livros de Spurgeon traduzidos e revisados, na ordem de publicação em inglês: *O Santo e o Seu Salvador*, *Tesouro de Davi* (só o texto de Spurgeon, 149 salmos; o Salmo 119 está no *Alfabeto de Ouro*), *Conversas de João Lavrador*, *Lições aos Meus Alunos*, *Retratos de João Lavrador*, *Alfabeto de Ouro*, *Ao Redor do Portão Estreito*, *Somente pela Graça*, *Segundo a Promessa*, *O Maior Combate do Mundo*, *O Evangelho do Reino*, *O Ganhador de Almas* e *Pescadores de Crianças* |
+| Biblioteca | 14 livros de Spurgeon traduzidos e revisados, na ordem de publicação em inglês: *O Santo e o Seu Salvador*, *Tesouro de Davi* (só o texto de Spurgeon, 149 salmos; o Salmo 119 está no *Alfabeto de Ouro*), *Conversas de João Lavrador*, *Lições aos Meus Alunos*, *Retratos de João Lavrador*, *Alfabeto de Ouro*, *Ao Redor do Portão Estreito*, *Somente pela Graça*, *Segundo a Promessa*, *O Maior Combate do Mundo*, *O Evangelho do Reino*, *O Ganhador de Almas*, *Até que Ele Venha* e *Pescadores de Crianças* |
 | 66 introduções | Completas, revisadas em fatos e linguagem; a frase final de cada uma conferida no original |
 | Comentários por versículo | 31.102, um por versículo, escritos e validados livro a livro |
 
@@ -266,6 +266,7 @@ para um livro volta para a estante.
   paragrafos: []}]}`. Carregado sob demanda, um livro por vez.
 - **Capa**: `assets/imagens/capa_<slug>.webp`, 225x300, na linha das capas
   de Manhã e Noite e Promessas. Sem o arquivo, aparece uma capa tipográfica.
+  `python tools/capa_para_webp.py <png> <slug>` tira o fundo branco do render e grava o WebP.
 - **O que o usuário guarda** (`lib/dados/leitura_de_livros.dart`, dentro do
   `Estado`): onde parou (capítulo e fração da rolagem, para o "continuar de
   onde parei"), capítulos lidos e destaques com nota por parágrafo. Fica no aparelho e, **com a conta Google, sobe para a nuvem**
