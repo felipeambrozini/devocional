@@ -36,6 +36,12 @@ const obrasDaBiblioteca = [
     capa: 'assets/imagens/capa_licoes_aos_meus_alunos.webp',
   ),
   ObraDaBiblioteca(
+    slug: 'a_biblia_e_o_jornal',
+    titulo: 'A Bíblia e o Jornal',
+    subtitulo: 'Notícias de 1878 lidas à luz da Escritura',
+    capa: 'assets/imagens/capa_a_biblia_e_o_jornal.webp',
+  ),
+  ObraDaBiblioteca(
     slug: 'retratos_de_joao_lavrador',
     titulo: 'Retratos de João Lavrador',
     subtitulo: 'Mais conselhos simples para gente simples',
