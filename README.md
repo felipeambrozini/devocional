@@ -607,7 +607,7 @@ Firestore (uma por lembrete cadastrado, por minuto — folga de sobra dentro do
 free tier para o número de usuários deste app; reavaliar se crescer muito).
 
 - **Formato das notificações do push**: "Venha ler a reflexão para sua manhã
-  em Josué 5:12", "Venha ler a reflexão para sua noite em Cantares 1:4" e
+  em Josué 5:12", "Venha ler a reflexão para sua noite em Cantares de Salomão 1:4" e
   "Venha ler a Promessa de Deus para o seu dia em Gênesis 3:15" — referência
   do dia, calculada dos assets. No Android quem
   exibe é o handler Dart (data-only acorda o app morto); na web, o service
