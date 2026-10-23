@@ -60,6 +60,12 @@ const obrasDaBiblioteca = [
     capa: 'assets/imagens/capa_ao_redor_do_portao_estreito.webp',
   ),
   ObraDaBiblioteca(
+    slug: 'o_fio_do_labirinto',
+    titulo: 'O Fio do Labirinto',
+    subtitulo: 'Uma voz em favor da fé honesta',
+    capa: 'assets/imagens/capa_o_fio_do_labirinto.webp',
+  ),
+  ObraDaBiblioteca(
     slug: 'somente_pela_graca',
     titulo: 'Somente pela Graça',
     subtitulo:
