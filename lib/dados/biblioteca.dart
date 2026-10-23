@@ -108,6 +108,12 @@ const obrasDaBiblioteca = [
     subtitulo: 'Para pais e mestres',
     capa: 'assets/imagens/capa_pescadores_de_criancas.webp',
   ),
+  ObraDaBiblioteca(
+    slug: 'apenas_uma_reuniao_de_oracao',
+    titulo: 'Apenas uma Reunião de Oração',
+    subtitulo: 'Quarenta discursos nas reuniões de oração do Tabernáculo',
+    capa: 'assets/imagens/capa_apenas_uma_reuniao_de_oracao.webp',
+  ),
 ];
 
 ObraDaBiblioteca? obraPorSlug(String slug) {

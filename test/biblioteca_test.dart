@@ -85,6 +85,7 @@ void main() {
           'licoes_aos_meus_alunos': 31,
           'a_biblia_e_o_jornal': 44,
           'o_fio_do_labirinto': 68,
+          'apenas_uma_reuniao_de_oracao': 41,
           'ate_que_ele_venha': 21,
           'pescadores_de_criancas': 23,
           'o_santo_e_o_seu_salvador': 13,
