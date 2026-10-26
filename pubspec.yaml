@@ -30,7 +30,7 @@ dependencies:
   # push da Cloud Function agendada (functions/) via FID da instalação gravado
   # no Firestore, em Android e web; no Android ainda há alarme local de reserva
   # pelo flutter_local_notifications abaixo.
-  firebase_messaging: ^17.0.0
+  firebase_messaging: ^17.0.1
   # FID da instalação Firebase, usado como destinatário do push no lugar do
   # token FCM (o token segue aceito pela Function em documentos antigos).
   firebase_app_installations: ^0.5.0
