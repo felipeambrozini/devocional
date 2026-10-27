@@ -1,4 +1,4 @@
-import 'package:felipe_ambrozini/dados/config_admin.dart';
+import 'package:devocional/dados/config_admin.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

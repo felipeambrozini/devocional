@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:felipe_ambrozini/dados/ia.dart';
-import 'package:felipe_ambrozini/dados/modelos.dart';
-import 'package:felipe_ambrozini/dados/personas.dart';
+import 'package:devocional/dados/ia.dart';
+import 'package:devocional/dados/modelos.dart';
+import 'package:devocional/dados/personas.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';

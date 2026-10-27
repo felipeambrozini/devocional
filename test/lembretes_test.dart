@@ -1,8 +1,8 @@
-import 'package:felipe_ambrozini/dados/estado.dart';
-import 'package:felipe_ambrozini/dados/lembretes.dart';
-import 'package:felipe_ambrozini/funcoes/aviso.dart';
-import 'package:felipe_ambrozini/funcoes/lembretes_acoes.dart';
-import 'package:felipe_ambrozini/widgets/widgets.dart';
+import 'package:devocional/dados/estado.dart';
+import 'package:devocional/dados/lembretes.dart';
+import 'package:devocional/funcoes/aviso.dart';
+import 'package:devocional/funcoes/lembretes_acoes.dart';
+import 'package:devocional/widgets/widgets.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

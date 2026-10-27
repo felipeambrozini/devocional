@@ -1,8 +1,8 @@
-import 'package:felipe_ambrozini/dados/conteudo.dart';
-import 'package:felipe_ambrozini/dados/estado.dart';
-import 'package:felipe_ambrozini/dados/modelos.dart';
-import 'package:felipe_ambrozini/telas/biblia.dart';
-import 'package:felipe_ambrozini/widgets/faixa.dart';
+import 'package:devocional/dados/conteudo.dart';
+import 'package:devocional/dados/estado.dart';
+import 'package:devocional/dados/modelos.dart';
+import 'package:devocional/telas/biblia.dart';
+import 'package:devocional/widgets/faixa.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';

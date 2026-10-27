@@ -1,5 +1,5 @@
-import 'package:felipe_ambrozini/dados/voz.dart';
-import 'package:felipe_ambrozini/widgets/botao_de_voz.dart';
+import 'package:devocional/dados/voz.dart';
+import 'package:devocional/widgets/botao_de_voz.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

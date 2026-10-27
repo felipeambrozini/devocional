@@ -16,7 +16,7 @@ são as do projeto, não invente um estilo novo.
   comportamento em linguagem natural (ex.: `test('vazio não libera
   ninguém', ...)`), nunca em inglês nem em `snake_case` técnico.
 - Import do pacote do próprio projeto como
-  `package:felipe_ambrozini/...`, nunca caminho relativo cruzando `lib/`.
+  `package:devocional/...`, nunca caminho relativo cruzando `lib/`.
 - Um `group` por função/classe/tela testada; `setUp`/`tearDown` para resetar
   overrides estáticos de teste (padrão `*Forcado`, ver `recursos_test.dart`).
 - Teste o comportamento observável (entrada → saída, estado → widget

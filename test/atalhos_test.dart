@@ -1,10 +1,10 @@
-import 'package:felipe_ambrozini/dados/conteudo.dart';
-import 'package:felipe_ambrozini/dados/estado.dart';
-import 'package:felipe_ambrozini/dados/modelos.dart';
-import 'package:felipe_ambrozini/main.dart';
-import 'package:felipe_ambrozini/telas/biblia.dart';
-import 'package:felipe_ambrozini/telas/busca.dart';
-import 'package:felipe_ambrozini/widgets/widgets.dart';
+import 'package:devocional/dados/conteudo.dart';
+import 'package:devocional/dados/estado.dart';
+import 'package:devocional/dados/modelos.dart';
+import 'package:devocional/main.dart';
+import 'package:devocional/telas/biblia.dart';
+import 'package:devocional/telas/busca.dart';
+import 'package:devocional/widgets/widgets.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

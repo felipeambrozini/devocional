@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:felipe_ambrozini/controladores/biblia_controlador.dart';
-import 'package:felipe_ambrozini/dados/audio_offline.dart';
-import 'package:felipe_ambrozini/dados/conteudo.dart';
-import 'package:felipe_ambrozini/dados/estado.dart';
-import 'package:felipe_ambrozini/dados/recursos.dart';
-import 'package:felipe_ambrozini/dados/voz.dart';
-import 'package:felipe_ambrozini/funcoes/aviso.dart';
-import 'package:felipe_ambrozini/telas/biblia.dart';
+import 'package:devocional/controladores/biblia_controlador.dart';
+import 'package:devocional/dados/audio_offline.dart';
+import 'package:devocional/dados/conteudo.dart';
+import 'package:devocional/dados/estado.dart';
+import 'package:devocional/dados/recursos.dart';
+import 'package:devocional/dados/voz.dart';
+import 'package:devocional/funcoes/aviso.dart';
+import 'package:devocional/telas/biblia.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';

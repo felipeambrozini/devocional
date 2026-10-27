@@ -1,7 +1,7 @@
-import 'package:felipe_ambrozini/dados/conteudo.dart';
-import 'package:felipe_ambrozini/dados/estado.dart';
-import 'package:felipe_ambrozini/dados/recursos.dart';
-import 'package:felipe_ambrozini/main.dart';
+import 'package:devocional/dados/conteudo.dart';
+import 'package:devocional/dados/estado.dart';
+import 'package:devocional/dados/recursos.dart';
+import 'package:devocional/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';

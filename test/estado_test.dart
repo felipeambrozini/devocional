@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:felipe_ambrozini/dados/conteudo.dart';
-import 'package:felipe_ambrozini/dados/modelos.dart';
-import 'package:felipe_ambrozini/dados/estado.dart';
+import 'package:devocional/dados/conteudo.dart';
+import 'package:devocional/dados/modelos.dart';
+import 'package:devocional/dados/estado.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

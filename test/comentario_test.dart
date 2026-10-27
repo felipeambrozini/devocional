@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:felipe_ambrozini/dados/canon.dart';
+import 'package:devocional/dados/canon.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Guarda o formato dos comentários de Spurgeon por versículo enquanto são

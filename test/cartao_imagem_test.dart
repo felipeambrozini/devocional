@@ -1,4 +1,4 @@
-import 'package:felipe_ambrozini/funcoes/cartao_imagem.dart';
+import 'package:devocional/funcoes/cartao_imagem.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

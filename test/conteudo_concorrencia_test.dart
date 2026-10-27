@@ -1,4 +1,4 @@
-import 'package:felipe_ambrozini/dados/conteudo.dart';
+import 'package:devocional/dados/conteudo.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Arquivo próprio de propósito: `Conteudo.instancia` é singleton e cacheia

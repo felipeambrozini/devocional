@@ -1,7 +1,7 @@
-import 'package:felipe_ambrozini/dados/audio_offline.dart';
-import 'package:felipe_ambrozini/dados/voz.dart';
-import 'package:felipe_ambrozini/funcoes/aviso.dart';
-import 'package:felipe_ambrozini/widgets/widgets.dart';
+import 'package:devocional/dados/audio_offline.dart';
+import 'package:devocional/dados/voz.dart';
+import 'package:devocional/funcoes/aviso.dart';
+import 'package:devocional/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

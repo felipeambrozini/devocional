@@ -1,4 +1,4 @@
-import 'package:felipe_ambrozini/dados/personas.dart';
+import 'package:devocional/dados/personas.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

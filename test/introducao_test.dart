@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:felipe_ambrozini/dados/canon.dart';
-import 'package:felipe_ambrozini/dados/modelos.dart';
+import 'package:devocional/dados/canon.dart';
+import 'package:devocional/dados/modelos.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Guarda o formato das 66 introduções enquanto elas são escritas.

@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:felipe_ambrozini/dados/canon.dart';
-import 'package:felipe_ambrozini/dados/modelos.dart';
+import 'package:devocional/dados/canon.dart';
+import 'package:devocional/dados/modelos.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Lê o asset direto do disco. Um teste de dados não precisa subir um app inteiro

@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:felipe_ambrozini/dados/modelos.dart';
-import 'package:felipe_ambrozini/estilo/tema.dart';
+import 'package:devocional/dados/modelos.dart';
+import 'package:devocional/estilo/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

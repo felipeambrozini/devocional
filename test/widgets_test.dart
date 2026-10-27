@@ -1,6 +1,6 @@
-import 'package:felipe_ambrozini/dados/canon.dart';
-import 'package:felipe_ambrozini/funcoes/dialogos.dart';
-import 'package:felipe_ambrozini/widgets/widgets.dart';
+import 'package:devocional/dados/canon.dart';
+import 'package:devocional/funcoes/dialogos.dart';
+import 'package:devocional/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

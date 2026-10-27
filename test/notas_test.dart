@@ -1,6 +1,6 @@
-import 'package:felipe_ambrozini/dados/conteudo.dart';
-import 'package:felipe_ambrozini/dados/estado.dart';
-import 'package:felipe_ambrozini/telas/notas.dart';
+import 'package:devocional/dados/conteudo.dart';
+import 'package:devocional/dados/estado.dart';
+import 'package:devocional/telas/notas.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';

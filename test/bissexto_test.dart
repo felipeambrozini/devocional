@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:felipe_ambrozini/dados/conteudo.dart';
+import 'package:devocional/dados/conteudo.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// 29 de fevereiro só pode aparecer em ano bissexto.
