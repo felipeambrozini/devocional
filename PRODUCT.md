@@ -47,7 +47,7 @@ vitoriana dele, tratando o leitor por "tu".
 - Cópia de segurança de favoritos, notas e progresso por exportar/importar
   (folha de compartilhar); conta Google em todas as plataformas, para
   espelhar na nuvem.
-- Navegação: abas Hoje, Bíblia, Devocional, Plano, Notas e Conversas; Sobre
+- Navegação: abas Hoje, Bíblia, Devocional, Biblioteca, Plano e Conversas; Sobre
   (créditos, canais e ajuda), Perguntas frequentes, Política de privacidade e
   Termos de serviço moram na folha de ajustes. Na web cada aba tem URL própria;
   `/sobre`, `/faq`, `/privacidade`, `/termos` e cada conversa também, e links diretos no formato

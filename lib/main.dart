@@ -291,18 +291,18 @@ const _destinos = <_Destino>[
     TelaDevocional(),
   ),
   _Destino(
-    'Plano',
-    'plano',
-    FontAwesomeIcons.calendarDays,
-    FontAwesomeIcons.solidCalendarDays,
-    TelaPlano(),
-  ),
-  _Destino(
     'Biblioteca',
     'biblioteca',
     FontAwesomeIcons.bookBookmark,
     FontAwesomeIcons.bookBookmark,
     TelaBiblioteca(),
+  ),
+  _Destino(
+    'Plano',
+    'plano',
+    FontAwesomeIcons.calendarDays,
+    FontAwesomeIcons.solidCalendarDays,
+    TelaPlano(),
   ),
   _Destino(
     'Conversas',
