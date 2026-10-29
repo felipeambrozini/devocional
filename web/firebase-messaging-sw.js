@@ -9,9 +9,14 @@
 // CI (.github/workflows/deploy-web.yml) com os mesmos secrets do Firebase já
 // usados no --dart-define do app. Para testar localmente, troque à mão pelos
 // valores do seu .env.json (ver README.md) — nunca comitar o resultado.
-importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');
+//
+// A versão precisa acompanhar o SDK JS que o firebase_core_web carrega na
+// página (`supportedFirebaseJsSdkVersion`): a página registra por FID
+// (`register()`, SDK 12.14+), e um SW mais antigo, ao renovar a inscrição no
+// `pushsubscriptionchange`, volta ao modelo por token e desfaz o registro.
+importScripts('https://www.gstatic.com/firebasejs/13.1.0/firebase-app-compat.js');
 importScripts(
-  'https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js'
+  'https://www.gstatic.com/firebasejs/13.1.0/firebase-messaging-compat.js'
 );
 
 firebase.initializeApp({
@@ -23,7 +28,8 @@ firebase.initializeApp({
   storageBucket: '__FIREBASE_STORAGE_BUCKET__',
 });
 
-const mensageria = firebase.messaging();
+// Instanciar é o que liga o tratamento do `pushsubscriptionchange` do SDK.
+firebase.messaging();
 
 // Ícones por tema: a página espelha o tema efetivo do app no Cache Storage
 // (lib/dados/espelho_do_tema.dart) — localStorage não serve, é invisível para
@@ -43,14 +49,28 @@ async function lerTemaEspelhado() {
   }
 }
 
-// Sem exibição automática do navegador em segundo plano — por isso o
-// `showNotification` manual aqui. A mensagem é data-only (o Android também
-// recebe data-only, para o handler de fundo exibir via notificação local —
-// ver lib/dados/lembretes.dart), então título e corpo vêm em `data`, junto com
-// `chave` ("manha", "promessas" ou "noite") e `minutos`. Tudo vem da Cloud
-// Function agendada (functions/src/index.ts).
-mensageria.onBackgroundMessage(async (mensagem) => {
-  const dados = mensagem.data || {};
+// A mensagem é data-only (o Android também recebe data-only, para o handler
+// de fundo exibir via notificação local — ver lib/dados/lembretes.dart), então
+// título e corpo vêm em `data`, junto com `chave` ("manha", "promessas" ou
+// "noite") e `minutos`. Tudo vem da Cloud Function agendada
+// (functions/src/index.ts).
+//
+// Listener próprio de `push`, e não `onBackgroundMessage`: o SDK só chama
+// aquele handler se nenhuma aba do app estiver visível — com o app aberto na
+// tela, ele repassa a mensagem à página (`onMessage`), que na web não exibe
+// nada, e o lembrete sumia. Aqui exibe sempre; o listener do SDK continua
+// registrado, mas sem `notification` no payload nem handler de fundo, não
+// mostra nada por conta própria — então não duplica.
+self.addEventListener('push', (evento) => {
+  let mensagem = null;
+  try {
+    mensagem = evento.data && evento.data.json();
+  } catch (_) {}
+  if (!mensagem) return;
+  evento.waitUntil(exibirLembrete(mensagem.data || {}));
+});
+
+async function exibirLembrete(dados) {
   const tema = await lerTemaEspelhado();
   const icone =
     tema === 'escuro'
@@ -58,7 +78,7 @@ mensageria.onBackgroundMessage(async (mensagem) => {
       : tema === 'claro'
         ? ICONE_CLARO
         : ICONE_PADRAO;
-  self.registration.showNotification(dados.titulo || 'Devocional', {
+  return self.registration.showNotification(dados.titulo || 'Devocional', {
     body: dados.corpo || '',
     icon: icone,
     // Tag por slot, não fixa: uma reentrega do mesmo lembrete (o FCM garante
@@ -69,7 +89,7 @@ mensageria.onBackgroundMessage(async (mensagem) => {
     tag: dados.chave || 'lembrete-devocional',
     data: { chave: dados.chave },
   });
-});
+}
 
 // Reaproveita uma aba já aberta em vez de abrir outra; `?lembrete=<chave>` é
 // o parâmetro que lib/main.dart (_abrirLeituraDoLembreteDoLink) já lê para

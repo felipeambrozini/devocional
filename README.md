@@ -681,6 +681,14 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
   `notificationclick` responder com o app fechado); mesmo caminho e mesmo
   escopo, então o navegador reaproveita aquele registro em vez de criar um
   segundo.
+- **O service worker exibe o push mesmo com o app aberto na tela**: ele tem
+  um listener próprio de `push`, e não `onBackgroundMessage` — o SDK só chama
+  esse handler quando nenhuma aba do app está visível; com o app aberto ele
+  repassa a mensagem à página (`onMessage`), que na web não exibe nada, e o
+  lembrete sumia. A versão do SDK importada no SW precisa acompanhar a que o
+  `firebase_core_web` carrega na página (`supportedFirebaseJsSdkVersion`):
+  um SW anterior ao registro por FID (12.14) renova a inscrição no
+  `pushsubscriptionchange` pelo modelo de token e desfaz o registro.
 - **Na web do iPhone, só instalado na tela de início**: o Safari entrega Web
   Push apenas a site adicionado à tela de início (iOS 16.4+), e a permissão
   tem de ser pedida por gesto do usuário já dentro do app instalado — em aba
