@@ -99,32 +99,12 @@ ThemeData construirTema({
 
   final traco = esquema.outline;
 
-  // O overlay de foco padrão do M3 (cerca de 10%) some sobre pergaminho e
-  // couro: nos botões o foco ganha também um anel de 2 px no metal.
-  ButtonStyle anelDeFoco(Color cor) => ButtonStyle(
-    side: WidgetStateProperty.resolveWith(
-      (estados) => estados.contains(WidgetState.focused)
-          ? BorderSide(color: cor, width: 2)
-          : null,
-    ),
-  );
-
   return ThemeData(
     useMaterial3: true,
     // Padrão do Flutter no desktop web é denso e sem área extra: botões e
     // chips ficavam abaixo dos 48 dp.
     materialTapTargetSize: MaterialTapTargetSize.padded,
     visualDensity: VisualDensity.standard,
-    focusColor: esquema.primary.withValues(alpha: 0.35),
-    textButtonTheme: TextButtonThemeData(style: anelDeFoco(esquema.primary)),
-    // O preenchimento do botão cheio já é primary: o anel precisa de outra cor.
-    filledButtonTheme: FilledButtonThemeData(
-      style: anelDeFoco(esquema.onSurface),
-    ),
-    outlinedButtonTheme: OutlinedButtonThemeData(
-      style: anelDeFoco(esquema.primary),
-    ),
-    iconButtonTheme: IconButtonThemeData(style: anelDeFoco(esquema.primary)),
     brightness: brilho,
     colorScheme: esquema,
     scaffoldBackgroundColor: esquema.surface,

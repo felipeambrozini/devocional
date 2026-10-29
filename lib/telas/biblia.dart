@@ -97,9 +97,10 @@ class _TelaBibliaState extends State<TelaBiblia> {
     // há conflito com a rolagem do capítulo.
     //
     // Envolve a tela inteira, e não só o corpo: o evento de tecla sobe a partir
-    // de quem tem o foco, e dentro da moldura o foco costuma cair num botão da
-    // AppBar. Com o atalho só no corpo, a tecla passava por fora dele e nada
-    // acontecia.
+    // de quem tem o foco, e o foco pode estar num botão da AppBar. Com o
+    // atalho só no corpo, a tecla passava por fora dele e nada acontecia. A
+    // âncora de foco fica dentro dos atalhos: é nela que a troca de aba põe o
+    // foco (ver DevocionalAncoraDeFoco).
     return ListenableBuilder(
       listenable: _controller,
       builder: (context, _) {
@@ -118,75 +119,79 @@ class _TelaBibliaState extends State<TelaBiblia> {
                 _controller.abrirBusca(context),
           },
           // "Voltar" sai da seleção antes de sair da tela.
-          child: PopScope(
-            canPop: !_controller.selecionando,
-            onPopInvokedWithResult: (_, _) => _controller.limparSelecao(),
-            child: Scaffold(
-              appBar: DevocionalAppBar(
-                title: Tooltip(
-                  message: 'Toque para escolher livro',
-                  child: DevocionalBotaoTerciario(
-                    onPressed: () => _controller.abrirSeletor(context),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Flexible com reticências porque a barra tem duas ações e um
-                        // livro de nome longo em celular estreito estouraria a linha.
-                        Flexible(
-                          child: Text(
-                            '${_controller.livroAtual.nome} $capitulo',
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).appBarTheme.titleTextStyle,
+          child: DevocionalAncoraDeFoco(
+            child: PopScope(
+              canPop: !_controller.selecionando,
+              onPopInvokedWithResult: (_, _) => _controller.limparSelecao(),
+              child: Scaffold(
+                appBar: DevocionalAppBar(
+                  title: Tooltip(
+                    message: 'Toque para escolher livro',
+                    child: DevocionalBotaoTerciario(
+                      onPressed: () => _controller.abrirSeletor(context),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Flexible com reticências porque a barra tem duas ações e um
+                          // livro de nome longo em celular estreito estouraria a linha.
+                          Flexible(
+                            child: Text(
+                              '${_controller.livroAtual.nome} $capitulo',
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(
+                                context,
+                              ).appBarTheme.titleTextStyle,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: DevocionalEspacamento.sp8),
-                        FaIcon(
-                          FontAwesomeIcons.chevronDown,
-                          color: cor.primary,
-                          size: 20,
-                        ),
-                      ],
+                          const SizedBox(width: DevocionalEspacamento.sp8),
+                          FaIcon(
+                            FontAwesomeIcons.chevronDown,
+                            color: cor.primary,
+                            size: 20,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+                  actions: [
+                    DevocionalIndicadorDeVozNaBarra(
+                      chave: chaveDeCapitulo(livro, capitulo),
+                    ),
+                    DevocionalBotaoDeBusca(
+                      aoBuscar: () => _controller.abrirBusca(context),
+                    ),
+                    const DevocionalBotaoDeNotas(),
+                    DevocionalBotaoDeAjustes(estado: estado),
+                  ],
                 ),
-                actions: [
-                  DevocionalIndicadorDeVozNaBarra(
-                    chave: chaveDeCapitulo(livro, capitulo),
-                  ),
-                  DevocionalBotaoDeBusca(
-                    aoBuscar: () => _controller.abrirBusca(context),
-                  ),
-                  const DevocionalBotaoDeNotas(),
-                  DevocionalBotaoDeAjustes(estado: estado),
-                ],
-              ),
-              body: Focus(
-                autofocus: true,
-                child: DevocionalLarguraDeLeitura(
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: DevocionalCarregaUmaVez<Capitulo>(
-                          chave: '$livro/$capitulo/$_tentativa',
-                          carregar: () =>
-                              Conteudo.instancia.capitulo(livro, capitulo),
-                          construir: (context, snap) =>
-                              _corpoDoCapitulo(context, estado, snap),
+                body: Focus(
+                  autofocus: true,
+                  child: DevocionalLarguraDeLeitura(
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: DevocionalCarregaUmaVez<Capitulo>(
+                            chave: '$livro/$capitulo/$_tentativa',
+                            carregar: () =>
+                                Conteudo.instancia.capitulo(livro, capitulo),
+                            construir: (context, snap) =>
+                                _corpoDoCapitulo(context, estado, snap),
+                          ),
                         ),
-                      ),
-                      if (_controller.semGestoDeToque && estado.setasDoRodape)
-                        DevocionalBarraDeCapitulo(
-                          podeVoltar:
-                              !(livro == canon.first.slug && capitulo == 1),
-                          podeAvancar:
-                              !(livro == canon.last.slug &&
-                                  capitulo == canon.last.capitulos),
-                          aoVoltar: () =>
-                              _controller.passarCapitulo(context, -1),
-                          aoAvancar: () =>
-                              _controller.passarCapitulo(context, 1),
-                        ),
-                    ],
+                        if (_controller.semGestoDeToque && estado.setasDoRodape)
+                          DevocionalBarraDeCapitulo(
+                            podeVoltar:
+                                !(livro == canon.first.slug && capitulo == 1),
+                            podeAvancar:
+                                !(livro == canon.last.slug &&
+                                    capitulo == canon.last.capitulos),
+                            aoVoltar: () =>
+                                _controller.passarCapitulo(context, -1),
+                            aoAvancar: () =>
+                                _controller.passarCapitulo(context, 1),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),

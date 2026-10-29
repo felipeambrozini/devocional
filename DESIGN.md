@@ -224,7 +224,7 @@ Contidos e discretos: os controles existem para o texto passar. Nenhum component
 - **Filled** (FilledButton): fundo do metal (Ouro de Missal / Bronze de Encadernação), letra do contrário (couro no escuro, pergaminho-alto no claro). Só para a ação decisiva do diálogo ou da folha — Salvar, Remover.
 - **Text** (TextButton): sem fundo, letra na cor de destaque. A ação quieta — Cancelar, Ler tudo, Sair, Exportar.
 - **Outlined** (OutlinedButton, com ícone quando entra num contexto): fio do metal com letra de destaque — Continuar leitura, faixa do cronograma, Entrar com Google. É o botão de "abrir alguma coisa".
-- **Hover / Focus:** hover escurece o metal no Filled (sem animação de elevação); focus soma ao overlay do Material 3 um anel de 2px no metal (no Filled, na cor do corpo, porque o preenchimento já é o metal), já que o overlay de ~10% some sobre pergaminho e couro. Alvos de toque sempre com 48dp (`materialTapTargetSize.padded`), inclusive no desktop web.
+- **Hover / Focus:** hover escurece o metal no Filled (sem animação de elevação); focus usa o overlay padrão do Material 3, sem anel nem fundo reforçado (o anel de 2px foi testado e recusado: a troca de aba punha o foco no primeiro botão da tela, e o anel aparecia num botão que ninguém tinha tocado). A troca de aba hoje põe o foco numa âncora invisível (`DevocionalAncoraDeFoco`), então só um Tab de verdade chega aos botões. Alvos de toque sempre com 48dp (`materialTapTargetSize.padded`), inclusive no desktop web.
 
 ### Chips
 - **Style:** sem checkmark (`showCheckmark: false` no `chipTheme`, valendo para todo chip); selecionado = metal cheio com a letra do contrário por cima; não selecionado = surfaceContainerHighest com fio a 50%.

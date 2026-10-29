@@ -510,9 +510,11 @@ final _router = GoRouter(
                       key: state.pageKey,
                       child: FocusScope(
                         node: _escoposDasAbas[i],
-                        child: TelaDevocional(
-                          leituraInicial: l,
-                          dataInicial: _dataDaRota(state),
+                        child: DevocionalAncoraDeFoco(
+                          child: TelaDevocional(
+                            leituraInicial: l,
+                            dataInicial: _dataDaRota(state),
+                          ),
                         ),
                       ),
                     ),
@@ -526,13 +528,16 @@ final _router = GoRouter(
               routes: [
                 GoRoute(
                   path: '/${d.caminho}',
-                  builder: (context, state) =>
-                      FocusScope(node: _escoposDasAbas[i], child: d.tela),
+                  builder: (context, state) => FocusScope(
+                    node: _escoposDasAbas[i],
+                    child: DevocionalAncoraDeFoco(child: d.tela),
+                  ),
                   routes: [
                     GoRoute(
                       path: ':slug',
-                      builder: (context, state) =>
-                          TelaDoLivro(slug: state.pathParameters['slug']!),
+                      builder: (context, state) => DevocionalAncoraDeFoco(
+                        child: TelaDoLivro(slug: state.pathParameters['slug']!),
+                      ),
                       routes: [
                         GoRoute(
                           path: ':capitulo',
@@ -562,23 +567,30 @@ final _router = GoRouter(
               routes: [
                 GoRoute(
                   path: '/${d.caminho}',
-                  builder: (context, state) =>
-                      FocusScope(node: _escoposDasAbas[i], child: d.tela),
+                  builder: (context, state) => FocusScope(
+                    node: _escoposDasAbas[i],
+                    child: DevocionalAncoraDeFoco(child: d.tela),
+                  ),
                   routes: [
                     GoRoute(
                       path: 'novo',
-                      builder: (context, state) =>
-                          TelaNovoPlano(estado: EscopoDoEstado.de(context)),
+                      builder: (context, state) => DevocionalAncoraDeFoco(
+                        child: TelaNovoPlano(
+                          estado: EscopoDoEstado.de(context),
+                        ),
+                      ),
                     ),
                     GoRoute(
                       path: ':id',
                       builder: (context, state) {
                         final id = state.pathParameters['id']!;
                         final estado = EscopoDoEstado.de(context);
-                        return TelaDeUmPlano(
-                          estado: estado,
-                          planoId: id,
-                          plano: estado.planoDoUsuario(id),
+                        return DevocionalAncoraDeFoco(
+                          child: TelaDeUmPlano(
+                            estado: estado,
+                            planoId: id,
+                            plano: estado.planoDoUsuario(id),
+                          ),
                         );
                       },
                     ),
@@ -591,8 +603,10 @@ final _router = GoRouter(
               routes: [
                 GoRoute(
                   path: '/${d.caminho}',
-                  builder: (context, state) =>
-                      FocusScope(node: _escoposDasAbas[i], child: d.tela),
+                  builder: (context, state) => FocusScope(
+                    node: _escoposDasAbas[i],
+                    child: DevocionalAncoraDeFoco(child: d.tela),
+                  ),
                 ),
               ],
             ),
@@ -784,11 +798,27 @@ class Moldura extends StatelessWidget {
       final escopo = _escoposDasAbas[i];
       // Pedir foco ao escopo deixava o foco no nó do próprio escopo, que fica
       // acima da tela: a tecla subia por fora dos atalhos dela e nada acontecia.
-      // O foco precisa cair num nó de dentro.
-      final dentro = escopo.traversalDescendants
-          .where((n) => n.canRequestFocus)
+      // O foco precisa cair num nó de dentro, e invisível: no primeiro botão
+      // da tela ele ganhava o realce de foco sem ninguém ter tocado nele. Os
+      // descendentes vêm dos mais fundos para os de fora, então a âncora que
+      // uma tela põe dentro dos próprios atalhos (Bíblia, leitor de livro)
+      // ganha da que a rota põe em volta de toda tela.
+      //
+      // A busca é no Navigator da aba, não só no escopo da rota raiz: um
+      // capítulo da Biblioteca ou um plano aberto são rotas próprias por cima
+      // dela, e o foco caía no sumário escondido por baixo (as setas do
+      // leitor paravam de responder). Só vale a âncora da rota à vista.
+      final navegador =
+          navigationShell.route.branches[i].navigatorKey.currentState;
+      final ancora = navegador?.focusNode.descendants
+          .whereType<NoDeAncoraDeFoco>()
+          .where((no) {
+            final contexto = no.context;
+            return contexto != null &&
+                (ModalRoute.of(contexto)?.isCurrent ?? false);
+          })
           .firstOrNull;
-      (dentro ?? escopo).requestFocus();
+      (ancora ?? escopo).requestFocus();
     });
   }
 

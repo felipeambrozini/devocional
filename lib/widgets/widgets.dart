@@ -9,6 +9,7 @@ export 'abas_do_plano.dart';
 export 'abertura_de_livro.dart';
 export 'alca_de_deslize.dart';
 export 'alternador_de_leitura.dart';
+export 'ancora_de_foco.dart';
 export 'app_bar.dart';
 export 'area_de_selecao.dart';
 export 'aviso_de_corte.dart';
