@@ -44,6 +44,14 @@ class _DevocionalAbaDoCronogramaState extends State<DevocionalAbaDoCronograma>
 
   final _chaveDeHoje = GlobalKey();
 
+  /// Muda a chave do carregamento para refazer o pedido que falhou.
+  int _tentativa = 0;
+
+  void _tentarDeNovo() {
+    Conteudo.instancia.esquecerFalhas();
+    setState(() => _tentativa++);
+  }
+
   /// Em qual mês a rolagem automática já aconteceu, para não refazê-la a cada
   /// redesenho nem roubar a posição de quem já rolou a lista com a mão.
   int? _mesJaCentralizado;
@@ -143,12 +151,14 @@ class _DevocionalAbaDoCronogramaState extends State<DevocionalAbaDoCronograma>
               //
               // A chave leva o ano porque é ele que escolhe o arquivo; o mês não, porque a
               // filtragem por mês é feita sobre a lista já carregada.
-              chave: 'plano/${hoje.year}',
+              chave: 'plano/${hoje.year}/$_tentativa',
               carregar: () => Conteudo.instancia.plano(
                 bissexto: Conteudo.ehBissexto(hoje.year),
               ),
               construir: (context, snap) {
-                if (snap.hasError) return const DevocionalAvisoDeErro();
+                if (snap.hasError) {
+                  return DevocionalAvisoDeErro(aoTentarDeNovo: _tentarDeNovo);
+                }
                 if (snap.connectionState != ConnectionState.done) {
                   return const Center(child: CircularProgressIndicator());
                 }

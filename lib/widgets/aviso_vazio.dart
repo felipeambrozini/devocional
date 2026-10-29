@@ -64,27 +64,21 @@ class DevocionalAvisoVazio extends StatelessWidget {
 /// sem dizer o que houve. Girar é promessa de que algo vai chegar; quando não
 /// vai, a tela precisa dizer isso.
 class DevocionalAvisoDeErro extends StatelessWidget {
-  const DevocionalAvisoDeErro({super.key, this.aoTentarDeNovo});
+  const DevocionalAvisoDeErro({super.key, required this.aoTentarDeNovo});
 
-  /// Quando existe, o erro oferece "Tentar de novo" em vez de mandar fechar o
-  /// aplicativo: a recuperação fica na tela onde a falha aconteceu.
-  final VoidCallback? aoTentarDeNovo;
+  /// A recuperação fica na tela onde a falha aconteceu: mandar fechar o
+  /// aplicativo não serve na web, onde não há aplicativo para fechar e a
+  /// falha quase sempre é a rede.
+  final VoidCallback aoTentarDeNovo;
 
   @override
-  Widget build(BuildContext context) {
-    final tentarDeNovo = aoTentarDeNovo;
-    return DevocionalAvisoVazio(
-      icone: FontAwesomeIcons.triangleExclamation,
-      titulo: 'Não foi possível carregar',
-      detalhe: tentarDeNovo == null
-          ? 'Feche e abra o aplicativo. Se continuar, pode faltar um arquivo de conteúdo.'
-          : 'Tente de novo. Se continuar, feche e abra o aplicativo.',
-      acao: tentarDeNovo == null
-          ? null
-          : DevocionalBotaoTerciario(
-              onPressed: tentarDeNovo,
-              child: const Text('Tentar de novo'),
-            ),
-    );
-  }
+  Widget build(BuildContext context) => DevocionalAvisoVazio(
+    icone: FontAwesomeIcons.triangleExclamation,
+    titulo: 'Não foi possível carregar',
+    detalhe: 'Verifique a conexão e tente de novo.',
+    acao: DevocionalBotaoTerciario(
+      onPressed: aoTentarDeNovo,
+      child: const Text('Tentar de novo'),
+    ),
+  );
 }

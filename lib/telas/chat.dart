@@ -152,140 +152,144 @@ class _TelaChatState extends State<TelaChat> {
                 ),
             ],
           ),
-          body: Column(
-            children: [
-              Expanded(
-                child: ListenableBuilder(
-                  listenable: estado,
-                  builder: (context, _) {
-                    final mensagens = conversaId == null
-                        ? const <Mensagem>[]
-                        : estado.mensagensDe(widget.persona.id, conversaId);
-                    if (mensagens.isEmpty) {
-                      return DevocionalBoasVindas(persona: widget.persona);
-                    }
-                    // O cabeçalho (o DevocionalFilete) é o índice 0; as mensagens vêm depois.
-                    return ListView.builder(
-                      controller: _controller.rolagem,
-                      padding: const EdgeInsets.fromLTRB(
-                        DevocionalEspacamento.sp16,
-                        DevocionalEspacamento.sp16,
-                        DevocionalEspacamento.sp16,
-                        DevocionalEspacamento.sp8,
-                      ),
-                      itemCount: mensagens.length + 1 + (cortada ? 1 : 0),
-                      itemBuilder: (context, i) {
-                        if (i == 0) {
-                          // A conversa abre como página: o DevocionalFilete que abre cada
-                          // leitura da Estante sinaliza onde o fio começa.
-                          return const Padding(
-                            padding: EdgeInsets.only(
-                              bottom: DevocionalEspacamento.sp18,
-                            ),
-                            child: Center(child: DevocionalFilete(largura: 64)),
+          body: DevocionalLarguraDeLeitura(
+            child: Column(
+              children: [
+                Expanded(
+                  child: ListenableBuilder(
+                    listenable: estado,
+                    builder: (context, _) {
+                      final mensagens = conversaId == null
+                          ? const <Mensagem>[]
+                          : estado.mensagensDe(widget.persona.id, conversaId);
+                      if (mensagens.isEmpty) {
+                        return DevocionalBoasVindas(persona: widget.persona);
+                      }
+                      // O cabeçalho (o DevocionalFilete) é o índice 0; as mensagens vêm depois.
+                      return ListView.builder(
+                        controller: _controller.rolagem,
+                        padding: const EdgeInsets.fromLTRB(
+                          DevocionalEspacamento.sp16,
+                          DevocionalEspacamento.sp16,
+                          DevocionalEspacamento.sp16,
+                          DevocionalEspacamento.sp8,
+                        ),
+                        itemCount: mensagens.length + 1 + (cortada ? 1 : 0),
+                        itemBuilder: (context, i) {
+                          if (i == 0) {
+                            // A conversa abre como página: o DevocionalFilete que abre cada
+                            // leitura da Estante sinaliza onde o fio começa.
+                            return const Padding(
+                              padding: EdgeInsets.only(
+                                bottom: DevocionalEspacamento.sp18,
+                              ),
+                              child: Center(
+                                child: DevocionalFilete(largura: 64),
+                              ),
+                            );
+                          }
+                          if (cortada && i == 1) {
+                            // A conversa passou do teto e as falas mais antigas
+                            // saíram do histórico: a nota quieta explica por que a
+                            // conversa não começa na primeira pergunta.
+                            return const DevocionalAvisoDeCorte();
+                          }
+                          return DevocionalBalcaoDeMensagem(
+                            mensagem: mensagens[i - 1 - (cortada ? 1 : 0)],
+                            persona: widget.persona,
                           );
-                        }
-                        if (cortada && i == 1) {
-                          // A conversa passou do teto e as falas mais antigas
-                          // saíram do histórico: a nota quieta explica por que a
-                          // conversa não começa na primeira pergunta.
-                          return const DevocionalAvisoDeCorte();
-                        }
-                        return DevocionalBalcaoDeMensagem(
-                          mensagem: mensagens[i - 1 - (cortada ? 1 : 0)],
-                          persona: widget.persona,
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-              if (respondendo)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    DevocionalEspacamento.sp16,
-                    DevocionalEspacamento.sp4,
-                    DevocionalEspacamento.sp16,
-                    0,
+                        },
+                      );
+                    },
                   ),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    // A espera é anunciada, não só desenhada: sem rótulo, o
-                    // leitor de tela passa segundos de geração paga em silêncio.
-                    child: Semantics(
-                      label: '${widget.persona.nome} está respondendo',
-                      liveRegion: true,
-                      child: DevocionalBolha(
-                        avatar: widget.persona.foto,
-                        child: SizedBox(
-                          width: DevocionalEspacamento.sp18,
-                          height: DevocionalEspacamento.sp18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                if (respondendo)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      DevocionalEspacamento.sp16,
+                      DevocionalEspacamento.sp4,
+                      DevocionalEspacamento.sp16,
+                      0,
+                    ),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      // A espera é anunciada, não só desenhada: sem rótulo, o
+                      // leitor de tela passa segundos de geração paga em silêncio.
+                      child: Semantics(
+                        label: '${widget.persona.nome} está respondendo',
+                        liveRegion: true,
+                        child: DevocionalBolha(
+                          avatar: widget.persona.foto,
+                          child: SizedBox(
+                            width: DevocionalEspacamento.sp18,
+                            height: DevocionalEspacamento.sp18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              if (conversador?.erro != null)
-                DevocionalErroDeResposta(
-                  persona: widget.persona,
-                  mensagem: conversador!.erro!,
-                  aoTentarDeNovo: conversador.repetir,
-                ),
-              SafeArea(
-                top: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    DevocionalEspacamento.sp12,
-                    DevocionalEspacamento.sp6,
-                    DevocionalEspacamento.sp12,
-                    DevocionalEspacamento.sp10,
+                if (conversador?.erro != null)
+                  DevocionalErroDeResposta(
+                    persona: widget.persona,
+                    mensagem: conversador!.erro!,
+                    aoTentarDeNovo: conversador.repetir,
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(avisoDeIa, style: tema.labelMedium),
-                      const SizedBox(height: DevocionalEspacamento.sp6),
-                      TextField(
-                        controller: _controller.controle,
-                        minLines: 1,
-                        maxLines: 4,
-                        textInputAction: TextInputAction.send,
-                        onSubmitted: (_) => _controller.enviar(),
-                        decoration: InputDecoration(
-                          // Enquanto a resposta vem, o campo diz o estado em vez de
-                          // engolir o envio em silêncio; o rascunho continua lá.
-                          hintText: respondendo
-                              ? 'aguarde a resposta...'
-                              : 'Escreva para ${widget.persona.nome}...',
-                          suffixIcon: respondendo
-                              // Parar no meio da geração: sem isto, a espera
-                              // (paga, por resposta) não tem saída, e o toque
-                              // ansioso reenvia ou abandona a tela. A pergunta
-                              // fica pendente para o "Tentar de novo".
-                              ? IconButton(
-                                  tooltip: 'Parar resposta',
-                                  icon: FaIcon(
-                                    FontAwesomeIcons.stop,
-                                    color: cor.primary,
+                SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      DevocionalEspacamento.sp12,
+                      DevocionalEspacamento.sp6,
+                      DevocionalEspacamento.sp12,
+                      DevocionalEspacamento.sp10,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(avisoDeIa, style: tema.labelMedium),
+                        const SizedBox(height: DevocionalEspacamento.sp6),
+                        TextField(
+                          controller: _controller.controle,
+                          minLines: 1,
+                          maxLines: 4,
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (_) => _controller.enviar(),
+                          decoration: InputDecoration(
+                            // Enquanto a resposta vem, o campo diz o estado em vez de
+                            // engolir o envio em silêncio; o rascunho continua lá.
+                            hintText: respondendo
+                                ? 'aguarde a resposta...'
+                                : 'Escreva para ${widget.persona.nome}...',
+                            suffixIcon: respondendo
+                                // Parar no meio da geração: sem isto, a espera
+                                // (paga, por resposta) não tem saída, e o toque
+                                // ansioso reenvia ou abandona a tela. A pergunta
+                                // fica pendente para o "Tentar de novo".
+                                ? IconButton(
+                                    tooltip: 'Parar resposta',
+                                    icon: FaIcon(
+                                      FontAwesomeIcons.stop,
+                                      color: cor.primary,
+                                    ),
+                                    onPressed: _controller.interromper,
+                                  )
+                                : IconButton(
+                                    tooltip: 'Enviar',
+                                    icon: FaIcon(
+                                      FontAwesomeIcons.paperPlane,
+                                      color: cor.primary,
+                                    ),
+                                    onPressed: _controller.enviar,
                                   ),
-                                  onPressed: _controller.interromper,
-                                )
-                              : IconButton(
-                                  tooltip: 'Enviar',
-                                  icon: FaIcon(
-                                    FontAwesomeIcons.paperPlane,
-                                    color: cor.primary,
-                                  ),
-                                  onPressed: _controller.enviar,
-                                ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

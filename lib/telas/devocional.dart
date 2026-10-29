@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../controladores/devocional_controlador.dart';
 import '../dados/canon.dart';
 import '../dados/config_admin.dart';
+import '../dados/conteudo.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
 import '../dados/recursos.dart';
@@ -73,6 +74,14 @@ class _TelaDevocionalState extends State<TelaDevocional> {
     dataInicial: widget.dataInicial,
     leituraInicial: widget.leituraInicial,
   );
+
+  /// Muda a chave do carregamento para refazer o pedido que falhou.
+  int _tentativa = 0;
+
+  void _tentarDeNovo() {
+    Conteudo.instancia.esquecerFalhas();
+    setState(() => _tentativa++);
+  }
 
   @override
   void dispose() {
@@ -194,13 +203,18 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                 ),
                 const SizedBox(height: DevocionalEspacamento.sp16),
                 DevocionalCarregaUmaVez<Devocional?>(
-                  chave: '${leitura.name}/${data.month}/${data.day}',
+                  chave:
+                      '${leitura.name}/${data.month}/${data.day}/$_tentativa',
                   carregar: _controller.carregar,
                   construir: (context, snap) {
                     if (snap.hasError) {
-                      return const Padding(
-                        padding: EdgeInsets.all(DevocionalEspacamento.sp32),
-                        child: DevocionalAvisoDeErro(),
+                      return Padding(
+                        padding: const EdgeInsets.all(
+                          DevocionalEspacamento.sp32,
+                        ),
+                        child: DevocionalAvisoDeErro(
+                          aoTentarDeNovo: _tentarDeNovo,
+                        ),
                       );
                     }
                     if (snap.connectionState != ConnectionState.done) {
@@ -215,9 +229,13 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                       // testes de conteúdo) e falha de carga já virou o hasError
                       // acima. Chegar aqui é asset corrompido ou incompleto:
                       // falha de conteúdo, não dia vazio.
-                      return const Padding(
-                        padding: EdgeInsets.all(DevocionalEspacamento.sp32),
-                        child: DevocionalAvisoDeErro(),
+                      return Padding(
+                        padding: const EdgeInsets.all(
+                          DevocionalEspacamento.sp32,
+                        ),
+                        child: DevocionalAvisoDeErro(
+                          aoTentarDeNovo: _tentarDeNovo,
+                        ),
                       );
                     }
                     final referencias = [

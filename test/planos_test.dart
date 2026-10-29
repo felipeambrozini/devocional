@@ -695,7 +695,7 @@ void main() {
       // duplicado "dias concluídos" no meio da lista foi removido.
       expect(find.text('0 de 30 dias lidos'), findsOneWidget);
 
-      await tester.tap(find.byTooltip('Marcar como lido').first);
+      await tester.tap(find.byTooltip(RegExp(r'^Marcar .+ como lido$')).first);
       await tester.pumpAndSettle();
       expect(find.text('1 de 30 dias lidos'), findsOneWidget);
       expect(estado.diasLidosDoPlano(estado.planosDoUsuario.single.id), 1);
@@ -735,7 +735,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('João relâmpago'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Marcar como lido').first);
+      await tester.tap(find.byTooltip(RegExp(r'^Marcar .+ como lido$')).first);
       // Sem settle: ele consumiria o timer de 3s que esconde o aviso e o
       // teste veria a tela já sem ele.
       await tester.pump();
@@ -780,7 +780,7 @@ void main() {
                       label: 'Plano',
                     ),
                     NavigationDestination(
-                      icon: FaIcon(FontAwesomeIcons.bookOpen),
+                      icon: FaIcon(FontAwesomeIcons.bookBible),
                       label: 'Bíblia',
                     ),
                   ],

@@ -94,7 +94,11 @@ class DevocionalCartaoDeDia extends StatelessWidget {
                 ],
               ),
             ),
-            DevocionalBotaoDeLido(lido: lido, aoAlternar: aoAlternar),
+            DevocionalBotaoDeLido(
+              lido: lido,
+              rotulo: rotulo,
+              aoAlternar: aoAlternar,
+            ),
           ],
         ),
       ),

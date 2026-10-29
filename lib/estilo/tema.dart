@@ -167,6 +167,7 @@ ThemeData construirTema({
       // do mês ou da leitura selecionada era justamente o mais difícil de ler
       // da régua inteira. Com o metal cheio dá 6,8:1 no escuro e 6,0:1 no claro.
       selectedColor: esquema.primary,
+      showCheckmark: false,
       labelStyle: corpo(13),
       secondaryLabelStyle: corpo(13, cor: esquema.onPrimary),
       side: BorderSide(color: traco.withValues(alpha: 0.5)),

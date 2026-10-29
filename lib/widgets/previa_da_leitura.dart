@@ -38,7 +38,7 @@ class DevocionalPreviaDaLeitura extends StatelessWidget {
   FaIconData get _icone => switch (leitura) {
     Leitura.manha => FontAwesomeIcons.sun,
     Leitura.noite => FontAwesomeIcons.moon,
-    Leitura.promessas => FontAwesomeIcons.wandMagicSparkles,
+    Leitura.promessas => FontAwesomeIcons.dove,
   };
 
   Future<Devocional?> _futuro() {

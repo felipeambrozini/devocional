@@ -32,7 +32,7 @@ class DevocionalBotaoDeAjustes extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => IconButton(
-    tooltip: 'Tamanho do texto e aparência',
+    tooltip: 'Ajustes e ajuda',
     icon: FaIcon(
       FontAwesomeIcons.sliders,
       color: Theme.of(context).colorScheme.primary,
@@ -64,17 +64,22 @@ class DevocionalBotaoDeLido extends StatelessWidget {
   const DevocionalBotaoDeLido({
     super.key,
     required this.lido,
+    required this.rotulo,
     required this.aoAlternar,
   });
 
   final bool lido;
+
+  /// O que se lê no dia ("Gênesis 1 a 3"). Entra no tooltip porque o leitor
+  /// de tela anuncia o botão sozinho: no cronograma são até 31 iguais por mês.
+  final String rotulo;
   final VoidCallback aoAlternar;
 
   @override
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     return IconButton(
-      tooltip: lido ? 'Desmarcar' : 'Marcar como lido',
+      tooltip: lido ? 'Desmarcar $rotulo' : 'Marcar $rotulo como lido',
       icon: FaIcon(
         lido ? FontAwesomeIcons.circleCheck : FontAwesomeIcons.circle,
         color: lido ? cor.secondary : cor.onSurfaceVariant,

@@ -81,7 +81,6 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                         ChoiceChip(
                           label: Text(rotulosDeEscala[i]),
                           selected: escala == estado.escalaDeLeitura,
-                          showCheckmark: false,
                           onSelected: (_) =>
                               estado.definirEscalaDeLeitura(escala),
                         ),
@@ -123,7 +122,6 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                         ChoiceChip(
                           label: Text(modo.rotulo),
                           selected: modo == estado.modoDoTema,
-                          showCheckmark: false,
                           onSelected: (_) => estado.definirModoDoTema(modo),
                         ),
                     ],

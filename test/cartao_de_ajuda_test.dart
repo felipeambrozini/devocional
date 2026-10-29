@@ -103,8 +103,8 @@ void main() {
     // assincronamente. Espera o FutureBuilder completar.
     await tester.pumpAndSettle(const Duration(seconds: 10));
 
-    final botaoMarcar = find.byTooltip('Marcar como lido');
-    final botaoDesmarcar = find.byTooltip('Desmarcar');
+    final botaoMarcar = find.byTooltip(RegExp(r'^Marcar .+ como lido$'));
+    final botaoDesmarcar = find.byTooltip(RegExp(r'^Desmarcar '));
 
     if (botaoMarcar.evaluate().isNotEmpty) {
       expect(botaoMarcar, findsOneWidget);
@@ -118,7 +118,7 @@ void main() {
       await tester.tap(botaoDesmarcar);
       await tester.pumpAndSettle();
 
-      final botaoMarcar2 = find.byTooltip('Marcar como lido');
+      final botaoMarcar2 = find.byTooltip(RegExp(r'^Marcar .+ como lido$'));
       expect(botaoMarcar2, findsOneWidget);
       await tester.ensureVisible(botaoMarcar2);
       await tester.pumpAndSettle();

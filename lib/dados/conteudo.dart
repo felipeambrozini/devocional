@@ -85,6 +85,16 @@ class Conteudo {
     }
   }
 
+  /// Libera uma nova tentativa dos assets que falharam. As marcas de "já
+  /// tentei" também guardam falhas de rede na web, e sem limpá-las o "Tentar
+  /// de novo" da tela devolveria o mesmo erro. O que carregou continua no
+  /// cache, que é consultado antes das marcas.
+  void esquecerFalhas() {
+    _tentouLivro.clear();
+    _tentouComentario.clear();
+    if (_promessas == null) _tentouPromessas = false;
+  }
+
   Future<Capitulo> capitulo(String slug, int numero) async {
     final livro = await _carregarLivro(slug);
     if (livro == null) {

@@ -6,7 +6,7 @@ import '../estilo/espacamento.dart';
 import 'botao.dart';
 
 /// Número que recebe o pedido de acesso pelo WhatsApp, para quem ainda não
-/// está numa allowlist de recurso premium (ver `lib/dados/recursos.dart`).
+/// está numa allowlist de recurso (ver `lib/dados/recursos.dart`).
 /// Mesmo padrão de `--dart-define` do `_emailDeContato` em `sobre.dart`: sem
 /// número versionado no repositório, e vazio esconde o botão.
 const _numeroWhatsapp = String.fromEnvironment('WHATSAPP_NUMERO');
@@ -40,7 +40,7 @@ class DevocionalCartaoDePedirAcesso extends StatelessWidget {
             FaIcon(icone, size: 56, color: cor.primary),
             const SizedBox(height: DevocionalEspacamento.sp16),
             Text(
-              'Recurso premium',
+              'Acesso sob pedido',
               style: tema.titleLarge,
               textAlign: TextAlign.center,
             ),

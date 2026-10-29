@@ -118,7 +118,6 @@ class _DevocionalLivrosEscolhidosState
                 ),
                 // Sem o tique do Material: neste sistema chip não carrega
                 // checkmark (ver o alternador de leitura).
-                showCheckmark: false,
                 onDeleted: () => _remover(context, visiveis[i]),
               ),
           ],
@@ -214,13 +213,11 @@ class DevocionalOpcaoDeDevocionais extends StatelessWidget {
                 ChoiceChip(
                   label: const Text('Antes do capítulo'),
                   selected: antes,
-                  showCheckmark: false,
                   onSelected: (_) => aoMudarOrdem(true),
                 ),
                 ChoiceChip(
                   label: const Text('Depois do capítulo'),
                   selected: !antes,
-                  showCheckmark: false,
                   onSelected: (_) => aoMudarOrdem(false),
                 ),
               ],
@@ -290,7 +287,7 @@ Future<List<String>?> mostrarEditorDeOrdemDosLivros(
                         key: ValueKey(slug),
                         leading: ReorderableDragStartListener(
                           index: i,
-                          child: const Icon(Icons.drag_handle),
+                          child: const FaIcon(FontAwesomeIcons.gripLines),
                         ),
                         title: Text('${i + 1}º · ${nomeDoLivro(slug)}'),
                         subtitle: Text(
@@ -301,12 +298,12 @@ Future<List<String>?> mostrarEditorDeOrdemDosLivros(
                           children: [
                             IconButton(
                               tooltip: 'Mover para cima',
-                              icon: const Icon(Icons.arrow_upward),
+                              icon: const FaIcon(FontAwesomeIcons.arrowUp),
                               onPressed: i == 0 ? null : () => mover(i, i - 1),
                             ),
                             IconButton(
                               tooltip: 'Mover para baixo',
-                              icon: const Icon(Icons.arrow_downward),
+                              icon: const FaIcon(FontAwesomeIcons.arrowDown),
                               onPressed: i == ordem.length - 1
                                   ? null
                                   : () => mover(i, i + 1),

@@ -134,17 +134,7 @@ void main() {
   });
 
   group('DevocionalAvisoDeErro', () {
-    testWidgets('sem ação, não promete uma recuperação que não existe', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        const MaterialApp(home: Scaffold(body: DevocionalAvisoDeErro())),
-      );
-
-      expect(find.text('Tentar de novo'), findsNothing);
-    });
-
-    testWidgets('com ação, oferece Tentar de novo e chama', (tester) async {
+    testWidgets('oferece Tentar de novo e chama', (tester) async {
       var tentativas = 0;
       await tester.pumpWidget(
         MaterialApp(

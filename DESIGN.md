@@ -227,7 +227,7 @@ Contidos e discretos: os controles existem para o texto passar. Nenhum component
 - **Hover / Focus:** hover escurece o metal no Filled (sem animação de elevação); focus usa o anel de foco padrão do Material 3.
 
 ### Chips
-- **Style:** sem checkmark (`showCheckmark: false`); selecionado = metal cheio com a letra do contrário por cima; não selecionado = surfaceContainerHighest com fio a 50%.
+- **Style:** sem checkmark (`showCheckmark: false` no `chipTheme`, valendo para todo chip); selecionado = metal cheio com a letra do contrário por cima; não selecionado = surfaceContainerHighest com fio a 50%.
 - **State:** o chip selecionado é o metal chapado — é a maior mancha de cor que o sistema permite, e é só ela.
 - **Uso:** o alternador das três leituras (Manhã, Noite, Promessas de Deus) e a escala de texto usam chips, nunca `SegmentedButton` — o segmentado iguala as larguras e "Promessas de Deus" não cabe três vezes num celular.
 

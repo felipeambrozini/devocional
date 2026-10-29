@@ -42,7 +42,6 @@ class DevocionalAlternadorDeLeitura extends StatelessWidget {
                 label: Text(l.rotulo, maxLines: 1),
                 selected: l == atual,
                 onSelected: (_) => ao(l),
-                showCheckmark: false,
               ),
           ],
         );

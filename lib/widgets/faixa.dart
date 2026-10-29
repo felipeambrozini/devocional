@@ -20,7 +20,7 @@ class DevocionalBotaoDeFaixa extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DevocionalBotaoSecundario.icon(
-      icon: const FaIcon(FontAwesomeIcons.bookOpen, size: 17),
+      icon: const FaIcon(FontAwesomeIcons.bookBible, size: 17),
       label: Text(faixa.rotulo),
       onPressed: () => Navigator.push(
         context,
@@ -54,7 +54,7 @@ class DevocionalBotaoDeDevocional extends StatelessWidget {
   FaIconData get _icone => switch (tipo) {
     TipoDeDevocional.manha => FontAwesomeIcons.sun,
     TipoDeDevocional.noite => FontAwesomeIcons.moon,
-    TipoDeDevocional.promessa => FontAwesomeIcons.wandMagicSparkles,
+    TipoDeDevocional.promessa => FontAwesomeIcons.dove,
   };
 
   /// Para Manhã e Noite, o nome do tipo. Para Promessas, o título da

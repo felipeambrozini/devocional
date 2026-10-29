@@ -142,52 +142,54 @@ class TelaHistorico extends StatelessWidget {
           ),
         ],
       ),
-      body: ListenableBuilder(
-        listenable: estado,
-        builder: (context, _) {
-          final conversas = estado.conversasDe(persona.id);
-          if (conversas.isEmpty) {
-            return DevocionalSemConversas(
-              persona: persona,
-              aoComecar: () => _abrirNova(context),
-            );
-          }
-          return ListView.separated(
-            padding: const EdgeInsets.symmetric(
-              vertical: DevocionalEspacamento.sp8,
-            ),
-            itemCount: conversas.length,
-            separatorBuilder: (context, _) => Divider(
-              height: 1,
-              indent: DevocionalEspacamento.sp16,
-              endIndent: DevocionalEspacamento.sp16,
-              color: cor.outline.withValues(alpha: 0.4),
-            ),
-            itemBuilder: (context, i) {
-              final conversa = conversas[i];
-              return ListTile(
-                onTap: () => _abrirConversa(context, conversa),
-                title: Text(
-                  conversa.titulo.isEmpty ? 'Conversa' : conversa.titulo,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: tema.titleMedium,
-                ),
-                subtitle: Text(
-                  dataLonga(
-                    DateTime.fromMillisecondsSinceEpoch(conversa.momento),
-                  ),
-                  style: tema.labelMedium,
-                ),
-                trailing: IconButton(
-                  tooltip: 'Apagar conversa',
-                  icon: FaIcon(FontAwesomeIcons.trash, color: cor.error),
-                  onPressed: () => _apagarUma(context, conversa),
-                ),
+      body: DevocionalLarguraDeLeitura(
+        child: ListenableBuilder(
+          listenable: estado,
+          builder: (context, _) {
+            final conversas = estado.conversasDe(persona.id);
+            if (conversas.isEmpty) {
+              return DevocionalSemConversas(
+                persona: persona,
+                aoComecar: () => _abrirNova(context),
               );
-            },
-          );
-        },
+            }
+            return ListView.separated(
+              padding: const EdgeInsets.symmetric(
+                vertical: DevocionalEspacamento.sp8,
+              ),
+              itemCount: conversas.length,
+              separatorBuilder: (context, _) => Divider(
+                height: 1,
+                indent: DevocionalEspacamento.sp16,
+                endIndent: DevocionalEspacamento.sp16,
+                color: cor.outline.withValues(alpha: 0.4),
+              ),
+              itemBuilder: (context, i) {
+                final conversa = conversas[i];
+                return ListTile(
+                  onTap: () => _abrirConversa(context, conversa),
+                  title: Text(
+                    conversa.titulo.isEmpty ? 'Conversa' : conversa.titulo,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: tema.titleMedium,
+                  ),
+                  subtitle: Text(
+                    dataLonga(
+                      DateTime.fromMillisecondsSinceEpoch(conversa.momento),
+                    ),
+                    style: tema.labelMedium,
+                  ),
+                  trailing: IconButton(
+                    tooltip: 'Apagar conversa',
+                    icon: FaIcon(FontAwesomeIcons.trash, color: cor.error),
+                    onPressed: () => _apagarUma(context, conversa),
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

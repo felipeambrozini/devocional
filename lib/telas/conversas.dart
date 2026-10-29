@@ -33,9 +33,9 @@ class TelaConversas extends StatelessWidget {
               : const DevocionalCartaoDePedirAcesso(
                   icone: FontAwesomeIcons.comments,
                   descricao:
-                      'O chat com Spurgeon e com Felipe é um recurso '
-                      'premium. Fale comigo pelo WhatsApp para habilitar '
-                      'o acesso na sua conta.',
+                      'Por enquanto, as conversas com Spurgeon e com Felipe '
+                      'estão abertas para alguns leitores. Peça o acesso pelo '
+                      'WhatsApp para habilitar na sua conta.',
                   mensagemDoWhatsapp: 'Oi Felipe, quero habilitar as conversas',
                 ),
         ),

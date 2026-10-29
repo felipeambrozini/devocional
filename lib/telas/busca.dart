@@ -214,7 +214,7 @@ class _AbaDevocionaisState extends State<_AbaDevocionais> {
                   },
                   decoration: const InputDecoration(
                     hintText: 'Data (DD-MM)',
-                    prefixIcon: Icon(Icons.calendar_today, size: 16),
+                    prefixIcon: FaIcon(FontAwesomeIcons.calendarDays, size: 16),
                     isDense: true,
                   ),
                 ),

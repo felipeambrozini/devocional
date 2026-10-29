@@ -51,6 +51,7 @@ class DevocionalCartaoLeituraProgresso extends StatelessWidget {
               ),
               DevocionalBotaoDeLido(
                 lido: lido,
+                rotulo: dia.rotulo,
                 aoAlternar: () =>
                     alternarLidoComDesfazer(context, estado, dia.data),
               ),

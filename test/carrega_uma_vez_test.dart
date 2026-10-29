@@ -101,7 +101,9 @@ void main() {
           carregar: () async => throw Exception('asset ausente'),
           construir: (context, snap) {
             vistos.add((snap.connectionState, snap.hasError));
-            if (snap.hasError) return const DevocionalAvisoDeErro();
+            if (snap.hasError) {
+              return DevocionalAvisoDeErro(aoTentarDeNovo: () {});
+            }
             return const CircularProgressIndicator();
           },
         ),

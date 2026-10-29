@@ -279,15 +279,15 @@ const _destinos = <_Destino>[
   _Destino(
     'Bíblia',
     'biblia',
-    FontAwesomeIcons.bookOpen,
-    FontAwesomeIcons.bookOpen,
+    FontAwesomeIcons.bookBible,
+    FontAwesomeIcons.bookBible,
     TelaBiblia(),
   ),
   _Destino(
     'Devocional',
     'devocional',
-    FontAwesomeIcons.bookOpenReader,
-    FontAwesomeIcons.bookOpenReader,
+    FontAwesomeIcons.featherPointed,
+    FontAwesomeIcons.featherPointed,
     TelaDevocional(),
   ),
   _Destino(

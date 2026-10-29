@@ -48,6 +48,14 @@ class _TelaBibliaState extends State<TelaBiblia> {
   /// rota da frente (ver `aoConcluirAudio`).
   StreamSubscription<String>? _assinaturaConclusoes;
 
+  /// Muda a chave do carregamento para refazer o pedido que falhou.
+  int _tentativa = 0;
+
+  void _tentarDeNovo() {
+    Conteudo.instancia.esquecerFalhas();
+    setState(() => _tentativa++);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -157,7 +165,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
                     children: [
                       Expanded(
                         child: DevocionalCarregaUmaVez<Capitulo>(
-                          chave: '$livro/$capitulo',
+                          chave: '$livro/$capitulo/$_tentativa',
                           carregar: () =>
                               Conteudo.instancia.capitulo(livro, capitulo),
                           construir: (context, snap) =>
@@ -195,16 +203,17 @@ class _TelaBibliaState extends State<TelaBiblia> {
     Estado estado,
     AsyncSnapshot<Capitulo> snap,
   ) {
-    if (snap.hasError) return const DevocionalAvisoDeErro();
+    if (snap.hasError) {
+      return DevocionalAvisoDeErro(aoTentarDeNovo: _tentarDeNovo);
+    }
     if (snap.connectionState != ConnectionState.done) {
       return const Center(child: CircularProgressIndicator());
     }
     final capitulo = snap.data!;
+    // Os 66 livros estão completos e a navegação só pede capítulos do canon:
+    // capítulo vazio é asset que não carregou (na web, quase sempre a rede).
     if (capitulo.versiculos.isEmpty) {
-      return const DevocionalAvisoVazio(
-        icone: FontAwesomeIcons.bookOpen,
-        titulo: 'Capítulo não encontrado',
-      );
+      return DevocionalAvisoDeErro(aoTentarDeNovo: _tentarDeNovo);
     }
     // Quem chegou por link, nota ou busca pediu um versículo exato; rolar até
     // ele precisa de um frame depois do capítulo montado.
@@ -588,8 +597,9 @@ class _AcoesDoVersiculo {
   /// A marcação como estava na hora em que a folha abriu.
   final Marcacao? marcacao;
 
-  /// Comentário de Spurgeon sobre este versículo, se já escrito.
-  final String? comentario;
+  /// Comentário de Spurgeon sobre este versículo, se já escrito. Criado uma
+  /// vez antes da folha abrir, para os redesenhos não refazerem o pedido.
+  final Future<String?> comentario;
 
   Widget folha(BuildContext contextoDaFolha) {
     final cor = Theme.of(contextoDaFolha).colorScheme;
@@ -617,28 +627,10 @@ class _AcoesDoVersiculo {
                     texto,
                     style: Theme.of(contextoDaFolha).textTheme.bodyMedium,
                   ),
-                  if (comentario != null && comentario!.isNotEmpty) ...[
-                    const SizedBox(height: DevocionalEspacamento.sp16),
-                    Text(
-                      'Comentário de Charles Spurgeon',
-                      style: Theme.of(contextoDaFolha).textTheme.labelMedium
-                          ?.copyWith(
-                            color: cor.primary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                    ),
-                    const SizedBox(height: DevocionalEspacamento.sp8),
-                    DevocionalBotaoDeVoz(
-                      chave: chaveDoComentario(livro, capituloNumero, numero),
-                      referencia: '$referencia:$numero, comentário',
-                    ),
-                    const SizedBox(height: DevocionalEspacamento.sp8),
-                    Text(
-                      comentario!,
-                      style: Theme.of(contextoDaFolha).textTheme.bodyMedium
-                          ?.copyWith(fontStyle: FontStyle.italic),
-                    ),
-                  ],
+                  FutureBuilder<String?>(
+                    future: comentario,
+                    builder: (context, snap) => _comentario(context, cor, snap),
+                  ),
                 ],
               ),
             ),
@@ -652,6 +644,49 @@ class _AcoesDoVersiculo {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _comentario(
+    BuildContext context,
+    ColorScheme cor,
+    AsyncSnapshot<String?> snap,
+  ) {
+    if (snap.connectionState != ConnectionState.done) {
+      return const Padding(
+        padding: EdgeInsets.only(top: DevocionalEspacamento.sp16),
+        child: SizedBox.square(
+          dimension: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+    final texto = snap.data;
+    if (texto == null || texto.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: DevocionalEspacamento.sp16),
+        Text(
+          'Comentário de Charles Spurgeon',
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: cor.primary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: DevocionalEspacamento.sp8),
+        DevocionalBotaoDeVoz(
+          chave: chaveDoComentario(livro, capituloNumero, numero),
+          referencia: '$referencia:$numero, comentário',
+        ),
+        const SizedBox(height: DevocionalEspacamento.sp8),
+        Text(
+          texto,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic),
+        ),
+      ],
     );
   }
 
@@ -882,12 +917,14 @@ Future<void> _abrirAcoesDoVersiculo(
   required String texto,
 }) async {
   final marcacao = estado.marcacaoDe(livro, capituloNumero, numero);
-  final comentario = await Conteudo.instancia.comentario(
+  // A folha abre já e o comentário chega dentro dela: o primeiro toque num
+  // livro baixa o arquivo de comentários inteiro (1 MB em Salmos), e esperar
+  // por ele antes de abrir deixava o toque sem resposta na web.
+  final comentario = Conteudo.instancia.comentario(
     livro,
     capituloNumero,
     numero,
   );
-  if (!context.mounted) return;
   final acoes = _AcoesDoVersiculo(
     estado: estado,
     livro: livro,
