@@ -327,22 +327,40 @@ WidgetStateProperty<TextStyle?>? _rotuloQueCabeNaBarra(BuildContext context) {
       Theme.of(context).textTheme.bodyMedium?.merge(doTema) ?? doTema;
   // Mesmo teto de escala que o NavigationBar aplica ao rótulo.
   final escala = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.3);
-  final larguraPorDestino = MediaQuery.sizeOf(context).width / _destinos.length;
-  var maisLongo = 0.0;
-  for (final d in _destinos) {
-    final pintor = TextPainter(
-      text: TextSpan(text: d.rotulo, style: estilo),
-      textScaler: escala,
-      textDirection: TextDirection.ltr,
-      maxLines: 1,
-    )..layout();
-    if (pintor.width > maisLongo) maisLongo = pintor.width;
-    pintor.dispose();
+  // A barra fica dentro de uma SafeArea: o recorte lateral da tela come espaço.
+  final larguraPorDestino =
+      (MediaQuery.sizeOf(context).width -
+          MediaQuery.paddingOf(context).horizontal) /
+      _destinos.length;
+  double maisLongoCom(double tamanhoDaFonte) {
+    var maisLongo = 0.0;
+    for (final d in _destinos) {
+      final pintor = TextPainter(
+        text: TextSpan(
+          text: d.rotulo,
+          style: estilo.copyWith(fontSize: tamanhoDaFonte),
+        ),
+        textScaler: escala,
+        textDirection: TextDirection.ltr,
+        maxLines: 1,
+      )..layout();
+      if (pintor.width > maisLongo) maisLongo = pintor.width;
+      pintor.dispose();
+    }
+    return maisLongo;
   }
+
+  final maisLongo = maisLongoCom(tamanho);
   if (maisLongo <= larguraPorDestino) return null;
-  // 0,95 de folga: a largura do texto não cai exatamente na proporção do corpo.
-  final reducao = larguraPorDestino / maisLongo * 0.95;
-  return WidgetStatePropertyAll(estilo.copyWith(fontSize: tamanho * reducao));
+  // A largura não cai na proporção do corpo (o letterSpacing não encolhe
+  // junto): a proporção é só o ponto de partida, e a medida desce de 0,25 em
+  // 0,25 até caber. Assim fica o maior tamanho possível, e quem usa a fonte
+  // do sistema maior não perde mais do que o espaço obriga.
+  var ajustado = tamanho * larguraPorDestino / maisLongo;
+  while (ajustado > 6 && maisLongoCom(ajustado) > larguraPorDestino) {
+    ajustado -= 0.25;
+  }
+  return WidgetStatePropertyAll(estilo.copyWith(fontSize: ajustado));
 }
 
 /// Um nó de foco por aba, criados uma vez para o app inteiro, não por

@@ -66,7 +66,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          flutter build apk --release --split-per-abi \
+          flutter build apk --release --target-platform android-arm64 \
             --dart-define=FIREBASE_API_KEY_WEB=${{ secrets.FIREBASE_API_KEY_WEB }} \
             --dart-define=FIREBASE_API_KEY_ANDROID=${{ secrets.FIREBASE_API_KEY_ANDROID }} \
             --dart-define=FIREBASE_API_KEY_IOS=${{ secrets.FIREBASE_API_KEY_IOS }} \
@@ -91,14 +91,17 @@ jobs:
       - name: Write release notes
         run: git log -1 --format=%B > release-notes.txt
 
-      # --split-per-abi gera um APK por arquitetura em vez do universal (que
-      # empacotava arm64-v8a, armeabi-v7a e x86_64 juntos — 66 MB, dos quais
-      # ~21 MB eram x86_64, que só emulador usa). arm64-v8a cobre o parque de
-      # aparelhos reais atual; quem tiver um Android antigo em armeabi-v7a
-      # (raro nos últimos anos) fica de fora deste grupo de teste por ora.
+      # --target-platform android-arm64 gera um APK só com arm64-v8a em vez do
+      # universal (que empacotava arm64-v8a, armeabi-v7a e x86_64 juntos — 66
+      # MB, dos quais ~21 MB eram x86_64, que só emulador usa). arm64-v8a cobre
+      # o parque de aparelhos reais atual; quem tiver um Android antigo em
+      # armeabi-v7a (raro nos últimos anos) fica de fora deste grupo de teste
+      # por ora. Não usar --split-per-abi: ele soma 1000 × código da ABI ao
+      # versionCode (arm64 = +2000), e o App Distribution mostrava 4028 para o
+      # build 2028 do pubspec. Assim o versionCode é exatamente o build number.
       - name: Distribute to Firebase App Distribution
         uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15
         with:
-          args: appdistribution:distribute build/app/outputs/flutter-apk/app-arm64-v8a-release.apk --app 1:169480227109:android:286f46640a25846c3c72cc --groups testadores --release-notes-file release-notes.txt
+          args: appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk --app 1:169480227109:android:286f46640a25846c3c72cc --groups testadores --release-notes-file release-notes.txt
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
