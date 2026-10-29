@@ -642,7 +642,10 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
 - **Identificador é o FID**: o app usa `FirebaseInstallations.getId()` e
   `onIdChange`, mantém `fid` no documento e, na primeira migração, apaga o
   documento antigo por token para não receber o push duas vezes. A Function
-  aceita `fid` (novo) e `token` (legado), preferindo `fid`.
+  aceita `fid` (novo) e `token` (legado), preferindo `fid`. No Android, o
+  `AndroidManifest.xml` precisa do `<meta-data>`
+  `firebase_messaging_installation_id_enabled=true`: sem ele o `register()`
+  do firebase_messaging 17 lança "API disabled" e o aparelho nunca é cadastrado.
 - **Conteúdo da Function**: `functions/src/assets/conteudo-lembretes.json`
   (37 KB, 366 dias) gerado dos JSONs do app só com referência/título.
   Regenerar se o conteúdo anual mudar.

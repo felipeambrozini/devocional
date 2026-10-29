@@ -31,6 +31,14 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
+        <!-- Push dos lembretes endereçado por FID (lib/dados/lembretes.dart):
+             o firebase_messaging 17 só libera `register()` com esta opção —
+             sem ela lança "API disabled" e o aparelho nunca entra na coleção
+             `lembretes`, então a Function não tem para quem enviar. -->
+        <meta-data
+            android:name="firebase_messaging_installation_id_enabled"
+            android:value="true" />
+
         <!-- Lembrete diário local (flutter_local_notifications, ver
              lib/dados/lembretes.dart): alarmes sobrevivem ao reinício do
              celular porque este receiver os rearma no boot — sem ele, o
