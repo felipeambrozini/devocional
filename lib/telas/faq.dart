@@ -36,7 +36,10 @@ class TelaFAQ extends StatelessWidget {
               DevocionalEspacamento.sp40,
             ),
             children: [
-              Text('Perguntas frequentes', style: tema.displayMedium),
+              Semantics(
+                header: true,
+                child: Text('Perguntas frequentes', style: tema.displayMedium),
+              ),
               const SizedBox(height: DevocionalEspacamento.sp8),
               const DevocionalFilete(largura: 64),
               const SizedBox(height: DevocionalEspacamento.sp16),

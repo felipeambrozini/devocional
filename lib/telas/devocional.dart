@@ -35,6 +35,12 @@ enum Leitura {
     Leitura.promessas => 'Promessas de Deus',
   };
 
+  FaIconData get icone => switch (this) {
+    Leitura.manha => FontAwesomeIcons.sun,
+    Leitura.noite => FontAwesomeIcons.moon,
+    Leitura.promessas => FontAwesomeIcons.dove,
+  };
+
   /// Manhã e Noite têm período; Promessas não, por ser leitura única do dia.
   Periodo? get periodo => switch (this) {
     Leitura.manha => Periodo.manha,
@@ -117,9 +123,12 @@ class _TelaDevocionalState extends State<TelaDevocional> {
         if (!leituraAtiva(leitura)) {
           return Scaffold(
             appBar: DevocionalAppBar(
-              title: Text(
-                ehHoje ? 'Hoje, ${dataLonga(data)}' : dataLonga(data),
-                overflow: TextOverflow.ellipsis,
+              title: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  ehHoje ? 'Hoje, ${dataLonga(data)}' : dataLonga(data),
+                ),
               ),
               actions: [
                 const DevocionalBotaoDeNotas(),
@@ -141,7 +150,7 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                   ),
                   const SizedBox(height: DevocionalEspacamento.sp16),
                   DevocionalAvisoVazio(
-                    icone: FontAwesomeIcons.moon,
+                    icone: leitura.icone,
                     titulo: leitura.tituloCompleto,
                     detalhe:
                         'Esta leitura está desativada temporariamente. As outras continuam no alternador acima.',
@@ -154,9 +163,12 @@ class _TelaDevocionalState extends State<TelaDevocional> {
 
         return Scaffold(
           appBar: DevocionalAppBar(
-            title: Text(
-              ehHoje ? 'Hoje, ${dataLonga(data)}' : dataLonga(data),
-              overflow: TextOverflow.ellipsis,
+            title: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                ehHoje ? 'Hoje, ${dataLonga(data)}' : dataLonga(data),
+              ),
             ),
             actions: [
               DevocionalBotaoDeBusca(
@@ -220,7 +232,11 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                     if (snap.connectionState != ConnectionState.done) {
                       return const Padding(
                         padding: EdgeInsets.all(DevocionalEspacamento.sp32),
-                        child: Center(child: CircularProgressIndicator()),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            semanticsLabel: 'Carregando',
+                          ),
+                        ),
                       );
                     }
                     final dev = snap.data;

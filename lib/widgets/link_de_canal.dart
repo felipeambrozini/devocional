@@ -15,17 +15,21 @@ class DevocionalLinkDeCanal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Image.asset(
-        asset,
-        // O logo oficial da marca, como o "G" do Google: não redesenhado.
-        width: 26,
-        height: 26,
+    return Semantics(
+      hint: 'Abre fora do app',
+      child: ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: Image.asset(
+          asset,
+          // O logo oficial da marca, como o "G" do Google: não redesenhado.
+          width: 26,
+          height: 26,
+          excludeFromSemantics: true,
+        ),
+        title: Text(rotulo),
+        onTap: () =>
+            launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
       ),
-      title: Text(rotulo),
-      onTap: () =>
-          launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
     );
   }
 }

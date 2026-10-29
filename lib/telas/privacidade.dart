@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 
 import '../dados/nuvem.dart';
 import '../dados/recursos.dart';
@@ -29,7 +30,7 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
 
   // O aceite, o Sobre e o FAQ linkam esta página mirando perguntas ("posso
   // apagar meus dados?"): o índice leva direto à seção, sem rolagem às cegas.
-  void _rolarAte(GlobalKey chave) {
+  void _rolarAte(GlobalKey chave, String titulo) {
     final alvo = chave.currentContext;
     if (alvo == null) return;
     Scrollable.ensureVisible(
@@ -38,6 +39,13 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
           ? Duration.zero
           : const Duration(milliseconds: 300),
       curve: Curves.easeOut,
+    );
+    // A rolagem não move o foco: sem o anúncio, quem usa leitor de tela fica
+    // sem saber que a página andou.
+    SemanticsService.sendAnnouncement(
+      View.of(alvo),
+      titulo,
+      Directionality.of(alvo),
     );
   }
 
@@ -73,7 +81,13 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                 DevocionalEspacamento.sp40,
               ),
               children: [
-                Text('Política de privacidade', style: tema.displayMedium),
+                Semantics(
+                  header: true,
+                  child: Text(
+                    'Política de privacidade',
+                    style: tema.displayMedium,
+                  ),
+                ),
                 const SizedBox(height: DevocionalEspacamento.sp8),
                 const DevocionalFilete(largura: 64),
                 const SizedBox(height: DevocionalEspacamento.sp16),
@@ -96,7 +110,7 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                   children: [
                     for (final entrada in indice.entries)
                       DevocionalBotaoTerciario(
-                        onPressed: () => _rolarAte(entrada.value),
+                        onPressed: () => _rolarAte(entrada.value, entrada.key),
                         child: Text(entrada.key),
                       ),
                   ],

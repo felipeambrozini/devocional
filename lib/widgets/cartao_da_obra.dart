@@ -19,7 +19,7 @@ class DevocionalCartaoDaObra extends StatelessWidget {
   });
 
   final ObraDaBiblioteca obra;
-  final VoidCallback aoAbrir;
+  final VoidCallback? aoAbrir;
 
   /// Sem o subtítulo e com o título em até duas linhas: cabe numa lista
   /// horizontal de altura fixa.
@@ -39,7 +39,13 @@ class DevocionalCartaoDaObra extends StatelessWidget {
           padding: const EdgeInsets.all(DevocionalEspacamento.sp16),
           child: Row(
             children: [
-              DevocionalCapaDeObra(titulo: obra.titulo, capa: obra.capa),
+              // O título ao lado já nomeia a obra: a capa falada duplicaria.
+              ExcludeSemantics(
+                child: DevocionalCapaDeObra(
+                  titulo: obra.titulo,
+                  capa: obra.capa,
+                ),
+              ),
               const SizedBox(width: DevocionalEspacamento.sp14),
               Expanded(
                 child: Column(
@@ -101,8 +107,12 @@ class _Progresso extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        DevocionalProgressoFino(valor: lidos / total),
-        const SizedBox(height: DevocionalEspacamento.sp6),
+        // Trilho vazio num livro não aberto lia como "0% feito": só aparece
+        // quando há o que medir.
+        if (lidos > 0) ...[
+          DevocionalProgressoFino(valor: lidos / total),
+          const SizedBox(height: DevocionalEspacamento.sp6),
+        ],
         Text(legenda, style: Theme.of(context).textTheme.labelMedium),
       ],
     );

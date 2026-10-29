@@ -176,19 +176,21 @@ class _Cabecalho extends StatelessWidget {
             if (nuvem.logado) ...[
               // Avatar só exibição: a foto do Google quando há, senão a
               // inicial do nome. Sem toque, sem upload.
-              CircleAvatar(
-                radius: 30,
-                backgroundImage: nuvem.fotoUrl != null
-                    ? NetworkImage(nuvem.fotoUrl!)
-                    : null,
-                child: nuvem.fotoUrl == null
-                    ? Text(
-                        (nome ?? '?').substring(0, 1).toUpperCase(),
-                        style: tema.headlineMedium?.copyWith(
-                          color: cor.primary,
-                        ),
-                      )
-                    : null,
+              ExcludeSemantics(
+                child: CircleAvatar(
+                  radius: 30,
+                  backgroundImage: nuvem.fotoUrl != null
+                      ? NetworkImage(nuvem.fotoUrl!)
+                      : null,
+                  child: nuvem.fotoUrl == null
+                      ? Text(
+                          (nome ?? '?').substring(0, 1).toUpperCase(),
+                          style: tema.headlineMedium?.copyWith(
+                            color: cor.primary,
+                          ),
+                        )
+                      : null,
+                ),
               ),
               const SizedBox(width: DevocionalEspacamento.sp14),
             ],
@@ -208,7 +210,7 @@ class _Cabecalho extends StatelessWidget {
             // Entrar ou sair da conta, no fim do cabeçalho: o convite para
             // entrar mora aqui (e não mais na folha de ajustes), porque o
             // estado da conta muda a saudação ao lado.
-            _BotaoDeConta(),
+            const _BotaoDeConta(),
             // Hoje não tem AppBar onde pendurar a ação, e sem isto os ajustes
             // só seriam alcançáveis de duas das seis abas.
             DevocionalBotaoDeAjustes(estado: EscopoDoEstado.de(context)),
@@ -249,6 +251,7 @@ class _BotaoDeConta extends StatelessWidget {
             message: 'Verificando conta…',
             child: Semantics(
               label: 'Verificando conta',
+              liveRegion: true,
               child: FaIcon(
                 FontAwesomeIcons.hourglassStart,
                 size: 16,
@@ -265,7 +268,10 @@ class _BotaoDeConta extends StatelessWidget {
               ? const SizedBox(
                   width: DevocionalEspacamento.sp18,
                   height: DevocionalEspacamento.sp18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    semanticsLabel: 'Carregando',
+                  ),
                 )
               : const FaIcon(FontAwesomeIcons.google, size: 16),
           label: const Text('Entrar'),

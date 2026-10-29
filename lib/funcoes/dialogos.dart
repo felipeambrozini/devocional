@@ -133,3 +133,12 @@ double larguraDeDialogo(BuildContext context, double cheia) {
   final estreita = MediaQuery.sizeOf(context).width - 128;
   return estreita < cheia ? estreita : cheia;
 }
+
+/// Altura de conteúdo de diálogo com lista rolável: a cheia quando cabe, senão
+/// o que sobra depois do teclado e de ~200 dp para título, ações e margens do
+/// AlertDialog (em celular deitado ou com o teclado aberto a fixa estourava).
+double alturaDeDialogo(BuildContext context, double cheia) {
+  final tamanho = MediaQuery.sizeOf(context);
+  final livre = tamanho.height - MediaQuery.viewInsetsOf(context).bottom - 200;
+  return livre.clamp(120.0, cheia);
+}

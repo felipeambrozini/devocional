@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -61,7 +62,12 @@ class _TelaLeitorDeLivroState extends State<TelaLeitorDeLivro> {
       carregar: () => Biblioteca.instancia.capitulos(widget.slug),
       construir: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
-          return aviso('', const Center(child: CircularProgressIndicator()));
+          return aviso(
+            '',
+            const Center(
+              child: CircularProgressIndicator(semanticsLabel: 'Carregando'),
+            ),
+          );
         }
         final capitulos = snap.data;
         if (capitulos == null || capitulos.isEmpty) {
@@ -318,77 +324,111 @@ class _CapituloAbertoState extends State<_CapituloAberto> {
             child: Stack(
               children: [
                 comSelecao(
-                  GestureDetector(
-                    onHorizontalDragEnd: _aoArrastar,
-                    child: NotificationListener<ScrollEndNotification>(
-                      onNotification: (_) {
-                        _controlador.guardarPosicao();
-                        return false;
-                      },
-                      child: SingleChildScrollView(
-                        controller: _controlador.rolagem,
-                        padding: const EdgeInsets.fromLTRB(
-                          DevocionalEspacamento.sp16,
-                          DevocionalEspacamento.sp8,
-                          DevocionalEspacamento.sp16,
-                          DevocionalEspacamento.sp32,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Capítulo ${widget.indice + 1} de ${widget.capitulos.length}',
-                              style: tema.labelMedium,
-                            ),
-                            const SizedBox(height: DevocionalEspacamento.sp4),
-                            Text(_capitulo.titulo, style: tema.headlineMedium),
-                            const SizedBox(height: DevocionalEspacamento.sp14),
-                            const DevocionalFilete(),
-                            const SizedBox(height: DevocionalEspacamento.sp16),
-                            KeyedSubtree(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  for (final (n, paragrafo)
-                                      in _capitulo.paragrafos.indexed)
-                                    _Paragrafo(
-                                      texto: paragrafo,
-                                      destaque: destaques[n],
-                                      aoTocar: () => _abrirAcoes(n),
+                  Semantics(
+                    // Leitor de tela não faz o arrasto: o mesmo passo vira
+                    // ação semântica.
+                    container: true,
+                    label:
+                        'Capítulo ${widget.indice + 1} de ${widget.capitulos.length}',
+                    customSemanticsActions: {
+                      // No último capítulo "próximo" terminaria a leitura, e no
+                      // primeiro "anterior" não faria nada: ficam de fora.
+                      if (!_ehUltimo)
+                        const CustomSemanticsAction(
+                          label: 'Próximo capítulo',
+                        ): () =>
+                            _passar(1),
+                      if (widget.indice > 0)
+                        const CustomSemanticsAction(
+                          label: 'Capítulo anterior',
+                        ): () =>
+                            _passar(-1),
+                    },
+                    child: GestureDetector(
+                      onHorizontalDragEnd: _aoArrastar,
+                      child: NotificationListener<ScrollEndNotification>(
+                        onNotification: (_) {
+                          _controlador.guardarPosicao();
+                          return false;
+                        },
+                        child: SingleChildScrollView(
+                          controller: _controlador.rolagem,
+                          padding: const EdgeInsets.fromLTRB(
+                            DevocionalEspacamento.sp16,
+                            DevocionalEspacamento.sp8,
+                            DevocionalEspacamento.sp16,
+                            DevocionalEspacamento.sp32,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Capítulo ${widget.indice + 1} de ${widget.capitulos.length}',
+                                style: tema.labelMedium,
+                              ),
+                              const SizedBox(height: DevocionalEspacamento.sp4),
+                              Text(
+                                _capitulo.titulo,
+                                style: tema.headlineMedium,
+                              ),
+                              const SizedBox(
+                                height: DevocionalEspacamento.sp14,
+                              ),
+                              const DevocionalFilete(),
+                              const SizedBox(
+                                height: DevocionalEspacamento.sp16,
+                              ),
+                              KeyedSubtree(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    for (final (n, paragrafo)
+                                        in _capitulo.paragrafos.indexed)
+                                      _Paragrafo(
+                                        texto: paragrafo,
+                                        destaque: destaques[n],
+                                        aoTocar: () => _abrirAcoes(n),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(
+                                height: DevocionalEspacamento.sp16,
+                              ),
+                              if (_ehUltimo) ...[
+                                Center(
+                                  child: DevocionalBotaoPrimario.icon(
+                                    onPressed: _terminarLeitura,
+                                    icon: const FaIcon(
+                                      FontAwesomeIcons.flagCheckered,
+                                      size: 16,
                                     ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: DevocionalEspacamento.sp16),
-                            if (_ehUltimo) ...[
-                              Center(
-                                child: DevocionalBotaoPrimario.icon(
-                                  onPressed: _terminarLeitura,
-                                  icon: const FaIcon(
-                                    FontAwesomeIcons.flagCheckered,
-                                    size: 16,
+                                    label: const Text('Terminar a leitura'),
                                   ),
-                                  label: const Text('Terminar a leitura'),
+                                ),
+                                const SizedBox(
+                                  height: DevocionalEspacamento.sp8,
+                                ),
+                              ],
+                              Center(
+                                child: DevocionalBotaoTerciario.icon(
+                                  onPressed: () => leitura.alternarLido(
+                                    _slug,
+                                    widget.indice,
+                                  ),
+                                  icon: FaIcon(
+                                    lido
+                                        ? FontAwesomeIcons.circleCheck
+                                        : FontAwesomeIcons.circle,
+                                    size: 14,
+                                  ),
+                                  label: Text(
+                                    lido ? 'Capítulo lido' : 'Marcar como lido',
+                                  ),
                                 ),
                               ),
-                              const SizedBox(height: DevocionalEspacamento.sp8),
                             ],
-                            Center(
-                              child: DevocionalBotaoTerciario.icon(
-                                onPressed: () =>
-                                    leitura.alternarLido(_slug, widget.indice),
-                                icon: FaIcon(
-                                  lido
-                                      ? FontAwesomeIcons.circleCheck
-                                      : FontAwesomeIcons.circle,
-                                  size: 14,
-                                ),
-                                label: Text(
-                                  lido ? 'Capítulo lido' : 'Marcar como lido',
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
@@ -445,44 +485,50 @@ class _Paragrafo extends StatelessWidget {
         // O alvo de uma linha curta ficava abaixo dos 48 dp: o mesmo mínimo da
         // Bíblia vale aqui, inclusive para quem lê com o texto ampliado.
         constraints: const BoxConstraints(minHeight: DevocionalToque.minimo),
-        child: GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTap: aoTocar,
-          child: Container(
-            width: double.infinity,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.fromLTRB(
-              DevocionalEspacamento.sp10,
-              DevocionalEspacamento.sp4,
-              DevocionalEspacamento.sp4,
-              DevocionalEspacamento.sp4,
-            ),
-            decoration: BoxDecoration(
-              color: grifado ? cor.surfaceContainerHighest : null,
-              border: Border(
-                left: BorderSide(
-                  color: grifado
-                      ? cor.secondary.withValues(alpha: 0.5)
-                      : Colors.transparent,
-                  width: 2,
+        child: Semantics(
+          button: true,
+          label: grifado ? 'Destacado' : null,
+          hint: 'Toque para destacar, anotar ou copiar',
+          child: InkWell(
+            onTap: aoTocar,
+            // Ink e não Container: o fundo do grifo é opaco e, pintado por
+            // cima do InkWell, escondia o splash e o foco do teclado.
+            child: Ink(
+              decoration: BoxDecoration(
+                color: grifado ? cor.surfaceContainerHighest : null,
+                border: Border(
+                  left: BorderSide(
+                    color: grifado ? cor.secondary : Colors.transparent,
+                    width: 3,
+                  ),
                 ),
               ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(texto, style: tema.bodyLarge?.copyWith(height: 1.7)),
-                if (nota.isNotEmpty) ...[
-                  const SizedBox(height: DevocionalEspacamento.sp8),
-                  Text(
-                    nota,
-                    style: tema.bodyMedium?.copyWith(
-                      fontStyle: FontStyle.italic,
-                      color: cor.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ],
+              child: Container(
+                width: double.infinity,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.fromLTRB(
+                  DevocionalEspacamento.sp10,
+                  DevocionalEspacamento.sp4,
+                  DevocionalEspacamento.sp4,
+                  DevocionalEspacamento.sp4,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(texto, style: tema.bodyLarge?.copyWith(height: 1.7)),
+                    if (nota.isNotEmpty) ...[
+                      const SizedBox(height: DevocionalEspacamento.sp8),
+                      Text(
+                        nota,
+                        style: tema.bodyMedium?.copyWith(
+                          fontStyle: FontStyle.italic,
+                          color: cor.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
           ),
         ),

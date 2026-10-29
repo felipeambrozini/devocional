@@ -268,71 +268,78 @@ class _SeletorDeLivrosState extends State<_SeletorDeLivros> {
       ),
       content: SizedBox(
         width: larguraDeDialogo(context, 460),
-        height: 480,
-        child: Column(
-          children: [
-            DevocionalBusca(
-              controller: _busca,
-              // Mesmo padrão da aba de busca: no celular o teclado cobriria a
-              // lista de 66 livros antes de qualquer intenção.
-              autofocus: !kIsWeb,
-              hintText: 'Buscar livro',
-              onChanged: (_) => setState(() {}),
-              border: const OutlineInputBorder(),
-            ),
-            const SizedBox(height: DevocionalEspacamento.sp12),
-            _atalhoDeTestamento(_antigos, 'Antigo Testamento'),
-            _atalhoDeTestamento(_novos, 'Novo Testamento'),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: DevocionalEspacamento.sp16,
-              ),
-              child: Text(
-                'Caixa cheia marca o testamento inteiro. Traço quer dizer que só parte dele está marcada.',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            const Divider(),
-            Expanded(
-              child: livros.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text('Nenhum livro encontrado.'),
-                          const SizedBox(height: DevocionalEspacamento.sp8),
-                          DevocionalBotaoTerciario(
-                            onPressed: () => setState(_busca.clear),
-                            child: const Text('Limpar busca'),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: livros.length,
-                      itemBuilder: (context, i) {
-                        final livro = livros[i];
-                        return CheckboxListTile(
-                          dense: true,
-                          title: Text(livro.nome),
-                          subtitle: Text(
-                            '${livro.capitulos} '
-                            '${livro.capitulos == 1 ? 'capítulo' : 'capítulos'}',
-                          ),
-                          value: _selecionados.contains(livro.slug),
-                          onChanged: (marcado) => setState(() {
-                            if (marcado == true) {
-                              _selecionados.add(livro.slug);
-                            } else {
-                              _selecionados.remove(livro.slug);
-                            }
-                          }),
-                        );
-                      },
+        height: alturaDeDialogo(context, 480),
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  DevocionalBusca(
+                    controller: _busca,
+                    // Mesmo padrão da aba de busca: no celular o teclado cobriria a
+                    // lista de 66 livros antes de qualquer intenção.
+                    autofocus: !kIsWeb,
+                    hintText: 'Buscar livro',
+                    onChanged: (_) => setState(() {}),
+                    border: const OutlineInputBorder(),
+                  ),
+                  const SizedBox(height: DevocionalEspacamento.sp12),
+                  _atalhoDeTestamento(_antigos, 'Antigo Testamento'),
+                  _atalhoDeTestamento(_novos, 'Novo Testamento'),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DevocionalEspacamento.sp16,
                     ),
+                    child: Text(
+                      'Caixa cheia marca o testamento inteiro. Traço quer dizer que só parte dele está marcada.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  const Divider(),
+                ],
+              ),
             ),
+            if (livros.isEmpty)
+              SliverToBoxAdapter(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Nenhum livro encontrado.'),
+                      const SizedBox(height: DevocionalEspacamento.sp8),
+                      DevocionalBotaoTerciario(
+                        onPressed: () => setState(_busca.clear),
+                        child: const Text('Limpar busca'),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              SliverList.builder(
+                itemCount: livros.length,
+                itemBuilder: (context, i) {
+                  final livro = livros[i];
+                  return CheckboxListTile(
+                    dense: true,
+                    title: Text(livro.nome),
+                    subtitle: Text(
+                      '${livro.capitulos} '
+                      '${livro.capitulos == 1 ? 'capítulo' : 'capítulos'}',
+                    ),
+                    value: _selecionados.contains(livro.slug),
+                    onChanged: (marcado) => setState(() {
+                      if (marcado == true) {
+                        _selecionados.add(livro.slug);
+                      } else {
+                        _selecionados.remove(livro.slug);
+                      }
+                    }),
+                  );
+                },
+              ),
           ],
         ),
       ),

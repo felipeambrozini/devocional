@@ -160,7 +160,11 @@ class _DevocionalAbaDoCronogramaState extends State<DevocionalAbaDoCronograma>
                   return DevocionalAvisoDeErro(aoTentarDeNovo: _tentarDeNovo);
                 }
                 if (snap.connectionState != ConnectionState.done) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      semanticsLabel: 'Carregando',
+                    ),
+                  );
                 }
                 final dias = snap.data!.where((d) => d.mes == _mes).toList();
                 final lidosNoMes = dias
@@ -179,9 +183,14 @@ class _DevocionalAbaDoCronogramaState extends State<DevocionalAbaDoCronograma>
                   // Monta o mês inteiro de uma vez em vez de só o visível.
                   // São no máximo 31 cartões leves, e é o que faz o cartão de hoje já
                   // existir na árvore quando _rolarAteHoje procura por ele; sem isso o
-                  // GlobalKey de um dia lá embaixo ainda não tem contexto. Se um dia a
-                  // lista crescer, o caminho é scrollable_positioned_list.
-                  scrollCacheExtent: const ScrollCacheExtent.pixels(4000),
+                  // GlobalKey de um dia lá embaixo ainda não tem contexto. 240px/dia
+                  // superestima de propósito: no celular os botões de faixa
+                  // empilham e o cartão passa de 170px, e os 4000px fixos de antes
+                  // paravam antes do dia 29. Se um dia a lista crescer, o caminho
+                  // é scrollable_positioned_list.
+                  scrollCacheExtent: ScrollCacheExtent.pixels(
+                    dias.length * 240.0,
+                  ),
                   itemCount: dias.length + 1,
                   separatorBuilder: (_, _) =>
                       const SizedBox(height: DevocionalEspacamento.sp10),

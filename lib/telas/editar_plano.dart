@@ -267,7 +267,6 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
           ),
           content: SizedBox(
             width: larguraDeDialogo(dialogContext, 420),
-            height: 520,
             child: Form(
               key: form,
               child: SingleChildScrollView(child: campos()),

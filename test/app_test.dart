@@ -899,7 +899,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.widgetWithText(ListTile, 'Uma'),
-        matching: find.byTooltip('Apagar conversa'),
+        matching: find.byTooltip('Apagar conversa: Uma'),
       ),
     );
     await tester.pumpAndSettle();
@@ -927,7 +927,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.widgetWithText(ListTile, 'Uma'),
-        matching: find.byTooltip('Apagar conversa'),
+        matching: find.byTooltip('Apagar conversa: Uma'),
       ),
     );
     await tester.pumpAndSettle();
@@ -1602,7 +1602,7 @@ void main() {
       tester.widget<RichText>(versiculo1).text as TextSpan,
       [],
     ).firstWhere((s) => s.text!.contains('No princípio'));
-    expect(doLadoDeFora.style?.color?.a, 0.7);
+    expect(doLadoDeFora.style?.color?.a, 0.75);
   });
 
   testWidgets(

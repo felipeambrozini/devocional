@@ -258,7 +258,7 @@ Future<List<String>?> mostrarEditorDeOrdemDosLivros(
           ),
           content: SizedBox(
             width: larguraDeDialogo(dialogContext, 420),
-            height: 400,
+            height: alturaDeDialogo(dialogContext, 400),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -287,7 +287,9 @@ Future<List<String>?> mostrarEditorDeOrdemDosLivros(
                         key: ValueKey(slug),
                         leading: ReorderableDragStartListener(
                           index: i,
-                          child: const FaIcon(FontAwesomeIcons.gripLines),
+                          child: const ExcludeSemantics(
+                            child: FaIcon(FontAwesomeIcons.gripLines),
+                          ),
                         ),
                         title: Text('${i + 1}º · ${nomeDoLivro(slug)}'),
                         subtitle: Text(

@@ -6,9 +6,10 @@ import '../dados/nuvem.dart';
 import '../dados/registro.dart';
 import 'aviso.dart';
 
-/// Tenta o login e mostra o motivo quando não completa. Público porque dois
-/// botões chamam isto: o do cabeçalho da Hoje (`hoje.dart`, `_BotaoDeConta`)
-/// e o cartão de plano compartilhado (`meu_plano.dart`). Quem chama precisa
+/// Tenta o login e mostra o motivo quando não completa. Público porque três
+/// botões chamam isto: o do cabeçalho da Hoje (`hoje.dart`, `_BotaoDeConta`),
+/// o cartão de plano compartilhado (`meu_plano.dart`) e o convite de acesso
+/// das Conversas (`cartao_de_pedir_acesso.dart`). Quem chama precisa
 /// fazê-lo direto do `onTap`/`onPressed` (sem `await` antes): o navegador só
 /// deixa abrir a janela do login dentro do gesto do usuário, e qualquer
 /// espera antes do `signInWithPopup` consome esse gesto e a janela sai

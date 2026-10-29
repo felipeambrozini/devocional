@@ -167,7 +167,7 @@ Não há terceiro acento. O metal tem dois graus (principal e destaque) e um gra
 
 **A Regra da Não-Inversão.** O claro não é o escuro invertido; o que se mantém entre temas é a relação entre os tons, não os valores. Dourado sobre pergaminho dá 2,1:1 e é proibido — quem precisa do metal num fundo claro usa o bronze. Clarear o bronze "só um pouco" também é proibido: `test/tema_test.dart` mede os contrastes da WCAG e falha se os pares anotados piorarem.
 
-**A Regra dos Papéis.** Nenhuma tela lê a paleta direto: tudo sai de `Theme.of(context).colorScheme` (surface fundo, surfaceContainer cartão, surfaceContainerHighest citação e chip, primary título e ícone, secondary destaque, outline borda, onSurface corpo, onSurfaceVariant apoio). Um `DevocionalCores.` solto numa tela é um vazamento.
+**A Regra dos Papéis.** Nenhuma tela lê a paleta direto: tudo sai de `Theme.of(context).colorScheme` (surface fundo, surfaceContainer cartão, surfaceContainerHighest citação e chip, primary título e ícone, secondary destaque, outline borda, outlineVariant divisor (o outline a 40%), onSurface corpo, onSurfaceVariant apoio). Um `DevocionalCores.` solto numa tela é um vazamento.
 
 ## Typography
 
@@ -195,7 +195,7 @@ arquivos por peso), em `lib/estilo/tema.dart`.
 
 **A Regra da Escala.** A escala de leitura do usuário multiplica só `bodyLarge` e `bodyMedium` — nunca a navegação, o título, a legenda. Aumentar o texto não pode empurrar a barra de baixo nem quebrar o cabeçalho.
 
-**A Regra do Peso Variável.** O peso das fontes vem de `fontVariations` (`wght`), porque Cinzel e Montserrat são variáveis e declarar peso no pubspec só rotula o arquivo. Um estilo novo que declare só `fontWeight` pode desenhar a instância errada.
+**A Regra do Peso Variável.** O peso das fontes vem de `fontVariations` (`wght`), porque Cinzel e Montserrat são variáveis e declarar peso no pubspec só rotula o arquivo. Um estilo novo que declare só `fontWeight` pode desenhar a instância errada: para mudar o peso de um estilo do tema numa tela, use `.comPeso(FontWeight.wXXX)` (extensão em `lib/estilo/tema.dart`), nunca `copyWith(fontWeight:)`.
 
 ## Layout
 
@@ -224,7 +224,7 @@ Contidos e discretos: os controles existem para o texto passar. Nenhum component
 - **Filled** (FilledButton): fundo do metal (Ouro de Missal / Bronze de Encadernação), letra do contrário (couro no escuro, pergaminho-alto no claro). Só para a ação decisiva do diálogo ou da folha — Salvar, Remover.
 - **Text** (TextButton): sem fundo, letra na cor de destaque. A ação quieta — Cancelar, Ler tudo, Sair, Exportar.
 - **Outlined** (OutlinedButton, com ícone quando entra num contexto): fio do metal com letra de destaque — Continuar leitura, faixa do cronograma, Entrar com Google. É o botão de "abrir alguma coisa".
-- **Hover / Focus:** hover escurece o metal no Filled (sem animação de elevação); focus usa o anel de foco padrão do Material 3.
+- **Hover / Focus:** hover escurece o metal no Filled (sem animação de elevação); focus soma ao overlay do Material 3 um anel de 2px no metal (no Filled, na cor do corpo, porque o preenchimento já é o metal), já que o overlay de ~10% some sobre pergaminho e couro. Alvos de toque sempre com 48dp (`materialTapTargetSize.padded`), inclusive no desktop web.
 
 ### Chips
 - **Style:** sem checkmark (`showCheckmark: false` no `chipTheme`, valendo para todo chip); selecionado = metal cheio com a letra do contrário por cima; não selecionado = surfaceContainerHighest com fio a 50%.
@@ -240,14 +240,14 @@ Contidos e discretos: os controles existem para o texto passar. Nenhum component
 - **Título:** Cinzel titleLarge (18px w600) na cor do metal, seguido de 12px de respiro antes do conteúdo.
 
 ### Inputs / Fields
-- **Style:** preenchido (surfaceContainer), fio do metal a 50%, cantos suaves (12px), placeholder em tinta suave.
+- **Style:** preenchido (surfaceContainer), borda na cor de apoio do texto (onSurfaceVariant), cantos suaves (12px), placeholder em tinta suave. É a exceção à Regra do Fio: o traço do metal fica abaixo dos 3:1 que a borda de um campo precisa.
 - **Focus:** o fio vira o metal principal cheio.
 - **Uso:** o campo da busca (com lupa no suffix) e o editor de nota no diálogo.
 
 ### Navigation
 - **Style:** barra embaixo no celular, trilho lateral a partir de 720px; fundo surfaceContainer, rótulos Montserrat w600 de 11–12px.
 - **States:** indicador = fio do metal a 45%; ícone e rótulo selecionados na cor de destaque, não selecionados em tinta suave.
-- **Mobile:** NavigationBar padrão do Material 3, seis destinos: Hoje, Bíblia, Devocional, Biblioteca, Plano, Conversas.
+- **Mobile:** NavigationBar padrão do Material 3, seis destinos: Hoje, Bíblia, Devocional, Biblioteca, Plano, Conversas. Os rótulos ficam sempre numa linha: em tela estreita (ou com fonte do sistema maior) o tamanho encolhe só o bastante para "Devocional" caber, nunca troca o nome.
 
 ### Signature Components
 - **O Filete:** o fio de metal (2px, 48–64px, gradiente do metal para o traço) que abre capítulos, devocionais, introduções e separa seções dentro de cartões. É a assinatura visual do sistema — a "linha dourada" que diz que uma leitura começa ali.

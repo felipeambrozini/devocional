@@ -53,8 +53,8 @@ class DevocionalCartaoDeDia extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              width: 34,
+            ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 34),
               child: Text(
                 '$numero',
                 style: tema.headlineSmall?.copyWith(

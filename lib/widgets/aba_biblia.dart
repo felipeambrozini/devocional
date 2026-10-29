@@ -64,11 +64,14 @@ class DevocionalAbaBiblia extends StatelessWidget {
               // resultados" faria parecer que são exatamente 300 na Bíblia
               // inteira, quando na verdade a contagem parou ali.
               Expanded(
-                child: Text(
-                  achados.length >= Conteudo.limiteDeBusca
-                      ? 'Primeiros ${Conteudo.limiteDeBusca} resultados; há mais'
-                      : '${achados.length} ${achados.length == 1 ? 'resultado' : 'resultados'}',
-                  style: Theme.of(context).textTheme.titleSmall,
+                child: Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    achados.length >= Conteudo.limiteDeBusca
+                        ? 'Primeiros ${Conteudo.limiteDeBusca} resultados; há mais'
+                        : '${achados.length} ${achados.length == 1 ? 'resultado' : 'resultados'}',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
                 ),
               ),
               const SizedBox(width: DevocionalEspacamento.sp10),
@@ -76,7 +79,10 @@ class DevocionalAbaBiblia extends StatelessWidget {
                 const SizedBox(
                   width: 13,
                   height: 13,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    semanticsLabel: 'Carregando',
+                  ),
                 ),
             ],
           ),

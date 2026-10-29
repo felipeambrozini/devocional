@@ -35,12 +35,6 @@ class DevocionalPreviaDaLeitura extends StatelessWidget {
 
   String get _titulo => leitura.tituloCompleto;
 
-  FaIconData get _icone => switch (leitura) {
-    Leitura.manha => FontAwesomeIcons.sun,
-    Leitura.noite => FontAwesomeIcons.moon,
-    Leitura.promessas => FontAwesomeIcons.dove,
-  };
-
   Future<Devocional?> _futuro() {
     final periodo = leitura.periodo;
     return periodo == null
@@ -60,7 +54,7 @@ class DevocionalPreviaDaLeitura extends StatelessWidget {
   Widget _aviso(BuildContext context, String texto) => DevocionalCartao(
     titulo: _titulo,
     acessorio: FaIcon(
-      _icone,
+      leitura.icone,
       color: Theme.of(context).colorScheme.primary,
       size: 20,
     ),
@@ -111,7 +105,7 @@ class DevocionalPreviaDaLeitura extends StatelessWidget {
         );
         return DevocionalCartao(
           titulo: _titulo,
-          acessorio: FaIcon(_icone, color: cor.primary, size: 20),
+          acessorio: FaIcon(leitura.icone, color: cor.primary, size: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

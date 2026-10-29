@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 
 import '../dados/nuvem.dart';
 import '../dados/recursos.dart';
@@ -26,7 +27,7 @@ class _TelaTermosState extends State<TelaTermos> {
 
   // Mesma razão do índice da privacidade: chegar direto à seção que motivou
   // a visita, sem rolagem às cegas.
-  void _rolarAte(GlobalKey chave) {
+  void _rolarAte(GlobalKey chave, String titulo) {
     final alvo = chave.currentContext;
     if (alvo == null) return;
     Scrollable.ensureVisible(
@@ -35,6 +36,13 @@ class _TelaTermosState extends State<TelaTermos> {
           ? Duration.zero
           : const Duration(milliseconds: 300),
       curve: Curves.easeOut,
+    );
+    // A rolagem não move o foco: sem o anúncio, quem usa leitor de tela fica
+    // sem saber que a página andou.
+    SemanticsService.sendAnnouncement(
+      View.of(alvo),
+      titulo,
+      Directionality.of(alvo),
     );
   }
 
@@ -78,7 +86,10 @@ class _TelaTermosState extends State<TelaTermos> {
                 DevocionalEspacamento.sp40,
               ),
               children: [
-                Text('Termos de serviço', style: tema.displayMedium),
+                Semantics(
+                  header: true,
+                  child: Text('Termos de serviço', style: tema.displayMedium),
+                ),
                 const SizedBox(height: DevocionalEspacamento.sp8),
                 const DevocionalFilete(largura: 64),
                 const SizedBox(height: DevocionalEspacamento.sp16),
@@ -99,7 +110,7 @@ class _TelaTermosState extends State<TelaTermos> {
                   children: [
                     for (final titulo in indice)
                       DevocionalBotaoTerciario(
-                        onPressed: () => _rolarAte(chaves[titulo]!),
+                        onPressed: () => _rolarAte(chaves[titulo]!, titulo),
                         child: Text(titulo),
                       ),
                   ],

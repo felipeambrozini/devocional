@@ -133,7 +133,9 @@ class _TelaAdminState extends State<TelaAdmin> {
         if (!config.carregado)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: DevocionalEspacamento.sp24),
-            child: Center(child: CircularProgressIndicator()),
+            child: Center(
+              child: CircularProgressIndicator(semanticsLabel: 'Carregando'),
+            ),
           ),
         if (config.carregado)
           _Interruptor(
@@ -352,7 +354,10 @@ class _SecaoDeEmailsState extends State<_SecaoDeEmails> {
               child: _adicionando
                   ? const SizedBox.square(
                       dimension: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        semanticsLabel: 'Adicionando',
+                      ),
                     )
                   : const Text('Adicionar'),
             ),
@@ -366,7 +371,7 @@ class _SecaoDeEmailsState extends State<_SecaoDeEmails> {
               FontAwesomeIcons.circleUser,
               color: Theme.of(context).colorScheme.primary,
             ),
-            title: Text(email, overflow: TextOverflow.ellipsis),
+            title: Text(email),
             trailing: IconButton(
               tooltip: 'Remover acesso de $email',
               icon: const FaIcon(FontAwesomeIcons.trash),
@@ -407,7 +412,10 @@ class _Interruptor extends StatelessWidget {
       secondary: salvando
           ? const SizedBox.square(
               dimension: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                semanticsLabel: 'Salvando',
+              ),
             )
           : null,
     );

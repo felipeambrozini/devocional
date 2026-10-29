@@ -24,7 +24,7 @@ class DevocionalCartaDeConversa extends StatelessWidget {
     final cor = Theme.of(context).colorScheme;
     return Card(
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         onTap: () => context.push('/${persona.slug}'),
         child: Padding(
           padding: const EdgeInsets.all(DevocionalEspacamento.sp16),

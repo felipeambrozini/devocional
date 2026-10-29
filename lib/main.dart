@@ -313,6 +313,38 @@ const _destinos = <_Destino>[
   ),
 ];
 
+/// Encolhe o rótulo da barra de baixo só o bastante para o mais longo caber
+/// numa linha. Com seis destinos cada um tem 65px a 390px, e "Devocional" a
+/// 11px já mede 64px antes da escala de fonte do sistema: o Flutter quebrava a
+/// palavra em "Devociona/l". Nulo mantém o estilo do tema quando já cabe.
+WidgetStateProperty<TextStyle?>? _rotuloQueCabeNaBarra(BuildContext context) {
+  final doTema = NavigationBarTheme.of(context).labelTextStyle?.resolve({});
+  final tamanho = doTema?.fontSize;
+  if (doTema == null || tamanho == null) return null;
+  // O rótulo herda o DefaultTextStyle do Material (bodyMedium), que traz o
+  // letterSpacing da tipografia do Flutter: medir sem ele erra por ~2,5px.
+  final estilo =
+      Theme.of(context).textTheme.bodyMedium?.merge(doTema) ?? doTema;
+  // Mesmo teto de escala que o NavigationBar aplica ao rótulo.
+  final escala = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.3);
+  final larguraPorDestino = MediaQuery.sizeOf(context).width / _destinos.length;
+  var maisLongo = 0.0;
+  for (final d in _destinos) {
+    final pintor = TextPainter(
+      text: TextSpan(text: d.rotulo, style: estilo),
+      textScaler: escala,
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+    )..layout();
+    if (pintor.width > maisLongo) maisLongo = pintor.width;
+    pintor.dispose();
+  }
+  if (maisLongo <= larguraPorDestino) return null;
+  // 0,95 de folga: a largura do texto não cai exatamente na proporção do corpo.
+  final reducao = larguraPorDestino / maisLongo * 0.95;
+  return WidgetStatePropertyAll(estilo.copyWith(fontSize: tamanho * reducao));
+}
+
 /// Um nó de foco por aba, criados uma vez para o app inteiro, não por
 /// instância da Moldura: as rotas de cada aba são estáticas em [_router], e
 /// tanto o `builder` da rota quanto o toque na barra de navegação (em
@@ -766,6 +798,7 @@ class Moldura extends StatelessWidget {
             _destinos.length - 1,
           ),
           onDestinationSelected: _irParaAba,
+          labelTextStyle: _rotuloQueCabeNaBarra(context),
           destinations: [
             for (final d in _destinos)
               NavigationDestination(

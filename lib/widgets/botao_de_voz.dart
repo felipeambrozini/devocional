@@ -10,6 +10,7 @@ import '../dados/recursos.dart';
 import '../dados/registro.dart';
 import '../dados/voz.dart';
 import '../estilo/espacamento.dart';
+import '../estilo/toque.dart';
 import '../funcoes/aviso.dart';
 import 'retrato_de_persona.dart';
 
@@ -316,30 +317,34 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
           child: InkWell(
             borderRadius: BorderRadius.circular(30),
             onTap: _checarDisponibilidade,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: DevocionalEspacamento.sp14,
-                vertical: DevocionalEspacamento.sp8,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                minHeight: DevocionalToque.minimo,
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FaIcon(
-                    FontAwesomeIcons.plugCircleXmark,
-                    size: 16,
-                    color: cor.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: DevocionalEspacamento.sp6),
-                  Flexible(
-                    child: Text(
-                      'Sem conexão. Toque para tentar',
-                      overflow: TextOverflow.ellipsis,
-                      style: tema.labelMedium?.copyWith(
-                        color: cor.onSurfaceVariant,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DevocionalEspacamento.sp14,
+                  vertical: DevocionalEspacamento.sp8,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    FaIcon(
+                      FontAwesomeIcons.plugCircleXmark,
+                      size: 16,
+                      color: cor.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: DevocionalEspacamento.sp6),
+                    Flexible(
+                      child: Text(
+                        'Sem conexão. Toque para tentar',
+                        style: tema.labelMedium?.copyWith(
+                          color: cor.onSurfaceVariant,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -520,27 +525,25 @@ class DevocionalIndicadorDeVozNaBarra extends StatelessWidget {
           // O anel gira enquanto o áudio não chegou — o que está parado no
           // "Cancelar" é a página, não a barra de cima: quem rolou para longe
           // ainda vê o preparo em andamento, e não um ícone congelado.
-          return ExcludeSemantics(
-            child: IconButton(
-              tooltip: 'Cancelar o preparo',
-              icon: Stack(
-                alignment: Alignment.center,
-                children: [
-                  SizedBox(
-                    width: 28,
-                    height: 28,
-                    child: CircularProgressIndicator(
-                      value: null,
-                      strokeWidth: 2,
-                      color: cor.primary,
-                      backgroundColor: cor.surfaceContainerHighest,
-                    ),
+          return IconButton(
+            tooltip: 'Cancelar o preparo',
+            icon: Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CircularProgressIndicator(
+                    value: null,
+                    strokeWidth: 2,
+                    color: cor.primary,
+                    backgroundColor: cor.surfaceContainerHighest,
                   ),
-                  FaIcon(FontAwesomeIcons.hourglassStart, size: 18),
-                ],
-              ),
-              onPressed: voz.parar,
+                ),
+                FaIcon(FontAwesomeIcons.hourglassStart, size: 18),
+              ],
             ),
+            onPressed: voz.parar,
           );
         }
         // Pausada de fora, o anel é o retomar: quem rolou para longe da
@@ -552,60 +555,58 @@ class DevocionalIndicadorDeVozNaBarra extends StatelessWidget {
         // leitura parou) sem voltar ao topo. Tocando, um segundo ícone sem
         // anel encerra de vez — o mesmo par pausar/parar da pílula, só que
         // aqui pausar é o anel (a ação mais comum) e parar é o extra.
-        return ExcludeSemantics(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              StreamBuilder<Duration>(
-                stream: voz.posicao,
-                builder: (context, posicao) {
-                  final agora = posicao.data ?? Duration.zero;
-                  return StreamBuilder<Duration?>(
-                    stream: voz.duracao,
-                    builder: (context, duracao) {
-                      final total = duracao.data;
-                      // Sem duração conhecida o anel fica indeterminado (o
-                      // CircularProgressIndicator anima sozinho).
-                      final fracao = fracaoDeProgresso(agora, total);
-                      return IconButton(
-                        tooltip: retomar
-                            ? 'Retomar a leitura'
-                            : 'Pausar a leitura',
-                        icon: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            SizedBox(
-                              width: 28,
-                              height: 28,
-                              child: CircularProgressIndicator(
-                                value: fracao,
-                                strokeWidth: 2,
-                                color: cor.primary,
-                                backgroundColor: cor.surfaceContainerHighest,
-                              ),
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            StreamBuilder<Duration>(
+              stream: voz.posicao,
+              builder: (context, posicao) {
+                final agora = posicao.data ?? Duration.zero;
+                return StreamBuilder<Duration?>(
+                  stream: voz.duracao,
+                  builder: (context, duracao) {
+                    final total = duracao.data;
+                    // Sem duração conhecida o anel fica indeterminado (o
+                    // CircularProgressIndicator anima sozinho).
+                    final fracao = fracaoDeProgresso(agora, total);
+                    return IconButton(
+                      tooltip: retomar
+                          ? 'Retomar a leitura'
+                          : 'Pausar a leitura',
+                      icon: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: CircularProgressIndicator(
+                              value: fracao,
+                              strokeWidth: 2,
+                              color: cor.primary,
+                              backgroundColor: cor.surfaceContainerHighest,
                             ),
-                            FaIcon(
-                              retomar
-                                  ? FontAwesomeIcons.circlePlay
-                                  : FontAwesomeIcons.circlePause,
-                              size: 18,
-                            ),
-                          ],
-                        ),
-                        onPressed: retomar ? voz.retomarDaPausa : voz.pausar,
-                      );
-                    },
-                  );
-                },
+                          ),
+                          FaIcon(
+                            retomar
+                                ? FontAwesomeIcons.circlePlay
+                                : FontAwesomeIcons.circlePause,
+                            size: 18,
+                          ),
+                        ],
+                      ),
+                      onPressed: retomar ? voz.retomarDaPausa : voz.pausar,
+                    );
+                  },
+                );
+              },
+            ),
+            if (!retomar)
+              IconButton(
+                tooltip: 'Encerrar a leitura',
+                icon: const FaIcon(FontAwesomeIcons.stop, size: 20),
+                onPressed: voz.parar,
               ),
-              if (!retomar)
-                IconButton(
-                  tooltip: 'Encerrar a leitura',
-                  icon: const FaIcon(FontAwesomeIcons.stop, size: 20),
-                  onPressed: voz.parar,
-                ),
-            ],
-          ),
+          ],
         );
       },
     );

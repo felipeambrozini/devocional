@@ -21,9 +21,10 @@ ThemeData construirTema({
   //   primary                 título e ícone
   //   secondary               destaque: citação, referência, aba ativa
   //   outline                 borda e filete
+  //   outlineVariant          divisor (o outline a 40%, ver abaixo)
   //   onSurface               corpo do texto
   //   onSurfaceVariant        apoio: legenda, rótulo, texto secundário
-  final esquema = escuro
+  final base = escuro
       ? const ColorScheme.dark(
           primary: DevocionalCores.dourado,
           onPrimary: DevocionalCores.fundo,
@@ -50,6 +51,11 @@ ThemeData construirTema({
           outline: DevocionalCores.bronzeSuave,
           error: Color(0xFF9B2C2C),
         );
+  // Sem outlineVariant o Material 3 cai no onSurface: Divider, VerticalDivider
+  // e a linha sob a TabBar saíam na cor cheia do texto, contra a Regra do Fio.
+  final esquema = base.copyWith(
+    outlineVariant: base.outline.withValues(alpha: 0.4),
+  );
 
   // Cinzel e Montserrat são fontes variáveis, e o campo `weight` do pubspec não
   // move o eixo `wght` de uma delas: ele só rotula o arquivo. Sem `fontVariations`
@@ -93,13 +99,37 @@ ThemeData construirTema({
 
   final traco = esquema.outline;
 
+  // O overlay de foco padrão do M3 (cerca de 10%) some sobre pergaminho e
+  // couro: nos botões o foco ganha também um anel de 2 px no metal.
+  ButtonStyle anelDeFoco(Color cor) => ButtonStyle(
+    side: WidgetStateProperty.resolveWith(
+      (estados) => estados.contains(WidgetState.focused)
+          ? BorderSide(color: cor, width: 2)
+          : null,
+    ),
+  );
+
   return ThemeData(
     useMaterial3: true,
+    // Padrão do Flutter no desktop web é denso e sem área extra: botões e
+    // chips ficavam abaixo dos 48 dp.
+    materialTapTargetSize: MaterialTapTargetSize.padded,
+    visualDensity: VisualDensity.standard,
+    focusColor: esquema.primary.withValues(alpha: 0.35),
+    textButtonTheme: TextButtonThemeData(style: anelDeFoco(esquema.primary)),
+    // O preenchimento do botão cheio já é primary: o anel precisa de outra cor.
+    filledButtonTheme: FilledButtonThemeData(
+      style: anelDeFoco(esquema.onSurface),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: anelDeFoco(esquema.primary),
+    ),
+    iconButtonTheme: IconButtonThemeData(style: anelDeFoco(esquema.primary)),
     brightness: brilho,
     colorScheme: esquema,
     scaffoldBackgroundColor: esquema.surface,
     canvasColor: esquema.surface,
-    dividerColor: traco.withValues(alpha: 0.4),
+    dividerColor: esquema.outlineVariant,
     textTheme: TextTheme(
       displayLarge: titulo(34, FontWeight.w700),
       displayMedium: titulo(28, FontWeight.w700),
@@ -180,13 +210,15 @@ ThemeData construirTema({
       filled: true,
       fillColor: esquema.surfaceContainer,
       hintStyle: corpo(15, cor: esquema.onSurfaceVariant),
+      // O traço do tema (outline) fica abaixo dos 3:1 que a borda de um campo
+      // pede; o campo usa a cor de apoio do texto.
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: traco.withValues(alpha: 0.5)),
+        borderSide: BorderSide(color: esquema.onSurfaceVariant),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: traco.withValues(alpha: 0.5)),
+        borderSide: BorderSide(color: esquema.onSurfaceVariant),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -215,5 +247,16 @@ ThemeData construirTema({
       todayForegroundColor: WidgetStatePropertyAll(esquema.secondary),
       todayBorder: BorderSide(color: esquema.primary),
     ),
+  );
+}
+
+/// Regra do Peso Variável (DESIGN.md): Cinzel e Montserrat são variáveis, e
+/// trocar só o `fontWeight` de um estilo do tema deixa o eixo `wght` no peso
+/// antigo, então a letra não engrossa. Use isto em vez de
+/// `copyWith(fontWeight:)`.
+extension PesoVariavel on TextStyle {
+  TextStyle comPeso(FontWeight peso) => copyWith(
+    fontWeight: peso,
+    fontVariations: [FontVariation('wght', peso.value.toDouble())],
   );
 }

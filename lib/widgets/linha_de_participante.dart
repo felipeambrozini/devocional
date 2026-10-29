@@ -27,14 +27,7 @@ class DevocionalLinhaDeParticipante extends StatelessWidget {
       children: [
         Row(
           children: [
-            Expanded(
-              child: Text(
-                nome,
-                style: tema.bodyMedium,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
+            Expanded(child: Text(nome, style: tema.bodyMedium)),
             if (ehCriador)
               Padding(
                 padding: const EdgeInsets.only(left: DevocionalEspacamento.sp8),

@@ -45,6 +45,7 @@ class DevocionalErroDeResposta extends StatelessWidget {
                 width: 28,
                 height: 28,
                 fit: BoxFit.cover,
+                excludeFromSemantics: true,
                 alignment: Alignment.topCenter,
               ),
             ),

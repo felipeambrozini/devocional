@@ -195,7 +195,9 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
     int lidos,
   ) {
     if (_controller.carregando) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(semanticsLabel: 'Carregando'),
+      );
     }
     final erro = _controller.erro;
     if (erro != null) {

@@ -29,9 +29,12 @@ class DevocionalCartao extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      titulo!,
-                      style: Theme.of(context).textTheme.titleLarge,
+                    child: Semantics(
+                      header: true,
+                      child: Text(
+                        titulo!,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
                     ),
                   ),
                   ?acessorio,

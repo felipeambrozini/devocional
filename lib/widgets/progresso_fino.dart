@@ -18,6 +18,8 @@ class DevocionalProgressoFino extends StatelessWidget {
       child: LinearProgressIndicator(
         value: valor.clamp(0.0, 1.0),
         minHeight: 6,
+        semanticsLabel: 'Progresso',
+        semanticsValue: '${(valor.clamp(0.0, 1.0) * 100).round()}%',
       ),
     );
   }

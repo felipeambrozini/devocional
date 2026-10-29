@@ -57,7 +57,7 @@ class DevocionalCartaoDeMarcacao extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    tooltip: 'Editar anotação',
+                    tooltip: 'Editar anotação de ${marcacao.referencia}',
                     icon: const FaIcon(FontAwesomeIcons.penToSquare, size: 20),
                     onPressed: () async {
                       final nota = await editarNota(
@@ -76,7 +76,7 @@ class DevocionalCartaoDeMarcacao extends StatelessWidget {
                     },
                   ),
                   IconButton(
-                    tooltip: 'Remover',
+                    tooltip: 'Remover ${marcacao.referencia} dos favoritos',
                     icon: const FaIcon(FontAwesomeIcons.trash, size: 20),
                     onPressed: () async {
                       final confirmou = await confirmarRemocao(

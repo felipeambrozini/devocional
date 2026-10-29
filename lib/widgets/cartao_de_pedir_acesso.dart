@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../dados/nuvem.dart';
 import '../estilo/espacamento.dart';
+import '../funcoes/conta_acoes.dart';
 import 'botao.dart';
 
 /// Número que recebe o pedido de acesso pelo WhatsApp, para quem ainda não
@@ -50,16 +52,54 @@ class DevocionalCartaoDePedirAcesso extends StatelessWidget {
               style: tema.bodyMedium?.copyWith(color: cor.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
-            if (_numeroWhatsapp.isNotEmpty) ...[
-              const SizedBox(height: DevocionalEspacamento.sp24),
-              DevocionalBotaoPrimario.icon(
-                onPressed: () => _abrirWhatsapp(mensagemDoWhatsapp),
-                icon: const FaIcon(FontAwesomeIcons.whatsapp),
-                label: const Text('Falar no WhatsApp'),
-              ),
-            ],
+            // As allowlists são por e-mail (ver `lib/dados/recursos.dart`):
+            // deslogado, pedir pelo WhatsApp não adianta enquanto a pessoa não
+            // entrar na conta, então o convite começa por aí. Ouve a Nuvem
+            // aqui porque quem usa este cartão o constrói como const, e o pai
+            // não o redesenha.
+            ListenableBuilder(
+              listenable: Nuvem.instancia,
+              builder: (context, _) => _acao(context, Nuvem.instancia),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _acao(BuildContext context, Nuvem nuvem) {
+    if (nuvem.carregandoConta) return const SizedBox.shrink();
+    if (!nuvem.logado) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: DevocionalEspacamento.sp12),
+          Text(
+            'O acesso é liberado pelo e-mail da conta Google, então entre '
+            'primeiro.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: DevocionalEspacamento.sp24),
+          DevocionalBotaoPrimario.icon(
+            onPressed: nuvem.entrando
+                ? null
+                : () => entrarNaConta(context, nuvem),
+            icon: const FaIcon(FontAwesomeIcons.google, size: 16),
+            label: const Text('Entrar com Google'),
+          ),
+        ],
+      );
+    }
+    if (_numeroWhatsapp.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: DevocionalEspacamento.sp24),
+      child: DevocionalBotaoPrimario.icon(
+        onPressed: () => _abrirWhatsapp(mensagemDoWhatsapp),
+        icon: const FaIcon(FontAwesomeIcons.whatsapp),
+        label: const Text('Falar no WhatsApp'),
       ),
     );
   }

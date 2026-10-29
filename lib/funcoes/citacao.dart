@@ -75,9 +75,9 @@ String textoDeCitacao(Devocional dev) => [
       ].join(' '),
 ].join('\n');
 
-/// O alvo de toque da referência da epígrafe. Visual idêntico ao texto morto
-/// em repouso; a diferença mora no cursor clicável, no ripple contido e na
-/// semântica de botão para leitor de tela.
+/// O alvo de toque da referência da epígrafe. Sublinhada para não depender só
+/// da cor (a mesma da citação) para parecer clicável; o padding vertical
+/// leva o alvo aos 48 dp mínimos.
 class _ReferenciaDaCitacao extends StatelessWidget {
   const _ReferenciaDaCitacao({
     required this.rotulo,
@@ -99,9 +99,12 @@ class _ReferenciaDaCitacao extends StatelessWidget {
         onTap: aoAbrir,
         child: Padding(
           padding: const EdgeInsets.symmetric(
-            vertical: DevocionalEspacamento.sp2,
+            vertical: DevocionalEspacamento.sp14,
           ),
-          child: Text(rotulo, style: estilo),
+          child: Text(
+            rotulo,
+            style: estilo?.copyWith(decoration: TextDecoration.underline),
+          ),
         ),
       ),
     );

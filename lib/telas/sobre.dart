@@ -71,7 +71,10 @@ class _TelaSobreState extends State<TelaSobre> {
               DevocionalEspacamento.sp40,
             ),
             children: [
-              Text('Devocional', style: tema.displayMedium),
+              Semantics(
+                header: true,
+                child: Text('Devocional', style: tema.displayMedium),
+              ),
               const SizedBox(height: DevocionalEspacamento.sp8),
               const DevocionalFilete(largura: 64),
               const SizedBox(height: DevocionalEspacamento.sp12),

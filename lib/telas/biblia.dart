@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -12,6 +13,7 @@ import '../dados/estado.dart';
 import '../dados/modelos.dart';
 import '../dados/voz.dart';
 import '../estilo/espacamento.dart';
+import '../estilo/tema.dart';
 import '../funcoes/aviso.dart';
 import '../funcoes/cartao_imagem.dart';
 import '../funcoes/dialogos.dart';
@@ -207,7 +209,9 @@ class _TelaBibliaState extends State<TelaBiblia> {
       return DevocionalAvisoDeErro(aoTentarDeNovo: _tentarDeNovo);
     }
     if (snap.connectionState != ConnectionState.done) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(semanticsLabel: 'Carregando'),
+      );
     }
     final capitulo = snap.data!;
     // Os 66 livros estão completos e a navegação só pede capítulos do canon:
@@ -222,20 +226,30 @@ class _TelaBibliaState extends State<TelaBiblia> {
     // com o botão do mouse apertado dispara o mesmo reconhecedor. Só que
     // ninguém descobre isso sem um dedo na tela, e é por isso que os chevrons
     // continuam lá embaixo em quem não tem toque. Ver [BibliaControlador.semGestoDeToque].
-    final leitor = GestureDetector(
-      onHorizontalDragEnd: (detalhe) =>
-          _controller.aoArrastarCapitulo(context, detalhe),
-      child: _Leitor(
-        capitulo: capitulo,
-        rolagem: _controller.rolagem,
-        destacar: widget.destacar,
-        alvoDeRolagem: widget.destacar?.$1,
-        chaveDoAlvoDeRolagem: widget.destacar == null
-            ? null
-            : _controller.chaveDoAlvoDeRolagem,
-        aoAbrirCapitulos: () => _controller.abrirGradeDeCapitulos(context),
-        selecionados: _controller.selecionados,
-        aoAlternarSelecao: _controller.alternarSelecao,
+    final leitor = Semantics(
+      // Leitor de tela não faz o arrasto: o mesmo passo vira ação semântica.
+      container: true,
+      customSemanticsActions: {
+        const CustomSemanticsAction(label: 'Próximo capítulo'): () =>
+            _controller.passarCapitulo(context, 1),
+        const CustomSemanticsAction(label: 'Capítulo anterior'): () =>
+            _controller.passarCapitulo(context, -1),
+      },
+      child: GestureDetector(
+        onHorizontalDragEnd: (detalhe) =>
+            _controller.aoArrastarCapitulo(context, detalhe),
+        child: _Leitor(
+          capitulo: capitulo,
+          rolagem: _controller.rolagem,
+          destacar: widget.destacar,
+          alvoDeRolagem: widget.destacar?.$1,
+          chaveDoAlvoDeRolagem: widget.destacar == null
+              ? null
+              : _controller.chaveDoAlvoDeRolagem,
+          aoAbrirCapitulos: () => _controller.abrirGradeDeCapitulos(context),
+          selecionados: _controller.selecionados,
+          aoAlternarSelecao: _controller.alternarSelecao,
+        ),
       ),
     );
     // O texto não é selecionável (SelectionArea): no toque, o toque longo é a
@@ -336,6 +350,7 @@ class _Leitor extends StatelessWidget {
                 const SizedBox(height: DevocionalEspacamento.sp4),
               ],
               Semantics(
+                header: true,
                 button: aoAbrirCapitulos != null,
                 child: aoAbrirCapitulos == null
                     ? Text(capitulo.referencia, style: tema.displayMedium)
@@ -513,27 +528,38 @@ class _LinhaDeVersiculo extends StatelessWidget {
                   children: [
                     TextSpan(
                       text: '$numero ',
-                      style: tema.labelMedium?.copyWith(
-                        color: cor.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: tema.labelMedium
+                          ?.copyWith(color: cor.primary)
+                          .comPeso(FontWeight.w700),
                     ),
+                    if (marcacao != null)
+                      WidgetSpan(
+                        alignment: PlaceholderAlignment.middle,
+                        child: Padding(
+                          padding: const EdgeInsets.only(
+                            right: DevocionalEspacamento.sp6,
+                          ),
+                          child: FaIcon(
+                            FontAwesomeIcons.solidBookmark,
+                            size: 11,
+                            color: cor.primary,
+                          ),
+                        ),
+                      ),
                     TextSpan(
                       text: texto,
                       // Fora da faixa pedida pelo cronograma o texto continua
                       // legível, apenas recuado, para o contexto não se perder.
                       //
-                      // 0.7 e não 0.55: sobre o fundo, 0.55 dava 3,5:1 de
-                      // contraste, abaixo do 4,5:1 que a WCAG AA pede para
-                      // texto corrido, e isto aqui é Escritura, não legenda.
-                      // 0.7 chega a 4,9:1 e ainda se distingue do texto pedido.
+                      // onSurface a 0.75 e não onSurfaceVariant a 0.7: este
+                      // dava cerca de 3,1:1 no tema claro, abaixo do 4,5:1 que
+                      // a WCAG AA pede para texto corrido, e isto aqui é
+                      // Escritura, não legenda.
                       style: noRecorte
                           ? tema.bodyLarge?.copyWith(height: 1.6)
                           : tema.bodyLarge?.copyWith(
                               height: 1.6,
-                              color: cor.onSurfaceVariant.withValues(
-                                alpha: 0.7,
-                              ),
+                              color: cor.onSurface.withValues(alpha: 0.75),
                             ),
                     ),
                   ],
@@ -657,7 +683,10 @@ class _AcoesDoVersiculo {
         padding: EdgeInsets.only(top: DevocionalEspacamento.sp16),
         child: SizedBox.square(
           dimension: 20,
-          child: CircularProgressIndicator(strokeWidth: 2),
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            semanticsLabel: 'Carregando',
+          ),
         ),
       );
     }
@@ -669,10 +698,9 @@ class _AcoesDoVersiculo {
         const SizedBox(height: DevocionalEspacamento.sp16),
         Text(
           'Comentário de Charles Spurgeon',
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: cor.primary,
-            fontWeight: FontWeight.w700,
-          ),
+          style: Theme.of(context).textTheme.labelMedium
+              ?.copyWith(color: cor.primary)
+              .comPeso(FontWeight.w700),
         ),
         const SizedBox(height: DevocionalEspacamento.sp8),
         DevocionalBotaoDeVoz(

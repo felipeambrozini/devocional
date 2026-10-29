@@ -22,6 +22,7 @@ class DevocionalBolha extends StatelessWidget {
             width: 28,
             height: 28,
             fit: BoxFit.cover,
+            excludeFromSemantics: true,
             // Mesmo recorte das mensagens: o cabelo encosta na borda de cima
             // da foto, e qualquer corte desloca o rosto para fora do centro.
             alignment: Alignment.topCenter,

@@ -54,7 +54,11 @@ class _TelaDoLivroState extends State<TelaDoLivro> {
                 carregar: () => Biblioteca.instancia.capitulos(widget.slug),
                 construir: (context, snap) {
                   if (snap.connectionState != ConnectionState.done) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        semanticsLabel: 'Carregando',
+                      ),
+                    );
                   }
                   final capitulos = snap.data;
                   if (capitulos == null || capitulos.isEmpty) {
@@ -91,11 +95,7 @@ class _Sumario extends StatelessWidget {
         DevocionalEspacamento.sp32,
       ),
       children: [
-        DevocionalCartaoDaObra(
-          obra: obra,
-          aoAbrir: () =>
-              context.push('/biblioteca/${obra.slug}/${capituloAtual + 1}'),
-        ),
+        DevocionalCartaoDaObra(obra: obra, aoAbrir: null),
         const SizedBox(height: DevocionalEspacamento.sp16),
         Align(
           alignment: Alignment.centerLeft,
@@ -143,33 +143,46 @@ class _LinhaDoCapitulo extends StatelessWidget {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
 
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
+    // O número some quando lido e o ícone sozinho não diz qual capítulo é:
+    // o rótulo único carrega número, título e estado.
+    return Semantics(
+      button: true,
+      excludeSemantics: true,
       onTap: aoAbrir,
-      // Largura mínima, não fixa: "Tesouro de Davi" tem 149 capítulos, e um
-      // número de três dígitos (ou a escala de texto aumentada) precisa caber
-      // sem cortar. O centro com widthFactor deixa o alvo crescer pelo conteúdo.
-      leading: ConstrainedBox(
-        constraints: const BoxConstraints(minWidth: 28),
-        child: Center(
-          widthFactor: 1,
-          child: lido
-              ? FaIcon(
-                  FontAwesomeIcons.circleCheck,
-                  size: 18,
-                  color: cor.secondary,
-                )
-              : Text(
-                  '$numero',
-                  textAlign: TextAlign.center,
-                  style: tema.labelLarge?.copyWith(
-                    fontFeatures: const [FontFeature.tabularFigures()],
+      label:
+          'Capítulo $numero, $titulo'
+          '${lido ? ', lido' : ''}'
+          '${parouAqui ? ', parei aqui' : ''}',
+      child: ListTile(
+        contentPadding: EdgeInsets.zero,
+        onTap: aoAbrir,
+        // Largura mínima, não fixa: "Tesouro de Davi" tem 149 capítulos, e um
+        // número de três dígitos (ou a escala de texto aumentada) precisa caber
+        // sem cortar. O centro com widthFactor deixa o alvo crescer pelo conteúdo.
+        leading: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 28),
+          child: Center(
+            widthFactor: 1,
+            child: lido
+                ? FaIcon(
+                    FontAwesomeIcons.circleCheck,
+                    size: 18,
+                    color: cor.secondary,
+                  )
+                : Text(
+                    '$numero',
+                    textAlign: TextAlign.center,
+                    style: tema.labelLarge?.copyWith(
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
                   ),
-                ),
+          ),
         ),
+        title: Text(titulo, style: tema.bodyLarge),
+        trailing: parouAqui
+            ? Text('Parei aqui', style: tema.labelMedium)
+            : null,
       ),
-      title: Text(titulo, style: tema.bodyLarge),
-      trailing: parouAqui ? Text('Parei aqui', style: tema.labelMedium) : null,
     );
   }
 }

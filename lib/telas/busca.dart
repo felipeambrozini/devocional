@@ -6,6 +6,7 @@ import '../controladores/busca_controlador.dart';
 import '../dados/conteudo.dart';
 import '../dados/modelos.dart';
 import '../estilo/espacamento.dart';
+import '../estilo/tema.dart';
 import '../funcoes/datas.dart';
 import '../widgets/widgets.dart';
 import 'devocional.dart';
@@ -181,9 +182,12 @@ class _AbaDevocionaisState extends State<_AbaDevocionais> {
           child: Row(
             children: [
               Expanded(
-                child: Text(
-                  '${lista.length} ${lista.length == 1 ? 'resultado' : 'resultados'}',
-                  style: Theme.of(context).textTheme.titleSmall,
+                child: Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    '${lista.length} ${lista.length == 1 ? 'resultado' : 'resultados'}',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
                 ),
               ),
               const SizedBox(width: DevocionalEspacamento.sp10),
@@ -191,7 +195,10 @@ class _AbaDevocionaisState extends State<_AbaDevocionais> {
                 const SizedBox(
                   width: 13,
                   height: 13,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    semanticsLabel: 'Carregando',
+                  ),
                 ),
             ],
           ),
@@ -212,30 +219,39 @@ class _AbaDevocionaisState extends State<_AbaDevocionais> {
                     if (data == _data) return;
                     setState(() => _data = data);
                   },
+                  keyboardType: TextInputType.datetime,
                   decoration: const InputDecoration(
-                    hintText: 'Data (DD-MM)',
+                    labelText: 'Data (DD-MM)',
                     prefixIcon: FaIcon(FontAwesomeIcons.calendarDays, size: 16),
-                    isDense: true,
                   ),
                 ),
               ),
               const SizedBox(width: DevocionalEspacamento.sp8),
-              DropdownButton<String?>(
-                value: _filtroDeLeitura,
-                hint: const Text('Leitura'),
-                onChanged: (v) => setState(() => _filtroDeLeitura = v),
-                items: [
-                  const DropdownMenuItem<String?>(
-                    value: null,
-                    child: Text('Todas'),
-                  ),
-                  const DropdownMenuItem(value: 'manha', child: Text('Manhã')),
-                  const DropdownMenuItem(value: 'noite', child: Text('Noite')),
-                  const DropdownMenuItem(
-                    value: 'promessas',
-                    child: Text('Promessas'),
-                  ),
-                ],
+              Semantics(
+                label: 'Filtrar por leitura',
+                child: DropdownButton<String?>(
+                  value: _filtroDeLeitura,
+                  hint: const Text('Leitura'),
+                  onChanged: (v) => setState(() => _filtroDeLeitura = v),
+                  items: [
+                    const DropdownMenuItem<String?>(
+                      value: null,
+                      child: Text('Todas'),
+                    ),
+                    const DropdownMenuItem(
+                      value: 'manha',
+                      child: Text('Manhã'),
+                    ),
+                    const DropdownMenuItem(
+                      value: 'noite',
+                      child: Text('Noite'),
+                    ),
+                    const DropdownMenuItem(
+                      value: 'promessas',
+                      child: Text('Promessas'),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -334,10 +350,7 @@ DateTime _dataDoDevocional(String chave) {
 /// tipos de resultado, Bíblia e devocionais.
 TextSpan destacar(String texto, String termo, TextTheme tema, ColorScheme cor) {
   final base = tema.bodyMedium?.copyWith(height: 1.5);
-  final forte = base?.copyWith(
-    color: cor.secondary,
-    fontWeight: FontWeight.w700,
-  );
+  final forte = base?.copyWith(color: cor.secondary).comPeso(FontWeight.w700);
   final textoSemAcento = Conteudo.normalizar(texto);
   final expressao = Conteudo.regexDePalavra(Conteudo.normalizar(termo));
 

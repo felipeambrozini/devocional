@@ -33,10 +33,13 @@ class DevocionalAvisoVazio extends StatelessWidget {
           children: [
             FaIcon(icone, size: 44, color: cor.outline),
             const SizedBox(height: DevocionalEspacamento.sp16),
-            Text(
-              titulo,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineSmall,
+            Semantics(
+              header: true,
+              child: Text(
+                titulo,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
             ),
             if (detalhe != null) ...[
               const SizedBox(height: DevocionalEspacamento.sp8),

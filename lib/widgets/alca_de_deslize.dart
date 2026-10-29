@@ -24,13 +24,11 @@ class DevocionalAlcaDeDeslize extends StatelessWidget {
       top: 0,
       bottom: 0,
       width: 24,
-      child: Tooltip(
-        message: 'Deslize para trocar capítulo',
-        child: Semantics(
-          label: 'Deslize horizontalmente para trocar capítulo',
-          hint: primeiraVez
-              ? 'Dica: arraste a tela para o lado'
-              : 'Gesto já usado, mas continua disponível',
+      // Só indício visual: leitor de tela troca de capítulo pelas ações
+      // semânticas do leitor, e anunciar um deslize que ele não faz é ruído.
+      child: ExcludeSemantics(
+        child: Tooltip(
+          message: 'Deslize para trocar capítulo',
           child: Container(
             width: 24,
             decoration: BoxDecoration(

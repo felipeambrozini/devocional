@@ -95,6 +95,7 @@ class TelaHistorico extends StatelessWidget {
                 width: 34,
                 height: 34,
                 fit: BoxFit.cover,
+                excludeFromSemantics: true,
                 alignment: Alignment.topCenter,
               ),
             ),
@@ -181,7 +182,7 @@ class TelaHistorico extends StatelessWidget {
                     style: tema.labelMedium,
                   ),
                   trailing: IconButton(
-                    tooltip: 'Apagar conversa',
+                    tooltip: 'Apagar conversa: ${conversa.titulo}',
                     icon: FaIcon(FontAwesomeIcons.trash, color: cor.error),
                     onPressed: () => _apagarUma(context, conversa),
                   ),

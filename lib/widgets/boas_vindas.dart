@@ -35,6 +35,7 @@ class DevocionalBoasVindas extends StatelessWidget {
                     width: 92,
                     height: 92,
                     fit: BoxFit.cover,
+                    excludeFromSemantics: true,
                     alignment: Alignment.topCenter,
                   ),
                 ),
