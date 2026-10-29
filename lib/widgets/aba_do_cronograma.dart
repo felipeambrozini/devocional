@@ -91,19 +91,18 @@ class _DevocionalAbaDoCronogramaState extends State<DevocionalAbaDoCronograma>
   /// A borda dourada acha o dia de hoje de relance, mas no dia 28 ainda são
   /// vinte e sete cartões de rolagem até chegar nele. Aqui a lista abre já
   /// mostrando o dia, e só no mês corrente: nos outros o topo é o certo.
+  ///
+  /// Salto, não animação: na primeira carga da web algo da inicialização
+  /// interrompia a animação uns 50 ms depois de começar, e a lista ficava
+  /// parada perto do dia 5. Abrir já no dia também é o que a frase acima
+  /// promete; rolar do dia 1 ao 29 na frente do leitor era só movimento.
   void _rolarAteHoje() {
     if (_mes != _hoje.month || _mesJaCentralizado == _mes) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final alvo = _chaveDeHoje.currentContext;
       if (!mounted || alvo == null) return;
       _mesJaCentralizado = _mes;
-      Scrollable.ensureVisible(
-        alvo,
-        alignment: 0.15,
-        duration: MediaQuery.disableAnimationsOf(alvo)
-            ? Duration.zero
-            : const Duration(milliseconds: 350),
-      );
+      Scrollable.ensureVisible(alvo, alignment: 0.15);
     });
   }
 
