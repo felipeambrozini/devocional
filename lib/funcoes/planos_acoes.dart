@@ -23,6 +23,7 @@ Future<bool> excluirPlano(
   String planoId, {
   required bool compartilhado,
 }) async {
+  if (planoId == idDoPlanoDeJesus) return false;
   final confirmou = await confirmar(
     context,
     titulo: 'Excluir plano?',
@@ -61,6 +62,7 @@ Future<bool> editarPlano(
   Estado estado,
   PlanoDoUsuario plano,
 ) async {
+  if (plano.fixo) return false;
   final edicao = await mostrarEditorDePlano(context, plano);
   if (edicao == null) return false;
   final mudouODiaADia =

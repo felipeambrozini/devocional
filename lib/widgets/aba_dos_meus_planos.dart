@@ -8,14 +8,16 @@ import '../dados/nuvem.dart';
 import '../dados/planos.dart';
 import '../dados/recursos.dart';
 import '../estilo/espacamento.dart';
+import '../funcoes/aviso.dart';
+import '../funcoes/conta_acoes.dart';
 import '../widgets/widgets.dart';
 
 /// A aba Meus Planos: a lista dos planos do usuário e o caminho para criar
 /// um novo.
 ///
-/// A aba fica visível para todo mundo — só o conteúdo muda com a conta e com
-/// [Recursos.planos], mesma filosofia de gating de `conversas.dart`:
-/// explicar o que falta e como pedir, nunca esconder a aba em silêncio.
+/// A aba fica visível para todo mundo, com ou sem conta, e mostra ao menos o
+/// plano fixo. Só criar um plano pede conta (ver `_abrirNovoPlano`); o
+/// interruptor [Recursos.planoPersonalizado] desliga a aba inteira.
 class DevocionalAbaDosMeusPlanos extends StatelessWidget {
   const DevocionalAbaDosMeusPlanos({super.key});
 
@@ -24,16 +26,7 @@ class DevocionalAbaDosMeusPlanos extends StatelessWidget {
     return ListenableBuilder(
       listenable: Listenable.merge([Nuvem.instancia, ConfigAdmin.instancia]),
       builder: (context, _) {
-        if (!Nuvem.instancia.logado) {
-          return DevocionalCartaoDeEntrar(
-            titulo: 'Seus próprios planos de leitura',
-            descricao:
-                'Entre com sua conta para criar, compartilhar e acompanhar '
-                'planos de leitura próprios.',
-            onEntrar: () {},
-          );
-        }
-        if (!Recursos.planos) {
+        if (!Recursos.planoPersonalizado) {
           return const DevocionalAvisoVazio(
             icone: FontAwesomeIcons.calendarPlus,
             titulo: 'Planos indisponíveis',
@@ -55,52 +48,39 @@ class _ListaDePlanos extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final planos = estado.planosDoUsuario;
+    final planos = estado.planosParaExibir;
 
     return DevocionalLarguraDeLeitura(
-      child: planos.isEmpty
-          ? DevocionalAvisoVazio(
-              icone: FontAwesomeIcons.calendarDays,
-              titulo: 'Nenhum plano de leitura ainda',
-              detalhe:
-                  'Escolha um ou mais livros e em quantos dias quer lê-los: '
-                  'o plano se monta sozinho, dia por dia.',
-              acao: DevocionalBotaoPrimario.icon(
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(
+          DevocionalEspacamento.sp16,
+          DevocionalEspacamento.sp12,
+          DevocionalEspacamento.sp16,
+          DevocionalEspacamento.sp32,
+        ),
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Seus planos',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+              DevocionalBotaoPrimario.icon(
                 icon: const FaIcon(FontAwesomeIcons.plus),
                 label: const Text('Criar plano'),
                 onPressed: () => _abrirNovoPlano(context),
               ),
-            )
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(
-                DevocionalEspacamento.sp16,
-                DevocionalEspacamento.sp12,
-                DevocionalEspacamento.sp16,
-                DevocionalEspacamento.sp32,
-              ),
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Seus planos',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                    ),
-                    DevocionalBotaoPrimario.icon(
-                      icon: const FaIcon(FontAwesomeIcons.plus),
-                      label: const Text('Criar plano'),
-                      onPressed: () => _abrirNovoPlano(context),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: DevocionalEspacamento.sp12),
-                for (final plano in planos) ...[
-                  DevocionalCartaoDePlano(plano: plano),
-                  const SizedBox(height: DevocionalEspacamento.sp10),
-                ],
-              ],
-            ),
+            ],
+          ),
+          const SizedBox(height: DevocionalEspacamento.sp12),
+          for (final plano in planos) ...[
+            DevocionalCartaoDePlano(plano: plano),
+            const SizedBox(height: DevocionalEspacamento.sp10),
+          ],
+        ],
+      ),
     );
   }
 
@@ -108,6 +88,16 @@ class _ListaDePlanos extends StatelessWidget {
   // que faz a aba resetar para esta lista ao voltar de outra aba com um
   // plano aberto (Moldura._irParaAba).
   Future<void> _abrirNovoPlano(BuildContext context) async {
+    final nuvem = Nuvem.instancia;
+    if (!nuvem.logado) {
+      mostrarAviso(
+        context,
+        'Entre na sua conta para criar planos de leitura.',
+        rotuloDeAcao: 'Entrar',
+        aoAgir: () => entrarNaConta(context, nuvem),
+      );
+      return;
+    }
     final criado = await context.push<PlanoDoUsuario>('/plano/novo');
     if (criado == null || !context.mounted) return;
     context.push('/plano/${criado.id}');

@@ -46,6 +46,7 @@ GoRouter _routerDoPlano(Estado estado, DateTime hoje) => GoRouter(
 );
 
 void main() {
+  _testesDoPlanoDeJesus();
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
     await Conteudo.instancia.aquecerIndiceDeDevocionais();
@@ -646,7 +647,7 @@ void main() {
 
       await tester.tap(find.text('Meus planos'));
       await tester.pumpAndSettle();
-      expect(find.text('Nenhum plano de leitura ainda'), findsOneWidget);
+      expect(find.text('A Vida de Jesus em 30 dias'), findsOneWidget);
 
       await tester.tap(find.widgetWithText(FilledButton, 'Criar plano'));
       await tester.pumpAndSettle();
@@ -1250,6 +1251,18 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(estado.planosDoUsuario.single.livros, ['exodo', 'genesis']);
+    });
+  });
+}
+
+void _testesDoPlanoDeJesus() {
+  group('plano fixo de Jesus', () {
+    test('tem 30 dias, é fixo e o dia 1 abre em João 1:1-18', () {
+      expect(planoDeJesus.fixo, isTrue);
+      final dias = planoDeJesus.diasDoPlano;
+      expect(dias, hasLength(30));
+      expect(dias.first.faixas.first.rotulo, 'João 1:1 a 18');
+      expect(planoDeJesus.totalDeCapitulos, greaterThan(0));
     });
   });
 }

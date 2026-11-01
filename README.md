@@ -19,6 +19,13 @@ mesmo código).
   Biblioteca" abaixo). Começa com *Somente pela Graça*.
 - **Cronograma de leitura anual**, 365 dias (366 em ano bissexto), agrupado por
   mês, com marcação de lido e barra de progresso do ano.
+- **A Vida de Jesus em 30 dias**: plano fixo (`planoDeJesus`, dias em
+  `lib/dados/plano_de_jesus_dias.dart`) que toda conta ganha em Meus Planos —
+  os quatro evangelhos em harmonia. Não vive no armazenamento nem na nuvem:
+  não pode ser editado, excluído nem compartilhado; só o progresso é salvo. No
+  primeiro login o app mostra uma mensagem de boas-vindas que o apresenta. Planos
+  em andamento (algum dia lido, nem todos) aparecem na Hoje, entre a leitura
+  do dia e os devocionais; vários viram uma lista horizontal.
 - **Planos personalizados**: escolher um ou mais livros e em quantos dias, com
   prévia antes de confirmar. O seletor tem atalhos para marcar o Antigo ou o
   Novo Testamento inteiros de uma vez, e com 2+ livros dá para escolher a
@@ -746,12 +753,11 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
   Parâmetro de consulta, não caminho, porque o
   Pages devolveria 404. `alvoDoLink` e `linkDoVersiculo` em `lib/dados/canon.dart`
   fazem a ida e volta.
-- **A aba "Meus planos" só existe para quem tem conta** (21/08/2026):
-  `TelaPlano` (`lib/telas/plano.dart`) escuta `Nuvem.instancia` e, sem login,
-  mostra só o cronograma anual, sem abas — criar e compartilhar um plano
-  depende da nuvem, então sem conta não há o que listar ali. Um link de plano
-  compartilhado aberto sem conta já pedia login antes disto (`_CartaoDeEntrar`
-  em `lib/telas/meu_plano.dart`); a mudança foi só a aba da lista.
+- **A aba "Meus planos" é aberta a todos** (01/11/2026): sem login ela mostra
+  o plano fixo "A Vida de Jesus em 30 dias"; só criar um plano pede conta —
+  `_abrirNovoPlano` (`lib/widgets/aba_dos_meus_planos.dart`) avisa "Entre na
+  sua conta…" com a ação "Entrar". Um link de plano compartilhado aberto sem
+  conta continua pedindo login (`_CartaoDeEntrar` em `lib/telas/meu_plano.dart`).
 - **Link do plano compartilhado leva o título como slug** (20/08/2026),
   `?plano=<slug-do-titulo>-<id>` (`linkDoPlano` em `lib/dados/planos_nuvem.dart`).
   O slug é só estética: quem abre busca pelo plano sempre pelo `id`, o último

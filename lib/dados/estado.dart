@@ -43,6 +43,7 @@ class Estado extends ChangeNotifier {
   static const _kMinutosLembretePromessas = 'minutos_lembrete_promessas';
   static const _kMinutosLembreteLeitura = 'minutos_lembrete_leitura';
   static const _kMinutosLembreteNoite = 'minutos_lembrete_noite';
+  static const _kBoasVindasVistas = 'boas_vindas_vistas';
   static const _kPlanos = 'planos_do_usuario';
   static const _kPlanosLidos = 'planos_lidos';
 
@@ -92,6 +93,9 @@ class Estado extends ChangeNotifier {
 
   /// A primeira visita ainda não dispensou o cartão "Como usar" da Hoje.
   bool _ajudaDispensada = false;
+
+  /// Se o aviso de boas-vindas (que apresenta o plano de Jesus) já apareceu.
+  bool _boasVindasVistas = false;
 
   /// Se o tooltip de primeiro uso do deslize para trocar capítulo já foi dispensado.
   bool _swipeTooltipDispensado = false;
@@ -193,6 +197,7 @@ class Estado extends ChangeNotifier {
     );
 
     _ajudaDispensada = _prefs.getBool(_kAjudaDispensada) ?? false;
+    _boasVindasVistas = _prefs.getBool(_kBoasVindasVistas) ?? false;
 
     _swipeTooltipDispensado = _prefs.getBool(_kSwipeTooltipDispensado) ?? false;
 
@@ -389,6 +394,17 @@ class Estado extends ChangeNotifier {
     await _prefs.setBool(_kAjudaDispensada, true);
   }
 
+  // --- boas-vindas depois do primeiro login ---------------------------------- //
+
+  bool get boasVindasVistas => _boasVindasVistas;
+
+  /// Vale uma vez por aparelho: depois de mostrada, não volta.
+  Future<void> marcarBoasVindasVistas() async {
+    if (_boasVindasVistas) return;
+    _boasVindasVistas = true;
+    await _prefs.setBool(_kBoasVindasVistas, true);
+  }
+
   // --- progresso do cronograma --------------------------------------------- //
 
   int get diasLidos => _lidos.length;
@@ -510,10 +526,16 @@ class Estado extends ChangeNotifier {
 
   // --- planos de leitura do usuário ---------------------------------------- //
 
-  /// Do mais novo ao mais antigo.
+  /// Só os planos criados ou aceitos pelo usuário, do mais novo ao mais
+  /// antigo.
   List<PlanoDoUsuario> get planosDoUsuario => List.unmodifiable(_planos);
 
+  /// O que Meus Planos e a Hoje mostram: o plano fixo [planoDeJesus] na
+  /// frente, depois [planosDoUsuario].
+  List<PlanoDoUsuario> get planosParaExibir => [planoDeJesus, ..._planos];
+
   PlanoDoUsuario? planoDoUsuario(String id) {
+    if (id == idDoPlanoDeJesus) return planoDeJesus;
     for (final plano in _planos) {
       if (plano.id == id) return plano;
     }

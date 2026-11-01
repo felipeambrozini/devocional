@@ -78,6 +78,12 @@ class _TelaHojeState extends State<TelaHoje> {
                   // cartão que ganha o filete; promessas mantém o cartão sem ele,
                   // e o progresso do ano segue a leitura como quem a acompanha.
                   DevocionalLeituraDeHoje(data: agora),
+                  // Planos personalizados em andamento: o próximo dia de cada
+                  // um, entre a leitura do cronograma e os devocionais.
+                  if (Recursos.planoPersonalizado) ...[
+                    const SizedBox(height: DevocionalEspacamento.sp16),
+                    DevocionalPlanosEmAndamento(estado: estado),
+                  ],
                   if (leituraEmDestaque != null) ...[
                     const SizedBox(height: DevocionalEspacamento.sp16),
                     DevocionalPreviaDaLeitura(

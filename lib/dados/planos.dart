@@ -4,7 +4,24 @@ import 'canon.dart';
 import 'conteudo.dart';
 import 'modelos.dart';
 
+part 'plano_de_jesus_dias.dart';
+
 int _contadorIdPlano = 0;
+
+/// O id do plano que todo mundo ganha ao entrar na conta. Fixo: não vive em
+/// `planos_do_usuario` nem na nuvem, então não há como editá-lo, excluí-lo ou
+/// compartilhá-lo — ver [planoDeJesus].
+const idDoPlanoDeJesus = 'jesus';
+
+/// "A Vida de Jesus em 30 dias": os quatro evangelhos em harmonia, num dia a dia fixo.
+/// Tem seus dias próprios em vez de distribuir capítulos ([diasDoPlano]).
+final planoDeJesus = PlanoDoUsuario(
+  id: idDoPlanoDeJesus,
+  titulo: 'A Vida de Jesus em 30 dias',
+  livros: const ['mateus', 'marcos', 'lucas', 'joao'],
+  dias: _diasDoPlanoDeJesus.length,
+  criadoEm: DateTime.fromMillisecondsSinceEpoch(0),
+);
 
 /// Um dia de um plano de leitura criado pelo usuário.
 ///
@@ -157,14 +174,25 @@ class PlanoDoUsuario {
   /// aparece antes ou depois dele no dia.
   final bool devocionalAntes;
 
-  List<DiaDePlanoDoUsuario> get diasDoPlano => montarPlanoDeLeitura(
-    livros: livros,
-    dias: dias,
-    incluirDevocionais: incluirDevocionais,
-    devocionalAntes: devocionalAntes,
-  );
+  /// Plano embutido no app (ver [planoDeJesus]): imutável para o usuário.
+  bool get fixo => id == idDoPlanoDeJesus;
+
+  List<DiaDePlanoDoUsuario> get diasDoPlano => fixo
+      ? _diasFixosDeJesus()
+      : montarPlanoDeLeitura(
+          livros: livros,
+          dias: dias,
+          incluirDevocionais: incluirDevocionais,
+          devocionalAntes: devocionalAntes,
+        );
 
   int get totalDeCapitulos {
+    if (fixo) {
+      return {
+        for (final dia in diasDoPlano)
+          for (final faixa in dia.faixas) (faixa.livro, faixa.deCapitulo),
+      }.length;
+    }
     var total = 0;
     for (final slug in livros) {
       total += livroPorSlug(slug)?.capitulos ?? 0;
@@ -343,3 +371,22 @@ String tituloDePlano(List<String> livros, int dias) {
   if (livrosTexto.isEmpty) return 'Plano de leitura em $dias dias';
   return '$livrosTexto em $dias ${dias == 1 ? 'dia' : 'dias'}';
 }
+
+List<DiaDePlanoDoUsuario> _diasFixosDeJesus() => [
+  for (final (indice, faixas) in _diasDoPlanoDeJesus.indexed)
+    DiaDePlanoDoUsuario(
+      numero: indice + 1,
+      itens: [
+        for (final (livro, capitulo, de, ate) in faixas)
+          ItemDeCapitulo(
+            Faixa(
+              livro: livro,
+              deCapitulo: capitulo,
+              ateCapitulo: capitulo,
+              deVersiculo: de,
+              ateVersiculo: ate,
+            ),
+          ),
+      ],
+    ),
+];

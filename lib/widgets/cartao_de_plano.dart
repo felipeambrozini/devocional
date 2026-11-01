@@ -71,22 +71,36 @@ class DevocionalCartaoDePlano extends StatelessWidget {
                   // participa) não deveria exigir abrir o plano e achar o
                   // menu de três pontinhos lá dentro. Sem caixa encolhedora:
                   // o alvo de toque fica nos 48dp padrão do IconButton.
-                  IconButton(
-                    tooltip: souCriador ? 'Excluir plano' : 'Sair do plano',
-                    icon: FaIcon(
-                      FontAwesomeIcons.trash,
-                      size: 20,
-                      color: cor.onSurfaceVariant,
+                  if (plano.fixo)
+                    Padding(
+                      padding: const EdgeInsets.all(DevocionalEspacamento.sp12),
+                      child: Tooltip(
+                        message:
+                            'Plano fixo: não pode ser alterado nem excluído',
+                        child: FaIcon(
+                          FontAwesomeIcons.lock,
+                          size: 18,
+                          color: cor.onSurfaceVariant,
+                        ),
+                      ),
+                    )
+                  else
+                    IconButton(
+                      tooltip: souCriador ? 'Excluir plano' : 'Sair do plano',
+                      icon: FaIcon(
+                        FontAwesomeIcons.trash,
+                        size: 20,
+                        color: cor.onSurfaceVariant,
+                      ),
+                      onPressed: () => souCriador
+                          ? excluirPlano(
+                              context,
+                              estado,
+                              plano.id,
+                              compartilhado: plano.compartilhado,
+                            )
+                          : sairDoPlano(context, estado, plano.id),
                     ),
-                    onPressed: () => souCriador
-                        ? excluirPlano(
-                            context,
-                            estado,
-                            plano.id,
-                            compartilhado: plano.compartilhado,
-                          )
-                        : sairDoPlano(context, estado, plano.id),
-                  ),
                 ],
               ),
               const SizedBox(height: DevocionalEspacamento.sp2),

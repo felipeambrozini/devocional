@@ -151,7 +151,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
                       ),
                   ],
                 ),
-              ] else if (!_controller.compartilhado)
+              ] else if (!_controller.compartilhado && plano?.fixo != true)
                 PopupMenuButton<String>(
                   tooltip: 'Opções do plano',
                   onSelected: (opcao) {
@@ -261,12 +261,13 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
                   totalDeDias: diaCount,
                 ),
                 const SizedBox(height: DevocionalEspacamento.sp10),
-                DevocionalCartaoDeCompartilhar(
-                  compartilhado: _controller.compartilhado,
-                  aoCompartilhar: _controller.compartilhado
-                      ? () => _controller.copiarLink(context)
-                      : () => _controller.compartilhar(context),
-                ),
+                if (!planoLocal.fixo)
+                  DevocionalCartaoDeCompartilhar(
+                    compartilhado: _controller.compartilhado,
+                    aoCompartilhar: _controller.compartilhado
+                        ? () => _controller.copiarLink(context)
+                        : () => _controller.compartilhar(context),
+                  ),
                 if (_controller.compartilhado && dados != null) ...[
                   const SizedBox(height: DevocionalEspacamento.sp10),
                   DevocionalSecaoDeParticipantes(

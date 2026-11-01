@@ -20,6 +20,7 @@ import 'dados/lembretes.dart';
 import 'dados/modelos.dart';
 import 'dados/nuvem.dart';
 import 'dados/personas.dart';
+import 'dados/planos.dart';
 import 'dados/planos_nuvem.dart';
 import 'dados/recursos.dart';
 import 'dados/registro.dart';
@@ -648,6 +649,9 @@ class _AppDevocionalState extends State<AppDevocional>
     // reporte de rota, no app e nos testes. Ver o comentário de [_router].
     GoRouter.optionURLReflectsImperativeAPIs = true;
     widget.estado.addListener(_conferirTema);
+    Nuvem.instancia.addListener(_conferirBoasVindas);
+    // Sessão já em cache: o Nuvem pode ter avisado antes de esta tela existir.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _conferirBoasVindas());
     // Para [didChangePlatformBrightness]: no modo Automático, o sistema pode
     // virar o tema com o app aberto, e o espelho do ícone de notificação
     // (web) precisa acompanhar.
@@ -672,6 +676,7 @@ class _AppDevocionalState extends State<AppDevocional>
   @override
   void dispose() {
     widget.estado.removeListener(_conferirTema);
+    Nuvem.instancia.removeListener(_conferirBoasVindas);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -690,6 +695,25 @@ class _AppDevocionalState extends State<AppDevocional>
         },
       ),
     );
+  }
+
+  /// Na primeira vez que há conta aberta neste aparelho, dá as boas-vindas e
+  /// apresenta o plano fixo "A Vida de Jesus em 30 dias". Marca como visto antes de
+  /// mostrar: fechar o diálogo de qualquer jeito não o traz de volta.
+  void _conferirBoasVindas() {
+    final estado = widget.estado;
+    final contexto = navigatorKey.currentContext;
+    if (!Nuvem.instancia.logado || estado.boasVindasVistas) return;
+    if (contexto == null) return;
+    unawaited(estado.marcarBoasVindasVistas());
+    showDialog<bool>(
+      context: contexto,
+      builder: (_) => const DevocionalBoasVindasDialogo(),
+    ).then((verPlano) {
+      if (verPlano != true) return;
+      _router.go('/plano');
+      _router.push('/plano/$idDoPlanoDeJesus');
+    });
   }
 
   /// O tema precisa ser refeito quando o tamanho do texto ou o modo mudam, mas o

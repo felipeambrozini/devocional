@@ -69,6 +69,9 @@ vitoriana dele, tratando o leitor por "tu".
   Opt-in nos Ajustes ("Ouvir capítulos em sequência", desligado por padrão):
   ao terminar um capítulo da Bíblia, o leitor avança e o próximo começa
   sozinho; devocionais, introduções e comentários nunca encadeiam.
+- Plano fixo "A Vida de Jesus em 30 dias": toda conta o ganha (não edita,
+  não exclui, não compartilha), com boas-vindas no primeiro login. Planos em
+  andamento aparecem na Hoje.
 - Planos personalizados: escolher livros e a duração; compartilháveis por
   link, com progresso de cada participante (exige conta Google). O seletor
   tem atalhos para o Antigo e o Novo Testamento inteiros, e com 2+ livros dá
