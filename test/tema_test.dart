@@ -164,6 +164,26 @@ void main() {
           greaterThan(4.5),
         );
       });
+
+      test('$nome: a letra vermelha passa de 4,5:1 em todo fundo de '
+          'versículo, inclusive recuada', () {
+        // Fundo liso, marcado (outline a 18%) e selecionado (primary a 18%),
+        // com o vermelho cheio e a 0.9 de fora da faixa (ver biblia.dart).
+        final fundos = [
+          cor.surface,
+          Color.alphaBlend(cor.outline.withValues(alpha: 0.18), cor.surface),
+          Color.alphaBlend(cor.primary.withValues(alpha: 0.18), cor.surface),
+        ];
+        for (final fundo in fundos) {
+          for (final alfa in [1.0, 0.9]) {
+            final texto = Color.alphaBlend(
+              cor.tertiary.withValues(alpha: alfa),
+              fundo,
+            );
+            expect(contraste(texto, fundo), greaterThan(4.5));
+          }
+        }
+      });
     }
 
     test('o destaque é o tom mais distante do fundo nas duas paletas', () {

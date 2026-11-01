@@ -432,6 +432,7 @@ class _Leitor extends StatelessWidget {
           referencia: capitulo.referencia,
           numero: numero,
           texto: texto,
+          falasDivinas: capitulo.falasDivinas[numero] ?? const [],
           noRecorte: noRecorte,
           selecionando: selecionados.isNotEmpty,
           selecionado: selecionados.contains(numero),
@@ -452,6 +453,7 @@ class _LinhaDeVersiculo extends StatelessWidget {
     required this.referencia,
     required this.numero,
     required this.texto,
+    required this.falasDivinas,
     required this.noRecorte,
     required this.selecionando,
     required this.selecionado,
@@ -463,12 +465,29 @@ class _LinhaDeVersiculo extends StatelessWidget {
   final String referencia;
   final int numero;
   final String texto;
+  final List<(int, int)> falasDivinas;
   final bool noRecorte;
 
   /// Há versículos marcados no capítulo: o toque marca em vez de abrir a folha.
   final bool selecionando;
   final bool selecionado;
   final VoidCallback aoAlternarSelecao;
+
+  /// Fora da faixa pedida pelo cronograma o texto continua legível, apenas
+  /// recuado, para o contexto não se perder.
+  ///
+  /// onSurface a 0.75 e não onSurfaceVariant a 0.7: este dava cerca de 3,1:1
+  /// no tema claro, abaixo do 4,5:1 que a WCAG AA pede para texto corrido, e
+  /// isto aqui é Escritura, não legenda. A fala divina recua menos (0.9): o
+  /// vermelho a 0.75 caía para 3,7:1 sobre o fundo de selecionado.
+  TextStyle? _estiloDoTrecho(BuildContext context, {required bool divino}) {
+    final cor = Theme.of(context).colorScheme;
+    final base = divino ? cor.tertiary : cor.onSurface;
+    return Theme.of(context).textTheme.bodyLarge?.copyWith(
+      height: 1.6,
+      color: noRecorte ? base : base.withValues(alpha: divino ? 0.9 : 0.75),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -551,22 +570,14 @@ class _LinhaDeVersiculo extends StatelessWidget {
                           ),
                         ),
                       ),
-                    TextSpan(
-                      text: texto,
-                      // Fora da faixa pedida pelo cronograma o texto continua
-                      // legível, apenas recuado, para o contexto não se perder.
-                      //
-                      // onSurface a 0.75 e não onSurfaceVariant a 0.7: este
-                      // dava cerca de 3,1:1 no tema claro, abaixo do 4,5:1 que
-                      // a WCAG AA pede para texto corrido, e isto aqui é
-                      // Escritura, não legenda.
-                      style: noRecorte
-                          ? tema.bodyLarge?.copyWith(height: 1.6)
-                          : tema.bodyLarge?.copyWith(
-                              height: 1.6,
-                              color: cor.onSurface.withValues(alpha: 0.75),
-                            ),
-                    ),
+                    for (final (pedaco, divino) in partesDoVersiculo(
+                      texto,
+                      estado.letraVermelha ? falasDivinas : const [],
+                    ))
+                      TextSpan(
+                        text: pedaco,
+                        style: _estiloDoTrecho(context, divino: divino),
+                      ),
                   ],
                 ),
               ),

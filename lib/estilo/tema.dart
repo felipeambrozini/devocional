@@ -20,6 +20,7 @@ ThemeData construirTema({
   //   surfaceContainerHighest cartão dentro de cartão, citação, chip
   //   primary                 título e ícone
   //   secondary               destaque: citação, referência, aba ativa
+  //   tertiary                letra vermelha das falas de Deus na Bíblia
   //   outline                 borda e filete
   //   outlineVariant          divisor (o outline a 40%, ver abaixo)
   //   onSurface               corpo do texto
@@ -36,6 +37,7 @@ ThemeData construirTema({
           surfaceContainerHighest: DevocionalCores.superficieAlta,
           onSurfaceVariant: DevocionalCores.begeSuave,
           outline: DevocionalCores.douradoEscuro,
+          tertiary: DevocionalCores.carmimClaro,
           error: Color(0xFFE57373),
         )
       : const ColorScheme.light(
@@ -49,6 +51,7 @@ ThemeData construirTema({
           surfaceContainerHighest: DevocionalCores.pergaminhoFundo,
           onSurfaceVariant: DevocionalCores.tintaSuave,
           outline: DevocionalCores.bronzeSuave,
+          tertiary: DevocionalCores.carmim,
           error: Color(0xFF9B2C2C),
         );
   // Sem outlineVariant o Material 3 cai no onSurface: Divider, VerticalDivider

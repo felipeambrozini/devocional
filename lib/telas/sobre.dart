@@ -216,6 +216,15 @@ class _TelaSobreState extends State<TelaSobre> {
                     style: tema.bodyLarge?.copyWith(height: 1.7),
                   ),
                   const SizedBox(height: DevocionalEspacamento.sp16),
+                  // Atribuição exigida pela licença CC BY 4.0 dos dados.
+                  Text(
+                    'As palavras de Deus em vermelho seguem os dados de falas '
+                    'e falantes do MACULA Quotation and Speaker Data, © 2023 '
+                    'Clear Bible, Inc. (CC BY 4.0), com dados da SIL e da '
+                    'Faith Comes By Hearing, adaptados ao texto em português.',
+                    style: tema.bodyLarge?.copyWith(height: 1.7),
+                  ),
+                  const SizedBox(height: DevocionalEspacamento.sp16),
                 ],
               ),
               _SecaoExpansivel(

@@ -196,6 +196,10 @@ vitoriana dele, tratando o leitor por "tu".
 - Escala do texto de leitura ajustável pelo usuário, multiplicando só o corpo
   do texto.
 - Tema claro e escuro completos, seguindo o aparelho por padrão.
+- Palavras de Deus (Pai, Jesus e Espírito Santo) em vermelho no leitor da
+  Bíblia, ligado por padrão e desligável na folha de ajustes. Os dois
+  vermelhos (`DevocionalCores.carmim` e `carmimClaro`) passam de 5:1 em todo
+  fundo de versículo, inclusive o selecionado.
 - Suporte à navegação por teclado no desktop (setas trocam capítulo, Ctrl+F
   abre a busca).
 - Os chevrons de capítulo no rodapé do leitor existem só na web e podem ser

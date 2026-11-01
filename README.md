@@ -64,6 +64,18 @@ mesmo código).
   precisa. Nesse instante curto o cabeçalho mostra "Verificando conta" em vez
   do botão Entrar, que só aparece quando se sabe que não há sessão.
 - **Busca** no texto da Bíblia e nos devocionais, em duas abas.
+- **Palavras de Deus em vermelho**: na Bíblia, as falas de Deus Pai, de Jesus
+  e do Espírito Santo saem em vermelho (carmim no claro, vermelho claro no
+  escuro), ligado por padrão e desligável nos Ajustes ("Palavras de Deus em
+  vermelho"). As edições comuns de letra vermelha marcam só Jesus; aqui segue
+  as que marcam as três Pessoas, com fala direta em toda a Bíblia (inclusive os
+  oráculos dos profetas em primeira pessoa de Deus), mas não as citações do AT
+  feitas pelos apóstolos. Os trechos vêm de `assets/falas_divinas/<slug>.json`,
+  gerados por `tools/falas_divinas/gerar.py` a partir do MACULA Quotation and
+  Speaker Data (Clear Bible, CC BY 4.0, crédito na tela Sobre). Como a BKJ não
+  tem aspas, o corte dentro do versículo é aproximado pela pontuação ("disse
+  Deus: **Haja luz.** E houve luz."), e alguns versículos de diálogo podem sair
+  com o corte deslocado.
 - **Tamanho do texto** ajustável e **tema claro ou escuro**, pela barra do leitor
   ou do devocional. O padrão segue o aparelho, e dá para fixar um dos dois.
 - **Lembrete diário**, opcional, em Android e web: 4 horários ajustáveis —

@@ -7,6 +7,7 @@ class Capitulo {
     required this.titulo,
     required this.versiculos,
     String? nome,
+    this.falasDivinas = const {},
   }) : nome = nome ?? '';
 
   final String livro;
@@ -23,11 +24,35 @@ class Capitulo {
   /// Pares (número, texto) na ordem numérica.
   final List<(int, String)> versiculos;
 
+  /// Por versículo, os trechos `(início, fim)` do texto em que fala Deus Pai,
+  /// Jesus ou o Espírito Santo, para a letra vermelha. Versículo sem fala
+  /// divina não aparece. Ver `tools/falas_divinas/gerar.py`.
+  final Map<int, List<(int, int)>> falasDivinas;
+
   /// Salmos é o único livro em que cada capítulo é um poema autônomo, então
   /// a referência usa o singular ("Salmo 23"), diferente do seletor de
   /// livro, que continua no plural ("Salmos").
   String get referencia =>
       '${livro == 'salmos' ? 'Salmo' : (nome.isNotEmpty ? nome : nomeDoLivro(livro))} $numero';
+}
+
+/// O texto de um versículo em pedaços, cada um marcado se é fala divina.
+///
+/// Os trechos vêm de um asset gerado à parte do texto; se algum dia o texto
+/// mudar e um índice passar do fim, o trecho é aparado em vez de lançar, e o
+/// pior caso é um pedaço sem vermelho, nunca o versículo sumindo.
+List<(String, bool)> partesDoVersiculo(String texto, List<(int, int)> trechos) {
+  final partes = <(String, bool)>[];
+  var cursor = 0;
+  for (final (inicio, fim) in trechos) {
+    final a = inicio.clamp(cursor, texto.length);
+    final b = fim.clamp(a, texto.length);
+    if (a > cursor) partes.add((texto.substring(cursor, a), false));
+    if (b > a) partes.add((texto.substring(a, b), true));
+    cursor = b;
+  }
+  if (cursor < texto.length) partes.add((texto.substring(cursor), false));
+  return partes;
 }
 
 /// Introdução de um livro, na voz de Spurgeon.

@@ -32,4 +32,11 @@ abstract final class DevocionalCores {
   static const bronzeSuave = Color(0xFFC2AE86); // traço e borda
   static const tinta = Color(0xFF3D2417); // corpo, 12,8:1
   static const tintaSuave = Color(0xFF6B5842); // apoio, 6,0:1
+
+  // Letra vermelha das falas de Deus (papel `tertiary`). Carmim de impressão
+  // no claro; no escuro um vermelho claro, porque o carmim sobre marrom fica
+  // abaixo de 3:1. Pior caso: versículo fora da faixa do cronograma (alfa 0.9)
+  // sobre o fundo de selecionado, 4,6:1 nos dois temas.
+  static const carmim = Color(0xFFA01C1C); // 7,0:1 sobre o pergaminho
+  static const carmimClaro = Color(0xFFF2998E); // 7,6:1 sobre o fundo
 }

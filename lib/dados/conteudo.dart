@@ -92,6 +92,7 @@ class Conteudo {
   void esquecerFalhas() {
     _tentouLivro.clear();
     _tentouComentario.clear();
+    _tentouFalasDivinas.clear();
     if (_promessas == null) _tentouPromessas = false;
   }
 
@@ -121,12 +122,20 @@ class Conteudo {
             .map((e) => (int.parse(e.key), e.value as String))
             .toList()
           ..sort((a, b) => a.$1.compareTo(b.$1));
+    final falas = (await _carregarFalasDivinas(slug))?['$numero'] as Map?;
     return Capitulo(
       livro: slug,
       numero: numero,
       titulo: cap['titulo'] as String? ?? '',
       versiculos: versiculos,
       nome: livro['nome'] as String? ?? '',
+      falasDivinas: {
+        for (final MapEntry(:key, :value) in (falas ?? const {}).entries)
+          int.parse(key as String): [
+            for (final trecho in value as List)
+              ((trecho as List)[0] as int, trecho[1] as int),
+          ],
+      },
     );
   }
 
@@ -481,6 +490,32 @@ class Conteudo {
     }
     _introducoes[slug] = introducao;
     return introducao;
+  }
+
+  final Map<String, Map<String, dynamic>> _falasDivinas = {};
+  final Map<String, bool> _tentouFalasDivinas = {};
+
+  /// Mesmo padrão de [_carregarComentarios]. Sem o arquivo o capítulo abre
+  /// normal, só sem letra vermelha.
+  Future<Map<String, dynamic>?> _carregarFalasDivinas(String slug) async {
+    final cacheado = _falasDivinas[slug];
+    if (cacheado != null) return cacheado;
+    if (_tentouFalasDivinas[slug] == true) return null;
+    try {
+      final cru = await rootBundle.loadString(
+        'assets/falas_divinas/$slug.json',
+      );
+      final dados = json.decode(cru) as Map<String, dynamic>;
+      _falasDivinas[slug] = dados;
+      return dados;
+    } on FlutterError {
+      return null;
+    } catch (erro, pilha) {
+      _registrarAssetQuebrado('assets/falas_divinas/$slug.json', erro, pilha);
+      return null;
+    } finally {
+      _tentouFalasDivinas[slug] = true;
+    }
   }
 
   final Map<String, Map<String, dynamic>> _comentarios = {};

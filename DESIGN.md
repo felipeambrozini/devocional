@@ -19,6 +19,8 @@ colors:
   tinta-de-pregador: "#3D2417"
   tinta-suave: "#6B5842"
   erro: "#E57373"
+  carmim: "#A01C1C"
+  carmim-claro: "#F2998E"
 typography:
   display:
     fontFamily: "Cinzel"
@@ -147,6 +149,8 @@ carrega cor.
 
 Não há terceiro acento. O metal tem dois graus (principal e destaque) e um grau de traço/borda: **Ouro Escuro** (#8C6D1F) no escuro, **Bronze Suave** (#C2AE86) no claro.
 
+A única exceção é a **letra vermelha** (papel `tertiary`), que não é acento de interface: só pinta, no leitor da Bíblia, as falas de Deus Pai, Jesus e Espírito Santo, como nas Bíblias impressas de letra vermelha. **Carmim** (#A01C1C) no claro, **Carmim Claro** (#F2998E) no escuro; passam de 4,5:1 em todo fundo de versículo, mesmo recuadas a 0.9 sobre o selecionado (o teste da WCAG guarda). Nunca em botão, ícone ou título.
+
 ### Neutral
 
 - **Pergaminho** (#F7F1E3): fundo da página no claro.
@@ -271,7 +275,7 @@ Contidos e discretos: os controles existem para o texto passar. Nenhum component
 
 ### Don't:
 - **Don't** usar dourado sobre pergaminho (2,1:1, ilegível) nem clarear o bronze — o claro tem o próprio metal, escurecido.
-- **Don't** inventar um terceiro acento de cor ou uma terceira família de fonte.
+- **Don't** inventar um terceiro acento de cor ou uma terceira família de fonte (a letra vermelha das falas de Deus é texto bíblico, não acento, e fica só no leitor).
 - **Don't** usar `SegmentedButton` para as três leituras (chips).
 - **Don't** deixar o texto de leitura passar de 720px, nem multiplicar títulos pela escala do usuário.
 - **Don't** ler a paleta direto de `DevocionalCores` numa tela — só `Theme.of(context).colorScheme`.

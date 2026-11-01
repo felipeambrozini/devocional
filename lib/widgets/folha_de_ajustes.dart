@@ -127,6 +127,18 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                     ],
                   ),
                 ),
+                SwitchListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: DevocionalEspacamento.sp20,
+                  ),
+                  title: const Text('Palavras de Deus em vermelho'),
+                  subtitle: const Text(
+                    'Na Bíblia, as falas de Deus Pai, de Jesus e do Espírito '
+                    'Santo aparecem em vermelho.',
+                  ),
+                  value: estado.letraVermelha,
+                  onChanged: (nova) => estado.definirLetraVermelha(nova),
+                ),
                 // Setas de virar capítulo são assunto da web: no celular o
                 // rodapé nem existe. Leitura é o assunto do bloco de cima,
                 // por isso as setas fecham este primeiro grupo.

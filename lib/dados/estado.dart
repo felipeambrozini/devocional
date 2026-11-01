@@ -37,6 +37,7 @@ class Estado extends ChangeNotifier {
   static const _kAjudaDispensada = 'ajuda_dispensada';
   static const _kSwipeTooltipDispensado = 'swipe_tooltip_dispensado';
   static const _kSetasDoRodape = 'setas_do_rodape';
+  static const _kLetraVermelha = 'letra_vermelha';
   static const _kLembretesAtivos = 'lembretes_ativos';
   static const _kMinutosLembreteManha = 'minutos_lembrete_manha';
   static const _kMinutosLembretePromessas = 'minutos_lembrete_promessas';
@@ -101,6 +102,10 @@ class Estado extends ChangeNotifier {
   /// virar página por setas, Enter ou espaço esconde os botões na folha de
   /// ajustes. Existe só para a web; no celular o rodapé nem existe.
   bool _setasDoRodape = true;
+
+  /// Se as falas de Deus Pai, de Jesus e do Espírito Santo aparecem em
+  /// vermelho na Bíblia. Padrão true, como nas edições de letra vermelha.
+  bool _letraVermelha = true;
 
   /// Se os três lembretes diários estão ligados. Padrão false: notificação é
   /// opt-in, nunca ligada sem o usuário pedir.
@@ -192,6 +197,8 @@ class Estado extends ChangeNotifier {
     _swipeTooltipDispensado = _prefs.getBool(_kSwipeTooltipDispensado) ?? false;
 
     _setasDoRodape = _prefs.getBool(_kSetasDoRodape) ?? true;
+
+    _letraVermelha = _prefs.getBool(_kLetraVermelha) ?? true;
 
     _lembretesAtivos = _prefs.getBool(_kLembretesAtivos) ?? false;
     _minutosLembreteManha = _minutosValidos(
@@ -323,6 +330,17 @@ class Estado extends ChangeNotifier {
     _setasDoRodape = novo;
     notifyListeners();
     await _prefs.setBool(_kSetasDoRodape, novo);
+  }
+
+  // --- letra vermelha ------------------------------------------------------ //
+
+  bool get letraVermelha => _letraVermelha;
+
+  Future<void> definirLetraVermelha(bool nova) async {
+    if (nova == _letraVermelha) return;
+    _letraVermelha = nova;
+    notifyListeners();
+    await _prefs.setBool(_kLetraVermelha, nova);
   }
 
   // --- tamanho do texto de leitura ----------------------------------------- //
