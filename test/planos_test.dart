@@ -627,6 +627,32 @@ void main() {
   });
 
   group('a tela de Meus Planos', () {
+    testWidgets('sem conta, pede login em vez de listar os planos', (
+      tester,
+    ) async {
+      await tester.runAsync(() => Conteudo.instancia.plano(bissexto: false));
+      final estado = Estado(await SharedPreferences.getInstance());
+      Nuvem.instancia.logadoForcado = false;
+      addTearDown(() => Nuvem.instancia.logadoForcado = null);
+      await tester.pumpWidget(
+        EscopoDoEstado(
+          estado: estado,
+          child: MaterialApp.router(
+            routerConfig: _routerDoPlano(estado, DateTime(2027, 2, 15)),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Meus planos'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Entre para ver seus planos'), findsOneWidget);
+      expect(find.text('Entrar com Google'), findsOneWidget);
+      expect(find.text('A Vida de Jesus em 30 dias'), findsNothing);
+      expect(find.text('Criar plano'), findsNothing);
+    });
+
     testWidgets('cria um plano pelo formulário e marca um dia', (tester) async {
       // O cronograma (primeira aba) carrega o asset do plano do ano; aquece
       // antes, senão a Future do FutureBuilder nunca completa no tempo falso.

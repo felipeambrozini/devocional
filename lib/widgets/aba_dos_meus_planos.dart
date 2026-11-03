@@ -8,15 +8,13 @@ import '../dados/nuvem.dart';
 import '../dados/planos.dart';
 import '../dados/recursos.dart';
 import '../estilo/espacamento.dart';
-import '../funcoes/aviso.dart';
-import '../funcoes/conta_acoes.dart';
 import '../widgets/widgets.dart';
 
 /// A aba Meus Planos: a lista dos planos do usuário e o caminho para criar
 /// um novo.
 ///
-/// A aba fica visível para todo mundo, com ou sem conta, e mostra ao menos o
-/// plano fixo. Só criar um plano pede conta (ver `_abrirNovoPlano`); o
+/// A aba fica visível para todo mundo, mas os planos só existem para quem tem
+/// conta: sem ela, um aviso com o botão de entrar ocupa o lugar da lista. O
 /// interruptor [Recursos.planoPersonalizado] desliga a aba inteira.
 class DevocionalAbaDosMeusPlanos extends StatelessWidget {
   const DevocionalAbaDosMeusPlanos({super.key});
@@ -33,6 +31,14 @@ class DevocionalAbaDosMeusPlanos extends StatelessWidget {
             detalhe:
                 'Os planos de leitura personalizados estão desligados no '
                 'momento. Tente de novo mais tarde.',
+          );
+        }
+        if (!Nuvem.instancia.logado) {
+          return const DevocionalCartaoDeEntrar(
+            titulo: 'Entre para ver seus planos',
+            descricao:
+                'Os planos de leitura ficam guardados na sua conta. Entre '
+                'para ler "A Vida de Jesus em 30 dias" e criar os seus.',
           );
         }
         return _ListaDePlanos(estado: EscopoDoEstado.de(context));
@@ -88,16 +94,6 @@ class _ListaDePlanos extends StatelessWidget {
   // que faz a aba resetar para esta lista ao voltar de outra aba com um
   // plano aberto (Moldura._irParaAba).
   Future<void> _abrirNovoPlano(BuildContext context) async {
-    final nuvem = Nuvem.instancia;
-    if (!nuvem.logado) {
-      mostrarAviso(
-        context,
-        'Entre na sua conta para criar planos de leitura.',
-        rotuloDeAcao: 'Entrar',
-        aoAgir: () => entrarNaConta(context, nuvem),
-      );
-      return;
-    }
     final criado = await context.push<PlanoDoUsuario>('/plano/novo');
     if (criado == null || !context.mounted) return;
     context.push('/plano/${criado.id}');

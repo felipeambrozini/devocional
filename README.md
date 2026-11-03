@@ -753,10 +753,10 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
   Parâmetro de consulta, não caminho, porque o
   Pages devolveria 404. `alvoDoLink` e `linkDoVersiculo` em `lib/dados/canon.dart`
   fazem a ida e volta.
-- **A aba "Meus planos" é aberta a todos** (01/11/2026): sem login ela mostra
-  o plano fixo "A Vida de Jesus em 30 dias"; só criar um plano pede conta —
-  `_abrirNovoPlano` (`lib/widgets/aba_dos_meus_planos.dart`) avisa "Entre na
-  sua conta…" com a ação "Entrar". Um link de plano compartilhado aberto sem
+- **Planos só para quem tem conta**: a aba "Meus planos" continua visível, mas
+  sem login mostra o `DevocionalCartaoDeEntrar` (aviso + "Entrar com Google")
+  no lugar da lista, e o plano fixo "A Vida de Jesus em 30 dias" também some da
+  Hoje (`Recursos.planos`). Um link de plano compartilhado aberto sem
   conta continua pedindo login (`_CartaoDeEntrar` em `lib/telas/meu_plano.dart`).
 - **Link do plano compartilhado leva o título como slug** (20/08/2026),
   `?plano=<slug-do-titulo>-<id>` (`linkDoPlano` em `lib/dados/planos_nuvem.dart`).

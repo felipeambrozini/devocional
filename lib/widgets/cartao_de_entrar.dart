@@ -13,14 +13,16 @@ import 'layout_leitura.dart';
 class DevocionalCartaoDeEntrar extends StatelessWidget {
   const DevocionalCartaoDeEntrar({
     super.key,
-    required this.onEntrar,
+    this.onEntrar,
     this.titulo = 'Este plano é compartilhado por link',
     this.descricao =
         'Entre com sua conta para participar, marcar os dias lidos '
         'e ver o progresso de todos.',
   });
 
-  final VoidCallback onEntrar;
+  /// Roda depois do login. Opcional: quem só depende de `Nuvem` para
+  /// reconstruir a tela não precisa de callback.
+  final VoidCallback? onEntrar;
   final String titulo;
   final String descricao;
 
@@ -40,10 +42,13 @@ class DevocionalCartaoDeEntrar extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      titulo,
-                      style: Theme.of(context).textTheme.titleMedium,
-                      textAlign: TextAlign.center,
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        titulo,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                     const SizedBox(height: DevocionalEspacamento.sp8),
                     Text(
@@ -59,7 +64,7 @@ class DevocionalCartaoDeEntrar extends StatelessWidget {
                             ? null
                             : () async {
                                 await entrarNaConta(context, Nuvem.instancia);
-                                onEntrar();
+                                onEntrar?.call();
                               },
                         icon: Nuvem.instancia.entrando
                             ? const SizedBox(

@@ -39,7 +39,10 @@ class _TelaHojeState extends State<TelaHoje> {
       body: SafeArea(
         child: DevocionalLarguraDeLeitura(
           child: ListenableBuilder(
-            listenable: ConfigAdmin.instancia,
+            listenable: Listenable.merge([
+              ConfigAdmin.instancia,
+              Nuvem.instancia,
+            ]),
             builder: (context, _) {
               // A leitura da hora pode estar desligada no painel: aí o
               // destaque cai para a outra leitura do período que continuar
@@ -80,7 +83,7 @@ class _TelaHojeState extends State<TelaHoje> {
                   DevocionalLeituraDeHoje(data: agora),
                   // Planos personalizados em andamento: o próximo dia de cada
                   // um, entre a leitura do cronograma e os devocionais.
-                  if (Recursos.planoPersonalizado) ...[
+                  if (Recursos.planos) ...[
                     const SizedBox(height: DevocionalEspacamento.sp16),
                     DevocionalPlanosEmAndamento(estado: estado),
                   ],
