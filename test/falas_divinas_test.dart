@@ -67,6 +67,52 @@ void main() {
     }
   });
 
+  test('os assets batem com as correções manuais de tools/falas_divinas', () {
+    final pasta = Directory('tools/falas_divinas/correcoes');
+    if (!pasta.existsSync()) return;
+    final arquivos = pasta.listSync().whereType<File>().where(
+      (arquivo) => arquivo.path.endsWith('.json'),
+    );
+    for (final arquivo in arquivos) {
+      final slug = arquivo.uri.pathSegments.last.replaceAll('.json', '');
+      final correcoes =
+          json.decode(arquivo.readAsStringSync()) as Map<String, dynamic>;
+      final falas =
+          json.decode(
+                File('assets/falas_divinas/$slug.json').readAsStringSync(),
+              )
+              as Map<String, dynamic>;
+      final capitulos =
+          (json.decode(File('assets/biblia/$slug.json').readAsStringSync())
+                  as Map<String, dynamic>)['capitulos']
+              as Map<String, dynamic>;
+      for (final MapEntry(key: cap, value: versiculos) in correcoes.entries) {
+        for (final MapEntry(key: v, value: trechos)
+            in (versiculos as Map<String, dynamic>).entries) {
+          final ref = '$slug $cap:$v';
+          final texto = capitulos[cap]['versiculos'][v] as String;
+          final esperado = <List<int>>[];
+          var posicao = 0;
+          for (final trecho in (trechos as List).cast<String>()) {
+            final inicio = texto.indexOf(trecho, posicao);
+            expect(
+              inicio >= 0,
+              isTrue,
+              reason: '$ref: "$trecho" fora de ordem',
+            );
+            esperado.add([inicio, inicio + trecho.length]);
+            posicao = inicio + trecho.length;
+          }
+          final atual = [
+            for (final trecho in (falas[cap]?[v] as List? ?? const []))
+              (trecho as List).cast<int>(),
+          ];
+          expect(atual, esperado, reason: ref);
+        }
+      }
+    }
+  });
+
   test('o capítulo traz as falas: "Haja luz." em Gênesis 1:3', () async {
     final capitulo = await Conteudo.instancia.capitulo('genesis', 1);
     final (_, texto) = capitulo.versiculos[2];

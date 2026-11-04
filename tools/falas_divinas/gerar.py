@@ -217,6 +217,10 @@ def main(caminho_projecoes, caminho_palavras, caminho_versificacao):
     print(f'{total} versiculos com fala divina; {len(sem_corte)} sem corte:')
     print('\n'.join(sem_corte))
 
+    # A revisao manual mora em correcoes/<slug>.json e vale por cima do MACULA.
+    from aplicar_correcoes import aplicar
+    aplicar()
+
 
 if __name__ == '__main__':
     main(*sys.argv[1:4])
