@@ -86,7 +86,8 @@ class _TelaNotasState extends State<TelaNotas> {
                   // perder: quem chega sem favorito nem dia lido ouviria do risco
                   // antes de ter algo para guardar (medo antes do valor).
                   if (kIsWeb &&
-                      (estado.marcacoes.isNotEmpty || estado.diasLidos > 0))
+                      (estado.marcacoes.isNotEmpty ||
+                          estado.diasLidosEmTodosOsAnos > 0))
                     DevocionalAvisoDePerda(
                       onExportar: () => _exportar(context, estado),
                     ),

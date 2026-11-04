@@ -57,7 +57,7 @@ class Estado extends ChangeNotifier {
 
   final SharedPreferences _prefs;
 
-  /// Datas 'DD-MM' do cronograma já marcadas como lidas.
+  /// Datas 'AAAA-MM-DD' do cronograma já marcadas como lidas.
   Set<String> _lidos = {};
 
   /// Favoritos e notas, indexados por [Marcacao.chave].
@@ -152,7 +152,9 @@ class Estado extends ChangeNotifier {
       Estado(await SharedPreferences.getInstance());
 
   void _lerTudo() {
-    _lidos = (_prefs.getStringList(_kLidos) ?? const []).toSet();
+    _lidos = (_prefs.getStringList(_kLidos) ?? const [])
+        .map(migrarChaveDeLeitura)
+        .toSet();
 
     final marcacoesCruas = _prefs.getString(_kMarcacoes);
     if (marcacoesCruas != null && marcacoesCruas.isNotEmpty) {
@@ -407,23 +409,57 @@ class Estado extends ChangeNotifier {
 
   // --- progresso do cronograma --------------------------------------------- //
 
-  int get diasLidos => _lidos.length;
+  /// Dia do nascimento do app (28/07/2026): as chaves antigas 'DD-MM' foram
+  /// gravadas sem ano, e daqui se deduz o ano delas.
+  static const _mesDeNascimentoDoApp = 7;
+  static const _diaDeNascimentoDoApp = 28;
+  static const _anoDeNascimentoDoApp = 2026;
 
-  bool foiLido(String data) => _lidos.contains(data);
+  static final _chaveAntiga = RegExp(r'^(\d{2})-(\d{2})$');
 
-  Future<void> alternarLido(String data) async {
-    if (!_lidos.remove(data)) _lidos.add(data);
+  /// Chave 'AAAA-MM-DD' de um dia do cronograma, a partir do ano exibido e do
+  /// [DiaDoPlano.data] ('DD-MM').
+  static String chaveDeLeitura(int ano, String data) =>
+      '$ano-${data.substring(3, 5)}-${data.substring(0, 2)}';
+
+  /// Converte uma chave antiga 'DD-MM' em 'AAAA-MM-DD'; qualquer outra passa
+  /// intacta, então migrar de novo não muda nada. De 28/07 em diante a chave
+  /// antiga é do ano de nascimento do app, antes disso só pode ser do seguinte
+  /// (um APK velho gravando depois da virada do ano).
+  static String migrarChaveDeLeitura(String chave) {
+    final antiga = _chaveAntiga.firstMatch(chave);
+    if (antiga == null) return chave;
+    final dia = int.parse(antiga[1]!);
+    final mes = int.parse(antiga[2]!);
+    final jaNasceu =
+        mes > _mesDeNascimentoDoApp ||
+        (mes == _mesDeNascimentoDoApp && dia >= _diaDeNascimentoDoApp);
+    final ano = jaNasceu ? _anoDeNascimentoDoApp : _anoDeNascimentoDoApp + 1;
+    return '$ano-${antiga[2]}-${antiga[1]}';
+  }
+
+  /// Dias lidos em todos os anos, para saber se há o que exportar ou apagar.
+  int get diasLidosEmTodosOsAnos => _lidos.length;
+
+  int diasLidosNoAno(int ano) =>
+      _lidos.where((chave) => chave.startsWith('$ano-')).length;
+
+  bool foiLido(String chave) => _lidos.contains(chave);
+
+  Future<void> alternarLido(String chave) async {
+    if (!_lidos.remove(chave)) _lidos.add(chave);
     notifyListeners();
     await _prefs.setStringList(_kLidos, _lidos.toList()..sort());
   }
 
-  /// Fração do cronograma concluída, para a barra de progresso.
+  /// Fração do cronograma de [ano] concluída, para a barra de progresso.
   ///
   /// O total entra por parâmetro em vez de ser 365 fixo: em ano bissexto o
   /// cronograma tem 366 dias, e com o divisor errado marcar o ano inteiro daria
   /// mais de cem por cento. Quem chama pega o número em [Conteudo.diasDoAno], e
   /// assim o Estado continua sem saber de assets.
-  double progressoDoAno(int totalDeDias) => _lidos.length / totalDeDias;
+  double progressoDoAno(int ano, int totalDeDias) =>
+      diasLidosNoAno(ano) / totalDeDias;
 
   // --- última leitura ------------------------------------------------------ //
 
@@ -503,14 +539,16 @@ class Estado extends ChangeNotifier {
     if (nota.trim().isEmpty) {
       final existente = _marcacoes[base.chave];
       if (existente == null) return;
-      _marcacoes[base.chave] = existente.comNota('');
+      _marcacoes[base.chave] = existente.comNota('', em: _agoraEmMs());
     } else {
-      _marcacoes[base.chave] = base.comNota(nota.trim());
+      _marcacoes[base.chave] = base.comNota(nota.trim(), em: _agoraEmMs());
     }
     _sujarMarcacoes();
     notifyListeners();
     await _gravarMarcacoes();
   }
+
+  static int _agoraEmMs() => DateTime.now().millisecondsSinceEpoch;
 
   Future<void> removerMarcacao(Marcacao marcacao) async {
     if (_marcacoes.remove(marcacao.chave) == null) return;
@@ -917,10 +955,19 @@ class Estado extends ChangeNotifier {
   /// Funde uma cópia com o que já existe. Devolve quantas marcações e quantos
   /// dias entraram, ou lança [FormatException] se o texto não for uma cópia.
   ///
+  static bool _importadaVence(Marcacao local, Marcacao chegando) {
+    if (chegando.nota.trim().isEmpty) return false;
+    if (local.nota.trim().isEmpty) return true;
+    return chegando.em > local.em;
+  }
+
   /// Funde, não substitui: importar no aparelho errado, ou importar duas vezes,
   /// nunca apaga uma nota que só existe aqui. Em conflito de mesma referência,
   /// vence quem tem nota, pela mesma razão de [alternarFavorito]: a nota é
-  /// trabalho do usuário e some sem ter como voltar.
+  /// trabalho do usuário e some sem ter como voltar. Entre duas notas, vence a
+  /// de carimbo [Marcacao.em] maior; no empate, a daqui.
+  ///
+  /// Dias lidos aceitam as chaves antigas 'DD-MM' (ver [migrarChaveDeLeitura]).
   Future<(int marcacoes, int dias)> importar(String texto) async {
     final Object? cru;
     try {
@@ -949,7 +996,7 @@ class Estado extends ChangeNotifier {
         continue;
       }
       final existente = _marcacoes[chegando.chave];
-      if (existente != null && chegando.nota.trim().isEmpty) continue;
+      if (existente != null && !_importadaVence(existente, chegando)) continue;
       if (existente == null || existente.nota != chegando.nota) {
         novasMarcacoes++;
       }
@@ -958,7 +1005,7 @@ class Estado extends ChangeNotifier {
 
     var novosDias = 0;
     for (final dia in (cru['dias_lidos'] as List? ?? const [])) {
-      if (dia is String && _lidos.add(dia)) novosDias++;
+      if (dia is String && _lidos.add(migrarChaveDeLeitura(dia))) novosDias++;
     }
 
     _sujarMarcacoes();

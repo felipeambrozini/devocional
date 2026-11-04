@@ -166,8 +166,10 @@ class _DevocionalAbaDoCronogramaState extends State<DevocionalAbaDoCronograma>
                   );
                 }
                 final dias = snap.data!.where((d) => d.mes == _mes).toList();
+                String chaveDe(DiaDoPlano dia) =>
+                    Estado.chaveDeLeitura(hoje.year, dia.data);
                 final lidosNoMes = dias
-                    .where((d) => estado.foiLido(d.data))
+                    .where((d) => estado.foiLido(chaveDe(d)))
                     .length;
                 _rolarAteHoje();
 
@@ -214,10 +216,10 @@ class _DevocionalAbaDoCronogramaState extends State<DevocionalAbaDoCronograma>
                       numero: dia.dia,
                       rotulo: dia.rotulo,
                       itens: [for (final f in dia.faixas) ItemDeCapitulo(f)],
-                      lido: estado.foiLido(dia.data),
+                      lido: estado.foiLido(chaveDe(dia)),
                       destacar: ehHoje,
                       aoAlternar: () {
-                        estado.alternarLido(dia.data);
+                        estado.alternarLido(chaveDe(dia));
                       },
                     );
                   },

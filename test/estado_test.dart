@@ -17,28 +17,28 @@ void main() {
   group('progresso do cronograma', () {
     test('marca, desmarca e persiste', () async {
       final estado = await Estado.abrir();
-      expect(estado.diasLidos, 0);
-      expect(estado.foiLido('01-01'), isFalse);
+      expect(estado.diasLidosEmTodosOsAnos, 0);
+      expect(estado.foiLido('2027-01-01'), isFalse);
 
-      await estado.alternarLido('01-01');
-      await estado.alternarLido('25-12');
-      expect(estado.diasLidos, 2);
-      expect(estado.foiLido('01-01'), isTrue);
+      await estado.alternarLido('2027-01-01');
+      await estado.alternarLido('2026-12-25');
+      expect(estado.diasLidosEmTodosOsAnos, 2);
+      expect(estado.foiLido('2027-01-01'), isTrue);
 
-      expect((await reabrir()).diasLidos, 2);
+      expect((await reabrir()).diasLidosEmTodosOsAnos, 2);
 
-      await estado.alternarLido('01-01');
-      expect(estado.foiLido('01-01'), isFalse);
-      expect((await reabrir()).diasLidos, 1);
+      await estado.alternarLido('2027-01-01');
+      expect(estado.foiLido('2027-01-01'), isFalse);
+      expect((await reabrir()).diasLidosEmTodosOsAnos, 1);
     });
 
     test('progresso e fracao do total de dias do ano', () async {
       final estado = await Estado.abrir();
-      expect(estado.progressoDoAno(365), 0);
-      await estado.alternarLido('01-01');
-      expect(estado.progressoDoAno(365), closeTo(1 / 365, 1e-9));
+      expect(estado.progressoDoAno(2027, 365), 0);
+      await estado.alternarLido('2027-01-01');
+      expect(estado.progressoDoAno(2027, 365), closeTo(1 / 365, 1e-9));
       // Em ano bissexto o divisor é 366, senão marcar o ano inteiro passaria de 100%.
-      expect(estado.progressoDoAno(366), closeTo(1 / 366, 1e-9));
+      expect(estado.progressoDoAno(2027, 366), closeTo(1 / 366, 1e-9));
     });
 
     test(
@@ -51,15 +51,17 @@ void main() {
           final estado = await Estado.abrir();
           for (var d = 0; d < total; d++) {
             final dia = DateTime(ano, 1, 1).add(Duration(days: d));
-            await estado.alternarLido(Conteudo.chaveDoDia(dia));
+            await estado.alternarLido(
+              Estado.chaveDeLeitura(ano, Conteudo.chaveDoDia(dia)),
+            );
           }
           expect(
-            estado.diasLidos,
+            estado.diasLidosEmTodosOsAnos,
             total,
             reason: 'ano $ano deve render $total chaves distintas',
           );
           expect(
-            estado.progressoDoAno(Conteudo.diasDoAno(ano)),
+            estado.progressoDoAno(ano, Conteudo.diasDoAno(ano)),
             closeTo(1.0, 1e-9),
             reason: 'ano $ano',
           );
@@ -222,8 +224,8 @@ void main() {
       final origem = await Estado.abrir();
       await origem.alternarFavorito('joao', 3, 16);
       await origem.definirNota('romanos', 8, 28, 'para meditar');
-      await origem.alternarLido('01-01');
-      await origem.alternarLido('15-03');
+      await origem.alternarLido('2027-01-01');
+      await origem.alternarLido('2027-03-15');
       final copia = origem.exportar();
 
       // Aparelho novo: nada gravado, so a copia.
@@ -236,10 +238,10 @@ void main() {
       expect(dias, 2);
       expect(destino.ehFavorito('joao', 3, 16), isTrue);
       expect(destino.marcacaoDe('romanos', 8, 28)?.nota, 'para meditar');
-      expect(destino.diasLidos, 2);
+      expect(destino.diasLidosEmTodosOsAnos, 2);
 
       // E sobreviveu ao disco, nao ficou so na memoria.
-      expect((await reabrir()).diasLidos, 2);
+      expect((await reabrir()).diasLidosEmTodosOsAnos, 2);
     });
 
     test(
@@ -247,19 +249,23 @@ void main() {
       () async {
         final estado = await Estado.abrir();
         await estado.definirNota('joao', 3, 16, 'nota daqui');
-        await estado.alternarLido('01-01');
+        await estado.alternarLido('2027-01-01');
 
         final outra = await () async {
           SharedPreferences.setMockInitialValues({});
           final e = await Estado.abrir();
           await e.alternarFavorito('joao', 3, 16);
-          await e.alternarLido('04-07');
+          await e.alternarLido('2027-07-04');
           return e.exportar();
         }();
 
         final (_, dias) = await estado.importar(outra);
         expect(dias, 1, reason: 'so o dia que faltava');
-        expect(estado.diasLidos, 2, reason: '01-01 continua marcado');
+        expect(
+          estado.diasLidosEmTodosOsAnos,
+          2,
+          reason: '01-01 continua marcado',
+        );
         expect(
           estado.marcacaoDe('joao', 3, 16)?.nota,
           'nota daqui',
@@ -271,7 +277,7 @@ void main() {
     test('importar duas vezes nao duplica nada', () async {
       final estado = await Estado.abrir();
       await estado.alternarFavorito('joao', 3, 16);
-      await estado.alternarLido('01-01');
+      await estado.alternarLido('2027-01-01');
       final copia = estado.exportar();
 
       await estado.importar(copia);
@@ -279,7 +285,7 @@ void main() {
       expect(marcacoes, 0);
       expect(dias, 0);
       expect(estado.marcacoes.length, 1);
-      expect(estado.diasLidos, 1);
+      expect(estado.diasLidosEmTodosOsAnos, 1);
     });
 
     test('texto que nao e copia e recusado com explicacao', () async {

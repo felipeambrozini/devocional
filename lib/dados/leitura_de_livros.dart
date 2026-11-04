@@ -1,10 +1,10 @@
 import 'dart:convert';
-import 'dart:math' show min;
 
 import 'package:flutter/foundation.dart' show VoidCallback;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'biblioteca.dart';
+import 'carimbo.dart';
 import 'modelos.dart';
 import 'registro.dart';
 
@@ -48,17 +48,11 @@ class LeituraDeLivros {
   // Tetos do que se aceita de uma cópia vinda da conta, que é dado de fora.
   static const _tetoDePosicoes = 10000;
   static const _tetoDeLeituras = 1000;
-  static const _umDiaEmMs = 24 * 60 * 60 * 1000;
 
   static String _limitarNota(String nota) =>
       nota.runes.length <= tamanhoMaximoDaNota
       ? nota
       : String.fromCharCodes(nota.runes.take(tamanhoMaximoDaNota));
-
-  /// Um carimbo de tempo não pode estar mais de um dia no futuro: um relógio
-  /// errado em outro aparelho ganharia todas as fusões seguintes.
-  static int _semFuturo(int em) =>
-      min(em, DateTime.now().millisecondsSinceEpoch + _umDiaEmMs);
 
   final SharedPreferences _prefs;
   final VoidCallback _aoMudar;
@@ -403,7 +397,7 @@ class LeituraDeLivros {
     return PosicaoNoLivro(
       capitulo: posicao.capitulo,
       fracao: posicao.fracao,
-      em: _semFuturo(posicao.em),
+      em: limitarCarimboNoFuturo(posicao.em),
     );
   }
 
@@ -421,7 +415,7 @@ class LeituraDeLivros {
         capitulo: bruto.capitulo,
         paragrafo: bruto.paragrafo,
         nota: _limitarNota(bruto.nota),
-        em: _semFuturo(bruto.em),
+        em: limitarCarimboNoFuturo(bruto.em),
       );
       final local = _destaques[remoto.chave];
       if (local != null && remoto.em <= local.em) return false;

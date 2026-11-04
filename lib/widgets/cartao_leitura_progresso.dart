@@ -27,9 +27,10 @@ class DevocionalCartaoLeituraProgresso extends StatelessWidget {
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
-    final lido = estado.foiLido(dia.data);
+    final chave = Estado.chaveDeLeitura(ano, dia.data);
+    final lido = estado.foiLido(chave);
     final total = Conteudo.diasDoAno(ano);
-    final progresso = estado.progressoDoAno(total);
+    final progresso = estado.progressoDoAno(ano, total);
 
     return DevocionalCartao(
       padding: const EdgeInsets.all(DevocionalEspacamento.sp20),
@@ -53,7 +54,7 @@ class DevocionalCartaoLeituraProgresso extends StatelessWidget {
                 lido: lido,
                 rotulo: dia.rotulo,
                 aoAlternar: () =>
-                    alternarLidoComDesfazer(context, estado, dia.data),
+                    alternarLidoComDesfazer(context, estado, chave),
               ),
             ],
           ),
@@ -87,7 +88,7 @@ class DevocionalCartaoLeituraProgresso extends StatelessWidget {
                 textBaseline: TextBaseline.alphabetic,
                 children: [
                   Text(
-                    '${estado.diasLidos}',
+                    '${estado.diasLidosNoAno(ano)}',
                     style: tema.titleMedium?.copyWith(color: cor.primary),
                   ),
                   const SizedBox(width: DevocionalEspacamento.sp6),
