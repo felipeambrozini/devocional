@@ -1,7 +1,9 @@
 import 'package:devocional/dados/conteudo.dart';
 import 'package:devocional/dados/estado.dart';
 import 'package:devocional/dados/modelos.dart';
+import 'package:devocional/dados/nuvem.dart';
 import 'package:devocional/main.dart';
+import 'package:devocional/telas/biblia.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+  tearDown(() => Nuvem.instancia.logadoForcado = null);
 
   Future<void> aquecerAssets(WidgetTester tester) async {
     await tester.runAsync(() async {
@@ -21,6 +24,7 @@ void main() {
       }
       await conteudo.promessa(agora);
       await conteudo.capitulo('genesis', 1);
+      await conteudo.capitulo('joao', 1);
       await conteudo.capitulo('salmos', 119);
       await conteudo.introducao('genesis');
     });
@@ -76,6 +80,56 @@ void main() {
       expect(find.text('Como usar'), findsNothing);
     },
   );
+
+  Future<void> abrirHojeAteOCartao(WidgetTester tester) async {
+    await aquecerAssets(tester);
+    final estado = Estado(await SharedPreferences.getInstance());
+    await tester.binding.setSurfaceSize(const Size(800, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(AppDevocional(estado: estado));
+    await tester.pumpAndSettle();
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    (app.routerConfig as GoRouter).go('/hoje');
+    for (var i = 0; i < 50 && find.byType(ListView).evaluate().isEmpty; i++) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Entendi'),
+      300,
+      scrollable: find.descendant(
+        of: find.byType(ListView),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    await tester.ensureVisible(find.text('Entendi'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('sem conta, Começar por João 1 abre a Bíblia com 1:1-18', (
+    tester,
+  ) async {
+    Nuvem.instancia.logadoForcado = false;
+    await abrirHojeAteOCartao(tester);
+
+    await tester.ensureVisible(find.text('Começar por João 1'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Começar por João 1'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    final tela = tester.widget<TelaBiblia>(find.byType(TelaBiblia));
+    expect(tela.livroInicial, 'joao');
+    expect(tela.capituloInicial, 1);
+    expect(tela.destacar, (1, 18));
+  });
+
+  testWidgets('logado, o botão Começar por João 1 não aparece', (tester) async {
+    Nuvem.instancia.logadoForcado = true;
+    await abrirHojeAteOCartao(tester);
+
+    expect(find.text('Começar por João 1'), findsNothing);
+  });
 
   testWidgets('o aviso de dia marcado aparece e some sozinho em 3s', (
     tester,

@@ -17,7 +17,7 @@ class DevocionalBoasVindasDialogo extends StatelessWidget {
         'especial: A Vida de Jesus em 30 dias. Em um mês você percorre os '
         'quatro evangelhos em harmonia, acompanhando a vida e o ministério '
         'de Jesus dia após dia.\n\n'
-        'Você o encontra em na aba Plano, em Meus Planos. Ele é fixo: não pode ser '
+        'Você o encontra na aba Plano, em Meus Planos. Ele é fixo: não pode ser '
         'alterado nem excluído.',
       ),
       actions: [

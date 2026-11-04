@@ -3,8 +3,10 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import '../dados/estado.dart';
+import '../dados/nuvem.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/linhas_de_ajuda.dart';
+import '../telas/biblia.dart';
 import 'botao.dart';
 import 'cartao.dart';
 
@@ -35,15 +37,25 @@ class DevocionalCartaoDeAjuda extends StatelessWidget {
             Text(linha, style: tema.bodyMedium),
             const SizedBox(height: DevocionalEspacamento.sp6),
           ],
+          if (!Nuvem.instancia.logado) ...[
+            const SizedBox(height: DevocionalEspacamento.sp2),
+            Semantics(
+              hint: 'Abre o Evangelho de João, capítulo 1',
+              child: DevocionalBotaoSecundario(
+                onPressed: () => _abrirJoao1(context),
+                child: const Text('Começar por João 1'),
+              ),
+            ),
+          ],
           const SizedBox(height: DevocionalEspacamento.sp2),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: DevocionalEspacamento.sp8,
             children: [
               DevocionalBotaoTerciario(
                 onPressed: () => context.push('/sobre'),
                 child: const Text('Ver tudo'),
               ),
-              const SizedBox(width: DevocionalEspacamento.sp8),
               DevocionalBotaoTerciario(
                 onPressed: () => estado.dispensarAjuda(),
                 child: const Text('Entendi'),
@@ -51,6 +63,19 @@ class DevocionalCartaoDeAjuda extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  void _abrirJoao1(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const TelaBiblia(
+          livroInicial: 'joao',
+          capituloInicial: 1,
+          destacar: (1, 18),
+        ),
       ),
     );
   }
