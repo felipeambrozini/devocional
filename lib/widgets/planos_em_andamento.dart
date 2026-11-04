@@ -208,10 +208,11 @@ class _CartaoDoPlanoDeHoje extends StatelessWidget {
         if (estado.foiLidoNoPlano(plano.id, d.numero)) d.numero,
     };
     final novo = {...atual};
-    if (!novo.remove(dia)) novo.add(dia);
+    final marcou = !novo.remove(dia);
+    if (marcou) novo.add(dia);
     await estado.substituirLidosDoPlano(plano.id, novo);
     try {
-      await PlanosNaNuvem.instancia.gravarDias(plano.id, novo.toList()..sort());
+      await PlanosNaNuvem.instancia.gravarDias(plano.id, dia, marcou);
     } on PlanosNaNuvemExcecao catch (erro) {
       await estado.substituirLidosDoPlano(plano.id, atual);
       if (context.mounted) mostrarErro(context, erro.mensagem);

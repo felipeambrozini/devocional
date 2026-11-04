@@ -62,6 +62,9 @@ class PlanoControlador extends ChangeNotifier {
 
   bool _descartado = false;
 
+  /// Só o link entra no plano sozinho; abrir pela lista nunca reentra.
+  bool get abertoPorLink => plano == null;
+
   /// Um plano aberto por link é compartilhado por definição.
   bool get compartilhado => plano?.compartilhado ?? true;
 
@@ -85,54 +88,84 @@ class PlanoControlador extends ChangeNotifier {
   }
 
   Future<void> iniciar() async {
-    if (!compartilhado) {
+    if (!compartilhado || !Nuvem.instancia.logado) {
+      // Plano local, ou sem conta: não há documento para ler (no segundo caso
+      // o cartão de entrar aparece).
       carregando = false;
       notifyListeners();
       return;
     }
-    if (!Nuvem.instancia.logado) {
-      // Sem conta não há documento para ler: o cartão de entrar aparece.
-      carregando = false;
-      notifyListeners();
-      return;
+    final leitura = await _lerDocumento();
+    if (_descartado) return;
+    final acao = decidirAberturaDoPlano(
+      abertoPorLink: abertoPorLink,
+      existe: leitura.existe,
+      participa: leitura.participa,
+      codigoDoErro: leitura.codigoDoErro,
+    );
+    switch (acao) {
+      case AcaoAoAbrirPlano.assinar:
+        _aplicarAoEspelho(leitura.documento!);
+        _assinar();
+      case AcaoAoAbrirPlano.entrar:
+        await _entrarEAssinar();
+      case AcaoAoAbrirPlano.tirarDoEspelho:
+        await _tirarDoEspelho(leitura);
+      case AcaoAoAbrirPlano.mostrarErro:
+        _mostrarErro('Não foi possível abrir o plano. Verifique a conexão.');
     }
+  }
+
+  Future<_LeituraDoPlano> _lerDocumento() async {
     try {
-      // Participantes leem o documento; quem ainda não é participante recebe
-      // erro de permissão — é o sinal de que precisa entrar primeiro.
-      final doc = await FirebaseFirestore.instance
+      final documento = await FirebaseFirestore.instance
           .collection('planos')
           .doc(planoId)
           .get();
-      if (!doc.exists) {
-        // O plano sumiu da nuvem: sai também do espelho local. Trata aqui
-        // mesmo, sem lançar para o catch abaixo — lançar caía no mesmo
-        // `catch (_)` que tenta `entrar()` de novo, e essa segunda falha
-        // (documento continua não existindo) sempre substituía esta
-        // mensagem clara pela genérica de "Plano não encontrado".
-        await estado.removerPlano(planoId);
-        if (_descartado) return;
-        erro =
-            'Este plano não existe mais. Ele pode ter sido excluído por '
-            'quem o criou.';
-        carregando = false;
-        notifyListeners();
-        return;
-      }
-      _aplicarAoEspelho(doc);
-      _assinar();
+      return _LeituraDoPlano(
+        documento: documento,
+        existe: documento.exists,
+        participa: _participa(documento.data()),
+      );
+    } on FirebaseException catch (falha) {
+      return _LeituraDoPlano(codigoDoErro: falha.code);
     } catch (_) {
-      try {
-        await PlanosNaNuvem.instancia.entrar(planoId);
-        _assinar();
-      } catch (entrada) {
-        if (_descartado) return;
-        erro = entrada is PlanosNaNuvemExcecao
-            ? entrada.mensagem
-            : 'Não foi possível abrir o plano. Verifique a conexão.';
-        carregando = false;
-        notifyListeners();
-      }
+      return const _LeituraDoPlano(codigoDoErro: 'desconhecido');
     }
+  }
+
+  bool _participa(Map<String, dynamic>? dados) {
+    final participantes = dados?['participantes'];
+    return participantes is Map && participantes[uid] is Map;
+  }
+
+  Future<void> _entrarEAssinar() async {
+    try {
+      await PlanosNaNuvem.instancia.entrar(planoId);
+      _assinar();
+    } on PlanosNaNuvemExcecao catch (entrada) {
+      _mostrarErro(entrada.mensagem);
+    }
+  }
+
+  /// O plano não é mais deste usuário (apagado, ou ele saiu por outro
+  /// aparelho): sai do espelho local em vez de ficar na lista como zumbi.
+  Future<void> _tirarDoEspelho(_LeituraDoPlano leitura) async {
+    await estado.removerPlano(planoId);
+    _mostrarErro(
+      leitura.existe == false
+          ? 'Este plano não existe mais. Ele pode ter sido excluído por '
+                'quem o criou.'
+          : 'Você não participa mais deste plano. Para voltar, abra o link '
+                'de convite de novo.',
+    );
+  }
+
+  void _mostrarErro(String mensagem) {
+    if (_descartado) return;
+    erro = mensagem;
+    carregando = false;
+    notifyListeners();
   }
 
   void _assinar() {
@@ -219,19 +252,15 @@ class PlanoControlador extends ChangeNotifier {
         }
         return;
       }
-      // A verdade é o documento: o novo conjunto parte do que ele diz, não
-      // do espelho, senão um espelho velho apagaria dias marcados noutro
-      // aparelho.
+      // O espelho local parte do que o documento diz; a gravação na nuvem só
+      // move este dia, então nada marcado noutro aparelho se perde.
       final atual = {...meusLidos()};
       final novo = {...atual};
-      if (!novo.remove(dia)) novo.add(dia);
-      final marcou = novo.contains(dia);
+      final marcou = !novo.remove(dia);
+      if (marcou) novo.add(dia);
       await estado.substituirLidosDoPlano(planoId, novo);
       try {
-        await PlanosNaNuvem.instancia.gravarDias(
-          planoId,
-          novo.toList()..sort(),
-        );
+        await PlanosNaNuvem.instancia.gravarDias(planoId, dia, marcou);
         if (context.mounted) {
           _avisarConclusao(
             context,
@@ -371,4 +400,44 @@ class PlanoControlador extends ChangeNotifier {
     notifyListeners();
     iniciar();
   }
+}
+
+/// O que a tela de um plano compartilhado faz ao abrir, dado o que a nuvem
+/// respondeu.
+enum AcaoAoAbrirPlano { assinar, entrar, tirarDoEspelho, mostrarErro }
+
+/// Decide a abertura de um plano compartilhado. [existe] é nulo quando a
+/// leitura falhou ([codigoDoErro] preenchido). Entrar sozinho só vale para
+/// quem veio por link; quem veio da lista e perdeu o acesso (saiu por outro
+/// aparelho) tem o plano tirado do espelho, e falha de rede nunca vira
+/// entrada, para não regravar a participação por engano.
+AcaoAoAbrirPlano decidirAberturaDoPlano({
+  required bool abertoPorLink,
+  required bool? existe,
+  required bool participa,
+  String? codigoDoErro,
+}) {
+  if (codigoDoErro == 'not-found') return AcaoAoAbrirPlano.tirarDoEspelho;
+  if (codigoDoErro != null && codigoDoErro != 'permission-denied') {
+    return AcaoAoAbrirPlano.mostrarErro;
+  }
+  if (existe == false) return AcaoAoAbrirPlano.tirarDoEspelho;
+  if (existe == true && participa) return AcaoAoAbrirPlano.assinar;
+  return abertoPorLink
+      ? AcaoAoAbrirPlano.entrar
+      : AcaoAoAbrirPlano.tirarDoEspelho;
+}
+
+class _LeituraDoPlano {
+  const _LeituraDoPlano({
+    this.documento,
+    this.existe,
+    this.participa = false,
+    this.codigoDoErro,
+  });
+
+  final DocumentSnapshot<Map<String, dynamic>>? documento;
+  final bool? existe;
+  final bool participa;
+  final String? codigoDoErro;
 }

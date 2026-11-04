@@ -177,30 +177,32 @@ class PlanosNaNuvem {
     }
   }
 
-  /// Escreve os dias lidos do usuário na própria entrada do documento.
-  /// Idempotente, e a regra do Firestore só deixa tocar a própria entrada.
-  Future<void> gravarDias(String planoId, List<int> lidos) async {
-    final usuario = FirebaseAuth.instance.currentUser;
-    if (usuario == null) {
-      throw const PlanosNaNuvemExcecao(
-        'Entre na sua conta para marcar dias no plano.',
-      );
-    }
-    try {
-      await FirebaseFirestore.instance.collection(_colecao).doc(planoId).update(
-        {'participantes.${usuario.uid}.lidos': lidos},
-      );
-    } catch (erro, pilha) {
-      Registro.erro('PlanosNaNuvem.gravarDias', erro, pilha);
-      throw const PlanosNaNuvemExcecao(
+  /// Marca ou desmarca um dia na própria entrada do documento, com
+  /// `arrayUnion`/`arrayRemove`: o servidor aplica só este dia, então um
+  /// espelho local velho não apaga o que foi marcado noutro aparelho. A regra
+  /// do Firestore só deixa tocar a própria entrada.
+  Future<void> gravarDias(String planoId, int dia, bool marcado) =>
+      _atualizarMinhaEntrada(
+        planoId,
+        (uid) => atualizacaoDeDia(uid, dia, marcado),
+        'PlanosNaNuvem.gravarDias',
         'Não foi possível guardar. Verifique a conexão e tente de novo.',
       );
-    }
-  }
 
-  /// Entra num plano pelo link: escreve a própria participação. Falha com
-  /// [PlanosNaNuvemExcecao] se o documento não existe (link errado) ou se
-  /// a regra recusar.
+  /// Substitui a lista inteira de dias lidos — só para o reset ao editar o
+  /// plano, que de propósito apaga o progresso de quem editou.
+  Future<void> substituirDias(String planoId, List<int> lidos) =>
+      _atualizarMinhaEntrada(
+        planoId,
+        (uid) => {'participantes.$uid.lidos': lidos},
+        'PlanosNaNuvem.substituirDias',
+        'Não foi possível guardar. Verifique a conexão e tente de novo.',
+      );
+
+  /// Entra num plano pelo link: escreve a própria participação sem tocar nos
+  /// dias já lidos, então repetir a chamada (rede instável, outro aparelho)
+  /// nunca zera o progresso. Falha com [PlanosNaNuvemExcecao] se o documento
+  /// não existe (link errado) ou se a regra recusar.
   Future<void> entrar(String planoId) async {
     final usuario = FirebaseAuth.instance.currentUser;
     if (usuario == null) {
@@ -209,9 +211,10 @@ class PlanosNaNuvem {
       );
     }
     try {
-      await FirebaseFirestore.instance.collection(_colecao).doc(planoId).update(
-        {'participantes.${usuario.uid}': _entradaDoUsuario(usuario, const [])},
-      );
+      await FirebaseFirestore.instance
+          .collection(_colecao)
+          .doc(planoId)
+          .update(atualizacaoDeEntrada(usuario.uid, usuario.displayName));
     } catch (erro, pilha) {
       Registro.erro('PlanosNaNuvem.entrar', erro, pilha);
       throw const PlanosNaNuvemExcecao(
@@ -221,7 +224,8 @@ class PlanosNaNuvem {
   }
 
   /// Sai do plano: apaga a própria participação. O documento continua para
-  /// os outros; só o criador pode apagar o plano inteiro.
+  /// os outros; só o criador pode apagar o plano inteiro. Plano que já não
+  /// existe conta como sucesso: o objetivo (não participar mais) está cumprido.
   Future<void> sair(String planoId) async {
     final usuario = FirebaseAuth.instance.currentUser;
     if (usuario == null) return;
@@ -230,6 +234,7 @@ class PlanosNaNuvem {
         {'participantes.${usuario.uid}': FieldValue.delete()},
       );
     } catch (erro, pilha) {
+      if (_naoEncontrado(erro)) return;
       Registro.erro('PlanosNaNuvem.sair', erro, pilha);
       throw const PlanosNaNuvemExcecao(
         'Não foi possível sair agora. Verifique a conexão e tente de novo.',
@@ -262,7 +267,8 @@ class PlanosNaNuvem {
     }
   }
 
-  /// O criador apaga o plano para todos.
+  /// O criador apaga o plano para todos. Plano que já sumiu conta como
+  /// sucesso.
   Future<void> excluir(String planoId) async {
     try {
       await FirebaseFirestore.instance
@@ -270,6 +276,7 @@ class PlanosNaNuvem {
           .doc(planoId)
           .delete();
     } catch (erro, pilha) {
+      if (_naoEncontrado(erro)) return;
       Registro.erro('PlanosNaNuvem.excluir', erro, pilha);
       throw const PlanosNaNuvemExcecao(
         'Não foi possível excluir agora. Verifique a conexão e tente de novo.',
@@ -282,11 +289,54 @@ class PlanosNaNuvem {
   Stream<DocumentSnapshot<Map<String, dynamic>>> deUmPlano(String planoId) =>
       FirebaseFirestore.instance.collection(_colecao).doc(planoId).snapshots();
 
+  Future<void> _atualizarMinhaEntrada(
+    String planoId,
+    Map<String, dynamic> Function(String uid) campos,
+    String origem,
+    String mensagemDeErro,
+  ) async {
+    final usuario = FirebaseAuth.instance.currentUser;
+    if (usuario == null) {
+      throw const PlanosNaNuvemExcecao(
+        'Entre na sua conta para marcar dias no plano.',
+      );
+    }
+    try {
+      await FirebaseFirestore.instance
+          .collection(_colecao)
+          .doc(planoId)
+          .update(campos(usuario.uid));
+    } catch (erro, pilha) {
+      Registro.erro(origem, erro, pilha);
+      throw PlanosNaNuvemExcecao(mensagemDeErro);
+    }
+  }
+
   Map<String, dynamic> _entradaDoUsuario(User usuario, List<int> lidos) => {
     'nome': nomeDoParticipante(usuario.displayName),
     'lidos': lidos,
   };
 }
+
+bool _naoEncontrado(Object erro) =>
+    erro is FirebaseException && erro.code == 'not-found';
+
+/// Os campos para entrar no plano sem destruir nada: o nome é regravado e
+/// `lidos` recebe `arrayUnion` vazio, que cria a lista se faltar e mantém o
+/// que já existe. Gravar o mapa inteiro zeraria o progresso de quem já
+/// participa numa repetição de [PlanosNaNuvem.entrar].
+Map<String, dynamic> atualizacaoDeEntrada(String uid, String? displayName) => {
+  'participantes.$uid.nome': nomeDoParticipante(displayName),
+  'participantes.$uid.lidos': FieldValue.arrayUnion(const <int>[]),
+};
+
+/// O campo que marca ([marcado]) ou desmarca um [dia] na entrada do
+/// participante, aplicado pelo servidor sem reler a lista.
+Map<String, dynamic> atualizacaoDeDia(String uid, int dia, bool marcado) => {
+  'participantes.$uid.lidos': marcado
+      ? FieldValue.arrayUnion([dia])
+      : FieldValue.arrayRemove([dia]),
+};
 
 /// Nome para a lista de participantes; sem nome no perfil Google, cai em
 /// "Participante" — nunca no e-mail, que os outros participantes também

@@ -270,4 +270,62 @@ void main() {
       expect(controlador.carregando, isFalse);
     });
   });
+
+  group('decidirAberturaDoPlano', () {
+    AcaoAoAbrirPlano decidir({
+      bool porLink = false,
+      bool? existe = true,
+      bool participa = true,
+      String? erro,
+    }) => decidirAberturaDoPlano(
+      abertoPorLink: porLink,
+      existe: existe,
+      participa: participa,
+      codigoDoErro: erro,
+    );
+
+    test('participante com documento assina, venha de onde vier', () {
+      expect(decidir(), AcaoAoAbrirPlano.assinar);
+      expect(decidir(porLink: true), AcaoAoAbrirPlano.assinar);
+    });
+
+    test('plano apagado sai do espelho, por link ou pela lista', () {
+      expect(decidir(existe: false), AcaoAoAbrirPlano.tirarDoEspelho);
+      expect(
+        decidir(porLink: true, existe: false),
+        AcaoAoAbrirPlano.tirarDoEspelho,
+      );
+    });
+
+    test('permission-denied entra só por link; pela lista tira do espelho', () {
+      expect(
+        decidir(porLink: true, existe: null, erro: 'permission-denied'),
+        AcaoAoAbrirPlano.entrar,
+      );
+      expect(
+        decidir(existe: null, erro: 'permission-denied'),
+        AcaoAoAbrirPlano.tirarDoEspelho,
+      );
+    });
+
+    test('documento legível sem participação segue a mesma regra', () {
+      expect(decidir(porLink: true, participa: false), AcaoAoAbrirPlano.entrar);
+      expect(decidir(participa: false), AcaoAoAbrirPlano.tirarDoEspelho);
+    });
+
+    test('falha passageira de rede nunca entra nem tira do espelho', () {
+      for (final porLink in [true, false]) {
+        for (final codigo in [
+          'unavailable',
+          'deadline-exceeded',
+          'desconhecido',
+        ]) {
+          expect(
+            decidir(porLink: porLink, existe: null, erro: codigo),
+            AcaoAoAbrirPlano.mostrarErro,
+          );
+        }
+      }
+    });
+  });
 }

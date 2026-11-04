@@ -82,7 +82,7 @@ Future<bool> editarPlano(
         devocionalAntes: edicao.devocionalAntes,
       );
       if (mudouODiaADia) {
-        await PlanosNaNuvem.instancia.gravarDias(plano.id, const []);
+        await PlanosNaNuvem.instancia.substituirDias(plano.id, const []);
       }
     } on PlanosNaNuvemExcecao catch (erro) {
       if (context.mounted) mostrarErro(context, erro.mensagem);
