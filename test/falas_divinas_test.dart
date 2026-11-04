@@ -93,10 +93,17 @@ void main() {
           final texto = capitulos[cap]['versiculos'][v] as String;
           final esperado = <List<int>>[];
           var posicao = 0;
-          for (final trecho in (trechos as List).cast<String>()) {
-            final inicio = texto.indexOf(trecho, posicao);
+          for (final item in trechos as List) {
+            // Um trecho é a string, ou [string, n] para a n-ésima ocorrência.
+            final (trecho, numero) = item is String
+                ? (item, 1)
+                : (item[0] as String, item[1] as int);
+            var inicio = -1;
+            for (var vez = 0; vez < numero; vez++) {
+              inicio = texto.indexOf(trecho, inicio + 1);
+            }
             expect(
-              inicio >= 0,
+              inicio >= posicao,
               isTrue,
               reason: '$ref: "$trecho" fora de ordem',
             );

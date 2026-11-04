@@ -33,17 +33,32 @@ def utf16(texto, i):
     return len(texto[:i].encode('utf-16-le')) // 2
 
 
+def ocorrencia(texto, trecho, numero):
+    """Posicao da n-esima ocorrencia (1 = a primeira) de trecho em texto, ou -1."""
+    inicio = -1
+    for _ in range(numero):
+        inicio = texto.find(trecho, inicio + 1)
+        if inicio < 0:
+            return -1
+    return inicio
+
+
 def intervalos(texto, trechos, onde):
-    """Indices UTF-16 [inicio, fim) de cada trecho, em ordem, sem ambiguidade."""
+    """Indices UTF-16 [inicio, fim) de cada trecho, em ordem, sem ambiguidade.
+
+    Um trecho e uma string, ou [string, n] para a n-esima ocorrencia (1 = a
+    primeira) quando a mesma frase aparece mais de uma vez no versiculo.
+    """
     saida, posicao = [], 0
-    for trecho in trechos:
+    for item in trechos:
+        trecho, numero = (item, None) if isinstance(item, str) else item
         if not trecho.strip():
             sys.exit(f'{onde}: trecho vazio')
-        inicio = texto.find(trecho, posicao)
-        if inicio < 0:
+        inicio = ocorrencia(texto, trecho, numero or 1)
+        if inicio < posicao:
             sys.exit(f'{onde}: trecho fora do versiculo ou fora de ordem: {trecho!r}\n  {texto}')
-        if texto.find(trecho, inicio + 1) >= 0:
-            sys.exit(f'{onde}: trecho repetido no versiculo, alongue com palavras vizinhas: {trecho!r}')
+        if numero is None and texto.find(trecho, inicio + 1) >= 0:
+            sys.exit(f'{onde}: trecho repetido no versiculo, use [trecho, n] ou alongue: {trecho!r}')
         saida.append([utf16(texto, inicio), utf16(texto, inicio + len(trecho))])
         posicao = inicio + len(trecho)
     return saida
