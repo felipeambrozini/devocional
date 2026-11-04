@@ -610,6 +610,62 @@ motivo novo.
   devocional cuja referência cite dois capítulos da mesma faixa multi-capítulo
   apareceria duas vezes no dia; agora dedupe por `{...}.toList()` antes de
   intercalar, aproveitando a igualdade por valor de `ItemDeDevocional`.
+- **O app só regrava o cadastro do lembrete quando algo mudou** (`cadastroPrecisaSerGravado`
+  em `lib/dados/lembretes.dart`): antes, toda abertura do app dava `.set` em
+  `lembretes/{fid}`, apagando o `ultimoEnvio*` e fazendo a Function reenviar o
+  aviso do dia no minuto seguinte (na web, tocar no aviso recarrega a página e
+  repetia). Agora ele lê o documento e só grava se `fid`, os 4 horários ou o
+  fuso mudaram, o que mantém o reenvio ao mudar o horário e a atualização do
+  fuso de quem viaja. Um horário entre 23h e 23h59 não chega mais à meia-noite:
+  depois da virada o dia de referência é o de ontem (`referenciaDoSlot`). Desligar
+  os lembretes em outro aparelho, pela conta, agora cancela também o lembrete
+  local deste.
+- **Dias lidos do cronograma têm ano** (`AAAA-MM-DD`, `lib/dados/estado.dart`):
+  a chave `DD-MM` sem ano faria tudo o que foi lido em 2026 aparecer como lido
+  em 2027, e em 2028 a variante de 366 dias deslocaria as faixas depois de
+  28/02. A migração é idempotente e roda no carregamento e no importar: chaves
+  `DD-MM` viram a data a partir do nascimento do app (28/07/2026): de 28/07 em
+  diante é 2026, antes é 2027, então um APK velho que grave `05-01` depois da
+  virada cai em 2027. O "Progresso do ano" e o contador do mês contam só o ano
+  exibido (`diasLidosNoAno`, `progressoDoAno`); a tela de marcações usa o total
+  de todos os anos (`diasLidosEmTodosOsAnos`) para decidir se há o que exportar.
+  O APK velho trata a chave nova como marca opaca e conta em dobro até
+  atualizar. As chaves de `assets/devocionais` e `assets/planos` continuam
+  `DD-MM`: elas identificam o dia do calendário, não uma leitura feita.
+- **Nota tem carimbo de edição** (`Marcacao.em`, opcional, ms desde a época,
+  com o mesmo teto de um dia no futuro de `lib/dados/carimbo.dart`, que também
+  serve aos livros): no importar, em conflito vence a nota mais recente; sem
+  carimbo dos dois lados fica a daqui, e nota vazia que chega nunca apaga a
+  local. Antes, a cópia que chegava vencia sempre e uma nota editada podia
+  voltar à versão velha da conta.
+- **Nada sobe para a conta antes de um puxar bem-sucedido**
+  (`Sincronia` em `lib/dados/nuvem.dart`): se o puxar inicial falha (rede, ou
+  navegador novo sem cache), o `mergeFields` do primeiro envio trocaria o campo
+  inteiro da conta pelo quase nada local. Agora o primeiro envio tenta puxar e
+  fundir de novo e não empurra se falhar. Ao ir para segundo plano
+  (`paused`/`hidden`) o app despeja na hora o que esperava o debounce de 2 s. A
+  retomada não força mais a atestação do App Check (`revalidarAppCheck(forcar:
+  false)`): só o PERMISSION_DENIED força. Apagar a conta para as sincronias e
+  reautentica **antes** de apagar qualquer coisa quando o login tem mais de 5
+  min; cancelado, nada é apagado.
+- **Plano compartilhado não perde progresso** (`lib/dados/planos_nuvem.dart`,
+  `lib/controladores/plano_controlador.dart`): marcar um dia grava só aquele dia
+  (`arrayUnion`/`arrayRemove` em `participantes.<uid>.lidos`), então marcar num
+  aparelho não apaga o que foi marcado noutro; entrar no plano é idempotente
+  (`arrayUnion([])`) e uma falha passageira de rede não zera mais o progresso. A
+  entrada automática só acontece ao abrir por link de convite; pela lista, um
+  plano de que a pessoa saiu noutro aparelho ou que foi apagado sai do espelho
+  local com aviso (`decidirAberturaDoPlano`). A regra de `planos` separa `get`
+  (participante ou documento inexistente, para o app ver "plano apagado") de
+  `list` (só participante), e o delete de um plano já inexistente passa. Só o
+  reset de `planos_acoes.dart` substitui a lista inteira (`substituirDias`).
+- **O chat manda só as últimas 20 falas** à Gemini (`lib/dados/ia.dart`), com a
+  primeira sempre do usuário. Resposta que bate o teto de 2.048 tokens sai com
+  um aviso de corte no fim; bloqueio de segurança dá uma mensagem própria pedindo
+  para reformular, sem "tente de novo". A política de privacidade diz que o app
+  usa o nível gratuito da API Gemini, no qual o Google pode usar o conteúdo para
+  melhorar os produtos e revisores humanos podem ler os dados, sem ligação com a
+  conta; se o faturamento for habilitado, revisar esse trecho.
 
 ### Lembretes diários (Android e web)
 
@@ -622,9 +678,25 @@ atrasava 10-30 min e pulava a janela de 5 min — o scheduler do Google não; e
 mesmo assim sobrou tolerância: 60 min depois do horário cadastrado ainda
 envia (60 tentativas na cadência de 1 min, não 12), com um envio único por
 dia marcado no próprio documento (`ultimoEnvioManha`/`ultimoEnvioNoite`,
-escritos só pela Function). Cadência de 1 min em vez de 5: mais leituras no
-Firestore (uma por lembrete cadastrado, por minuto — folga de sobra dentro do
-free tier para o número de usuários deste app; reavaliar se crescer muito).
+escritos só pela Function). A Function não lê mais a coleção inteira a cada
+minuto (eram 1.440 leituras por aparelho por dia, e o grátis acabava com ~35
+aparelhos): cada documento tem `proximoEnvio`, o instante em que volta a ser
+lido, e a execução do minuto consulta só `proximoEnvio <= agora`, junta as
+mensagens vencidas em `sendEach` de até 500 e grava `ultimoEnvio*` e o novo
+`proximoEnvio` num `batch()`. `proximoEnvio` é o próximo slot, com teto de 60
+min (marcado com `ponytail:` no código: evita converter fuso para UTC; o preço é
+uma leitura por documento por hora no pior caso). Quem não tem o campo (cadastro
+novo, ou o `.set` completo do app, que o apaga) é marcado pelo gatilho
+`prepararLembrete` (`onDocumentWritten` em `lembretes/{id}`, na região do banco,
+`southamerica-east1`), e a execução seguinte o pega. Os cadastros que já existiam
+antes do campo, e um gatilho que falhe, são cobertos por uma varredura a cada 15
+min dentro da própria agendada (`marcarSemProximoEnvio`, marcada `ponytail:` no
+código): sem ela esses lembretes ficariam fora da consulta e o push deixaria de
+chegar. Se um documento some no meio de um lote, a gravação cai para um
+documento por vez em vez de repetir o aviso dos outros. A lógica de horário vive em
+`functions/src/regras.ts`, testada com `npm --prefix functions test`. O log traz
+"N lembrete(s) vencido(s)": perto de zero nos minutos sem horário é o sinal de
+que está funcionando.
 
 - **Formato das notificações do push**: "Venha ler a reflexão para sua manhã
   em Josué 5:12", "Venha ler a reflexão para sua noite em Cantares de Salomão 1:4" e
@@ -654,8 +726,8 @@ free tier para o número de usuários deste app; reavaliar se crescer muito).
 - **Contrato do Firestore** (`lembretes/{fid}`, id = FID; documentos antigos
   `lembretes/{token}`, id = token FCM): `{fid, minutosManha, minutosPromessas,
   minutosLeitura, minutosNoite, fuso}` escritos pelo app, com o identificador
-  igual ao id, mais `ultimoEnvio*` escritos só pela Function (Admin SDK ignora
-  as regras). A proteção é o `hasOnly`/formato estrito de `valido()` e a
+  igual ao id, mais `ultimoEnvio*` e `proximoEnvio` escritos só pela Function
+  (Admin SDK ignora as regras; o cliente não pode gravar `proximoEnvio`). A proteção é o `hasOnly`/formato estrito de `valido()` e a
   proibição de `list`; App Check é opcional nesta coleção (aparelhos sem Play
   Integrity precisam registrar o lembrete).
 - **Identificador é o FID**: o app usa `FirebaseInstallations.getId()` e
