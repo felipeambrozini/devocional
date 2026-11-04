@@ -85,6 +85,12 @@ class Sincronia {
   String? _ultimaCopia;
   Timer? _pendente;
 
+  /// Se um puxar+fundir já deu certo. Enquanto não deu, nada sobe: o local
+  /// ainda não absorveu o que a conta tem, e empurrar o campo inteiro (o
+  /// `mergeFields` substitui o campo todo) apagaria o dela, principalmente
+  /// num navegador novo, sem cache persistente.
+  bool _puxou = false;
+
   /// A cópia que o [_pendente] ainda não enviou. Vive fora da closure do
   /// `Timer` para que [despejar] saiba o que enviar no logout.
   String? _pendenteCopia;
@@ -100,6 +106,15 @@ class Sincronia {
   /// [_aoMudar] do fim dispara.
   Future<void> comecar() async {
     _ultimaCopia = _serializar();
+    await _puxarEFundir();
+    estado.addListener(_aoMudar);
+    _aoMudar();
+  }
+
+  /// Devolve se o puxar+fundir deu certo (agora ou antes). Falhar aqui (sem
+  /// rede, Firestore recusou, cópia ilegível) não pode derrubar nada: o local
+  /// fica intacto, nada sobe, e o próximo envio tenta puxar de novo.
+  Future<bool> _puxarEFundir() async {
     try {
       final remota = await puxar();
       if (remota != null) await _fundir(remota);
@@ -107,24 +122,14 @@ class Sincronia {
       // este aparelho tinha. Sem esta linha, o que só existe aqui só subia
       // quando a fusão trazia novidade de lá: com a conta ainda sem cópia
       // (`remota` null), `_aoMudar` comparava o local com ele mesmo, não via
-      // diferença e nada subia — um plano criado antes de entrar na conta
+      // diferença e nada subia: um plano criado antes de entrar na conta
       // ficava preso no aparelho, e a web, na mesma conta, nunca o via.
-      //
-      // Só depois da fusão ter dado certo: com ela quebrada (cópia ilegível)
-      // o local ainda não absorveu o que estava lá, e mandá-lo por cima
-      // apagaria o que a conta tinha. Nesse caso o `catch` abaixo mantém a
-      // base local, e nada sobe.
       if (!_mesmoConteudo(remota, _serializar())) _ultimaCopia = null;
+      _puxou = true;
     } catch (erro, pilha) {
-      // Cópia da conta ilegível (FormatException: versão futura ou gravada
-      // torta), sem rede, ou o Firestore recusou o acesso: o local continua
-      // intacto e vai subir por cima; nunca o contrário. A sincronia segue
-      // viva para os envios e a próxima mudança tenta puxar de novo. Falhar
-      // aqui não pode derrubar nada (mesma regra de `_enviar`).
-      Registro.erro('Nuvem.comecar', erro, pilha);
+      Registro.erro('Nuvem.puxar', erro, pilha);
     }
-    estado.addListener(_aoMudar);
-    _aoMudar();
+    return _puxou;
   }
 
   void parar() {
@@ -155,6 +160,20 @@ class Sincronia {
     if (copia != null) _enviar(copia);
   }
 
+  /// Sem puxar+fundir feito, tenta de novo antes de subir e não sobe se
+  /// falhar (o pendente se perde, mas a próxima mudança o recalcula). Depois
+  /// de uma retomada tardia a cópia é refeita: a fusão pode ter trazido o que
+  /// a conta tinha.
+  Future<void> _transmitir(String copia) async {
+    final aEnviar = _puxou ? copia : await _copiaDepoisDePuxar();
+    if (aEnviar == null || aEnviar == _ultimaCopia) return;
+    await empurrar(aEnviar);
+    _ultimaCopia = aEnviar;
+  }
+
+  Future<String?> _copiaDepoisDePuxar() async =>
+      await _puxarEFundir() ? _serializar() : null;
+
   /// Envia agora o que ainda aguardava o debounce, sem esperar o [atraso].
   ///
   /// Usado no logout: o signOut a seguir para a sincronia, e uma mudança
@@ -171,8 +190,7 @@ class Sincronia {
     _pendenteCopia = null;
     if (copia == null) return;
     try {
-      await empurrar(copia).timeout(const Duration(seconds: 5));
-      _ultimaCopia = copia;
+      await _transmitir(copia).timeout(const Duration(seconds: 5));
     } catch (erro, pilha) {
       Registro.erro('Nuvem.despejar', erro, pilha);
     }
@@ -181,8 +199,7 @@ class Sincronia {
 
   Future<void> _enviar(String copia) async {
     try {
-      await empurrar(copia);
-      _ultimaCopia = copia;
+      await _transmitir(copia);
     } catch (erro, pilha) {
       // Sem rede, ou regra recusou. O dado continua no aparelho e a próxima
       // mudança tenta de novo; falhar aqui não pode derrubar nada.
@@ -232,6 +249,55 @@ bool _mesmoValor(dynamic a, dynamic b) {
   return a == b;
 }
 
+/// A ordem segura de apagar a conta. Para as sincronias ANTES de tudo, senão
+/// uma mudança pendente recriaria o documento recém-apagado. Reautentica antes
+/// de apagar, quando o login é antigo, para que um popup cancelado ou falho
+/// não deixe o documento apagado e a conta de pé. Se algo falha, as sincronias
+/// voltam: o usuário segue logado e o app segue sincronizando.
+Future<void> apagarContaEmOrdem({
+  required void Function() pararSincronias,
+  required void Function() religarSincronias,
+  required bool precisaReautenticar,
+  required Future<void> Function() reautenticar,
+  required Future<void> Function() apagar,
+}) async {
+  pararSincronias();
+  try {
+    if (precisaReautenticar) await reautenticar();
+    await apagar();
+  } catch (_) {
+    religarSincronias();
+    rethrow;
+  }
+}
+
+/// Funde os lembretes que vieram da conta neste aparelho. O ligar e o desligar
+/// vindos de outro aparelho precisam chegar ao agendamento local, não só à
+/// preferência.
+Future<void> fundirLembretesDaConta(Estado estado, String remota) async {
+  final estavaLigado = estado.lembretesAtivos;
+  final mudou = await estado.fundirLembretes(remota);
+  if (!mudou) return;
+  if (!estado.lembretesAtivos) {
+    if (estavaLigado) await Lembretes.instancia.cancelar();
+    return;
+  }
+  // O horário ligado veio de outro aparelho: este pode nunca ter pedido a
+  // permissão de notificação. Sem checar aqui, agendar() roda no vácuo: grava
+  // o horário mas nada aparece neste aparelho. Não desliga `lembretesAtivos`
+  // aqui: é a preferência compartilhada entre aparelhos, e derrubá-la também
+  // desligaria os que já têm permissão; a falta de permissão é só deste
+  // aparelho.
+  if (!await Lembretes.instancia.pedirPermissao()) return;
+  TimeOfDay hora(int m) => TimeOfDay(hour: m ~/ 60, minute: m % 60);
+  await Lembretes.instancia.agendar(
+    manha: hora(estado.minutosLembreteManha),
+    promessas: hora(estado.minutosLembretePromessas),
+    leitura: hora(estado.minutosLembreteLeitura),
+    noite: hora(estado.minutosLembreteNoite),
+  );
+}
+
 /// Conta Google e cópia na nuvem. Um valor só para o app inteiro, como
 /// `Lembretes.instancia` em `lib/dados/lembretes.dart` — e pela mesma razão:
 /// os botões de Entrar e Sair (Hoje e plano compartilhado) não têm como
@@ -247,6 +313,7 @@ class Nuvem extends ChangeNotifier {
   Nuvem._();
 
   static const _colecao = 'usuarios';
+  static const _loginRecente = Duration(minutes: 5);
 
   Sincronia? _sincronia;
 
@@ -275,6 +342,10 @@ class Nuvem extends ChangeNotifier {
   /// biblioteca, no campo `livros` do mesmo documento: a leitura é da conta, e
   /// celular e web logados mostram a mesma coisa.
   Sincronia? _sincroniaDeLivros;
+
+  /// O Estado passado a [iniciar], para religar as sincronias quando o
+  /// apagar da conta é desfeito.
+  Estado? _estado;
   StreamSubscription<User?>? _assinatura;
   bool _pronta = false;
 
@@ -395,22 +466,27 @@ class Nuvem extends ChangeNotifier {
     }
   }
 
-  /// Revalida o token do App Check fora do ciclo de abertura — na retomada
-  /// do app e depois de um PERMISSION_DENIED que pode ter sido token
-  /// expirado. Se a atestação do aparelho falha de verdade, isso só
-  /// registra e segue: ninguém fica travado aqui esperando.
-  Future<void> revalidarAppCheck() async {
+  /// Pede o token do App Check. Na retomada do app basta `forcar: false`: o
+  /// SDK devolve o cacheado e só renova se expirou, sem pagar uma atestação
+  /// (avaliação do reCAPTCHA na web, Play Integrity no Android) a cada volta
+  /// à aba. Depois de um PERMISSION_DENIED, que pode ter sido token vencido,
+  /// o padrão `forcar: true` obriga uma atestação nova: sem isso o SDK
+  /// devolveria o token ruim em cache. Se a atestação falha de verdade, isso
+  /// só registra e segue: ninguém fica travado aqui esperando.
+  Future<void> revalidarAppCheck({bool forcar = true}) async {
     try {
-      // forceRefresh: sem isso o SDK devolve o token cacheado (ou nada, se
-      // a primeira tentativa falhou) e a revalidação vira ritual — o que
-      // importa é forçar uma nova atestação.
-      await FirebaseAppCheck.instance
-          .getToken(true)
-          .timeout(const Duration(seconds: 10), onTimeout: () => null);
+      await obterTokenAppCheck(
+        forcar,
+      ).timeout(const Duration(seconds: 10), onTimeout: () => null);
     } catch (erro, pilha) {
       Registro.esperado('Nuvem.revalidarAppCheck', erro, pilha);
     }
   }
+
+  /// Só para testes: troca a ida ao Firebase App Check.
+  @visibleForTesting
+  Future<String?> Function(bool forcar) obterTokenAppCheck = (forcar) =>
+      FirebaseAppCheck.instance.getToken(forcar);
 
   Future<void> iniciar(Estado estado) async {
     try {
@@ -437,96 +513,94 @@ class Nuvem extends ChangeNotifier {
     // verdade) a UI saberia tarde que pode mostrar o "Entrar".
     notifyListeners();
 
+    _estado = estado;
     _assinatura = FirebaseAuth.instance.authStateChanges().listen((usuario) {
-      _sincronia?.parar();
-      _sincronia = null;
-      _sincroniaDeConversas?.parar();
-      _sincroniaDeConversas = null;
-      _sincroniaDeLembretes?.parar();
-      _sincroniaDeLembretes = null;
-      _sincroniaDePlanos?.parar();
-      _sincroniaDePlanos = null;
-      _sincroniaDeLivros?.parar();
-      _sincroniaDeLivros = null;
+      _pararSincronias();
       notifyListeners();
-      if (usuario == null) return;
-
-      // Uma leitura só do documento para as quatro sincronias: cada uma pega
-      // o próprio campo dela, em vez de quatro idas ao Firestore por login.
-      // Seguro porque a Sincronia só chama `puxar` uma vez, em `comecar`.
-      final uid = usuario.uid;
-      final documento = _lerDocumento(uid);
-
-      final sincronia = Sincronia(
-        estado: estado,
-        puxar: () => _campo(documento, 'copia'),
-        empurrar: (copia) => _empurrarCampo(uid, 'copia', copia),
-        aoMudarSituacao: notifyListeners,
-      );
-      _sincronia = sincronia;
-      unawaited(sincronia.comecar());
-
-      final sincroniaDeConversas = Sincronia(
-        estado: estado,
-        serializar: estado.serializarConversas,
-        fundir: estado.fundirConversas,
-        puxar: () => _campo(documento, 'conversas'),
-        empurrar: (copia) => _empurrarCampo(uid, 'conversas', copia),
-        aoMudarSituacao: notifyListeners,
-      );
-      _sincroniaDeConversas = sincroniaDeConversas;
-      unawaited(sincroniaDeConversas.comecar());
-
-      final sincroniaDeLembretes = Sincronia(
-        estado: estado,
-        serializar: estado.serializarLembretes,
-        fundir: (remota) async {
-          final mudou = await estado.fundirLembretes(remota);
-          if (!mudou || !estado.lembretesAtivos) return;
-          // O horário ligado veio de outro aparelho — este pode nunca ter
-          // pedido a permissão de notificação. Sem checar aqui, agendar()
-          // roda no vácuo: grava o horário mas nada aparece neste aparelho.
-          // Não desliga `lembretesAtivos` aqui: é a preferência compartilhada
-          // entre aparelhos, e derrubá-la também desligaria os que já têm
-          // permissão — a falta de permissão é só deste aparelho.
-          if (!await Lembretes.instancia.pedirPermissao()) return;
-          TimeOfDay hora(int m) => TimeOfDay(hour: m ~/ 60, minute: m % 60);
-          await Lembretes.instancia.agendar(
-            manha: hora(estado.minutosLembreteManha),
-            promessas: hora(estado.minutosLembretePromessas),
-            leitura: hora(estado.minutosLembreteLeitura),
-            noite: hora(estado.minutosLembreteNoite),
-          );
-        },
-        puxar: () => _campo(documento, 'lembretes'),
-        empurrar: (copia) => _empurrarCampo(uid, 'lembretes', copia),
-        aoMudarSituacao: notifyListeners,
-      );
-      _sincroniaDeLembretes = sincroniaDeLembretes;
-      unawaited(sincroniaDeLembretes.comecar());
-
-      final sincroniaDePlanos = Sincronia(
-        estado: estado,
-        serializar: estado.serializarPlanos,
-        fundir: estado.fundirPlanos,
-        puxar: () => _campo(documento, 'planos'),
-        empurrar: (copia) => _empurrarCampo(uid, 'planos', copia),
-        aoMudarSituacao: notifyListeners,
-      );
-      _sincroniaDePlanos = sincroniaDePlanos;
-      unawaited(sincroniaDePlanos.comecar());
-
-      final sincroniaDeLivros = Sincronia(
-        estado: estado,
-        serializar: estado.serializarLeituraDeLivros,
-        fundir: estado.fundirLeituraDeLivros,
-        puxar: () => _campo(documento, 'livros'),
-        empurrar: (copia) => _empurrarCampo(uid, 'livros', copia),
-        aoMudarSituacao: notifyListeners,
-      );
-      _sincroniaDeLivros = sincroniaDeLivros;
-      unawaited(sincroniaDeLivros.comecar());
+      if (usuario != null) _iniciarSincronias(estado, usuario.uid);
     });
+  }
+
+  void _pararSincronias() {
+    _sincronia?.parar();
+    _sincronia = null;
+    _sincroniaDeConversas?.parar();
+    _sincroniaDeConversas = null;
+    _sincroniaDeLembretes?.parar();
+    _sincroniaDeLembretes = null;
+    _sincroniaDePlanos?.parar();
+    _sincroniaDePlanos = null;
+    _sincroniaDeLivros?.parar();
+    _sincroniaDeLivros = null;
+  }
+
+  void _iniciarSincronias(Estado estado, String uid) {
+    // Uma leitura só do documento para as cinco sincronias na primeira
+    // tentativa: cada uma pega o próprio campo dela, em vez de cinco idas ao
+    // Firestore por login. Quem precisa tentar de novo (o puxar falhou) lê o
+    // documento outra vez, sem herdar o erro da leitura compartilhada.
+    final documento = _lerDocumento(uid);
+    Future<String?> Function() puxarDe(String campo) {
+      var primeiraLeitura = true;
+      return () {
+        if (!primeiraLeitura) return _campo(_lerDocumento(uid), campo);
+        primeiraLeitura = false;
+        return _campo(documento, campo);
+      };
+    }
+
+    final sincronia = Sincronia(
+      estado: estado,
+      puxar: puxarDe('copia'),
+      empurrar: (copia) => _empurrarCampo(uid, 'copia', copia),
+      aoMudarSituacao: notifyListeners,
+    );
+    _sincronia = sincronia;
+    unawaited(sincronia.comecar());
+
+    final sincroniaDeConversas = Sincronia(
+      estado: estado,
+      serializar: estado.serializarConversas,
+      fundir: estado.fundirConversas,
+      puxar: puxarDe('conversas'),
+      empurrar: (copia) => _empurrarCampo(uid, 'conversas', copia),
+      aoMudarSituacao: notifyListeners,
+    );
+    _sincroniaDeConversas = sincroniaDeConversas;
+    unawaited(sincroniaDeConversas.comecar());
+
+    final sincroniaDeLembretes = Sincronia(
+      estado: estado,
+      serializar: estado.serializarLembretes,
+      fundir: (remota) => fundirLembretesDaConta(estado, remota),
+      puxar: puxarDe('lembretes'),
+      empurrar: (copia) => _empurrarCampo(uid, 'lembretes', copia),
+      aoMudarSituacao: notifyListeners,
+    );
+    _sincroniaDeLembretes = sincroniaDeLembretes;
+    unawaited(sincroniaDeLembretes.comecar());
+
+    final sincroniaDePlanos = Sincronia(
+      estado: estado,
+      serializar: estado.serializarPlanos,
+      fundir: estado.fundirPlanos,
+      puxar: puxarDe('planos'),
+      empurrar: (copia) => _empurrarCampo(uid, 'planos', copia),
+      aoMudarSituacao: notifyListeners,
+    );
+    _sincroniaDePlanos = sincroniaDePlanos;
+    unawaited(sincroniaDePlanos.comecar());
+
+    final sincroniaDeLivros = Sincronia(
+      estado: estado,
+      serializar: estado.serializarLeituraDeLivros,
+      fundir: estado.fundirLeituraDeLivros,
+      puxar: puxarDe('livros'),
+      empurrar: (copia) => _empurrarCampo(uid, 'livros', copia),
+      aoMudarSituacao: notifyListeners,
+    );
+    _sincroniaDeLivros = sincroniaDeLivros;
+    unawaited(sincroniaDeLivros.comecar());
   }
 
   @override
@@ -639,20 +713,25 @@ class Nuvem extends ChangeNotifier {
     }
   }
 
-  Future<void> sair() async {
-    // Despeja o que ainda aguardava o debounce antes de derrubar a sessão:
-    // o signOut para a sincronia, e a última mudança não pode ficar presa no
-    // timer. [despejar] tem teto de espera, então o logout nunca trava.
+  /// Envia agora o que ainda aguardava o debounce, em todas as sincronias.
+  /// Usado ao sair da conta e quando o app vai para segundo plano: um app
+  /// fechado em seguida mataria o timer de 2 s e a última mudança se perderia.
+  /// Cada [Sincronia.despejar] tem teto de espera, então nada trava.
+  Future<void> despejarSincronias() async {
     await _sincronia?.despejar();
     await _sincroniaDeConversas?.despejar();
     await _sincroniaDeLembretes?.despejar();
     await _sincroniaDePlanos?.despejar();
     await _sincroniaDeLivros?.despejar();
+  }
+
+  Future<void> sair() async {
+    await despejarSincronias();
     await FirebaseAuth.instance.signOut();
   }
 
   /// Apaga o documento da conta e a conta em si. O que está no navegador não
-  /// é tocado — só o que subiu para a nuvem.
+  /// é tocado, só o que subiu para a nuvem.
   ///
   /// Antes do documento e da conta, limpa a participação em planos
   /// compartilhados (nome e progresso ficariam visíveis aos outros
@@ -660,21 +739,34 @@ class Nuvem extends ChangeNotifier {
   Future<void> apagarDados() async {
     final usuario = FirebaseAuth.instance.currentUser;
     if (usuario == null) return;
+    final estado = _estado;
+    await apagarContaEmOrdem(
+      pararSincronias: _pararSincronias,
+      religarSincronias: () {
+        if (estado != null) _iniciarSincronias(estado, usuario.uid);
+      },
+      precisaReautenticar: _loginAntigo(usuario),
+      reautenticar: () => _reautenticar(usuario),
+      apagar: () => _apagarDocumentoEConta(usuario),
+    );
+  }
+
+  /// O Firebase só apaga a conta com login recente. Reautenticar antes de
+  /// apagar qualquer coisa evita deixar o documento apagado e a conta de pé,
+  /// mas só vale a pena (um popup do Google) quando o login já passou do prazo.
+  bool _loginAntigo(User usuario) {
+    final ultimoLogin = usuario.metadata.lastSignInTime;
+    return ultimoLogin == null ||
+        DateTime.now().difference(ultimoLogin) > _loginRecente;
+  }
+
+  Future<void> _apagarDocumentoEConta(User usuario) async {
     await PlanosNaNuvem.instancia.sairDeTodosOsPlanos(usuario.uid);
     await FirebaseFirestore.instance
         .collection(_colecao)
         .doc(usuario.uid)
         .delete();
-    try {
-      await usuario.delete();
-    } on FirebaseAuthException catch (erro) {
-      // O Firebase exige login recente para apagar a conta. Como já estamos
-      // dentro do gesto de "Apagar", refazer o login na hora ainda conta
-      // como gesto do usuário.
-      if (erro.code != 'requires-recent-login') rethrow;
-      await _reautenticar(usuario);
-      await usuario.delete();
-    }
+    await usuario.delete();
   }
 
   /// Prova de novo a identidade de [usuario], sem trocar a sessão — o que

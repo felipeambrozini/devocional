@@ -666,10 +666,14 @@ class _AppDevocionalState extends State<AppDevocional>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState estado) {
-    // Token do App Check pode ter expirado com o app suspenso — sem isto, o
-    // Firestore nega (PERMISSION_DENIED) até o processo ser reiniciado.
-    if (estado == AppLifecycleState.resumed) {
-      unawaited(Nuvem.instancia.revalidarAppCheck());
+    switch (estado) {
+      // Sem forçar: o SDK só renova o token do App Check se ele expirou.
+      case AppLifecycleState.resumed:
+        unawaited(Nuvem.instancia.revalidarAppCheck(forcar: false));
+      // O app pode ser fechado em seguida e levar junto o debounce de 2 s.
+      case AppLifecycleState.paused || AppLifecycleState.hidden:
+        unawaited(Nuvem.instancia.despejarSincronias());
+      default:
     }
   }
 

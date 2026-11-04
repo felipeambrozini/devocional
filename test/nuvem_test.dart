@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:devocional/dados/estado.dart';
+import 'package:devocional/dados/lembretes.dart';
 import 'package:devocional/dados/modelos.dart';
 import 'package:devocional/dados/nuvem.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -94,7 +95,7 @@ void main() {
         SharedPreferences.setMockInitialValues({});
         final outro = await Estado.abrir();
         await outro.alternarFavorito('joao', 3, 16);
-        await outro.alternarLido('04-07');
+        await outro.alternarLido('2027-07-04');
         return outro.exportar();
       }();
 
@@ -111,14 +112,14 @@ void main() {
         'nota daqui',
         reason: 'a nota local não pode ser apagada por um favorito sem nota',
       );
-      expect(estado.foiLido('04-07'), isTrue);
+      expect(estado.foiLido('2027-07-04'), isTrue);
     });
 
     test(
       'o eco de importar() termina: sem novidade não envia, com novidade envia uma vez',
       () async {
         final estado = await Estado.abrir();
-        await estado.alternarLido('01-01');
+        await estado.alternarLido('2027-01-01');
         final copiaIgual = estado.exportar();
 
         var envios = 0;
@@ -145,7 +146,7 @@ void main() {
         final comNovidade = await () async {
           SharedPreferences.setMockInitialValues({});
           final outro = await Estado.abrir();
-          await outro.alternarLido('25-12');
+          await outro.alternarLido('2026-12-25');
           return outro.exportar();
         }();
         final sincronia = Sincronia(
@@ -166,7 +167,7 @@ void main() {
 
     test('puxar devolvendo lixo não derruba o estado local', () async {
       final estado = await Estado.abrir();
-      await estado.alternarLido('01-01');
+      await estado.alternarLido('2027-01-01');
 
       final sincronia = Sincronia(
         estado: estado,
@@ -177,7 +178,7 @@ void main() {
       await sincronia.comecar();
 
       expect(
-        estado.diasLidos,
+        estado.diasLidosEmTodosOsAnos,
         1,
         reason: 'cópia remota ilegível é engolida, local continua intacto',
       );
@@ -248,6 +249,168 @@ void main() {
       await sincronia.despejar();
       expect(envios, 0);
     });
+
+    test(
+      'puxar que falha não deixa a primeira mudança sobrescrever a conta',
+      () async {
+        final remota = await () async {
+          SharedPreferences.setMockInitialValues({});
+          final outro = await Estado.abrir();
+          await outro.alternarFavorito('romanos', 8, 28);
+          return outro.exportar();
+        }();
+        SharedPreferences.setMockInitialValues({});
+        final estado = await Estado.abrir();
+        var puxadas = 0;
+        final enviados = <String>[];
+        final sincronia = Sincronia(
+          estado: estado,
+          puxar: () async {
+            if (++puxadas == 1) throw Exception('sem rede');
+            return remota;
+          },
+          empurrar: (copia) async => enviados.add(copia),
+          atraso: Duration.zero,
+        );
+        await sincronia.comecar();
+
+        await estado.alternarFavorito('joao', 3, 16);
+        await assentar();
+        await assentar();
+
+        expect(
+          puxadas,
+          2,
+          reason: 'o envio tentou puxar de novo antes de subir',
+        );
+        expect(enviados, hasLength(1));
+        expect(
+          enviados.single,
+          estado.exportar(),
+          reason: 'subiu a união, não só o favorito local',
+        );
+        expect(estado.marcacoes.length, 2);
+      },
+    );
+
+    test('puxar que continua falhando não envia nada', () async {
+      final estado = await Estado.abrir();
+      var envios = 0;
+      final sincronia = Sincronia(
+        estado: estado,
+        puxar: () async => throw Exception('sem rede'),
+        empurrar: (_) async => envios++,
+        atraso: Duration.zero,
+      );
+      await sincronia.comecar();
+
+      await estado.alternarFavorito('joao', 3, 16);
+      await assentar();
+      await sincronia.despejar();
+
+      expect(envios, 0);
+    });
+
+    test(
+      'despejar() de dentro do app indo para segundo plano envia o pendente',
+      () async {
+        final estado = await Estado.abrir();
+        final enviados = <String>[];
+        final sincronia = Sincronia(
+          estado: estado,
+          puxar: () async => null,
+          empurrar: (copia) async => enviados.add(copia),
+          atraso: const Duration(seconds: 30),
+        );
+        await sincronia.comecar();
+
+        await estado.definirNota('joao', 3, 16, 'nota digitada');
+        await sincronia.despejar();
+
+        expect(enviados, hasLength(1));
+        expect(enviados.single, contains('nota digitada'));
+      },
+    );
+  });
+
+  group('App Check na retomada', () {
+    tearDown(() => Nuvem.instancia.obterTokenAppCheck = (forcar) async => null);
+
+    test('retomada não força a atestação, PERMISSION_DENIED força', () async {
+      final pedidos = <bool>[];
+      Nuvem.instancia.obterTokenAppCheck = (forcar) async {
+        pedidos.add(forcar);
+        return null;
+      };
+
+      await Nuvem.instancia.revalidarAppCheck(forcar: false);
+      await Nuvem.instancia.revalidarAppCheck();
+
+      expect(pedidos, [false, true]);
+    });
+  });
+
+  group('apagarContaEmOrdem', () {
+    test('reautenticação que falha não apaga nada e religa', () async {
+      final passos = <String>[];
+      await expectLater(
+        apagarContaEmOrdem(
+          pararSincronias: () => passos.add('parar'),
+          religarSincronias: () => passos.add('religar'),
+          precisaReautenticar: true,
+          reautenticar: () async => throw Exception('popup fechado'),
+          apagar: () async => passos.add('apagar'),
+        ),
+        throwsException,
+      );
+      expect(passos, ['parar', 'religar']);
+    });
+
+    test(
+      'login recente apaga sem reautenticar, com as sincronias paradas',
+      () async {
+        final passos = <String>[];
+        await apagarContaEmOrdem(
+          pararSincronias: () => passos.add('parar'),
+          religarSincronias: () => passos.add('religar'),
+          precisaReautenticar: false,
+          reautenticar: () async => passos.add('reautenticar'),
+          apagar: () async => passos.add('apagar'),
+        );
+        expect(passos, ['parar', 'apagar']);
+      },
+    );
+  });
+
+  group('lembretes vindos da conta', () {
+    late _LembretesFalsos lembretes;
+    setUp(() {
+      lembretes = _LembretesFalsos();
+      Lembretes.instancia = lembretes;
+    });
+
+    test('conta com lembretes desligados cancela o lembrete local', () async {
+      final estado = await Estado.abrir();
+      await estado.definirLembretesAtivos(true);
+      final remota = json.encode({'ativo': false});
+
+      await fundirLembretesDaConta(estado, remota);
+
+      expect(estado.lembretesAtivos, isFalse);
+      expect(lembretes.cancelamentos, 1);
+    });
+
+    test(
+      'desligado que já estava desligado aqui não cancela de novo',
+      () async {
+        final estado = await Estado.abrir();
+        final remota = json.encode({'ativo': false, 'manha': 7 * 60 + 1});
+
+        await fundirLembretesDaConta(estado, remota);
+
+        expect(lembretes.cancelamentos, 0);
+      },
+    );
   });
 
   group('Sincronia de conversas', () {
@@ -607,3 +770,14 @@ dynamic _ordenar(dynamic valor) => switch (valor) {
   List lista => [for (final item in lista) _ordenar(item)],
   _ => valor,
 };
+
+/// Falso mínimo: só conta os cancelamentos; o resto não é usado aqui.
+class _LembretesFalsos implements Lembretes {
+  int cancelamentos = 0;
+
+  @override
+  Future<void> cancelar() async => cancelamentos++;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
