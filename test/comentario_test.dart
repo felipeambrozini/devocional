@@ -105,20 +105,12 @@ void main() {
       Recursos.comentarioNoCapituloForcado = null;
     });
 
-    test('a flag nasce desligada, mesmo com o documento sem o campo', () {
-      expect(Recursos.comentarioNoCapitulo, isFalse);
-      ConfigAdmin.instancia.aplicarMapa({'bibliotecaAtiva': true});
-      expect(Recursos.comentarioNoCapitulo, isFalse);
-      ConfigAdmin.instancia.aplicarMapa({'comentarioNoCapituloAtivo': true});
+    test('a flag nasce ligada, mesmo com o documento sem o campo', () {
       expect(Recursos.comentarioNoCapitulo, isTrue);
-    });
-
-    test('a preferência do leitor nasce desligada e persiste', () async {
-      final prefs = await SharedPreferences.getInstance();
-      final estado = Estado(prefs);
-      expect(estado.comentarioNoCapitulo, isFalse);
-      await estado.definirComentarioNoCapitulo(true);
-      expect(Estado(prefs).comentarioNoCapitulo, isTrue);
+      ConfigAdmin.instancia.aplicarMapa({'bibliotecaAtiva': true});
+      expect(Recursos.comentarioNoCapitulo, isTrue);
+      ConfigAdmin.instancia.aplicarMapa({'comentarioNoCapituloAtivo': false});
+      expect(Recursos.comentarioNoCapitulo, isFalse);
     });
 
     test('comentariosDoCapitulo devolve os 51 versículos de João 1', () async {
@@ -134,12 +126,10 @@ void main() {
     Future<void> abrirLeitor(
       WidgetTester tester, {
       required bool flag,
-      required bool preferencia,
       String livro = 'joao',
     }) async {
       Recursos.comentarioNoCapituloForcado = flag;
       final estado = Estado(await SharedPreferences.getInstance());
-      await estado.definirComentarioNoCapitulo(preferencia);
       await tester.runAsync(() async {
         await Conteudo.instancia.capitulo(livro, 1);
         await Conteudo.instancia.introducao(livro);
@@ -154,20 +144,87 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('flag e preferência ligadas mostram o comentário de 1:1', (
-      tester,
-    ) async {
-      await abrirLeitor(tester, flag: true, preferencia: true);
+    testWidgets('com a flag ligada mostra o comentário de 1:1', (tester) async {
+      await abrirLeitor(tester, flag: true);
       expect(find.textContaining(trechoDeJoao1v1), findsOneWidget);
     });
 
-    testWidgets('com a flag desligada, não mostra', (tester) async {
-      await abrirLeitor(tester, flag: false, preferencia: true);
-      expect(find.textContaining(trechoDeJoao1v1), findsNothing);
+    testWidgets('aberto num versículo pedido, o versículo continua à vista '
+        'depois que os comentários entram', (tester) async {
+      Recursos.comentarioNoCapituloForcado = true;
+      final estado = Estado(await SharedPreferences.getInstance());
+      await tester.runAsync(() async {
+        await Conteudo.instancia.capitulo('joao', 1);
+        await Conteudo.instancia.introducao('joao');
+        await Conteudo.instancia.comentariosDoCapitulo('joao', 1);
+      });
+      await tester.pumpWidget(
+        EscopoDoEstado(
+          estado: estado,
+          child: const MaterialApp(
+            home: TelaBiblia(livroInicial: 'joao', destacar: (14, 14)),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final versiculo14 = find.byWidgetPredicate(
+        (w) =>
+            w is RichText &&
+            w.text.toPlainText().contains('E o Verbo se fez carne'),
+      );
+      expect(versiculo14, findsOneWidget);
+      final posicao = tester.getRect(versiculo14);
+      expect(posicao.top, greaterThanOrEqualTo(0));
+      expect(posicao.bottom, lessThanOrEqualTo(600));
     });
 
-    testWidgets('com a preferência desligada, não mostra', (tester) async {
-      await abrirLeitor(tester, flag: true, preferencia: false);
+    testWidgets('aoCarregar roda uma vez, depois que os comentários entram', (
+      tester,
+    ) async {
+      Recursos.comentarioNoCapituloForcado = true;
+      await tester.runAsync(
+        () => Conteudo.instancia.comentariosDoCapitulo('joao', 1),
+      );
+      var chamadas = 0;
+      var comentariosNaTela = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DevocionalComentariosDoCapitulo(
+            livro: 'joao',
+            capituloNumero: 1,
+            aoCarregar: () => chamadas++,
+            construir: (context, comentarios) {
+              comentariosNaTela = comentarios?.length ?? 0;
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(comentariosNaTela, 51);
+      expect(chamadas, 1);
+    });
+
+    testWidgets('aoCarregar não roda com o recurso desligado', (tester) async {
+      Recursos.comentarioNoCapituloForcado = false;
+      var chamadas = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DevocionalComentariosDoCapitulo(
+            livro: 'joao',
+            capituloNumero: 1,
+            aoCarregar: () => chamadas++,
+            construir: (context, comentarios) => const SizedBox.shrink(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(chamadas, 0);
+    });
+
+    testWidgets('com a flag desligada, não mostra', (tester) async {
+      await abrirLeitor(tester, flag: false);
       expect(find.textContaining(trechoDeJoao1v1), findsNothing);
     });
 
@@ -176,7 +233,6 @@ void main() {
     ) async {
       Recursos.comentarioNoCapituloForcado = true;
       final estado = Estado(await SharedPreferences.getInstance());
-      await estado.definirComentarioNoCapitulo(true);
       await tester.pumpWidget(
         EscopoDoEstado(
           estado: estado,

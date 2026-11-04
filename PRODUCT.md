@@ -107,7 +107,9 @@ vitoriana dele, tratando o leitor por "tu".
   de toque: abre a Bíblia no capítulo citado, com os versículos destacados.
 - Comentário de Spurgeon por versículo: a folha de ações do versículo na
   Bíblia (Favoritar, Copiar, Anotar) mostra o comentário daquele versículo,
-  nos 66 livros.
+  nos 66 livros. O mesmo comentário aparece também direto no leitor, abaixo de
+  cada versículo, para todos; só o admin o desliga (interruptor do painel, como
+  os outros recursos), sem escolha do leitor nos ajustes.
 - Texto selecionável e copiável na Bíblia, no Devocional e na Introdução. Na
   Introdução, o menu de seleção (o clique forte que já abre a
   seleção) ganha um botão de Compartilhar para o trecho escolhido; na

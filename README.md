@@ -97,11 +97,11 @@ mesmo código).
   `tools/falas_divinas/excecoes/<slug>.json`. Em Deuteronômio, que o MACULA quase
   não marca, entraram as falas de Deus citadas por Moisés em primeira pessoa.
 - **Comentário no capítulo** (modo estudo): o comentário de Spurgeon abaixo de cada
-  versículo, em corpo menor e com o fio do metal à esquerda. Exige o interruptor
-  `comentarioNoCapituloAtivo` do painel `/admin` (`Recursos.comentarioNoCapitulo`,
-  nasce desligado) e a preferência do leitor nos ajustes de leitura (desligada por
-  padrão, só no aparelho). Carrega depois do texto bíblico; a leitura em voz alta
-  não lê os comentários.
+  versículo, em corpo menor e com o fio do metal à esquerda. Aparece para todos;
+  só o admin o desliga, pelo interruptor `comentarioNoCapituloAtivo` do painel
+  `/admin` (`Recursos.comentarioNoCapitulo`, ligado quando o campo falta, como os
+  outros). Os comentários do capítulo carregam uma vez, depois do texto bíblico;
+  a leitura em voz alta não lê os comentários.
 - **Tamanho do texto** ajustável e **tema claro ou escuro**, pela barra do leitor
   ou do devocional. O padrão segue o aparelho, e dá para fixar um dos dois.
 - **Lembrete diário**, opcional, em Android e web: 4 horários ajustáveis —

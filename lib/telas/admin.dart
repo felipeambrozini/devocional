@@ -211,8 +211,7 @@ class _TelaAdminState extends State<TelaAdmin> {
           _Interruptor(
             titulo: 'Comentário no capítulo',
             subtitulo:
-                'O comentário de Spurgeon abaixo de cada versículo, '
-                'opção nos ajustes de leitura.',
+                'O comentário de Spurgeon abaixo de cada versículo da Bíblia.',
             valor: config.comentarioNoCapituloAtivo,
             salvando: _salvando.contains('comentarioNoCapituloAtivo'),
             aoMudar: (novo) => _alternar(

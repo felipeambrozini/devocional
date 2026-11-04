@@ -1544,6 +1544,10 @@ void main() {
   testWidgets('o leitor aberto por link rola até o versículo pedido', (
     tester,
   ) async {
+    // O teste confere o recuo dos versículos de fora do recorte, que ficam
+    // acima do alvo; com os comentários o alvo desce e eles saem da árvore.
+    Recursos.comentarioNoCapituloForcado = false;
+    addTearDown(() => Recursos.comentarioNoCapituloForcado = null);
     await aquecerAssets(tester);
     await tester.pumpWidget(
       MaterialApp(

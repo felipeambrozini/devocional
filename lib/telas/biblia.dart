@@ -252,6 +252,9 @@ class _TelaBibliaState extends State<TelaBiblia> {
               ? null
               : _controller.chaveDoAlvoDeRolagem,
           aoAbrirCapitulos: () => _controller.abrirGradeDeCapitulos(context),
+          aoCarregarComentarios: widget.destacar == null
+              ? null
+              : () => _controller.rolarAteOAlvo(widget.destacar!.$1),
           selecionados: _controller.selecionados,
           aoAlternarSelecao: _controller.alternarSelecao,
         ),
@@ -298,6 +301,7 @@ class _Leitor extends StatelessWidget {
     this.alvoDeRolagem,
     this.chaveDoAlvoDeRolagem,
     this.aoAbrirCapitulos,
+    this.aoCarregarComentarios,
     required this.selecionados,
     required this.aoAlternarSelecao,
   });
@@ -320,12 +324,17 @@ class _Leitor extends StatelessWidget {
   /// grade de capítulos num toque.
   final VoidCallback? aoAbrirCapitulos;
 
+  /// Com um versículo pedido, rola de novo até ele quando os comentários
+  /// entram e crescem o conteúdo acima dele.
+  final VoidCallback? aoCarregarComentarios;
+
   @override
   Widget build(BuildContext context) {
     return DevocionalComentariosDoCapitulo(
       livro: capitulo.livro,
       capituloNumero: capitulo.numero,
       construir: _lista,
+      aoCarregar: aoCarregarComentarios,
     );
   }
 

@@ -32,7 +32,7 @@ class ConfigAdmin extends ChangeNotifier {
   bool _promessasAtivo = true;
   bool _ouvirTextosAtivo = true;
   bool _bibliotecaAtiva = true;
-  bool _comentarioNoCapituloAtivo = false;
+  bool _comentarioNoCapituloAtivo = true;
 
   /// Se algum snapshot (ou mapa de teste) já foi aplicado. Antes disso os
   /// getters valem os padrões acima, e `Recursos.conversas` usa o
@@ -105,11 +105,7 @@ class ConfigAdmin extends ChangeNotifier {
     _promessasAtivo = ligado('promessasAtivo');
     _ouvirTextosAtivo = ligado('ouvirTextosAtivo');
     _bibliotecaAtiva = ligado('bibliotecaAtiva');
-    // Recurso novo nasce desligado: ausente no documento, fica fechado.
-    _comentarioNoCapituloAtivo = ligado(
-      'comentarioNoCapituloAtivo',
-      padrao: false,
-    );
+    _comentarioNoCapituloAtivo = ligado('comentarioNoCapituloAtivo');
     _carregado = true;
     notifyListeners();
   }
@@ -176,7 +172,7 @@ class ConfigAdmin extends ChangeNotifier {
     _promessasAtivo = true;
     _ouvirTextosAtivo = true;
     _bibliotecaAtiva = true;
-    _comentarioNoCapituloAtivo = false;
+    _comentarioNoCapituloAtivo = true;
     _carregado = false;
     notifyListeners();
   }
