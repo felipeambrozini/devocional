@@ -43,6 +43,8 @@ export 'cartao_leitura_progresso_carregando.dart';
 export 'cartao_leitura_progresso_erro.dart';
 export 'cartas_de_conversa.dart';
 export 'com_fade_ao_fim.dart';
+export 'comentario_no_capitulo.dart';
+export 'comentarios_do_capitulo.dart';
 export 'erro_de_busca.dart';
 export 'erro_de_resposta.dart';
 export 'faixa.dart';

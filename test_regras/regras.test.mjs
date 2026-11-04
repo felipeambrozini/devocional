@@ -212,6 +212,14 @@ const configValida = () => ({conversasAtivas: true, atualizadoEm: serverTimestam
 
 await caso('só o dono grava config/recursos',
   assertSucceeds(setDoc(recursos(dono), configValida())));
+await caso('dono grava comentarioNoCapituloAtivo em config/recursos',
+  assertSucceeds(setDoc(recursos(dono),
+    {comentarioNoCapituloAtivo: true, atualizadoEm: serverTimestamp()}, {merge: true})));
+await caso('recusa comentarioNoCapituloAtivo que não é bool',
+  assertFails(setDoc(recursos(dono),
+    {comentarioNoCapituloAtivo: 'sim', atualizadoEm: serverTimestamp()})));
+await caso('recusa campo desconhecido em config/recursos, mesmo vindo do dono',
+  assertFails(setDoc(recursos(dono), {campoInventado: 1, atualizadoEm: serverTimestamp()})));
 await caso('outro e-mail não grava config/recursos',
   assertFails(setDoc(recursos(outroEmail), configValida())));
 await caso('usuário comum não grava config/recursos',

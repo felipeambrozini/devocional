@@ -207,6 +207,20 @@ class _TelaAdminState extends State<TelaAdmin> {
             salvando: _salvando.contains('bibliotecaAtiva'),
             aoMudar: (novo) => _alternar('bibliotecaAtiva', 'Biblioteca', novo),
           ),
+        if (config.carregado)
+          _Interruptor(
+            titulo: 'Comentário no capítulo',
+            subtitulo:
+                'O comentário de Spurgeon abaixo de cada versículo, '
+                'opção nos ajustes de leitura.',
+            valor: config.comentarioNoCapituloAtivo,
+            salvando: _salvando.contains('comentarioNoCapituloAtivo'),
+            aoMudar: (novo) => _alternar(
+              'comentarioNoCapituloAtivo',
+              'Comentário no capítulo',
+              novo,
+            ),
+          ),
         const SizedBox(height: DevocionalEspacamento.sp24),
         const DevocionalFilete(largura: 64),
         const SizedBox(height: DevocionalEspacamento.sp16),

@@ -322,6 +322,14 @@ class _Leitor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return DevocionalComentariosDoCapitulo(
+      livro: capitulo.livro,
+      capituloNumero: capitulo.numero,
+      construir: _lista,
+    );
+  }
+
+  Widget _lista(BuildContext context, Map<int, String>? comentarios) {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
 
@@ -432,6 +440,7 @@ class _Leitor extends StatelessWidget {
           referencia: capitulo.referencia,
           numero: numero,
           texto: texto,
+          comentario: comentarios?[numero],
           falasDivinas: capitulo.falasDivinas[numero] ?? const [],
           noRecorte: noRecorte,
           selecionando: selecionados.isNotEmpty,
@@ -453,6 +462,7 @@ class _LinhaDeVersiculo extends StatelessWidget {
     required this.referencia,
     required this.numero,
     required this.texto,
+    required this.comentario,
     required this.falasDivinas,
     required this.noRecorte,
     required this.selecionando,
@@ -465,6 +475,7 @@ class _LinhaDeVersiculo extends StatelessWidget {
   final String referencia;
   final int numero;
   final String texto;
+  final String? comentario;
   final List<(int, int)> falasDivinas;
   final bool noRecorte;
 
@@ -581,6 +592,7 @@ class _LinhaDeVersiculo extends StatelessWidget {
                   ],
                 ),
               ),
+              DevocionalComentarioNoCapitulo(texto: comentario),
               if (marcacao != null && marcacao.nota.isNotEmpty) ...[
                 const SizedBox(height: DevocionalEspacamento.sp6),
                 Row(

@@ -557,6 +557,24 @@ class Conteudo {
     return versiculos?['$numero'] as String?;
   }
 
+  /// Comentários de um capítulo inteiro (versículo -> texto), pelo mesmo
+  /// carregamento por livro e cache de [comentario]. Vazio sem arquivo ou
+  /// sem comentários naquele capítulo.
+  Future<Map<int, String>> comentariosDoCapitulo(
+    String slug,
+    int capitulo,
+  ) async {
+    final dados = await _carregarComentarios(slug);
+    final capitulos = dados?['capitulos'] as Map<String, dynamic>?;
+    final versiculos = capitulos?['$capitulo'] as Map<String, dynamic>?;
+    return {
+      for (final entrada
+          in versiculos?.entries ?? const <MapEntry<String, dynamic>>[])
+        if (int.tryParse(entrada.key) != null && entrada.value is String)
+          int.parse(entrada.key): entrada.value as String,
+    };
+  }
+
   /// Busca no texto da Bíblia, emitindo os achados livro por livro.
   ///
   /// Varredura sequencial, sem índice invertido. A primeira busca na Bíblia

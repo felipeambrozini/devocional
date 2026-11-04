@@ -2,7 +2,15 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:devocional/dados/canon.dart';
+import 'package:devocional/dados/config_admin.dart';
+import 'package:devocional/dados/conteudo.dart';
+import 'package:devocional/dados/estado.dart';
+import 'package:devocional/dados/recursos.dart';
+import 'package:devocional/telas/biblia.dart';
+import 'package:devocional/widgets/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Guarda o formato dos comentários de Spurgeon por versículo enquanto são
 /// escritos aos poucos, livro por livro, versículo por versículo.
@@ -87,4 +95,104 @@ void main() {
       });
     });
   }
+
+  group('comentário no capítulo', () {
+    const trechoDeJoao1v1 = 'Três afirmações curtas, três muralhas';
+
+    setUp(() => SharedPreferences.setMockInitialValues({}));
+    tearDown(() {
+      ConfigAdmin.instancia.redefinirParaTeste();
+      Recursos.comentarioNoCapituloForcado = null;
+    });
+
+    test('a flag nasce desligada, mesmo com o documento sem o campo', () {
+      expect(Recursos.comentarioNoCapitulo, isFalse);
+      ConfigAdmin.instancia.aplicarMapa({'bibliotecaAtiva': true});
+      expect(Recursos.comentarioNoCapitulo, isFalse);
+      ConfigAdmin.instancia.aplicarMapa({'comentarioNoCapituloAtivo': true});
+      expect(Recursos.comentarioNoCapitulo, isTrue);
+    });
+
+    test('a preferência do leitor nasce desligada e persiste', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final estado = Estado(prefs);
+      expect(estado.comentarioNoCapitulo, isFalse);
+      await estado.definirComentarioNoCapitulo(true);
+      expect(Estado(prefs).comentarioNoCapitulo, isTrue);
+    });
+
+    test('comentariosDoCapitulo devolve os 51 versículos de João 1', () async {
+      final mapa = await Conteudo.instancia.comentariosDoCapitulo('joao', 1);
+      expect(mapa.length, 51);
+      expect(mapa[1], startsWith(trechoDeJoao1v1));
+    });
+
+    test('livro sem arquivo de comentário devolve vazio', () async {
+      expect(await Conteudo.instancia.comentariosDoCapitulo('livro-x', 1), {});
+    });
+
+    Future<void> abrirLeitor(
+      WidgetTester tester, {
+      required bool flag,
+      required bool preferencia,
+      String livro = 'joao',
+    }) async {
+      Recursos.comentarioNoCapituloForcado = flag;
+      final estado = Estado(await SharedPreferences.getInstance());
+      await estado.definirComentarioNoCapitulo(preferencia);
+      await tester.runAsync(() async {
+        await Conteudo.instancia.capitulo(livro, 1);
+        await Conteudo.instancia.introducao(livro);
+        await Conteudo.instancia.comentariosDoCapitulo(livro, 1);
+      });
+      await tester.pumpWidget(
+        EscopoDoEstado(
+          estado: estado,
+          child: MaterialApp(home: TelaBiblia(livroInicial: livro)),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('flag e preferência ligadas mostram o comentário de 1:1', (
+      tester,
+    ) async {
+      await abrirLeitor(tester, flag: true, preferencia: true);
+      expect(find.textContaining(trechoDeJoao1v1), findsOneWidget);
+    });
+
+    testWidgets('com a flag desligada, não mostra', (tester) async {
+      await abrirLeitor(tester, flag: false, preferencia: true);
+      expect(find.textContaining(trechoDeJoao1v1), findsNothing);
+    });
+
+    testWidgets('com a preferência desligada, não mostra', (tester) async {
+      await abrirLeitor(tester, flag: true, preferencia: false);
+      expect(find.textContaining(trechoDeJoao1v1), findsNothing);
+    });
+
+    testWidgets('livro sem arquivo de comentário não mostra nada nem quebra', (
+      tester,
+    ) async {
+      Recursos.comentarioNoCapituloForcado = true;
+      final estado = Estado(await SharedPreferences.getInstance());
+      await estado.definirComentarioNoCapitulo(true);
+      await tester.pumpWidget(
+        EscopoDoEstado(
+          estado: estado,
+          child: MaterialApp(
+            home: DevocionalComentariosDoCapitulo(
+              livro: 'livro-x',
+              capituloNumero: 1,
+              construir: (context, comentarios) =>
+                  Text('comentários: ${comentarios?.length}'),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.text('comentários: 0'), findsOneWidget);
+    });
+  });
 }

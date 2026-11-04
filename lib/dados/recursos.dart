@@ -64,6 +64,15 @@ class Recursos {
   /// Override para teste, mesmo padrão de [conversasForcado].
   static bool? bibliotecaForcado;
 
+  /// Comentário de Spurgeon abaixo de cada versículo na leitura. Nasce
+  /// desligado, ao contrário dos outros: ausente no documento, fica fechado.
+  static bool get comentarioNoCapitulo =>
+      comentarioNoCapituloForcado ??
+      ConfigAdmin.instancia.comentarioNoCapituloAtivo;
+
+  /// Override para teste, mesmo padrão de [conversasForcado].
+  static bool? comentarioNoCapituloForcado;
+
   /// Cronograma anual (aba "Cronograma" dentro do Plano).
   static bool get cronograma =>
       cronogramaForcado ?? ConfigAdmin.instancia.cronogramaAtivo;

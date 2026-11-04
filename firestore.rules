@@ -46,6 +46,8 @@ service cloud.firestore {
     //   promessasAtivo           bool — Promessas de Deus
     //   ouvirTextosAtivo         bool — botão "Ouvir" nos textos
     //   bibliotecaAtiva          bool — a Biblioteca de livros de Spurgeon
+    //   comentarioNoCapituloAtivo bool — comentário de Spurgeon sob cada versículo
+    //                            (nasce desligado)
     //   atualizadoEm             timestamp do servidor, gravado em toda escrita
     //
     // Leitura pública: o gating precisa funcionar sem login (quem não tem
@@ -66,7 +68,8 @@ service cloud.firestore {
           'conversasAtivas', 'emailsComConversas', 'emailsComPlanos',
           'planoPersonalizadoAtivo',
           'cronogramaAtivo', 'manhaAtivo', 'noiteAtivo', 'promessasAtivo',
-          'ouvirTextosAtivo', 'bibliotecaAtiva', 'atualizadoEm'
+          'ouvirTextosAtivo', 'bibliotecaAtiva',
+          'comentarioNoCapituloAtivo', 'atualizadoEm'
         ]);
         let boolOk = (!('conversasAtivas' in dados) || dados.conversasAtivas is bool) &&
             (!('planoPersonalizadoAtivo' in dados) || dados.planoPersonalizadoAtivo is bool) &&
@@ -75,7 +78,9 @@ service cloud.firestore {
             (!('noiteAtivo' in dados) || dados.noiteAtivo is bool) &&
             (!('promessasAtivo' in dados) || dados.promessasAtivo is bool) &&
             (!('ouvirTextosAtivo' in dados) || dados.ouvirTextosAtivo is bool) &&
-            (!('bibliotecaAtiva' in dados) || dados.bibliotecaAtiva is bool);
+            (!('bibliotecaAtiva' in dados) || dados.bibliotecaAtiva is bool) &&
+            (!('comentarioNoCapituloAtivo' in dados) ||
+                dados.comentarioNoCapituloAtivo is bool);
         let emailsOk = (!('emailsComConversas' in dados) ||
             (dados.emailsComConversas is list && dados.emailsComConversas.size() < 5000)) &&
             (!('emailsComPlanos' in dados) ||

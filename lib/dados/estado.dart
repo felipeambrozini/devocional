@@ -38,6 +38,7 @@ class Estado extends ChangeNotifier {
   static const _kSwipeTooltipDispensado = 'swipe_tooltip_dispensado';
   static const _kSetasDoRodape = 'setas_do_rodape';
   static const _kLetraVermelha = 'letra_vermelha';
+  static const _kComentarioNoCapitulo = 'comentario_no_capitulo';
   static const _kLembretesAtivos = 'lembretes_ativos';
   static const _kMinutosLembreteManha = 'minutos_lembrete_manha';
   static const _kMinutosLembretePromessas = 'minutos_lembrete_promessas';
@@ -110,6 +111,7 @@ class Estado extends ChangeNotifier {
   /// Se as falas de Deus Pai, de Jesus e do Espírito Santo aparecem em
   /// vermelho na Bíblia. Padrão true, como nas edições de letra vermelha.
   bool _letraVermelha = true;
+  bool _comentarioNoCapitulo = false;
 
   /// Se os três lembretes diários estão ligados. Padrão false: notificação é
   /// opt-in, nunca ligada sem o usuário pedir.
@@ -206,6 +208,7 @@ class Estado extends ChangeNotifier {
     _setasDoRodape = _prefs.getBool(_kSetasDoRodape) ?? true;
 
     _letraVermelha = _prefs.getBool(_kLetraVermelha) ?? true;
+    _comentarioNoCapitulo = _prefs.getBool(_kComentarioNoCapitulo) ?? false;
 
     _lembretesAtivos = _prefs.getBool(_kLembretesAtivos) ?? false;
     _minutosLembreteManha = _minutosValidos(
@@ -348,6 +351,17 @@ class Estado extends ChangeNotifier {
     _letraVermelha = nova;
     notifyListeners();
     await _prefs.setBool(_kLetraVermelha, nova);
+  }
+
+  // --- comentário no capítulo ---------------------------------------------- //
+
+  bool get comentarioNoCapitulo => _comentarioNoCapitulo;
+
+  Future<void> definirComentarioNoCapitulo(bool novo) async {
+    if (novo == _comentarioNoCapitulo) return;
+    _comentarioNoCapitulo = novo;
+    notifyListeners();
+    await _prefs.setBool(_kComentarioNoCapitulo, novo);
   }
 
   // --- tamanho do texto de leitura ----------------------------------------- //

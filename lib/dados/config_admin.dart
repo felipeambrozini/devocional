@@ -32,6 +32,7 @@ class ConfigAdmin extends ChangeNotifier {
   bool _promessasAtivo = true;
   bool _ouvirTextosAtivo = true;
   bool _bibliotecaAtiva = true;
+  bool _comentarioNoCapituloAtivo = false;
 
   /// Se algum snapshot (ou mapa de teste) já foi aplicado. Antes disso os
   /// getters valem os padrões acima, e `Recursos.conversas` usa o
@@ -47,6 +48,7 @@ class ConfigAdmin extends ChangeNotifier {
   bool get promessasAtivo => _promessasAtivo;
   bool get ouvirTextosAtivo => _ouvirTextosAtivo;
   bool get bibliotecaAtiva => _bibliotecaAtiva;
+  bool get comentarioNoCapituloAtivo => _comentarioNoCapituloAtivo;
   bool get carregado => _carregado;
 
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _assinatura;
@@ -89,9 +91,9 @@ class ConfigAdmin extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    bool ligado(String chave) {
+    bool ligado(String chave, {bool padrao = true}) {
       final valor = mapa[chave];
-      return valor is bool ? valor : true;
+      return valor is bool ? valor : padrao;
     }
 
     _conversasAtivas = ligado('conversasAtivas');
@@ -103,6 +105,11 @@ class ConfigAdmin extends ChangeNotifier {
     _promessasAtivo = ligado('promessasAtivo');
     _ouvirTextosAtivo = ligado('ouvirTextosAtivo');
     _bibliotecaAtiva = ligado('bibliotecaAtiva');
+    // Recurso novo nasce desligado: ausente no documento, fica fechado.
+    _comentarioNoCapituloAtivo = ligado(
+      'comentarioNoCapituloAtivo',
+      padrao: false,
+    );
     _carregado = true;
     notifyListeners();
   }
@@ -136,6 +143,7 @@ class ConfigAdmin extends ChangeNotifier {
     bool? promessasAtivo,
     bool? ouvirTextosAtivo,
     bool? bibliotecaAtiva,
+    bool? comentarioNoCapituloAtivo,
     bool carregado = true,
   }) {
     if (conversasAtivas != null) _conversasAtivas = conversasAtivas;
@@ -149,6 +157,9 @@ class ConfigAdmin extends ChangeNotifier {
     if (promessasAtivo != null) _promessasAtivo = promessasAtivo;
     if (ouvirTextosAtivo != null) _ouvirTextosAtivo = ouvirTextosAtivo;
     if (bibliotecaAtiva != null) _bibliotecaAtiva = bibliotecaAtiva;
+    if (comentarioNoCapituloAtivo != null) {
+      _comentarioNoCapituloAtivo = comentarioNoCapituloAtivo;
+    }
     _carregado = carregado;
     notifyListeners();
   }
@@ -165,6 +176,7 @@ class ConfigAdmin extends ChangeNotifier {
     _promessasAtivo = true;
     _ouvirTextosAtivo = true;
     _bibliotecaAtiva = true;
+    _comentarioNoCapituloAtivo = false;
     _carregado = false;
     notifyListeners();
   }
@@ -187,6 +199,7 @@ class ConfigAdmin extends ChangeNotifier {
       'promessasAtivo',
       'ouvirTextosAtivo',
       'bibliotecaAtiva',
+      'comentarioNoCapituloAtivo',
     };
     if (!conhecidos.contains(campo)) {
       throw ArgumentError('Campo desconhecido: $campo');

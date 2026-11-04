@@ -81,8 +81,27 @@ mesmo código).
   gerados por `tools/falas_divinas/gerar.py` a partir do MACULA Quotation and
   Speaker Data (Clear Bible, CC BY 4.0, crédito na tela Sobre). Como a BKJ não
   tem aspas, o corte dentro do versículo é aproximado pela pontuação ("disse
-  Deus: **Haja luz.** E houve luz."), e alguns versículos de diálogo podem sair
-  com o corte deslocado.
+  Deus: **Haja luz.** E houve luz."), e isso errava nos diálogos (em Gênesis
+  3:13 a fala da mulher saía em vermelho e a pergunta de Deus, em preto). Por
+  isso cada livro foi revisado à mão: a revisão mora em
+  `tools/falas_divinas/correcoes/<slug>.json` (a lista completa de trechos
+  literais que ficam em vermelho no versículo; lista vazia tira o vermelho),
+  aplicada por `aplicar_correcoes.py` por cima do MACULA, inclusive quando o
+  `gerar.py` roda de novo. `test/falas_divinas_test.dart` confere que os assets
+  batem com as correções, e `mostrar.py` mostra um livro com o vermelho entre
+  `<<` e `>>` para revisar. Regra do produto: é vermelho a fala direta de Deus
+  Pai, de Jesus e do Espírito Santo e o oráculo do profeta em primeira pessoa
+  de Deus, mesmo repassado por um profeta (a fórmula "Assim diz o SENHOR" e a
+  introdução narrada ficam em preto); o anjo do SENHOR segue a fonte. Os casos
+  de fronteira deixados como estão ficam anotados, com o motivo, em
+  `tools/falas_divinas/excecoes/<slug>.json`. Em Deuteronômio, que o MACULA quase
+  não marca, entraram as falas de Deus citadas por Moisés em primeira pessoa.
+- **Comentário no capítulo** (modo estudo): o comentário de Spurgeon abaixo de cada
+  versículo, em corpo menor e com o fio do metal à esquerda. Exige o interruptor
+  `comentarioNoCapituloAtivo` do painel `/admin` (`Recursos.comentarioNoCapitulo`,
+  nasce desligado) e a preferência do leitor nos ajustes de leitura (desligada por
+  padrão, só no aparelho). Carrega depois do texto bíblico; a leitura em voz alta
+  não lê os comentários.
 - **Tamanho do texto** ajustável e **tema claro ou escuro**, pela barra do leitor
   ou do devocional. O padrão segue o aparelho, e dá para fixar um dos dois.
 - **Lembrete diário**, opcional, em Android e web: 4 horários ajustáveis —
