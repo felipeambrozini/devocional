@@ -167,7 +167,13 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                     texto:
                         'As mensagens enviadas às personas Charles Spurgeon e '
                         'Felipe Ambrozini são processadas pela API Gemini do '
-                        'Google para gerar a resposta. O histórico de cada '
+                        'Google para gerar a resposta, e cada pergunta leva '
+                        'junto as últimas falas da conversa. O app usa o nível '
+                        'gratuito da API: segundo os termos do Google, nele o '
+                        'conteúdo enviado pode ser usado para melhorar os '
+                        'produtos do Google e lido por revisores, sem ligação '
+                        'com a sua conta. Por isso, não escreva no chat '
+                        'informações sensíveis. O histórico de cada '
                         'conversa é salvo no aparelho e, para quem tem conta, '
                         'também na nuvem descrita acima.',
                   ),

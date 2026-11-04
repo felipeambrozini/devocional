@@ -98,8 +98,8 @@ class Recursos {
   static bool? conversasForcado;
 
   /// Se a conta aberta pode usar Conversas (chat com as personas na aba).
-  /// Em teste: o chat chama a API paga do Gemini, e abrir
-  /// para todo mundo antes da hora custaria sem controle.
+  /// Em teste: o chat chama a API Gemini (nível gratuito, com cota
+  /// limitada), e abrir para todo mundo antes da hora esgotaria a cota.
   ///
   /// A allowlist mora no Firestore (`config/recursos`, campo
   /// `emailsComConversas`) e o painel admin edita sem reimplantar, sem

@@ -23,7 +23,106 @@ void main() {
     200,
   );
 
+  Future<Object?> perguntarCom(
+    http.Response Function(http.Request) responder, {
+    List<Mensagem> historico = const [],
+    void Function(Map<String, dynamic>)? aoReceber,
+  }) async {
+    final cliente = MockClient((requisicao) async {
+      aoReceber?.call(json.decode(requisicao.body) as Map<String, dynamic>);
+      return responder(requisicao);
+    });
+    try {
+      return await perguntar(
+        persona: personaSpurgeon,
+        cliente: cliente,
+        pergunta: 'Oi',
+        historico: historico,
+      );
+    } on IaExcecao catch (erro) {
+      return erro;
+    }
+  }
+
   group('perguntar', () {
+    test('envia só as últimas falas e começa no usuário', () async {
+      late Map<String, dynamic> corpo;
+      final historico = [
+        for (var i = 0; i < 50; i++)
+          Mensagem(
+            id: '$i',
+            papel: i.isEven ? 'user' : 'assistant',
+            texto: 'fala $i',
+            momento: i,
+          ),
+      ];
+
+      await perguntarCom(
+        (_) => respostaDaGemini('ok'),
+        historico: historico,
+        aoReceber: (c) => corpo = c,
+      );
+
+      final conteudos = corpo['contents'] as List;
+      expect(conteudos.length, lessThanOrEqualTo(21));
+      expect((conteudos.first as Map)['role'], 'user');
+      expect((conteudos.last as Map)['role'], 'user');
+      expect(corpo['systemInstruction'], isNotNull);
+    });
+
+    test(
+      'resposta que bate o teto de tokens vem marcada como cortada',
+      () async {
+        final resposta = await perguntarCom(
+          (_) => http.Response(
+            json.encode({
+              'candidates': [
+                {
+                  'finishReason': 'MAX_TOKENS',
+                  'content': {
+                    'parts': [
+                      {'text': 'Texto pela metade'},
+                    ],
+                  },
+                },
+              ],
+            }),
+            200,
+          ),
+        );
+
+        expect(resposta, startsWith('Texto pela metade'));
+        expect(resposta as String, contains('cortada'));
+      },
+    );
+
+    test(
+      'bloqueio de segurança tem mensagem própria, sem tentar de novo',
+      () async {
+        final bloqueios = [
+          http.Response(
+            json.encode({
+              'promptFeedback': {'blockReason': 'SAFETY'},
+            }),
+            200,
+          ),
+          http.Response(
+            json.encode({
+              'candidates': [
+                {'finishReason': 'SAFETY'},
+              ],
+            }),
+            200,
+          ),
+        ];
+        for (final bloqueio in bloqueios) {
+          final erro = await perguntarCom((_) => bloqueio) as IaExcecao;
+          expect(erro.mensagem, contains('reformul'));
+          expect(erro.mensagem, isNot(contains('de novo')));
+        }
+      },
+    );
+
     test(
       'mapeia o histórico e fecha a pergunta como última fala do usuário',
       () async {

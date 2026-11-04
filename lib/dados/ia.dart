@@ -30,6 +30,17 @@ final _clientePadrao = http.Client();
 /// um teto baixo segura a latência e o custo do tier gratuito.
 const _maxTokensDeResposta = 2048;
 
+/// Quantas falas do histórico vão ao modelo: conversa longa não pode crescer o
+/// custo e a latência de cada pergunta sem limite.
+const _maxFalasDeHistorico = 20;
+
+const _avisoDeRespostaCortada =
+    '\n\n(Resposta cortada pelo limite de tamanho. Peça para continuar.)';
+
+const _mensagemDePerguntaBloqueada =
+    'A pergunta não pôde ser respondida pela inteligência artificial. '
+    'Tente reformulá-la com outras palavras.';
+
 /// Falha na conversa com a Gemini, já traduzida para o que o usuário deve ler.
 ///
 /// Quem chama (a tela do chat) mostra [mensagem] num balão de erro com botão
@@ -46,9 +57,9 @@ class IaExcecao implements Exception {
 /// Fala com a persona e devolve a resposta.
 ///
 /// [historico] é o que o [Estado] já guardou, [pergunta] a mensagem nova. O
-/// histórico vai inteiro ao modelo, com o papel mapeado para o vocabulário do
-/// Gemini ("user"/"model"), e a pergunta fecha como última fala do usuário,
-/// que é o formato que a API exige.
+/// histórico vai ao modelo limitado às últimas [_maxFalasDeHistorico] falas, com
+/// o papel mapeado para o vocabulário do Gemini ("user"/"model"), e a pergunta
+/// fecha como última fala do usuário, que é o formato que a API exige.
 ///
 /// [cliente] existe só para os testes injetarem um HTTP falso; quem chama de
 /// verdade usa o cliente global do pacote `http`.
@@ -60,9 +71,11 @@ Future<String> perguntar({
 }) async {
   final conteudos = <Map<String, dynamic>>[];
   var ultimoPapel = '';
-  for (final mensagem in historico) {
+  for (final mensagem in _recentes(historico)) {
     final papel = mensagem.doUsuario ? 'user' : 'model';
     if (papel == ultimoPapel) continue;
+    // A API exige que a conversa comece no usuário.
+    if (conteudos.isEmpty && papel != 'user') continue;
     conteudos.add({
       'role': papel,
       'parts': [
@@ -136,19 +149,49 @@ Future<String> perguntar({
       'instantes.',
     );
   }
+  return _textoDaResposta(corpo);
+}
+
+List<Mensagem> _recentes(List<Mensagem> historico) =>
+    historico.length <= _maxFalasDeHistorico
+    ? historico
+    : historico.sublist(historico.length - _maxFalasDeHistorico);
+
+/// Extrai o texto, avisando quando a resposta foi cortada pelo teto de tokens
+/// e traduzindo bloqueio de segurança em mensagem própria: reenviar a mesma
+/// pergunta não adianta, é preciso reformulá-la.
+String _textoDaResposta(Map corpo) {
+  final bloqueio = (corpo['promptFeedback'] as Map?)?['blockReason'];
+  if (bloqueio != null) throw const IaExcecao(_mensagemDePerguntaBloqueada);
+
   final candidatos = corpo['candidates'];
   final primeiro = candidatos is List && candidatos.isNotEmpty
       ? candidatos.first
       : null;
+  final motivoDoFim = primeiro is Map ? primeiro['finishReason'] : null;
   final conteudo = primeiro is Map ? primeiro['content'] : null;
   final partes = conteudo is Map ? conteudo['parts'] : null;
   final primeira = partes is List && partes.isNotEmpty ? partes.first : null;
   final texto = primeira is Map ? primeira['text'] : null;
-  if (texto is! String || texto.trim().isEmpty) {
-    throw const IaExcecao('A resposta veio vazia. Tente de novo.');
+  final temTexto = texto is String && texto.trim().isNotEmpty;
+  if (!temTexto) {
+    throw motivoDoFim is String && _motivosDeBloqueio.contains(motivoDoFim)
+        ? const IaExcecao(_mensagemDePerguntaBloqueada)
+        : const IaExcecao('A resposta veio vazia. Tente de novo.');
   }
-  return texto.trim();
+  return motivoDoFim == 'MAX_TOKENS'
+      ? '${texto.trim()}$_avisoDeRespostaCortada'
+      : texto.trim();
 }
+
+const _motivosDeBloqueio = {
+  'SAFETY',
+  'PROHIBITED_CONTENT',
+  'BLOCKLIST',
+  'SPII',
+  'RECITATION',
+  'IMAGE_SAFETY',
+};
 
 /// 429 é o teto do tier gratuito, que zera sozinho em até um dia. 403 é outra
 /// coisa: a chave sem permissão para o modelo (não se resolve sozinho, e sem
