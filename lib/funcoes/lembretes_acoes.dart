@@ -61,10 +61,9 @@ Future<void> aplicarHorarioDeLembrete(
 /// Rearma os lembretes no início do app, sempre que estiverem ligados.
 ///
 /// O lembrete local de reserva é recorrente e sobrevive sozinho sem o app
-/// abrir (ver `LembretesReais._armarReservas`), mas regravar o documento do
-/// Firestore ainda atualiza o fuso, que ficava preso ao da primeira gravação
-/// em quem viajasse — por isso não pula quando já existe registro. A escrita
-/// é idempotente e barata.
+/// abrir (ver `LembretesReais._armarReservas`), mas reagendar ainda confere o
+/// documento do Firestore, que só é regravado se horário ou fuso mudaram (em
+/// quem viaja o fuso ficaria preso ao da primeira gravação).
 Future<void> reagendarLembretesSeNecessario(Estado estado) async {
   if (!estado.lembretesAtivos) return;
   await _agendarLembretes(estado);

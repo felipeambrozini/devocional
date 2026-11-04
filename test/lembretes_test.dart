@@ -316,4 +316,45 @@ void main() {
       });
     });
   });
+
+  group('cadastroPrecisaSerGravado', () {
+    final cadastro = <String, dynamic>{
+      'fid': 'abc',
+      'minutosManha': 420,
+      'minutosPromessas': 720,
+      'minutosLeitura': 1080,
+      'minutosNoite': 1260,
+      'fuso': 'America/Sao_Paulo',
+    };
+
+    Future<bool> precisa(Map<String, dynamic>? gravado) =>
+        cadastroPrecisaSerGravado(() async => gravado, cadastro);
+
+    test('cadastro igual não regrava, mesmo com campos da Function', () async {
+      final gravado = {...cadastro, 'ultimoEnvioManha': '2026-11-04'};
+      expect(await precisa(gravado), isFalse);
+    });
+
+    test('documento inexistente grava', () async {
+      expect(await precisa(null), isTrue);
+    });
+
+    for (final campo in cadastro.keys.where((c) => c != 'fid')) {
+      test('mudar $campo regrava', () async {
+        final gravado = {
+          ...cadastro,
+          campo: campo == 'fuso' ? 'Europe/Lisbon' : 1,
+        };
+        expect(await precisa(gravado), isTrue);
+      });
+    }
+
+    test('falha na leitura grava', () async {
+      final precisaGravar = await cadastroPrecisaSerGravado(
+        () async => throw Exception('sem rede'),
+        cadastro,
+      );
+      expect(precisaGravar, isTrue);
+    });
+  });
 }

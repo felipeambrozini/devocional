@@ -303,6 +303,36 @@ Future<void> _lembreteEmSegundoPlano(RemoteMessage mensagem) async {
   }
 }
 
+const _camposDoCadastro = [
+  'fid',
+  'minutosManha',
+  'minutosPromessas',
+  'minutosLeitura',
+  'minutosNoite',
+  'fuso',
+];
+
+/// Verdadeiro se o documento gravado já tem o mesmo fid, os mesmos quatro
+/// horários e o mesmo fuso do [novo]. Campos extras da Function
+/// (`ultimoEnvio*`, `proximoEnvio`) não contam.
+bool mesmoCadastro(Map<String, dynamic>? gravado, Map<String, dynamic> novo) =>
+    gravado != null &&
+    _camposDoCadastro.every((campo) => gravado[campo] == novo[campo]);
+
+/// Decide se o [novo] cadastro precisa ser gravado. Se a leitura falhar,
+/// grava (comportamento anterior), registrando o erro.
+Future<bool> cadastroPrecisaSerGravado(
+  Future<Map<String, dynamic>?> Function() lerGravado,
+  Map<String, dynamic> novo,
+) async {
+  try {
+    return !mesmoCadastro(await lerGravado(), novo);
+  } catch (erro, pilha) {
+    Registro.erro('Lembretes.lerCadastro', erro, pilha);
+    return true;
+  }
+}
+
 /// Agenda o lembrete diário no servidor e navega quando a notificação é
 /// tocada.
 ///
@@ -530,9 +560,11 @@ class LembretesReais implements Lembretes {
     }
   }
 
-  /// Grava o cadastro que a Function consulta. O `.set()` substitui tudo —
-  /// inclusive apaga `ultimoEnvio*` da Function, o que é desejado: reagendar
-  /// vale um reenvio no mesmo dia.
+  /// Grava o cadastro que a Function consulta, só se ele mudou. O `.set()`
+  /// substitui tudo, inclusive `ultimoEnvio*` e `proximoEnvio` da Function:
+  /// quando o horário ou o fuso muda isso é desejado (reagendar vale um
+  /// reenvio no mesmo dia), mas a cada abertura do app faria a Function
+  /// reenviar o aviso já entregue.
   Future<void> _gravar(
     String fid,
     TimeOfDay manha,
@@ -543,14 +575,20 @@ class LembretesReais implements Lembretes {
     final fuso = await FlutterTimezone.getLocalTimezone();
     _ultimoFuso = fuso.identifier;
     _ultimoFid = fid;
-    await FirebaseFirestore.instance.collection(_colecao).doc(fid).set({
+    final cadastro = {
       'fid': fid,
       'minutosManha': manha.hour * 60 + manha.minute,
       'minutosPromessas': promessas.hour * 60 + promessas.minute,
       'minutosLeitura': leitura.hour * 60 + leitura.minute,
       'minutosNoite': noite.hour * 60 + noite.minute,
       'fuso': _ultimoFuso,
-    });
+    };
+    final documento = FirebaseFirestore.instance.collection(_colecao).doc(fid);
+    final precisaGravar = await cadastroPrecisaSerGravado(
+      () async => (await documento.get()).data(),
+      cadastro,
+    );
+    if (precisaGravar) await documento.set(cadastro);
   }
 
   /// Arma o lembrete local recorrente de reserva nos slots escolhidos, + 5
