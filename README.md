@@ -963,12 +963,24 @@ rewrite em `firebase.json` cuida do SPA). O build usa `--base-href
 `hosting,firestore:rules,storage,functions` juntos. As actions estão fixadas em
 commit SHA completo, não em tag mutável.
 
-Cache: `index.html`, `flutter_bootstrap.js`, `main.dart.js`, os manifestos de
-assets (`FontManifest.json`, `AssetManifest*`) e as fontes do FontAwesome saem
-com `no-cache`; só o resto de `assets/` e o `canvaskit/` ficam imutáveis por um
-ano. O manifesto lista as fontes de cada build, e congelá-lo por um ano quebra
-os ícones quando o conjunto de fontes muda (foi o que apagou os ícones na troca
-de Material para FontAwesome). Ver `headers` em `firebase.json`.
+Cache: `index.html`, `flutter_bootstrap.js`, `main.dart.js` e todo o `assets/`
+(a Bíblia, os comentários, os livros, os manifestos e as fontes) saem com
+`no-cache`: o navegador guarda a cópia, mas pergunta ao Hosting se ela mudou, e
+o ETag responde com um 304 de poucos bytes. Só o `canvaskit/` fica imutável por
+um ano. Os nomes dos assets do Flutter não levam hash, então um cache longo
+fazia uma correção de versículo ou de comentário levar até um ano para chegar a
+quem já tinha visitado, e congelar o manifesto por um ano quebra os ícones
+quando o conjunto de fontes muda (foi o que apagou os ícones na troca de
+Material para FontAwesome). Um caminho inexistente sob `assets/` cai no rewrite
+do SPA e devolve o `index.html`, que agora também não fica em cache por um ano.
+Ver `headers` em `firebase.json`.
+
+Antes de publicar, o job `regras-e-functions` do `deploy-web.yml` roda os testes
+das regras no emulador (`npm --prefix test_regras test`) e os da Function
+(`npm --prefix functions test`); o `deploy` só começa se ele passar.
+Voltar atrás: o Hosting tem histórico de versões no console do Firebase (um
+clique em "Reverter"); regras e Function voltam com `git revert` do commit e um
+novo push.
 
 Além do build em `public/devocional`, o mesmo passo copia `404.html`,
 `robots.txt` e `llms.txt` para a raiz do `public` — o Hosting só olha esses
