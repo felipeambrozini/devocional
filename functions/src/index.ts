@@ -6,10 +6,11 @@
 // implementa `zonedSchedule` (lança `UnsupportedError`), então lá não existe
 // reserva local — por isso a cadência apertada: cada minuto de atraso aqui é
 // um minuto de atraso na única notificação que a web recebe.
-// Lê a coleção `lembretes` no Firestore ({fid, minutosManha, minutosNoite,
-// fuso}, gravada pelo app; ver lib/dados/lembretes.dart) e envia via FCM uma
-// mensagem **data-only** para quem venceu o horário. Documentos antigos ainda
-// trazem {token} em vez de {fid}; os dois formatos são aceitos na transição:
+// Lê só os documentos vencidos da coleção `lembretes` no Firestore
+// (`proximoEnvio` <= agora; {fid, minutosManha, minutosNoite, fuso}, gravada
+// pelo app, ver lib/dados/lembretes.dart) e envia via FCM uma mensagem
+// **data-only** para quem venceu o horário. Documentos antigos ainda trazem
+// {token} em vez de {fid}; os dois formatos são aceitos na transição:
 //
 //   - data-only acorda o handler Dart com o app morto no Android, que exibe
 //     via notificação local (o lembrete local recorrente de reserva do
@@ -27,24 +28,41 @@
 // 12. O cron do GitHub pulava lembrete quase todo dia porque exigia minuto
 // exato; isto aqui não.
 //
+// Consulta barata: cada avaliação grava `proximoEnvio` (quando o documento
+// volta a ser lido, no máximo 60 min à frente), então o documento só é lido
+// perto de um horário seu. Documento sem o campo (cadastro novo, APK antigo
+// que regrava com .set) é marcado pelo gatilho `prepararLembrete`.
+//
 // Conteúdo: assets/conteudo-lembretes.json — gerado dos JSONs do app
 // (manha_e_noite/promessas_de_deus) só com referência e título, que é tudo
 // que a notificação usa ("Venha ler a reflexão para sua manhã em
 // Gênesis 1:2"). Regenerar se algum dia o conteúdo anual mudar.
 import {initializeApp} from "firebase-admin/app";
-import {getFirestore} from "firebase-admin/firestore";
-import {getMessaging, Message} from "firebase-admin/messaging";
+import {
+  DocumentReference,
+  getFirestore,
+  Timestamp,
+} from "firebase-admin/firestore";
+import {getMessaging, Message, SendResponse} from "firebase-admin/messaging";
+import {onDocumentWritten} from "firebase-functions/v2/firestore";
 import {onSchedule} from "firebase-functions/v2/scheduler";
 import conteudoJson from "./assets/conteudo-lembretes.json";
+import {
+  calcularProximoEnvio,
+  deveEnviar,
+  ehBissexto,
+  referenciaDoSlot,
+} from "./regras";
 
 initializeApp();
 
 const COLECAO = "lembretes";
 
-// Minutos depois do horário cadastrado em que o push ainda é enviado. O app,
-// do outro lado, suprime push mais de 5 min atrasado (o alarme local já
-// avisou) — ver `pushAindaVale` em lib/dados/lembretes.dart.
-const TOLERANCIA_MINUTOS = 60;
+// Mesma região do Firestore: o gatilho precisa estar nela.
+const REGIAO_DO_BANCO = "southamerica-east1";
+
+// Limite do sendEach e do WriteBatch.
+const TAMANHO_MAXIMO_LOTE = 500;
 
 interface PromessaDia {
   t: string;
@@ -52,10 +70,6 @@ interface PromessaDia {
 }
 
 type DiaConteudo = {m?: string; n?: string; p?: PromessaDia; l?: string; lb?: string};
-
-function ehBissexto(ano: number): boolean {
-  return (ano % 4 === 0 && ano % 100 !== 0) || ano % 400 === 0;
-}
 
 const conteudoPorDia = conteudoJson as Record<string, DiaConteudo>;
 
@@ -65,8 +79,10 @@ interface DadosDoLembrete {
   /** Token FCM de documentos gravados antes da migração para FID. */
   token?: string;
   minutosManha: number;
-  minutosPromessas: number;
-  minutosLeitura: number;
+  /** Ausente em documentos antigos: herda da manhã. */
+  minutosPromessas?: number;
+  /** Ausente em documentos antigos: herda da manhã. */
+  minutosLeitura?: number;
   minutosNoite: number;
   fuso: string;
   ultimoEnvioManha?: string;
@@ -77,6 +93,61 @@ interface DadosDoLembrete {
 
 type Alvo = {fid: string} | {token: string};
 
+type CampoUltimoEnvio =
+  | "ultimoEnvioManha"
+  | "ultimoEnvioPromessas"
+  | "ultimoEnvioLeitura"
+  | "ultimoEnvioNoite";
+
+type Interruptores = (interruptor: string) => boolean;
+
+interface DefinicaoDoSlot {
+  chave: string;
+  campoUltimoEnvio: CampoUltimoEnvio;
+  /** Interruptor em config/recursos. */
+  interruptor: string;
+  titulo: string;
+  minutos: (d: DadosDoLembrete) => number;
+  /** Texto do push, ou vazio quando o dia não tem conteúdo do slot. */
+  corpo: (conteudo: DiaConteudo, ano: number) => string | undefined;
+}
+
+const SLOTS: DefinicaoDoSlot[] = [
+  {
+    chave: "manha",
+    campoUltimoEnvio: "ultimoEnvioManha",
+    interruptor: "manhaAtivo",
+    titulo: "Devocional da Manhã",
+    minutos: (d) => d.minutosManha,
+    corpo: (c) => c.m ? `Venha ler a reflexão para sua manhã em ${c.m}` : undefined,
+  },
+  {
+    chave: "promessas",
+    campoUltimoEnvio: "ultimoEnvioPromessas",
+    interruptor: "promessasAtivo",
+    titulo: "Promessas de Deus",
+    minutos: (d) => d.minutosPromessas ?? d.minutosManha,
+    corpo: (c) => c.p?.r ?
+      `Venha ler a Promessa de Deus para o seu dia em ${c.p.r}` : undefined,
+  },
+  {
+    chave: "leitura",
+    campoUltimoEnvio: "ultimoEnvioLeitura",
+    interruptor: "cronogramaAtivo",
+    titulo: "Leitura do Dia",
+    minutos: (d) => d.minutosLeitura ?? d.minutosManha,
+    corpo: (c, ano) => ehBissexto(ano) ? (c.lb ?? c.l) : c.l,
+  },
+  {
+    chave: "noite",
+    campoUltimoEnvio: "ultimoEnvioNoite",
+    interruptor: "noiteAtivo",
+    titulo: "Devocional da Noite",
+    minutos: (d) => d.minutosNoite,
+    corpo: (c) => c.n ? `Venha ler a reflexão para sua noite em ${c.n}` : undefined,
+  },
+];
+
 function alvoDe(d: DadosDoLembrete): Alvo | null {
   if (typeof d.fid === "string" && d.fid.length > 0) return {fid: d.fid};
   if (typeof d.token === "string" && d.token.length > 0) {
@@ -85,9 +156,8 @@ function alvoDe(d: DadosDoLembrete): Alvo | null {
   return null;
 }
 
-function agoraNoFuso(fuso: string): {
+function agoraNoFuso(fuso: string, agora: Date): {
   diaISO: string;
-  diaChave: string;
   minutoDoDia: number;
 } {
   const partes = new Intl.DateTimeFormat("en-CA", {
@@ -98,35 +168,14 @@ function agoraNoFuso(fuso: string): {
     hour: "2-digit",
     minute: "2-digit",
     hourCycle: "h23",
-  }).formatToParts(new Date());
+  }).formatToParts(agora);
   const p = (tipo: string) => partes.find((x) => x.type === tipo)?.value ?? "";
   const hora = Number(p("hour"));
   const minuto = Number(p("minute"));
   return {
     diaISO: `${p("year")}-${p("month")}-${p("day")}`,
-    diaChave: `${p("day")}-${p("month")}`,
     minutoDoDia: hora * 60 + minuto,
   };
-}
-
-/// Minutos de atraso de [agora] sobre [alvo], considerando a virada da
-/// meia-noite (alvo 23:55, agora 00:03 → 8). Antes do alvo no mesmo dia
-/// volta pelo fim do dia anterior (número alto = ainda não deu a hora).
-function atrasoMinutos(agora: number, alvo: number): number {
-  const diferenca = (agora - alvo) % 1440;
-  return diferenca < 0 ? diferenca + 1440 : diferenca;
-}
-
-function deveEnviar(
-    agoraMinuto: number,
-    alvoMinuto: number,
-    ultimoEnvio: string | undefined,
-    diaISO: string,
-): boolean {
-  return (
-    ultimoEnvio !== diaISO &&
-    atrasoMinutos(agoraMinuto, alvoMinuto) <= TOLERANCIA_MINUTOS
-  );
 }
 
 function mensagem(
@@ -150,163 +199,250 @@ function mensagem(
   };
 }
 
+interface Envio {
+  slot: DefinicaoDoSlot;
+  /** Dia a que o slot pertence (ontem na virada da meia-noite). */
+  diaISO: string;
+  message: Message;
+}
+
+interface Avaliacao {
+  ref: DocumentReference;
+  minutoDoDia: number;
+  alvosMinuto: number[];
+  envios: Envio[];
+  confirmados: Envio[];
+  alvoMorto: boolean;
+}
+
+function planejarEnvios(
+    alvo: Alvo,
+    d: DadosDoLembrete,
+    local: {diaISO: string; minutoDoDia: number},
+    ligado: Interruptores,
+): Envio[] {
+  return SLOTS.flatMap((slot) => {
+    const alvoMinuto = slot.minutos(d);
+    const referencia = referenciaDoSlot(
+        local.diaISO, local.minutoDoDia, alvoMinuto);
+    if (
+      !ligado(slot.interruptor) ||
+      !deveEnviar(local.minutoDoDia, alvoMinuto, d[slot.campoUltimoEnvio],
+          referencia.diaISO)
+    ) {
+      return [];
+    }
+    const conteudo = conteudoPorDia[referencia.diaChave];
+    const ano = Number(referencia.diaISO.slice(0, 4));
+    const corpo = conteudo && slot.corpo(conteudo, ano);
+    if (!corpo) return [];
+    return [{
+      slot,
+      diaISO: referencia.diaISO,
+      message: mensagem(alvo, slot.chave, slot.titulo, corpo, alvoMinuto),
+    }];
+  });
+}
+
+function avaliar(
+    ref: DocumentReference,
+    d: DadosDoLembrete,
+    agora: Date,
+    ligado: Interruptores,
+): Avaliacao {
+  // Documento inválido sai sem alvos: só volta à consulta em 60 min.
+  const avaliacao: Avaliacao = {
+    ref,
+    minutoDoDia: 0,
+    alvosMinuto: [],
+    envios: [],
+    confirmados: [],
+    alvoMorto: false,
+  };
+  const alvo = alvoDe(d);
+  if (
+    alvo === null ||
+    typeof d.minutosManha !== "number" ||
+    typeof d.minutosNoite !== "number" ||
+    typeof d.fuso !== "string"
+  ) {
+    console.warn(`Documento fora do contrato: ${ref.id}`);
+    return avaliacao;
+  }
+  let local: ReturnType<typeof agoraNoFuso>;
+  try {
+    local = agoraNoFuso(d.fuso, agora);
+  } catch {
+    console.warn(`Fuso inválido em ${ref.id}: ${d.fuso}`);
+    return avaliacao;
+  }
+  return {
+    ...avaliacao,
+    minutoDoDia: local.minutoDoDia,
+    alvosMinuto: SLOTS.map((slot) => slot.minutos(d)),
+    envios: planejarEnvios(alvo, d, local, ligado),
+  };
+}
+
+async function lerInterruptores(): Promise<Interruptores> {
+  // Interruptores do painel (ver lib/dados/config_admin.dart): sem o
+  // documento vale ligado, igual no app — um documento velho nunca desliga
+  // um recurso novo por acidente. Uma leitura só por execução.
+  let rec: Record<string, unknown> | null = null;
+  try {
+    const r = await getFirestore().doc("config/recursos").get();
+    rec = r.exists ? (r.data() as Record<string, unknown>) : null;
+  } catch {}
+  return (interruptor) => (rec?.[interruptor] as boolean | undefined) ?? true;
+}
+
+async function enviarEmFatias(mensagens: Message[]): Promise<SendResponse[]> {
+  const respostas: SendResponse[] = [];
+  for (let i = 0; i < mensagens.length; i += TAMANHO_MAXIMO_LOTE) {
+    const fatia = await getMessaging().sendEach(
+        mensagens.slice(i, i + TAMANHO_MAXIMO_LOTE));
+    respostas.push(...fatia.responses);
+  }
+  return respostas;
+}
+
+function registrarRespostas(
+    avaliacoes: Avaliacao[],
+    respostas: SendResponse[],
+): number {
+  const envios = avaliacoes.flatMap(
+      (a) => a.envios.map((envio) => ({a, envio})));
+  let enviados = 0;
+  envios.forEach(({a, envio}, i) => {
+    const r = respostas[i];
+    if (r.success) {
+      enviados++;
+      a.confirmados.push(envio);
+      return;
+    }
+    const codigo = r.error?.code ?? 0;
+    console.error(`Falha ao enviar ${envio.slot.chave} para ${a.ref.id}:`,
+        r.error?.message);
+    // UNREGISTERED/INVALID_ARGUMENT = FID/token apagado/expirado ou
+    // inválido: nada a fazer além de remover o cadastro. Outros códigos
+    // (rede, cota) são passageiros; a próxima rodada tenta de novo.
+    if (codigo === "messaging/registration-token-not-registered" ||
+        codigo === "messaging/installation-id-not-registered" ||
+        codigo === "messaging/invalid-argument") {
+      a.alvoMorto = true;
+    }
+  });
+  return enviados;
+}
+
+type Gravacao = {
+  ref: DocumentReference;
+  atualizacao: Record<string, string | Timestamp> | "apagar";
+};
+
+// Um documento que sumiu entre a leitura e a escrita (a pessoa desligou o
+// lembrete) derruba o commit do lote inteiro; nesse caso grava um a um, para
+// os outros até 499 não ficarem vencidos e receberem o mesmo push de novo.
+async function gravarEmLotes(gravacoes: Gravacao[]): Promise<void> {
+  for (let i = 0; i < gravacoes.length; i += TAMANHO_MAXIMO_LOTE) {
+    const fatia = gravacoes.slice(i, i + TAMANHO_MAXIMO_LOTE);
+    const lote = getFirestore().batch();
+    for (const {ref, atualizacao} of fatia) {
+      if (atualizacao === "apagar") lote.delete(ref);
+      else lote.update(ref, atualizacao);
+    }
+    try {
+      await lote.commit();
+    } catch (erro) {
+      console.error("Lote de lembretes falhou, gravando um a um:", erro);
+      await Promise.all(fatia.map(async ({ref, atualizacao}) => {
+        try {
+          if (atualizacao === "apagar") await ref.delete();
+          else await ref.update(atualizacao);
+        } catch (erroDoDocumento) {
+          console.error(`Falha ao gravar ${ref.path}:`, erroDoDocumento);
+        }
+      }));
+    }
+  }
+}
+
+async function gravarResultados(
+    avaliacoes: Avaliacao[],
+    agora: Date,
+): Promise<void> {
+  await gravarEmLotes(avaliacoes.map((a): Gravacao => {
+    if (a.alvoMorto) return {ref: a.ref, atualizacao: "apagar"};
+    const reenviar = a.confirmados.length < a.envios.length;
+    const atualizacao: Record<string, string | Timestamp> = {
+      proximoEnvio: Timestamp.fromDate(calcularProximoEnvio(
+          agora, a.minutoDoDia, a.alvosMinuto, reenviar)),
+    };
+    for (const envio of a.confirmados) {
+      atualizacao[envio.slot.campoUltimoEnvio] = envio.diaISO;
+    }
+    return {ref: a.ref, atualizacao};
+  }));
+}
+
+// ponytail: varredura da coleção inteira a cada 15 min para marcar os
+// documentos sem `proximoEnvio`. O gatilho `prepararLembrete` só enxerga
+// escritas novas, e os cadastros que já existiam antes do campo (e um gatilho
+// que falhe) ficariam fora da consulta para sempre. Custa ~96 leituras por
+// documento por dia, 15 vezes menos que ler tudo todo minuto; sai quando todo
+// cadastro antigo tiver sido regravado, ou sobe para uma vez por hora.
+const INTERVALO_DA_VARREDURA_MINUTOS = 15;
+
+async function marcarSemProximoEnvio(agora: Date): Promise<void> {
+  const todos = await getFirestore().collection(COLECAO)
+    .select("proximoEnvio").get();
+  const marca = Timestamp.fromDate(agora);
+  const semCampo = todos.docs
+    .filter((doc) => doc.get("proximoEnvio") === undefined)
+    .map((doc): Gravacao => ({ref: doc.ref, atualizacao: {proximoEnvio: marca}}));
+  console.log(`${semCampo.length} lembrete(s) sem proximoEnvio marcado(s).`);
+  await gravarEmLotes(semCampo);
+}
+
 export const enviarLembretes = onSchedule(
   // O runtime (nodejs22) vem do "engines.node" do package.json — na v7 das
   // functions não se define runtime por aqui. Cron unix, não "every X
   // minutes": esse atalho não tem forma de dizer "1" (singular quebra o
   // parser do Scheduler).
-  {schedule: "* * * * *", timeZone: "Etc/UTC"},
+  {schedule: "* * * * *", timeZone: "Etc/UTC", timeoutSeconds: 120},
   async () => {
-    const db = getFirestore();
-
-    // Interruptores do painel (ver lib/dados/config_admin.dart): sem o
-    // documento vale ligado, igual no app — um documento velho nunca desliga
-    // um recurso novo por acidente. Uma leitura só por minuto para não punir
-    // o Firestore a cada lembrete.
-    let rec: Record<string, unknown> | null = null;
-    try {
-      const r = await db.doc("config/recursos").get();
-      rec = r.exists ? (r.data() as Record<string, unknown>) : null;
-    } catch {}
-    const ligado = (k: string) => (rec?.[k] as boolean | undefined) ?? true;
-    const manhaAtiva = ligado("manhaAtivo");
-    const noiteAtiva = ligado("noiteAtivo");
-    const promessasAtiva = ligado("promessasAtivo");
-    const cronogramaAtivo = ligado("cronogramaAtivo");
-
-    const snap = await db.collection(COLECAO).get();
-    console.log(`${snap.size} lembrete(s) cadastrado(s).`);
-
-    let enviados = 0;
-    let removidos = 0;
-
-    for (const doc of snap.docs) {
-      const d = doc.data() as DadosDoLembrete;
-      // Compatibilidade: documentos antigos só tinham manha/noite; promessas
-      // e leitura herdam da manhã até o app reescrever com os 4 campos.
-      const minutosPromessas = typeof (d as any).minutosPromessas === "number"
-        ? (d as any).minutosPromessas as number : d.minutosManha;
-      const minutosLeitura = typeof (d as any).minutosLeitura === "number"
-        ? (d as any).minutosLeitura as number : d.minutosManha;
-      const alvo = alvoDe(d);
-      if (
-        alvo === null ||
-        typeof d.minutosManha !== "number" ||
-        typeof d.minutosNoite !== "number" ||
-        typeof d.fuso !== "string"
-      ) {
-        console.warn(`Documento fora do contrato: ${doc.id}`);
-        continue;
-      }
-
-      let local: ReturnType<typeof agoraNoFuso>;
-      try {
-        local = agoraNoFuso(d.fuso);
-      } catch {
-        console.warn(`Fuso inválido em ${doc.id}: ${d.fuso}`);
-        continue;
-      }
-      const conteudoDia = conteudoPorDia[local.diaChave];
-      if (!conteudoDia) continue;
-
-      type Slot = "manha" | "promessas" | "leitura" | "noite";
-      const pendentes: {slot: Slot; message: Message}[] = [];
-
-      if (manhaAtiva && deveEnviar(local.minutoDoDia, d.minutosManha, d.ultimoEnvioManha, local.diaISO)) {
-        if (conteudoDia.m) {
-          pendentes.push({
-            slot: "manha",
-            message: mensagem(alvo, "manha", "Devocional da Manhã",
-              `Venha ler a reflexão para sua manhã em ${conteudoDia.m}`, d.minutosManha),
-          });
-        }
-      }
-
-      if (promessasAtiva && deveEnviar(local.minutoDoDia, minutosPromessas, (d as any).ultimoEnvioPromessas, local.diaISO)) {
-        if (conteudoDia.p?.r) {
-          pendentes.push({
-            slot: "promessas",
-            message: mensagem(alvo, "promessas", "Promessas de Deus",
-              `Venha ler a Promessa de Deus para o seu dia em ${conteudoDia.p.r}`, minutosPromessas),
-          });
-        }
-      }
-
-      if (cronogramaAtivo && deveEnviar(local.minutoDoDia, minutosLeitura, (d as any).ultimoEnvioLeitura, local.diaISO)) {
-        const ano = Number(local.diaISO.slice(0, 4));
-        const leituraLabel = ehBissexto(ano)
-          ? (conteudoDia.lb ?? conteudoDia.l)
-          : conteudoDia.l;
-        if (leituraLabel) {
-          pendentes.push({
-            slot: "leitura",
-            message: mensagem(alvo, "leitura", "Leitura do Dia",
-              leituraLabel, minutosLeitura),
-          });
-        }
-      }
-
-      if (noiteAtiva && deveEnviar(local.minutoDoDia, d.minutosNoite, d.ultimoEnvioNoite, local.diaISO)) {
-        if (conteudoDia.n) {
-          pendentes.push({
-            slot: "noite",
-            message: mensagem(alvo, "noite", "Devocional da Noite",
-              `Venha ler a reflexão para sua noite em ${conteudoDia.n}`, d.minutosNoite),
-          });
-        }
-      }
-
-      if (pendentes.length === 0) continue;
-
-      const resposta = await getMessaging().sendEach(
-        pendentes.map((x) => x.message),
-      );
-
-      const slotsOk = new Set<Slot>();
-      let alvoMorto = false;
-      resposta.responses.forEach((r, i) => {
-        if (r.success) {
-          enviados++;
-          slotsOk.add(pendentes[i].slot);
-          return;
-        }
-        const codigo = r.error?.code ?? 0;
-        console.error(`Falha ao enviar ${pendentes[i].slot} para ${doc.id}:`,
-          r.error?.message);
-        // UNREGISTERED/INVALID_ARGUMENT = FID/token apagado/expirado ou
-        // inválido: nada a fazer além de remover o cadastro. Outros códigos
-        // (rede, cota) são passageiros; a próxima rodada tenta de novo.
-        if (codigo === "messaging/registration-token-not-registered" ||
-            codigo === "messaging/installation-id-not-registered" ||
-            codigo === "messaging/invalid-argument") {
-          alvoMorto = true;
-        }
-      });
-
-      if (alvoMorto) {
-        await doc.ref.delete();
-        removidos++;
-        continue;
-      }
-
-      const atualizacao: Record<string, string> = {};
-      if (slotsOk.has("manha") && d.ultimoEnvioManha !== local.diaISO) {
-        atualizacao.ultimoEnvioManha = local.diaISO;
-      }
-      if (slotsOk.has("promessas") && (d as any).ultimoEnvioPromessas !== local.diaISO) {
-        atualizacao.ultimoEnvioPromessas = local.diaISO;
-      }
-      if (slotsOk.has("leitura") && (d as any).ultimoEnvioLeitura !== local.diaISO) {
-        atualizacao.ultimoEnvioLeitura = local.diaISO;
-      }
-      if (slotsOk.has("noite") && d.ultimoEnvioNoite !== local.diaISO) {
-        atualizacao.ultimoEnvioNoite = local.diaISO;
-      }
-      if (Object.keys(atualizacao).length > 0) {
-        await doc.ref.update(atualizacao);
-      }
+    const agora = new Date();
+    if (agora.getUTCMinutes() % INTERVALO_DA_VARREDURA_MINUTOS === 0) {
+      await marcarSemProximoEnvio(agora);
     }
+    const ligado = await lerInterruptores();
 
+    const vencidos = await getFirestore().collection(COLECAO)
+      .where("proximoEnvio", "<=", Timestamp.fromDate(agora)).get();
+    console.log(`${vencidos.size} lembrete(s) vencido(s).`);
+
+    const avaliacoes = vencidos.docs.map((doc) =>
+      avaliar(doc.ref, doc.data() as DadosDoLembrete, agora, ligado));
+    const mensagens = avaliacoes.flatMap(
+        (a) => a.envios.map((envio) => envio.message));
+    const respostas = await enviarEmFatias(mensagens);
+    const enviados = registrarRespostas(avaliacoes, respostas);
+    await gravarResultados(avaliacoes, agora);
+
+    const removidos = avaliacoes.filter((a) => a.alvoMorto).length;
     console.log(`${enviados} push(es) enviado(s), ${removidos} removido(s).`);
+  },
+);
+
+// Documento sem `proximoEnvio` (cadastro novo, APK antigo que regrava com
+// .set e apaga o campo) nunca entra na consulta acima: marca como vencido
+// agora, para a execução do próximo minuto pegá-lo. Não entra em loop porque
+// depois da escrita o documento passa a ter o campo.
+export const prepararLembrete = onDocumentWritten(
+  {document: `${COLECAO}/{id}`, region: REGIAO_DO_BANCO},
+  async (evento) => {
+    const depois = evento.data?.after;
+    if (!depois?.exists || depois.get("proximoEnvio") !== undefined) return;
+    await depois.ref.update({proximoEnvio: Timestamp.now()});
   },
 );

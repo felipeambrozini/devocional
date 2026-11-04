@@ -8,6 +8,7 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "npm ci --include=dev && tsc",
+    "test": "node --test test/regras.test.mjs",
     "build:watch": "tsc --watch",
     "logs": "firebase functions:log"
   },
