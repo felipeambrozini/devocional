@@ -285,11 +285,19 @@ service cloud.firestore {
               .hasOnly([request.auth.uid]) &&
           minhaEntradaValida(request.auth.uid);
 
-      // Participantes leem o plano inteiro (títulos, progresso de todos).
-      allow read: if google() &&
-          'participantes' in resource.data &&
-          resource.data.participantes is map &&
-          request.auth.uid in resource.data.participantes;
+      function souParticipante() {
+        return google() &&
+            'participantes' in resource.data &&
+            resource.data.participantes is map &&
+            request.auth.uid in resource.data.participantes;
+      }
+
+      // Participantes leem o plano inteiro (títulos, progresso de todos). O
+      // get também passa para documento inexistente: sem `resource == null`,
+      // as regras negavam com PERMISSION_DENIED e o app nunca distinguia
+      // "plano apagado" de "sem acesso", deixando o plano excluído na lista.
+      allow get: if google() && (resource == null || souParticipante());
+      allow list: if souParticipante();
 
       // Entrar, marcar dias e sair são o mesmo tipo de escrita: só a
       // própria entrada. Quem ainda não participa pode criá-la (é o entrar
@@ -297,7 +305,10 @@ service cloud.firestore {
       allow update: if google() &&
           (soAParticipacaoDoProprio(request.auth.uid) || planoEditavelPeloCriador());
 
-      allow delete: if google() && resource.data.criadoPor == request.auth.uid;
+      // Excluir plano já apagado passa (resource == null): é idempotente e
+      // não expõe nada, já que o documento não existe.
+      allow delete: if google() &&
+          (resource == null || resource.data.criadoPor == request.auth.uid);
     }
 
     // Lembrete diário do devocional (ver lib/dados/lembretes.dart e

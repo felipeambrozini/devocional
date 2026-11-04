@@ -13,7 +13,8 @@ import {
   assertFails,
 } from '@firebase/rules-unit-testing';
 import {
-  doc, setDoc, updateDoc, deleteDoc, deleteField, serverTimestamp,
+  doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField, serverTimestamp,
+  collection, query, where, getDocs, arrayUnion, arrayRemove,
 } from 'firebase/firestore';
 import {ref, uploadBytes, deleteObject} from 'firebase/storage';
 
@@ -32,6 +33,13 @@ const bob = env.authenticatedContext('bob', google);
 const semGoogle = env.authenticatedContext('carol',
   {firebase: {sign_in_provider: 'password'}});
 const anonimo = env.unauthenticatedContext();
+const carolDoGoogle = env.authenticatedContext('carol-google', google);
+const dono = env.authenticatedContext('dono', {
+  email: 'felipe.anegrini@gmail.com', ...google,
+});
+const outroEmail = env.authenticatedContext('intruso', {
+  email: 'outro@example.com', ...google,
+});
 
 let falhas = 0;
 async function caso(nome, promessa) {
@@ -116,6 +124,141 @@ await caso('quem não criou não exclui o plano',
 await caso('criadora exclui o plano',
   assertSucceeds(deleteDoc(plano(alice, 'p1'))));
 
+// --- Firestore: planos, leitura, listagem e exclusão ------------------- //
+const planoDaAlice = (id) => setDoc(plano(alice, id),
+  {...planoValido(), participantes: {alice: {nome: 'Alice', lidos: [1]}}});
+const consultaDeParticipante = (ctx, uid) => getDocs(query(
+  collection(ctx.firestore(), 'planos'), where(`participantes.${uid}`, '!=', null)));
+
+await caso('seed: plano da alice com bob dentro', (async () => {
+  await assertSucceeds(planoDaAlice('p10'));
+  await assertSucceeds(updateDoc(plano(bob, 'p10'),
+    {'participantes.bob': {nome: 'Bob', lidos: [2]}}));
+})());
+await caso('list por participantes passa para o próprio uid',
+  assertSucceeds(consultaDeParticipante(bob, 'bob')));
+await caso('list por participantes devolve o plano em que participa', (async () => {
+  const resultado = await consultaDeParticipante(bob, 'bob');
+  if (!resultado.docs.some((d) => d.id === 'p10')) throw new Error('p10 ausente');
+})());
+await caso('list por participantes falha para o uid alheio',
+  assertFails(consultaDeParticipante(bob, 'alice')));
+await caso('list sem filtro de participante falha',
+  assertFails(getDocs(collection(bob.firestore(), 'planos'))));
+await caso('get de plano existente em que não participa falha',
+  assertFails(getDoc(plano(carolDoGoogle, 'p10'))));
+await caso('get de plano apagado devolve exists=false para quem tem login', (async () => {
+  const snapshot = await assertSucceeds(getDoc(plano(bob, 'nunca-existiu')));
+  if (snapshot.exists()) throw new Error('deveria não existir');
+})());
+await caso('get de plano apagado falha sem login Google',
+  assertFails(getDoc(plano(anonimo, 'nunca-existiu'))));
+await caso('delete de plano já apagado passa',
+  assertSucceeds(deleteDoc(plano(bob, 'nunca-existiu'))));
+await caso('delete de plano alheio existente continua falhando',
+  assertFails(deleteDoc(plano(bob, 'p10'))));
+await caso('delete de plano inexistente falha sem login Google',
+  assertFails(deleteDoc(plano(anonimo, 'nunca-existiu'))));
+
+// arrayUnion/arrayRemove nos dias lidos e o entrar com arrayUnion([]).
+await caso('arrayUnion nos próprios lidos passa',
+  assertSucceeds(updateDoc(plano(bob, 'p10'),
+    {'participantes.bob.lidos': arrayUnion(3)})));
+await caso('arrayRemove nos próprios lidos passa',
+  assertSucceeds(updateDoc(plano(bob, 'p10'),
+    {'participantes.bob.lidos': arrayRemove(2)})));
+await caso('arrayUnion nos lidos da alice falha para o bob',
+  assertFails(updateDoc(plano(bob, 'p10'),
+    {'participantes.alice.lidos': arrayUnion(9)})));
+await caso('arrayRemove nos lidos da alice falha para o bob',
+  assertFails(updateDoc(plano(bob, 'p10'),
+    {'participantes.alice.lidos': arrayRemove(1)})));
+await caso('lidos do bob ficaram [3] após union e remove', (async () => {
+  const lidos = (await getDoc(plano(bob, 'p10'))).data().participantes.bob.lidos;
+  if (JSON.stringify(lidos) !== '[3]') throw new Error(JSON.stringify(lidos));
+})());
+
+await caso('seed: plano só da alice',
+  assertSucceeds(planoDaAlice('p11')));
+await caso('entrar com nome e arrayUnion([]) cria lidos=[] quando falta', (async () => {
+  await assertSucceeds(updateDoc(plano(bob, 'p11'), {
+    'participantes.bob.nome': 'Bob',
+    'participantes.bob.lidos': arrayUnion(),
+  }));
+  const entrada = (await getDoc(plano(bob, 'p11'))).data().participantes.bob;
+  if (entrada.nome !== 'Bob' || entrada.lidos.length !== 0) {
+    throw new Error(JSON.stringify(entrada));
+  }
+})());
+await caso('entrar de novo com arrayUnion([]) preserva os lidos existentes', (async () => {
+  await assertSucceeds(updateDoc(plano(bob, 'p11'),
+    {'participantes.bob.lidos': arrayUnion(4, 5)}));
+  await assertSucceeds(updateDoc(plano(bob, 'p11'), {
+    'participantes.bob.nome': 'Bob',
+    'participantes.bob.lidos': arrayUnion(),
+  }));
+  const lidos = (await getDoc(plano(bob, 'p11'))).data().participantes.bob.lidos;
+  if (JSON.stringify(lidos) !== '[4,5]') throw new Error(JSON.stringify(lidos));
+})());
+await caso('entrar com nome e arrayUnion([]) na entrada alheia falha',
+  assertFails(updateDoc(plano(bob, 'p11'), {
+    'participantes.alice.nome': 'Falsa',
+    'participantes.alice.lidos': arrayUnion(),
+  })));
+
+// --- Firestore: config/recursos ----------------------------------------- //
+const recursos = (ctx) => doc(ctx.firestore(), 'config', 'recursos');
+const configValida = () => ({conversasAtivas: true, atualizadoEm: serverTimestamp()});
+
+await caso('só o dono grava config/recursos',
+  assertSucceeds(setDoc(recursos(dono), configValida())));
+await caso('outro e-mail não grava config/recursos',
+  assertFails(setDoc(recursos(outroEmail), configValida())));
+await caso('usuário comum não grava config/recursos',
+  assertFails(setDoc(recursos(alice), configValida())));
+await caso('anônimo não grava config/recursos',
+  assertFails(setDoc(recursos(anonimo), configValida())));
+await caso('usuário logado lê config/recursos',
+  assertSucceeds(getDoc(recursos(alice))));
+await caso('anônimo também lê config/recursos',
+  assertSucceeds(getDoc(recursos(anonimo))));
+
+// --- Firestore: usuarios/{uid}, campos do contrato ---------------------- //
+const mesclar = (ctx, uid, campos) => setDoc(doc(ctx.firestore(), 'usuarios', uid),
+  {...campos, atualizadoEm: serverTimestamp()}, {merge: true});
+const copiaValida = () => ({versao: 1, marcacoes: [], dias_lidos: []});
+const planosDoUsuario = () => ({planos: [], planos_lidos: {}});
+const livrosDoUsuario = () => ({versao: 1, livros: {}, destaques: []});
+const lembretesValidos = () =>
+  ({ativo: true, manha: 360, promessas: 360, leitura: 480, noite: 1260});
+
+await caso('grava a própria copia',
+  assertSucceeds(mesclar(alice, 'alice', {copia: copiaValida()})));
+await caso('copia com chave extra é recusada',
+  assertFails(mesclar(alice, 'alice', {copia: {...copiaValida(), extra: 1}})));
+await caso('chave extra no topo do documento é recusada',
+  assertFails(mesclar(alice, 'alice', {lixo: 1})));
+await caso('não grava a copia do bob',
+  assertFails(mesclar(alice, 'bob', {copia: copiaValida()})));
+await caso('grava os próprios planos',
+  assertSucceeds(mesclar(alice, 'alice', {planos: planosDoUsuario()})));
+await caso('planos com chave extra são recusados',
+  assertFails(mesclar(alice, 'alice', {planos: {...planosDoUsuario(), x: 1}})));
+await caso('não grava os planos do bob',
+  assertFails(mesclar(alice, 'bob', {planos: planosDoUsuario()})));
+await caso('grava a própria leitura de livros',
+  assertSucceeds(mesclar(alice, 'alice', {livros: livrosDoUsuario()})));
+await caso('livros com chave extra são recusados',
+  assertFails(mesclar(alice, 'alice', {livros: {...livrosDoUsuario(), x: 1}})));
+await caso('não grava os livros do bob',
+  assertFails(mesclar(alice, 'bob', {livros: livrosDoUsuario()})));
+await caso('grava os próprios lembretes',
+  assertSucceeds(mesclar(alice, 'alice', {lembretes: lembretesValidos()})));
+await caso('lembretes com horário fora da faixa são recusados',
+  assertFails(mesclar(alice, 'alice', {lembretes: {...lembretesValidos(), manha: 1440}})));
+await caso('não grava os lembretes do bob',
+  assertFails(mesclar(alice, 'bob', {lembretes: lembretesValidos()})));
+
 // --- Firestore: usuarios/{uid}.conversas ------------------------------- //
 const usuario = (ctx) => doc(ctx.firestore(), 'usuarios', 'alice');
 await caso('conversas como mapa passa',
@@ -144,6 +287,23 @@ await caso('anônimo ainda registra lembrete (não pode quebrar)',
   assertSucceeds(setDoc(doc(anonimo.firestore(), 'lembretes', token), lembrete)));
 await caso('lembrete com token diferente do id é recusado',
   assertFails(setDoc(doc(anonimo.firestore(), 'lembretes', 'outro'), lembrete)));
+
+const fid = 'fid' + 'y'.repeat(20);
+const lembretePorFid = {
+  fid, minutosManha: 360, minutosPromessas: 360, minutosLeitura: 480,
+  minutosNoite: 1260, fuso: 'America/Sao_Paulo',
+};
+const lembreteAnonimo = (id) => doc(anonimo.firestore(), 'lembretes', id);
+await caso('lembrete por fid grava com id igual ao fid',
+  assertSucceeds(setDoc(lembreteAnonimo(fid), lembretePorFid)));
+await caso('lembrete por fid com id diferente do fid é recusado',
+  assertFails(setDoc(lembreteAnonimo('outro-fid'), lembretePorFid)));
+await caso('lembrete por fid regravado por inteiro, sem proximoEnvio, continua válido',
+  assertSucceeds(setDoc(lembreteAnonimo(fid), {...lembretePorFid, minutosManha: 400})));
+await caso('cliente não grava proximoEnvio (só a Function, via Admin SDK)',
+  assertFails(setDoc(lembreteAnonimo(fid), {...lembretePorFid, proximoEnvio: 'x'})));
+await caso('lista de lembretes é negada',
+  assertFails(getDocs(collection(anonimo.firestore(), 'lembretes'))));
 
 await env.cleanup();
 console.log(falhas === 0 ? '\nTodas as regras ok.' : `\n${falhas} falha(s).`);
