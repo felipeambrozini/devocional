@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart'
     show kIsWeb, defaultTargetPlatform, TargetPlatform;
-import 'package:google_api_headers/google_api_headers.dart';
+import 'package:flutter/services.dart' show MethodChannel;
+import 'package:package_info_plus/package_info_plus.dart';
 
 /// Chaves de API do Google, uma por plataforma, porque cada uma prova a
 /// identidade de um jeito:
@@ -12,9 +13,9 @@ import 'package:google_api_headers/google_api_headers.dart';
 /// * chaveAndroid: criada no Google Cloud Console, restrita ao app Android
 ///   (`com.felipeambrozini.devocional` + SHA-1 da assinatura) e às APIs que o
 ///   app usa. O celular prova a identidade com os cabeçalhos
-///   X-Android-Package/X-Android-Cert, calculados em tempo de execução pelo
-///   plugin google_api_headers — então debug e release funcionam sem trocar
-///   nada, desde que os dois SHA-1 estejam registrados na chave.
+///   X-Android-Package/X-Android-Cert, calculados em tempo de execução (ver
+///   [cabecalhosGoogle]) — então debug e release funcionam sem trocar nada,
+///   desde que os dois SHA-1 estejam registrados na chave.
 /// * chaveIos: criada no Google Cloud Console, restrita ao app iOS
 ///   (`com.felipeambrozini.devocional` Bundle ID) e às APIs que o app usa.
 ///
@@ -39,21 +40,44 @@ String get chaveGemini {
   }
 }
 
+/// Canal do MainActivity.kt que devolve o SHA-1 da assinatura do apk.
+const _canalAssinatura = MethodChannel('devocional/assinatura');
+
 /// Os cabeçalhos do pedido a uma API do Google.
 ///
-/// Fora da web, a chave restrita ao app exige a identidade do apk em todo
-/// pedido. O plugin google_api_headers lê o nome do pacote e o SHA-1 da
-/// assinatura em tempo de execução — assim o mesmo código serve para o build
-/// de debug e o de release. Se o plugin faltar num aparelho, o pedido segue
-/// sem a prova, que a própria API recusa se precisar.
+/// Fora da web, a chave restrita ao app exige a identidade do app em todo
+/// pedido, lida em tempo de execução — assim o mesmo código serve para o
+/// build de debug e o de release. Se o canal nativo faltar (um isolate de
+/// segundo plano não passa pelo MainActivity), o pedido segue sem a prova,
+/// que a própria API recusa se precisar.
 Future<Map<String, String>> cabecalhosGoogle() async {
   final cabecalhos = <String, String>{'Content-Type': 'application/json'};
   if (!kIsWeb) {
     try {
-      cabecalhos.addAll(await GoogleApiHeaders().getHeaders());
+      cabecalhos.addAll(await _provaDeIdentidade());
     } catch (_) {
-      // Plataforma sem o plugin nativo: segue sem a prova de identidade.
+      // Sem o canal nativo: segue sem a prova de identidade.
     }
   }
   return cabecalhos;
 }
+
+/// O que a restrição de cada chave confere: pacote + SHA-1 da assinatura no
+/// Android, Bundle ID no iOS.
+Future<Map<String, String>> _provaDeIdentidade() async {
+  switch (defaultTargetPlatform) {
+    case TargetPlatform.android:
+      final sha1 = await _canalAssinatura.invokeMethod<String>('sha1');
+      return {
+        'X-Android-Package': await _nomeDoPacote(),
+        'X-Android-Cert': ?sha1,
+      };
+    case TargetPlatform.iOS:
+      return {'X-Ios-Bundle-Identifier': await _nomeDoPacote()};
+    default:
+      return {};
+  }
+}
+
+Future<String> _nomeDoPacote() async =>
+    (await PackageInfo.fromPlatform()).packageName;

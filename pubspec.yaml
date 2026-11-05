@@ -3,7 +3,7 @@ description: "Aplicativo devocional pessoal: tradução autoral da King James 16
 
 publish_to: 'none' 
 
-version: 1.15.0+33
+version: 1.15.0+34
 
 environment:
   sdk: ^3.12.0
@@ -58,18 +58,16 @@ dependencies:
   # Cada aba com o próprio caminho na URL, e Sobre e as conversas também
   # (ver lib/main.dart). Pacote da própria equipe do Flutter, não um clone de
   # terceiro.
-  go_router: ^18.1.1
-  # Número da versão na tela Sobre (ver lib/telas/sobre.dart). Já entra no
-  # build pela google_api_headers, dependência transitiva do Firebase; listar
-  # aqui o promove a dependência direta para o código poder importar.
+  go_router: ^18.1.3
+  # Número da versão na tela Sobre (ver lib/telas/sobre.dart) e nome do pacote
+  # na prova de identidade das chaves do Google (ver lib/dados/google.dart).
   package_info_plus: ^10.2.2
   # Chamadas HTTP para a Gemini API gratuita (ver lib/dados/ia.dart). Único
   # cliente HTTP do app; funciona igual em Android e web.
   http: ^1.6.0
-  google_api_headers: ^5.4.4
   just_audio: ^0.10.6
   google_sign_in: ^7.2.0
-  firebase_app_check: ^0.5.0
+  firebase_app_check: ^0.5.1
   # Onde gravar o arquivo de registro de erros (ver lib/dados/registro.dart).
   # Já era dependência transitiva do Firebase; só promovida a direta para o
   # código poder importar.

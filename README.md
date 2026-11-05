@@ -900,6 +900,18 @@ que está funcionando.
   domínios autorizados.
 - **Nome do pacote** trocado para `com.felipeambrozini.devocional` (09/08/2026),
   refletido no `android/app/build.gradle.kts`.
+- **Android em Kotlin embutido do AGP 9** (05/11/2026): `android.builtInKotlin=true`
+  em `android/gradle.properties` e nada de `kotlin-android` no
+  `android/app/build.gradle.kts`; `android.newDsl` segue `false` porque o
+  Flutter Gradle Plugin ainda usa a DSL antiga. Por isso o `google_api_headers`
+  saiu: toda versão publicada aplica o Kotlin Gradle Plugin sem condição e
+  quebra o build com a flag ligada. A prova de identidade da chave da Gemini
+  (`X-Android-Package`/`X-Android-Cert`) agora é montada em `cabecalhosGoogle()`
+  (`lib/dados/google.dart`), com o SHA-1 da assinatura vindo de um canal no
+  `MainActivity.kt`. Não adicionar plugin que aplique KGP sem condição. Os
+  plugins Firebase continuam listados no aviso de KGP do build — o Flutter os
+  detecta por regex no texto do `build.gradle` —, mas com a flag ligada não
+  aplicam o KGP.
 - **FAQ e Política de privacidade** (20/08/2026): `lib/telas/faq.dart` e
   `lib/telas/privacidade.dart`, com rotas próprias (`/faq`, `/privacidade`) e
   entradas na folha de ajustes, ao lado de Sobre. A política é a versão
