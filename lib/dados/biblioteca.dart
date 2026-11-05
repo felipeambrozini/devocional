@@ -48,6 +48,12 @@ const obrasDaBiblioteca = [
     capa: 'assets/imagens/capa_a_biblia_e_o_jornal.webp',
   ),
   ObraDaBiblioteca(
+    slug: 'conversas_com_lavradores',
+    titulo: 'Conversas com Lavradores',
+    subtitulo: 'Sermões do campo: arado, semente, ceifa e celeiro',
+    capa: 'assets/imagens/capa_conversas_com_lavradores.webp',
+  ),
+  ObraDaBiblioteca(
     slug: 'retratos_de_joao_lavrador',
     titulo: 'Retratos de João Lavrador',
     subtitulo: 'Mais conselhos simples para gente simples',

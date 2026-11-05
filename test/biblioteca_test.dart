@@ -91,6 +91,7 @@ void main() {
           'o_santo_e_o_seu_salvador': 13,
           'tesouro_de_davi': 149,
           'respigas_entre_os_feixes': 146,
+          'conversas_com_lavradores': 19,
         };
         final proibidos = RegExp('[—–‘’“”]');
         for (final obra in obrasDaBiblioteca) {
