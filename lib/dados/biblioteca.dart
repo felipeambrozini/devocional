@@ -18,6 +18,12 @@ const obrasDaBiblioteca = [
     capa: 'assets/imagens/capa_o_santo_e_o_seu_salvador.webp',
   ),
   ObraDaBiblioteca(
+    slug: 'respigas_entre_os_feixes',
+    titulo: 'Respigas entre os Feixes',
+    subtitulo: '146 meditações curtas para a vida cristã',
+    capa: 'assets/imagens/capa_respigas_entre_os_feixes.webp',
+  ),
+  ObraDaBiblioteca(
     slug: 'tesouro_de_davi',
     titulo: 'Tesouro de Davi',
     subtitulo: 'Spurgeon sobre os Salmos, um capítulo por salmo',

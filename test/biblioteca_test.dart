@@ -90,6 +90,7 @@ void main() {
           'pescadores_de_criancas': 23,
           'o_santo_e_o_seu_salvador': 13,
           'tesouro_de_davi': 149,
+          'respigas_entre_os_feixes': 146,
         };
         final proibidos = RegExp('[—–‘’“”]');
         for (final obra in obrasDaBiblioteca) {
