@@ -86,7 +86,7 @@ jobs:
             --dart-define=WHATSAPP_NUMERO=${{ secrets.WHATSAPP_NUMERO }}
 
       - name: Distribute to Firebase App Distribution
-        uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15
+        uses: w9jds/firebase-action@18be666dd40e1769c63de2dac0e6053e0e8c7349 # v15
         with:
           # Numa linha só: num escalar YAML simples as quebras de linha viram
           # espaço, mas a `\` de continuação ficava literal no meio do comando.
