@@ -1,6 +1,6 @@
 ---
 name: release-checklist
-description: Roda a sequência de checagens antes de um push para main com funcionalidade nova (bump de versão, analyze, test, docs, teste web). Use quando o usuário disser que vai subir/publicar/dar push em main, ou pedir para preparar um release.
+description: Roda a sequência de checagens antes de um push para main com funcionalidade nova ou bug fix (bump de versão, analyze, test, docs, teste web). Use quando o usuário disser que vai subir/publicar/dar push em main, ou pedir para preparar um release.
 disable-model-invocation: true
 ---
 
@@ -13,8 +13,8 @@ versão, e o bump precisa acontecer **antes** do push.
 ## 1. Confirme o que está sendo entregue
 
 Pergunte-se (ou confirme com o usuário) se este push contém **funcionalidade
-nova**. Bug fix, refactor, ajuste de texto/documentação e iteração local não
-contam — só funcionalidade nova perto do push justifica bump de versão.
+nova**, **bug fix** ou só refactor, ajuste de texto/documentação e iteração
+local — esse último caso não mexe na versão.
 
 ## 2. Analyze + test
 
@@ -35,12 +35,19 @@ principal e casos de borda da funcionalidade antes de seguir.
 Se a mudança afeta o que está documentado em README.md, PRODUCT.md ou
 DESIGN.md, atualize esses arquivos agora — não depois do push.
 
-## 5. Bump de versão (só se houver funcionalidade nova)
+## 5. Bump de versão (funcionalidade nova ou bug fix)
 
-Se, e só se, o passo 1 confirmou funcionalidade nova e o push é iminente:
-incremente o `N` em `version: X.Y.Z+N` no `pubspec.yaml`. Sem funcionalidade
-nova, pule este passo — bumpar sem build correspondente distribuída é o que
-causou o bug de notificação que "não tinha fix" (era build velha instalada).
+Com o push iminente, ajuste `version: X.Y.Z+N` no `pubspec.yaml` conforme o
+passo 1:
+
+- Bug fix: soma 1 ao patch e ao `+N` (`1.15.0+34` → `1.15.1+35`).
+- Funcionalidade nova: soma 1 à minor, zera o patch e soma 1 ao `+N`
+  (`1.15.1+35` → `1.16.0+36`).
+- Só refactor, texto ou documentação: pule este passo.
+
+O `+N` nunca volta atrás nem zera: o Android só atualiza por cima de um build
+com `+N` maior, sem precisar desinstalar, e sem bump o testador não consegue
+saber se está numa build desatualizada.
 
 ## 6. Commit e push
 
