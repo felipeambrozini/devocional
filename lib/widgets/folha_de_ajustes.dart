@@ -139,6 +139,25 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                   value: estado.letraVermelha,
                   onChanged: (nova) => estado.definirLetraVermelha(nova),
                 ),
+                ListenableBuilder(
+                  listenable: ConfigAdmin.instancia,
+                  builder: (context, _) => Recursos.comentarioNoCapitulo
+                      ? SwitchListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: DevocionalEspacamento.sp20,
+                          ),
+                          title: const Text('Comentário junto do texto'),
+                          subtitle: const Text(
+                            'Mostra o comentário de Spurgeon abaixo de cada '
+                            'versículo. Desligado, ele fica ao tocar no '
+                            'versículo.',
+                          ),
+                          value: estado.comentarioNoTexto,
+                          onChanged: (novo) =>
+                              estado.definirComentarioNoTexto(novo),
+                        )
+                      : const SizedBox.shrink(),
+                ),
                 // Setas de virar capítulo são assunto da web: no celular o
                 // rodapé nem existe. Leitura é o assunto do bloco de cima,
                 // por isso as setas fecham este primeiro grupo.

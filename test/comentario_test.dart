@@ -130,6 +130,7 @@ void main() {
     }) async {
       Recursos.comentarioNoCapituloForcado = flag;
       final estado = Estado(await SharedPreferences.getInstance());
+      await estado.definirComentarioNoTexto(true);
       await tester.runAsync(() async {
         await Conteudo.instancia.capitulo(livro, 1);
         await Conteudo.instancia.introducao(livro);
@@ -153,6 +154,7 @@ void main() {
         'depois que os comentários entram', (tester) async {
       Recursos.comentarioNoCapituloForcado = true;
       final estado = Estado(await SharedPreferences.getInstance());
+      await estado.definirComentarioNoTexto(true);
       await tester.runAsync(() async {
         await Conteudo.instancia.capitulo('joao', 1);
         await Conteudo.instancia.introducao('joao');
@@ -188,16 +190,21 @@ void main() {
       );
       var chamadas = 0;
       var comentariosNaTela = 0;
+      final estado = Estado(await SharedPreferences.getInstance());
+      await estado.definirComentarioNoTexto(true);
       await tester.pumpWidget(
-        MaterialApp(
-          home: DevocionalComentariosDoCapitulo(
-            livro: 'joao',
-            capituloNumero: 1,
-            aoCarregar: () => chamadas++,
-            construir: (context, comentarios) {
-              comentariosNaTela = comentarios?.length ?? 0;
-              return const SizedBox.shrink();
-            },
+        EscopoDoEstado(
+          estado: estado,
+          child: MaterialApp(
+            home: DevocionalComentariosDoCapitulo(
+              livro: 'joao',
+              capituloNumero: 1,
+              aoCarregar: () => chamadas++,
+              construir: (context, comentarios) {
+                comentariosNaTela = comentarios?.length ?? 0;
+                return const SizedBox.shrink();
+              },
+            ),
           ),
         ),
       );
@@ -209,18 +216,32 @@ void main() {
     testWidgets('aoCarregar não roda com o recurso desligado', (tester) async {
       Recursos.comentarioNoCapituloForcado = false;
       var chamadas = 0;
+      final estado = Estado(await SharedPreferences.getInstance());
+      await estado.definirComentarioNoTexto(true);
       await tester.pumpWidget(
-        MaterialApp(
-          home: DevocionalComentariosDoCapitulo(
-            livro: 'joao',
-            capituloNumero: 1,
-            aoCarregar: () => chamadas++,
-            construir: (context, comentarios) => const SizedBox.shrink(),
+        EscopoDoEstado(
+          estado: estado,
+          child: MaterialApp(
+            home: DevocionalComentariosDoCapitulo(
+              livro: 'joao',
+              capituloNumero: 1,
+              aoCarregar: () => chamadas++,
+              construir: (context, comentarios) => const SizedBox.shrink(),
+            ),
           ),
         ),
       );
       await tester.pumpAndSettle();
       expect(chamadas, 0);
+    });
+
+    testWidgets('por padrão o comentário não aparece junto do texto', (
+      tester,
+    ) async {
+      Recursos.comentarioNoCapituloForcado = true;
+      final estado = Estado(await SharedPreferences.getInstance());
+      expect(estado.comentarioNoTexto, isFalse);
+      expect(comentarioNoTextoAtivo(estado), isFalse);
     });
 
     testWidgets('com a flag desligada, não mostra', (tester) async {
@@ -233,6 +254,7 @@ void main() {
     ) async {
       Recursos.comentarioNoCapituloForcado = true;
       final estado = Estado(await SharedPreferences.getInstance());
+      await estado.definirComentarioNoTexto(true);
       await tester.pumpWidget(
         EscopoDoEstado(
           estado: estado,

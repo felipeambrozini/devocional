@@ -38,6 +38,7 @@ class Estado extends ChangeNotifier {
   static const _kSwipeTooltipDispensado = 'swipe_tooltip_dispensado';
   static const _kSetasDoRodape = 'setas_do_rodape';
   static const _kLetraVermelha = 'letra_vermelha';
+  static const _kComentarioNoTexto = 'comentario_no_texto';
   static const _kLembretesAtivos = 'lembretes_ativos';
   static const _kMinutosLembreteManha = 'minutos_lembrete_manha';
   static const _kMinutosLembretePromessas = 'minutos_lembrete_promessas';
@@ -110,6 +111,11 @@ class Estado extends ChangeNotifier {
   /// Se as falas de Deus Pai, de Jesus e do Espírito Santo aparecem em
   /// vermelho na Bíblia. Padrão true, como nas edições de letra vermelha.
   bool _letraVermelha = true;
+
+  /// Se o comentário de Spurgeon aparece junto do texto, abaixo de cada
+  /// versículo. Padrão false: o comentário vive na folha do versículo, e a
+  /// leitura fica limpa até o usuário pedir o contrário.
+  bool _comentarioNoTexto = false;
 
   /// Se os três lembretes diários estão ligados. Padrão false: notificação é
   /// opt-in, nunca ligada sem o usuário pedir.
@@ -206,6 +212,8 @@ class Estado extends ChangeNotifier {
     _setasDoRodape = _prefs.getBool(_kSetasDoRodape) ?? true;
 
     _letraVermelha = _prefs.getBool(_kLetraVermelha) ?? true;
+
+    _comentarioNoTexto = _prefs.getBool(_kComentarioNoTexto) ?? false;
 
     _lembretesAtivos = _prefs.getBool(_kLembretesAtivos) ?? false;
     _minutosLembreteManha = _minutosValidos(
@@ -348,6 +356,17 @@ class Estado extends ChangeNotifier {
     _letraVermelha = nova;
     notifyListeners();
     await _prefs.setBool(_kLetraVermelha, nova);
+  }
+
+  // --- comentário junto do texto ------------------------------------------- //
+
+  bool get comentarioNoTexto => _comentarioNoTexto;
+
+  Future<void> definirComentarioNoTexto(bool novo) async {
+    if (novo == _comentarioNoTexto) return;
+    _comentarioNoTexto = novo;
+    notifyListeners();
+    await _prefs.setBool(_kComentarioNoTexto, novo);
   }
 
   // --- tamanho do texto de leitura ----------------------------------------- //

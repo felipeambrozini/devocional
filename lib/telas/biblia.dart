@@ -985,11 +985,10 @@ Future<void> _abrirAcoesDoVersiculo(
   // A folha abre já e o comentário chega dentro dela: o primeiro toque num
   // livro baixa o arquivo de comentários inteiro (1 MB em Salmos), e esperar
   // por ele antes de abrir deixava o toque sem resposta na web.
-  final comentario = Conteudo.instancia.comentario(
-    livro,
-    capituloNumero,
-    numero,
-  );
+  // Com o comentário já junto do texto, a folha não o repete.
+  final comentario = comentarioNoTextoAtivo(estado)
+      ? Future<String?>.value()
+      : Conteudo.instancia.comentario(livro, capituloNumero, numero);
   final acoes = _AcoesDoVersiculo(
     estado: estado,
     livro: livro,

@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 
 import '../dados/config_admin.dart';
 import '../dados/conteudo.dart';
+import '../dados/estado.dart';
 import '../dados/recursos.dart';
 import 'carrega_uma_vez.dart';
 
+/// O comentário aparece junto do texto só se o admin deixou o recurso ligado e
+/// o usuário escolheu assim; do contrário ele mora na folha do versículo.
+bool comentarioNoTextoAtivo(Estado estado) =>
+    Recursos.comentarioNoCapitulo && estado.comentarioNoTexto;
+
 /// Carrega os comentários de Spurgeon do capítulo uma vez só e os entrega ao
 /// [construir], que desenha a lista. O mapa é nulo enquanto carrega e quando o
-/// admin desligou o recurso. O texto bíblico
+/// comentário não está junto do texto ([comentarioNoTextoAtivo]). O texto bíblico
 /// já está na tela quando os comentários chegam, e a lista é desenhada pelo
 /// mesmo [construir] nos dois casos, então a rolagem não se perde.
 ///
@@ -51,7 +57,7 @@ class DevocionalComentariosDoCapitulo extends StatelessWidget {
     return ListenableBuilder(
       listenable: ConfigAdmin.instancia,
       builder: (context, _) {
-        if (!Recursos.comentarioNoCapitulo) {
+        if (!comentarioNoTextoAtivo(EscopoDoEstado.de(context))) {
           return construir(context, null);
         }
         return DevocionalCarregaUmaVez<Map<int, String>>(
