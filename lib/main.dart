@@ -812,6 +812,14 @@ class Moldura extends StatelessWidget {
     if (i != navigationShell.currentIndex && !Voz.instancia.pausado) {
       Voz.instancia.parar();
     }
+    // Folhas e diálogos abertos moram no Navigator da aba (não no raiz), então
+    // sobreviveriam à troca e reapareceriam ao voltar para ela.
+    navigationShell
+        .route
+        .branches[navigationShell.currentIndex]
+        .navigatorKey
+        .currentState
+        ?.popUntil((rota) => rota is! PopupRoute);
     navigationShell.goBranch(
       i,
       // A aba Plano sempre reabre em Meus Planos: diferente da Bíblia (que
