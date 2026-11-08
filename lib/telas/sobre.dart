@@ -7,6 +7,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../controladores/sobre_controlador.dart';
+import '../dados/contato.dart';
 import '../dados/conteudo.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
@@ -18,13 +19,6 @@ import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
 import '../funcoes/linhas_de_ajuda.dart';
 import '../widgets/widgets.dart';
-
-/// E-mail que recebe "Relatar um problema" — mesmo padrão de
-/// `--dart-define` das outras chaves, para não versionar um endereço
-/// pessoal no repositório (ver o que já foi tirado de `Recursos`). Vazio
-/// esconde o item: sem endereço configurado, um mailto: sem destino só
-/// confundiria.
-const _emailDeContato = String.fromEnvironment('EMAIL_DE_CONTATO');
 
 /// Créditos das traduções, da fonte dos devocionais e o link dos canais.
 class TelaSobre extends StatefulWidget {
@@ -109,7 +103,7 @@ class _TelaSobreState extends State<TelaSobre> {
                 subtitle: const Text('O cartão da primeira visita, de novo.'),
                 onTap: () => _mostrarAjuda(context),
               ),
-              if (_emailDeContato.isNotEmpty)
+              if (emailDeContato.isNotEmpty)
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: FaIcon(
@@ -213,6 +207,11 @@ class _TelaSobreState extends State<TelaSobre> {
                     'and Evening e Faith\'s Checkbook. O texto busca conservar '
                     'fidelidade teológica, reverência literária e rigor no respeito '
                     'aos direitos autorais.',
+                    style: tema.bodyLarge?.copyWith(height: 1.7),
+                  ),
+                  const SizedBox(height: DevocionalEspacamento.sp16),
+                  Text(
+                    avisoDaBibliaDeEstudo,
                     style: tema.bodyLarge?.copyWith(height: 1.7),
                   ),
                   const SizedBox(height: DevocionalEspacamento.sp16),
@@ -432,7 +431,7 @@ Future<void> _mostrarAjuda(BuildContext context) {
 
 /// Abre o cliente de e-mail com assunto e corpo já preenchidos — versão e
 /// plataforma, para o testador não precisar descobrir e digitar isso
-/// sozinho. Só é chamado quando [_emailDeContato] não está vazio (ver o
+/// sozinho. Só é chamado quando [emailDeContato] não está vazio (ver o
 /// `if` no `ListTile`).
 Future<void> _relatarProblema() async {
   final info = await PackageInfo.fromPlatform();
@@ -445,7 +444,7 @@ Future<void> _relatarProblema() async {
         };
   final uri = Uri(
     scheme: 'mailto',
-    path: _emailDeContato,
+    path: emailDeContato,
     queryParameters: {
       'subject': 'Devocional: relatar um problema',
       'body':

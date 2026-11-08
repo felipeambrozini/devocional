@@ -1208,7 +1208,7 @@ void main() {
     expect(find.text('Favoritar'), findsOneWidget);
   });
 
-  testWidgets('o leitor abre Gênesis 1 e mostra o texto da BKJ', (
+  testWidgets('o leitor abre Gênesis 1 e mostra o texto da King James', (
     tester,
   ) async {
     await aquecerAssets(tester);
@@ -1355,7 +1355,7 @@ void main() {
   );
 
   testWidgets(
-    'o devocional tem as três abas e Promessas traz o versículo da BKJ',
+    'o devocional tem as três abas e Promessas traz o versículo da King James',
     (tester) async {
       await aquecerAssets(tester);
       // 1 de janeiro tem tradução pronta, então serve de caso concreto.
@@ -1407,12 +1407,12 @@ void main() {
     await tester.pumpAndSettle();
 
     // A referência da citação vem do próprio devocional (field `referencia`),
-    // exibida em caixa alta — não é o versículo completo da BKJ.
+    // exibida em caixa alta — não é o versículo completo da King James.
     expect(
       find.textContaining('JOSUÉ 5:12', findRichText: true),
       findsOneWidget,
     );
-    // O versículo completo da BKJ não aparece: só a referência abreviada.
+    // O versículo completo da King James não aparece: só a referência abreviada.
     expect(
       find.textContaining(
         'Elas comeram do fruto da terra de Canaã',
@@ -1427,7 +1427,7 @@ void main() {
   });
 
   testWidgets(
-    'Promessas de Deus mostra título, referência e versículo da BKJ',
+    'Promessas de Deus mostra título, referência e versículo da King James',
     (tester) async {
       await aquecerAssets(tester);
       final data = DateTime(2026, 1, 1);
@@ -1452,7 +1452,7 @@ void main() {
         find.textContaining('GÊNESIS 3:15', findRichText: true),
         findsOneWidget,
       );
-      // O versículo não é tradução minha: sai do asset da BKJ.
+      // O versículo não é tradução minha: sai do asset da King James.
       expect(
         find.textContaining(
           'E porei inimizade entre ti e a mulher',

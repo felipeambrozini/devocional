@@ -45,6 +45,7 @@ class Estado extends ChangeNotifier {
   static const _kMinutosLembreteLeitura = 'minutos_lembrete_leitura';
   static const _kMinutosLembreteNoite = 'minutos_lembrete_noite';
   static const _kBoasVindasVistas = 'boas_vindas_vistas';
+  static const _kConsentimentoDaNuvem = 'consentimento_da_nuvem';
   static const _kPlanos = 'planos_do_usuario';
   static const _kPlanosLidos = 'planos_lidos';
 
@@ -97,6 +98,7 @@ class Estado extends ChangeNotifier {
 
   /// Se o aviso de boas-vindas (que apresenta o plano de Jesus) já apareceu.
   bool _boasVindasVistas = false;
+  bool _consentimentoDaNuvem = false;
 
   /// Se o tooltip de primeiro uso do deslize para trocar capítulo já foi dispensado.
   bool _swipeTooltipDispensado = false;
@@ -206,6 +208,7 @@ class Estado extends ChangeNotifier {
 
     _ajudaDispensada = _prefs.getBool(_kAjudaDispensada) ?? false;
     _boasVindasVistas = _prefs.getBool(_kBoasVindasVistas) ?? false;
+    _consentimentoDaNuvem = _prefs.getBool(_kConsentimentoDaNuvem) ?? false;
 
     _swipeTooltipDispensado = _prefs.getBool(_kSwipeTooltipDispensado) ?? false;
 
@@ -424,6 +427,21 @@ class Estado extends ChangeNotifier {
     if (_boasVindasVistas) return;
     _boasVindasVistas = true;
     await _prefs.setBool(_kBoasVindasVistas, true);
+  }
+
+  // --- consentimento para guardar dados na nuvem ---------------------------- //
+
+  /// Se quem usa este aparelho já consentiu em guardar favoritos, anotações,
+  /// progresso e conversas na nuvem. A LGPD trata esses dados como sensíveis
+  /// (revelam convicção religiosa) e pede consentimento específico antes.
+  bool get consentimentoDaNuvem => _consentimentoDaNuvem;
+
+  /// Marca o consentimento antes de gravá-lo: quem chama logo em seguida
+  /// abre o login, e a conta que chegar já deve encontrá-lo registrado.
+  Future<void> registrarConsentimentoDaNuvem() async {
+    if (_consentimentoDaNuvem) return;
+    _consentimentoDaNuvem = true;
+    await _prefs.setBool(_kConsentimentoDaNuvem, true);
   }
 
   // --- progresso do cronograma --------------------------------------------- //

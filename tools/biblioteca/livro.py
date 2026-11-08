@@ -21,7 +21,7 @@ import json
 import re
 from pathlib import Path
 
-from checar_capitulo import MARCADOR, problemas, versiculo_bkj
+from checar_capitulo import MARCADOR, problemas, versiculo_king_james
 
 PASTA = Path(__file__).parent
 DESTINO = PASTA.parent.parent / "assets" / "livros"
@@ -44,7 +44,7 @@ def extrair_capitulos(texto: str, blocos_de_capa: int) -> list[dict]:
     return capitulos
 
 
-# A BKJ do Salmo 119 traz, no fim do ultimo versiculo de cada oitava, o nome da
+# A King James do Salmo 119 traz, no fim do ultimo versiculo de cada oitava, o nome da
 # proxima letra hebraica ("... de todo. BETH."). Dentro de um livro isso aparece
 # no meio do texto, entao sai na expansao.
 LETRAS_HEBRAICAS = {
@@ -54,13 +54,13 @@ LETRAS_HEBRAICAS = {
 
 
 def versiculo_sem_letra(ref: str) -> str:
-    texto = versiculo_bkj(ref)
+    texto = versiculo_king_james(ref)
     corpo, _, ultima = texto.rpartition(" ")
     return corpo if ultima.removesuffix(".") in LETRAS_HEBRAICAS else texto
 
 
 def expandir(paragrafo: str) -> str:
-    """Troca um marcador de versiculo pelo texto da BKJ; outro paragrafo passa direto."""
+    """Troca um marcador de versiculo pelo texto da King James; outro paragrafo passa direto."""
     achado = MARCADOR.match(paragrafo)
     if not achado:
         return paragrafo

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart' show ChangeNotifier;
 
+import 'crise.dart';
 import 'estado.dart';
 import 'ia.dart';
 import 'modelos.dart';
@@ -67,7 +68,7 @@ class Conversador extends ChangeNotifier {
 
   /// Menor tempo entre dois [enviar]: a chave da Gemini é uma só para todo
   /// mundo que usa o app (embutida no build, sem servidor por trás), e mandar
-  /// mensagens em sequência esgota a cota gratuita para todos os usuários, não
+  /// mensagens em sequência gasta a cota do projeto para todos os usuários, não
   /// só para quem está mandando. Não protege contra alguém que fale direto
   /// com a API por fora do app — só contra o próprio app sendo usado assim.
   final Duration intervaloMinimo;
@@ -79,6 +80,11 @@ class Conversador extends ChangeNotifier {
   bool _descartado = false;
 
   bool get respondendo => _respondendo;
+
+  /// Alguma pergunta desta conversa deu sinal de crise: a tela mostra o
+  /// contato do CVV e o mantém até fechar.
+  bool get apoioEmCrise => _apoioEmCrise;
+  bool _apoioEmCrise = false;
 
   final Duration duracaoDoErro;
 
@@ -103,6 +109,7 @@ class Conversador extends ChangeNotifier {
       return;
     }
     _ultimoEnvio = agora;
+    if (pedeApoioEmCrise(pergunta)) _apoioEmCrise = true;
     // Uma conversa reaberta pelo histórico já chega com [conversaId]: a
     // primeira mensagem enviada nela precisa continuar essa conversa, não
     // abrir outra vazia. Só quando não há [conversaId] (chat novo) é que

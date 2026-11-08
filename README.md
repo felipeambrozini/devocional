@@ -6,7 +6,7 @@ mesmo código).
 ## O que o app faz
 
 - **Bíblia completa em tradução inédita:**
-  - **BKJ 1611**, uma tradução interna autoral, com 31.102 versículos (bate exatamente com o canon).
+  - **King James 1611**, uma tradução interna autoral, com 31.102 versículos (bate exatamente com o canon).
 - **Devocional diário**, três leituras por dia, na voz de Charles Spurgeon:
   - **Manhã** e **Noite** (*Morning and Evening*), uma virada automática entre
     as duas: 0h-17h59 mostra o devocional da manhã, 18h-23h59 o da noite,
@@ -52,7 +52,7 @@ mesmo código).
   títulos, frases apócrifas) e a regra de não inventar datas, nomes nem
   citações; a ficha vem de `tools/introducoes/spurgeon_fontes.md`.
 - **Introduções aos 66 livros**, na voz de Spurgeon, com título formal do livro
-  vindo da BKJ 1611.
+  vindo da King James 1611.
 - **Favoritos e notas**: qualquer versículo pode ser marcado, anotado, copiado ou
   compartilhado — o compartilhar gera um cartão-imagem na identidade do app
   (fundo couro, filete dourado) com o texto junto, pronto para WhatsApp e
@@ -79,7 +79,7 @@ mesmo código).
   oráculos dos profetas em primeira pessoa de Deus), mas não as citações do AT
   feitas pelos apóstolos. Os trechos vêm de `assets/falas_divinas/<slug>.json`,
   gerados por `tools/falas_divinas/gerar.py` a partir do MACULA Quotation and
-  Speaker Data (Clear Bible, CC BY 4.0, crédito na tela Sobre). Como a BKJ não
+  Speaker Data (Clear Bible, CC BY 4.0, crédito na tela Sobre). Como a King James não
   tem aspas, o corte dentro do versículo é aproximado pela pontuação ("disse
   Deus: **Haja luz.** E houve luz."), e isso errava nos diálogos (em Gênesis
   3:13 a fala da mulher saía em vermelho e a pergunta de Deus, em preto). Por
@@ -169,9 +169,9 @@ plano compartilhado.
   como o `IndexedStack` antigo fazia).
 - `firebase_core` + `firebase_auth` + `cloud_firestore` para a conta na
   nuvem (sempre disponível, sem gating por plataforma).
-- `http` fala direto com a Gemini API (`gemini-3.5-flash-lite`, tier gratuito;
-  nome fixo, não o alias `gemini-flash-latest`, que pode migrar para fora do
-  grátis sem aviso) para o chat das duas personas (`lib/dados/ia.dart`). Chave
+- `http` fala direto com a Gemini API (`gemini-3.5-flash-lite`, plano pago por
+  uso; nome fixo, não o alias `gemini-flash-latest`, que pode migrar para um
+  modelo mais caro sem aviso) para o chat das duas personas (`lib/dados/ia.dart`). Chave
   em `lib/dados/google.dart`, vinda do `.env.json`.
 - `just_audio` toca os MP3 pré-gerados da leitura em voz alta
   (`lib/dados/voz.dart`), servidos a partir de `AUDIO_BASE_URL`
@@ -216,7 +216,7 @@ test/          testes de unidade e de widget
 Todo o conteúdo bíblico e devocional já está carregado e verificado, inclusive
 os comentários de Spurgeon por versículo. Os scripts de apoio moram em `tools/`:
 `icones.py`, `validar_comentarios.py` (31.102 comentários, 0 erros; confere
-estrutura, citações contra a BKJ e proibições) e `introducoes/checar_intro.py`
+estrutura, citações contra a King James e proibições) e `introducoes/checar_intro.py`
 (as 66 introduções passam). Os dois ficam como rede de proteção para quando um
 texto for editado. A geração de áudio (TTS) e a
 validação dos MP3 com Whisper ficam fora do repo, em `C:\Users\USER\audio_gen`,
@@ -224,7 +224,7 @@ e não são versionadas aqui.
 
 | Conteúdo | Situação |
 |---|---|
-| BKJ 1611 | 66 livros, 1189 capítulos, **31.102 versículos, bate exatamente com o canon** |
+| King James 1611 | 66 livros, 1189 capítulos, **31.102 versículos, bate exatamente com o canon** |
 | Manhã e Noite | 366 dias, todos com manhã e noite (732 entradas) |
 | Promessas de Deus | 366 de 366 traduzidos |
 | Cronograma anual | 365 dias (366 em ano bissexto), 455 faixas, os 1.189 capítulos |
@@ -245,7 +245,7 @@ Regras que valem para os assets anuais (`assets/devocionais/*.json` e
   usa `_livroEPrefixo`). Atenção às acentuações não óbvias: "Oseias" **sem**
   acento.
 - **Voz vitoriana de Spurgeon**, tratando o leitor por "tu"; citações bíblicas
-  no registro BKJ do app.
+  no registro King James do app.
 
 ### Fidelidade da tradução do Manhã e Noite
 
@@ -265,7 +265,7 @@ Candidatos a revisão manual, se algum dia houver versão editorial.
 - Os **fatos** (autoria tradicional, capítulos, episódios bíblicos e da vida de
   Spurgeon) foram revisados contra `tools/introducoes/spurgeon_fontes.md`; a
   seção "Spurgeon em [Livro]" só conta episódio com fonte.
-  `python tools/introducoes/checar_intro.py <slug>` confere citações da BKJ,
+  `python tools/introducoes/checar_intro.py <slug>` confere citações da King James,
   pontuação, vocabulário e o formato da frase.
 - O **tom** foi calibrado em 07/08/2026 para soar como Spurgeon de verdade
   (355 pontos de exclamação em 63.042 palavras, 56,3 por 10 mil): ajustes
@@ -273,7 +273,7 @@ Candidatos a revisão manual, se algum dia houver versão editorial.
   em [Livro]"; "Estrutura" ficou sem nenhum toque.
 - O endereçamento por **"tu"** foi corrigido (a "vós" predominava); texto
   bíblico citado com referência e plural histórico legítimo continuam "vós" de
-  propósito, porque é a BKJ 1611 e precisa continuar byte a byte igual ao asset.
+  propósito, porque é a King James do app e precisa continuar byte a byte igual ao asset.
 - Nenhuma construção retórica virou tique: "Aqui está" é o mais comum, com
   19/66, abaixo do teto de 22/66.
 
@@ -328,21 +328,21 @@ para um livro volta para a estante.
 - **Fonte e tradução**: o texto em inglês vem do CCEL (domínio público) e a
   tradução é nossa; as edições em português existentes não são livres. Os
   versículos **não são traduzidos de novo**: toda citação da Escritura é
-  copiada literalmente da BKJ do app. Registro de Spurgeon ao leitor ("tu"),
+  copiada literalmente da King James do app. Registro de Spurgeon ao leitor ("tu"),
   português do Brasil, sem travessão e sem aspas curvas.
 - **Pipeline** (`tools/biblioteca/`):
   1. `livro.py --extrair <slug> <txt>` gera `<slug>_en.json`.
   2. A tradução fica em `<slug>_pt/NN.json` (NN = índice do capítulo + 1), um
      arquivo por capítulo, com os mesmos parágrafos do inglês e o campo
-     `citacoes` (`{ref, trecho}`, cada trecho literal da BKJ).
+     `citacoes` (`{ref, trecho}`, cada trecho literal da King James).
   3. `checar_capitulo.py <slug> <índice>` confere paridade de parágrafos,
-     proibições e as citações contra a BKJ.
+     proibições e as citações contra a King James.
   4. `auditar_livro.py <slug>` roda tudo no livro e acusa citação sem
-     registro, trecho entre aspas fora da BKJ, frases perdidas e suspeitas de
+     registro, trecho entre aspas fora da King James, frases perdidas e suspeitas de
      português de Portugal.
   5. `revisar_livro.py <slug>` resume a revisão para ler de uma vez (razão de
      tamanho, citações sem registro, trechos que parecem versículo mas não são
-     literais da BKJ, parágrafos encurtados, inglês solto, português de Portugal).
+     literais da King James, parágrafos encurtados, inglês solto, português de Portugal).
      `checar_en.py <slug>` confere o inglês extraído antes de traduzir. A
      omissão de frases é o erro mais comum do tradutor: parágrafo com muito menos
      palavras ou frases que o original se refaz por inteiro.
@@ -681,13 +681,25 @@ motivo novo.
   (participante ou documento inexistente, para o app ver "plano apagado") de
   `list` (só participante), e o delete de um plano já inexistente passa. Só o
   reset de `planos_acoes.dart` substitui a lista inteira (`substituirDias`).
+- **Apoio em crise no chat**: `pedeApoioEmCrise` (`lib/dados/crise.dart`, lista
+  de expressões marcada `ponytail:`) liga o `DevocionalApoioEmCrise` acima do
+  campo, com o CVV (188, cvv.org.br) e o 192, até a conversa fechar; e
+  `instrucaoDoSistema` (`lib/dados/personas.dart`) anexa a toda persona a
+  orientação de indicar essa ajuda.
+- **Consentimento da LGPD**: antes do primeiro login no aparelho,
+  `entrarNaConta` mostra `DevocionalConsentimentoDaNuvem`, cujo botão é o
+  próprio gesto que abre a janela do Google; quem já estava logado o recebe ao
+  abrir o app (`_pedirConsentimento` em `main.dart`), e recusar sai da conta.
 - **O chat manda só as últimas 20 falas** à Gemini (`lib/dados/ia.dart`), com a
   primeira sempre do usuário. Resposta que bate o teto de 2.048 tokens sai com
   um aviso de corte no fim; bloqueio de segurança dá uma mensagem própria pedindo
   para reformular, sem "tente de novo". A política de privacidade diz que o app
-  usa o nível gratuito da API Gemini, no qual o Google pode usar o conteúdo para
-  melhorar os produtos e revisores humanos podem ler os dados, sem ligação com a
-  conta; se o faturamento for habilitado, revisar esse trecho.
+  usa o plano pago da API Gemini, no qual o Google não usa o conteúdo para
+  treinar nem melhorar os produtos e só o registra por tempo limitado para
+  detectar abuso; se o faturamento for desligado, revisar esse trecho. A seção
+  Contato da política nomeia o responsável pelos dados e mostra o
+  `EMAIL_DE_CONTATO` (`lib/dados/contato.dart`) para pedidos de acesso,
+  correção ou exclusão.
 
 ### Lembretes diários (Android e web)
 
@@ -710,11 +722,12 @@ min (marcado com `ponytail:` no código: evita converter fuso para UTC; o preço
 uma leitura por documento por hora no pior caso). Quem não tem o campo (cadastro
 novo, ou o `.set` completo do app, que o apaga) é marcado pelo gatilho
 `prepararLembrete` (`onDocumentWritten` em `lembretes/{id}`, na região do banco,
-`southamerica-east1`), e a execução seguinte o pega. Os cadastros que já existiam
-antes do campo, e um gatilho que falhe, são cobertos por uma varredura a cada 15
-min dentro da própria agendada (`marcarSemProximoEnvio`, marcada `ponytail:` no
-código): sem ela esses lembretes ficariam fora da consulta e o push deixaria de
-chegar. Se um documento some no meio de um lote, a gravação cai para um
+`southamerica-east1`), e a execução seguinte o pega. A varredura a cada 15 min
+que cobria os cadastros antigos (`marcarSemProximoEnvio`) saiu em 08/11/2026,
+quando todos já tinham o campo: custava ~96 leituras por documento por dia. Sem
+ela, um documento cujo gatilho falhe fica fora da consulta até a próxima
+gravação do app; se isso aparecer no log, a varredura volta numa execução
+avulsa. Se um documento some no meio de um lote, a gravação cai para um
 documento por vez em vez de repetir o aviso dos outros. A lógica de horário vive em
 `functions/src/regras.ts`, testada com `npm --prefix functions test`. O log traz
 "N lembrete(s) vencido(s)": perto de zero nos minutos sem horário é o sinal de

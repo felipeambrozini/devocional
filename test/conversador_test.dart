@@ -232,7 +232,7 @@ void main() {
               tentativas++;
               if (tentativas == 1) {
                 throw const IaExcecao(
-                  'O limite gratuito da inteligência '
+                  'O limite de uso da inteligência '
                   'artificial foi atingido.',
                 );
               }
@@ -242,7 +242,7 @@ void main() {
 
       await conversador.enviar('Pode responder?');
 
-      expect(conversador.erro, contains('limite gratuito'));
+      expect(conversador.erro, contains('limite de uso'));
       expect(conversador.respondendo, isFalse);
       expect(estado.mensagensDe('spurgeon', conversador.id!), hasLength(1));
       expect(

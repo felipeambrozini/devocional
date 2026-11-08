@@ -17,7 +17,7 @@ falante de português brasileiro, que lê a Bíblia e devocionais diariamente.
 ## Product Purpose
 
 App devocional diário em português brasileiro com a Bíblia completa (tradução
-autoral BKJ 1611, 31.102 versículos, exatamente o canon), devocionais de
+autoral da King James 1611, 31.102 versículos, exatamente o canon), devocionais de
 Charles Spurgeon (Manhã e Noite, e Promessas de Deus), cronograma anual de
 leitura e planos personalizados/compartilhados, introduções aos 66 livros na
 voz de Spurgeon, favoritos, notas, busca, leitura em voz alta e chat com IA
@@ -26,7 +26,7 @@ certo, no ritmo certo, sem fricção.
 
 ## Positioning
 
-A tradução BKJ 1611: uma tradução interna e autoral da linhagem da King James
+A tradução autoral da King James 1611: uma tradução interna, feita do texto inglês de 1611
 para o português, com contagem de versículos idêntica ao canon (31.102) e os
 66 livros completos — coisa que nenhum app vizinho pode copiar de verdade. A
 isso se somam os devocionais de Spurgeon integralmente traduzidos na voz
@@ -55,9 +55,16 @@ vitoriana dele, tratando o leitor por "tu".
   `/sobre`, `/faq`, `/privacidade`, `/termos` e cada conversa também, e links diretos no formato
   `?ler=joao.3.16` abrem um versículo (`?plano=<id>` abre um plano
   compartilhado).
-- Conversas com IA (Gemini): duas personas, Charles Spurgeon e Felipe
+- Consentimento da LGPD antes de subir dados à nuvem: favoritos, anotações,
+  progresso e conversas revelam convicção religiosa (dado sensível), então o
+  primeiro login no aparelho passa por um diálogo de consentimento, e quem já
+  tinha sessão aberta o recebe ao abrir o app (recusar sai da conta).
+- Conversas com IA (Gemini, plano pago por uso; só para maiores de 18 anos,
+  como exigem os termos da Gemini): duas personas, Charles Spurgeon e Felipe
   Ambrozini, com histórico salvo por conversa, numa aba própria em todas as
-  plataformas e larguras.
+  plataformas e larguras. Mensagem com sinal de crise (suicídio, se ferir)
+  mostra um cartão fixo com o CVV (188, cvv.org.br) e o 192, e toda persona
+  recebe no sistema a orientação de indicar essa ajuda.
 - Painel admin (`/admin`, só web e só a conta do dono): liga/desliga cada
   recurso na hora (conversas, planos personalizados, cronograma, cada leitura
   do devocional, ouvir textos) e edita as allowlists de e-mails do chat e dos
@@ -97,7 +104,7 @@ vitoriana dele, tratando o leitor por "tu".
 
 ## Capabilities and Constraints
 
-- Bíblia BKJ 1611 completa.
+- Bíblia King James 1611 completa.
 - Favoritos, notas, copiar e compartilhar por versículo (compartilhar gera
   cartão-imagem + texto com link); busca em duas abas
   (Bíblia e devocionais); a busca das marcações filtra referência e nota, não
@@ -105,6 +112,12 @@ vitoriana dele, tratando o leitor por "tu".
   filtro por data (DD-MM) e por leitura (Manhã, Noite, Promessas).
 - A referência da epígrafe do devocional (na Hoje e no Devocional) é um alvo
   de toque: abre a Bíblia no capítulo citado, com os versículos destacados.
+- A Bíblia de Estudo Charles Haddon Spurgeon é uma obra imaginada: introduções
+  e comentários escritos com IA a partir da obra pública dele, como se ele a
+  tivesse preparado no fim do ministério. Isso é dito sob o título em cada
+  abertura de livro e em Sobre (`avisoCurtoDaBibliaDeEstudo` e
+  `avisoDaBibliaDeEstudo` em `lib/funcoes/aviso.dart`), para ninguém tomar
+  essas linhas por textos de Spurgeon.
 - Comentário de Spurgeon por versículo: a folha de ações do versículo na
   Bíblia (Favoritar, Copiar, Anotar) mostra o comentário daquele versículo,
   nos 66 livros. O mesmo comentário aparece também direto no leitor, abaixo de
@@ -120,7 +133,7 @@ vitoriana dele, tratando o leitor por "tu".
 - Biblioteca de livros de Spurgeon em domínio público, traduzidos para o app
   (começa com *Somente pela Graça*): leitura por capítulo, continuar de onde
   parou, progresso por livro e destaques com nota por parágrafo. Os versículos
-  citados saem da BKJ do app, nunca de tradução nova. É uma aba da barra de
+  citados saem da King James do app, nunca de tradução nova. É uma aba da barra de
   baixo (no lugar de Notas, que virou um ícone na barra de cima do Devocional
   e da Bíblia); a Hoje mostra o último livro iniciado; o painel admin a liga e
   desliga.
@@ -132,7 +145,7 @@ vitoriana dele, tratando o leitor por "tu".
   propósito — ver README.md. Respeita os interruptores do painel.
 - Regras de texto do produto: sem travessões em nenhum texto do app e sem
   aspas curvas (só aspas retas); voz vitoriana de Spurgeon tratando o leitor
-  por "tu"; citações bíblicas no registro BKJ do app.
+  por "tu"; citações bíblicas no registro King James do app.
 - Decisões recusadas de propósito (não reabrir sem motivo novo): streak de
   dias, cores de marcação, widget na tela inicial, lembretes em iOS (exigiria
   a chave APNs no Console — Android e web já têm), offline de verdade na
@@ -166,7 +179,7 @@ vitoriana dele, tratando o leitor por "tu".
 
 ## Evidence on Hand
 
-- Conteúdo todo carregado e verificado (README): BKJ 1611 com 31.102
+- Conteúdo todo carregado e verificado (README): King James 1611 com 31.102
   versículos, batendo exatamente com o canon; Manhã e Noite com 366 dias completos;
   Promessas de Deus 366/366; cronograma 365/366 dias; 66 introduções completas;
   comentários de Spurgeon nos 31.102 versículos (`assets/comentarios/`).

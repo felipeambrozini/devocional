@@ -138,7 +138,7 @@ def recortar(texto, inicio, fim, do_comeco, ate_o_fim):
     if do_comeco:
         a = 0
     else:
-        # A BKJ introduz a fala com ":" ("disse Deus: Haja luz"), ";" ("Assim
+        # A King James introduz a fala com ":" ("disse Deus: Haja luz"), ";" ("Assim
         # diz o SENHOR; ...") e as vezes "," ("disse o SENHOR, Que ves tu?").
         # Sem pontuacao perto, a fala vem do versiculo anterior e so foi
         # interrompida por narracao longa: pinta desde o comeco.

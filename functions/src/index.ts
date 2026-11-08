@@ -385,25 +385,6 @@ async function gravarResultados(
   }));
 }
 
-// ponytail: varredura da coleção inteira a cada 15 min para marcar os
-// documentos sem `proximoEnvio`. O gatilho `prepararLembrete` só enxerga
-// escritas novas, e os cadastros que já existiam antes do campo (e um gatilho
-// que falhe) ficariam fora da consulta para sempre. Custa ~96 leituras por
-// documento por dia, 15 vezes menos que ler tudo todo minuto; sai quando todo
-// cadastro antigo tiver sido regravado, ou sobe para uma vez por hora.
-const INTERVALO_DA_VARREDURA_MINUTOS = 15;
-
-async function marcarSemProximoEnvio(agora: Date): Promise<void> {
-  const todos = await getFirestore().collection(COLECAO)
-    .select("proximoEnvio").get();
-  const marca = Timestamp.fromDate(agora);
-  const semCampo = todos.docs
-    .filter((doc) => doc.get("proximoEnvio") === undefined)
-    .map((doc): Gravacao => ({ref: doc.ref, atualizacao: {proximoEnvio: marca}}));
-  console.log(`${semCampo.length} lembrete(s) sem proximoEnvio marcado(s).`);
-  await gravarEmLotes(semCampo);
-}
-
 export const enviarLembretes = onSchedule(
   // O runtime (nodejs22) vem do "engines.node" do package.json — na v7 das
   // functions não se define runtime por aqui. Cron unix, não "every X
@@ -412,9 +393,6 @@ export const enviarLembretes = onSchedule(
   {schedule: "* * * * *", timeZone: "Etc/UTC", timeoutSeconds: 120},
   async () => {
     const agora = new Date();
-    if (agora.getUTCMinutes() % INTERVALO_DA_VARREDURA_MINUTOS === 0) {
-      await marcarSemProximoEnvio(agora);
-    }
     const ligado = await lerInterruptores();
 
     const vencidos = await getFirestore().collection(COLECAO)

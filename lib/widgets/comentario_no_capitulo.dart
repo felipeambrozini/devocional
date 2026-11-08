@@ -20,7 +20,7 @@ class DevocionalComentarioNoCapitulo extends StatelessWidget {
     // da Escritura, em vez de fundi-lo ao versículo.
     return Semantics(
       container: true,
-      label: 'Comentário de Spurgeon',
+      label: 'Comentário no estilo de Spurgeon',
       child: Container(
         width: double.infinity,
         margin: const EdgeInsets.only(top: DevocionalEspacamento.sp8),

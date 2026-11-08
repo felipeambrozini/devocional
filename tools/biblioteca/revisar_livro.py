@@ -4,7 +4,7 @@
 
 Junta o que checar_en.py, checar_capitulo.py e auditar_livro.py conferem com
 verificacoes de conteudo: tamanho (portugues costuma sair maior que o ingles),
-citacao entre aspas que parece versiculo de QUALQUER livro da BKJ mas nao e
+citacao entre aspas que parece versiculo de QUALQUER livro da King James mas nao e
 literal (o tradutor traduziu por conta propria), paragrafo muito encurtado,
 palavras em ingles soltas e portugues de Portugal fora de aspas.
 """
@@ -102,10 +102,10 @@ def revisar(slug: str) -> None:
           f"(razao {total_pt / max(total_en, 1):.2f})")
     print(f"estrutura: {len(original) - len(com_problema)}/{len(original)} OK"
           + (f"; com problema: {com_problema}" if com_problema else ""))
-    print(f"citacoes entre aspas na BKJ sem registro: {len(sem_registro)}")
+    print(f"citacoes entre aspas na King James sem registro: {len(sem_registro)}")
     for linha in sem_registro[:200]:
         print("  ", linha)
-    print(f"parecem versiculo mas nao sao literais da BKJ: {len(suspeitas)}")
+    print(f"parecem versiculo mas nao sao literais da King James: {len(suspeitas)}")
     for linha in suspeitas[:200]:
         print("  ", linha)
     print(f"paragrafos encurtados (<80%): {len(encurtados)}", encurtados)

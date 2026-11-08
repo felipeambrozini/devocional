@@ -30,14 +30,6 @@ import '../widgets/widgets.dart';
 /// FORM: redesenho da superfície do chat no mundo estabelecido da Estante,
 /// direção fixada pelo usuário (carta enquadrada pelo DevocionalFilete); sem sorteio.
 
-/// O chat com uma persona: histórico da conversa, campo de mensagem e a
-/// resposta da inteligência artificial gratuita.
-///
-/// [conversaId] é a conversa que este chat abre; null abre uma conversa nova,
-/// que só nasce (com o próprio id) na primeira pergunta. A lista de
-/// conversas fica em `lib/telas/historico.dart`, e é de lá que este chat é
-/// empurrado, junto com a URL que o F5 e o link compartilhado reabrem.
-
 /// O aviso de que o teto de mensagens cortou as falas mais antigas. O mesmo
 /// texto na snackbar do momento do corte e na nota quieta no topo da conversa:
 /// ajustar num lugar ajusta nos dois.
@@ -46,7 +38,7 @@ const avisoDeCorte =
     'passou de ${Conversas.maxMensagensPorConversa} mensagens.';
 
 /// O chat com uma persona: histórico da conversa, campo de mensagem e a
-/// resposta da inteligência artificial gratuita.
+/// resposta da inteligência artificial.
 ///
 /// [conversaId] é a conversa que este chat abre; null abre uma conversa nova,
 /// que só nasce (com o próprio id) na primeira pergunta. A lista de
@@ -231,6 +223,14 @@ class _TelaChatState extends State<TelaChat> {
                           ),
                         ),
                       ),
+                    ),
+                  ),
+                // Flexível e rolável: com fonte grande ou teclado aberto, o
+                // cartão não pode empurrar o campo de mensagem para fora.
+                if (conversador?.apoioEmCrise ?? false)
+                  const Flexible(
+                    child: SingleChildScrollView(
+                      child: DevocionalApoioEmCrise(),
                     ),
                   ),
                 if (conversador?.erro != null)

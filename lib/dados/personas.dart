@@ -45,13 +45,34 @@ class Persona {
   final bool saudacaoPorHorario;
 }
 
-/// Horário do aparelho anexado ao sistema da persona de saudação por horário.
-/// Vira parte da instrução na chamada, não é um dado do usuário: só diz a hora
-/// para a resposta começar com "Bom dia" ou "Boa noite" certo.
-String saudacaoComHorario(Persona persona, DateTime agora) =>
-    persona.saudacaoPorHorario
-    ? '${persona.sistema}\n\nHorário atual do interlocutor: ${agora.hour.toString().padLeft(2, '0')}h${agora.minute.toString().padLeft(2, '0')}. Use-o para cumprimentar pelo período certo.'
-    : persona.sistema;
+/// A instrução de sistema que vai na chamada: a da persona, a orientação de
+/// crise (comum a todas) e, na persona de saudação por horário, a hora do
+/// aparelho, que não é um dado do usuário: só serve para a resposta começar
+/// com "Bom dia" ou "Boa noite" certo.
+String instrucaoDoSistema(Persona persona, DateTime agora) {
+  final hora =
+      '${agora.hour.toString().padLeft(2, '0')}h'
+      '${agora.minute.toString().padLeft(2, '0')}';
+  return [
+    persona.sistema,
+    _orientacaoDeCrise,
+    if (persona.saudacaoPorHorario)
+      'Horário atual do interlocutor: $hora. Use-o para cumprimentar pelo '
+          'período certo.',
+  ].join('\n\n');
+}
+
+/// Comum a todas as personas: quem fala em tirar a própria vida ou se ferir
+/// precisa ouvir de ajuda humana, não só de consolo. A tela também mostra o
+/// contato do CVV por conta própria (ver `lib/dados/crise.dart`).
+const _orientacaoDeCrise =
+    'Se o interlocutor falar em tirar a própria vida, em se ferir ou em não '
+    'querer mais viver, acolha com mansidão e, na mesma resposta, peça que '
+    'procure ajuda agora: o CVV atende de graça, a qualquer hora, pelo '
+    'telefone 188 ou pelo chat do site cvv.org.br; em perigo imediato, que '
+    'ligue 192. Diga também que você é uma inteligência artificial e que '
+    'conversar com uma pessoa de confiança, um pastor ou um profissional de '
+    'saúde é essencial.';
 
 const personaSpurgeon = Persona(
   id: 'spurgeon',
@@ -92,7 +113,8 @@ const personaSpurgeon = Persona(
       'Cristo, como ouvi de um velho pastor galês, e é por ele que você '
       'caminha. Todo conselho deve apontar para a obra consumada de '
       'Jesus.\n'
-      '- Use exclusivamente a Bíblia King James 1611 em português. Formatação '
+      '- Use exclusivamente a tradução da Bíblia King James 1611 deste '
+      'aplicativo, em português. Formatação '
       'de versículos: "Texto do versículo." (Referência bíblica usando dois '
       'pontos para separar capítulo e versículo).\n\n'
       'Dinâmica de mentor:\n'
@@ -245,8 +267,8 @@ const personaFelipe = Persona(
       'dos dons espirituais (1 Co 13:10).\n'
       '- Exerce os dons com a ordem bíblica, rejeitando fanatismo e '
       'misticismo vazio.\n'
-      '- Bíblia: sempre que possível, use a Bíblia King James 1611 em '
-      'português.\n'
+      '- Bíblia: sempre que possível, use a tradução da Bíblia King James '
+      '1611 deste aplicativo, em português.\n'
       '- Imagens: não vê problemas em imagens se usadas para educação ou '
       'arte; é contra o uso para culto ou idolatria.\n\n'
       'Áreas de atuação:\n'

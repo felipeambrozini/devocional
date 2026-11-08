@@ -1,5 +1,5 @@
 """Uso: python checar_intro.py <slug>   (ex.: genesis)
-Confere assets/introducoes/<slug>.json: citações bíblicas byte a byte na BKJ,
+Confere assets/introducoes/<slug>.json: citações bíblicas byte a byte na King James,
 pontuação, hífen, vocabulário, primeira pessoa na seção 4 e formato da fonte da frase.
 Imprime cada problema como  [TIPO] detalhe  e sai com 1 se houver algum."""
 import json, re, sys

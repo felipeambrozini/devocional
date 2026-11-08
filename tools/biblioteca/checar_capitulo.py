@@ -1,4 +1,4 @@
-"""Confere a traducao de um capitulo contra o original e contra a BKJ do app.
+"""Confere a traducao de um capitulo contra o original e contra a King James do app.
 
     python tools/biblioteca/checar_capitulo.py somente_pela_graca 1
 
@@ -6,7 +6,7 @@ O segundo argumento e o indice do capitulo em <slug>_en.json, contado a partir d
 a traducao e lida de <slug>_pt/NN.json, com NN = indice + 1 em dois digitos.
 
 Cada item de "citacoes" ({"ref": "isaias 1:18", "trecho": "..."}) precisa ser um
-trecho literal do versiculo da BKJ e aparecer literalmente no texto traduzido.
+trecho literal do versiculo da King James e aparecer literalmente no texto traduzido.
 """
 
 from __future__ import annotations
@@ -18,13 +18,13 @@ from pathlib import Path
 
 PASTA = Path(__file__).parent
 BIBLIA = PASTA.parent.parent / "assets" / "biblia"
-# Paragrafo que so o --montar preenche com a BKJ: "[[salmos 119:17]]" (um versiculo,
+# Paragrafo que so o --montar preenche com a King James: "[[salmos 119:17]]" (um versiculo,
 # com numero) ou "[[salmos 119:17-24]]" (um trecho). O tradutor copia sem mexer.
 MARCADOR = re.compile(r"^\[\[(\w+ \d+):(\d+)(?:-(\d+))?\]\]$")
 PROIBIDOS = re.compile("[—–‘’“”]|--")
 
 
-def versiculo_bkj(ref: str) -> str:
+def versiculo_king_james(ref: str) -> str:
     livro, _, resto = ref.rpartition(" ")
     capitulo, versiculo = resto.split(":")
     dados = json.loads((BIBLIA / f"{livro}.json").read_text(encoding="utf-8"))
@@ -53,12 +53,12 @@ def problemas(slug: str, indice: int) -> list[str]:
         achados.append("travessao ou aspa curva no texto")
     for citacao in traducao.get("citacoes", []):
         try:
-            verso = versiculo_bkj(citacao["ref"])
+            verso = versiculo_king_james(citacao["ref"])
         except (OSError, KeyError, ValueError):
-            achados.append(f"referencia nao resolve na BKJ: {citacao['ref']}")
+            achados.append(f"referencia nao resolve na King James: {citacao['ref']}")
             continue
         if citacao["trecho"].casefold() not in verso.casefold():
-            achados.append(f"trecho nao e da BKJ ({citacao['ref']}): {citacao['trecho']}")
+            achados.append(f"trecho nao e da King James ({citacao['ref']}): {citacao['trecho']}")
         if citacao["trecho"].casefold() not in texto.casefold():
             achados.append(f"trecho ausente do texto: {citacao['trecho']}")
     return achados

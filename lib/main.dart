@@ -704,11 +704,14 @@ class _AppDevocionalState extends State<AppDevocional>
   /// Na primeira vez que há conta aberta neste aparelho, dá as boas-vindas e
   /// apresenta o plano fixo "A Vida de Jesus em 30 dias". Marca como visto antes de
   /// mostrar: fechar o diálogo de qualquer jeito não o traz de volta.
+  ///
+  /// Antes delas, o consentimento da LGPD, se ainda não há um neste aparelho.
   void _conferirBoasVindas() {
     final estado = widget.estado;
     final contexto = navigatorKey.currentContext;
-    if (!Nuvem.instancia.logado || estado.boasVindasVistas) return;
-    if (contexto == null) return;
+    if (!Nuvem.instancia.logado || contexto == null) return;
+    if (!estado.consentimentoDaNuvem) return _pedirConsentimento(contexto);
+    if (estado.boasVindasVistas) return;
     unawaited(estado.marcarBoasVindasVistas());
     showDialog<bool>(
       context: contexto,
@@ -718,6 +721,35 @@ class _AppDevocionalState extends State<AppDevocional>
       _router.go('/plano');
       _router.push('/plano/$idDoPlanoDeJesus');
     });
+  }
+
+  bool _pedindoConsentimento = false;
+
+  /// Conta aberta sem consentimento registrado neste aparelho: quem entrou
+  /// antes de o pedido existir, ou num aparelho onde a sessão já estava
+  /// aberta. Quem recusa sai da conta, e a cópia na nuvem continua apagável
+  /// em Sobre.
+  void _pedirConsentimento(BuildContext contexto) {
+    if (_pedindoConsentimento) return;
+    _pedindoConsentimento = true;
+    showDialog<void>(
+      context: contexto,
+      barrierDismissible: false,
+      // Sem fechar pelo voltar do Android nem pelo gesto do leitor de tela:
+      // a conta ficaria aberta sem consentimento e sem escolha feita.
+      builder: (_) => PopScope(
+        canPop: false,
+        child: DevocionalConsentimentoDaNuvem(
+          rotuloDeConcordar: 'Concordo',
+          rotuloDeRecusar: 'Sair da conta',
+          aoConcordar: () {
+            unawaited(widget.estado.registrarConsentimentoDaNuvem());
+            _conferirBoasVindas();
+          },
+          aoRecusar: () => unawaited(Nuvem.instancia.sair()),
+        ),
+      ),
+    ).whenComplete(() => _pedindoConsentimento = false);
   }
 
   /// O tema precisa ser refeito quando o tamanho do texto ou o modo mudam, mas o

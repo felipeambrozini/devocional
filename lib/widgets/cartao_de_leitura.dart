@@ -51,7 +51,7 @@ class DevocionalCartaoDeLeitura extends StatelessWidget {
         color: cor.secondary,
       ),
       estiloReferencia: tema.titleSmall?.copyWith(color: cor.secondary),
-      // A epígrafe é a porta do devocional para o texto da BKJ: tocar na
+      // A epígrafe é a porta do devocional para o texto da King James: tocar na
       // referência abre o capítulo com os versículos citados em destaque.
       aoAbrirReferencia: (livro, capitulo, deVersiculo, ateVersiculo) =>
           Navigator.push(

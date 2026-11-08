@@ -14,7 +14,7 @@ import '../estilo/espacamento.dart';
 ///
 /// Com [aoAbrirReferencia], a referência que o canon resolve vira alvo de
 /// toque e devolve livro, capítulo e faixa de versículos já resolvidos — é a
-/// porta do devocional para o texto da BKJ. Referência que o canon não
+/// porta do devocional para o texto da King James. Referência que o canon não
 /// reconhece segue como texto morto, sem prometer o que não cumpre. O toque
 /// fica com quem chama (a navegação é de cada tela); aqui só se resolve o
 /// alvo, porque `biblia.dart` importa este arquivo e o contrário seria ciclo.

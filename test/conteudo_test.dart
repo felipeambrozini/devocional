@@ -189,7 +189,7 @@ void main() {
 
     test('a referencia de todo dia resolve livro, capitulo e versiculo', () {
       // A tela troca a referencia abreviada do asset pelo nome do livro por
-      // extenso mais o versiculo completo da BKJ; se uma referencia não
+      // extenso mais o versiculo completo da King James; se uma referencia não
       // resolvesse, o dia cairia de volta na abreviação crua em silêncio.
       //
       // O raro dia cita mais de uma passagem, separadas por vírgula ou "e"

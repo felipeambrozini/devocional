@@ -1,6 +1,6 @@
 # Devocional
 
-> Aplicativo devocional diário em português brasileiro: Bíblia completa na tradução autoral BKJ 1611 (31.102 versículos, mesmo canon do texto King James), devocionais de Charles Spurgeon e cronograma anual de leitura. Gratuito, sem anúncio, disponível na web e em Android.
+> Aplicativo devocional diário em português brasileiro: Bíblia completa em tradução autoral da King James 1611 (31.102 versículos, mesmo canon do original inglês), devocionais de Charles Spurgeon e cronograma anual de leitura. Gratuito, sem anúncio, disponível na web e em Android.
 
 O texto da Bíblia é uma tradução autoral e inédita da King James 1611, feita
 diretamente do inglês em domínio público, com contagem de versículos

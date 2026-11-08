@@ -8,16 +8,16 @@ import 'modelos.dart';
 import 'personas.dart';
 import 'registro.dart';
 
-/// Cliente da Gemini API gratuita (sem cartão de crédito).
+/// Cliente da Gemini API, no plano pago por uso.
 ///
 /// A chave mora em `lib/dados/google.dart`, junto do cabeçalho de identidade do
 /// apk. A leitura em voz alta não usa mais essa chave nem TTS: os áudios são
 /// MP3 pré-gerados (ver `lib/dados/voz.dart`).
 ///
 /// Nome fixo, não o alias `gemini-flash-latest`: o alias pode passar a
-/// apontar para um modelo fora do tier gratuito sem aviso, e a falha vira um
-/// 403 disfarçado de limite de cota. Flash-Lite é o mais barato da linha, se
-/// um dia sair do grátis (faturamento habilitado no projeto). 2.5 foi
+/// apontar para um modelo mais caro ou sem permissão na chave sem aviso, e a
+/// falha vira um 403 disfarçado de limite de cota. Flash-Lite é o mais barato
+/// da linha, e o faturamento é por uso. 2.5 foi
 /// descontinuado para novos usuários em favor do 3.5 (aviso 404 da própria
 /// API), então o nome fixo também precisa de olho na aposentadoria do Google.
 const _modelo = 'gemini-3.5-flash-lite';
@@ -27,7 +27,7 @@ const _modelo = 'gemini-3.5-flash-lite';
 final _clientePadrao = http.Client();
 
 /// Teto de tokens da resposta: um conselho de Spurgeon não precisa de mais, e
-/// um teto baixo segura a latência e o custo do tier gratuito.
+/// um teto baixo segura a latência e o custo por resposta.
 const _maxTokensDeResposta = 2048;
 
 /// Quantas falas do histórico vão ao modelo: conversa longa não pode crescer o
@@ -114,7 +114,7 @@ Future<String> perguntar({
           body: json.encode({
             'systemInstruction': {
               'parts': [
-                {'text': saudacaoComHorario(persona, DateTime.now())},
+                {'text': instrucaoDoSistema(persona, DateTime.now())},
               ],
             },
             'contents': conteudos,
@@ -193,14 +193,14 @@ const _motivosDeBloqueio = {
   'IMAGE_SAFETY',
 };
 
-/// 429 é o teto do tier gratuito, que zera sozinho em até um dia. 403 é outra
+/// 429 é o teto de cota do projeto, que zera sozinho em até um dia. 403 é outra
 /// coisa: a chave sem permissão para o modelo (não se resolve sozinho, e sem
 /// isso o usuário achava que era o mesmo limite e ficava esperando à toa). Os
 /// outros códigos são serviço fora do ar. Não se envia o corpo da API ao
 /// usuário: é inglês técnico que não ajuda ninguém; fica no registro.
 String _mensagemDeErro(http.Response resposta) {
   if (resposta.statusCode == 429) {
-    return 'O limite gratuito da inteligência artificial foi atingido. '
+    return 'O limite de uso da inteligência artificial foi atingido. '
         'Espere um pouco e tente de novo.';
   }
   if (resposta.statusCode == 403) {

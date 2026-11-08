@@ -11,6 +11,20 @@ import '../widgets/botao.dart';
 /// histórico vazio — repetir é o que o torna um aviso, não um enfeite.
 const avisoDeIa = 'Respostas geradas por inteligência artificial';
 
+/// Divulgação de que introduções e comentários da Bíblia de Estudo não são
+/// textos de Spurgeon: a versão curta vai sob o título da obra, em cada
+/// abertura de livro; a longa, em Sobre. Sem ela, "Bíblia de Estudo Charles
+/// Haddon Spurgeon" leva o leitor a crer que ele escreveu cada linha.
+const avisoCurtoDaBibliaDeEstudo =
+    'Obra imaginada, escrita com inteligência artificial no estilo de Spurgeon';
+const avisoDaBibliaDeEstudo =
+    'A Bíblia de Estudo Charles Haddon Spurgeon é uma obra imaginada: a Bíblia '
+    'de Estudo que ele poderia ter preparado no fim do ministério. As '
+    'introduções aos livros e os comentários dos versículos foram escritos com '
+    'inteligência artificial a partir da obra pública de Spurgeon, na voz '
+    'dele, e não são textos que ele escreveu. Só as frases dele com fonte '
+    'comprovada aparecem como citação, com a obra de origem.';
+
 /// Quanto tempo um aviso de snackbar fica na tela antes de fechar sozinho. Um
 /// valor só em todo o projeto: se a duração mudar um dia, muda aqui.
 const duracaoDeAviso = Duration(seconds: 3);

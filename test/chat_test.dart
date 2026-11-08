@@ -239,7 +239,7 @@ void main() {
       expect(sistema, contains('Bom dia'));
     });
 
-    test('429 vira mensagem amigável de limite gratuito', () async {
+    test('429 vira mensagem amigável de limite de uso', () async {
       final cliente = MockClient(
         (requisicao) async => http.Response('{"error": {}}', 429),
       );
@@ -255,7 +255,7 @@ void main() {
           isA<IaExcecao>().having(
             (e) => e.mensagem,
             'mensagem',
-            contains('limite gratuito'),
+            contains('limite de uso'),
           ),
         ),
       );

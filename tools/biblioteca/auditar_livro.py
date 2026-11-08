@@ -4,11 +4,11 @@
 
 Relatorio por livro:
   - problemas estruturais de cada capitulo (checar_capitulo.py);
-  - trechos entre aspas que estao na BKJ mas nao foram registrados em "citacoes";
-  - trechos entre aspas de 6+ palavras que NAO estao na BKJ: ou sao fala inventada
+  - trechos entre aspas que estao na King James mas nao foram registrados em "citacoes";
+  - trechos entre aspas de 6+ palavras que NAO estao na King James: ou sao fala inventada
     do pregador, ou versiculo que o tradutor traduziu por conta propria (revisar);
   - paragrafos que perderam 2+ frases em relacao ao original;
-  - suspeitas de portugues de Portugal (so aviso: o texto da BKJ tem essas formas).
+  - suspeitas de portugues de Portugal (so aviso: o texto da King James tem essas formas).
 """
 
 from __future__ import annotations

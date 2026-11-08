@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Acha, nos comentários de Spurgeon, trechos sem aspas que reproduzem um versículo da BKJ com
+"""Acha, nos comentários de Spurgeon, trechos sem aspas que reproduzem um versículo da King James com
 palavras trocadas.
 
 Uso:

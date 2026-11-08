@@ -5,6 +5,7 @@ import '../dados/canon.dart';
 import '../dados/conteudo.dart';
 import '../dados/modelos.dart';
 import '../dados/voz.dart';
+import '../funcoes/aviso.dart';
 import '../funcoes/capa_biblia.dart';
 import '../estilo/espacamento.dart';
 import 'area_de_selecao.dart';
@@ -77,6 +78,13 @@ class _AberturaDeLivroState extends State<DevocionalAberturaDeLivro> {
                               Text(
                                 'Bíblia de Estudo Charles Haddon Spurgeon',
                                 style: tema.labelMedium,
+                              ),
+                              const SizedBox(height: DevocionalEspacamento.sp4),
+                              Text(
+                                avisoCurtoDaBibliaDeEstudo,
+                                style: tema.bodySmall?.copyWith(
+                                  color: cor.onSurfaceVariant,
+                                ),
                               ),
                             ],
                           ),
