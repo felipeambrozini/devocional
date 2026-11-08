@@ -230,57 +230,65 @@ class _CapituloAbertoState extends State<_CapituloAberto> {
 
     await showModalBottomSheet<void>(
       context: context,
+      // Em paisagem a alça mais as três ações passam dos 9/16 da tela: a
+      // rolagem mantém "Copiar" alcançável em vez de cortá-lo.
       builder: (folha) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (!temNota)
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!temNota)
+                ListTile(
+                  leading: FaIcon(
+                    FontAwesomeIcons.highlighter,
+                    color: cor.primary,
+                  ),
+                  title: Text(destaque == null ? 'Destacar' : 'Tirar destaque'),
+                  onTap: () async {
+                    await leitura.alternarDestaque(
+                      _slug,
+                      widget.indice,
+                      paragrafo,
+                    );
+                    if (folha.mounted) Navigator.pop(folha);
+                  },
+                ),
               ListTile(
                 leading: FaIcon(
-                  FontAwesomeIcons.highlighter,
+                  FontAwesomeIcons.penToSquare,
                   color: cor.primary,
                 ),
-                title: Text(destaque == null ? 'Destacar' : 'Tirar destaque'),
+                title: Text(temNota ? 'Editar anotação' : 'Anotar'),
                 onTap: () async {
-                  await leitura.alternarDestaque(
-                    _slug,
-                    widget.indice,
-                    paragrafo,
+                  final nota = await editarNota(
+                    folha,
+                    referencia:
+                        '${_capitulo.titulo}, parágrafo ${paragrafo + 1}',
+                    notaAtual: destaque?.nota ?? '',
+                  );
+                  if (nota != null) {
+                    await leitura.definirNota(
+                      _slug,
+                      widget.indice,
+                      paragrafo,
+                      nota,
+                    );
+                  }
+                  if (folha.mounted) Navigator.pop(folha);
+                },
+              ),
+              ListTile(
+                leading: FaIcon(FontAwesomeIcons.copy, color: cor.primary),
+                title: const Text('Copiar'),
+                onTap: () async {
+                  await Clipboard.setData(
+                    ClipboardData(text: _capitulo.paragrafos[paragrafo]),
                   );
                   if (folha.mounted) Navigator.pop(folha);
                 },
               ),
-            ListTile(
-              leading: FaIcon(FontAwesomeIcons.penToSquare, color: cor.primary),
-              title: Text(temNota ? 'Editar anotação' : 'Anotar'),
-              onTap: () async {
-                final nota = await editarNota(
-                  folha,
-                  referencia: '${_capitulo.titulo}, parágrafo ${paragrafo + 1}',
-                  notaAtual: destaque?.nota ?? '',
-                );
-                if (nota != null) {
-                  await leitura.definirNota(
-                    _slug,
-                    widget.indice,
-                    paragrafo,
-                    nota,
-                  );
-                }
-                if (folha.mounted) Navigator.pop(folha);
-              },
-            ),
-            ListTile(
-              leading: FaIcon(FontAwesomeIcons.copy, color: cor.primary),
-              title: const Text('Copiar'),
-              onTap: () async {
-                await Clipboard.setData(
-                  ClipboardData(text: _capitulo.paragrafos[paragrafo]),
-                );
-                if (folha.mounted) Navigator.pop(folha);
-              },
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

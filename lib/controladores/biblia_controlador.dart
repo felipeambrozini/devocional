@@ -249,6 +249,7 @@ class BibliaControlador extends ChangeNotifier {
     final destino = await showModalBottomSheet<(String, int)>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => DevocionalSeletorDeLivro(livroAtual: livro),
     );
     if (destino != null && context.mounted) {

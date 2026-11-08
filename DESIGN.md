@@ -248,6 +248,10 @@ Contidos e discretos: os controles existem para o texto passar. Nenhum component
 - **Focus:** o fio vira o metal principal cheio.
 - **Uso:** o campo da busca (com lupa no suffix) e o editor de nota no diálogo.
 
+### Bottom Sheets
+- **Alça:** toda folha mostra a alça central (`showDragHandle` no tema) e fecha arrastando para baixo. A alça ocupa 48px no topo: folhas sem `isScrollControlled` (limite de 9/16 da tela) descontam essa altura ou rolam o conteúdo, para não cortar a última ação em paisagem.
+- **Topo:** folhas com `isScrollControlled` usam `useSafeArea`, para a alça não ficar sob a barra de status.
+
 ### Navigation
 - **Style:** barra embaixo no celular, trilho lateral a partir de 720px; fundo surfaceContainer, rótulos Montserrat w600 de 11–12px.
 - **States:** indicador = fio do metal a 45%; ícone e rótulo selecionados na cor de destaque, não selecionados em tinta suave.

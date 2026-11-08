@@ -1006,6 +1006,7 @@ Future<void> _abrirAcoesDoVersiculo(
     // widgets/folha_de_ajustes.dart: isScrollControlled deixa a folha crescer, e o
     // SingleChildScrollView rola o que não couber em vez de estourar.
     isScrollControlled: true,
+    useSafeArea: true,
     builder: acoes.folha,
   );
 }

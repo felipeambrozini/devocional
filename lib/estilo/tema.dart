@@ -211,6 +211,7 @@ ThemeData construirTema({
     dialogTheme: DialogThemeData(backgroundColor: esquema.surfaceContainer),
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: esquema.surfaceContainer,
+      showDragHandle: true,
     ),
     snackBarTheme: SnackBarThemeData(
       backgroundColor: esquema.surfaceContainerHighest,

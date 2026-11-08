@@ -202,7 +202,10 @@ class DevocionalFolhaDeCapitulos extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final altura = MediaQuery.sizeOf(context).height * 0.55;
+    // Desconta a alça de arraste do tema: 55% + alça passaria do limite de
+    // 9/16 da folha e o encolhimento silencioso sairia da grade.
+    final altura =
+        MediaQuery.sizeOf(context).height * 0.55 - kMinInteractiveDimension;
     return SizedBox(
       height: altura,
       child: Column(
