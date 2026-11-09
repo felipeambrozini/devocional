@@ -34,6 +34,11 @@ const _maxTokensDeResposta = 2048;
 /// custo e a latência de cada pergunta sem limite.
 const _maxFalasDeHistorico = 20;
 
+/// Teto de caracteres de uma pergunta, aplicado no campo do chat: cada envio
+/// leva junto as últimas [_maxFalasDeHistorico] falas, então uma mensagem sem
+/// teto multiplicaria o custo de todas as perguntas seguintes.
+const maxCaracteresDaPergunta = 2000;
+
 const _avisoDeRespostaCortada =
     '\n\n(Resposta cortada pelo limite de tamanho. Peça para continuar.)';
 

@@ -5,11 +5,27 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('Recursos.conversas', () {
-    tearDown(() => Recursos.conversasForcado = null);
+    tearDown(() {
+      Recursos.conversasForcado = null;
+      ConfigAdmin.instancia.redefinirParaTeste();
+    });
 
-    test('conversasForcado tem prioridade sobre a allowlist', () {
+    test('conversasForcado tem prioridade sobre o convite', () {
       Recursos.conversasForcado = true;
       expect(Recursos.conversas, isTrue);
+    });
+
+    test('o convite da conta abre, e o interruptor geral fecha', () {
+      ConfigAdmin.instancia.definirParaTeste(souConvidado: true);
+      expect(Recursos.conversas, isTrue);
+
+      ConfigAdmin.instancia.definirParaTeste(conversasAtivas: false);
+      expect(Recursos.conversas, isFalse);
+    });
+
+    test('configuração carregada sem convite fica fechada', () {
+      ConfigAdmin.instancia.definirParaTeste();
+      expect(Recursos.conversas, isFalse);
     });
 
     test('sem login e sem override, fica fechado', () {

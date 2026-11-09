@@ -14,6 +14,7 @@ import '../dados/modelos.dart';
 import '../dados/nuvem.dart';
 import '../dados/personas.dart';
 import '../dados/recursos.dart';
+import '../dados/registro.dart';
 import '../dados/voz.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
@@ -442,17 +443,16 @@ Future<void> _relatarProblema() async {
           TargetPlatform.iOS => 'iOS',
           final outra => outra.name,
         };
-  final uri = Uri(
-    scheme: 'mailto',
-    path: emailDeContato,
-    queryParameters: {
-      'subject': 'Devocional: relatar um problema',
-      'body':
-          'Versão ${info.version}+${info.buildNumber}, $plataforma\n\n'
-          'Descreva o que aconteceu:\n',
-    },
+  final uri = mailtoPara(
+    emailDeContato,
+    assunto: 'Devocional: relatar um problema',
+    corpo:
+        'Versão ${info.version}+${info.buildNumber}, $plataforma\n\n'
+        'Descreva o que aconteceu:\n',
   );
-  await launchUrl(uri);
+  // Na web, na mesma aba: o padrão abre uma aba nova, que fica em branco
+  // mostrando o próprio mailto: em vez de só chamar o programa de e-mail.
+  await launchUrl(uri, webOnlyWindowName: '_self');
 }
 
 /// Confirma e apaga a cópia da conta. O "não pode ser desfeita" é literal:
@@ -473,7 +473,8 @@ Future<void> _apagarDaNuvem(BuildContext context) async {
   try {
     await Nuvem.instancia.apagarDados();
     mostrarAvisoNo(mensageiro, 'Dados apagados da nuvem.');
-  } catch (_) {
+  } catch (erro, pilha) {
+    Registro.erro('Sobre.apagarDaNuvem', erro, pilha);
     mostrarErroNo(mensageiro, 'Não foi possível apagar agora. Tente de novo.');
   }
 }

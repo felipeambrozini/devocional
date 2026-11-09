@@ -38,6 +38,22 @@ void main() {
       );
       expect(() => ConfigAdmin.validarEmail('a @x.com'), throwsFormatException);
     });
+
+    test('recusa barra, que não cabe no id do convite', () {
+      expect(
+        () => ConfigAdmin.validarEmail('a/b@x.com'),
+        throwsFormatException,
+      );
+      expect(ConfigAdmin.normalizarEmails(['a/b@x.com', 'c@x.com']), [
+        'c@x.com',
+      ]);
+    });
+  });
+
+  test('ouvirConvite sem Firebase não libera ninguém', () {
+    ConfigAdmin.instancia.ouvirConvite('ana@exemplo.com');
+    expect(ConfigAdmin.instancia.souConvidado, isFalse);
+    ConfigAdmin.instancia.ouvirConvite(null);
   });
 
   group('aplicarMapa', () {
@@ -45,20 +61,23 @@ void main() {
       ConfigAdmin.instancia.aplicarMapa(null);
       expect(ConfigAdmin.instancia.carregado, isTrue);
       expect(ConfigAdmin.instancia.conversasAtivas, isTrue);
-      expect(ConfigAdmin.instancia.emailsComConversas, isEmpty);
+      expect(ConfigAdmin.instancia.emailsLegados, isEmpty);
     });
 
-    test('aplica valores, normaliza e-mails e mantém ligado o ausente', () {
-      ConfigAdmin.instancia.aplicarMapa({
-        'conversasAtivas': false,
-        'emailsComConversas': ['B@x.com', 'a@x.com'],
-        'manhaAtivo': false,
-      });
-      expect(ConfigAdmin.instancia.conversasAtivas, isFalse);
-      expect(ConfigAdmin.instancia.emailsComConversas, ['a@x.com', 'b@x.com']);
-      expect(ConfigAdmin.instancia.manhaAtivo, isFalse);
-      expect(ConfigAdmin.instancia.cronogramaAtivo, isTrue);
-    });
+    test(
+      'aplica valores, normaliza a lista antiga e mantém ligado o ausente',
+      () {
+        ConfigAdmin.instancia.aplicarMapa({
+          'conversasAtivas': false,
+          'emailsComConversas': ['B@x.com', 'a@x.com'],
+          'manhaAtivo': false,
+        });
+        expect(ConfigAdmin.instancia.conversasAtivas, isFalse);
+        expect(ConfigAdmin.instancia.emailsLegados, ['a@x.com', 'b@x.com']);
+        expect(ConfigAdmin.instancia.manhaAtivo, isFalse);
+        expect(ConfigAdmin.instancia.cronogramaAtivo, isTrue);
+      },
+    );
 
     test('tipo errado mantém o padrão ligado', () {
       ConfigAdmin.instancia.aplicarMapa({'conversasAtivas': 'sim'});

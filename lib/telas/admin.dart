@@ -17,8 +17,8 @@ import '../widgets/widgets.dart';
 /// e esta tela mostra o motivo em vez do conteúdo — defesa em profundidade,
 /// para um link direto nunca vazar o painel.
 ///
-/// Tudo grava no Firestore (`config/recursos`) e vale na hora, sem
-/// reimplantar: o app inteiro ouve o documento (ver `ConfigAdmin.iniciar`).
+/// Tudo grava no Firestore (`config/recursos` e `convidados/{email}`) e vale
+/// na hora, sem reimplantar: o app inteiro ouve os dois (ver `ConfigAdmin`).
 class TelaAdmin extends StatefulWidget {
   const TelaAdmin({super.key});
 
@@ -31,6 +31,28 @@ class _TelaAdminState extends State<TelaAdmin> {
   /// giro até o Firestore responder, para o toque não parecer morto nem
   /// duplicar a escrita.
   final _salvando = <String>{};
+
+  /// Criado no primeiro uso, que só acontece com o painel aberto para o
+  /// dono: nenhuma outra conta consegue listar os convidados.
+  late final Stream<List<String>> _convidados = ConfigAdmin.instancia
+      .ouvirConvidados();
+
+  bool _migrando = false;
+
+  Future<void> _migrarConvidados() async {
+    setState(() => _migrando = true);
+    try {
+      await ConfigAdmin.instancia.migrarConvidados();
+      if (mounted) mostrarAviso(context, 'Convidados migrados.');
+    } catch (erro, pilha) {
+      Registro.erro('Admin.migrarConvidados', erro, pilha);
+      if (mounted) {
+        mostrarErro(context, 'Não foi possível migrar. Tente de novo.');
+      }
+    } finally {
+      if (mounted) setState(() => _migrando = false);
+    }
+  }
 
   Future<void> _alternar(String campo, String rotulo, bool valor) async {
     if (_salvando.contains(campo)) return;
@@ -223,16 +245,47 @@ class _TelaAdminState extends State<TelaAdmin> {
         const SizedBox(height: DevocionalEspacamento.sp24),
         const DevocionalFilete(largura: 64),
         const SizedBox(height: DevocionalEspacamento.sp16),
-        _SecaoDeEmails(
-          titulo: 'E-mails com conversas',
-          legendaVazia: 'Ninguém liberado ainda.',
-          legendaCheia: (n) =>
-              '$n ${n == 1 ? 'conta liberada' : 'contas liberadas'}.',
-          emails: config.emailsComConversas,
-          textoDeRemocao: (email) => '$email perde o chat na hora.',
-          aoAdicionar: ConfigAdmin.instancia.adicionarEmail,
-          aoRemover: ConfigAdmin.instancia.removerEmail,
-          contextoDeErro: 'Admin.emailsComConversas',
+        if (config.emailsLegados.isNotEmpty) ...[
+          Text(
+            'A lista antiga ainda está no documento público, com '
+            '${config.emailsLegados.length} e-mails. Migrar leva cada um para '
+            'o próprio convite e apaga a lista.',
+            style: tema.bodySmall,
+          ),
+          const SizedBox(height: DevocionalEspacamento.sp8),
+          DevocionalBotaoPrimario(
+            onPressed: _migrando ? null : _migrarConvidados,
+            child: Text(_migrando ? 'Migrando...' : 'Migrar convidados'),
+          ),
+          const SizedBox(height: DevocionalEspacamento.sp16),
+        ],
+        StreamBuilder<List<String>>(
+          // O bloco de migração acima entra e sai da lista: sem a chave, a
+          // seção mudaria de índice e seria recriada, perdendo o e-mail
+          // digitado.
+          key: const ValueKey('convidados'),
+          stream: _convidados,
+          builder: (context, convidados) {
+            if (convidados.hasError) {
+              return Text(
+                'Não foi possível carregar os convidados.',
+                style: tema.bodyMedium,
+              );
+            }
+            return _SecaoDeEmails(
+              titulo: 'E-mails com conversas',
+              legendaVazia: convidados.hasData
+                  ? 'Ninguém liberado ainda.'
+                  : 'Carregando os convidados...',
+              legendaCheia: (n) =>
+                  '$n ${n == 1 ? 'conta liberada' : 'contas liberadas'}.',
+              emails: convidados.data ?? const [],
+              textoDeRemocao: (email) => '$email perde o chat na hora.',
+              aoAdicionar: ConfigAdmin.instancia.adicionarEmail,
+              aoRemover: ConfigAdmin.instancia.removerEmail,
+              contextoDeErro: 'Admin.convidados',
+            );
+          },
         ),
       ],
     );

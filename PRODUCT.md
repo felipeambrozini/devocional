@@ -67,9 +67,8 @@ vitoriana dele, tratando o leitor por "tu".
   recebe no sistema a orientação de indicar essa ajuda.
 - Painel admin (`/admin`, só web e só a conta do dono): liga/desliga cada
   recurso na hora (conversas, planos personalizados, cronograma, cada leitura
-  do devocional, ouvir textos) e edita as allowlists de e-mails do chat e dos
-  planos (a dos planos só restringe quando tem o primeiro e-mail; vazia,
-  vale o interruptor global).
+  do devocional, ouvir textos) e edita os convidados do chat, um e-mail por
+  convite (os planos próprios não têm lista: basta a conta Google).
   Ferramenta de operação, não parte da leitura diária — por isso é a única
   exceção à regra de "um app só em todas as plataformas".
 - Leitura em voz alta (MP3 pré-gerados, voz que remete ao tom de Charles

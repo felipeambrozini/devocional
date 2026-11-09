@@ -10,6 +10,7 @@ import '../dados/estado.dart';
 import '../dados/nuvem.dart';
 import '../dados/planos.dart';
 import '../dados/planos_nuvem.dart';
+import '../dados/registro.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
 import '../funcoes/conta_acoes.dart';
@@ -181,7 +182,15 @@ class PlanoControlador extends ChangeNotifier {
               notifyListeners();
               return;
             }
-            _aplicarAoEspelho(doc);
+            try {
+              _aplicarAoEspelho(doc);
+            } catch (falha, pilha) {
+              // Documento com campo de tipo inesperado: sem isto a exceção
+              // morre no stream e a tela fica carregando para sempre.
+              Registro.erro('PlanoControlador.espelho($planoId)', falha, pilha);
+              _mostrarErro('Não foi possível carregar o plano.');
+              return;
+            }
             this.doc = doc;
             carregando = false;
             erro = null;

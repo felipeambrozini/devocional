@@ -267,6 +267,66 @@ void main() {
       );
     });
 
+    test('repetir com resposta a caminho não abre outra chamada', () async {
+      final estado = await Estado.abrir();
+      final portao = Completer<String>();
+      var chamadas = 0;
+      final conversador = Conversador(
+        persona: personaSpurgeon,
+        estado: estado,
+        chamar: ({required persona, required historico, required pergunta}) {
+          chamadas++;
+          return portao.future;
+        },
+      );
+
+      final enviando = conversador.enviar('Oi');
+      await Future<void>.delayed(Duration.zero);
+      expect(conversador.respondendo, isTrue);
+
+      await conversador.repetir();
+      expect(chamadas, 1, reason: 'cada chamada é paga');
+
+      portao.complete('Amém.');
+      await enviando;
+      conversador.dispose();
+    });
+
+    test(
+      'tentar de novo numa conversa reaberta mostra o apoio em crise',
+      () async {
+        final estado = await Estado.abrir();
+        final id = await abrirConversa(estado, [
+          Mensagem(
+            id: '1',
+            papel: 'user',
+            texto: 'Eu quero morrer.',
+            momento: 1,
+            pendente: true,
+          ),
+        ]);
+        final conversador = Conversador(
+          persona: personaSpurgeon,
+          estado: estado,
+          conversaId: id,
+          chamar:
+              ({
+                required persona,
+                required historico,
+                required pergunta,
+              }) async {
+                return 'Não estás só.';
+              },
+        );
+
+        conversador.retomarInterrompida();
+        await conversador.repetir();
+
+        expect(conversador.apoioEmCrise, isTrue);
+        conversador.dispose();
+      },
+    );
+
     test('o erro some sozinho depois da duração do balão', () async {
       final estado = await Estado.abrir();
       final conversador = Conversador(

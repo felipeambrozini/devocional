@@ -110,18 +110,16 @@ class Recursos {
   /// Em teste: o chat chama a API Gemini (paga por uso, com cota diária), e
   /// abrir para todo mundo antes da hora esgotaria a cota e o orçamento.
   ///
-  /// A allowlist mora no Firestore (`config/recursos`, campo
-  /// `emailsComConversas`) e o painel admin edita sem reimplantar, sem
-  /// versionar e-mail nenhum no repositório. Antes de o documento carregar
-  /// ninguém entra: o router reavalia o redirect quando o ConfigAdmin
-  /// notifica (ver `main.dart`).
+  /// Os convites moram no Firestore (`convidados/{email}`, um documento por
+  /// conta) e o painel admin edita sem reimplantar, sem versionar e-mail
+  /// nenhum no repositório. Antes de a configuração e o convite da conta
+  /// carregarem ninguém entra: o router reavalia o redirect quando o
+  /// ConfigAdmin notifica (ver `main.dart`).
   static bool get conversas {
     final forcado = conversasForcado;
     if (forcado != null) return forcado;
     if (!ConfigAdmin.instancia.conversasAtivas) return false;
-    final email = Nuvem.instancia.email?.trim().toLowerCase();
-    if (email == null || email.isEmpty) return false;
     if (!ConfigAdmin.instancia.carregado) return false;
-    return ConfigAdmin.instancia.emailsComConversas.contains(email);
+    return ConfigAdmin.instancia.souConvidado;
   }
 }

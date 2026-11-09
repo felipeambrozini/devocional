@@ -230,6 +230,56 @@ await caso('usuário logado lê config/recursos',
   assertSucceeds(getDoc(recursos(alice))));
 await caso('anônimo também lê config/recursos',
   assertSucceeds(getDoc(recursos(anonimo))));
+await caso('dono apaga a lista antiga de convidados de config/recursos',
+  assertSucceeds(setDoc(recursos(dono),
+    {emailsComConversas: deleteField(), atualizadoEm: serverTimestamp()}, {merge: true})));
+
+// --- Firestore: convidados/{email} --------------------------------------- //
+const convite = (ctx, email) => doc(ctx.firestore(), 'convidados', email);
+const conviteValido = () => ({criadoEm: serverTimestamp()});
+const convidados = (ctx) => getDocs(collection(ctx.firestore(), 'convidados'));
+
+await caso('dono convida um e-mail',
+  assertSucceeds(setDoc(convite(dono, 'outro@example.com'), conviteValido())));
+await caso('dono convida de novo o mesmo e-mail',
+  assertSucceeds(setDoc(convite(dono, 'outro@example.com'), conviteValido())));
+await caso('recusa convite com campo a mais',
+  assertFails(setDoc(convite(dono, 'x@example.com'), {...conviteValido(), nota: 'a'})));
+await caso('recusa convite com e-mail em maiúsculas',
+  assertFails(setDoc(convite(dono, 'X@example.com'), conviteValido())));
+await caso('convidado lê o próprio convite',
+  assertSucceeds(getDoc(convite(outroEmail, 'outro@example.com'))));
+const comEmail = (uid, email, provedor = 'google.com') =>
+  env.authenticatedContext(uid, {email, firebase: {sign_in_provider: provedor}});
+
+await caso('conta sem e-mail no token não lê o convite alheio',
+  assertFails(getDoc(convite(alice, 'outro@example.com'))));
+await caso('outro convidado não lê o convite alheio',
+  assertFails(getDoc(convite(comEmail('vizinho', 'vizinho@example.com'),
+    'outro@example.com'))));
+await caso('mesmo e-mail por senha, sem Google, não lê o convite',
+  assertFails(getDoc(convite(comEmail('senha', 'outro@example.com', 'password'),
+    'outro@example.com'))));
+await caso('e-mail em maiúsculas no token lê o convite em minúsculas',
+  assertSucceeds(getDoc(convite(comEmail('caixa', 'Outro@Example.com'),
+    'outro@example.com'))));
+await caso('conta sem convite lê o próprio caminho, que não existe',
+  assertSucceeds(getDoc(convite(comEmail('vizinho', 'vizinho@example.com'),
+    'vizinho@example.com'))));
+await caso('anônimo não lê convite',
+  assertFails(getDoc(convite(anonimo, 'outro@example.com'))));
+await caso('convidado não lista os convidados',
+  assertFails(convidados(outroEmail)));
+await caso('anônimo não lista os convidados',
+  assertFails(convidados(anonimo)));
+await caso('dono lista os convidados',
+  assertSucceeds(convidados(dono)));
+await caso('conta comum não se convida',
+  assertFails(setDoc(convite(outroEmail, 'outro2@example.com'), conviteValido())));
+await caso('convidado não apaga o próprio convite',
+  assertFails(deleteDoc(convite(outroEmail, 'outro@example.com'))));
+await caso('dono remove o convite',
+  assertSucceeds(deleteDoc(convite(dono, 'outro@example.com'))));
 
 // --- Firestore: usuarios/{uid}, campos do contrato ---------------------- //
 const mesclar = (ctx, uid, campos) => setDoc(doc(ctx.firestore(), 'usuarios', uid),

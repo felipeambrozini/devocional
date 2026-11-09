@@ -142,6 +142,11 @@ Future<void> main() async {
   );
 }
 
+/// O convite do chat é da conta aberta: cada mudança na [Nuvem] (entrar, sair,
+/// trocar de conta) refaz a escuta, que ignora a chamada se o e-mail é o mesmo.
+void _ouvirConviteDaConta() =>
+    ConfigAdmin.instancia.ouvirConvite(Nuvem.instancia.email);
+
 Future<void> _iniciar() async {
   WidgetsFlutterBinding.ensureInitialized();
   FlutterError.onError = (detalhes) {
@@ -189,6 +194,8 @@ Future<void> _iniciar() async {
     Nuvem.instancia.iniciar(estado).then((_) {
       unawaited(PlanosNaNuvem.instancia.iniciar(estado));
       unawaited(ConfigAdmin.instancia.iniciar());
+      _ouvirConviteDaConta();
+      Nuvem.instancia.addListener(_ouvirConviteDaConta);
       unawaited(reagendarLembretesSeNecessario(estado));
     }),
   );

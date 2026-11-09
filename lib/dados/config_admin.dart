@@ -8,11 +8,15 @@ import 'registro.dart';
 
 /// Configuração remota do painel admin (só web, só o dono).
 ///
-/// Um documento só no Firestore (`config/recursos`), lido por todo mundo e
-/// escrito só pelo admin (ver `firestore.rules`): interruptores de cada
-/// recurso mais a allowlist de e-mails do chat. Sem ele (primeiro deploy,
-/// sem rede, teste) vale o padrão ligado de cada campo, e a allowlist fica
-/// vazia — o chat só abre depois de o documento chegar.
+/// Um documento no Firestore (`config/recursos`), lido por todo mundo e
+/// escrito só pelo admin (ver `firestore.rules`), guarda os interruptores de
+/// cada recurso. Sem ele (primeiro deploy, sem rede, teste) vale o padrão
+/// ligado de cada campo.
+///
+/// Os convidados do chat ficam fora dele, um documento por e-mail em
+/// `convidados/{email}`: o documento de configuração é público, e a lista
+/// dentro dele entregava o e-mail de todos os convidados a qualquer pessoa.
+/// Cada conta só consegue ler o próprio convite.
 ///
 /// Não importa `recursos.dart` de propósito: é `recursos.dart` quem lê daqui,
 /// e o contrário fecharia um ciclo.
@@ -22,9 +26,11 @@ class ConfigAdmin extends ChangeNotifier {
 
   static const colecao = 'config';
   static const documento = 'recursos';
+  static const colecaoDeConvidados = 'convidados';
 
   bool _conversasAtivas = true;
-  List<String> _emails = const [];
+  List<String> _emailsLegados = const [];
+  bool _souConvidado = false;
   bool _planoPersonalizadoAtivo = true;
   bool _cronogramaAtivo = true;
   bool _manhaAtivo = true;
@@ -35,12 +41,17 @@ class ConfigAdmin extends ChangeNotifier {
   bool _comentarioNoCapituloAtivo = true;
 
   /// Se algum snapshot (ou mapa de teste) já foi aplicado. Antes disso os
-  /// getters valem os padrões acima, e `Recursos.conversas` usa o
-  /// `--dart-define` legado em vez da lista ainda vazia.
+  /// getters valem os padrões acima, e `Recursos.conversas` não libera ninguém.
   bool _carregado = false;
 
   bool get conversasAtivas => _conversasAtivas;
-  List<String> get emailsComConversas => List.unmodifiable(_emails);
+
+  /// A lista antiga de convidados, de quando ela morava em `config/recursos`.
+  /// Só serve para o painel oferecer [migrarConvidados]; vazia depois dele.
+  List<String> get emailsLegados => List.unmodifiable(_emailsLegados);
+
+  /// Se a conta aberta tem convite para o chat (ver [ouvirConvite]).
+  bool get souConvidado => _souConvidado;
   bool get planoPersonalizadoAtivo => _planoPersonalizadoAtivo;
   bool get cronogramaAtivo => _cronogramaAtivo;
   bool get manhaAtivo => _manhaAtivo;
@@ -75,9 +86,57 @@ class ConfigAdmin extends ChangeNotifier {
     }
   }
 
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+  _assinaturaDoConvite;
+  String? _emailDoConvite;
+
+  CollectionReference<Map<String, dynamic>> get _convidados =>
+      FirebaseFirestore.instance.collection(colecaoDeConvidados);
+
+  /// Ouve o convite de [emailDaConta] (null = ninguém logado). Chamar de novo
+  /// com o mesmo e-mail não faz nada; trocar de conta troca a escuta e
+  /// derruba o convite até o documento da conta nova chegar.
+  void ouvirConvite(String? emailDaConta) {
+    final normalizado = emailDaConta?.trim().toLowerCase() ?? '';
+    final email = normalizado.isEmpty ? null : normalizado;
+    if (email == _emailDoConvite) return;
+    _emailDoConvite = email;
+    unawaited(_assinaturaDoConvite?.cancel());
+    _assinaturaDoConvite = null;
+    _definirConvidado(false);
+    if (email == null || Firebase.apps.isEmpty) return;
+    _assinaturaDoConvite = _convidados
+        .doc(email)
+        .snapshots()
+        .listen(
+          (doc) => _definirConvidado(doc.exists),
+          onError: (Object erro, StackTrace pilha) {
+            Registro.erro('ConfigAdmin.ouvirConvite', erro, pilha);
+            // O erro encerra a escuta. Esquecer o e-mail faz a próxima
+            // chamada assinar de novo, em vez de deixar a conta sem chat
+            // até reabrir o app.
+            _emailDoConvite = null;
+            _definirConvidado(false);
+          },
+        );
+  }
+
+  void _definirConvidado(bool valor) {
+    if (_souConvidado == valor) return;
+    _souConvidado = valor;
+    notifyListeners();
+  }
+
+  /// Os e-mails de todos os convidados, para o painel. Só o admin consegue
+  /// listar a coleção: para qualquer outra conta o stream termina em erro.
+  Stream<List<String>> ouvirConvidados() => _convidados.snapshots().map(
+    (consulta) => [for (final doc in consulta.docs) doc.id],
+  );
+
   @override
   void dispose() {
     _assinatura?.cancel();
+    _assinaturaDoConvite?.cancel();
     super.dispose();
   }
 
@@ -97,7 +156,7 @@ class ConfigAdmin extends ChangeNotifier {
     }
 
     _conversasAtivas = ligado('conversasAtivas');
-    _emails = normalizarEmails(mapa['emailsComConversas']);
+    _emailsLegados = normalizarEmails(mapa['emailsComConversas']);
     _planoPersonalizadoAtivo = ligado('planoPersonalizadoAtivo');
     _cronogramaAtivo = ligado('cronogramaAtivo');
     _manhaAtivo = ligado('manhaAtivo');
@@ -119,7 +178,10 @@ class ConfigAdmin extends ChangeNotifier {
     for (final item in cru) {
       if (item is! String) continue;
       final email = item.trim().toLowerCase();
-      if (email.isEmpty || !email.contains('@')) continue;
+      // Com barra o e-mail não serve de id de documento (ver [validarEmail]).
+      if (email.isEmpty || !email.contains('@') || email.contains('/')) {
+        continue;
+      }
       vistos.add(email);
       if (vistos.length >= 5000) break;
     }
@@ -131,7 +193,7 @@ class ConfigAdmin extends ChangeNotifier {
   @visibleForTesting
   void definirParaTeste({
     bool? conversasAtivas,
-    List<String>? emails,
+    bool? souConvidado,
     bool? planoPersonalizadoAtivo,
     bool? cronogramaAtivo,
     bool? manhaAtivo,
@@ -143,7 +205,7 @@ class ConfigAdmin extends ChangeNotifier {
     bool carregado = true,
   }) {
     if (conversasAtivas != null) _conversasAtivas = conversasAtivas;
-    if (emails != null) _emails = normalizarEmails(emails);
+    if (souConvidado != null) _souConvidado = souConvidado;
     if (planoPersonalizadoAtivo != null) {
       _planoPersonalizadoAtivo = planoPersonalizadoAtivo;
     }
@@ -164,7 +226,8 @@ class ConfigAdmin extends ChangeNotifier {
   @visibleForTesting
   void redefinirParaTeste() {
     _conversasAtivas = true;
-    _emails = const [];
+    _emailsLegados = const [];
+    _souConvidado = false;
     _planoPersonalizadoAtivo = true;
     _cronogramaAtivo = true;
     _manhaAtivo = true;
@@ -214,14 +277,36 @@ class ConfigAdmin extends ChangeNotifier {
     if (email.contains(' ')) {
       throw const FormatException('E-mail não tem espaço.');
     }
+    // O e-mail é o id do documento do convite, e id não aceita barra.
+    if (email.contains('/')) {
+      throw const FormatException('E-mail não tem barra.');
+    }
     return email;
   }
 
-  Future<void> adicionarEmail(String cru) => _gravar({
-    'emailsComConversas': FieldValue.arrayUnion([validarEmail(cru)]),
-  });
+  static Map<String, Object?> _convite() => {
+    'criadoEm': FieldValue.serverTimestamp(),
+  };
 
-  Future<void> removerEmail(String email) => _gravar({
-    'emailsComConversas': FieldValue.arrayRemove([email.trim().toLowerCase()]),
-  });
+  Future<void> adicionarEmail(String cru) =>
+      _convidados.doc(validarEmail(cru)).set(_convite());
+
+  Future<void> removerEmail(String email) =>
+      _convidados.doc(email.trim().toLowerCase()).delete();
+
+  /// Leva a lista antiga de `config/recursos` para `convidados/{email}` e
+  /// apaga o campo, tudo num lote só: ou migra inteiro, ou nada muda. Um lote
+  /// do Firestore aceita 500 escritas, teto bem acima da lista de convidados.
+  Future<void> migrarConvidados() {
+    final firestore = FirebaseFirestore.instance;
+    final lote = firestore.batch();
+    for (final email in _emailsLegados) {
+      lote.set(_convidados.doc(email), _convite());
+    }
+    lote.set(firestore.collection(colecao).doc(documento), {
+      'emailsComConversas': FieldValue.delete(),
+      'atualizadoEm': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    return lote.commit();
+  }
 }

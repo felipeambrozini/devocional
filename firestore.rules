@@ -29,11 +29,22 @@ rules_version = '2';
 // próprio Firestore, e é sempre do próprio usuário.
 service cloud.firestore {
   match /databases/{database}/documents {
+    // O dono do app, pelo e-mail da conta Google. Vale para config/recursos e
+    // para convidados.
+    function admin() {
+      return request.auth != null &&
+          request.auth.token.email == 'felipe.anegrini@gmail.com' &&
+          request.auth.token.firebase.sign_in_provider == 'google.com';
+    }
+
     // Configuração remota do painel admin (ver lib/dados/config_admin.dart).
     //
     // Contrato do documento config/recursos:
     //   conversasAtivas          bool — kill switch global do chat
-    //   emailsComConversas       list de string — allowlist do chat
+    //   emailsComConversas       list de string — campo legado: os convidados
+    //                            do chat moram em convidados/{email}; o
+    //                            painel migra e apaga este campo, que segue
+    //                            tolerado até lá
     //   emailsComPlanos          list de string — campo legado: a allowlist
     //                            dos planos saiu (agora basta login Google),
     //                            mas documentos antigos ainda podem tê-lo — e
@@ -56,12 +67,6 @@ service cloud.firestore {
     // inteiro. Campo ausente vale ligado (ver aplicarMapa), por isso a regra
     // aceita documento parcial: o painel grava com merge, um campo por vez.
     match /config/recursos {
-      function admin() {
-        return request.auth != null &&
-            request.auth.token.email == 'felipe.anegrini@gmail.com' &&
-            request.auth.token.firebase.sign_in_provider == 'google.com';
-      }
-
       function formaValida() {
         let dados = request.resource.data;
         let soOsCampos = dados.keys().hasOnly([
@@ -93,6 +98,34 @@ service cloud.firestore {
       allow list: if false;
       allow create, update: if admin() && formaValida();
       allow delete: if false;
+    }
+
+    // Convidados do chat: um documento por conta, com o e-mail em minúsculas
+    // como id (ver lib/dados/config_admin.dart). Fora de config/recursos de
+    // propósito: aquele documento é público, e a lista dentro dele entregava
+    // o e-mail de todos os convidados a qualquer pessoa. Aqui cada conta lê
+    // só o próprio convite (existir é ter acesso), e só o dono lista e
+    // escreve.
+    //
+    // Contrato do documento convidados/{email}:
+    //   criadoEm  timestamp do servidor
+    match /convidados/{email} {
+      function meuConvite() {
+        return request.auth != null &&
+            request.auth.token.firebase.sign_in_provider == 'google.com' &&
+            request.auth.token.email.lower() == email;
+      }
+
+      function conviteValido() {
+        let dados = request.resource.data;
+        return dados.keys().hasOnly(['criadoEm']) &&
+            dados.criadoEm is timestamp &&
+            email == email.lower() && email.size() < 320;
+      }
+
+      allow get: if admin() || meuConvite();
+      allow list, delete: if admin();
+      allow create, update: if admin() && conviteValido();
     }
 
     // Cada um lê e escreve só o próprio documento, identificado pelo uid da

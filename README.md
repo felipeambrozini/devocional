@@ -511,13 +511,19 @@ motivo novo.
   `/charles-spurgeon`, `/felipe-ambrozini`). Os valores moram no Firestore
   (`config/recursos`, ver `lib/dados/config_admin.dart`) e o painel `/admin`
   (só web e só a conta do dono, com entrada na folha de ajustes) os edita na
-  hora; sem o documento, cada campo vale o padrão ligado. `conversas` compara
-  o e-mail da conta aberta (`Nuvem.email`) contra a allowlist do documento
-  (`emailsComConversas`), porque o chat chama a API paga do Gemini e abrir
+  hora; sem o documento, cada campo vale o padrão ligado. `conversas` exige o
+  convite da conta aberta: um documento `convidados/{email}` (id = e-mail em
+  minúsculas), porque o chat chama a API paga do Gemini e abrir
   para todo mundo antes da hora custaria sem controle — convidar alguém é
   adicionar o e-mail no painel, sem versionar e-mail nenhum no repositório e
   sem trocar secret de build (o `--dart-define=EMAILS_COM_CONVERSAS` antigo
-   saiu de vez; antes de o documento carregar o chat fica fechado). Sem
+   saiu de vez; antes de a configuração e o convite carregarem o chat fica
+   fechado). Os convites ficam fora de `config/recursos` porque esse
+   documento é público: a lista que morava nele (`emailsComConversas`)
+   entregava o e-mail de todos os convidados a qualquer pessoa. Cada conta lê
+   só o próprio convite (`ConfigAdmin.ouvirConvite`); só o dono lista e
+   escreve. Enquanto o campo antigo existir, o painel mostra "Migrar
+   convidados", que cria os convites e apaga a lista num lote só. Sem
    `firebase_remote_config`: o Firestore que
    o app já usa é o servidor de configuração. Cada interruptor tem o seu
    `*Forcado` (mesmo padrão de `Lembretes.instancia`, mutável) só para teste —

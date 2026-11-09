@@ -109,7 +109,6 @@ class Conversador extends ChangeNotifier {
       return;
     }
     _ultimoEnvio = agora;
-    if (pedeApoioEmCrise(pergunta)) _apoioEmCrise = true;
     // Uma conversa reaberta pelo histórico já chega com [conversaId]: a
     // primeira mensagem enviada nela precisa continuar essa conversa, não
     // abrir outra vazia. Só quando não há [conversaId] (chat novo) é que
@@ -139,7 +138,12 @@ class Conversador extends ChangeNotifier {
     return conversa.id;
   }
 
-  Future<void> repetir() => _perguntar(_ultimaPergunta);
+  /// Refaz a última pergunta. Com uma resposta já a caminho não faz nada: um
+  /// segundo toque no "Tentar de novo" abriria outra chamada paga.
+  Future<void> repetir() async {
+    if (_respondendo) return;
+    await _perguntar(_ultimaPergunta);
+  }
 
   /// Para a resposta em andamento (o botão parar da tela): a pergunta
   /// continua no histórico como pendente e a tela oferece "Tentar de novo",
@@ -187,6 +191,9 @@ class Conversador extends ChangeNotifier {
     _erro = null;
     _temporizadorDoErro?.cancel();
     _ultimaPergunta = pergunta;
+    // Aqui, e não em `enviar`: o "Tentar de novo" de uma conversa reaberta
+    // também passa por este ponto.
+    if (pedeApoioEmCrise(pergunta)) _apoioEmCrise = true;
     notifyListeners();
     try {
       // A pergunta atual já está no histórico como mensagem pendente (foi
