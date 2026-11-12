@@ -121,6 +121,12 @@ const obrasDaBiblioteca = [
     capa: 'assets/imagens/capa_pescadores_de_criancas.webp',
   ),
   ObraDaBiblioteca(
+    slug: 'um_ministerio_completo',
+    titulo: 'Um Ministério Completo',
+    subtitulo: 'Doze discursos aos pastores nas conferências do Colégio',
+    capa: 'assets/imagens/capa_um_ministerio_completo.webp',
+  ),
+  ObraDaBiblioteca(
     slug: 'apenas_uma_reuniao_de_oracao',
     titulo: 'Apenas uma Reunião de Oração',
     subtitulo: 'Quarenta discursos nas reuniões de oração do Tabernáculo',
