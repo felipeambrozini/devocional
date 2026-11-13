@@ -91,6 +91,12 @@ const obrasDaBiblioteca = [
     capa: 'assets/imagens/capa_segundo_a_promessa.webp',
   ),
   ObraDaBiblioteca(
+    slug: 'sermoes_em_velas',
+    titulo: 'Sermões em Velas',
+    subtitulo: 'Duas conferências sobre as lições de uma vela comum',
+    capa: 'assets/imagens/capa_sermoes_em_velas.webp',
+  ),
+  ObraDaBiblioteca(
     slug: 'o_maior_combate_do_mundo',
     titulo: 'O Maior Combate do Mundo',
     subtitulo: 'A última conferência de Spurgeon aos pastores',
