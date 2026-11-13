@@ -26,8 +26,9 @@ void main() {
   }
 
   /// A cor de fundo que o app está de fato pintando.
-  Color fundoEmUso(WidgetTester tester) =>
-      Theme.of(tester.element(find.byType(Moldura))).colorScheme.surface;
+  Color fundoEmUso(WidgetTester tester) => Theme.of(
+    tester.element(find.byType(DevocionalMoldura)),
+  ).colorScheme.surface;
 
   testWidgets('escolher claro ou escuro troca a paleta na hora', (
     tester,

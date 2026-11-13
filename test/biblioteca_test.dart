@@ -92,6 +92,8 @@ void main() {
           'tesouro_de_davi': 149,
           'respigas_entre_os_feixes': 146,
           'conversas_com_lavradores': 19,
+          'um_ministerio_completo': 12,
+          'sermoes_em_velas': 2,
         };
         final proibidos = RegExp('[—–‘’“”]');
         for (final obra in obrasDaBiblioteca) {

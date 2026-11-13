@@ -92,7 +92,7 @@ class _ListaDePlanos extends StatelessWidget {
 
   // Rotas próprias sob /plano (ver main.dart), não Navigator.push avulso: é o
   // que faz a aba resetar para esta lista ao voltar de outra aba com um
-  // plano aberto (Moldura._irParaAba).
+  // plano aberto (DevocionalMoldura._irParaAba).
   Future<void> _abrirNovoPlano(BuildContext context) async {
     final criado = await context.push<PlanoDoUsuario>('/plano/novo');
     if (criado == null || !context.mounted) return;

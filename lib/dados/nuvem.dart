@@ -376,7 +376,7 @@ class Nuvem extends ChangeNotifier {
   /// A sessão salva ainda não voltou: sem override de teste e sem o primeiro
   /// evento do Auth. Antes disso [logado] vale false por falta de resposta,
   /// não por resposta, e o cabeçalho mostra espera em vez de um "Entrar" que
-  /// sumiria sozinho (ver `_BotaoDeConta` em `lib/telas/hoje.dart`).
+  /// sumiria sozinho (ver `DevocionalBotaoDeConta` em `lib/widgets/botao_de_conta.dart`).
   bool get carregandoConta => logadoForcado == null && !_sessaoConhecida;
   String? get email =>
       _sessaoConhecida ? FirebaseAuth.instance.currentUser?.email : null;
@@ -396,8 +396,8 @@ class Nuvem extends ChangeNotifier {
   String? get uid =>
       _sessaoConhecida ? FirebaseAuth.instance.currentUser?.uid : null;
 
-  /// Primeiro nome de quem entrou, para a saudação de `_Cabecalho` em
-  /// `hoje.dart`. null sem conta, ou se a conta Google não devolveu nome.
+  /// Primeiro nome de quem entrou, para a saudação de `DevocionalCabecalhoDaHoje`
+  /// (`lib/widgets/cabecalho_da_hoje.dart`). null sem conta, ou se a conta Google não devolveu nome.
   String? get primeiroNome {
     final nome = _sessaoConhecida
         ? FirebaseAuth.instance.currentUser?.displayName
@@ -406,7 +406,7 @@ class Nuvem extends ChangeNotifier {
   }
 
   /// Avatar da conta: a foto do Google quando há, senão a inicial do nome
-  /// (ver `_Cabecalho` em `hoje.dart`). Sem upload próprio: o app nunca
+  /// (ver `DevocionalCabecalhoDaHoje`). Sem upload próprio: o app nunca
   /// hospeda foto, só exibe a da conta.
   String? get fotoUrl =>
       _sessaoConhecida ? FirebaseAuth.instance.currentUser?.photoURL : null;

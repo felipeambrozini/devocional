@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import '../dados/estado.dart';
@@ -8,11 +7,7 @@ import '../dados/config_admin.dart';
 import '../dados/modelos.dart';
 import '../dados/nuvem.dart';
 import '../dados/recursos.dart';
-import '../dados/registro.dart';
 import '../estilo/espacamento.dart';
-import '../funcoes/aviso.dart';
-import '../funcoes/conta_acoes.dart';
-import '../funcoes/datas.dart';
 import '../widgets/widgets.dart';
 import 'devocional.dart';
 
@@ -66,7 +61,7 @@ class _TelaHojeState extends State<TelaHoje> {
                   DevocionalEspacamento.sp32,
                 ),
                 children: [
-                  _Cabecalho(data: agora),
+                  DevocionalCabecalhoDaHoje(data: agora),
                   const SizedBox(height: DevocionalEspacamento.sp20),
                   // Ajuda só para quem chega: um cartão curto na primeira visita,
                   // que some para sempre com "Entendi". Fica antes dos cards de
@@ -125,167 +120,6 @@ class _TelaHojeState extends State<TelaHoje> {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Bom dia, boa tarde ou boa noite, só para a saudação — separado de
-/// [Periodo], que decide qual devocional (Manhã ou Noite) aparece na
-/// prévia. O conteúdo é binário porque Spurgeon só escreveu duas partes por
-/// dia; a saudação não precisa seguir a mesma régua.
-String _saudacaoPelaHora(int hora) {
-  if (hora < 6) return 'Boa noite';
-  if (hora < 12) return 'Bom dia';
-  if (hora < 18) return 'Boa tarde';
-  return 'Boa noite';
-}
-
-/// Confirma e executa o logout. Um toque no "Sair" não pode deslogar sem
-/// pergunta: na web, o espelho na nuvem é a proteção contra o navegador
-/// limpar o armazenamento local, e derrubar a sessão desarma essa proteção.
-Future<void> _sairDaConta(BuildContext context) async {
-  final confirmou = await confirmar(
-    context,
-    titulo: 'Sair da conta?',
-    conteudo:
-        'Favoritos, notas e progresso ficam neste aparelho, mas a cópia na '
-        'nuvem para de se atualizar. Na web, é ela que devolve os dados se o '
-        'navegador limpar o armazenamento.',
-    rotuloDaAcao: 'Sair',
-  );
-  if (!confirmou || !context.mounted) return;
-  final mensageiro = ScaffoldMessenger.of(context);
-  try {
-    await Nuvem.instancia.sair();
-    mostrarAvisoNo(mensageiro, 'Você saiu da conta.');
-  } catch (erro, pilha) {
-    Registro.erro('_sairDaConta', erro, pilha);
-    mostrarErroNo(mensageiro, 'Não foi possível sair agora. Tente de novo.');
-  }
-}
-
-class _Cabecalho extends StatelessWidget {
-  const _Cabecalho({required this.data});
-
-  final DateTime data;
-
-  @override
-  Widget build(BuildContext context) {
-    final cor = Theme.of(context).colorScheme;
-    final tema = Theme.of(context).textTheme;
-    final saudacao = _saudacaoPelaHora(data.hour);
-
-    return ListenableBuilder(
-      listenable: Nuvem.instancia,
-      builder: (context, _) {
-        final nuvem = Nuvem.instancia;
-        final nome = nuvem.primeiroNome;
-        return Row(
-          children: [
-            if (nuvem.logado) ...[
-              // Avatar só exibição: a foto do Google quando há, senão a
-              // inicial do nome. Sem toque, sem upload.
-              ExcludeSemantics(
-                child: CircleAvatar(
-                  radius: 30,
-                  backgroundImage: nuvem.fotoUrl != null
-                      ? NetworkImage(nuvem.fotoUrl!)
-                      : null,
-                  child: nuvem.fotoUrl == null
-                      ? Text(
-                          (nome ?? '?').substring(0, 1).toUpperCase(),
-                          style: tema.headlineMedium?.copyWith(
-                            color: cor.primary,
-                          ),
-                        )
-                      : null,
-                ),
-              ),
-              const SizedBox(width: DevocionalEspacamento.sp14),
-            ],
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    nome != null ? '$saudacao, $nome' : saudacao,
-                    style: tema.headlineMedium,
-                  ),
-                  const SizedBox(height: DevocionalEspacamento.sp4),
-                  Text(dataLonga(data), style: tema.bodySmall),
-                ],
-              ),
-            ),
-            // Entrar ou sair da conta, no fim do cabeçalho: o convite para
-            // entrar mora aqui (e não mais na folha de ajustes), porque o
-            // estado da conta muda a saudação ao lado.
-            const _BotaoDeConta(),
-            // Hoje não tem AppBar onde pendurar a ação, e sem isto os ajustes
-            // só seriam alcançáveis de duas das seis abas.
-            DevocionalBotaoDeAjustes(estado: EscopoDoEstado.de(context)),
-          ],
-        );
-      },
-    );
-  }
-}
-
-/// Entrar, sair ou esperar, no fim do cabeçalho da Hoje. Três estados, nunca
-/// dois ao mesmo tempo: a espera enquanto a sessão pode estar restaurando
-/// (sem ela, o "Entrar" aparecia e sumia sozinho segundos depois, parecendo
-/// que o app tinha deslogado sozinho ao fechar), o convite para entrar, ou o
-/// botão "Sair" de quem já entrou (o e-mail fica no Sobre, em "Conta e
-/// privacidade").
-class _BotaoDeConta extends StatelessWidget {
-  const _BotaoDeConta();
-
-  @override
-  Widget build(BuildContext context) {
-    final nuvem = Nuvem.instancia;
-    return ListenableBuilder(
-      listenable: nuvem,
-      builder: (context, _) {
-        if (nuvem.logado) {
-          return DevocionalBotaoTerciario.icon(
-            onPressed: () => _sairDaConta(context),
-            icon: const FaIcon(FontAwesomeIcons.rightFromBracket, size: 18),
-            label: const Text('Sair'),
-          );
-        }
-        if (nuvem.carregandoConta) {
-          // Espera estática, sem animação: a restauração leva 20-30s no
-          // Android, e um giro indeterminado queimaria bateria à toa no
-          // cabeçalho de toda abertura (além de nunca assentar em teste).
-          return Tooltip(
-            message: 'Verificando conta…',
-            child: Semantics(
-              label: 'Verificando conta',
-              liveRegion: true,
-              child: FaIcon(
-                FontAwesomeIcons.hourglassStart,
-                size: 16,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-          );
-        }
-        return DevocionalBotaoSecundario.icon(
-          onPressed: nuvem.entrando
-              ? null
-              : () => entrarNaConta(context, nuvem),
-          icon: nuvem.entrando
-              ? const SizedBox(
-                  width: DevocionalEspacamento.sp18,
-                  height: DevocionalEspacamento.sp18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    semanticsLabel: 'Carregando',
-                  ),
-                )
-              : const FaIcon(FontAwesomeIcons.google, size: 16),
-          label: const Text('Entrar'),
-        );
-      },
     );
   }
 }

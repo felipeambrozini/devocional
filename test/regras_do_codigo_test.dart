@@ -2,9 +2,10 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// Trava mecânica das duas regras do projeto que o analyzer não conhece: o
+/// Trava mecânica das regras do projeto que o analyzer não conhece: o
 /// texto do app sem travessão e sem aspas curvas, e a Regra dos Papéis do
-/// DESIGN.md (tela e widget nunca leem `DevocionalCores`).
+/// DESIGN.md (tela e widget nunca leem `DevocionalCores`) e cada widget em
+/// arquivo próprio em `lib/widgets/`, fora das telas e do `main.dart`.
 ///
 /// Varre `lib/` porque é o que vira tela. `test/`, `tools/` e `assets/` ficam
 /// de fora de propósito: comentário e dado bruto não são texto que a pessoa
@@ -106,6 +107,38 @@ void main() {
             'Tela e widget leem tudo de Theme.of(context).colorScheme; só '
             'lib/estilo/tema.dart importa a paleta (DESIGN.md, "Regra dos '
             'Papéis"). Achados:\n${achados.join('\n')}',
+      );
+    });
+  });
+
+  group('widget em arquivo próprio', () {
+    test('tela e main.dart só declaram o próprio widget', () {
+      final declaracao = RegExp(
+        r'^class (\w+) extends (StatelessWidget|StatefulWidget)\b',
+        multiLine: true,
+      );
+      final achados = <String>[];
+      for (final arquivo in fontes) {
+        final ehTela = arquivo.caminho.startsWith('lib/telas/');
+        if (!ehTela && arquivo.caminho != 'lib/main.dart') continue;
+        final widgets = [
+          for (final m in declaracao.allMatches(arquivo.fonte)) m.group(1)!,
+        ];
+        final permitidos = widgets.where(
+          (nome) => ehTela ? nome.startsWith('Tela') : nome == 'AppDevocional',
+        );
+        if (widgets.length > 1 || permitidos.length != widgets.length) {
+          achados.add('${arquivo.caminho}: ${widgets.join(', ')}');
+        }
+      }
+
+      expect(
+        achados,
+        isEmpty,
+        reason:
+            'Cada tela declara só o próprio widget (Tela...) e main.dart só '
+            'AppDevocional; o resto mora em lib/widgets/, um por arquivo. '
+            'Achados:\n${achados.join('\n')}',
       );
     });
   });

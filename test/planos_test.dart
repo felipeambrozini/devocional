@@ -787,7 +787,7 @@ void main() {
           dias: 30,
         );
 
-        // Espelha Moldura._irParaAba de main.dart: a aba Plano (índice 0
+        // Espelha DevocionalMoldura._irParaAba (lib/widgets/moldura.dart): a aba Plano (índice 0
         // aqui) sempre reseta para a lista ao voltar de outra aba.
         final router = GoRouter(
           initialLocation: '/plano',

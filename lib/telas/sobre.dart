@@ -50,7 +50,7 @@ class _TelaSobreState extends State<TelaSobre> {
           actions: [
             DevocionalBotaoDeAjustes(estado: EscopoDoEstado.de(context)),
             // A demonstração vive dentro de "A voz de Spurgeon", uma seção
-            // expansível aberta por padrão (ver _SecaoExpansivel): quem rola
+            // expansível aberta por padrão (ver DevocionalSecaoExpansivel): quem rola
             // para longe dela, ou a fecha, não vê mais a pílula, e o trecho
             // não pode tocar sem o botão de parar à vista. O indicador também
             // cobre o trecho pausado (chamada).
@@ -196,7 +196,7 @@ class _TelaSobreState extends State<TelaSobre> {
               // vez e raramente revisitado — colapsadas por padrão e depois
               // de Ajuda/Conta e privacidade, que são a razão mais comum de
               // abrir esta tela.
-              _SecaoExpansivel(
+              DevocionalSecaoExpansivel(
                 icone: FontAwesomeIcons.bookBible,
                 titulo: 'Fontes do texto',
                 children: [
@@ -227,7 +227,7 @@ class _TelaSobreState extends State<TelaSobre> {
                   const SizedBox(height: DevocionalEspacamento.sp16),
                 ],
               ),
-              _SecaoExpansivel(
+              DevocionalSecaoExpansivel(
                 icone: FontAwesomeIcons.volumeHigh,
                 titulo: 'A voz de Spurgeon',
                 abertaPorPadrao: true,
@@ -285,7 +285,7 @@ class _TelaSobreState extends State<TelaSobre> {
                   const SizedBox(height: DevocionalEspacamento.sp16),
                 ],
               ),
-              _SecaoExpansivel(
+              DevocionalSecaoExpansivel(
                 icone: FontAwesomeIcons.user,
                 titulo: 'Sobre mim',
                 children: [
@@ -327,7 +327,7 @@ class _TelaSobreState extends State<TelaSobre> {
                   const SizedBox(height: DevocionalEspacamento.sp16),
                 ],
               ),
-              _SecaoExpansivel(
+              DevocionalSecaoExpansivel(
                 icone: FontAwesomeIcons.shareNodes,
                 titulo: 'Onde me encontrar',
                 children: [
@@ -346,53 +346,6 @@ class _TelaSobreState extends State<TelaSobre> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Envolve uma seção de referência (lida uma vez, raramente revisitada) num
-/// `ExpansionTile` colapsado por padrão — mesma técnica de
-/// `_SecaoDeLembretesExpansivel` em `folha_de_ajustes.dart`, para não exigir
-/// rolar por texto estático até chegar em Ajuda e Conta e privacidade.
-class _SecaoExpansivel extends StatelessWidget {
-  const _SecaoExpansivel({
-    required this.icone,
-    required this.titulo,
-    required this.children,
-    this.abertaPorPadrao = false,
-  });
-
-  final FaIconData icone;
-  final String titulo;
-  final List<Widget> children;
-
-  /// Só a seção com um CTA interativo (a demonstração de voz) deveria abrir
-  /// já expandida — as outras três são texto de crédito, sem ação, e ficam
-  /// fechadas como o resto do padrão.
-  final bool abertaPorPadrao;
-
-  @override
-  Widget build(BuildContext context) {
-    final tema = Theme.of(context).textTheme;
-    final cor = Theme.of(context).colorScheme;
-    return Theme(
-      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-      child: ExpansionTile(
-        tilePadding: EdgeInsets.zero,
-        childrenPadding: EdgeInsets.zero,
-        // Mesmo tamanho dos ícones de Ajuda/Conta e privacidade nesta tela
-        // (FaIcon sem `size:` explícito) — um `size: 18` menor aqui destoava
-        // do resto da tela.
-        leading: FaIcon(icone, color: cor.primary),
-        initiallyExpanded: abertaPorPadrao,
-        // Cabeçalho semântico: sem isto, quem navega por leitor de tela só
-        // consegue rolar linearmente, sem pular de seção em seção.
-        title: Semantics(
-          header: true,
-          child: Text(titulo, style: tema.headlineSmall),
-        ),
-        children: children,
       ),
     );
   }

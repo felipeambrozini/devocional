@@ -1,15 +1,11 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../controladores/busca_controlador.dart';
 import '../dados/conteudo.dart';
-import '../dados/modelos.dart';
 import '../estilo/espacamento.dart';
 import '../estilo/tema.dart';
-import '../funcoes/datas.dart';
 import '../widgets/widgets.dart';
-import 'devocional.dart';
 
 /// Busca no texto da Bíblia e nos devocionais de Spurgeon, em duas abas.
 ///
@@ -92,7 +88,7 @@ class _TelaBuscaState extends State<TelaBusca> {
                           erro: _controller.erro,
                           aoTentarDeNovo: () => _controller.buscar(context),
                         ),
-                        _AbaDevocionais(
+                        DevocionalAbaDevocionais(
                           termoBuscado: _controller.termoBuscado,
                           achados: _controller.achadosDevocionais,
                           buscando: _controller.buscandoDevocionais,
@@ -110,239 +106,6 @@ class _TelaBuscaState extends State<TelaBusca> {
       },
     );
   }
-}
-
-class _AbaDevocionais extends StatefulWidget {
-  const _AbaDevocionais({
-    required this.termoBuscado,
-    required this.achados,
-    required this.buscando,
-    required this.erro,
-    required this.aoTentarDeNovo,
-  });
-
-  final String termoBuscado;
-  final List<AchadoDevocional> achados;
-  final bool buscando;
-  final bool erro;
-  final VoidCallback aoTentarDeNovo;
-
-  @override
-  State<_AbaDevocionais> createState() => _AbaDevocionaisState();
-}
-
-class _AbaDevocionaisState extends State<_AbaDevocionais> {
-  /// A data digitada e a leitura escolhida são campos de estado, e não a
-  /// leitura de um controlador dentro de um getter: com o controlador, cada
-  /// tecla-digitada era um `setState` sem nome, e o filtro inteiro rodava a
-  /// cada caractere sem nada mudar de fato.
-  String _data = '';
-  String? _filtroDeLeitura;
-
-  List<AchadoDevocional> get _filtrados {
-    return widget.achados.where((a) {
-      if (_filtroDeLeitura != null && a.leitura != _filtroDeLeitura) {
-        return false;
-      }
-      if (_data.isNotEmpty && !a.data.contains(_data)) return false;
-      return true;
-    }).toList();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (widget.erro) {
-      return DevocionalErroDeBusca(aoTentarDeNovo: widget.aoTentarDeNovo);
-    }
-    if (widget.termoBuscado.isEmpty) {
-      return const DevocionalAvisoVazio(
-        icone: FontAwesomeIcons.bookOpen,
-        titulo: 'Busque nos devocionais',
-        detalhe: 'Manhã e Noite e Promessas de Deus, na voz de Spurgeon.',
-      );
-    }
-    final lista = _filtrados;
-    if (lista.isEmpty && !widget.buscando) {
-      return DevocionalAvisoVazio(
-        icone: FontAwesomeIcons.magnifyingGlassMinus,
-        titulo: 'Nada encontrado',
-        detalhe: 'Nenhum devocional com "${widget.termoBuscado}".',
-      );
-    }
-
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            DevocionalEspacamento.sp16,
-            0,
-            DevocionalEspacamento.sp16,
-            DevocionalEspacamento.sp8,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Semantics(
-                  liveRegion: true,
-                  child: Text(
-                    '${lista.length} ${lista.length == 1 ? 'resultado' : 'resultados'}',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                ),
-              ),
-              const SizedBox(width: DevocionalEspacamento.sp10),
-              if (widget.buscando)
-                const SizedBox(
-                  width: 13,
-                  height: 13,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    semanticsLabel: 'Carregando',
-                  ),
-                ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            DevocionalEspacamento.sp16,
-            0,
-            DevocionalEspacamento.sp16,
-            DevocionalEspacamento.sp8,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  onChanged: (valor) {
-                    final data = valor.trim();
-                    if (data == _data) return;
-                    setState(() => _data = data);
-                  },
-                  keyboardType: TextInputType.datetime,
-                  decoration: const InputDecoration(
-                    labelText: 'Data (DD-MM)',
-                    prefixIcon: FaIcon(FontAwesomeIcons.calendarDays, size: 16),
-                  ),
-                ),
-              ),
-              const SizedBox(width: DevocionalEspacamento.sp8),
-              Semantics(
-                label: 'Filtrar por leitura',
-                child: DropdownButton<String?>(
-                  value: _filtroDeLeitura,
-                  hint: const Text('Leitura'),
-                  onChanged: (v) => setState(() => _filtroDeLeitura = v),
-                  items: [
-                    const DropdownMenuItem<String?>(
-                      value: null,
-                      child: Text('Todas'),
-                    ),
-                    const DropdownMenuItem(
-                      value: 'manha',
-                      child: Text('Manhã'),
-                    ),
-                    const DropdownMenuItem(
-                      value: 'noite',
-                      child: Text('Noite'),
-                    ),
-                    const DropdownMenuItem(
-                      value: 'promessas',
-                      child: Text('Promessas'),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(
-              DevocionalEspacamento.sp16,
-              0,
-              DevocionalEspacamento.sp16,
-              DevocionalEspacamento.sp32,
-            ),
-            itemCount: lista.length,
-            separatorBuilder: (_, _) =>
-                const Divider(height: DevocionalEspacamento.sp18),
-            itemBuilder: (context, i) => _ItemDeAchadoDevocional(
-              achado: lista[i],
-              termo: widget.termoBuscado,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ItemDeAchadoDevocional extends StatelessWidget {
-  const _ItemDeAchadoDevocional({required this.achado, required this.termo});
-
-  final AchadoDevocional achado;
-  final String termo;
-
-  @override
-  Widget build(BuildContext context) {
-    final cor = Theme.of(context).colorScheme;
-    final tema = Theme.of(context).textTheme;
-    final leitura = Leitura.values.byName(achado.leitura);
-    final data = _dataDoDevocional(achado.data);
-
-    return InkWell(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) =>
-              TelaDevocional(dataInicial: data, leituraInicial: leitura),
-        ),
-      ),
-      // 12 como no destaque de versículo: 8 está fora da escala do DESIGN.md.
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: DevocionalEspacamento.sp4,
-          horizontal: DevocionalEspacamento.sp4,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '${leitura.rotulo} · ${dataLonga(data)}',
-              style: tema.titleSmall?.copyWith(color: cor.secondary),
-            ),
-            if (achado.titulo.isNotEmpty) ...[
-              const SizedBox(height: DevocionalEspacamento.sp2),
-              Text(
-                achado.titulo,
-                style: tema.bodySmall?.copyWith(
-                  fontStyle: FontStyle.italic,
-                  color: cor.onSurfaceVariant,
-                ),
-              ),
-            ],
-            const SizedBox(height: DevocionalEspacamento.sp5),
-            Text.rich(
-              destacar(achado.texto, termo, tema, cor),
-              maxLines: 4,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Uma data qualquer, só para navegar até o dia certo do devocional: os
-/// assets são anuais e a chave 'DD-MM' não guarda ano. 2024 é bissexto de
-/// propósito — sem isso, '29-02' normalizaria sozinho para 1º de março (ver
-/// `test/bissexto_test.dart`) e a busca levaria para o dia errado, calada.
-DateTime _dataDoDevocional(String chave) {
-  final partes = chave.split('-');
-  return DateTime(2024, int.parse(partes[1]), int.parse(partes[0]));
 }
 
 /// Realça as ocorrências do termo, comparando sem acento para que buscar

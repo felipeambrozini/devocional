@@ -165,7 +165,7 @@ plano compartilhado.
   a seção Lembretes diários abaixo. O lembrete respeita os interruptores do
   painel: leitura desligada não dispara nem abre.
 - `go_router` para as rotas por aba, com `StatefulShellRoute.indexedStack` (a
-  `Moldura` continua preservando a rolagem e o capítulo aberto de cada aba,
+  `DevocionalMoldura` continua preservando a rolagem e o capítulo aberto de cada aba,
   como o `IndexedStack` antigo fazia).
 - `firebase_core` + `firebase_auth` + `cloud_firestore` para a conta na
   nuvem (sempre disponível, sem gating por plataforma).
@@ -397,7 +397,7 @@ motivo novo.
 - **Os chevrons de capítulo só existem onde não há gesto de toque**: no celular
   deslizar já passa a página; na web a barra fica. É a
   única ramificação por plataforma no app — a web entra pelo pior caso (desktop
-  sem toque). `_semGestoDeToque` em `lib/telas/biblia.dart`.
+  sem toque). `BibliaControlador.semGestoDeToque`.
 - **O alternador das três leituras usa chips, não `SegmentedButton`** — o
   `SegmentedButton` iguala a largura dos segmentos à do maior, e três vezes
   "Promessas de Deus" nunca cabe num celular.
@@ -438,7 +438,7 @@ motivo novo.
   versículo (na Bíblia) ou a citação (no Devocional) sai como PNG na identidade
   do app, com o texto de sempre junto (e o link que reabre a leitura); na web,
   cai para texto puro, que é o que o share da web suporta. Copiar continua só
-  texto (`_textoDoVersiculo` em `lib/telas/biblia.dart`). Em teste,
+  texto (`_textoDoVersiculo` em `lib/widgets/linha_de_versiculo.dart`). Em teste,
   `Clipboard.getData` trava para sempre;
   a forma de verificar é um `setMockMethodCallHandler` capturando o argumento
   de `Clipboard.setData`.
@@ -476,7 +476,7 @@ motivo novo.
   partir de dentro da aba Plano. O botão físico de voltar do Android já
   funcionava com isso (`GoRouterDelegate.popRoute` prioriza o Navigator da
   aba ativa antes do raiz), mas `goBranch(initialLocation: true)` — o reset
-  que `Moldura._irParaAba` (`main.dart`) usa ao voltar para uma aba — só
+  que `DevocionalMoldura._irParaAba` (`lib/widgets/moldura.dart`) usa ao voltar para uma aba — só
   descarta rotas que o próprio go_router controla; uma rota empurrada por
   fora sobrevive ao reset porque ele nem sabe que ela existe. Por isso trocar
   para Bíblia e voltar para Planos continuava mostrando o plano aberto antes,
@@ -572,7 +572,7 @@ motivo novo.
   versículo vive na folha de ações (Favoritar, Copiar, Compartilhar, Anotar),
   aberta pelo toque na linha, e na barra da seleção.
 - **Selecionar vários versículos do capítulo** (`BibliaControlador.selecionados`,
-  `_BarraDaSelecao` em `lib/telas/biblia.dart`): toque longo num versículo
+  `DevocionalBarraDaSelecao` em `lib/widgets/barra_da_selecao.dart`): toque longo num versículo
   entra no modo de seleção, e nele o toque simples marca ou desmarca. A barra
   de baixo mostra a contagem e oferece Copiar e Compartilhar (cartão-imagem,
   como o de um versículo). A referência junta os vizinhos em faixa

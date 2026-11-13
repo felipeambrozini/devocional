@@ -457,7 +457,7 @@ const enderecoDoSite = 'https://www.felipeambrozini.com.br/devocional/';
 }
 
 /// Link direto para um versículo, o inverso de [alvoDoLink]. Vai junto do
-/// texto de Copiar e Compartilhar em `biblia.dart`.
+/// texto de Copiar e Compartilhar ([textoCitado]).
 String linkDoVersiculo(String slug, int capitulo, int versiculo) =>
     '$enderecoDoSite?ler=$slug.$capitulo.$versiculo';
 
@@ -482,3 +482,11 @@ String referenciaDeVersiculos(
   }
   return '$referenciaDoCapitulo:${trechos.join(', ')}';
 }
+
+/// O texto de Copiar e Compartilhar: a citação entre aspas, a referência e o
+/// link que reabre o versículo, um por linha.
+String textoCitado({
+  required String texto,
+  required String referencia,
+  required String link,
+}) => '"$texto"\n$referencia\n$link';

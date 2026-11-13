@@ -28,7 +28,6 @@ import 'dados/url_da_pagina.dart';
 import 'dados/voz.dart';
 import 'estilo/tema.dart';
 import 'funcoes/lembretes_acoes.dart';
-import 'funcoes/movimento.dart';
 import 'telas/admin.dart';
 import 'telas/biblia.dart';
 import 'telas/biblioteca.dart';
@@ -255,64 +254,43 @@ void _abrirLeituraDoLembreteDoLink() {
   removerParametroDaUrl('lembrete');
 }
 
-class _Destino {
-  const _Destino(
-    this.rotulo,
-    this.caminho,
-    this.icone,
-    this.iconeAtivo,
-    this.tela,
-  );
-
-  final String rotulo;
-
-  /// Sem acento de propósito, ainda que o rótulo tenha ("Bíblia"): é o que
-  /// vira caminho na URL, e o resto do app (canon.dart, chaves de Leitura)
-  /// também evita acento em identificador para não depender de como cada
-  /// camada decide escapar.
-  final String caminho;
-  final FaIconData icone;
-  final FaIconData iconeAtivo;
-  final Widget tela;
-}
-
-const _destinos = <_Destino>[
-  _Destino(
+const _destinos = <DestinoDaMoldura>[
+  DestinoDaMoldura(
     'Hoje',
     'hoje',
     FontAwesomeIcons.sun,
     FontAwesomeIcons.solidSun,
     TelaHoje(),
   ),
-  _Destino(
+  DestinoDaMoldura(
     'Bíblia',
     'biblia',
     FontAwesomeIcons.bookBible,
     FontAwesomeIcons.bookBible,
     TelaBiblia(),
   ),
-  _Destino(
+  DestinoDaMoldura(
     'Devocional',
     'devocional',
     FontAwesomeIcons.featherPointed,
     FontAwesomeIcons.featherPointed,
     TelaDevocional(),
   ),
-  _Destino(
+  DestinoDaMoldura(
     'Biblioteca',
     'biblioteca',
     FontAwesomeIcons.bookBookmark,
     FontAwesomeIcons.bookBookmark,
     TelaBiblioteca(),
   ),
-  _Destino(
+  DestinoDaMoldura(
     'Plano',
     'plano',
     FontAwesomeIcons.calendarDays,
     FontAwesomeIcons.solidCalendarDays,
     TelaPlano(),
   ),
-  _Destino(
+  DestinoDaMoldura(
     'Conversas',
     'conversas',
     FontAwesomeIcons.comments,
@@ -321,60 +299,10 @@ const _destinos = <_Destino>[
   ),
 ];
 
-/// Encolhe o rótulo da barra de baixo só o bastante para o mais longo caber
-/// numa linha. Com seis destinos cada um tem 65px a 390px, e "Devocional" a
-/// 11px já mede 64px antes da escala de fonte do sistema: o Flutter quebrava a
-/// palavra em "Devociona/l". Nulo mantém o estilo do tema quando já cabe.
-WidgetStateProperty<TextStyle?>? _rotuloQueCabeNaBarra(BuildContext context) {
-  final doTema = NavigationBarTheme.of(context).labelTextStyle?.resolve({});
-  final tamanho = doTema?.fontSize;
-  if (doTema == null || tamanho == null) return null;
-  // O rótulo herda o DefaultTextStyle do Material (bodyMedium), que traz o
-  // letterSpacing da tipografia do Flutter: medir sem ele erra por ~2,5px.
-  final estilo =
-      Theme.of(context).textTheme.bodyMedium?.merge(doTema) ?? doTema;
-  // Mesmo teto de escala que o NavigationBar aplica ao rótulo.
-  final escala = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.3);
-  // A barra fica dentro de uma SafeArea: o recorte lateral da tela come espaço.
-  final larguraPorDestino =
-      (MediaQuery.sizeOf(context).width -
-          MediaQuery.paddingOf(context).horizontal) /
-      _destinos.length;
-  double maisLongoCom(double tamanhoDaFonte) {
-    var maisLongo = 0.0;
-    for (final d in _destinos) {
-      final pintor = TextPainter(
-        text: TextSpan(
-          text: d.rotulo,
-          style: estilo.copyWith(fontSize: tamanhoDaFonte),
-        ),
-        textScaler: escala,
-        textDirection: TextDirection.ltr,
-        maxLines: 1,
-      )..layout();
-      if (pintor.width > maisLongo) maisLongo = pintor.width;
-      pintor.dispose();
-    }
-    return maisLongo;
-  }
-
-  final maisLongo = maisLongoCom(tamanho);
-  if (maisLongo <= larguraPorDestino) return null;
-  // A largura não cai na proporção do corpo (o letterSpacing não encolhe
-  // junto): a proporção é só o ponto de partida, e a medida desce de 0,25 em
-  // 0,25 até caber. Assim fica o maior tamanho possível, e quem usa a fonte
-  // do sistema maior não perde mais do que o espaço obriga.
-  var ajustado = tamanho * larguraPorDestino / maisLongo;
-  while (ajustado > 6 && maisLongoCom(ajustado) > larguraPorDestino) {
-    ajustado -= 0.25;
-  }
-  return WidgetStatePropertyAll(estilo.copyWith(fontSize: ajustado));
-}
-
 /// Um nó de foco por aba, criados uma vez para o app inteiro, não por
-/// instância da Moldura: as rotas de cada aba são estáticas em [_router], e
+/// instância da DevocionalMoldura: as rotas de cada aba são estáticas em [_router], e
 /// tanto o `builder` da rota quanto o toque na barra de navegação (em
-/// `Moldura._irParaAba`) precisam do mesmo nó.
+/// `DevocionalMoldura._irParaAba`) precisam do mesmo nó.
 ///
 /// Existem porque o shell mantém as abas vivas ao mesmo tempo (para
 /// preservar rolagem e capítulo aberto ao trocar de aba) escondendo as
@@ -393,7 +321,7 @@ final _escoposDasAbas = [
 /// abas.
 ///
 /// `StatefulShellRoute.indexedStack`, não rotas soltas: rotas soltas
-/// trocariam de aba reconstruindo a Moldura do zero, perdendo a rolagem e o
+/// trocariam de aba reconstruindo a DevocionalMoldura do zero, perdendo a rolagem e o
 /// capítulo aberto que o antigo `IndexedStack` preservava. O shell preserva
 /// isso da mesma forma (por baixo, também é um `Offstage`+`IndexedStack`),
 /// só que agora cada aba também tem URL própria.
@@ -487,8 +415,11 @@ final _router = GoRouter(
     ),
     GoRoute(path: '/termos', builder: (context, state) => const TelaTermos()),
     StatefulShellRoute.indexedStack(
-      builder: (context, state, navigationShell) =>
-          Moldura(navigationShell: navigationShell),
+      builder: (context, state, navigationShell) => DevocionalMoldura(
+        navigationShell: navigationShell,
+        destinos: _destinos,
+        escoposDasAbas: _escoposDasAbas,
+      ),
       branches: [
         for (final (i, d) in _destinos.indexed)
           // O Devocional não é uma rota só: cada leitura tem a própria
@@ -568,7 +499,7 @@ final _router = GoRouter(
             // Novo plano e o detalhe de um plano viram rotas próprias (não um
             // Navigator.push avulso): é o que faz `goBranch(initialLocation:
             // true)` descartar o plano aberto ao voltar para esta aba (ver
-            // `Moldura._irParaAba`) — uma rota empurrada por fora do
+            // `DevocionalMoldura._irParaAba`) — uma rota empurrada por fora do
             // go_router sobrevive ao reset, porque o go_router não sabe que
             // ela existe.
             StatefulShellBranch(
@@ -781,7 +712,7 @@ class _AppDevocionalState extends State<AppDevocional>
         routerConfig: _router,
         title: 'Devocional',
         debugShowCheckedModeBanner: false,
-        builder: (context, child) => _EsconderMovimento(child: child!),
+        builder: (context, child) => DevocionalEsconderMovimento(child: child!),
         // Os dois temas vão sempre montados, e o `themeMode` escolhe. Assim
         // "Automático" funciona de verdade: o sistema pode virar o modo com o
         // app aberto, e o MaterialApp troca sozinho, sem passar pelo Estado.
@@ -804,157 +735,6 @@ class _AppDevocionalState extends State<AppDevocional>
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: [const Locale('pt', 'BR')],
-      ),
-    );
-  }
-}
-
-/// Web: `prefers-reduced-motion: reduce` não chegava ao `MediaQuery`, e as
-/// transições de rota e rolagens que leem `disableAnimationsOf` continuavam
-/// animadas. Aqui o MediaQuery é sobrescrito uma vez, na raiz, e toda a
-/// árvore passa a respeitar a preferência (Android/iOS já a anunciam sozinhos).
-class _EsconderMovimento extends StatelessWidget {
-  const _EsconderMovimento({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    if (!prefereReduzirMovimento) return child;
-    return MediaQuery(
-      data: MediaQuery.of(context).copyWith(disableAnimations: true),
-      child: child,
-    );
-  }
-}
-
-/// Casca de navegação. Barra inferior no celular, trilho lateral em tela larga.
-/// O corte em 720 px é onde seis rótulos deixam de caber com folga na horizontal.
-///
-/// Sem estado próprio: quem sabe a aba atual é o [navigationShell], do
-/// GoRouter — duplicar isso num `_indice` local só criaria duas fontes de
-/// verdade para a mesma coisa.
-class Moldura extends StatelessWidget {
-  const Moldura({super.key, required this.navigationShell});
-
-  final StatefulNavigationShell navigationShell;
-
-  void _irParaAba(int i) {
-    // A leitura para ao sair da Bíblia: o shell mantém as abas vivas em
-    // Offstage, e o botão de parar sai da tela junto com o leitor. A mesma
-    // regra do _ObservadorDaVoz para as rotas empurradas por cima.
-    //
-    // Pausada de fora (chamada, perda de foco de áudio), a sessão sobrevive
-    // à troca de aba: nada está tocando, a regra do botão à vista não se
-    // aplica, e quem volta encontra o "Pausado. Toque para retomar." no
-    // lugar exato em que a interrupção o deixou.
-    if (i != navigationShell.currentIndex && !Voz.instancia.pausado) {
-      Voz.instancia.parar();
-    }
-    // Folhas e diálogos abertos moram no Navigator da aba (não no raiz), então
-    // sobreviveriam à troca e reapareceriam ao voltar para ela.
-    navigationShell
-        .route
-        .branches[navigationShell.currentIndex]
-        .navigatorKey
-        .currentState
-        ?.popUntil((rota) => rota is! PopupRoute);
-    navigationShell.goBranch(
-      i,
-      // A aba Plano sempre reabre em Meus Planos: diferente da Bíblia (que
-      // preserva capítulo e rolagem de propósito), não faz sentido continuar
-      // vendo um plano específico depois de ir para outra aba e voltar —
-      // ver a lixeira e o resto da navegação de planos em telas/plano.dart.
-      initialLocation:
-          i == navigationShell.currentIndex || _destinos[i].caminho == 'plano',
-    );
-    // Depois do frame: antes dele a aba de destino ainda não está na frente.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final escopo = _escoposDasAbas[i];
-      // Pedir foco ao escopo deixava o foco no nó do próprio escopo, que fica
-      // acima da tela: a tecla subia por fora dos atalhos dela e nada acontecia.
-      // O foco precisa cair num nó de dentro, e invisível: no primeiro botão
-      // da tela ele ganhava o realce de foco sem ninguém ter tocado nele. Os
-      // descendentes vêm dos mais fundos para os de fora, então a âncora que
-      // uma tela põe dentro dos próprios atalhos (Bíblia, leitor de livro)
-      // ganha da que a rota põe em volta de toda tela.
-      //
-      // A busca é no Navigator da aba, não só no escopo da rota raiz: um
-      // capítulo da Biblioteca ou um plano aberto são rotas próprias por cima
-      // dela, e o foco caía no sumário escondido por baixo (as setas do
-      // leitor paravam de responder). Só vale a âncora da rota à vista.
-      final navegador =
-          navigationShell.route.branches[i].navigatorKey.currentState;
-      final ancora = navegador?.focusNode.descendants
-          .whereType<NoDeAncoraDeFoco>()
-          .where((no) {
-            final contexto = no.context;
-            return contexto != null &&
-                (ModalRoute.of(contexto)?.isCurrent ?? false);
-          })
-          .firstOrNull;
-      (ancora ?? escopo).requestFocus();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) => _conteudo(context);
-
-  Widget _conteudo(BuildContext context) {
-    final largo = telaLarga(context);
-
-    // A DevocionalLarguraDeLeitura não fica aqui. Envolvendo o shell inteiro, ela prendia
-    // também a AppBar e a régua de meses do Plano numa faixa de 720 px no meio da
-    // janela, e deixava de fora as telas abertas por push (como "Sobre" e o
-    // "Continuar leitura"), que nascem no Navigator raiz: o mesmo leitor ficava
-    // com 720 px pela aba e com a janela inteira quando aberto por fora. Agora
-    // cada tela limita o próprio corpo, e a moldura ocupa a janela como um app
-    // da web deve.
-    if (!largo) {
-      // Em tela estreita as conversas moram na aba Conversas, e o texto de
-      // leitura não disputa viewport com ninguém.
-      return Scaffold(
-        body: navigationShell,
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: navigationShell.currentIndex.clamp(
-            0,
-            _destinos.length - 1,
-          ),
-          onDestinationSelected: _irParaAba,
-          labelTextStyle: _rotuloQueCabeNaBarra(context),
-          destinations: [
-            for (final d in _destinos)
-              NavigationDestination(
-                icon: FaIcon(d.icone),
-                selectedIcon: FaIcon(d.iconeAtivo),
-                label: d.rotulo,
-              ),
-          ],
-        ),
-      );
-    }
-
-    // Em telas largas a aba Conversas continua no trilho: uma entrada só
-    // para o chat, sem atalho flutuante duplicado.
-    return Scaffold(
-      body: Row(
-        children: [
-          NavigationRail(
-            selectedIndex: navigationShell.currentIndex,
-            onDestinationSelected: _irParaAba,
-            labelType: NavigationRailLabelType.all,
-            destinations: [
-              for (final d in _destinos)
-                NavigationRailDestination(
-                  icon: FaIcon(d.icone),
-                  selectedIcon: FaIcon(d.iconeAtivo),
-                  label: Text(d.rotulo),
-                ),
-            ],
-          ),
-          const VerticalDivider(width: 1),
-          Expanded(child: navigationShell),
-        ],
       ),
     );
   }

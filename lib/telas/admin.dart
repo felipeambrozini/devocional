@@ -160,7 +160,7 @@ class _TelaAdminState extends State<TelaAdmin> {
             ),
           ),
         if (config.carregado)
-          _Interruptor(
+          DevocionalInterruptor(
             titulo: 'Conversas (chat)',
             subtitulo: 'Interruptor geral: desligado, ninguém conversa.',
             valor: config.conversasAtivas,
@@ -168,7 +168,7 @@ class _TelaAdminState extends State<TelaAdmin> {
             aoMudar: (novo) => _alternar('conversasAtivas', 'Conversas', novo),
           ),
         if (config.carregado)
-          _Interruptor(
+          DevocionalInterruptor(
             titulo: 'Planos personalizados',
             subtitulo: 'A aba Meus planos e a criação de planos próprios.',
             valor: config.planoPersonalizadoAtivo,
@@ -180,7 +180,7 @@ class _TelaAdminState extends State<TelaAdmin> {
             ),
           ),
         if (config.carregado)
-          _Interruptor(
+          DevocionalInterruptor(
             titulo: 'Cronograma anual',
             subtitulo: 'A aba Cronograma dentro do Plano.',
             valor: config.cronogramaAtivo,
@@ -188,7 +188,7 @@ class _TelaAdminState extends State<TelaAdmin> {
             aoMudar: (novo) => _alternar('cronogramaAtivo', 'Cronograma', novo),
           ),
         if (config.carregado)
-          _Interruptor(
+          DevocionalInterruptor(
             titulo: 'Devocional da manhã',
             subtitulo: 'A leitura Manhã no Devocional e na Hoje.',
             valor: config.manhaAtivo,
@@ -196,7 +196,7 @@ class _TelaAdminState extends State<TelaAdmin> {
             aoMudar: (novo) => _alternar('manhaAtivo', 'Manhã', novo),
           ),
         if (config.carregado)
-          _Interruptor(
+          DevocionalInterruptor(
             titulo: 'Devocional da noite',
             subtitulo: 'A leitura Noite no Devocional e na Hoje.',
             valor: config.noiteAtivo,
@@ -204,7 +204,7 @@ class _TelaAdminState extends State<TelaAdmin> {
             aoMudar: (novo) => _alternar('noiteAtivo', 'Noite', novo),
           ),
         if (config.carregado)
-          _Interruptor(
+          DevocionalInterruptor(
             titulo: 'Promessas de Deus',
             subtitulo: 'A leitura Promessas no Devocional e na Hoje.',
             valor: config.promessasAtivo,
@@ -212,7 +212,7 @@ class _TelaAdminState extends State<TelaAdmin> {
             aoMudar: (novo) => _alternar('promessasAtivo', 'Promessas', novo),
           ),
         if (config.carregado)
-          _Interruptor(
+          DevocionalInterruptor(
             titulo: 'Ouvir textos',
             subtitulo:
                 'O botão Ouvir na Bíblia, no devocional e nas introduções.',
@@ -222,7 +222,7 @@ class _TelaAdminState extends State<TelaAdmin> {
                 _alternar('ouvirTextosAtivo', 'Ouvir textos', novo),
           ),
         if (config.carregado)
-          _Interruptor(
+          DevocionalInterruptor(
             titulo: 'Biblioteca',
             subtitulo: 'Os livros de Spurgeon, na Hoje e no Devocional.',
             valor: config.bibliotecaAtiva,
@@ -230,7 +230,7 @@ class _TelaAdminState extends State<TelaAdmin> {
             aoMudar: (novo) => _alternar('bibliotecaAtiva', 'Biblioteca', novo),
           ),
         if (config.carregado)
-          _Interruptor(
+          DevocionalInterruptor(
             titulo: 'Comentário no capítulo',
             subtitulo:
                 'O comentário de Spurgeon abaixo de cada versículo da Bíblia.',
@@ -272,7 +272,7 @@ class _TelaAdminState extends State<TelaAdmin> {
                 style: tema.bodyMedium,
               );
             }
-            return _SecaoDeEmails(
+            return DevocionalSecaoDeEmails(
               titulo: 'E-mails com conversas',
               legendaVazia: convidados.hasData
                   ? 'Ninguém liberado ainda.'
@@ -288,202 +288,6 @@ class _TelaAdminState extends State<TelaAdmin> {
           },
         ),
       ],
-    );
-  }
-}
-
-/// A allowlist do chat no painel: título, contagem, campo de adicionar e a
-/// lista com remover.
-class _SecaoDeEmails extends StatefulWidget {
-  const _SecaoDeEmails({
-    required this.titulo,
-    required this.legendaVazia,
-    required this.legendaCheia,
-    required this.emails,
-    required this.textoDeRemocao,
-    required this.aoAdicionar,
-    required this.aoRemover,
-    required this.contextoDeErro,
-  });
-
-  final String titulo;
-  final String legendaVazia;
-  final String Function(int total) legendaCheia;
-  final List<String> emails;
-  final String Function(String email) textoDeRemocao;
-  final Future<void> Function(String email) aoAdicionar;
-  final Future<void> Function(String email) aoRemover;
-  final String contextoDeErro;
-
-  @override
-  State<_SecaoDeEmails> createState() => _SecaoDeEmailsState();
-}
-
-class _SecaoDeEmailsState extends State<_SecaoDeEmails> {
-  final _email = TextEditingController();
-  bool _adicionando = false;
-  String? _erroDoEmail;
-
-  @override
-  void dispose() {
-    _email.dispose();
-    super.dispose();
-  }
-
-  Future<void> _adicionar() async {
-    if (_adicionando) return;
-    setState(() {
-      _adicionando = true;
-      _erroDoEmail = null;
-    });
-    try {
-      await widget.aoAdicionar(_email.text);
-      _email.clear();
-      if (mounted) mostrarAviso(context, 'E-mail liberado.');
-    } on FormatException catch (erro) {
-      // Erro de digitação volta para o campo, não só para o aviso: o foco
-      // fica onde se corrige.
-      if (mounted) setState(() => _erroDoEmail = erro.message);
-    } catch (erro, pilha) {
-      Registro.erro(widget.contextoDeErro, erro, pilha);
-      if (mounted) {
-        mostrarErro(context, 'Não foi possível adicionar. Tente de novo.');
-      }
-    } finally {
-      if (mounted) setState(() => _adicionando = false);
-    }
-  }
-
-  Future<void> _remover(String email) async {
-    final pode = await confirmar(
-      context,
-      titulo: 'Remover acesso?',
-      conteudo: widget.textoDeRemocao(email),
-      rotuloDaAcao: 'Remover',
-    );
-    if (!pode || !mounted) return;
-    try {
-      await widget.aoRemover(email);
-      if (mounted) mostrarAviso(context, 'Acesso removido.');
-    } catch (erro, pilha) {
-      Registro.erro(widget.contextoDeErro, erro, pilha);
-      if (mounted) {
-        mostrarErro(context, 'Não foi possível remover. Tente de novo.');
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tema = Theme.of(context).textTheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(widget.titulo, style: tema.headlineSmall),
-        const SizedBox(height: DevocionalEspacamento.sp4),
-        Text(
-          widget.emails.isEmpty
-              ? widget.legendaVazia
-              : widget.legendaCheia(widget.emails.length),
-          style: tema.bodySmall,
-        ),
-        const SizedBox(height: DevocionalEspacamento.sp8),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              // Sem `border:` no InputDecoration de propósito: o
-              // inputDecorationTheme (ver tema.dart) já dá fill, 12px e o fio
-              // do metal com foco primário — o override com OutlineInputBorder
-              // cru apagava tudo isso.
-              child: TextField(
-                controller: _email,
-                keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.done,
-                textCapitalization: TextCapitalization.none,
-                autocorrect: false,
-                enableSuggestions: false,
-                autofocus: true,
-                enabled: !_adicionando,
-                autofillHints: const [AutofillHints.email],
-                decoration: InputDecoration(
-                  labelText: 'E-mail para liberar',
-                  hintText: 'alguem@exemplo.com',
-                  errorText: _erroDoEmail,
-                ),
-                onSubmitted: (_) => _adicionar(),
-              ),
-            ),
-            const SizedBox(width: DevocionalEspacamento.sp8),
-            DevocionalBotaoPrimario(
-              onPressed: _adicionando ? null : _adicionar,
-              child: _adicionando
-                  ? const SizedBox.square(
-                      dimension: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        semanticsLabel: 'Adicionando',
-                      ),
-                    )
-                  : const Text('Adicionar'),
-            ),
-          ],
-        ),
-        const SizedBox(height: DevocionalEspacamento.sp8),
-        for (final email in widget.emails)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: FaIcon(
-              FontAwesomeIcons.circleUser,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            title: Text(email),
-            trailing: IconButton(
-              tooltip: 'Remover acesso de $email',
-              icon: const FaIcon(FontAwesomeIcons.trash),
-              onPressed: () => _remover(email),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-/// Uma linha do painel: título, explicação e o interruptor. Com escrita no
-/// voo ([salvando]), o switch desabilita e o giro ocupa o lugar do ícone à
-/// esquerda — o toque tem resposta na hora, sem parecer morto.
-class _Interruptor extends StatelessWidget {
-  const _Interruptor({
-    required this.titulo,
-    required this.subtitulo,
-    required this.valor,
-    required this.aoMudar,
-    this.salvando = false,
-  });
-
-  final String titulo;
-  final String subtitulo;
-  final bool valor;
-  final ValueChanged<bool> aoMudar;
-  final bool salvando;
-
-  @override
-  Widget build(BuildContext context) {
-    return SwitchListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(titulo),
-      subtitle: Text(subtitulo),
-      value: valor,
-      onChanged: salvando ? null : aoMudar,
-      secondary: salvando
-          ? const SizedBox.square(
-              dimension: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                semanticsLabel: 'Salvando',
-              ),
-            )
-          : null,
     );
   }
 }

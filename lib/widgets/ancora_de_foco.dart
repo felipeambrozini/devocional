@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// O ponto de foco invisível de uma aba: é para ele que a troca de aba manda
-/// o foco do teclado (ver `Moldura._irParaAba` em `main.dart`). Antes o foco
+/// o foco do teclado (ver `DevocionalMoldura._irParaAba` em `lib/widgets/moldura.dart`). Antes o foco
 /// caía no primeiro botão da tela, que ganhava o realce de foco sem ninguém
 /// ter tocado nele (a lupa do Devocional, o título do capítulo na Bíblia).
 ///
