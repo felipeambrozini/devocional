@@ -494,7 +494,12 @@ class LembretesReais implements Lembretes {
           promessas != null &&
           leitura != null &&
           noite != null) {
-        unawaited(_gravar(fid, manha, promessas, leitura, noite));
+        unawaited(
+          _gravar(fid, manha, promessas, leitura, noite).catchError(
+            (Object erro, StackTrace pilha) =>
+                Registro.erro('Lembretes.gravar/novoFid', erro, pilha),
+          ),
+        );
       }
     });
   }
@@ -733,8 +738,8 @@ class LembretesReais implements Lembretes {
       } catch (erro, pilha) {
         Registro.erro('Lembretes.cancelar', erro, pilha);
       }
-      for (final id in [3101, 3201, 3401, 3701]) {
-        unawaited(_locais.cancel(id: id));
+      for (final chave in ['manha', 'promessas', 'leitura', 'noite']) {
+        unawaited(_locais.cancel(id: _idDaExibida(chave)));
       }
     }
     final fid = _ultimoFid ?? await _fidOuNulo();

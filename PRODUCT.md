@@ -58,7 +58,8 @@ vitoriana dele, tratando o leitor por "tu".
 - Consentimento da LGPD antes de subir dados à nuvem: favoritos, anotações,
   progresso e conversas revelam convicção religiosa (dado sensível), então o
   primeiro login no aparelho passa por um diálogo de consentimento, e quem já
-  tinha sessão aberta o recebe ao abrir o app (recusar sai da conta).
+  tinha sessão aberta o recebe ao abrir o app (recusar sai da conta). Sem
+  consentimento neste aparelho nenhuma sincronia começa: nada sobe nem desce.
 - Conversas com IA (Gemini, plano pago por uso; só para maiores de 18 anos,
   como exigem os termos da Gemini): duas personas, Charles Spurgeon e Felipe
   Ambrozini, com histórico salvo por conversa, numa aba própria em todas as

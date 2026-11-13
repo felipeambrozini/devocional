@@ -29,7 +29,11 @@ class Marcacao {
   final int em;
 
   /// Identidade estável usada como chave de armazenamento.
-  String get chave => '$livro/$capitulo/$versiculo';
+  String get chave => chaveDe(livro, capitulo, versiculo);
+
+  /// A mesma [chave], para buscar sem montar uma marcação inteira.
+  static String chaveDe(String livro, int capitulo, int versiculo) =>
+      '$livro/$capitulo/$versiculo';
 
   String get referencia => '${nomeNaReferencia(livro)} $capitulo:$versiculo';
 

@@ -682,6 +682,7 @@ class _AppDevocionalState extends State<AppDevocional>
           rotuloDeRecusar: 'Sair da conta',
           aoConcordar: () {
             unawaited(widget.estado.registrarConsentimentoDaNuvem());
+            Nuvem.instancia.aoConsentir();
             _conferirBoasVindas();
           },
           aoRecusar: () => unawaited(Nuvem.instancia.sair()),

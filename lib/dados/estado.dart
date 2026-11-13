@@ -532,10 +532,10 @@ class Estado extends ChangeNotifier {
       marcacoes.where((m) => m.nota.trim().isNotEmpty).toList();
 
   Marcacao? marcacaoDe(String livro, int capitulo, int versiculo) =>
-      _marcacoes['$livro/$capitulo/$versiculo'];
+      _marcacoes[Marcacao.chaveDe(livro, capitulo, versiculo)];
 
   bool ehFavorito(String livro, int capitulo, int versiculo) =>
-      _marcacoes.containsKey('$livro/$capitulo/$versiculo');
+      _marcacoes.containsKey(Marcacao.chaveDe(livro, capitulo, versiculo));
 
   Future<void> alternarFavorito(
     String livro,
@@ -851,7 +851,8 @@ class Estado extends ChangeNotifier {
       await _prefs.setInt(_kMinutosLembreteLeitura, leitura);
       await _prefs.setInt(_kMinutosLembreteNoite, noite);
       return true;
-    } catch (_) {
+    } catch (erro, pilha) {
+      Registro.erro('Estado.fundirLembretes', erro, pilha);
       return false;
     }
   }
@@ -888,6 +889,10 @@ class Estado extends ChangeNotifier {
 
       var mudou = false;
       final idsLocais = {for (final p in _planos) p.id};
+      // Planos que este aparelho remontou (livros ou dias) depois da cópia
+      // remota: os dias lidos de lá foram marcados sobre a montagem antiga e
+      // não podem voltar para a nova (ver `atualizarPlano`).
+      final remontadosAqui = <String>{};
 
       for (final item in planosRemotos) {
         if (item is! Map<String, dynamic>) continue;
@@ -919,6 +924,11 @@ class Estado extends ChangeNotifier {
               (mesclado.titulo != local.titulo ||
                   !listEquals(mesclado.livros, local.livros) ||
                   mesclado.dias != local.dias);
+          if (!remotoMaisNovo &&
+              (!listEquals(plano.livros, local.livros) ||
+                  plano.dias != local.dias)) {
+            remontadosAqui.add(plano.id);
+          }
           if (conteudoMudou ||
               mesclado.compartilhado != local.compartilhado ||
               mesclado.criadoPor != local.criadoPor ||
@@ -946,7 +956,7 @@ class Estado extends ChangeNotifier {
       for (final entry in lidosRemotos.entries) {
         final id = entry.key;
         final dias = entry.value;
-        if (dias is! List) continue;
+        if (dias is! List || remontadosAqui.contains(id)) continue;
         final remotos = {
           for (final d in dias)
             if (d is int) d,

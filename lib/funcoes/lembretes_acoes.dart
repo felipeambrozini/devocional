@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../dados/config_admin.dart';
 import '../dados/estado.dart';
 import '../dados/lembretes.dart';
 
@@ -64,7 +67,22 @@ Future<void> aplicarHorarioDeLembrete(
 /// abrir (ver `LembretesReais._armarReservas`), mas reagendar ainda confere o
 /// documento do Firestore, que só é regravado se horário ou fuso mudaram (em
 /// quem viaja o fuso ficaria preso ao da primeira gravação).
+///
+/// Arma já com os interruptores padrão (sem rede a config nunca chega, e o
+/// lembrete não pode depender dela) e arma de novo quando a config do painel
+/// chegar: só aí se sabe que leitura o admin desligou, e a reserva dela não
+/// pode ficar armada.
 Future<void> reagendarLembretesSeNecessario(Estado estado) async {
   if (!estado.lembretesAtivos) return;
+  final config = ConfigAdmin.instancia;
+  if (!config.carregado) {
+    void aoCarregar() {
+      if (!config.carregado) return;
+      config.removeListener(aoCarregar);
+      if (estado.lembretesAtivos) unawaited(_agendarLembretes(estado));
+    }
+
+    config.addListener(aoCarregar);
+  }
   await _agendarLembretes(estado);
 }

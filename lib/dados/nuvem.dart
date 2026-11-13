@@ -517,8 +517,21 @@ class Nuvem extends ChangeNotifier {
     _assinatura = FirebaseAuth.instance.authStateChanges().listen((usuario) {
       _pararSincronias();
       notifyListeners();
-      if (usuario != null) _iniciarSincronias(estado, usuario.uid);
+      // Sem consentimento neste aparelho nada sobe nem desce: quem já tinha
+      // sessão aberta antes do pedido existir passa primeiro pelo diálogo
+      // (ver `_pedirConsentimento` em main.dart), que chama [aoConsentir].
+      if (usuario != null && estado.consentimentoDaNuvem) {
+        _iniciarSincronias(estado, usuario.uid);
+      }
     });
+  }
+
+  /// Liga as sincronias da conta já aberta assim que o consentimento chega.
+  void aoConsentir() {
+    final estado = _estado;
+    final usuario = FirebaseAuth.instance.currentUser;
+    if (estado == null || usuario == null || _sincronia != null) return;
+    _iniciarSincronias(estado, usuario.uid);
   }
 
   void _pararSincronias() {

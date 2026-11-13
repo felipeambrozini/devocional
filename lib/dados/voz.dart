@@ -237,10 +237,16 @@ class Voz extends ChangeNotifier {
     if (emCache != null) return emCache;
     try {
       final resp = await http.head(Uri.parse(url)).timeout(_timeoutDaChecagem);
-      final resultado = resp.statusCode == 200
-          ? DisponibilidadeRemota.existe
-          : DisponibilidadeRemota.naoExiste;
-      _cacheDeDisponibilidade[chave] = resultado;
+      final resultado = switch (resp.statusCode) {
+        200 => DisponibilidadeRemota.existe,
+        // O Storage responde 403 para objeto ausente sem permissão de listar.
+        403 || 404 || 410 => DisponibilidadeRemota.naoExiste,
+        // 429, 5xx e afins passam: não podem esconder o botão a sessão toda.
+        _ => DisponibilidadeRemota.semRede,
+      };
+      if (resultado != DisponibilidadeRemota.semRede) {
+        _cacheDeDisponibilidade[chave] = resultado;
+      }
       return resultado;
     } catch (_) {
       return DisponibilidadeRemota.semRede;

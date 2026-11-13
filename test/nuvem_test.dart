@@ -628,6 +628,34 @@ void main() {
     });
 
     test(
+      'dias lidos da cópia velha não voltam ao plano remontado aqui',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final estado = await Estado.abrir();
+        final plano = await estado.criarPlano(
+          titulo: 'Salmos',
+          livros: ['salmos'],
+          dias: 30,
+        );
+        await estado.alternarLidoNoPlano(plano.id, 1);
+        await estado.alternarLidoNoPlano(plano.id, 2);
+        final copiaVelha = estado.serializarPlanos();
+
+        await Future<void>.delayed(const Duration(milliseconds: 2));
+        await estado.atualizarPlano(plano.id, dias: 60);
+        await estado.fundirPlanos(copiaVelha);
+
+        expect(
+          estado.diasLidosDoPlano(plano.id),
+          0,
+          reason:
+              'os dias 1 e 2 foram marcados na montagem de 30 dias; voltar '
+              'com eles marcaria como lido o que nunca foi lido',
+        );
+      },
+    );
+
+    test(
       'conta em dia não vira escrita, mesmo com as chaves em outra ordem',
       () async {
         final estado = await Estado.abrir();
