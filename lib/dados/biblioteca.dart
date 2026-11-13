@@ -36,6 +36,12 @@ const obrasDaBiblioteca = [
     capa: 'assets/imagens/capa_conversas_de_joao_lavrador.webp',
   ),
   ObraDaBiblioteca(
+    slug: 'penas_para_flechas',
+    titulo: 'Penas para Flechas',
+    subtitulo: 'Ilustrações para pregadores e mestres, de A a Z',
+    capa: 'assets/imagens/capa_penas_para_flechas.webp',
+  ),
+  ObraDaBiblioteca(
     slug: 'licoes_aos_meus_alunos',
     titulo: 'Lições aos Meus Alunos',
     subtitulo: 'Para ministros e pregadores',
