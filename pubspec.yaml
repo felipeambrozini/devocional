@@ -37,7 +37,7 @@ dependencies:
   # Alarme local de reserva do lembrete no Android (horário + 5 min): se o
   # push não chegar, o próprio aparelho avisa com o mesmo conteúdo. Fora da
   # web — lá a exibição é do service worker.
-  flutter_local_notifications: ^22.3.3
+  flutter_local_notifications: ^23.0.0
   # Ligações tipadas às APIs do navegador. Usado pelo espelho do tema para
   # notificações (lib/dados/espelho_do_tema.dart): grava no Cache Storage,
   # que o service worker lê para escolher o ícone da notificação. Já era
