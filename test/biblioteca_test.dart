@@ -94,6 +94,7 @@ void main() {
           'conversas_com_lavradores': 19,
           'um_ministerio_completo': 12,
           'sermoes_em_velas': 2,
+          'penas_para_flechas': 24,
         };
         final proibidos = RegExp('[—–‘’“”]');
         for (final obra in obrasDaBiblioteca) {
