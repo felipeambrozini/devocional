@@ -17,6 +17,7 @@ import '../funcoes/lembretes_acoes.dart';
 import '../estilo/espacamento.dart';
 import 'botao.dart';
 import 'filete.dart';
+import 'progresso_fino.dart';
 
 /// Ajustes de leitura: tamanho do texto e claro ou escuro, a dica dos botões
 /// de conversa, lembretes - e Sobre, que deixou de ser aba e voltou
@@ -528,7 +529,7 @@ class _SecaoAudioOffline {
                     return ListTile(
                       title: Text(rotulos[cat]!),
                       subtitle: baixandoEste
-                          ? LinearProgressIndicator(value: off.progresso)
+                          ? DevocionalProgressoFino(valor: off.progresso)
                           : Text(pronto ? 'Baixado' : '$baixados/$total'),
                       trailing: pronto
                           ? IconButton(

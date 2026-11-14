@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../estilo/espacamento.dart';
+import 'progresso_fino.dart';
 
 class DevocionalLinhaDeParticipante extends StatelessWidget {
   const DevocionalLinhaDeParticipante({
@@ -59,12 +60,8 @@ class DevocionalLinhaDeParticipante extends StatelessWidget {
           ],
         ),
         const SizedBox(height: DevocionalEspacamento.sp4),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(3),
-          child: LinearProgressIndicator(
-            value: totalDeDias == 0 ? 0 : lidos.length / totalDeDias,
-            minHeight: 5,
-          ),
+        DevocionalProgressoFino(
+          valor: totalDeDias == 0 ? 0 : lidos.length / totalDeDias,
         ),
       ],
     );

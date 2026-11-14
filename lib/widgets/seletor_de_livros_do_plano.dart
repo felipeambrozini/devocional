@@ -111,7 +111,6 @@ class _DevocionalSeletorDeLivrosDoPlanoState
                     autofocus: !kIsWeb,
                     hintText: 'Buscar livro',
                     onChanged: (_) => setState(() {}),
-                    border: const OutlineInputBorder(),
                   ),
                   const SizedBox(height: DevocionalEspacamento.sp12),
                   _atalhoDeTestamento(_antigos, 'Antigo Testamento'),

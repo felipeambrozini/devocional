@@ -532,6 +532,7 @@ class Nuvem extends ChangeNotifier {
     final usuario = FirebaseAuth.instance.currentUser;
     if (estado == null || usuario == null || _sincronia != null) return;
     _iniciarSincronias(estado, usuario.uid);
+    PlanosNaNuvem.instancia.aoConsentir();
   }
 
   void _pararSincronias() {

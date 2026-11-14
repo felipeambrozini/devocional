@@ -58,7 +58,7 @@ service cloud.firestore {
     //   ouvirTextosAtivo         bool — botão "Ouvir" nos textos
     //   bibliotecaAtiva          bool — a Biblioteca de livros de Spurgeon
     //   comentarioNoCapituloAtivo bool — comentário de Spurgeon sob cada versículo
-    //                            (nasce desligado)
+    //                            (ausente vale ligado)
     //   atualizadoEm             timestamp do servidor, gravado em toda escrita
     //
     // Leitura pública: o gating precisa funcionar sem login (quem não tem

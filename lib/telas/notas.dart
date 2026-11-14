@@ -32,7 +32,6 @@ class _TelaNotasState extends State<TelaNotas> {
     return ListenableBuilder(
       listenable: _controller,
       builder: (context, _) {
-        final cor = Theme.of(context).colorScheme;
         final estado = EscopoDoEstado.de(context);
         final favoritos = _controller.filtrar(estado.marcacoes);
         final notas = _controller.filtrar(estado.comNota);
@@ -67,9 +66,6 @@ class _TelaNotasState extends State<TelaNotas> {
                 ),
               ],
               bottom: TabBar(
-                labelColor: cor.secondary,
-                unselectedLabelColor: cor.onSurfaceVariant,
-                indicatorColor: cor.primary,
                 tabs: [
                   Tab(text: 'Favoritos (${favoritos.length})'),
                   Tab(text: 'Notas (${notas.length})'),

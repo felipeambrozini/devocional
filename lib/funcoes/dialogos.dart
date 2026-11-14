@@ -78,7 +78,6 @@ class _DialogoDeTextoState extends State<DialogoDeTexto> {
             minLines: widget.linhasMin,
             decoration: InputDecoration(
               labelText: widget.rotuloDoCampo,
-              border: const OutlineInputBorder(),
             ),
           ),
         ],

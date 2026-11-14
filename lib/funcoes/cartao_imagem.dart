@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../dados/registro.dart';
+import '../estilo/cores.dart';
 
 /// Cartão-imagem para compartilhar: o versículo em pergaminho escuro com o
 /// filete de metal, na identidade da Estante (couro `#2E1B10`, bege de
@@ -21,29 +22,37 @@ import '../dados/registro.dart';
 
 const _largura = 1080.0;
 const _margem = 96.0;
-const _fundo = ui.Color(0xFF2E1B10);
-const _corTexto = ui.Color(0xFFEDE0C8);
-const _destaque = ui.Color(0xFFE3C567);
-const _apoio = ui.Color(0xFFC9B99A);
+// A imagem é sempre a paleta escura, qualquer que seja o tema do aparelho:
+// por isso lê as cores direto, e não do ColorScheme.
+const _fundo = DevocionalCores.fundo;
+const _corTexto = DevocionalCores.bege;
+const _destaque = DevocionalCores.douradoClaro;
+const _apoio = DevocionalCores.begeSuave;
 
+/// Regra das Duas Vozes: Cinzel na marca e na assinatura, Montserrat no
+/// corpo. Sem `fontFamily` o motor caía na fonte padrão do sistema.
 TextPainter _pintor(
   String texto, {
   required double tamanho,
   required ui.Color cor,
+  bool titulo = false,
   bool italico = false,
   bool negrito = false,
   double altura = 1.5,
   double espacamento = 0,
 }) {
+  final peso = negrito ? FontWeight.w700 : FontWeight.w400;
   final pintor = TextPainter(
     text: TextSpan(
       text: texto,
       style: TextStyle(
+        fontFamily: titulo ? 'Cinzel' : 'Montserrat',
         color: cor,
         fontSize: tamanho,
         height: altura,
         fontStyle: italico ? FontStyle.italic : FontStyle.normal,
-        fontWeight: negrito ? FontWeight.w700 : FontWeight.w400,
+        fontWeight: peso,
+        fontVariations: [ui.FontVariation('wght', peso.value.toDouble())],
         letterSpacing: espacamento,
       ),
     ),
@@ -61,12 +70,19 @@ Future<Uint8List> gerarImagemDoCartao({
   required String referencia,
   String? rodape,
 }) async {
-  final marca = _pintor('DEVOCIONAL', tamanho: 34, cor: _apoio, espacamento: 8);
+  final marca = _pintor(
+    'DEVOCIONAL',
+    tamanho: 34,
+    cor: _apoio,
+    titulo: true,
+    espacamento: 8,
+  );
   final corpo = _pintor(texto, tamanho: 54, cor: _corTexto, italico: true);
   final assinatura = _pintor(
     referencia,
     tamanho: 46,
     cor: _destaque,
+    titulo: true,
     negrito: true,
   );
   final pe = (rodape == null || rodape.isEmpty)

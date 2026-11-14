@@ -62,7 +62,6 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
                       hintText: livros.isEmpty
                           ? 'Ex.: Ler os Evangelhos'
                           : tituloDePlano(livros, dias),
-                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: DevocionalEspacamento.sp20),
@@ -105,7 +104,6 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
                           ? 'Escolha os livros para ver o tamanho do plano.'
                           : 'O plano terá $totalDeCapitulos '
                                 '${totalDeCapitulos == 1 ? 'capítulo' : 'capítulos'}.',
-                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: DevocionalEspacamento.sp20),

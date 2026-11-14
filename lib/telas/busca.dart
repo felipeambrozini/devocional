@@ -42,7 +42,6 @@ class _TelaBuscaState extends State<TelaBusca> {
     return ListenableBuilder(
       listenable: _controller,
       builder: (context, _) {
-        final cor = Theme.of(context).colorScheme;
         return DefaultTabController(
           length: 2,
           initialIndex: widget.abaInicial == AbaDaBusca.devocionais ? 1 : 0,
@@ -50,9 +49,6 @@ class _TelaBuscaState extends State<TelaBusca> {
             appBar: DevocionalAppBar(
               title: const Text('Buscar'),
               bottom: TabBar(
-                labelColor: cor.secondary,
-                unselectedLabelColor: cor.onSurfaceVariant,
-                indicatorColor: cor.primary,
                 tabs: const [
                   Tab(text: 'Bíblia'),
                   Tab(text: 'Devocionais'),

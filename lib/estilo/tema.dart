@@ -66,9 +66,9 @@ ThemeData construirTema({
   // variam por plataforma. `fontWeight` continua declarado porque é o que o
   // Flutter usa para escolher a família; `fontVariations` é o que pesa a letra.
   //
-  // Regra da Escala (DESIGN.md): a escala do usuário multiplica só
-  // bodyLarge/bodyMedium — nunca a navegação, o título ou a legenda. Títulos
-  // escalam só 30% do solicitado (teto 1,3×) para não estourar AppBar/Nav em 2×.
+  // Regra da Escala (DESIGN.md): a escala do usuário multiplica inteira só
+  // bodyLarge/bodyMedium. Títulos, rótulos e o resto do texto escalam só 30%
+  // do solicitado (teto 1,3×) para não estourar AppBar/Nav em 2×.
   double escalarLeitura(double tamanho) => tamanho * escalaDeLeitura;
   double escalarTitulo(double tamanho) {
     final limitada = 1.0 + (escalaDeLeitura - 1.0) * 0.3;
@@ -131,6 +131,13 @@ ThemeData construirTema({
       bodySmall: corpo(13, cor: esquema.onSurfaceVariant),
       labelLarge: corpo(14, peso: FontWeight.w600),
       labelMedium: corpo(12, cor: esquema.onSurfaceVariant),
+      // Sem isto o labelSmall caía na tipografia padrão do Material (Roboto),
+      // uma terceira família contra a Regra das Duas Vozes.
+      labelSmall: corpo(
+        11,
+        peso: FontWeight.w600,
+        cor: esquema.onSurfaceVariant,
+      ),
     ),
     appBarTheme: AppBarTheme(
       backgroundColor: esquema.surface,
@@ -151,7 +158,15 @@ ThemeData construirTema({
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: esquema.surfaceContainer,
       indicatorColor: traco.withValues(alpha: 0.45),
-      labelTextStyle: WidgetStatePropertyAll(corpo(11, peso: FontWeight.w600)),
+      labelTextStyle: WidgetStateProperty.resolveWith(
+        (estados) => corpo(
+          11,
+          peso: FontWeight.w600,
+          cor: estados.contains(WidgetState.selected)
+              ? esquema.secondary
+              : esquema.onSurfaceVariant,
+        ),
+      ),
       iconTheme: WidgetStateProperty.resolveWith(
         (estados) => IconThemeData(
           color: estados.contains(WidgetState.selected)
@@ -170,7 +185,66 @@ ThemeData construirTema({
         peso: FontWeight.w600,
         cor: esquema.secondary,
       ),
-      unselectedLabelTextStyle: corpo(12, cor: esquema.onSurfaceVariant),
+      unselectedLabelTextStyle: corpo(
+        12,
+        peso: FontWeight.w600,
+        cor: esquema.onSurfaceVariant,
+      ),
+    ),
+    tabBarTheme: TabBarThemeData(
+      labelColor: esquema.secondary,
+      unselectedLabelColor: esquema.onSurfaceVariant,
+      indicatorColor: esquema.primary,
+      labelStyle: corpo(14, peso: FontWeight.w600),
+      unselectedLabelStyle: corpo(14, peso: FontWeight.w600),
+    ),
+    // Regra do Chapado: nenhum botão ganha sombra, nem no hover (o padrão do
+    // Material 3 eleva o FilledButton). Cantos de 12px, não a pílula padrão.
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        shape: _cantosDeBotao,
+        textStyle: corpo(14, peso: FontWeight.w600),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style:
+          OutlinedButton.styleFrom(
+            foregroundColor: esquema.secondary,
+            shape: _cantosDeBotao,
+            textStyle: corpo(14, peso: FontWeight.w600),
+          ).copyWith(
+            // Desabilitado, o fio apaga junto com a letra: senão o botão parecia
+            // ativo e só a letra a 38% dizia o contrário.
+            side: WidgetStateProperty.resolveWith(
+              (estados) => BorderSide(
+                color: estados.contains(WidgetState.disabled)
+                    ? esquema.onSurface.withValues(alpha: 0.12)
+                    : traco.withValues(alpha: 0.5),
+              ),
+            ),
+          ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: esquema.secondary,
+        shape: _cantosDeBotao,
+        textStyle: corpo(14, peso: FontWeight.w600),
+      ),
+    ),
+    // Superfícies flutuantes sem sombra se separam da página pelo tom mais alto
+    // e pelo fio do metal cheio (presença, na Regra do Fio): com o fundo do
+    // cartão e o fio a 35%, o menu sumia contra a página no tema claro.
+    popupMenuTheme: PopupMenuThemeData(
+      color: esquema.surfaceContainerHighest,
+      elevation: 0,
+      shadowColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: traco),
+      ),
     ),
     chipTheme: ChipThemeData(
       backgroundColor: esquema.surfaceContainerHighest,
@@ -184,6 +258,7 @@ ThemeData construirTema({
       labelStyle: corpo(13),
       secondaryLabelStyle: corpo(13, cor: esquema.onPrimary),
       side: BorderSide(color: traco.withValues(alpha: 0.5)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     ),
     listTileTheme: ListTileThemeData(
       textColor: esquema.onSurface,
@@ -207,6 +282,16 @@ ThemeData construirTema({
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: esquema.primary),
       ),
+      // Sem estes o Material usava, no hover do campo com erro, uma cor que o
+      // esquema não define e que sumia contra o fundo.
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: esquema.error),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: esquema.error, width: 2),
+      ),
     ),
     dialogTheme: DialogThemeData(backgroundColor: esquema.surfaceContainer),
     bottomSheetTheme: BottomSheetThemeData(
@@ -216,6 +301,15 @@ ThemeData construirTema({
     snackBarTheme: SnackBarThemeData(
       backgroundColor: esquema.surfaceContainerHighest,
       contentTextStyle: corpo(14),
+      // Sem isto a ação ("Desfazer") caía no inversePrimary, que sem valor no
+      // esquema vira onPrimary: couro sobre couro, 1,3:1.
+      actionTextColor: esquema.secondary,
+      elevation: 0,
+      // Sem sombra, o fio do metal cheio separa o aviso da página.
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: traco),
+      ),
     ),
     progressIndicatorTheme: ProgressIndicatorThemeData(
       // O anel de carregamento é o único elemento que o Material tingia com a
@@ -233,6 +327,10 @@ ThemeData construirTema({
     ),
   );
 }
+
+const _cantosDeBotao = RoundedRectangleBorder(
+  borderRadius: BorderRadius.all(Radius.circular(12)),
+);
 
 /// Regra do Peso Variável (DESIGN.md): Cinzel e Montserrat são variáveis, e
 /// trocar só o `fontWeight` de um estilo do tema deixa o eixo `wght` no peso

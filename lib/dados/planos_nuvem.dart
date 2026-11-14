@@ -58,6 +58,11 @@ class PlanosNaNuvem {
   ///
   /// A assinatura de login vive o app inteiro (este é um singleton), então
   /// não há o que cancelar — por isso não é guardada.
+  ///
+  /// Mesma regra da [Nuvem]: sem consentimento neste aparelho nada desce.
+  /// Quem já tinha sessão aberta antes do pedido passa pelo diálogo de
+  /// `main.dart`, que chama [Nuvem.aoConsentir], e é ela quem chama
+  /// [aoConsentir] aqui.
   Future<void> iniciar(Estado estado) async {
     if (Firebase.apps.isEmpty) return;
     _estado = estado;
@@ -67,12 +72,25 @@ class PlanosNaNuvem {
     });
   }
 
+  /// Puxa os planos da conta já aberta assim que o consentimento chega.
+  void aoConsentir() {
+    final usuario = FirebaseAuth.instance.currentUser;
+    if (usuario == null) return;
+    unawaited(_puxarOsMeus(usuario.uid));
+  }
+
   /// Traz para o espelho local todos os planos em que o usuário participa,
   /// com os próprios dias lidos. Sem isto, um plano criado ou aceito noutro
   /// navegador nunca apareceria na lista de Meus Planos daqui.
   Future<void> _puxarOsMeus(String uid, {bool jaRevalidou = false}) async {
     final estado = _estado;
     if (estado == null) return;
+    if (!podePuxarPlanos(
+      logado: true,
+      consentiu: estado.consentimentoDaNuvem,
+    )) {
+      return;
+    }
     try {
       final resultados = await FirebaseFirestore.instance
           .collection(_colecao)
@@ -317,6 +335,12 @@ class PlanosNaNuvem {
     'lidos': lidos,
   };
 }
+
+/// Se os planos da conta podem descer da nuvem para este aparelho: só com
+/// conta aberta e com o consentimento da LGPD registrado aqui (planos
+/// revelam convicção religiosa, como as notas e o progresso).
+bool podePuxarPlanos({required bool logado, required bool consentiu}) =>
+    logado && consentiu;
 
 bool _naoEncontrado(Object erro) =>
     erro is FirebaseException && erro.code == 'not-found';

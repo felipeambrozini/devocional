@@ -3,7 +3,7 @@ description: "Aplicativo devocional pessoal: tradução autoral da King James 16
 
 publish_to: 'none' 
 
-version: 1.18.0+38
+version: 1.18.1+39
 
 environment:
   sdk: ^3.12.0
@@ -62,7 +62,7 @@ dependencies:
   # Número da versão na tela Sobre (ver lib/telas/sobre.dart) e nome do pacote
   # na prova de identidade das chaves do Google (ver lib/dados/google.dart).
   package_info_plus: ^10.2.2
-  # Chamadas HTTP para a Gemini API gratuita (ver lib/dados/ia.dart). Único
+  # Chamadas HTTP para a Gemini API, plano pago por uso (ver lib/dados/ia.dart). Único
   # cliente HTTP do app; funciona igual em Android e web.
   http: ^1.6.0
   just_audio: ^0.10.6
@@ -164,7 +164,7 @@ flutter:
   # o mesmo arquivo em vários pesos aqui não instancia o eixo `wght`: só rotula o
   # arquivo, e o motor acaba desenhando a instância padrão (Regular no Cinzel,
   # Thin no Montserrat) em todo peso pedido. Quem pesa a letra é o `fontVariations`
-  # de lib/theme.dart.
+  # de lib/estilo/tema.dart.
   fonts:
     - family: Cinzel
       fonts:

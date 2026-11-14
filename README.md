@@ -1,12 +1,13 @@
 # Devocional
 
-Aplicativo devocional pessoal do Felipe, em Flutter (Android e web a partir do
-mesmo código).
+Aplicativo devocional pessoal do Felipe, em Flutter (Android, iOS e web a partir
+do mesmo código).
 
 ## O que o app faz
 
 - **Bíblia completa em tradução inédita:**
-  - **King James 1611**, uma tradução interna autoral, com 31.102 versículos (bate exatamente com o canon).
+  - **King James 1611**, uma tradução interna autoral, com 31.102 versículos
+    (bate exatamente com o canon).
 - **Devocional diário**, três leituras por dia, na voz de Charles Spurgeon:
   - **Manhã** e **Noite** (*Morning and Evening*), uma virada automática entre
     as duas: 0h-17h59 mostra o devocional da manhã, 18h-23h59 o da noite,
@@ -14,59 +15,76 @@ mesmo código).
   - **Promessas de Deus** (*Faith's Checkbook*), uma promessa bíblica por dia,
     com título, referência e comentário.
   - Calendário para ver o devocional de qualquer data, passada ou futura.
-- **Biblioteca** de livros de Spurgeon, lidos por capítulo, com continuar de onde
+- **Biblioteca** de livros de Spurgeon, lidos por capítulo, com continuar de
+  onde
   parou, progresso por livro, destaques e notas por parágrafo (ver "A
-  Biblioteca" abaixo). Começa com *Somente pela Graça*.
+  Biblioteca" abaixo). São 22 livros, na ordem de publicação em inglês: a
+  estante abre com *O Santo e o Seu Salvador*.
 - **Cronograma de leitura anual**, 365 dias (366 em ano bissexto), agrupado por
   mês, com marcação de lido e barra de progresso do ano.
 - **A Vida de Jesus em 30 dias**: plano fixo (`planoDeJesus`, dias em
   `lib/dados/plano_de_jesus_dias.dart`) que toda conta ganha em Meus Planos —
   os quatro evangelhos em harmonia. Não vive no armazenamento nem na nuvem:
   não pode ser editado, excluído nem compartilhado; só o progresso é salvo. No
-  primeiro login o app mostra uma mensagem de boas-vindas que o apresenta. Planos
+  primeiro login o app mostra uma mensagem de boas-vindas que o apresenta.
+  Planos
   em andamento (algum dia lido, nem todos) aparecem na Hoje, entre a leitura
   do dia e os devocionais; vários viram uma lista horizontal.
 - **Planos personalizados**: escolher um ou mais livros e em quantos dias, com
   prévia antes de confirmar. O seletor tem atalhos para marcar o Antigo ou o
   Novo Testamento inteiros de uma vez, e com 2+ livros dá para escolher a
-  ordem de leitura ("Alterar ordem de leitura"). Dá para compartilhar por link; cada participante
+  ordem de leitura ("Alterar ordem de leitura"). Dá para compartilhar por link;
+  cada participante
   entra com a própria conta Google e o progresso de todos aparece junto (Meus
   Planos). Quem criou pode excluir o plano (some para todos os participantes,
   com o progresso de cada um); quem só participa pode sair, e some só o
    próprio progresso. Quem criou também edita o plano depois — nome, livros,
   ordem de leitura, dias e a inclusão/posição dos devocionais — pelo menu de
   opções; mudar livros (inclusive só a ordem) ou dias pede confirmação e
-  reinicia o progresso marcado.
+  reinicia o progresso marcado. Os planos personalizados exigem a conta Google e
+  o
+  interruptor `planoPersonalizadoAtivo` ligado no painel.
 - **Leitura em voz alta**: botão Ouvir narra capítulos da Bíblia, Manhã e
-  Noite, Promessas de Deus e as introduções, numa voz que remete ao tom de
+  Noite, Promessas de Deus, as introduções e o comentário de Spurgeon de cada
+  versículo (na folha do versículo), numa voz que remete ao tom de
   Charles Spurgeon (não é clone da voz do Felipe), em MP3 pré-gerado
   (hospedado em `AUDIO_BASE_URL`). Fora da web dá para baixar por categoria e
-  ouvir offline, nos Ajustes ("Áudio offline"). Nos Ajustes também dá para
+  ouvir offline, nos Ajustes ("Áudio offline"): Bíblia, introduções, Manhã e
+  Noite e Promessas; os comentários não têm categoria offline e só tocam com
+  rede. Nos Ajustes também dá para
   ligar "Ouvir capítulos em sequência" (desligado por padrão): ao terminar um
   capítulo da Bíblia, o leitor vira a página e o próximo começa sozinho.
 - **Conversas com IA**: duas personas para conversar, Charles Spurgeon e
   Felipe Ambrozini, cada uma com o próprio jeito de falar (Gemini). Histórico
-  salvo por conversa, numa aba própria em todas as plataformas. A persona do
+  salvo por conversa, numa aba própria em todas as plataformas. A aba é de
+  todos, mas o chat só abre para contas convidadas (`convidados/{email}`, ver
+  o painel admin abaixo); sem convite, a aba mostra o contato pelo WhatsApp. A
+  persona do
   Spurgeon leva no sistema uma ficha de fatos verificados da vida dele, os
   limites do que ele nunca fez nem poderia saber (anacronismos, viagens,
   títulos, frases apócrifas) e a regra de não inventar datas, nomes nem
   citações; a ficha vem de `tools/introducoes/spurgeon_fontes.md`.
 - **Introduções aos 66 livros**, na voz de Spurgeon, com título formal do livro
   vindo da King James 1611.
-- **Favoritos e notas**: qualquer versículo pode ser marcado, anotado, copiado ou
+- **Favoritos e notas**: qualquer versículo pode ser marcado, anotado, copiado
+  ou
   compartilhado — o compartilhar gera um cartão-imagem na identidade do app
   (fundo couro, filete dourado) com o texto junto, pronto para WhatsApp e
   Instagram; tela própria lista os favoritos e os que têm anotação, com
   busca por referência ou por texto da nota, e exporta uma cópia de segurança
-  de tudo (favoritos, notas e progresso) para reimportar em outro aparelho.
+  de favoritos, notas e dias lidos do cronograma para reimportar em outro
+  aparelho (planos, conversas e a leitura dos livros não entram na cópia).
 - **Comentário de Spurgeon por versículo**: a mesma folha que abre ao tocar um
   versículo (Favoritar, Copiar, Anotar) mostra também o comentário de Charles
   Spurgeon para aquele versículo, nos 31.102 versículos dos 66 livros.
-- **Conta Google (Web, Android e iOS)**: opcional — favoritos, notas, progresso e
-  planos sobem sozinhos para a conta de quem entrar, para não perder nada se o
+- **Conta Google (Web, Android e iOS)**: opcional — favoritos, notas, progresso,
+  conversas, horários dos lembretes, planos e a leitura dos livros da
+  Biblioteca sobem sozinhos para a conta de quem entrar (depois do
+  consentimento da LGPD neste aparelho), para não perder nada se o
   navegador limpar o armazenamento e para o mesmo plano aparecer no celular e
   na web. Quem entra vê o próprio avatar (foto da conta Google, ou a inicial do
-  nome sem foto) na saudação da aba Hoje. Ao abrir, nome e foto voltam assim que o Firebase Auth
+  nome sem foto) na saudação da aba Hoje. Ao abrir, nome e foto voltam assim que
+  o Firebase Auth
   restaura a sessão salva — sem esperar o App Check, que só o Firestore
   precisa. Nesse instante curto o cabeçalho mostra "Verificando conta" em vez
   do botão Entrar, que só aparece quando se sabe que não há sessão.
@@ -79,7 +97,8 @@ mesmo código).
   oráculos dos profetas em primeira pessoa de Deus), mas não as citações do AT
   feitas pelos apóstolos. Os trechos vêm de `assets/falas_divinas/<slug>.json`,
   gerados por `tools/falas_divinas/gerar.py` a partir do MACULA Quotation and
-  Speaker Data (Clear Bible, CC BY 4.0, crédito na tela Sobre). Como a King James não
+  Speaker Data (Clear Bible, CC BY 4.0, crédito na tela Sobre). Como a King
+  James não
   tem aspas, o corte dentro do versículo é aproximado pela pontuação ("disse
   Deus: **Haja luz.** E houve luz."), e isso errava nos diálogos (em Gênesis
   3:13 a fala da mulher saía em vermelho e a pergunta de Deus, em preto). Por
@@ -94,18 +113,27 @@ mesmo código).
   de Deus, mesmo repassado por um profeta (a fórmula "Assim diz o SENHOR" e a
   introdução narrada ficam em preto); o anjo do SENHOR segue a fonte. Os casos
   de fronteira deixados como estão ficam anotados, com o motivo, em
-  `tools/falas_divinas/excecoes/<slug>.json`. Em Deuteronômio, que o MACULA quase
+  `tools/falas_divinas/excecoes/<slug>.json`. Em Deuteronômio, que o MACULA
+  quase
   não marca, entraram as falas de Deus citadas por Moisés em primeira pessoa.
-- **Comentário no capítulo** (modo estudo): por padrão o comentário de Spurgeon fica
-  na folha que abre ao tocar no versículo. Quem ligar "Comentário junto do texto"
-  nos ajustes de leitura (`Estado.comentarioNoTexto`, padrão desligado) o vê abaixo
-  de cada versículo, em corpo menor e com o fio do metal à esquerda, e ele deixa de
-  aparecer na folha. O interruptor `comentarioNoCapituloAtivo` do painel `/admin`
-  (`Recursos.comentarioNoCapitulo`, ligado quando o campo falta) é a chave-mestra:
+- **Comentário no capítulo** (modo estudo): por padrão o comentário de Spurgeon
+  fica
+  na folha que abre ao tocar no versículo. Quem ligar "Comentário junto do
+  texto"
+  nos ajustes de leitura (`Estado.comentarioNoTexto`, padrão desligado) o vê
+  abaixo
+  de cada versículo, em corpo menor e com o fio do metal à esquerda, e ele deixa
+  de
+  aparecer na folha. O interruptor `comentarioNoCapituloAtivo` do painel
+  `/admin`
+  (`Recursos.comentarioNoCapitulo`, ligado quando o campo falta) é a
+  chave-mestra:
   desligado, a opção some dos ajustes e o comentário volta só para a folha. Os
-  comentários do capítulo carregam uma vez, depois do texto bíblico; a leitura em
+  comentários do capítulo carregam uma vez, depois do texto bíblico; a leitura
+  em
   voz alta do capítulo não lê os comentários.
-- **Tamanho do texto** ajustável e **tema claro ou escuro**, pela barra do leitor
+- **Tamanho do texto** ajustável e **tema claro ou escuro**, pela barra do
+  leitor
   ou do devocional. O padrão segue o aparelho, e dá para fixar um dos dois.
 - **Lembrete diário**, opcional, em Android e web: 4 horários ajustáveis —
   Manhã, Noite, Promessas de Deus e Leitura do Dia (cronograma) —, push de uma
@@ -126,104 +154,139 @@ mesmo código).
 ## Telas
 
 | Aba | Conteúdo |
-|---|---|
-| Hoje | Saudação, prévia das três leituras do dia, leitura do cronograma, progresso do ano |
+| --- | --- |
+| Hoje | Saudação, cartão de ajuda na primeira visita, leitura do cronograma com o progresso do ano, planos em andamento, prévia da leitura da hora (Manhã ou Noite) e das Promessas, livros em leitura ("Seus livros") |
 | Bíblia | Leitor por capítulo, os 66 livros, introdução de cada um |
 | Devocional | Manhã, Noite e Promessas de Deus, com calendário |
-| Plano | Cronograma anual por mês, com marcação de lido; Meus Planos (personalizados e compartilhados) |
 | Biblioteca | Os livros de Spurgeon: estante, sumário e leitor por capítulo |
-| Conversas | Chat com Spurgeon e Felipe (IA), numa aba própria em todas as plataformas |
+| Plano | Cronograma anual por mês, com marcação de lido; Meus Planos (personalizados e compartilhados) |
+| Conversas | Chat com Spurgeon e Felipe (IA, só para contas convidadas), numa aba própria em todas as plataformas; cada persona abre o histórico de conversas (`lib/telas/historico.dart`) |
 
 Notas não é aba: abre pelo ícone de marcador na barra de cima do Devocional e
 da Bíblia, com URL própria (`/notas`).
 
-Sobre (créditos, fonte da tradução, canais e ajuda), Perguntas frequentes,
-Política de privacidade e Termos de serviço não são abas: moram no fim da
-folha de ajustes, com URL própria cada uma.
+Sobre (créditos, fonte da tradução, canais e ajuda), Perguntas frequentes e
+Política de privacidade não são abas: moram no fim da folha de ajustes (seção
+"Sobre e ajuda"), com URL própria cada uma. Termos de serviço abre de dentro de
+Sobre. Na mesma seção, só na web e só para a conta do dono, aparece
+"Administração": o painel `/admin` (`lib/telas/admin.dart`), que liga e
+desliga recursos e cuida dos convites do chat.
 
 Na web, cada aba tem a própria URL (`/hoje`, `/biblia`, `/devocional`,
-`/plano`, `/notas`, `/conversas`) — dá para abrir, atualizar ou compartilhar
-qualquer uma direto; `/notas`, `/sobre`, `/faq`, `/privacidade`, `/termos` e cada conversa
-(`/charles-spurgeon`, `/felipe-ambrozini`) também têm URL própria. `?ler=joao.3.16`
-na URL abre esse versículo por cima da aba, e `?plano=<id>` (ou
-`?plano=<slug>-<id>`, com o título do plano na frente só por estética) abre um
-plano compartilhado.
+`/biblioteca`, `/plano`, `/conversas`) — dá para abrir, atualizar ou
+compartilhar qualquer uma direto. Dentro das abas:
+
+- `/devocional` só redireciona para a leitura do horário (`/manha` ou
+  `/noite`), levando junto o `?data=`; cada leitura tem a própria URL
+  (`/manha`, `/noite`, `/promessas`), com `?data=AAAA-MM-DD` para outro dia.
+- `/biblioteca/<slug>` abre o sumário de um livro e `/biblioteca/<slug>/<n>` o
+  capítulo.
+- `/plano/novo` cria um plano e `/plano/<id>` abre um plano.
+
+Fora das abas, `/notas`, `/sobre`, `/faq`, `/privacidade`, `/termos` e
+`/admin` também têm URL própria, e cada persona do chat também:
+`/charles-spurgeon` (ou `/felipe-ambrozini`) abre o histórico,
+`/<slug>/conversa` uma conversa nova e `/<slug>/conversa/<id>` uma conversa
+salva. Parâmetros na URL: `?ler=joao.3.16` abre esse versículo por cima da
+aba; `?plano=<id>` (ou `?plano=<slug>-<id>`, com o título do plano na frente
+só por estética) abre um plano compartilhado; `?lembrete=<chave>` (o toque na
+notificação na web) abre a leitura do lembrete.
 
 ## Stack
 
 - Flutter (Dart), `flutter_localizations` para `pt_BR`.
 - `shared_preferences` é o armazenamento local (progresso, favoritos, notas e
   planos), igual em todas as plataformas, sem banco. Quem entra com a
-  conta Google (Android, iOS ou web) também espelha favoritos, notas, progresso
-  e planos num documento do Firestore — ver a conta na nuvem, acima.
+  conta Google (Android, iOS ou web) também espelha favoritos, notas, progresso,
+  conversas, lembretes, planos e livros num documento do Firestore — ver a
+  conta na nuvem, acima.
 - `share_plus` para compartilhar um versículo (cartão-imagem + texto, ver
   `lib/funcoes/cartao_imagem.dart`) ou exportar a cópia. O lembrete
   diário é híbrido, Android e web (ver `lembretesSuportados` em
   `lib/dados/lembretes.dart`): push de uma Cloud Function agendada via
-  `firebase_messaging`, mais `flutter_local_notifications` + `flutter_timezone` +
+  `firebase_messaging`, mais `flutter_local_notifications` + `flutter_timezone`
+  +
   `timezone` para o alarme local de reserva no Android, no fuso detectado — ver
   a seção Lembretes diários abaixo. O lembrete respeita os interruptores do
   painel: leitura desligada não dispara nem abre.
 - `go_router` para as rotas por aba, com `StatefulShellRoute.indexedStack` (a
-  `DevocionalMoldura` continua preservando a rolagem e o capítulo aberto de cada aba,
+  `DevocionalMoldura` continua preservando a rolagem e o capítulo aberto de cada
+  aba,
   como o `IndexedStack` antigo fazia).
 - `firebase_core` + `firebase_auth` + `cloud_firestore` para a conta na
   nuvem (sempre disponível, sem gating por plataforma).
 - `http` fala direto com a Gemini API (`gemini-3.5-flash-lite`, plano pago por
   uso; nome fixo, não o alias `gemini-flash-latest`, que pode migrar para um
-  modelo mais caro sem aviso) para o chat das duas personas (`lib/dados/ia.dart`). Chave
+  modelo mais caro sem aviso) para o chat das duas personas
+  (`lib/dados/ia.dart`). Chave
   em `lib/dados/google.dart`, vinda do `.env.json`.
 - `just_audio` toca os MP3 pré-gerados da leitura em voz alta
   (`lib/dados/voz.dart`), servidos a partir de `AUDIO_BASE_URL`
   (`lib/dados/audio_config.dart`); `AudioOffline`
   (`lib/dados/audio_offline.dart`) baixa e cacheia esses arquivos em disco
   fora da web, para ouvir sem internet. A geração dos MP3 é em lotes (roda por
-  semanas fora deste repo, ver `audio_gen/`), então o botão de ouvir só
+  semanas fora deste repo, na pasta `audio_gen` citada em "Conteúdo"), então o
+  botão de ouvir só
   aparece quando o áudio já existe: `Voz.disponibilidadeRemota` faz um HEAD
   no arquivo do Storage (com cache por chave e timeout, para não repetir o
   HEAD a cada navegação nem travar sem rede), além de checar o cache offline.
 - Fontes empacotadas localmente (Cinzel e Montserrat), sem depender de rede na
   primeira execução.
-- Conteúdo (Bíblia, devocionais, introduções, cronograma) vem de arquivos JSON
-  em `assets/`, um arquivo por livro, carregado sob demanda.
+- Conteúdo (Bíblia, comentários, falas divinas, introduções, devocionais,
+  cronograma e livros da Biblioteca) vem de arquivos JSON em `assets/`,
+  carregados sob demanda: um arquivo por livro bíblico na Bíblia, nos
+  comentários, nas falas divinas e nas introduções; um por livro da
+  Biblioteca; e um arquivo anual para cada devocional (Manhã e Noite,
+  Promessas) e para o cronograma (comum e bissexto).
 
 ## Estrutura
 
-```
+```text
 lib/
   dados/       serviços (estado, voz, nuvem, lembretes...), canon (os 66 livros),
                leitura de conteúdo; modelos/ tem os tipos de dado, um domínio
                por arquivo (bíblia, cronograma, devocional, marcações, busca,
-               chat, áudio, preferências de leitura), reunidos no barril
-               `dados/modelos.dart`
+               chat, livro da Biblioteca, preferências de leitura), reunidos
+               no barril `dados/modelos.dart`
   controladores/ um controller por tela (biblia, busca, chat, devocional,
-               notas, novo plano, plano, sobre)
-  telas/       uma tela por arquivo (hoje, bíblia, devocional, plano, notas, busca, conversas, sobre...)
+               leitor de livro, notas, novo plano, plano, sobre)
+  telas/       uma tela por arquivo (hoje, bíblia, devocional, plano, notas,
+               busca, conversas, sobre...)
   widgets/     widgets compartilhados entre telas, um por arquivo, reunidos no
                barril `widgets/widgets.dart`
   funcoes/     funções livres sem widget próprio (avisos, diálogos, ações que
                tocam dados, formatação de data e afins)
   estilo/      cores.dart (as duas paletas: marrom e dourada, pergaminho e
-               bronze), espacamento.dart (ritmo de espaçamento) e tema.dart
-               (monta o ThemeData)
+               bronze), espacamento.dart (ritmo de espaçamento), toque.dart
+               (alvo mínimo de toque) e tema.dart (monta o ThemeData)
   main.dart    navegação (barra/trilho), rotas e ponto de entrada
-assets/        Bíblia interna, devocionais, introduções, livros, cronograma, imagens, fontes
+assets/        Bíblia interna, comentários, falas divinas, devocionais,
+               introduções, livros, cronograma, imagens, fontes e icone/
+               (fontes do ícone e da splash)
 test/          testes de unidade e de widget
+test_regras/   testes das regras do Firestore e do Storage no emulador
+functions/     Cloud Function dos lembretes (TypeScript)
+tools/         scripts de apoio ao conteúdo (Python)
+web/           index.html, manifesto, service worker do push e arquivos da raiz
 ```
 
 ## Conteúdo
 
 Todo o conteúdo bíblico e devocional já está carregado e verificado, inclusive
 os comentários de Spurgeon por versículo. Os scripts de apoio moram em `tools/`:
-`icones.py`, `validar_comentarios.py` (31.102 comentários, 0 erros; confere
-estrutura, citações contra a King James e proibições) e `introducoes/checar_intro.py`
-(as 66 introduções passam). Os dois ficam como rede de proteção para quando um
-texto for editado. A geração de áudio (TTS) e a
-validação dos MP3 com Whisper ficam fora do repo, em `C:\Users\USER\audio_gen`,
+`icones.py` (ícone e splash), `validar_comentarios.py` (31.102 comentários, 0
+erros; confere estrutura, citações contra a King James e proibições),
+`quase_literal.py` (acha nos comentários versículos citados sem aspas e com
+palavras trocadas), `introducoes/checar_intro.py` (as 66 introduções passam),
+`capa_para_webp.py` (capas da Biblioteca), `biblioteca/` (pipeline dos livros,
+ver "A Biblioteca") e `falas_divinas/` (as palavras de Deus em vermelho). Os
+validadores ficam como rede de proteção para quando um texto for editado. A
+geração de áudio (TTS) e a
+validação dos MP3 com Whisper ficam fora do repo, em `C:\Users\felip\audio_gen`,
 e não são versionadas aqui.
 
 | Conteúdo | Situação |
-|---|---|
+| --- | --- |
 | King James 1611 | 66 livros, 1189 capítulos, **31.102 versículos, bate exatamente com o canon** |
 | Manhã e Noite | 366 dias, todos com manhã e noite (732 entradas) |
 | Promessas de Deus | 366 de 366 traduzidos |
@@ -241,7 +304,8 @@ Regras que valem para os assets anuais (`assets/devocionais/*.json` e
   versículos entram no campo `versiculo`.
 - **Sem travessões** em nenhum texto do app (por pedido do usuário) e **sem
   aspas curvas**: vírgula, ponto e vírgula ou ponto, e aspas retas `"`.
-- **Referências no JSON precisam resolver no canon do app** (`lib/dados/canon.dart`
+- **Referências no JSON precisam resolver no canon do app**
+  (`lib/dados/canon.dart`
   usa `_livroEPrefixo`). Atenção às acentuações não óbvias: "Oseias" **sem**
   acento.
 - **Voz vitoriana de Spurgeon**, tratando o leitor por "tu"; citações bíblicas
@@ -265,7 +329,8 @@ Candidatos a revisão manual, se algum dia houver versão editorial.
 - Os **fatos** (autoria tradicional, capítulos, episódios bíblicos e da vida de
   Spurgeon) foram revisados contra `tools/introducoes/spurgeon_fontes.md`; a
   seção "Spurgeon em [Livro]" só conta episódio com fonte.
-  `python tools/introducoes/checar_intro.py <slug>` confere citações da King James,
+  `python tools/introducoes/checar_intro.py <slug>` confere citações da King
+  James,
   pontuação, vocabulário e o formato da frase.
 - O **tom** foi calibrado em 07/08/2026 para soar como Spurgeon de verdade
   (355 pontos de exclamação em 63.042 palavras, 56,3 por 10 mil): ajustes
@@ -273,15 +338,17 @@ Candidatos a revisão manual, se algum dia houver versão editorial.
   em [Livro]"; "Estrutura" ficou sem nenhum toque.
 - O endereçamento por **"tu"** foi corrigido (a "vós" predominava); texto
   bíblico citado com referência e plural histórico legítimo continuam "vós" de
-  propósito, porque é a King James do app e precisa continuar byte a byte igual ao asset.
+  propósito, porque é a King James do app e precisa continuar byte a byte igual
+  ao asset.
 - Nenhuma construção retórica virou tique: "Aqui está" é o mais comum, com
   19/66, abaixo do teto de 22/66.
 
 ### A Biblioteca (livros de Spurgeon)
 
 Livros de Spurgeon em domínio público, traduzidos para o app e lidos por
-capítulo. É uma aba da barra de baixo (no lugar de Notas): a Hoje mostra o
-último livro iniciado, e cada nível tem URL própria (`/biblioteca`,
+capítulo. É uma aba da barra de baixo (no lugar de Notas): a Hoje mostra os
+livros em leitura (um vira cartão; vários, a lista "Seus livros"), e cada nível
+tem URL própria (`/biblioteca`,
 `/biblioteca/<slug>` para o sumário, `/biblioteca/<slug>/<n>` para o capítulo
 *n*, a partir de 1). O interruptor `bibliotecaAtiva` do painel liga e desliga
 (`Recursos.biblioteca`); desligada, a aba mostra um aviso e o link direto
@@ -307,11 +374,14 @@ para um livro volta para a estante.
   paragrafos: []}]}`. Carregado sob demanda, um livro por vez.
 - **Capa**: `assets/imagens/capa_<slug>.webp`, 225x300, na linha das capas
   de Manhã e Noite e Promessas. Sem o arquivo, aparece uma capa tipográfica.
-  `python tools/capa_para_webp.py <png> <slug>` tira o fundo branco do render e grava o WebP.
+  `python tools/capa_para_webp.py <png> <slug>` tira o fundo branco do render e
+  grava o WebP.
 - **O que o usuário guarda** (`lib/dados/leitura_de_livros.dart`, dentro do
   `Estado`): onde parou (capítulo e fração da rolagem, para o "continuar de
-  onde parei"), capítulos lidos e destaques com nota por parágrafo. Fica no aparelho e, **com a conta Google, sobe para a nuvem**
-  (campo `livros` do documento `usuarios/{uid}`, com a regra em `firestore.rules`):
+  onde parei"), capítulos lidos e destaques com nota por parágrafo. Fica no
+  aparelho e, **com a conta Google, sobe para a nuvem**
+  (campo `livros` do documento `usuarios/{uid}`, com a regra em
+  `firestore.rules`):
   celular e web logados mostram o mesmo progresso. Por livro, a "volta" (quantas
   vezes foi terminado) maior vence por inteiro; na mesma volta, os capítulos
   lidos se somam e vale a posição mais recente; os destaques se somam e, no
@@ -328,7 +398,8 @@ para um livro volta para a estante.
 - **Fonte e tradução**: o texto em inglês vem do CCEL (domínio público) e a
   tradução é nossa; as edições em português existentes não são livres. Os
   versículos **não são traduzidos de novo**: toda citação da Escritura é
-  copiada literalmente da King James do app. Registro de Spurgeon ao leitor ("tu"),
+  copiada literalmente da King James do app. Registro de Spurgeon ao leitor
+  ("tu"),
   português do Brasil, sem travessão e sem aspas curvas.
 - **Pipeline** (`tools/biblioteca/`):
   1. `livro.py --extrair <slug> <txt>` gera `<slug>_en.json`.
@@ -338,17 +409,22 @@ para um livro volta para a estante.
   3. `checar_capitulo.py <slug> <índice>` confere paridade de parágrafos,
      proibições e as citações contra a King James.
   4. `auditar_livro.py <slug>` roda tudo no livro e acusa citação sem
-     registro, trecho entre aspas fora da King James, frases perdidas e suspeitas de
+     registro, trecho entre aspas fora da King James, frases perdidas e
+     suspeitas de
      português de Portugal.
   5. `revisar_livro.py <slug>` resume a revisão para ler de uma vez (razão de
      tamanho, citações sem registro, trechos que parecem versículo mas não são
-     literais da King James, parágrafos encurtados, inglês solto, português de Portugal).
+     literais da King James, parágrafos encurtados, inglês solto, português de
+     Portugal).
      `checar_en.py <slug>` confere o inglês extraído antes de traduzir. A
-     omissão de frases é o erro mais comum do tradutor: parágrafo com muito menos
+     omissão de frases é o erro mais comum do tradutor: parágrafo com muito
+     menos
      palavras ou frases que o original se refaz por inteiro.
   6. `livro.py --montar <slug>` valida e grava `assets/livros/<slug>.json`.
-  Os JSON de trabalho (`<slug>_en.json` e `<slug>_pt/`) só existem enquanto o livro
-  está sendo traduzido: depois do `--montar`, o que vale é o asset, e eles saem do
+  Os JSON de trabalho (`<slug>_en.json` e `<slug>_pt/`) só existem enquanto o
+  livro
+  está sendo traduzido: depois do `--montar`, o que vale é o asset, e eles saem
+  do
   repositório (ficam no histórico do Git).
 
 ## Decisões que não devem ser refeitas
@@ -379,50 +455,61 @@ motivo novo.
   trazer de volta um jeito suportado.
 - **Sincronização entre aparelhos** — a cópia por exportar/importar cobria o
   risco real (perder as notas). Reaberta em 09/08/2026 quando o motivo mudou
-  (o app passou a ser compartilhado com dezenas de pessoas): a conta Google
-  na web é a forma atual de não perder nada (ver "Conta Google" acima);
-  exportar/importar continua sendo o único caminho no Android.
+  (o app passou a ser compartilhado com dezenas de pessoas): a conta Google,
+  na web, no Android e no iOS, é a forma atual de não perder nada (ver "Conta
+  Google" acima); exportar/importar continua como cópia manual, sem conta.
 - **Camada monocromática do ícone do Android** — a silhueta de rosto vira o
   avatar de "sem foto"; testada e descartada. Não reabrir sem trocar a marca
   por um monograma ou símbolo.
 
 ### Arquitetura e comportamento
 
-- **A virada manhã/noite é por horário fixo do aparelho, não pelo sol do lugar.**
-  0h-17h59 manhã, 18h-23h59 noite (`Periodo.pelaHora` em `lib/dados/modelos.dart`).
+- **A virada manhã/noite é por horário fixo do aparelho, não pelo sol do
+  lugar.**
+  0h-17h59 manhã, 18h-23h59 noite (`Periodo.pelaHora` em
+  `lib/dados/modelos/devocional.dart`).
   A versão por geolocalização (nascer/pôr do sol, pacote `geolocator`) foi
   removida junto das permissões de localização.
 - **29 de fevereiro** não precisa de tratamento especial: `DateTime` do Dart já
   o impede em ano comum (provado em `test/bissexto_test.dart`).
 - **Os chevrons de capítulo só existem onde não há gesto de toque**: no celular
-  deslizar já passa a página; na web a barra fica. É a
-  única ramificação por plataforma no app — a web entra pelo pior caso (desktop
-  sem toque). `BibliaControlador.semGestoDeToque`.
+  deslizar já passa a página; na web a barra fica. Nessa decisão a web entra
+  pelo pior caso (desktop sem toque), sem tentar detectar tela de toque
+  (`BibliaControlador.semGestoDeToque`). Não é a única ramificação por
+  plataforma: o app testa `kIsWeb`/`defaultTargetPlatform` em vários pontos
+  (lembretes, painel admin, seleção de texto, alça de deslize, App Check,
+  login).
 - **O alternador das três leituras usa chips, não `SegmentedButton`** — o
   `SegmentedButton` iguala a largura dos segmentos à do maior, e três vezes
   "Promessas de Deus" nunca cabe num celular.
 - **O peso das fontes vem de `fontVariations`, não do `weight` do pubspec**:
   Cinzel e Montserrat são variáveis, e declarar `weight:` só rotula o arquivo.
-  `lib/estilo/tema.dart` põe `FontVariation('wght', N)` em todo estilo. Guardado por
+  `lib/estilo/tema.dart` põe `FontVariation('wght', N)` em todo estilo. Guardado
+  por
   dois testes (`test/tema_test.dart` e `test/fontes_test.dart`, que mede o
   texto de verdade).
 - **Há dois temas, e nenhuma tela lê a paleta direto**: `DevocionalCores`
   (`lib/estilo/cores.dart`) tem as duas paletas e só `tema.dart` a importa;
   as telas leem tudo de `Theme.of(context).colorScheme`. Se aparecer um
-  `DevocionalCores.` em `lib/telas/`, é um vazamento. O mapa dos papéis: `surface` fundo, `surfaceContainer` cartão,
+  `DevocionalCores.` em `lib/telas/`, é um vazamento. O mapa dos papéis:
+  `surface` fundo, `surfaceContainer` cartão,
   `surfaceContainerHighest` citação e chip, `primary` título e ícone,
   `secondary` destaque, `outline` borda, `onSurface` corpo, `onSurfaceVariant`
   apoio. **O claro não é o escuro invertido**: o dourado sobre pergaminho dá
   2,1:1 e é ilegível, então o destaque vira bronze. `test/tema_test.dart`
   calcula os contrastes da WCAG e falha se clarearem o bronze.
-- **A `LarguraDeLeitura` fica no corpo de cada tela**, nunca em volta do
+- **A `DevocionalLarguraDeLeitura` fica no corpo de cada tela**, nunca em volta
+  do
   Scaffold nem do `IndexedStack` — em volta do stack ela prendia a AppBar e a
   régua de meses do Plano, e deixava de fora as telas abertas por
   `MaterialPageRoute`.
-- **O tamanho do texto de leitura multiplica só `bodyLarge` e `bodyMedium`**,
-  para não empurrar a barra de baixo nem quebrar o cabeçalho. O `Estado`
-  recusa valores fora de `escalasDeLeitura`.
-- **Toda tela distingue carregando, erro e vazio** (`AvisoDeErro` em
+- **O tamanho do texto escala por inteiro só no corpo de leitura**: `bodyLarge`
+  e `bodyMedium` acompanham a escala pedida inteira (de 0,85× a 2×); títulos e
+  os demais textos escalam só 30% do pedido, sem encolher e com teto de 1,3×
+  (`escalarTitulo` em
+  `lib/estilo/tema.dart`), para não empurrar a barra de baixo nem quebrar o
+  cabeçalho. O `Estado` recusa valores fora de `escalasDeLeitura`.
+- **Toda tela distingue carregando, erro e vazio** (`DevocionalAvisoDeErro` em
   `lib/widgets/aviso_vazio.dart`); o padrão antigo confundia os três e
   deixava o spinner girando para sempre.
 - **A cópia de segurança das notas sai pela folha de compartilhar**, não por
@@ -438,7 +525,8 @@ motivo novo.
   versículo (na Bíblia) ou a citação (no Devocional) sai como PNG na identidade
   do app, com o texto de sempre junto (e o link que reabre a leitura); na web,
   cai para texto puro, que é o que o share da web suporta. Copiar continua só
-  texto (`_textoDoVersiculo` em `lib/widgets/linha_de_versiculo.dart`). Em teste,
+  texto (`_textoDoVersiculo` em `lib/widgets/linha_de_versiculo.dart`). Em
+  teste,
   `Clipboard.getData` trava para sempre;
   a forma de verificar é um `setMockMethodCallHandler` capturando o argumento
   de `Clipboard.setData`.
@@ -447,7 +535,8 @@ motivo novo.
   sincronia.
 - **O avatar da Hoje é a foto da conta Google de quem entrou, nunca uma
   imagem fixa do app** (20/08/2026) — antes era a foto do Felipe embutida no
-  app, escondida na web. `Nuvem.fotoUrl` lê `FirebaseAuth.currentUser?.photoURL`;
+  app, escondida na web. `Nuvem.fotoUrl` lê
+  `FirebaseAuth.currentUser?.photoURL`;
   sem conta ou sem foto, cai na inicial do nome. Só exibição: sem toque, sem
   upload, sem Storage.
 - **Plano que só existia no celular não aparecia na web** (02/09/2026):
@@ -461,12 +550,14 @@ motivo novo.
   tem, e o que só existe aqui sobe no primeiro envio. A comparação ali é de
   conteúdo (`_mesmoConteudo`), não de string, porque o Firestore devolve as
   chaves de um mapa em outra ordem que a de quem gravou — por string, toda
-  entrada na conta viraria uma escrita à toa. Vale para os quatro domínios
-  (cópia, conversas, lembretes e planos), e só depois de a fusão ter dado
+  entrada na conta viraria uma escrita à toa. Vale para os cinco domínios
+  (cópia, conversas, lembretes, planos e livros), e só depois de a fusão ter
+  dado
   certo: com a cópia da conta ilegível, mandar a local por cima apagaria o
   que estava lá.
 - **Excluir um plano e sair dele são ações diferentes** (20/08/2026):
-  `excluirPlano` (`lib/funcoes/planos_acoes.dart`) apaga o plano da nuvem para todos
+  `excluirPlano` (`lib/funcoes/planos_acoes.dart`) apaga o plano da nuvem para
+  todos
   os participantes, e só quem criou pode chamar; `sairDoPlano` apaga apenas a
   própria participação, para quem só entrou no plano de outra pessoa. Os dois
   ficam disponíveis pela lixeira no cartão de "Meus Planos" e pelo menu
@@ -476,13 +567,16 @@ motivo novo.
   partir de dentro da aba Plano. O botão físico de voltar do Android já
   funcionava com isso (`GoRouterDelegate.popRoute` prioriza o Navigator da
   aba ativa antes do raiz), mas `goBranch(initialLocation: true)` — o reset
-  que `DevocionalMoldura._irParaAba` (`lib/widgets/moldura.dart`) usa ao voltar para uma aba — só
+  que `DevocionalMoldura._irParaAba` (`lib/widgets/moldura.dart`) usa ao voltar
+  para uma aba — só
   descarta rotas que o próprio go_router controla; uma rota empurrada por
   fora sobrevive ao reset porque ele nem sabe que ela existe. Por isso trocar
   para Bíblia e voltar para Planos continuava mostrando o plano aberto antes,
   em vez da lista. A correção: `/plano/novo` e `/plano/:id` (`main.dart`),
-  navegadas com `context.push`/`context.pop` (`lib/telas/plano.dart`,
-  `lib/telas/novo_plano.dart`) em vez de `Navigator.push`/`pop` cru. Provado
+  navegadas com `context.push`/`context.pop` (hoje em
+  `lib/widgets/aba_dos_meus_planos.dart`, `lib/widgets/cartao_de_plano.dart` e
+  `lib/controladores/novo_plano_controlador.dart`) em vez de
+  `Navigator.push`/`pop` cru. Provado
   com um teste de widget que cria um plano, troca de aba pela barra inferior
   e volta (`test/planos_test.dart`) — sem ele o bug não reproduzia de forma
   confiável só lendo o código.
@@ -497,18 +591,24 @@ motivo novo.
   Num plano compartilhado, a regra do Firestore (`planoEditavelPeloCriador`
   em `firestore.rules`) só deixa o criador tocar `titulo`/`livros`/`dias`/
   `incluirDevocionais`/`devocionalAntes` do documento — nunca a lista de
-  participantes; o progresso de quem edita reinicia também na nuvem (mesma
-  chamada de `gravarDias` que marcar um dia usa), mas o dos outros
+  participantes; o progresso de quem edita reinicia também na nuvem
+  (`PlanosNaNuvem.substituirDias(id, [])`, em `lib/funcoes/planos_acoes.dart`),
+  mas o dos outros
   participantes só reinicia quando cada um marcar de novo, porque as regras
   não deixam o criador escrever na entrada alheia.
 - **Funcionalidades se ligam/desligam pelo painel admin, sem reimplantar**:
   `lib/dados/recursos.dart` reúne os interruptores — `planoPersonalizado`
-  (aba "Meus planos"), `ouvirTextos` (`BotaoDeVoz`, único ponto de entrada
+  (aba "Meus planos"), `ouvirTextos` (`DevocionalBotaoDeVoz`, único ponto de
+  entrada
   da leitura em voz alta), `cronograma` (aba "Cronograma"), `devocionalManha`,
   `devocionalNoite`, `promessas` (cada leitura em separado), `biblioteca` (os
-  livros de Spurgeon e as rotas `/biblioteca`) e `conversas` (o
+  livros de Spurgeon e as rotas `/biblioteca`), `comentarioNoCapitulo` (a
+  opção "Comentário junto do texto") e `conversas` (o
   chat de cada persona e as rotas
-  `/charles-spurgeon`, `/felipe-ambrozini`). Os valores moram no Firestore
+  `/charles-spurgeon`, `/felipe-ambrozini`). No Firestore, os campos são
+  `planoPersonalizadoAtivo`, `ouvirTextosAtivo`, `cronogramaAtivo`,
+  `manhaAtivo`, `noiteAtivo`, `promessasAtivo`, `bibliotecaAtiva`,
+  `comentarioNoCapituloAtivo` e `conversasAtivas`. Os valores moram no Firestore
   (`config/recursos`, ver `lib/dados/config_admin.dart`) e o painel `/admin`
   (só web e só a conta do dono, com entrada na folha de ajustes) os edita na
   hora; sem o documento, cada campo vale o padrão ligado. `conversas` exige o
@@ -529,7 +629,7 @@ motivo novo.
    `*Forcado` (mesmo padrão de `Lembretes.instancia`, mutável) só para teste —
    o login de verdade nunca roda no ambiente de teste, e sem o override os
    testes de Conversas não veriam o recurso.
- - **Planos próprios não têm allowlist** (`Recursos.planos`): basta a conta
+- **Planos próprios não têm allowlist** (`Recursos.planos`): basta a conta
    Google logada e o interruptor global `planoPersonalizadoAtivo` ligado —
    quem entra vê a aba e cria planos. A seção de e-mails dos planos saiu do
    painel; só a allowlist do chat continua por e-mail.
@@ -553,14 +653,19 @@ motivo novo.
   a abertura da web já está resolvida à mão; deixar o gerador mexer ali
   sobrescreveria isso.
 - **A versão do Flutter segue o canal `stable`** (`.fvmrc` com `"flutter":
-  "stable"` e `subosito/flutter-action@v2` com `flutter-version: stable`):
+  "stable"` e `subosito/flutter-action`, fixada por SHA, com `channel: stable`):
   a escolha deliberada é acompanhar o estável mais recente, não travar numa
   patch antiga. **Atualizar o `.fvmrc` quando o `stable` local mudar** e rodar
   a suíte antes de comitar.
-- **`AreaDeSelecaoComCompartilhar` (`lib/widgets/area_de_selecao.dart`, 20/08/2026)
+- **`DevocionalAreaDeSelecaoComCompartilhar`
+  (`lib/widgets/area_de_selecao.dart`, 20/08/2026)
   envolve `SelectionArea` e acrescenta "Compartilhar" ao menu de seleção**,
-  usada no Devocional e no corpo aberto do cartão de introdução do
-  livro dentro do leitor da Bíblia: o texto vira selecionável e copiável
+  usada no corpo aberto do cartão de introdução do livro
+  (`lib/widgets/abertura_de_livro.dart`, na Bíblia e no Devocional) e no
+  capítulo da Biblioteca fora da web (`lib/widgets/capitulo_aberto.dart`); o
+  cartão de leitura do Devocional usa um `SelectionArea` simples, e o
+  compartilhar dele é o botão próprio (abaixo). O texto vira selecionável e
+  copiável
   de fábrica, e o mesmo clique forte que abre a seleção nativa ganha um botão
   a mais para compartilhar o trecho escolhido (via `share_plus`, sem
   formatação de referência — a seleção pode não bater com um parágrafo
@@ -571,25 +676,31 @@ motivo novo.
   (abaixo), e a seleção de palavras brigaria com ele. Compartilhar um
   versículo vive na folha de ações (Favoritar, Copiar, Compartilhar, Anotar),
   aberta pelo toque na linha, e na barra da seleção.
-- **Selecionar vários versículos do capítulo** (`BibliaControlador.selecionados`,
-  `DevocionalBarraDaSelecao` em `lib/widgets/barra_da_selecao.dart`): toque longo num versículo
+- **Selecionar vários versículos do capítulo**
+  (`BibliaControlador.selecionados`,
+  `DevocionalBarraDaSelecao` em `lib/widgets/barra_da_selecao.dart`): toque
+  longo num versículo
   entra no modo de seleção, e nele o toque simples marca ou desmarca. A barra
   de baixo mostra a contagem e oferece Copiar e Compartilhar (cartão-imagem,
   como o de um versículo). A referência junta os vizinhos em faixa
   ("João 3:16-18, 20", `referenciaDeVersiculos` em `lib/dados/canon.dart`), o
   texto sai na ordem do capítulo e o link aponta para o primeiro marcado.
   "Voltar", o X da barra e a troca de capítulo saem do modo.
-- **O cartão do Devocional tem um botão de Compartilhar próprio** (`_CartaoDeLeitura`
-  em `lib/telas/devocional.dart`, 31/08/2026), ao lado do `BotaoDeVoz`: manda
+- **O cartão do Devocional tem um botão de Compartilhar próprio**
+  (`DevocionalCartaoDeLeitura`
+  em `lib/widgets/cartao_de_leitura.dart`, 31/08/2026), ao lado do
+  `DevocionalBotaoDeVoz`: manda
   título, citação (`textoDeCitacao`, extraído de `lib/funcoes/citacao.dart`
   para reuso sem os spans de toque de `spansDeCitacao`) e o comentário do dia,
   terminando no link da leitura (`$enderecoDoSite/{manha,noite,promessas}`,
   com `?data=` só fora de hoje — o mesmo caminho que `main.dart` já declara
   para cada leitura, sem overlay de parâmetro como o de versículo/plano).
-  Diferente da seleção de texto (`AreaDeSelecaoComCompartilhar`, acima), não
+  Diferente da seleção de texto (`DevocionalAreaDeSelecaoComCompartilhar`,
+  acima), não
   exige selecionar nada antes.
-- **Os dois players de voz separam pausar de parar** (`BotaoDeVoz` e
-  `IndicadorDeVozNaBarra`, `lib/widgets/botao_de_voz.dart`, 21/08/2026): tocando, a
+- **Os dois players de voz separam pausar de parar** (`DevocionalBotaoDeVoz` e
+  `DevocionalIndicadorDeVozNaBarra`, `lib/widgets/botao_de_voz.dart`,
+  21/08/2026): tocando, a
   pílula pausa pelo corpo (ícone de pausa) e encerra pelo X ao lado; o anel
   da barra de cima (Bíblia e Sobre) faz o mesmo — pausa pelo anel
   e encerra por um segundo ícone ao lado, sem anel. Antes só havia o parar, e
@@ -602,7 +713,8 @@ motivo novo.
   `_posicaoDaPausa`, e um `parar()` logo depois (o deslize de capítulo, por
   exemplo) lia a posição da pausa antiga em vez da posição real da leitura em
   andamento.
-- **Velocidade da leitura em voz** (`Voz.proximaVelocidade`, 22/09/2026): tocando
+- **Velocidade da leitura em voz** (`Voz.proximaVelocidade`, 22/09/2026):
+  tocando
   ou pausada, a pílula mostra um "1x" entre o rótulo e o X; cada toque passa
   para 1,25x → 1,5x → 1,75x → 2x → 1x. A velocidade vale para o app
   inteiro (não volta a 1x a cada capítulo) e é salva entre aberturas
@@ -618,13 +730,17 @@ motivo novo.
   calendário); `faixas` virou getter derivado, então nada que lia `.faixas`
   quebrou. `montarPlanoDeLeitura` ganhou `incluirDevocionais`/`devocionalAntes`
   (padrão preserva o comportamento de hoje), intercalando o devocional
-  correspondente antes ou depois do(s) capítulo(s) do dia. `CartaoDeDia`
+  correspondente antes ou depois do(s) capítulo(s) do dia.
+  `DevocionalCartaoDeDia`
   (cartão compartilhado do cronograma e dos planos) passou a renderizar uma
-  lista de `ItemDoDia`, despachando para `BotaoDeFaixa` (capítulo) ou o novo
-  `BotaoDeDevocional`, que abre a tela do devocional (`/manha`, `/noite` ou
+  lista de `ItemDoDia`, despachando para `DevocionalBotaoDeFaixa` (capítulo) ou
+  o novo
+  `DevocionalBotaoDeDevocional`, que abre a tela do devocional (`/manha`,
+  `/noite` ou
   `/promessas`) na data em que ele foi publicado originalmente. `TelaNovoPlano`
   ganhou a caixa "Incluir devocionais dos livros" (desmarcada por padrão) e,
-  quando marcada, um seletor segmentado de antes/depois, os dois já refletidos
+  quando marcada, dois `ChoiceChip` de antes/depois
+  (`lib/widgets/opcoes_de_plano.dart`), os dois já refletidos
   na prévia ao vivo e na criação do plano. Só planos criados pelo usuário
   (`PlanoDoUsuario`, persistido local e no Firestore com os dois campos novos)
   ganham a opção; o cronograma anual fixo não muda.
@@ -633,19 +749,23 @@ motivo novo.
   (`lib/telas/meu_plano.dart`) — abrir um plano já criado, ou por link — nunca
   chamava `aquecerIndiceDeDevocionais()`; como `Conteudo` é singleton do
   processo, sem passar por Novo plano antes os devocionais ficavam vazios a
-  sessão toda. Ganhou o mesmo aquecimento do `initState` de `TelaNovoPlano`.
+  sessão toda. Ganhou o mesmo aquecimento de Novo plano; hoje os dois moram
+  nos controladores (`PlanoControlador` e `NovoPlanoControlador`, em
+  `lib/controladores/`).
   E `_itensComDevocionais` (`lib/dados/planos.dart`) não deduplicava: um
   devocional cuja referência cite dois capítulos da mesma faixa multi-capítulo
   apareceria duas vezes no dia; agora dedupe por `{...}.toList()` antes de
   intercalar, aproveitando a igualdade por valor de `ItemDeDevocional`.
-- **O app só regrava o cadastro do lembrete quando algo mudou** (`cadastroPrecisaSerGravado`
+- **O app só regrava o cadastro do lembrete quando algo mudou**
+  (`cadastroPrecisaSerGravado`
   em `lib/dados/lembretes.dart`): antes, toda abertura do app dava `.set` em
   `lembretes/{fid}`, apagando o `ultimoEnvio*` e fazendo a Function reenviar o
   aviso do dia no minuto seguinte (na web, tocar no aviso recarrega a página e
   repetia). Agora ele lê o documento e só grava se `fid`, os 4 horários ou o
   fuso mudaram, o que mantém o reenvio ao mudar o horário e a atualização do
   fuso de quem viaja. Um horário entre 23h e 23h59 não chega mais à meia-noite:
-  depois da virada o dia de referência é o de ontem (`referenciaDoSlot`). Desligar
+  depois da virada o dia de referência é o de ontem (`referenciaDoSlot`).
+  Desligar
   os lembretes em outro aparelho, pela conta, agora cancela também o lembrete
   local deste.
 - **Dias lidos do cronograma têm ano** (`AAAA-MM-DD`, `lib/dados/estado.dart`):
@@ -696,9 +816,15 @@ motivo novo.
   `entrarNaConta` mostra `DevocionalConsentimentoDaNuvem`, cujo botão é o
   próprio gesto que abre a janela do Google; quem já estava logado o recebe ao
   abrir o app (`_pedirConsentimento` em `main.dart`), e recusar sai da conta.
+  Sem consentimento neste aparelho (`Estado.consentimentoDaNuvem`) nada sobe
+  nem desce: nem o documento `usuarios/{uid}` (`Nuvem`) nem os planos da
+  coleção `planos` (`PlanosNaNuvem`, em `lib/dados/planos_nuvem.dart`). Ao
+  consentir, `Nuvem.aoConsentir()` liga as sincronias e faz os planos começarem
+  a descer.
 - **O chat manda só as últimas 20 falas** à Gemini (`lib/dados/ia.dart`), com a
   primeira sempre do usuário. Resposta que bate o teto de 2.048 tokens sai com
-  um aviso de corte no fim; bloqueio de segurança dá uma mensagem própria pedindo
+  um aviso de corte no fim; bloqueio de segurança dá uma mensagem própria
+  pedindo
   para reformular, sem "tente de novo". A política de privacidade diz que o app
   usa o plano pago da API Gemini, no qual o Google não usa o conteúdo para
   treinar nem melhorar os produtos e só o registra por tempo limitado para
@@ -717,8 +843,9 @@ reserva**, só no Android, em T+5 min, todo dia (`flutter_local_notifications`,
 atrasava 10-30 min e pulava a janela de 5 min — o scheduler do Google não; e
 mesmo assim sobrou tolerância: 60 min depois do horário cadastrado ainda
 envia (60 tentativas na cadência de 1 min, não 12), com um envio único por
-dia marcado no próprio documento (`ultimoEnvioManha`/`ultimoEnvioNoite`,
-escritos só pela Function). A Function não lê mais a coleção inteira a cada
+dia e por slot marcado no próprio documento (`ultimoEnvioManha`,
+`ultimoEnvioPromessas`, `ultimoEnvioLeitura` e `ultimoEnvioNoite`, escritos só
+pela Function). A Function não lê mais a coleção inteira a cada
 minuto (eram 1.440 leituras por aparelho por dia, e o grátis acabava com ~35
 aparelhos): cada documento tem `proximoEnvio`, o instante em que volta a ser
 lido, e a execução do minuto consulta só `proximoEnvio <= agora`, junta as
@@ -734,17 +861,29 @@ quando todos já tinham o campo: custava ~96 leituras por documento por dia. Sem
 ela, um documento cujo gatilho falhe fica fora da consulta até a próxima
 gravação do app; se isso aparecer no log, a varredura volta numa execução
 avulsa. Se um documento some no meio de um lote, a gravação cai para um
-documento por vez em vez de repetir o aviso dos outros. A lógica de horário vive em
-`functions/src/regras.ts`, testada com `npm --prefix functions test`. O log traz
+documento por vez em vez de repetir o aviso dos outros. A lógica de horário vive
+em
+`functions/src/regras.ts`, testada com `npm --prefix functions run build` e
+depois `npm --prefix functions test` (o teste importa o JavaScript compilado em
+`functions/lib/`). O log traz
 "N lembrete(s) vencido(s)": perto de zero nos minutos sem horário é o sinal de
 que está funcionando.
 
-- **Formato das notificações do push**: "Venha ler a reflexão para sua manhã
-  em Josué 5:12", "Venha ler a reflexão para sua noite em Cantares de Salomão 1:4" e
-  "Venha ler a Promessa de Deus para o seu dia em Gênesis 3:15" — referência
-  do dia, calculada dos assets. No Android quem
+- **Formato das notificações do push**: quatro slots, cada um com o próprio
+  horário e o próprio envio do dia (`SLOTS` em `functions/src/index.ts`):
+  Devocional da Manhã ("Venha ler a reflexão para sua manhã em Josué 5:12"),
+  Promessas de Deus ("Venha ler a Promessa de Deus para o seu dia em Gênesis
+  3:15"), Leitura do Dia (a faixa do cronograma, como "Marcos 1 a 3", da
+  variante bissexta em ano bissexto) e Devocional da Noite ("Venha ler a
+  reflexão para sua noite em Cantares 1:4") — referência do dia, calculada dos
+  assets. Documento antigo sem `minutosPromessas` ou `minutosLeitura` herda o
+  horário da manhã. Cada slot só sai com o seu interruptor ligado em
+  `config/recursos` (`manhaAtivo`, `promessasAtivo`, `cronogramaAtivo`,
+  `noiteAtivo`, lidos por `lerInterruptores` uma vez por execução; sem o
+  documento, vale ligado), e no Android o app confere de novo antes de exibir.
+  No Android quem
   exibe é o handler Dart (data-only acorda o app morto); na web, o service
-  worker. A manhã dispara duas notificações (devocional + promessas). O
+  worker. O
   lembrete local de reserva usa um corpo genérico fixo, sem a referência do
   dia (ver bullet abaixo).
 - **Reserva permanente, sem exato**: o lembrete local dispara todo dia às
@@ -768,7 +907,8 @@ que está funcionando.
   `lembretes/{token}`, id = token FCM): `{fid, minutosManha, minutosPromessas,
   minutosLeitura, minutosNoite, fuso}` escritos pelo app, com o identificador
   igual ao id, mais `ultimoEnvio*` e `proximoEnvio` escritos só pela Function
-  (Admin SDK ignora as regras; o cliente não pode gravar `proximoEnvio`). A proteção é o `hasOnly`/formato estrito de `valido()` e a
+  (Admin SDK ignora as regras; o cliente não pode gravar `proximoEnvio`). A
+  proteção é o `hasOnly`/formato estrito de `valido()` e a
   proibição de `list`; App Check é opcional nesta coleção (aparelhos sem Play
   Integrity precisam registrar o lembrete).
 - **Identificador é o FID**: o app usa `FirebaseInstallations.getId()` e
@@ -779,7 +919,9 @@ que está funcionando.
   `firebase_messaging_installation_id_enabled=true`: sem ele o `register()`
   do firebase_messaging 17 lança "API disabled" e o aparelho nunca é cadastrado.
 - **Conteúdo da Function**: `functions/src/assets/conteudo-lembretes.json`
-  (37 KB, 366 dias) gerado dos JSONs do app só com referência/título.
+  (cerca de 55 KB, 366 dias) gerado dos JSONs do app só com as referências de
+  Manhã e Noite, título e referência da promessa e a faixa do cronograma (`l`,
+  e `lb` para o ano bissexto).
   Regenerar se o conteúdo anual mudar.
 - **Ícone único no Android, tema só na cor de destaque**: um só drawable
    (`ic_lembrete`) para a notificação inteira — presente no
@@ -795,7 +937,8 @@ que está funcionando.
   círculo de destaque atrás do ícone na gaveta expandida
   (`AndroidNotificationDetails.color`, calculada em `_corDoTema()`
   em `lib/dados/lembretes.dart`) — dourado no tema escuro, bronze no claro,
-  mesmo par de `DevocionalCores.dourado`/`DevocionalCores.bronze` de `lib/estilo/cores.dart`
+  mesmo par de `DevocionalCores.dourado`/`DevocionalCores.bronze` de
+  `lib/estilo/cores.dart`
   (duplicado como constante, não importado — `lib/dados` não depende do
   pacote de estilo). Na web, que renderiza o ícone em cor cheia de verdade
   (sem máscara), a página continua espelhando o tema efetivo no Cache
@@ -839,7 +982,9 @@ que está funcionando.
   para qualquer caminho sob `/devocional/` (rewrite em `firebase.json`), então
   abrir `/devocional/biblia` direto ou dar F5 funciona sem truque de 404.
 - **Chat com URL própria** (16/08/2026): as conversas (`/charles-spurgeon`,
-  `/felipe-ambrozini`) são empurradas por `push` por cima das abas, e a barra
+  `/felipe-ambrozini`, que hoje abrem o histórico, com cada conversa em
+  `/<slug>/conversa/<id>`) são empurradas por `push` por cima das abas, e a
+  barra
   de endereço acompanha porque `main.dart` liga
   `GoRouter.optionURLReflectsImperativeAPIs` (opção estática do go_router, que
   por padrão não reflete na URL as navegações imperativas — o motivo de a
@@ -853,7 +998,8 @@ que está funcionando.
   (`/charles-spurgeon`, `/felipe-ambrozini`). É a única entrada do chat em
   todas as plataformas e larguras (os balões flutuantes das telas largas
   foram removidos: duas entradas para o mesmo chat).
-- **`usePathUrlStrategy()`** vem de `package:flutter_web_plugins/url_strategy.dart`,
+- **`usePathUrlStrategy()`** vem de
+  `package:flutter_web_plugins/url_strategy.dart`,
   não do barril `flutter_web_plugins.dart` (o barril puxa `dart:ui_web` sem
   condicional e quebra a compilação para a VM, que é o que o `flutter test`
   usa).
@@ -862,17 +1008,22 @@ que está funcionando.
   **Teto conhecido**: é uma prévia só para o site inteiro; link direto para um
   versículo mostra a mesma imagem genérica (prévia por rota exigiria render no
   servidor).
-- **Link direto**, formato `?ler=joao.3.16` (capítulo sem versículo: `?ler=joao.3`).
-  Parâmetro de consulta, não caminho, porque o
-  Pages devolveria 404. `alvoDoLink` e `linkDoVersiculo` em `lib/dados/canon.dart`
+- **Link direto**, formato `?ler=joao.3.16` (capítulo sem versículo:
+  `?ler=joao.3`).
+  Parâmetro de consulta, não caminho: a escolha vem da época do GitHub Pages,
+  que devolvia 404 para caminho desconhecido. No Firebase Hosting o rewrite do
+  SPA já resolveria um caminho, mas o formato ficou. `alvoDoLink` e
+  `linkDoVersiculo` em `lib/dados/canon.dart`
   fazem a ida e volta.
 - **Planos só para quem tem conta**: a aba "Meus planos" continua visível, mas
   sem login mostra o `DevocionalCartaoDeEntrar` (aviso + "Entrar com Google")
   no lugar da lista, e o plano fixo "A Vida de Jesus em 30 dias" também some da
   Hoje (`Recursos.planos`). Um link de plano compartilhado aberto sem
-  conta continua pedindo login (`_CartaoDeEntrar` em `lib/telas/meu_plano.dart`).
+  conta continua pedindo login (o mesmo `DevocionalCartaoDeEntrar`, em
+  `lib/telas/meu_plano.dart`).
 - **Link do plano compartilhado leva o título como slug** (20/08/2026),
-  `?plano=<slug-do-titulo>-<id>` (`linkDoPlano` em `lib/dados/planos_nuvem.dart`).
+  `?plano=<slug-do-titulo>-<id>` (`linkDoPlano` em
+  `lib/dados/planos_nuvem.dart`).
   O slug é só estética: quem abre busca pelo plano sempre pelo `id`, o último
   trecho depois do último hífen (`idDoParametroDePlano`), que nunca tem hífen
   dentro e por isso continua único mesmo com dois planos de mesmo título.
@@ -888,21 +1039,29 @@ que está funcionando.
   pessoa fechou o aviso).
 - **Tela Sobre completa**: `lib/telas/sobre.dart`, com dois links (YouTube e
   Instagram) abertos com `launchUrl` do `url_launcher`.
-- **`biblia.dart`, `devocional.dart` e `busca.dart` se importam em ciclo** —
-  import circular entre arquivos é permitido em Dart, não é um erro: a busca
+- **As telas `biblia.dart`, `devocional.dart` e `busca.dart` se importam em
+  ciclo**, hoje de forma indireta (via
+  `lib/controladores/biblia_controlador.dart`,
+  `lib/controladores/devocional_controlador.dart` e
+  `lib/widgets/item_de_achado*.dart`) — import circular entre arquivos é
+  permitido em Dart, não é um erro: a busca
   abre o leitor num versículo ou num devocional, e os leitores abrem a busca
   (`Ctrl+F` na Bíblia; lupa na barra do devocional, que abre direto na aba
   "Devocionais" via `TelaBusca(abaInicial:)`).
-- **Conta Google e cópia na nuvem (Web, Android e iOS)** (19/08/2026): `Sincronia` em
+- **Conta Google e cópia na nuvem (Web, Android e iOS)** (19/08/2026):
+  `Sincronia` em
   `lib/dados/nuvem.dart` é um ouvinte de fora sobre o `ChangeNotifier` do
   `Estado`, reaproveitando `exportar()`/`importar()` para favoritos/notas e
-  `serializarConversas`/`serializarPlanos`/`serializarLembretes` para os
-  demais domínios. O filtro contra ruído e contra loop é comparar a string
+  `serializarConversas`/`serializarPlanos`/`serializarLembretes`/`serializarLeituraDeLivros`
+  para os demais domínios. O filtro contra ruído e contra loop é comparar a
+  string
   serializada com a última enviada — só na entrada na conta (`comecar()`) a
   base de comparação é a cópia que veio da conta, e não a local: sem isso, o
   que só existia no aparelho nunca subia sozinho (ver "Plano que só existia
-  no celular não aparecia na web" abaixo). Documento único por usuário no Firestore
-  (`usuarios/{uid}`) com campos `copia`, `conversas`, `planos` e `lembretes`;
+  no celular não aparecia na web" abaixo). Documento único por usuário no
+  Firestore
+  (`usuarios/{uid}`) com campos `copia`, `conversas`, `lembretes`, `planos` e
+  `livros`;
   **remoção não sincroniza** (funde e nunca apaga) nos domínios de cópia e
   planos. Login por `signInWithPopup` na web; no Android/iOS usa
   `google_sign_in` nativo.
@@ -913,16 +1072,20 @@ que está funcionando.
   `lib/dados/nuvem.dart` checar `defaultTargetPlatform` (que reflete o
   user-agent mesmo com `kIsWeb`) e usar redirect só nesse caso, mantendo popup
   no desktop.
-- **`lib/firebase_options.dart` lê do `.env.json` via `flutter_dotenv`** (19/08/2026):
+- **`lib/firebase_options.dart` lê as chaves por `String.fromEnvironment`**
+  (19/08/2026):
   não é mais gerado pelo `flutterfire configure`. As chaves ficam no `.env.json`
-  (gitignored) e entram via `dotenv.env['CHAVE']` no `firebase_options.dart`.
-  O CI usa `--dart-define-from-file=.env.json` ou secrets do GitHub.
+  (gitignored) e entram no build como `--dart-define`: localmente por
+  `--dart-define-from-file=.env.json`, no CI por um `--dart-define` por secret
+  do GitHub. O `.env.json` não é asset nem vai dentro do app; não há
+  `flutter_dotenv`.
   As chaves são públicas por desenho: quem protege os dados são as regras do
   Firestore (`firestore.rules`, publicado pelo CI a cada push) e a lista de
   domínios autorizados.
 - **Nome do pacote** trocado para `com.felipeambrozini.devocional` (09/08/2026),
   refletido no `android/app/build.gradle.kts`.
-- **Android em Kotlin embutido do AGP 9** (05/11/2026): `android.builtInKotlin=true`
+- **Android em Kotlin embutido do AGP 9** (05/11/2026):
+  `android.builtInKotlin=true`
   em `android/gradle.properties` e nada de `kotlin-android` no
   `android/app/build.gradle.kts`; `android.newDsl` segue `false` porque o
   Flutter Gradle Plugin ainda usa a DSL antiga. Por isso o `google_api_headers`
@@ -940,10 +1103,11 @@ que está funcionando.
   completa e é a fonte da verdade sobre o que sobe para a nuvem; o resumo em
   Sobre (seção Conta e privacidade) só linka para ela. Escrita para corrigir
   uma lacuna real: o resumo antigo dizia que só favoritos, anotações e dias
-  lidos subiam, mas `Nuvem._empurrarConversas` (`lib/dados/nuvem.dart`) também
-  sincroniza o histórico do chat com IA para quem tem conta.
+  lidos subiam, mas a `Nuvem` (`_empurrarCampo(uid, 'conversas', …)` em
+  `lib/dados/nuvem.dart`) também sincroniza o histórico do chat com IA para
+  quem tem conta.
 - **Termos de serviço** (21/08/2026): `lib/telas/termos.dart`, rota própria
-  (`/termos`) e entrada na folha de ajustes ao lado de Sobre, com o mesmo
+  (`/termos`) e entrada dentro da tela Sobre, com o mesmo
   tratamento visual da política de privacidade. Criada para preencher o campo
   de link de termos exigido pela tela de consentimento OAuth do Google Cloud
   Console (`APIs & Services → OAuth consent screen → Edit app registration`).
@@ -983,8 +1147,9 @@ que está funcionando.
   adaptativo; `icone_adaptativo.png` (bronze, sem fundo) e
   `icone_adaptativo_escuro.png` (dourado, sem fundo) para as duas camadas de
   frente do ícone adaptativo do Android, uma por tema; `icone_mascaravel.png`
-  (fundo chapado) para os `Icon-maskable-*` da web; `icone_claro.png`, pronta
-  para quando iOS 18 tiver variante clara configurada (ainda manual, o
+  (fundo chapado) para os `Icon-maskable-*` da web; `icone_claro.png`, que hoje
+  alimenta o `favicon-claro.png` da web (por `--corrigir`) e fica pronta para
+  quando o iOS 18 tiver variante clara configurada (ainda manual, o
   `flutter_launcher_icons` 0.14.4 não gera isso); `icone_tingido.png`
   (silhueta transparente) para o ícone tingido do iOS 18.
 - **A splash também é a marca-texto "Devocional"** (mesma fonte, dourada no
@@ -1032,6 +1197,7 @@ flutter build apk --dart-define-from-file=.env.json
 # Web
 flutter build web --dart-define-from-file=.env.json
 ```
+
 (O `.env.json` deve conter todas as chaves — ver `.env.example.json` na raiz
 para a lista completa e `SECURITY.md §3.1` para o motivo de cada uma:
 `FIREBASE_API_KEY_*`, `GEMINI_API_KEY_*`, `AUDIO_BASE_URL`, `FCM_VAPID_KEY`,
@@ -1081,7 +1247,7 @@ O site mora em
 `www.felipeambrozini.com.br/devocional/` (Firebase Hosting, não GitHub Pages;
 um nível abaixo da raiz do domínio; o build vai para `public/devocional` e o
 rewrite em `firebase.json` cuida do SPA). O build usa `--base-href
-/devocional/` e as chaves de API vêm dos Secrets do repositório (cerca de 22
+/devocional/` e as chaves de API vêm dos Secrets do repositório (21
 `--dart-define`, ver `.env.example.json` e `SECURITY.md §3.1` — entre elas
 `FIREBASE_API_KEY_WEB`, `GEMINI_API_KEY_WEB`, `AUDIO_BASE_URL`). O deploy usa
 `FIREBASE_SERVICE_ACCOUNT` (JSON da conta de serviço do Firebase) e publica
@@ -1102,12 +1268,13 @@ Ver `headers` em `firebase.json`.
 
 Antes de publicar, o job `regras-e-functions` do `deploy-web.yml` roda os testes
 das regras no emulador (`npm --prefix test_regras test`) e os da Function
-(`npm --prefix functions test`); o `deploy` só começa se ele passar.
+(`npm --prefix functions run build` e depois `npm --prefix functions test`);
+o `deploy` só começa se ele passar.
 Voltar atrás: o Hosting tem histórico de versões no console do Firebase (um
 clique em "Reverter"); regras e Function voltam com `git revert` do commit e um
 novo push.
 
 Além do build em `public/devocional`, o mesmo passo copia `404.html`,
-`robots.txt` e `llms.txt` para a raiz do `public` — o Hosting só olha esses
+`robots.txt`, `llms.txt` e `sitemap.xml` para a raiz do `public` — o Hosting só
+olha esses
 arquivos na raiz do domínio, nunca num subcaminho.
-

@@ -1,0 +1,14 @@
+// Configuração do markdownlint (extensão do VS Code e markdownlint-cli2).
+{
+  // Linha de 80 colunas no texto; tabela e bloco de código (comando, JSON de
+  // exemplo) não quebram linha sem mudar de sentido, então ficam de fora.
+  "MD013": { "tables": false, "code_blocks": false },
+  // O DESIGN.md repete "Named Rules" em cada seção, e os relatórios repetem
+  // "Alta/Média/Baixa" por documento: só conta repetição entre irmãos.
+  "MD024": { "siblings_only": true },
+  // Só a chave `title` da raiz do front matter conta como título do
+  // documento. O padrão aceitava recuo, e o `typography.title` do DESIGN.md
+  // virava um segundo h1.
+  "MD025": { "front_matter_title": "^title\\s*[:=]" },
+  "MD041": { "front_matter_title": "^title\\s*[:=]" }
+}

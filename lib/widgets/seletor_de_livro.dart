@@ -238,7 +238,6 @@ class _GradeDeCapitulos extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cor = Theme.of(context).colorScheme;
     return GridView.builder(
       padding: const EdgeInsets.all(DevocionalEspacamento.sp16),
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
@@ -250,11 +249,21 @@ class _GradeDeCapitulos extends StatelessWidget {
       itemCount: livro.capitulos,
       itemBuilder: (context, i) => OutlinedButton(
         onPressed: () => ao(i + 1),
+        // Fundo tonal: o fio a 50% sozinho mal separava as células na folha.
         style: OutlinedButton.styleFrom(
           padding: EdgeInsets.zero,
-          side: BorderSide(color: cor.outline.withValues(alpha: 0.6)),
+          backgroundColor: Theme.of(
+            context,
+          ).colorScheme.surfaceContainerHighest,
         ),
-        child: Text('${i + 1}', style: Theme.of(context).textTheme.bodyMedium),
+        // Na escala de leitura máxima o "150" de Salmos não cabia na célula.
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            '${i + 1}',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
       ),
     );
   }

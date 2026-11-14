@@ -11,13 +11,15 @@ android, web
 Felipe Ambrozini, o criador, é o usuário primário: usa o app todo dia no
 celular para a leitura devocional pessoal. A partir de 09/08/2026 o app passou
 a ser compartilhado com dezenas de pessoas, que o usam principalmente na web
-(link do GitHub Pages, distribuído boca a boca). O público é cristão,
+(site no Firebase Hosting, link distribuído boca a boca; o Android sai pelo
+Firebase App Distribution). O público é cristão,
 falante de português brasileiro, que lê a Bíblia e devocionais diariamente.
 
 ## Product Purpose
 
 App devocional diário em português brasileiro com a Bíblia completa (tradução
-autoral da King James 1611, 31.102 versículos, exatamente o canon), devocionais de
+autoral da King James 1611, 31.102 versículos, exatamente o canon), devocionais
+de
 Charles Spurgeon (Manhã e Noite, e Promessas de Deus), cronograma anual de
 leitura e planos personalizados/compartilhados, introduções aos 66 livros na
 voz de Spurgeon, favoritos, notas, busca, leitura em voz alta e chat com IA
@@ -26,7 +28,8 @@ certo, no ritmo certo, sem fricção.
 
 ## Positioning
 
-A tradução autoral da King James 1611: uma tradução interna, feita do texto inglês de 1611
+A tradução autoral da King James 1611: uma tradução interna, feita do texto
+inglês de 1611
 para o português, com contagem de versículos idêntica ao canon (31.102) e os
 66 livros completos — coisa que nenhum app vizinho pode copiar de verdade. A
 isso se somam os devocionais de Spurgeon integralmente traduzidos na voz
@@ -50,16 +53,20 @@ vitoriana dele, tratando o leitor por "tu".
   (folha de compartilhar); conta Google em todas as plataformas, para
   espelhar na nuvem.
 - Navegação: abas Hoje, Bíblia, Devocional, Biblioteca, Plano e Conversas; Sobre
-  (créditos, canais e ajuda), Perguntas frequentes, Política de privacidade e
-  Termos de serviço moram na folha de ajustes. Na web cada aba tem URL própria;
-  `/sobre`, `/faq`, `/privacidade`, `/termos` e cada conversa também, e links diretos no formato
+  (créditos, canais e ajuda), Perguntas frequentes e Política de privacidade
+  moram na folha de ajustes; os Termos de serviço abrem de dentro de Sobre. Na
+  web cada aba tem URL própria;
+  `/sobre`, `/faq`, `/privacidade`, `/termos` e cada conversa também, e links
+  diretos no formato
   `?ler=joao.3.16` abrem um versículo (`?plano=<id>` abre um plano
   compartilhado).
 - Consentimento da LGPD antes de subir dados à nuvem: favoritos, anotações,
-  progresso e conversas revelam convicção religiosa (dado sensível), então o
-  primeiro login no aparelho passa por um diálogo de consentimento, e quem já
-  tinha sessão aberta o recebe ao abrir o app (recusar sai da conta). Sem
-  consentimento neste aparelho nenhuma sincronia começa: nada sobe nem desce.
+  progresso, planos e conversas revelam convicção religiosa (dado sensível),
+  então o primeiro login no aparelho passa por um diálogo de consentimento, e
+  quem já tinha sessão aberta o recebe ao abrir o app (recusar sai da conta).
+  Sem consentimento neste aparelho nenhuma sincronia começa, a dos planos
+  (próprios e compartilhados) inclusive: nada sobe nem desce. Consentir liga
+  as sincronias na hora, e os planos da conta descem nesse momento.
 - Conversas com IA (Gemini, plano pago por uso; só para maiores de 18 anos,
   como exigem os termos da Gemini): duas personas, Charles Spurgeon e Felipe
   Ambrozini, com histórico salvo por conversa, numa aba própria em todas as
@@ -68,7 +75,8 @@ vitoriana dele, tratando o leitor por "tu".
   recebe no sistema a orientação de indicar essa ajuda.
 - Painel admin (`/admin`, só web e só a conta do dono): liga/desliga cada
   recurso na hora (conversas, planos personalizados, cronograma, cada leitura
-  do devocional, ouvir textos) e edita os convidados do chat, um e-mail por
+  do devocional, ouvir textos, Biblioteca e comentário no capítulo) e edita os
+  convidados do chat, um e-mail por
   convite (os planos próprios não têm lista: basta a conta Google).
   Ferramenta de operação, não parte da leitura diária — por isso é a única
   exceção à regra de "um app só em todas as plataformas".
@@ -131,9 +139,11 @@ vitoriana dele, tratando o leitor por "tu".
   Deus), o Compartilhar ficou só no botão do cartão, que manda título,
   citação e comentário do dia com um link que reabre a mesma leitura.
 - Biblioteca de livros de Spurgeon em domínio público, traduzidos para o app
-  (começa com *Somente pela Graça*): leitura por capítulo, continuar de onde
+  (22 obras, entre elas *Somente pela Graça*): leitura por capítulo, continuar
+  de onde
   parou, progresso por livro e destaques com nota por parágrafo. Os versículos
-  citados saem da King James do app, nunca de tradução nova. É uma aba da barra de
+  citados saem da King James do app, nunca de tradução nova. É uma aba da barra
+  de
   baixo (no lugar de Notas, que virou um ícone na barra de cima do Devocional
   e da Bíblia); a Hoje mostra o último livro iniciado; o painel admin a liga e
   desliga.
@@ -180,14 +190,16 @@ vitoriana dele, tratando o leitor por "tu".
 ## Evidence on Hand
 
 - Conteúdo todo carregado e verificado (README): King James 1611 com 31.102
-  versículos, batendo exatamente com o canon; Manhã e Noite com 366 dias completos;
+  versículos, batendo exatamente com o canon; Manhã e Noite com 366 dias
+  completos;
   Promessas de Deus 366/366; cronograma 365/366 dias; 66 introduções completas;
   comentários de Spurgeon nos 31.102 versículos (`assets/comentarios/`).
 - Suíte de testes em `test/` cobre canon, bissexto, tema (contrastes WCAG),
   fontes, lembretes e comportamento de plataforma.
 - Links de canais do Felipe (YouTube e Instagram) na tela Sobre.
 - Ausências que não devem ser fabricadas: sem depoimentos de usuários, sem
-  listagem em lojas (distribuição é o link do Pages), sem dados de uso ou
+  listagem em lojas (distribuição é o link do site no Firebase Hosting e, no
+  Android, o Firebase App Distribution), sem dados de uso ou
   público mensurado.
 
 ## Product Principles
@@ -197,24 +209,28 @@ vitoriana dele, tratando o leitor por "tu".
 2. O texto é o produto: fidelidade de tradução, voz, tipografia, escala e
    contraste de leitura têm prioridade sobre qualquer recurso novo.
 3. Um app só, fiel em todas as plataformas: a mesma experiência e o mesmo
-   design em celular, web e desktop; a web serve o público, o celular serve o
+   design no celular e na web (inclusive no navegador de desktop); a web serve o
+   público, o celular serve o
    dono, sem bifurcações de produto.
 4. Conteúdo verificável: números de versículos, canon e textos devocionais
    são checados contra as fontes; nada de conteúdo inventado ou atribuído.
 5. Os dados são do leitor: favoritos, notas e progresso podem sempre ser
-   exportados e importados; sincronização em nuvem só onde o armazenamento
-   local é frágil (navegador).
+   exportados e importados; a sincronização em nuvem é opcional, só pela
+   conta Google e com consentimento, igual em todas as plataformas.
 
 ## Accessibility & Inclusion
 
-- Movimento: `prefers-reduced-motion` na web força `MediaQuery.disableAnimations`
+- Movimento: `prefers-reduced-motion` na web força
+  `MediaQuery.disableAnimations`
   na raiz, e as rolagens que animam leem isso (Android/iOS já sinalizam pelo
   próprio MediaQuery quando o usuário liga "reduzir animações").
 
 - Contraste WCAG garantido por teste (`test/tema_test.dart` falha se
   clarearem o bronze ou piorarem os pares anotados).
-- Escala do texto de leitura ajustável pelo usuário, multiplicando só o corpo
-  do texto.
+- Escala do texto de leitura ajustável pelo usuário (0,85× a 2×): o corpo de
+  leitura acompanha a escala inteira; títulos, rótulos e navegação crescem só
+  30% do pedido, com teto de 1,3×, para não estourar a barra de cima nem a de
+  navegação.
 - Tema claro e escuro completos, seguindo o aparelho por padrão.
 - Palavras de Deus (Pai, Jesus e Espírito Santo) em vermelho no leitor da
   Bíblia, ligado por padrão e desligável na folha de ajustes. Os dois

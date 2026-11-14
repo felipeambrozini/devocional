@@ -89,4 +89,18 @@ void main() {
       );
     });
   });
+
+  group('podePuxarPlanos', () {
+    test('sem consentimento neste aparelho, nada desce', () {
+      expect(podePuxarPlanos(logado: true, consentiu: false), isFalse);
+    });
+
+    test('sem conta, nada desce', () {
+      expect(podePuxarPlanos(logado: false, consentiu: true), isFalse);
+    });
+
+    test('com conta e consentimento, os planos descem', () {
+      expect(podePuxarPlanos(logado: true, consentiu: true), isTrue);
+    });
+  });
 }

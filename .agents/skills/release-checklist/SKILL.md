@@ -18,7 +18,7 @@ local — esse último caso não mexe na versão.
 
 ## 2. Analyze + test
 
-```
+```text
 fvm flutter analyze && fvm flutter test
 ```
 

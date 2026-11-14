@@ -153,6 +153,20 @@ void main() {
         },
       );
 
+      test('$nome: a ação do aviso (Desfazer) é legível sobre o aviso', () {
+        // Sem actionTextColor o Material caía em onPrimary sobre o fundo do
+        // aviso: 1,3:1 no escuro, e o "Desfazer" sumia.
+        final aviso = construirTema(brilho: brilho).snackBarTheme;
+        expect(
+          contraste(aviso.actionTextColor!, aviso.backgroundColor!),
+          greaterThan(4.5),
+        );
+        expect(
+          contraste(aviso.contentTextStyle!.color!, aviso.backgroundColor!),
+          greaterThan(4.5),
+        );
+      });
+
       test('$nome: o botão de voz ativo tem o metal legível sobre o próprio '
           'fundo', () {
         // O estado ativo do botão de ouvir usa o anel do metal (ícone e

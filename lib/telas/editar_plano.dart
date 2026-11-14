@@ -118,7 +118,9 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                   padding: const EdgeInsets.all(DevocionalEspacamento.sp12),
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: Theme.of(dialogContext).colorScheme.outline,
+                      color: Theme.of(
+                        dialogContext,
+                      ).colorScheme.outline.withValues(alpha: 0.5),
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -144,7 +146,6 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                 textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(
                   labelText: 'Nome do plano',
-                  border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: DevocionalEspacamento.sp20),
@@ -205,7 +206,6 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                       ? 'Escolha os livros para ver o tamanho do plano.'
                       : 'O plano terá ${totalDeCapitulos()} '
                             '${totalDeCapitulos() == 1 ? 'capítulo' : 'capítulos'}.',
-                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: DevocionalEspacamento.sp20),

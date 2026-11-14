@@ -5,6 +5,8 @@ tools: Read, Grep, Glob, Write, Edit, Bash
 model: inherit
 ---
 
+# Escritor de testes Flutter
+
 Você escreve testes para o app devocional Flutter deste repositório. Antes de
 escrever qualquer teste novo, leia 2-3 arquivos existentes em `test/` que
 cubram uma área parecida com a que você vai testar — as convenções abaixo já
