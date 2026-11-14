@@ -2,7 +2,7 @@ import 'package:devocional/dados/conteudo.dart';
 import 'package:devocional/dados/estado.dart';
 import 'package:devocional/dados/recursos.dart';
 import 'package:devocional/main.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';

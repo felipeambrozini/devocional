@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:cupertino_ui/cupertino_ui.dart'
+    show GlobalCupertinoLocalizations;
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    show GlobalWidgetsLocalizations;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 // Não `flutter_web_plugins.dart` (o barril): ele também exporta o registro de
 // plugins, que importa `dart:ui_web` sem condicional e quebra a compilação
@@ -11,6 +13,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 // propósito: no-op fora da web, implementação de verdade só nela.
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'dados/canon.dart';
 import 'dados/config_admin.dart';

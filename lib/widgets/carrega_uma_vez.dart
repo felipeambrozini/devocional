@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// FutureBuilder que cria o future uma vez e só o refaz quando [chave] muda.
 ///

@@ -6,7 +6,7 @@ import 'package:devocional/dados/planos.dart';
 import 'package:devocional/telas/meu_plano.dart';
 import 'package:devocional/telas/novo_plano.dart';
 import 'package:devocional/telas/plano.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';

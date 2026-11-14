@@ -1,7 +1,7 @@
 import 'package:devocional/dados/conteudo.dart';
 import 'package:devocional/dados/estado.dart';
 import 'package:devocional/telas/notas.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';

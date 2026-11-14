@@ -12,7 +12,7 @@ import 'package:flutter/foundation.dart'
         defaultTargetPlatform,
         kIsWeb,
         visibleForTesting;
-import 'package:flutter/material.dart' show TimeOfDay;
+import 'package:material_ui/material_ui.dart' show TimeOfDay;
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../firebase_options.dart';

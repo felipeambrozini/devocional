@@ -6,7 +6,7 @@ import 'package:devocional/telas/biblia.dart';
 import 'package:devocional/telas/busca.dart';
 import 'package:devocional/widgets/widgets.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';

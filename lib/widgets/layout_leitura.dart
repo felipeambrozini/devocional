@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A largura (em px lógicos) a partir da qual a tela conta como larga: barra
 /// de navegação vira trilho lateral e a capa cresce. Um valor só em todo o

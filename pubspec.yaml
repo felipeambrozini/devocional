@@ -76,6 +76,8 @@ dependencies:
   # do aparelho (lib/dados/lembretes.dart).
   timezone: ^0.11.2
   font_awesome_flutter: ^11.0.0
+  material_ui: ^1.11.0
+  cupertino_ui: ^1.1.6
 
 dev_dependencies:
   flutter_test:

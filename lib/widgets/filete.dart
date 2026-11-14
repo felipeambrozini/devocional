@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// DevocionalFilete do metal do tema, usado para separar seções sem o peso de um Divider
 /// comum. Dourado no escuro, bronze no claro.

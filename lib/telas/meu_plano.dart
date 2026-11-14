@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 // ScrollCacheExtent ainda não é reexportado por material.dart nesta versão.
-import 'package:flutter/rendering.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../controladores/plano_controlador.dart';

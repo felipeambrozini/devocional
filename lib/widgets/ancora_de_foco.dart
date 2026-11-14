@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// O ponto de foco invisível de uma aba: é para ele que a troca de aba manda
 /// o foco do teclado (ver `DevocionalMoldura._irParaAba` em `lib/widgets/moldura.dart`). Antes o foco

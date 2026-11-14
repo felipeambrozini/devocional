@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Uma linha do painel: título, explicação e o interruptor. Com escrita no
 /// voo ([salvando]), o switch desabilita e o giro ocupa o lugar do ícone à

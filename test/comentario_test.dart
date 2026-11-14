@@ -8,7 +8,7 @@ import 'package:devocional/dados/estado.dart';
 import 'package:devocional/dados/recursos.dart';
 import 'package:devocional/telas/biblia.dart';
 import 'package:devocional/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A faixa de progresso do app: fio do metal sobre o trilho do tema, cantos
 /// quase retos e altura fina. Um só desenho para o ano (Hoje), para os planos

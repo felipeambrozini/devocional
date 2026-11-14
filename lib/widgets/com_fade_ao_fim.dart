@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Texto de até 5 linhas que desvanece na última quando o corte é real.
 ///

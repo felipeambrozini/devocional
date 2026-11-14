@@ -2,7 +2,7 @@ import 'package:devocional/dados/audio_offline.dart';
 import 'package:devocional/dados/voz.dart';
 import 'package:devocional/funcoes/aviso.dart';
 import 'package:devocional/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

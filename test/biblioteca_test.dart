@@ -12,7 +12,7 @@ import 'package:devocional/telas/biblioteca.dart';
 import 'package:devocional/telas/leitor_de_livro.dart';
 import 'package:devocional/telas/livro.dart';
 import 'package:devocional/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';

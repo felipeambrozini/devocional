@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// As duas paletas: marrom e dourada no escuro, pergaminho e bronze no claro.
 ///
