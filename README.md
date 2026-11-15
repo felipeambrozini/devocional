@@ -1131,6 +1131,23 @@ que está funcionando.
   (`lib/dados/registro.dart`); "Relatar um problema" (Sobre) abre e-mail com
   a versão já preenchida. Não reabrir sem primeiro decidir remover essa linha
   do `llms.txt` e da política de privacidade.
+- **Instalar como app (PWA)** (14/11/2026): o site já era instalável
+  (manifesto com `display: standalone`, ícones maskable, meta tags da Apple);
+  faltava avisar. O `web/index.html` guarda o `beforeinstallprompt` do
+  Chrome/Edge em `window.convitePraInstalar` (chega antes do Flutter) e
+  marca `window.appInstalado` no `appinstalled`; `lib/dados/instalacao.dart`
+  (fachada condicional, `_web`/`_io`) lê isso e sabe se o app já está aberto
+  como app (`display-mode: standalone` ou `navigator.standalone` do iPhone).
+  Dois pontos de entrada, os dois só na web e fora do app instalado: o
+  cartão `DevocionalCartaoDeInstalar` na Hoje, na vaga do "Como usar" depois
+  que ele é dispensado (para não empilhar dois cartões de boas-vindas), que
+  some com "Agora não" (`Estado.conviteDeInstalarDispensado`, por
+  navegador); e o item fixo `DevocionalItemDeInstalar` em Sobre, para quem
+  dispensou e mudou de ideia. Com convite, o toque abre a janela do
+  navegador; sem convite (Safari, Firefox) ou se ela falhar, mostra o
+  caminho pelo menu para o sistema da pessoa. O `preventDefault` no convite
+  troca a faixa automática do Chrome no celular pelo cartão da Hoje. Offline continua fora (ver
+  "Offline de verdade na web" em Produto).
 
 ### Ícone, splash e fontes
 

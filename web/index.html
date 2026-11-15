@@ -129,6 +129,19 @@
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('firebase-messaging-sw.js');
     }
+    // Convite de instalação como app (PWA), só no Chrome/Edge: o evento
+    // costuma chegar antes do Flutter carregar, então fica guardado aqui até
+    // o botão "Instalar como app" de Sobre usá-lo (ver
+    // lib/dados/instalacao_web.dart). O preventDefault troca a faixa
+    // automática do Chrome no celular por esse botão.
+    window.addEventListener('beforeinstallprompt', function (evento) {
+      evento.preventDefault();
+      window.convitePraInstalar = evento;
+    });
+    window.addEventListener('appinstalled', function () {
+      window.convitePraInstalar = null;
+      window.appInstalado = true;
+    });
   </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>

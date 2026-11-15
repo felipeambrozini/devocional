@@ -70,7 +70,12 @@ class _TelaHojeState extends State<TelaHoje> {
                   if (!estado.ajudaDispensada) ...[
                     DevocionalCartaoDeAjuda(estado: estado),
                     const SizedBox(height: DevocionalEspacamento.sp16),
-                  ],
+                  ] else
+                    // Na mesma vaga, depois do "Como usar": o convite para
+                    // instalar a versão web como app (só web, fora do app
+                    // instalado, até "Agora não"). O cartão traz o próprio
+                    // respiro de baixo, já que pode não aparecer.
+                    DevocionalCartaoDeInstalar(estado: estado),
                   // A leitura do plano abre a tela, antes dos devocionais: é a
                   // razão do app existir. A leitura da hora vem logo depois, no
                   // cartão que ganha o filete; promessas mantém o cartão sem ele,

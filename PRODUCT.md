@@ -198,8 +198,10 @@ vitoriana dele, tratando o leitor por "tu".
   fontes, lembretes e comportamento de plataforma.
 - Links de canais do Felipe (YouTube e Instagram) na tela Sobre.
 - Ausências que não devem ser fabricadas: sem depoimentos de usuários, sem
-  listagem em lojas (distribuição é o link do site no Firebase Hosting e, no
-  Android, o Firebase App Distribution), sem dados de uso ou
+  listagem em lojas (distribuição é o link do site no Firebase Hosting, que
+  se instala como app pelo navegador, com um cartão "Instalar como app" na
+  Hoje e o item fixo em Sobre, e, no Android, o Firebase App Distribution),
+  sem dados de uso ou
   público mensurado.
 
 ## Product Principles

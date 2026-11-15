@@ -35,6 +35,7 @@ class Estado extends ChangeNotifier {
   // com o app morto (ver `_corDoTema` em lib/dados/lembretes.dart).
   static const chaveModoDoTema = 'modo_do_tema';
   static const _kAjudaDispensada = 'ajuda_dispensada';
+  static const _kConviteDeInstalarDispensado = 'convite_de_instalar_dispensado';
   static const _kSwipeTooltipDispensado = 'swipe_tooltip_dispensado';
   static const _kSetasDoRodape = 'setas_do_rodape';
   static const _kLetraVermelha = 'letra_vermelha';
@@ -95,6 +96,9 @@ class Estado extends ChangeNotifier {
 
   /// A primeira visita ainda não dispensou o cartão "Como usar" da Hoje.
   bool _ajudaDispensada = false;
+
+  /// O cartão "Instalar como app" da Hoje (só web) foi dispensado.
+  bool _conviteDeInstalarDispensado = false;
 
   /// Se o aviso de boas-vindas (que apresenta o plano de Jesus) já apareceu.
   bool _boasVindasVistas = false;
@@ -207,6 +211,8 @@ class Estado extends ChangeNotifier {
     );
 
     _ajudaDispensada = _prefs.getBool(_kAjudaDispensada) ?? false;
+    _conviteDeInstalarDispensado =
+        _prefs.getBool(_kConviteDeInstalarDispensado) ?? false;
     _boasVindasVistas = _prefs.getBool(_kBoasVindasVistas) ?? false;
     _consentimentoDaNuvem = _prefs.getBool(_kConsentimentoDaNuvem) ?? false;
 
@@ -416,6 +422,19 @@ class Estado extends ChangeNotifier {
     _ajudaDispensada = true;
     notifyListeners();
     await _prefs.setBool(_kAjudaDispensada, true);
+  }
+
+  // --- convite para instalar como app (web) -------------------------------- //
+
+  bool get conviteDeInstalarDispensado => _conviteDeInstalarDispensado;
+
+  /// O cartão "Instalar como app" da Hoje é dispensado por navegador: quem
+  /// toca em "Agora não" não o vê mais. O item fixo em Sobre continua.
+  Future<void> dispensarConviteDeInstalar() async {
+    if (_conviteDeInstalarDispensado) return;
+    _conviteDeInstalarDispensado = true;
+    notifyListeners();
+    await _prefs.setBool(_kConviteDeInstalarDispensado, true);
   }
 
   // --- boas-vindas depois do primeiro login ---------------------------------- //

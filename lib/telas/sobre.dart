@@ -117,9 +117,11 @@ class _TelaSobreState extends State<TelaSobre> {
                   ),
                   onTap: _relatarProblema,
                 ),
+              // Só aparece na web, fora do app já instalado (ver o widget).
+              const DevocionalItemDeInstalar(),
               // Sem coleta remota neste app (sem Sentry, sem Analytics):
               // erro fica no console e em arquivo local. "Relatar um
-              // problema" abaixo abre e-mail com a versão já preenchida.
+              // problema" acima abre e-mail com a versão já preenchida.
               const SizedBox(height: DevocionalEspacamento.sp32),
               Semantics(
                 header: true,
