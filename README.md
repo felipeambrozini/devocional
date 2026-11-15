@@ -1054,12 +1054,11 @@ que está funcionando.
   (`Ctrl+F` na Bíblia; lupa na barra do devocional, que abre direto na aba
   "Devocionais" via `TelaBusca(abaInicial:)`).
 - **Conta Google e cópia na nuvem (Web, Android e iOS)** (19/08/2026):
-  `Sincronia` em
-  `lib/dados/nuvem.dart` é um ouvinte de fora sobre o `ChangeNotifier` do
-  `Estado`, reaproveitando `exportar()`/`importar()` para favoritos/notas e
-  `serializarConversas`/`serializarPlanos`/`serializarLembretes`/`serializarLeituraDeLivros`
-  para os demais domínios. O filtro contra ruído e contra loop é comparar a
-  string
+  `Sincronia` em `lib/dados/nuvem.dart` é um ouvinte de fora sobre o
+  `ChangeNotifier` do `Estado`, reaproveitando `exportar()`/`importar()` para
+  favoritos/notas e `serializarConversas`, `serializarPlanos`,
+  `serializarLembretes` e `serializarLeituraDeLivros` para os demais
+  domínios. O filtro contra ruído e contra loop é comparar a string
   serializada com a última enviada — só na entrada na conta (`comecar()`) a
   base de comparação é a cópia que veio da conta, e não a local: sem isso, o
   que só existia no aparelho nunca subia sozinho (ver "Plano que só existia
@@ -1151,8 +1150,8 @@ que está funcionando.
   dispensou e mudou de ideia. Com convite, o toque abre a janela do
   navegador; sem convite (Safari, Firefox) ou se ela falhar, mostra o
   caminho pelo menu para o sistema da pessoa. O `preventDefault` no convite
-  troca a faixa automática do Chrome no celular pelo cartão da Hoje. Offline continua fora (ver
-  "Offline de verdade na web" em Produto).
+  troca a faixa automática do Chrome no celular pelo cartão da Hoje.
+  Offline continua fora (ver "Offline de verdade na web" em Produto).
 
 ### Ícone, splash e fontes
 
@@ -1210,6 +1209,14 @@ recursos. O SDK é gerido pelo FVM (ver `.fvmrc`), canal `stable`.
 flutter test
 flutter analyze
 ```
+
+`test/regras_do_codigo_test.dart` trava as regras que o analyzer não
+conhece, inclusive a da documentação: Markdown do projeto (os `.md` da raiz,
+as skills e os agentes do projeto e as notas de `tools/`) quebra em 80
+colunas, com as mesmas exceções do MD013 em `.markdownlint.jsonc` (tabela,
+bloco de código, front matter e URL sem espaço depois da coluna 80). A
+extensão markdownlint do VS Code avisa enquanto se edita; o teste pega quem
+edita por fora dela.
 
 ## Gerando o app
 

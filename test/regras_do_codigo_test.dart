@@ -64,6 +64,46 @@ void main() {
     });
   });
 
+  group('documentação', () {
+    test('Markdown com no máximo 80 colunas (MD013)', () {
+      final achados = <String>[];
+      for (final arquivo in _markdownsDoProjeto()) {
+        final caminho = arquivo.path.replaceAll(r'\', '/');
+        final linhas = arquivo.readAsLinesSync();
+        for (final numero in _linhasLongas(linhas)) {
+          achados.add('$caminho:$numero (${linhas[numero - 1].length})');
+        }
+      }
+      expect(
+        achados,
+        isEmpty,
+        reason:
+            'Texto de Markdown quebra em 80 colunas, como o '
+            '.markdownlint.jsonc pede (tabela, bloco de código, front '
+            'matter e URL sem espaço depois da coluna 80 ficam de fora). '
+            'Os achados:\n${achados.join('\n')}',
+      );
+    });
+
+    test('a régua ignora o que o markdownlint ignora', () {
+      final longa = 'palavra ' * 12;
+      expect(
+        _linhasLongas([
+          '---',
+          'description: $longa',
+          '---',
+          '| $longa |',
+          '```',
+          longa,
+          '```',
+          'veja <https://exemplo.com/${'a' * 90}>',
+          longa,
+        ]),
+        [9],
+      );
+    });
+  });
+
   group('sincronia com a conta', () {
     test(
       'o envio de cada campo substitui o campo inteiro, sem mesclar mapas',
@@ -217,4 +257,59 @@ String _recorte(String texto) {
     return texto.substring(comecar, fim).trim();
   }
   return texto.trim();
+}
+
+/// Os Markdown escritos neste projeto: os da raiz (README, PRODUCT, DESIGN,
+/// AGENTS, CLAUDE, SECURITY), as skills e os agentes do projeto e as notas
+/// de `tools/`. Os `impeccable` são de terceiros, copiados como vieram, e
+/// `docs/` não é versionado.
+List<File> _markdownsDoProjeto() {
+  bool ehMarkdown(FileSystemEntity e) => e is File && e.path.endsWith('.md');
+  bool deTerceiros(File f) =>
+      f.path.replaceAll(r'\', '/').contains('impeccable');
+  List<File> em(String pasta, {bool recursivo = true}) {
+    final dir = Directory(pasta);
+    if (!dir.existsSync()) return const [];
+    return dir
+        .listSync(recursive: recursivo)
+        .where(ehMarkdown)
+        .cast<File>()
+        .where((f) => !deTerceiros(f))
+        .toList();
+  }
+
+  return [
+    ...em('.', recursivo: false),
+    ...em('.agents/skills'),
+    ...em('.claude/agents'),
+    ...em('tools'),
+  ];
+}
+
+/// Números (a partir de 1) das linhas acima de 80 colunas, com as mesmas
+/// exceções do MD013 configurado em `.markdownlint.jsonc`: front matter,
+/// bloco de código e tabela não contam, e uma linha só conta se tiver espaço
+/// depois da coluna 80 (uma URL comprida não tem onde quebrar).
+List<int> _linhasLongas(List<String> linhas) {
+  const limite = 80;
+  final achadas = <int>[];
+  var noFrontMatter = linhas.isNotEmpty && linhas.first.trim() == '---';
+  var noCodigo = false;
+  for (var i = 0; i < linhas.length; i++) {
+    final linha = linhas[i];
+    final aparada = linha.trimLeft();
+    if (noFrontMatter) {
+      if (i > 0 && linha.trim() == '---') noFrontMatter = false;
+      continue;
+    }
+    if (aparada.startsWith('```') || aparada.startsWith('~~~')) {
+      noCodigo = !noCodigo;
+      continue;
+    }
+    if (noCodigo || aparada.startsWith('|')) continue;
+    if (linha.length <= limite) continue;
+    if (!linha.substring(limite).contains(RegExp(r'\s'))) continue;
+    achadas.add(i + 1);
+  }
+  return achadas;
 }
