@@ -20,6 +20,17 @@ import 'instalacao_io.dart'
     if (dart.library.js_interop) 'instalacao_web.dart'
     as plataforma;
 
+/// No iPhone e no iPad, o Safari só entrega Web Push a site instalado na tela
+/// de início (iOS 16.4+), e a permissão só pode ser pedida de dentro do app
+/// instalado. Fora dele, ligar os lembretes falha, e a única saída é
+/// instalar: a folha de ajustes troca o interruptor por esse convite.
+/// [plataforma] é o sistema do aparelho (na web, o Flutter tira do
+/// navegador); fora da web [InstalacaoDoApp.disponivel] já é falso.
+bool lembretesPedemInstalar(
+  InstalacaoDoApp instalacao,
+  TargetPlatform plataforma,
+) => instalacao.disponivel && plataforma == TargetPlatform.iOS;
+
 abstract class InstalacaoDoApp extends ChangeNotifier {
   /// A da plataforma em que o app está rodando. Os testes passam a própria
   /// ao widget em vez de trocar esta.

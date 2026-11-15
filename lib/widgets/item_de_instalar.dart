@@ -78,6 +78,10 @@ List<String> passosParaInstalar(TargetPlatform plataforma) =>
             'pontinhos. Vale no Safari, no Chrome e no Edge.',
         '2. Role as opções e toque em Adicionar à Tela de Início.',
         '3. Toque em Adicionar. O Devocional aparece entre os seus apps.',
+        '4. Para receber os lembretes, abra o Devocional pelo ícone novo, '
+            'toque no botão de ajustes dele (os controles deslizantes, no '
+            'alto da tela) e ligue os lembretes. No iPhone, eles só chegam '
+            'assim.',
       ],
       TargetPlatform.android => const [
         '1. Abra o menu do navegador (os três pontinhos no canto).',

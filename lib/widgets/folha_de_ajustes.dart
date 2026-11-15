@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
 import 'package:material_ui/material_ui.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../dados/audio_offline.dart';
 import '../dados/config_admin.dart';
 import '../dados/estado.dart';
+import '../dados/instalacao.dart';
 import '../dados/lembretes.dart';
 import '../dados/modelos.dart';
 import '../dados/nuvem.dart';
@@ -17,6 +18,7 @@ import '../funcoes/lembretes_acoes.dart';
 import '../estilo/espacamento.dart';
 import 'botao.dart';
 import 'filete.dart';
+import 'item_de_instalar.dart';
 import 'progresso_fino.dart';
 
 /// Ajustes de leitura: tamanho do texto e claro ou escuro, a dica dos botões
@@ -325,12 +327,33 @@ class _SecaoDeLembretes {
         ),
         child: Text('Lembretes', style: tema.headlineSmall),
       ),
-      SwitchListTile(
-        title: const Text('Avisar no horário do devocional'),
-        subtitle: const Text('Quatro horários independentes.'),
-        value: estado.lembretesAtivos,
-        onChanged: (novo) => _alternar(context, novo),
-      ),
+      // iPhone na aba do navegador: o interruptor só levaria a um erro de
+      // permissão (o Safari não entrega push fora do app instalado), então
+      // no lugar dele vai o caminho que funciona.
+      if (!estado.lembretesAtivos &&
+          lembretesPedemInstalar(
+            InstalacaoDoApp.instancia,
+            defaultTargetPlatform,
+          ))
+        ListTile(
+          title: const Text('Instalar para receber lembretes'),
+          subtitle: const Text(
+            'No iPhone, os lembretes só chegam com o app instalado na tela '
+            'de início. Toque para ver como.',
+          ),
+          trailing: FaIcon(
+            FontAwesomeIcons.mobileScreen,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          onTap: () => instalarComoApp(context, InstalacaoDoApp.instancia),
+        )
+      else
+        SwitchListTile(
+          title: const Text('Avisar no horário do devocional'),
+          subtitle: const Text('Quatro horários independentes.'),
+          value: estado.lembretesAtivos,
+          onChanged: (novo) => _alternar(context, novo),
+        ),
       if (estado.lembretesAtivos) ...[
         _linhaDeHorario(
           context,
@@ -419,6 +442,11 @@ class _SecaoDeLembretesExpansivel extends StatelessWidget {
         subtitle: Text(
           estado.lembretesAtivos
               ? 'Avisar no horário · 4 horários'
+              : lembretesPedemInstalar(
+                  InstalacaoDoApp.instancia,
+                  defaultTargetPlatform,
+                )
+              ? 'No iPhone, pedem o app instalado'
               : 'Avisar no horário do devocional',
           style: Theme.of(context).textTheme.bodySmall,
         ),

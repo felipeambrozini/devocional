@@ -969,7 +969,12 @@ que está funcionando.
   tem de ser pedida por gesto do usuário já dentro do app instalado — em aba
   comum não há caminho, e isso não se resolve em código (daí as meta tags
   `apple-mobile-web-app-*` de `web/index.html`). Android/Chrome recebe em aba
-  comum, sem instalar.
+  comum, sem instalar. Por isso, no iPhone fora do app instalado
+  (`lembretesPedemInstalar` em `lib/dados/instalacao.dart`), a folha de
+  ajustes troca o interruptor dos lembretes por um item que leva aos passos
+  de instalar (antes ligar ali dava "Permissão negada", que mandava a pessoa
+  procurar nas Configurações algo que não existe); o último passo do iPhone
+  lembra de ligar os lembretes de dentro do app instalado.
 - **Deploy**: `deploy-web.yml` publica hosting + regras + functions juntos;
   o primeiro deploy cria sozinho o job do Cloud Scheduler. Requer plano Blaze
   (billing ativa; consumo fica dentro do free tier).

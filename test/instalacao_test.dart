@@ -222,6 +222,24 @@ void main() {
     debugDefaultTargetPlatformOverride = null;
   });
 
+  test('lembretes pedem instalar só no iPhone fora do app instalado', () {
+    final naAba = _InstalacaoFalsa();
+    final instalado = _InstalacaoFalsa(disponivel: false);
+    expect(lembretesPedemInstalar(naAba, TargetPlatform.iOS), isTrue);
+    expect(lembretesPedemInstalar(instalado, TargetPlatform.iOS), isFalse);
+    expect(lembretesPedemInstalar(naAba, TargetPlatform.android), isFalse);
+    expect(lembretesPedemInstalar(naAba, TargetPlatform.macOS), isFalse);
+    // Fora da web (Android/iOS nativos), nunca.
+    expect(
+      lembretesPedemInstalar(InstalacaoDoApp.instancia, TargetPlatform.iOS),
+      isFalse,
+    );
+  });
+
+  test('os passos do iPhone levam aos lembretes', () {
+    expect(passosParaInstalar(TargetPlatform.iOS).last, contains('lembretes'));
+  });
+
   test('cada sistema tem o próprio caminho', () {
     expect(
       passosParaInstalar(TargetPlatform.iOS).join(' '),
