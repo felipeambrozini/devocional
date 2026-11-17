@@ -30,14 +30,14 @@ dependencies:
   # push da Cloud Function agendada (functions/) via FID da instalação gravado
   # no Firestore, em Android e web; no Android ainda há alarme local de reserva
   # pelo flutter_local_notifications abaixo.
-  firebase_messaging: ^17.0.1
+  firebase_messaging: ^17.1.0
   # FID da instalação Firebase, usado como destinatário do push no lugar do
   # token FCM (o token segue aceito pela Function em documentos antigos).
-  firebase_app_installations: ^0.5.1
+  firebase_app_installations: ^0.5.2
   # Alarme local de reserva do lembrete no Android (horário + 5 min): se o
   # push não chegar, o próprio aparelho avisa com o mesmo conteúdo. Fora da
   # web — lá a exibição é do service worker.
-  flutter_local_notifications: ^22.3.3
+  flutter_local_notifications: ^23.0.2
   # Ligações tipadas às APIs do navegador. Usado pelo espelho do tema para
   # notificações (lib/dados/espelho_do_tema.dart): grava no Cache Storage,
   # que o service worker lê para escolher o ícone da notificação. Já era
@@ -52,13 +52,13 @@ dependencies:
   # Conta Google e cópia na nuvem, em todas as plataformas (ver
   # lib/dados/nuvem.dart): o navegador é o caso que mais precisa, porque é a
   # única plataforma que apaga o armazenamento sozinho.
-  firebase_core: ^5.1.0
-  firebase_auth: ^7.0.1
-  cloud_firestore: ^7.1.0
+  firebase_core: ^5.2.0
+  firebase_auth: ^7.1.0
+  cloud_firestore: ^7.2.0
   # Cada aba com o próprio caminho na URL, e Sobre e as conversas também
   # (ver lib/main.dart). Pacote da própria equipe do Flutter, não um clone de
   # terceiro.
-  go_router: ^18.1.3
+  go_router: ^18.1.4
   # Número da versão na tela Sobre (ver lib/telas/sobre.dart) e nome do pacote
   # na prova de identidade das chaves do Google (ver lib/dados/google.dart).
   package_info_plus: ^10.2.2
@@ -67,7 +67,7 @@ dependencies:
   http: ^1.6.0
   just_audio: ^0.10.6
   google_sign_in: ^7.2.0
-  firebase_app_check: ^0.5.1
+  firebase_app_check: ^0.5.2
   # Onde gravar o arquivo de registro de erros (ver lib/dados/registro.dart).
   # Já era dependência transitiva do Firebase; só promovida a direta para o
   # código poder importar.
@@ -76,8 +76,8 @@ dependencies:
   # do aparelho (lib/dados/lembretes.dart).
   timezone: ^0.11.2
   font_awesome_flutter: ^11.0.0
-  material_ui: ^1.11.0
-  cupertino_ui: ^1.1.6
+  material_ui: ^1.11.1
+  cupertino_ui: ^1.1.7
 
 dev_dependencies:
   flutter_test:
