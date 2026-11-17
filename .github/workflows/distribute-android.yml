@@ -31,7 +31,12 @@ concurrency:
 jobs:
   distribute:
     name: Build & Distribute Android
-    runs-on: ubuntu-latest
+    # ubuntu-latest virou ubuntu-26.04 na migração concluída em 19/11/2026 (o
+    # APK da branch principal já foi gerado e distribuído nessa imagem, com o
+    # Java 25 default, sem problema para Gradle 9.3.1 / AGP 9.1.1 / Kotlin
+    # 2.4.21). Fixado para o build de release não trocar de SO por baixo do
+    # testador nem precisar atravessar outra transição de imagem.
+    runs-on: ubuntu-26.04
     environment: github-pages
     steps:
       - name: Checkout

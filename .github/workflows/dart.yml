@@ -13,7 +13,10 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # Fixado como nos outros workflows: ubuntu-latest troca de versão sem aviso
+    # (foi para 26.04 em 19/11/2026) e o gate de qualidade deve rodar sempre
+    # no mesmo SO.
+    runs-on: ubuntu-26.04
 
     steps:
       # Fixado por SHA, como nos outros workflows: uma tag pode ser movida
