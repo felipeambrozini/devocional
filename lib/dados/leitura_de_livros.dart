@@ -8,6 +8,26 @@ import 'carimbo.dart';
 import 'modelos.dart';
 import 'registro.dart';
 
+/// Os devocionais (Manhã, Noite, Promessas) guardam favorito e nota no mesmo
+/// armazenamento dos destaques de livro, com um "livro" por leitura
+/// (`devocional_manha`...) e o dia como "capítulo" (mês × 100 + dia, que não
+/// depende do ano: o devocional se repete). O texto do dia é um parágrafo só,
+/// então o parágrafo é sempre [paragrafoDoDevocional]. Assim a nota do
+/// devocional herda a gravação, a fusão e a sincronia com a conta.
+const _prefixoDoDevocional = 'devocional_';
+const paragrafoDoDevocional = 0;
+
+String slugDoDevocional(String leitura) => '$_prefixoDoDevocional$leitura';
+
+bool ehSlugDeDevocional(String slug) =>
+    slug.startsWith(_prefixoDoDevocional) && slug.length > 11;
+
+/// O nome da leitura (`manha`, `noite`, `promessas`) de um slug de devocional.
+String leituraDoSlug(String slug) =>
+    slug.substring(_prefixoDoDevocional.length);
+
+int diaDoDevocional(DateTime data) => data.month * 100 + data.day;
+
 /// O que o usuário fez nos livros da biblioteca: onde parou, quais capítulos
 /// leu, quantas vezes terminou cada livro e o que grifou. Vai ao
 /// SharedPreferences, um blob JSON por assunto, e quem entra na conta também o
@@ -266,6 +286,13 @@ class LeituraDeLivros {
     await _gravarDestaques();
   }
 
+  /// Remove o destaque e a nota de uma vez (o "Remover" da tela de notas, que
+  /// já confirma); diferente de [alternarDestaque], que preserva a nota.
+  Future<void> removerDestaque(DestaqueDeLivro destaque) async {
+    if (_destaques.remove(destaque.chave) == null) return;
+    await _gravarDestaques();
+  }
+
   Future<void> _gravarDestaques() async {
     _aoMudar();
     await _prefs.setString(
@@ -409,7 +436,9 @@ class LeituraDeLivros {
           bruto.capitulo < _tetoDePosicoes &&
           bruto.paragrafo >= 0 &&
           bruto.paragrafo < _tetoDePosicoes;
-      if (obraPorSlug(bruto.slug) == null || !naFaixa) return false;
+      final conhecido =
+          obraPorSlug(bruto.slug) != null || ehSlugDeDevocional(bruto.slug);
+      if (!conhecido || !naFaixa) return false;
       final remoto = DestaqueDeLivro(
         slug: bruto.slug,
         capitulo: bruto.capitulo,

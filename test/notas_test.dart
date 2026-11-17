@@ -1,5 +1,7 @@
 import 'package:devocional/dados/conteudo.dart';
+import 'package:devocional/controladores/notas_controlador.dart';
 import 'package:devocional/dados/estado.dart';
+import 'package:devocional/dados/leitura_de_livros.dart';
 import 'package:devocional/telas/notas.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -107,5 +109,79 @@ void main() {
     await tester.tap(find.byIcon(FontAwesomeIcons.xmark.data));
     await tester.pumpAndSettle();
     expect(find.text('Favoritos (2)'), findsOneWidget);
+  });
+
+  group('cada aba vê só as próprias notas', () {
+    Future<Estado> montarDe(
+      WidgetTester tester,
+      Estado estado,
+      OrigemDasNotas origem,
+    ) async {
+      await tester.pumpWidget(
+        EscopoDoEstado(
+          estado: estado,
+          child: MaterialApp(home: TelaNotas(origem: origem)),
+        ),
+      );
+      await tester.pumpAndSettle();
+      return estado;
+    }
+
+    Future<Estado> estadoMisturado() async {
+      final estado = Estado(await SharedPreferences.getInstance());
+      await estado.alternarFavorito('joao', 3, 16);
+      await estado.leituraDeLivros.alternarDestaque(
+        slugDoDevocional('manha'),
+        diaDoDevocional(DateTime(2025, 11, 17)),
+        paragrafoDoDevocional,
+      );
+      await estado.leituraDeLivros.definirNota(
+        'respigas_entre_os_feixes',
+        0,
+        0,
+        'ilustração boa',
+      );
+      return estado;
+    }
+
+    testWidgets('Bíblia não mostra devocional nem livro', (tester) async {
+      await montarDe(tester, await estadoMisturado(), OrigemDasNotas.biblia);
+
+      expect(find.text('Favoritos (1)'), findsOneWidget);
+      expect(find.text('Notas (0)'), findsOneWidget);
+    });
+
+    testWidgets('Devocional mostra só a leitura favoritada', (tester) async {
+      await montarDe(
+        tester,
+        await estadoMisturado(),
+        OrigemDasNotas.devocional,
+      );
+
+      expect(find.text('Favoritos (1)'), findsOneWidget);
+      expect(find.text('Notas (0)'), findsOneWidget);
+      expect(find.text('Manhã, 17 de novembro'), findsOneWidget);
+    });
+
+    testWidgets('Biblioteca mostra só o livro, com a nota', (tester) async {
+      await montarDe(
+        tester,
+        await estadoMisturado(),
+        OrigemDasNotas.biblioteca,
+      );
+
+      expect(find.text('Favoritos (1)'), findsOneWidget);
+      expect(find.text('Notas (1)'), findsOneWidget);
+      expect(find.text('Respigas entre os Feixes, capítulo 1'), findsOneWidget);
+    });
+
+    test('o parâmetro da rota desconhecido cai na Bíblia', () {
+      expect(
+        OrigemDasNotas.doParametro('devocional'),
+        OrigemDasNotas.devocional,
+      );
+      expect(OrigemDasNotas.doParametro('lixo'), OrigemDasNotas.biblia);
+      expect(OrigemDasNotas.doParametro(null), OrigemDasNotas.biblia);
+    });
   });
 }

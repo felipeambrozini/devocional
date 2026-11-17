@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
+import '../controladores/notas_controlador.dart';
 import '../dados/estado.dart';
 import 'folha_de_ajustes.dart';
 
@@ -200,15 +201,18 @@ class DevocionalBotaoTerciario extends StatelessWidget {
   }
 }
 
-/// Abre as Notas (favoritos e anotações). Não é aba: fica na barra de cima do
-/// Devocional e da Bíblia e abre a tela por cima.
+/// Abre as Notas (favoritos e anotações) da aba [origem]. Não é aba: fica na
+/// barra de cima do Devocional, da Bíblia e da Biblioteca e abre a tela por
+/// cima, só com o que é daquela aba.
 class DevocionalBotaoDeNotas extends StatelessWidget {
-  const DevocionalBotaoDeNotas({super.key});
+  const DevocionalBotaoDeNotas({super.key, required this.origem});
+
+  final OrigemDasNotas origem;
 
   @override
   Widget build(BuildContext context) => IconButton(
-    tooltip: 'Notas',
+    tooltip: 'Favoritos e notas: ${origem.rotulo}',
     icon: const FaIcon(FontAwesomeIcons.bookmark),
-    onPressed: () => context.push('/notas'),
+    onPressed: () => context.push('/notas?aba=${origem.name}'),
   );
 }

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../controladores/biblia_controlador.dart';
+import '../controladores/notas_controlador.dart';
 import '../dados/canon.dart';
 import '../dados/conteudo.dart';
 import '../dados/estado.dart';
@@ -156,7 +157,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
                     DevocionalBotaoDeBusca(
                       aoBuscar: () => _controller.abrirBusca(context),
                     ),
-                    const DevocionalBotaoDeNotas(),
+                    const DevocionalBotaoDeNotas(origem: OrigemDasNotas.biblia),
                     DevocionalBotaoDeAjustes(estado: estado),
                   ],
                 ),

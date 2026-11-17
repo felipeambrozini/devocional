@@ -2,10 +2,12 @@ import 'package:material_ui/material_ui.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../controladores/devocional_controlador.dart';
+import '../controladores/notas_controlador.dart';
 import '../dados/canon.dart';
 import '../dados/config_admin.dart';
 import '../dados/conteudo.dart';
 import '../dados/estado.dart';
+import '../dados/leitura_de_livros.dart';
 import '../dados/modelos.dart';
 import '../dados/recursos.dart';
 import '../dados/voz.dart';
@@ -131,7 +133,7 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                 ),
               ),
               actions: [
-                const DevocionalBotaoDeNotas(),
+                const DevocionalBotaoDeNotas(origem: OrigemDasNotas.devocional),
                 DevocionalBotaoDeAjustes(estado: estado),
               ],
             ),
@@ -174,7 +176,7 @@ class _TelaDevocionalState extends State<TelaDevocional> {
               DevocionalBotaoDeBusca(
                 aoBuscar: () => _controller.abrirBusca(context),
               ),
-              const DevocionalBotaoDeNotas(),
+              const DevocionalBotaoDeNotas(origem: OrigemDasNotas.devocional),
               // Sem menu de uma opção só: com a volta para hoje no banner, a
               // única ação do canto é escolher a data, e ela vai direto.
               DevocionalBotaoDeData(
@@ -284,6 +286,8 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                               ? dev.referencia
                               : leitura.rotulo,
                           link: _controller.linkDaLeitura(),
+                          slugDeNota: slugDoDevocional(leitura.name),
+                          diaDeNota: diaDoDevocional(data),
                         ),
                       ],
                     );

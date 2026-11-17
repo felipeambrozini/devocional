@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
+import '../controladores/notas_controlador.dart';
 import '../dados/biblioteca.dart';
 import '../dados/config_admin.dart';
 import '../dados/estado.dart';
@@ -22,7 +23,10 @@ class TelaBiblioteca extends StatelessWidget {
       builder: (context, _) => Scaffold(
         appBar: DevocionalAppBar(
           title: const Text('Biblioteca'),
-          actions: [DevocionalBotaoDeAjustes(estado: estado)],
+          actions: [
+            const DevocionalBotaoDeNotas(origem: OrigemDasNotas.biblioteca),
+            DevocionalBotaoDeAjustes(estado: estado),
+          ],
         ),
         body: !Recursos.biblioteca
             ? const DevocionalAvisoVazio(

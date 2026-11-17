@@ -5,14 +5,20 @@ import 'package:share_plus/share_plus.dart';
 
 import '../controladores/notas_controlador.dart';
 import '../dados/estado.dart';
+import '../dados/leitura_de_livros.dart';
+import '../dados/modelos.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
 import '../funcoes/dialogos.dart';
 import '../widgets/widgets.dart';
 
-/// Favoritos e anotações, em duas abas, com busca.
+/// Favoritos e anotações de uma aba do app ([origem]), em duas abas, com busca.
+/// Bíblia, Devocional e Biblioteca não se misturam: cada uma mostra só o que
+/// foi marcado nela.
 class TelaNotas extends StatefulWidget {
-  const TelaNotas({super.key});
+  const TelaNotas({super.key, this.origem = OrigemDasNotas.biblia});
+
+  final OrigemDasNotas origem;
 
   @override
   State<TelaNotas> createState() => _TelaNotasState();
@@ -33,14 +39,25 @@ class _TelaNotasState extends State<TelaNotas> {
       listenable: _controller,
       builder: (context, _) {
         final estado = EscopoDoEstado.de(context);
-        final favoritos = _controller.filtrar(estado.marcacoes);
-        final notas = _controller.filtrar(estado.comNota);
+        final origem = widget.origem;
+        final ehBiblia = origem == OrigemDasNotas.biblia;
+        final favoritos = ehBiblia ? _controller.filtrar(estado.marcacoes) : [];
+        final notas = ehBiblia ? _controller.filtrar(estado.comNota) : [];
+        final destaques = ehBiblia
+            ? const <DestaqueDeLivro>[]
+            : _destaques(estado);
+        final destaquesComNota = [
+          for (final d in destaques)
+            if (d.nota.trim().isNotEmpty) d,
+        ];
+        final totalFavoritos = ehBiblia ? favoritos.length : destaques.length;
+        final totalNotas = ehBiblia ? notas.length : destaquesComNota.length;
 
         return DefaultTabController(
           length: 2,
           child: Scaffold(
             appBar: DevocionalAppBar(
-              title: const Text('Favoritos e notas'),
+              title: Text('Notas: ${origem.rotulo}'),
               actions: [
                 DevocionalBotaoDeAjustes(estado: estado),
                 PopupMenuButton<void Function()>(
@@ -67,8 +84,8 @@ class _TelaNotasState extends State<TelaNotas> {
               ],
               bottom: TabBar(
                 tabs: [
-                  Tab(text: 'Favoritos (${favoritos.length})'),
-                  Tab(text: 'Notas (${notas.length})'),
+                  Tab(text: 'Favoritos ($totalFavoritos)'),
+                  Tab(text: 'Notas ($totalNotas)'),
                 ],
               ),
             ),
@@ -104,34 +121,26 @@ class _TelaNotasState extends State<TelaNotas> {
                   Expanded(
                     child: TabBarView(
                       children: [
-                        DevocionalLista(
-                          itens: favoritos,
-                          vazio: _controller.busca.isEmpty
-                              ? const DevocionalAvisoVazio(
-                                  icone: FontAwesomeIcons.bookmark,
-                                  titulo: 'Nenhum favorito',
-                                  detalhe:
-                                      'Toque num versículo na Bíblia para favoritá-lo.',
-                                )
-                              : const DevocionalAvisoVazio(
-                                  icone: FontAwesomeIcons.magnifyingGlassMinus,
-                                  titulo: 'Nada encontrado',
-                                ),
+                        _lista(
+                          ehBiblia: ehBiblia,
+                          marcacoes: [...favoritos],
+                          destaques: destaques,
+                          vazio: _vazio(
+                            icone: FontAwesomeIcons.bookmark,
+                            titulo: 'Nenhum favorito',
+                            detalhe: _dicaDeFavorito(origem),
+                          ),
                         ),
-                        DevocionalLista(
-                          itens: notas,
+                        _lista(
+                          ehBiblia: ehBiblia,
+                          marcacoes: [...notas],
+                          destaques: destaquesComNota,
                           mostrarNota: true,
-                          vazio: _controller.busca.isEmpty
-                              ? const DevocionalAvisoVazio(
-                                  icone: FontAwesomeIcons.penToSquare,
-                                  titulo: 'Nenhuma anotação',
-                                  detalhe:
-                                      'Toque num versículo na Bíblia para anotar.',
-                                )
-                              : const DevocionalAvisoVazio(
-                                  icone: FontAwesomeIcons.magnifyingGlassMinus,
-                                  titulo: 'Nada encontrado',
-                                ),
+                          vazio: _vazio(
+                            icone: FontAwesomeIcons.penToSquare,
+                            titulo: 'Nenhuma anotação',
+                            detalhe: _dicaDeNota(origem),
+                          ),
                         ),
                       ],
                     ),
@@ -145,6 +154,74 @@ class _TelaNotasState extends State<TelaNotas> {
     );
   }
 }
+
+/// Os favoritos da aba que não é a Bíblia, já filtrados pela busca: livros da
+/// Biblioteca ou leituras do Devocional, cada um no seu armazenamento
+/// compartilhado (ver `ehSlugDeDevocional`).
+extension on _TelaNotasState {
+  List<DestaqueDeLivro> _destaques(Estado estado) {
+    final doDevocional = widget.origem == OrigemDasNotas.devocional;
+    final lista = [
+      for (final d in estado.leituraDeLivros.todosOsDestaques)
+        if (ehSlugDeDevocional(d.slug) == doDevocional)
+          if (OrigemDoDestaque.de(d) case final origem?)
+            if (_controller.combina(origem.referencia, d.nota)) d,
+    ];
+    // Devocional pelo calendário (a leitura do dia, não da leitura): o que
+    // se favoritou em janeiro vem antes do de dezembro.
+    if (doDevocional) {
+      lista.sort((a, b) {
+        final porDia = a.capitulo.compareTo(b.capitulo);
+        return porDia != 0 ? porDia : a.slug.compareTo(b.slug);
+      });
+    }
+    return lista;
+  }
+
+  Widget _vazio({
+    required FaIconData icone,
+    required String titulo,
+    required String detalhe,
+  }) => _controller.busca.isEmpty
+      ? DevocionalAvisoVazio(icone: icone, titulo: titulo, detalhe: detalhe)
+      : const DevocionalAvisoVazio(
+          icone: FontAwesomeIcons.magnifyingGlassMinus,
+          titulo: 'Nada encontrado',
+        );
+
+  Widget _lista({
+    required bool ehBiblia,
+    required List<Marcacao> marcacoes,
+    required List<DestaqueDeLivro> destaques,
+    required Widget vazio,
+    bool mostrarNota = false,
+  }) => ehBiblia
+      ? DevocionalLista(
+          itens: marcacoes,
+          mostrarNota: mostrarNota,
+          vazio: vazio,
+        )
+      : DevocionalListaDeDestaques(
+          itens: destaques,
+          mostrarNota: mostrarNota,
+          vazio: vazio,
+        );
+}
+
+String _dicaDeFavorito(OrigemDasNotas origem) => switch (origem) {
+  OrigemDasNotas.biblia => 'Toque num versículo na Bíblia para favoritá-lo.',
+  OrigemDasNotas.devocional =>
+    'Toque no texto de um devocional para favoritá-lo.',
+  OrigemDasNotas.biblioteca =>
+    'Toque num parágrafo de um livro da Biblioteca para favoritá-lo.',
+};
+
+String _dicaDeNota(OrigemDasNotas origem) => switch (origem) {
+  OrigemDasNotas.biblia => 'Toque num versículo na Bíblia para anotar.',
+  OrigemDasNotas.devocional => 'Toque no texto de um devocional para anotar.',
+  OrigemDasNotas.biblioteca =>
+    'Toque num parágrafo de um livro da Biblioteca para anotar.',
+};
 
 /// A cópia sai pela folha de compartilhar, não pela área de transferência.
 /// Favoritos, notas e progresso vivem no SharedPreferences, que na web é o

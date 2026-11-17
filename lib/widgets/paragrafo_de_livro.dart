@@ -13,11 +13,19 @@ class DevocionalParagrafoDeLivro extends StatelessWidget {
     required this.texto,
     required this.destaque,
     required this.aoTocar,
+    this.estilo,
+    this.dica = 'Toque para destacar, anotar ou copiar',
   });
 
   final String texto;
   final DestaqueDeLivro? destaque;
   final VoidCallback aoTocar;
+
+  /// Estilo do texto; o padrão é o corpo de leitura do tema.
+  final TextStyle? estilo;
+
+  /// O que o leitor de tela diz que o toque faz.
+  final String dica;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +43,7 @@ class DevocionalParagrafoDeLivro extends StatelessWidget {
         child: Semantics(
           button: true,
           label: grifado ? 'Destacado' : null,
-          hint: 'Toque para destacar, anotar ou copiar',
+          hint: dica,
           child: InkWell(
             onTap: aoTocar,
             // Ink e não Container: o fundo do grifo é opaco e, pintado por
@@ -62,7 +70,10 @@ class DevocionalParagrafoDeLivro extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(texto, style: tema.bodyLarge?.copyWith(height: 1.7)),
+                    Text(
+                      texto,
+                      style: estilo ?? tema.bodyLarge?.copyWith(height: 1.7),
+                    ),
                     if (nota.isNotEmpty) ...[
                       const SizedBox(height: DevocionalEspacamento.sp8),
                       Text(

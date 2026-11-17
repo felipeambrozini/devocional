@@ -41,6 +41,7 @@ export 'cartao_de_dia.dart';
 export 'cartao_de_entrar.dart';
 export 'cartao_de_instalar.dart';
 export 'cartao_de_leitura.dart';
+export 'cartao_de_destaque.dart';
 export 'cartao_de_marcacao.dart';
 export 'cartao_de_pedir_acesso.dart';
 export 'cartao_de_plano.dart';

@@ -15,6 +15,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'controladores/notas_controlador.dart';
 import 'dados/canon.dart';
 import 'dados/config_admin.dart';
 import 'dados/estado.dart';
@@ -409,8 +410,14 @@ final _router = GoRouter(
     ),
     GoRoute(path: '/faq', builder: (context, state) => const TelaFAQ()),
     // Notas não é aba (a barra de baixo tem seis destinos): abre por cima, pelo
-    // ícone de marcador da barra de cima do Devocional e da Bíblia.
-    GoRoute(path: '/notas', builder: (context, state) => const TelaNotas()),
+    // ícone de marcador da barra de cima do Devocional, da Bíblia e da
+    // Biblioteca. `?aba=` diz de qual: cada aba só vê as próprias notas.
+    GoRoute(
+      path: '/notas',
+      builder: (context, state) => TelaNotas(
+        origem: OrigemDasNotas.doParametro(state.uri.queryParameters['aba']),
+      ),
+    ),
     GoRoute(path: '/admin', builder: (context, state) => const TelaAdmin()),
     GoRoute(
       path: '/privacidade',

@@ -141,17 +141,21 @@ vitoriana dele, tratando o leitor por "tu".
   seleção) ganha um botão de Compartilhar para o trecho escolhido; na
   Bíblia, Compartilhar continua só pelo toque no versículo (a mesma folha de
   Favoritar, Copiar, Anotar). No Devocional (Manhã, Noite e Promessas de
-  Deus), o Compartilhar ficou só no botão do cartão, que manda título,
-  citação e comentário do dia com um link que reabre a mesma leitura.
+  Deus), tocar no texto abre a folha com Favoritar, Anotar, Copiar e
+  Compartilhar (o Compartilhar saiu do cartão): manda título, citação e
+  comentário do dia com um link que reabre a mesma leitura.
+- Favoritos e notas são separados por aba: o ícone de marcador da barra de
+  cima da Bíblia, do Devocional e da Biblioteca abre a tela só com o que foi
+  marcado naquela aba (`/notas?aba=biblia|devocional|biblioteca`).
 - Biblioteca de livros de Spurgeon em domínio público, traduzidos para o app
   (22 obras, entre elas *Somente pela Graça*): leitura por capítulo, continuar
   de onde
   parou, progresso por livro e destaques com nota por parágrafo. Os versículos
   citados saem da King James do app, nunca de tradução nova. É uma aba da barra
   de
-  baixo (no lugar de Notas, que virou um ícone na barra de cima do Devocional
-  e da Bíblia); a Hoje mostra o último livro iniciado; o painel admin a liga e
-  desliga.
+  baixo (no lugar de Notas, que virou um ícone na barra de cima do Devocional,
+  da Bíblia e da Biblioteca); a Hoje mostra o último livro iniciado; o
+  painel admin a liga e desliga.
 - Layout responsivo: barra inferior no celular, trilho lateral a partir de
   720px; gesto de deslizar troca capítulo no celular, setas na web.
 - Lembrete híbrido, Android e web (4 horários: Manhã, Noite, Promessas e Leitura

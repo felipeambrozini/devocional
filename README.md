@@ -83,8 +83,13 @@ do mesmo código).
   ou
   compartilhado — o compartilhar gera um cartão-imagem na identidade do app
   (fundo couro, filete dourado) com o texto junto, pronto para WhatsApp e
-  Instagram; tela própria lista os favoritos e os que têm anotação, com
-  busca por referência ou por texto da nota, e exporta uma cópia de segurança
+  Instagram; tela própria lista os favoritos e os que têm anotação (cada aba
+  — Bíblia, Devocional e Biblioteca — abre a tela só com os seus; no
+  Devocional e na Biblioteca o toque no texto abre a folha de Favoritar,
+  Anotar e, no Devocional, Copiar e Compartilhar; os do Devocional vivem
+  junto dos destaques de livros, com os slugs
+  `devocional_manha|noite|promessas` e o dia como capítulo, e sobem com a
+  conta), com busca por referência ou por texto da nota, e exporta uma cópia de segurança
   de favoritos, notas e dias lidos do cronograma para reimportar em outro
   aparelho (planos, conversas e a leitura dos livros não entram na cópia).
 - **Comentário de Spurgeon por versículo**: a mesma folha que abre ao tocar um
