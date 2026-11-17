@@ -63,7 +63,20 @@ do mesmo código).
   Spurgeon leva no sistema uma ficha de fatos verificados da vida dele, os
   limites do que ele nunca fez nem poderia saber (anacronismos, viagens,
   títulos, frases apócrifas) e a regra de não inventar datas, nomes nem
-  citações; a ficha vem de `tools/introducoes/spurgeon_fontes.md`.
+  citações; a ficha vem de `tools/introducoes/spurgeon_fontes.md`, e as regras
+  de português e doutrina vêm das skills `spurgeon-comentarios` e
+  `spurgeon-introducao` (`lib/dados/instrucoes_do_spurgeon.dart`). A persona
+  do Felipe segue as instruções unificadas do projeto (sermões, esboços,
+  pacote de 7 cortes, descrições de devocionais para o YouTube, resenhas e
+  prompts de imagem para o Gemini), em `lib/dados/instrucoes_do_felipe.dart`;
+  por isso a pergunta dele aceita até 20 mil caracteres (uma transcrição de
+  sermão) e a resposta até 16 mil tokens, contra 2 mil e 2048 do Spurgeon.
+  As duas recebem no sistema a lista dos livros da Biblioteca e o texto exato
+  das leituras de hoje (Manhã, Noite e Promessa); numa linha `dd/mm | Tipo |
+  Referência` entram também as leituras daquela data
+  (`lib/dados/leituras_da_conversa.dart`). Mensagem fora do tema de cada
+  persona (receita culinária, por exemplo) recebe só "Não posso ajudar com
+  isso.", e a orientação de crise prevalece sobre essa recusa.
 - **Introduções aos 66 livros**, na voz de Spurgeon, com título formal do livro
   vindo da King James 1611.
 - **Favoritos e notas**: qualquer versículo pode ser marcado, anotado, copiado

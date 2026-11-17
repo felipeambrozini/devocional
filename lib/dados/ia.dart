@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:http/http.dart' as http;
 
 import 'google.dart';
+import 'leituras_da_conversa.dart';
 import 'modelos.dart';
 import 'personas.dart';
 import 'registro.dart';
@@ -26,18 +27,9 @@ const _modelo = 'gemini-3.5-flash-lite';
 /// aberta a cada mensagem do chat; os testes injetam o próprio cliente falso.
 final _clientePadrao = http.Client();
 
-/// Teto de tokens da resposta: um conselho de Spurgeon não precisa de mais, e
-/// um teto baixo segura a latência e o custo por resposta.
-const _maxTokensDeResposta = 2048;
-
 /// Quantas falas do histórico vão ao modelo: conversa longa não pode crescer o
 /// custo e a latência de cada pergunta sem limite.
 const _maxFalasDeHistorico = 20;
-
-/// Teto de caracteres de uma pergunta, aplicado no campo do chat: cada envio
-/// leva junto as últimas [_maxFalasDeHistorico] falas, então uma mensagem sem
-/// teto multiplicaria o custo de todas as perguntas seguintes.
-const maxCaracteresDaPergunta = 2000;
 
 const _avisoDeRespostaCortada =
     '\n\n(Resposta cortada pelo limite de tamanho. Peça para continuar.)';
@@ -67,13 +59,19 @@ class IaExcecao implements Exception {
 /// fecha como última fala do usuário, que é o formato que a API exige.
 ///
 /// [cliente] existe só para os testes injetarem um HTTP falso; quem chama de
-/// verdade usa o cliente global do pacote `http`.
+/// verdade usa o cliente global do pacote `http`. [carregarLeituras], pelo
+/// mesmo motivo, troca as leituras do dia (que vêm dos assets) por um texto
+/// fixo no teste.
 Future<String> perguntar({
   required Persona persona,
   required List<Mensagem> historico,
   required String pergunta,
   http.Client? cliente,
+  Future<String?> Function(String pergunta, DateTime agora) carregarLeituras =
+      leiturasDaConversa,
 }) async {
+  final agora = DateTime.now();
+  final leituras = await carregarLeituras(pergunta, agora);
   final conteudos = <Map<String, dynamic>>[];
   var ultimoPapel = '';
   for (final mensagem in _recentes(historico)) {
@@ -119,14 +117,24 @@ Future<String> perguntar({
           body: json.encode({
             'systemInstruction': {
               'parts': [
-                {'text': instrucaoDoSistema(persona, DateTime.now())},
+                {
+                  'text': instrucaoDoSistema(
+                    persona,
+                    agora,
+                    leituras: leituras,
+                  ),
+                },
               ],
             },
             'contents': conteudos,
-            'generationConfig': {'maxOutputTokens': _maxTokensDeResposta},
+            'generationConfig': {
+              'maxOutputTokens': persona.maxTokensDeResposta,
+            },
           }),
         )
-        .timeout(const Duration(seconds: 90));
+        // Folga para a resposta longa do Felipe (sermão, pacote de cortes):
+        // com teto de 16 mil tokens, 90 s cortava a geração no meio.
+        .timeout(const Duration(seconds: 180));
   } catch (erro, pilha) {
     Registro.erro('Ia.responder', erro, pilha);
     throw const IaExcecao(

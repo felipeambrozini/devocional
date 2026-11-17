@@ -72,7 +72,12 @@ vitoriana dele, tratando o leitor por "tu".
   Ambrozini, com histórico salvo por conversa, numa aba própria em todas as
   plataformas e larguras. Mensagem com sinal de crise (suicídio, se ferir)
   mostra um cartão fixo com o CVV (188, cvv.org.br) e o 192, e toda persona
-  recebe no sistema a orientação de indicar essa ajuda.
+  recebe no sistema a orientação de indicar essa ajuda. Cada persona só trata
+  do próprio tema (Spurgeon: fé, Bíblia e a vida dele; Felipe: fé, conteúdo
+  cristão do ministério dele e Flutter) e responde "Não posso ajudar com
+  isso." ao resto. O Felipe produz sermões, cortes, descrições de devocionais
+  e prompts de imagem nas regras dele; as duas personas conhecem os livros da
+  Biblioteca e leem o texto exato das leituras do dia do próprio app.
 - Painel admin (`/admin`, só web e só a conta do dono): liga/desliga cada
   recurso na hora (conversas, planos personalizados, cronograma, cada leitura
   do devocional, ouvir textos, Biblioteca e comentário no capítulo) e edita os

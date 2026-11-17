@@ -4,7 +4,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../controladores/chat_controlador.dart';
 import '../dados/conversas.dart';
 import '../dados/estado.dart';
-import '../dados/ia.dart' show maxCaracteresDaPergunta;
 import '../dados/modelos.dart';
 import '../dados/personas.dart';
 import '../estilo/espacamento.dart';
@@ -258,7 +257,7 @@ class _TelaChatState extends State<TelaChat> {
                           controller: _controller.controle,
                           minLines: 1,
                           maxLines: 4,
-                          maxLength: maxCaracteresDaPergunta,
+                          maxLength: widget.persona.maxCaracteresDaPergunta,
                           // Sem contador até bater no teto: aí o aviso
                           // aparece e o leitor de tela o anuncia, em vez de
                           // o campo parar de aceitar texto em silêncio.
@@ -268,16 +267,24 @@ class _TelaChatState extends State<TelaChat> {
                                 required currentLength,
                                 required isFocused,
                                 required maxLength,
-                              }) => currentLength < maxCaracteresDaPergunta
-                              ? null
-                              : Semantics(
-                                  liveRegion: true,
-                                  child: Text(
-                                    'Limite de $maxCaracteresDaPergunta '
-                                    'caracteres atingido.',
-                                    style: tema.labelMedium,
-                                  ),
-                                ),
+                              }) =>
+                                  currentLength <
+                                      widget.persona.maxCaracteresDaPergunta
+                                  ? null
+                                  : Semantics(
+                                      liveRegion: true,
+                                      // Um texto colado acima do teto é
+                                      // cortado: o aviso diz que o resto
+                                      // não entrou, senão a transcrição
+                                      // segue incompleta sem ninguém saber.
+                                      child: Text(
+                                        'Limite de '
+                                        '${_comMilhar(widget.persona.maxCaracteresDaPergunta)} '
+                                        'caracteres atingido. O texto além '
+                                        'disso não entrou.',
+                                        style: tema.labelMedium,
+                                      ),
+                                    ),
                           textInputAction: TextInputAction.send,
                           onSubmitted: (_) => _controller.enviar(),
                           decoration: InputDecoration(
@@ -322,3 +329,10 @@ class _TelaChatState extends State<TelaChat> {
     );
   }
 }
+
+/// "20000" vira "20.000": número grande sem separador é difícil de ler de
+/// relance no aviso de limite do campo.
+String _comMilhar(int numero) => numero.toString().replaceAllMapped(
+  RegExp(r'\B(?=(\d{3})+(?!\d))'),
+  (_) => '.',
+);

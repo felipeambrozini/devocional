@@ -7,6 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
+/// Os testes do HTTP não carregam os assets das leituras do dia.
+Future<String?> semLeituras(String _, DateTime _) async => null;
+
 void main() {
   http.Response respostaDaGemini(String texto) => http.Response(
     json.encode({
@@ -36,6 +39,7 @@ void main() {
       return await perguntar(
         persona: personaSpurgeon,
         cliente: cliente,
+        carregarLeituras: semLeituras,
         pergunta: 'Oi',
         historico: historico,
       );
@@ -135,6 +139,7 @@ void main() {
         final resposta = await perguntar(
           persona: personaSpurgeon,
           cliente: cliente,
+          carregarLeituras: semLeituras,
           pergunta: 'Como vencer a ansiedade?',
           historico: [
             Mensagem(
@@ -186,6 +191,7 @@ void main() {
         await perguntar(
           persona: personaFelipe,
           cliente: cliente,
+          carregarLeituras: semLeituras,
           pergunta: 'E se eu fizer tudo de novo?',
           historico: [
             Mensagem(id: '1', papel: 'user', texto: 'Pergunta 1', momento: 1),
@@ -227,6 +233,7 @@ void main() {
       await perguntar(
         persona: personaFelipe,
         cliente: cliente,
+        carregarLeituras: semLeituras,
         pergunta: 'Oi',
         historico: const [],
       );
@@ -239,6 +246,57 @@ void main() {
       expect(sistema, contains('Bom dia'));
     });
 
+    test('pede à Gemini o teto de resposta da própria persona', () async {
+      final tetos = <Object?>[];
+      final cliente = MockClient((requisicao) async {
+        final corpo = json.decode(requisicao.body) as Map<String, dynamic>;
+        tetos.add((corpo['generationConfig'] as Map)['maxOutputTokens']);
+        return respostaDaGemini('ok');
+      });
+
+      for (final persona in [personaSpurgeon, personaFelipe]) {
+        await perguntar(
+          persona: persona,
+          cliente: cliente,
+          carregarLeituras: semLeituras,
+          pergunta: 'Oi',
+          historico: const [],
+        );
+      }
+
+      expect(tetos, [
+        personaSpurgeon.maxTokensDeResposta,
+        personaFelipe.maxTokensDeResposta,
+      ]);
+    });
+
+    test('anexa ao sistema as leituras que o app traz', () async {
+      late Map<String, dynamic> corpo;
+      final cliente = MockClient((requisicao) async {
+        corpo = json.decode(requisicao.body) as Map<String, dynamic>;
+        return respostaDaGemini('ok');
+      });
+      String? perguntaVista;
+
+      await perguntar(
+        persona: personaFelipe,
+        cliente: cliente,
+        pergunta: '17/11 | Manhã | Salmos 23:1',
+        historico: const [],
+        carregarLeituras: (pergunta, _) async {
+          perguntaVista = pergunta;
+          return 'Texto exato da Manhã.';
+        },
+      );
+
+      final sistema =
+          (((corpo['systemInstruction'] as Map)['parts'] as List).first
+                  as Map)['text']
+              as String;
+      expect(perguntaVista, '17/11 | Manhã | Salmos 23:1');
+      expect(sistema, contains('Texto exato da Manhã.'));
+    });
+
     test('429 vira mensagem amigável de limite de uso', () async {
       final cliente = MockClient(
         (requisicao) async => http.Response('{"error": {}}', 429),
@@ -248,6 +306,7 @@ void main() {
         perguntar(
           persona: personaSpurgeon,
           cliente: cliente,
+          carregarLeituras: semLeituras,
           pergunta: 'Oi',
           historico: const [],
         ),
@@ -270,6 +329,7 @@ void main() {
         perguntar(
           persona: personaSpurgeon,
           cliente: cliente,
+          carregarLeituras: semLeituras,
           pergunta: 'Oi',
           historico: const [],
         ),
@@ -292,6 +352,7 @@ void main() {
         perguntar(
           persona: personaSpurgeon,
           cliente: cliente,
+          carregarLeituras: semLeituras,
           pergunta: 'Oi',
           historico: const [],
         ),
@@ -316,6 +377,7 @@ void main() {
         perguntar(
           persona: personaSpurgeon,
           cliente: cliente,
+          carregarLeituras: semLeituras,
           pergunta: 'Oi',
           historico: const [],
         ),
@@ -338,6 +400,7 @@ void main() {
         perguntar(
           persona: personaSpurgeon,
           cliente: cliente,
+          carregarLeituras: semLeituras,
           pergunta: 'Oi',
           historico: const [],
         ),
@@ -360,6 +423,7 @@ void main() {
         perguntar(
           persona: personaSpurgeon,
           cliente: cliente,
+          carregarLeituras: semLeituras,
           pergunta: 'Oi',
           historico: const [],
         ),
