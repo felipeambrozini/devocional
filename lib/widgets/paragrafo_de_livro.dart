@@ -14,7 +14,7 @@ class DevocionalParagrafoDeLivro extends StatelessWidget {
     required this.destaque,
     required this.aoTocar,
     this.estilo,
-    this.dica = 'Toque para destacar, anotar ou copiar',
+    this.outrasAcoes = 'anotar ou copiar',
   });
 
   final String texto;
@@ -24,8 +24,9 @@ class DevocionalParagrafoDeLivro extends StatelessWidget {
   /// Estilo do texto; o padrão é o corpo de leitura do tema.
   final TextStyle? estilo;
 
-  /// O que o leitor de tela diz que o toque faz.
-  final String dica;
+  /// O que a folha do toque oferece além do favorito, para a dica do leitor
+  /// de tela ("anotar ou copiar"; o Devocional acrescenta compartilhar).
+  final String outrasAcoes;
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +34,14 @@ class DevocionalParagrafoDeLivro extends StatelessWidget {
     final tema = Theme.of(context).textTheme;
     final grifado = destaque != null;
     final nota = destaque?.nota ?? '';
+    // A dica acompanha o estado, para não anunciar "Favorito... toque para
+    // favoritar": com nota, a folha nem oferece desfavoritar (a nota prende
+    // o favorito, ver `LeituraDeLivros.alternarDestaque`).
+    final dica = nota.isNotEmpty
+        ? 'Toque para $outrasAcoes'
+        : grifado
+        ? 'Toque para remover dos favoritos, $outrasAcoes'
+        : 'Toque para favoritar, $outrasAcoes';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: DevocionalEspacamento.sp12),
@@ -42,7 +51,7 @@ class DevocionalParagrafoDeLivro extends StatelessWidget {
         constraints: const BoxConstraints(minHeight: DevocionalToque.minimo),
         child: Semantics(
           button: true,
-          label: grifado ? 'Destacado' : null,
+          label: grifado ? 'Favorito' : null,
           hint: dica,
           child: InkWell(
             onTap: aoTocar,

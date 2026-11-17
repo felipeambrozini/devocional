@@ -29,6 +29,40 @@ class DestinoDaMoldura {
   final Widget tela;
 }
 
+/// Leva o foco do teclado para a tela à vista na aba [indice], depois do
+/// frame (antes dele a aba de destino ainda não está na frente). Sem isso, a
+/// aba que saiu fica em `Offstage` mas continua com o foco: Tab e Enter agiam
+/// num botão invisível e os atalhos da aba nova não respondiam. Serve à barra
+/// de baixo ([DevocionalMoldura]) e a quem troca de aba por um `go` de dentro
+/// de uma tela, como o "Ler tudo" das prévias da Hoje.
+///
+/// Pedir foco ao escopo deixava o foco no nó do próprio escopo, que fica
+/// acima da tela: a tecla subia por fora dos atalhos dela e nada acontecia. O
+/// foco precisa cair num nó de dentro, e invisível: no primeiro botão da tela
+/// ele ganhava o realce de foco sem ninguém ter tocado nele. Os descendentes
+/// vêm dos mais fundos para os de fora, então a âncora que uma tela põe dentro
+/// dos próprios atalhos (Bíblia, leitor de livro) ganha da que a rota põe em
+/// volta de toda tela.
+///
+/// A busca é no Navigator da aba, não só no escopo da rota raiz: um capítulo
+/// da Biblioteca ou um plano aberto são rotas próprias por cima dela, e o foco
+/// caía no sumário escondido por baixo (as setas do leitor paravam de
+/// responder). Só vale a âncora da rota à vista; sem ela, [reserva].
+void focarAba(StatefulNavigationShell shell, int indice, {FocusNode? reserva}) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final navegador = shell.route.branches[indice].navigatorKey.currentState;
+    final ancora = navegador?.focusNode.descendants
+        .whereType<NoDeAncoraDeFoco>()
+        .where((no) {
+          final contexto = no.context;
+          return contexto != null &&
+              (ModalRoute.of(contexto)?.isCurrent ?? false);
+        })
+        .firstOrNull;
+    (ancora ?? reserva)?.requestFocus();
+  });
+}
+
 /// Casca de navegação. Barra inferior no celular, trilho lateral em tela larga.
 /// O corte em 720 px é onde seis rótulos deixam de caber com folga na horizontal.
 ///
@@ -132,33 +166,7 @@ class DevocionalMoldura extends StatelessWidget {
       initialLocation:
           i == navigationShell.currentIndex || destinos[i].caminho == 'plano',
     );
-    // Depois do frame: antes dele a aba de destino ainda não está na frente.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final escopo = escoposDasAbas[i];
-      // Pedir foco ao escopo deixava o foco no nó do próprio escopo, que fica
-      // acima da tela: a tecla subia por fora dos atalhos dela e nada acontecia.
-      // O foco precisa cair num nó de dentro, e invisível: no primeiro botão
-      // da tela ele ganhava o realce de foco sem ninguém ter tocado nele. Os
-      // descendentes vêm dos mais fundos para os de fora, então a âncora que
-      // uma tela põe dentro dos próprios atalhos (Bíblia, leitor de livro)
-      // ganha da que a rota põe em volta de toda tela.
-      //
-      // A busca é no Navigator da aba, não só no escopo da rota raiz: um
-      // capítulo da Biblioteca ou um plano aberto são rotas próprias por cima
-      // dela, e o foco caía no sumário escondido por baixo (as setas do
-      // leitor paravam de responder). Só vale a âncora da rota à vista.
-      final navegador =
-          navigationShell.route.branches[i].navigatorKey.currentState;
-      final ancora = navegador?.focusNode.descendants
-          .whereType<NoDeAncoraDeFoco>()
-          .where((no) {
-            final contexto = no.context;
-            return contexto != null &&
-                (ModalRoute.of(contexto)?.isCurrent ?? false);
-          })
-          .firstOrNull;
-      (ancora ?? escopo).requestFocus();
-    });
+    focarAba(navigationShell, i, reserva: escoposDasAbas[i]);
   }
 
   @override

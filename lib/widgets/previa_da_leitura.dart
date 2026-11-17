@@ -1,17 +1,20 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 
+import '../controladores/devocional_controlador.dart';
 import '../dados/conteudo.dart';
 import '../dados/modelos.dart';
 import '../estilo/espacamento.dart';
+import '../funcoes/abrir_na_biblia.dart';
 import '../funcoes/citacao.dart';
-import '../telas/biblia.dart';
 import '../telas/devocional.dart';
 import 'botao.dart';
 import 'cartao.dart';
 import 'carrega_uma_vez.dart';
 import 'com_fade_ao_fim.dart';
 import 'filete.dart';
+import 'moldura.dart';
 
 /// Prévia de uma das três leituras do dia, com atalho para a tela inteira.
 ///
@@ -42,13 +45,35 @@ class DevocionalPreviaDaLeitura extends StatelessWidget {
         : Conteudo.instancia.devocional(data, periodo);
   }
 
-  void _abrir(BuildContext context) => Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) =>
-          TelaDevocional(dataInicial: data, leituraInicial: leitura),
-    ),
-  );
+  /// "Ler tudo" leva à aba Devocional, na leitura e no dia da prévia, em vez
+  /// de empilhar uma segunda tela de devocional por cima da Hoje: a barra de
+  /// baixo passa a marcar a aba certa e a URL diz a leitura. Sem go_router (o
+  /// cartão testado sozinho), o push direto de antes.
+  void _abrir(BuildContext context) {
+    final roteador = GoRouter.maybeOf(context);
+    if (roteador != null) {
+      final shell = StatefulNavigationShell.maybeOf(context)?.widget;
+      roteador.go(DevocionalControlador.caminhoDaLeitura(leitura, data));
+      // O `go` troca de aba sem passar pela barra de baixo: o foco ficaria no
+      // "Ler tudo", agora escondido na Hoje (ver `focarAba`).
+      final aba =
+          shell?.route.branches.indexWhere(
+            (ramo) => ramo.routes.any(
+              (rota) => rota is GoRoute && rota.path == '/devocional',
+            ),
+          ) ??
+          -1;
+      if (shell != null && aba >= 0) focarAba(shell, aba);
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            TelaDevocional(dataInicial: data, leituraInicial: leitura),
+      ),
+    );
+  }
 
   /// Cartão de uma linha só, para quando ainda não há texto para mostrar.
   Widget _aviso(BuildContext context, String texto) => DevocionalCartao(
@@ -92,15 +117,11 @@ class DevocionalPreviaDaLeitura extends StatelessWidget {
           // A prévia segue o cartão do devocional: a referência da epígrafe
           // abre a Bíblia no versículo citado.
           aoAbrirReferencia: (livro, capitulo, deVersiculo, ateVersiculo) =>
-              Navigator.push(
+              abrirNaBiblia(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => TelaBiblia(
-                    livroInicial: livro.slug,
-                    capituloInicial: capitulo,
-                    destacar: (deVersiculo, ateVersiculo),
-                  ),
-                ),
+                livro.slug,
+                capitulo,
+                destacar: (deVersiculo, ateVersiculo),
               ),
         );
         return DevocionalCartao(

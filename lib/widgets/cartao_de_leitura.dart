@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -6,12 +7,12 @@ import '../dados/estado.dart';
 import '../dados/leitura_de_livros.dart';
 import '../dados/modelos.dart';
 import '../estilo/espacamento.dart';
+import '../funcoes/abrir_na_biblia.dart';
 import '../funcoes/aviso.dart';
 import '../funcoes/capa_biblia.dart';
 import '../funcoes/cartao_imagem.dart';
 import '../funcoes/citacao.dart';
 import '../funcoes/dialogos.dart';
-import '../telas/biblia.dart';
 import '../widgets/widgets.dart';
 
 class DevocionalCartaoDeLeitura extends StatelessWidget {
@@ -70,23 +71,22 @@ class DevocionalCartaoDeLeitura extends StatelessWidget {
       // A epígrafe é a porta do devocional para o texto da King James: tocar na
       // referência abre o capítulo com os versículos citados em destaque.
       aoAbrirReferencia: (livro, capitulo, deVersiculo, ateVersiculo) =>
-          Navigator.push(
+          abrirNaBiblia(
             context,
-            MaterialPageRoute(
-              builder: (_) => TelaBiblia(
-                livroInicial: livro.slug,
-                capituloInicial: capitulo,
-                destacar: (deVersiculo, ateVersiculo),
-              ),
-            ),
+            livro.slug,
+            capitulo,
+            destacar: (deVersiculo, ateVersiculo),
           ),
     );
     return DevocionalCartao(
       padding: const EdgeInsets.all(DevocionalEspacamento.sp20),
-      // O texto vira selecionável e copiável; o Compartilhar fica só no botão
-      // do cartão, uma rota única em vez de duas entradas para a mesma ação.
-      child: SelectionArea(
-        child: Column(
+      // A mesma regra do capítulo da Biblioteca, que também abre a folha de
+      // ações no toque do parágrafo: fora da web o texto é selecionável (toque
+      // longo seleciona, com Compartilhar no menu; toque curto abre a folha);
+      // na web não, porque o clique que tira uma seleção também abria a
+      // folha. "Copiar" está na folha nos dois casos.
+      child: _comSelecao(
+        Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -148,7 +148,7 @@ class DevocionalCartaoDeLeitura extends StatelessWidget {
             DevocionalParagrafoDeLivro(
               texto: texto,
               destaque: destaque,
-              dica: 'Toque para favoritar, anotar, copiar ou compartilhar',
+              outrasAcoes: 'anotar, copiar ou compartilhar',
               aoTocar: () => _abrirAcoes(context, estado, destaque),
             ),
             const SizedBox(height: DevocionalEspacamento.sp8),
@@ -170,6 +170,9 @@ class DevocionalCartaoDeLeitura extends StatelessWidget {
       ),
     );
   }
+
+  static Widget _comSelecao(Widget filho) =>
+      kIsWeb ? filho : DevocionalAreaDeSelecaoComCompartilhar(child: filho);
 
   /// A folha do texto: favoritar, anotar, copiar e compartilhar a leitura. O
   /// compartilhar mora aqui, e não solto no cartão, junto das outras ações do
@@ -195,11 +198,13 @@ class DevocionalCartaoDeLeitura extends StatelessWidget {
               if (!temNota)
                 ListTile(
                   leading: FaIcon(
-                    FontAwesomeIcons.bookmark,
+                    destaque == null
+                        ? FontAwesomeIcons.bookmark
+                        : FontAwesomeIcons.solidBookmark,
                     color: cor.primary,
                   ),
                   title: Text(
-                    destaque == null ? 'Favoritar' : 'Tirar dos favoritos',
+                    destaque == null ? 'Favoritar' : 'Remover dos favoritos',
                   ),
                   onTap: () async {
                     await leitura.alternarDestaque(

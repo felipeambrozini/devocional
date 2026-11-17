@@ -2,7 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../dados/modelos.dart';
 import '../estilo/espacamento.dart';
-import '../telas/biblia.dart';
+import '../funcoes/abrir_na_biblia.dart';
 import '../telas/busca.dart';
 
 class DevocionalItemDeAchado extends StatelessWidget {
@@ -20,15 +20,11 @@ class DevocionalItemDeAchado extends StatelessWidget {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     return InkWell(
-      onTap: () => Navigator.push(
+      onTap: () => abrirNaBiblia(
         context,
-        MaterialPageRoute(
-          builder: (_) => TelaBiblia(
-            livroInicial: achado.livro,
-            capituloInicial: achado.capitulo,
-            destacar: (achado.versiculo, achado.versiculo),
-          ),
-        ),
+        achado.livro,
+        achado.capitulo,
+        destacar: (achado.versiculo, achado.versiculo),
       ),
       borderRadius: BorderRadius.circular(12),
       child: Padding(

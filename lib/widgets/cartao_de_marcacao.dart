@@ -5,8 +5,8 @@ import '../dados/conteudo.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
 import '../estilo/espacamento.dart';
+import '../funcoes/abrir_na_biblia.dart';
 import '../funcoes/dialogos.dart';
-import '../telas/biblia.dart';
 import 'carrega_uma_vez.dart';
 
 class DevocionalCartaoDeMarcacao extends StatelessWidget {
@@ -28,15 +28,11 @@ class DevocionalCartaoDeMarcacao extends StatelessWidget {
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        onTap: () => Navigator.push(
+        onTap: () => abrirNaBiblia(
           context,
-          MaterialPageRoute(
-            builder: (_) => TelaBiblia(
-              livroInicial: marcacao.livro,
-              capituloInicial: marcacao.capitulo,
-              destacar: (marcacao.versiculo, marcacao.versiculo),
-            ),
-          ),
+          marcacao.livro,
+          marcacao.capitulo,
+          destacar: (marcacao.versiculo, marcacao.versiculo),
         ),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(

@@ -650,13 +650,13 @@ void main() {
 
       await tester.tap(find.textContaining(inicio));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Destacar'));
+      await tester.tap(find.text('Favoritar'));
       await tester.pumpAndSettle();
       expect(estado.leituraDeLivros.destaquesDe(slug, 1).keys, [0]);
 
       await tester.tap(find.textContaining(inicio));
       await tester.pumpAndSettle();
-      expect(find.text('Tirar destaque'), findsOneWidget);
+      expect(find.text('Remover dos favoritos'), findsOneWidget);
       await tester.tap(find.text('Anotar'));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), 'Boa ilustração');

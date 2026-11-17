@@ -136,7 +136,13 @@ class TelaHistorico extends StatelessWidget {
               maintainState: true,
               child: IconButton(
                 tooltip: 'Apagar todas as conversas',
-                icon: FaIcon(FontAwesomeIcons.broom, color: cor.error),
+                // Na cor de apoio, como a lixeira das marcações e dos planos:
+                // o vermelho do tema é para erro, e o diálogo de confirmação
+                // já avisa que a ação é destrutiva.
+                icon: FaIcon(
+                  FontAwesomeIcons.broom,
+                  color: cor.onSurfaceVariant,
+                ),
                 onPressed: () => _apagarTodas(context),
               ),
             ),
@@ -182,8 +188,13 @@ class TelaHistorico extends StatelessWidget {
                     style: tema.labelMedium,
                   ),
                   trailing: IconButton(
-                    tooltip: 'Apagar conversa: ${conversa.titulo}',
-                    icon: FaIcon(FontAwesomeIcons.trash, color: cor.error),
+                    tooltip: conversa.titulo.isEmpty
+                        ? 'Apagar conversa'
+                        : 'Apagar conversa: ${conversa.titulo}',
+                    icon: FaIcon(
+                      FontAwesomeIcons.trash,
+                      color: cor.onSurfaceVariant,
+                    ),
                     onPressed: () => _apagarUma(context, conversa),
                   ),
                 );

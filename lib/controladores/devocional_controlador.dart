@@ -61,10 +61,14 @@ class DevocionalControlador extends ChangeNotifier {
   /// aparece na URL de propósito, para o link continuar limpo.
   void irPara(BuildContext context, Leitura novaLeitura, DateTime novaData) {
     if (novaLeitura == leitura && _mesmoDia(novaData, data)) return;
-    GoRouter.of(
-      context,
-    ).go('/${novaLeitura.name}${_parametroDeData(novaData)}');
+    GoRouter.of(context).go(caminhoDaLeitura(novaLeitura, novaData));
   }
+
+  /// O caminho da aba Devocional numa leitura e num dia (`/manha`,
+  /// `/noite?data=AAAA-MM-DD`): o mesmo que main.dart declara, para quem leva
+  /// até a leitura de fora da aba (a prévia da Hoje) cair na própria aba.
+  static String caminhoDaLeitura(Leitura leitura, DateTime data) =>
+      '/${leitura.name}${_parametroDeData(data)}';
 
   /// `?data=AAAA-MM-DD`, ou vazio no dia de hoje — para a URL de hoje
   /// continuar limpa, na navegação ([irPara]) e no link de [linkDaLeitura].

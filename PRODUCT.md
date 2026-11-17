@@ -59,7 +59,10 @@ vitoriana dele, tratando o leitor por "tu".
   `/sobre`, `/faq`, `/privacidade`, `/termos` e cada conversa também, e links
   diretos no formato
   `?ler=joao.3.16` abrem um versículo (`?plano=<id>` abre um plano
-  compartilhado).
+  compartilhado). A Bíblia aberta por cima de outra aba (epígrafe do
+  devocional, leitura do dia, busca, marcações) tem URL própria,
+  `/ler/<livro>/<capítulo>`, que o F5 reabre; o "Ler tudo" da prévia na Hoje
+  leva à aba Devocional.
 - Consentimento da LGPD antes de subir dados à nuvem: favoritos, anotações,
   progresso, planos e conversas revelam convicção religiosa (dado sensível),
   então o primeiro login no aparelho passa por um diálogo de consentimento, e
@@ -136,21 +139,24 @@ vitoriana dele, tratando o leitor por "tu".
   nos 66 livros. O mesmo comentário aparece também direto no leitor, abaixo de
   cada versículo, para todos; só o admin o desliga (interruptor do painel, como
   os outros recursos), sem escolha do leitor nos ajustes.
-- Texto selecionável e copiável na Bíblia, no Devocional e na Introdução. Na
-  Introdução, o menu de seleção (o clique forte que já abre a
-  seleção) ganha um botão de Compartilhar para o trecho escolhido; na
-  Bíblia, Compartilhar continua só pelo toque no versículo (a mesma folha de
+- Texto selecionável e copiável na Introdução; no Devocional e no capítulo
+  da Biblioteca, só fora da web (na web o clique que tira uma seleção abriria
+  a folha de ações do parágrafo). Onde há seleção, o menu dela (o clique
+  forte que já abre a seleção) ganha um botão de Compartilhar para o trecho
+  escolhido. O texto da Bíblia não é selecionável: o toque longo seleciona
+  versículos, e Compartilhar vem pelo toque no versículo (a mesma folha de
   Favoritar, Copiar, Anotar). No Devocional (Manhã, Noite e Promessas de
   Deus), tocar no texto abre a folha com Favoritar, Anotar, Copiar e
   Compartilhar (o Compartilhar saiu do cartão): manda título, citação e
-  comentário do dia com um link que reabre a mesma leitura.
+  comentário do dia com um link que reabre a mesma leitura. Favoritar tem o
+  mesmo nome e ícone na Bíblia, no Devocional e na Biblioteca.
 - Favoritos e notas são separados por aba: o ícone de marcador da barra de
   cima da Bíblia, do Devocional e da Biblioteca abre a tela só com o que foi
   marcado naquela aba (`/notas?aba=biblia|devocional|biblioteca`).
 - Biblioteca de livros de Spurgeon em domínio público, traduzidos para o app
   (22 obras, entre elas *Somente pela Graça*): leitura por capítulo, continuar
   de onde
-  parou, progresso por livro e destaques com nota por parágrafo. Os versículos
+  parou, progresso por livro e favoritos com nota por parágrafo. Os versículos
   citados saem da King James do app, nunca de tradução nova. É uma aba da barra
   de
   baixo (no lugar de Notas, que virou um ícone na barra de cima do Devocional,

@@ -96,7 +96,7 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
       titulo: 'Terminar a leitura?',
       conteudo:
           '${widget.obra.titulo} será dado como lido e a leitura recomeça do '
-          'primeiro capítulo. Seus destaques e notas continuam guardados.',
+          'primeiro capítulo. Seus favoritos e notas continuam guardados.',
       rotuloDaAcao: 'Terminar',
     );
     if (!confirmou || !mounted) return;
@@ -167,11 +167,17 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
             children: [
               if (!temNota)
                 ListTile(
+                  // Mesmo nome e ícone da Bíblia e do Devocional: é o mesmo
+                  // gesto, e a tela de marcações o lista como favorito.
                   leading: FaIcon(
-                    FontAwesomeIcons.highlighter,
+                    destaque == null
+                        ? FontAwesomeIcons.bookmark
+                        : FontAwesomeIcons.solidBookmark,
                     color: cor.primary,
                   ),
-                  title: Text(destaque == null ? 'Destacar' : 'Tirar destaque'),
+                  title: Text(
+                    destaque == null ? 'Favoritar' : 'Remover dos favoritos',
+                  ),
                   onTap: () async {
                     await leitura.alternarDestaque(
                       _slug,

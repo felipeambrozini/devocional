@@ -4,7 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../dados/canon.dart';
 import '../estilo/espacamento.dart';
 import '../estilo/toque.dart';
-import '../telas/biblia.dart';
+import '../funcoes/abrir_na_biblia.dart';
 
 /// Card fixo no topo dos resultados quando o próprio termo digitado é uma
 /// referência bíblica reconhecida, para ir direto ao versículo em vez de
@@ -24,15 +24,11 @@ class DevocionalCartaoDeReferencia extends StatelessWidget {
         '${intervaloDeNumeros(deVersiculo, ateVersiculo)}';
 
     return InkWell(
-      onTap: () => Navigator.push(
+      onTap: () => abrirNaBiblia(
         context,
-        MaterialPageRoute(
-          builder: (_) => TelaBiblia(
-            livroInicial: livro.slug,
-            capituloInicial: capitulo,
-            destacar: (deVersiculo, ateVersiculo),
-          ),
-        ),
+        livro.slug,
+        capitulo,
+        destacar: (deVersiculo, ateVersiculo),
       ),
       borderRadius: BorderRadius.circular(8),
       child: ConstrainedBox(

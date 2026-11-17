@@ -23,6 +23,7 @@ class TelaBiblia extends StatefulWidget {
     this.livroInicial,
     this.capituloInicial,
     this.destacar,
+    this.voltarPara,
   });
 
   final String? livroInicial;
@@ -31,6 +32,10 @@ class TelaBiblia extends StatefulWidget {
   /// Faixa de versículos a destacar, para quando o cronograma pede
   /// "Salmos 119:1 a 56" e não o capítulo inteiro.
   final (int, int)? destacar;
+
+  /// Ver [DevocionalAppBar.voltarPara]: a Bíblia aberta por cima (rota `/ler`)
+  /// precisa de saída quando o F5 a deixa sozinha na pilha.
+  final String? voltarPara;
 
   @override
   State<TelaBiblia> createState() => _TelaBibliaState();
@@ -122,6 +127,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
               onPopInvokedWithResult: (_, _) => _controller.limparSelecao(),
               child: Scaffold(
                 appBar: DevocionalAppBar(
+                  voltarPara: widget.voltarPara,
                   title: Tooltip(
                     message: 'Toque para escolher livro',
                     child: DevocionalBotaoTerciario(

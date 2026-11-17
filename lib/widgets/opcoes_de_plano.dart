@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../dados/canon.dart';
 import '../estilo/espacamento.dart';
+import '../funcoes/aviso.dart';
 import '../funcoes/dialogos.dart';
 import 'botao.dart';
 import 'filete.dart';
@@ -51,17 +52,14 @@ class _DevocionalLivrosEscolhidosState
     widget.aoRemover(slug);
     final restaurar = widget.aoRestaurar;
     if (restaurar == null) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text('${nomeDoLivro(slug)} removido.'),
-          action: SnackBarAction(
-            label: 'Desfazer',
-            onPressed: () => restaurar([slug], indice < 0 ? 0 : indice),
-          ),
-        ),
-      );
+    // Pelo `mostrarAviso`, não por um SnackBar direto: com ação, o SnackBar
+    // do Flutter nunca fecha sozinho (ver `funcoes/aviso.dart`).
+    mostrarAviso(
+      context,
+      '${nomeDoLivro(slug)} removido.',
+      rotuloDeAcao: 'Desfazer',
+      aoAgir: () => restaurar([slug], indice < 0 ? 0 : indice),
+    );
   }
 
   void _limpar(BuildContext context) {
@@ -71,17 +69,12 @@ class _DevocionalLivrosEscolhidosState
     }
     final restaurar = widget.aoRestaurar;
     if (restaurar == null) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text('${backup.length} livros removidos.'),
-          action: SnackBarAction(
-            label: 'Desfazer',
-            onPressed: () => restaurar(backup, 0),
-          ),
-        ),
-      );
+    mostrarAviso(
+      context,
+      '${backup.length} livros removidos.',
+      rotuloDeAcao: 'Desfazer',
+      aoAgir: () => restaurar(backup, 0),
+    );
   }
 
   @override

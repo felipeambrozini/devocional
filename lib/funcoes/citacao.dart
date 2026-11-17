@@ -52,6 +52,7 @@ List<InlineSpan> spansDeCitacao(
             baseline: TextBaseline.alphabetic,
             child: _ReferenciaDaCitacao(
               rotulo: referencia.toUpperCase(),
+              rotuloFalado: referencia,
               estilo: estiloReferencia,
               aoAbrir: () => abrir(faixa.$1, faixa.$2, faixa.$3, faixa.$4),
             ),
@@ -81,19 +82,32 @@ String textoDeCitacao(Devocional dev) => [
 class _ReferenciaDaCitacao extends StatelessWidget {
   const _ReferenciaDaCitacao({
     required this.rotulo,
+    required this.rotuloFalado,
     required this.estilo,
     required this.aoAbrir,
   });
 
+  /// O texto à vista, em caixa alta, como a atribuição de uma epígrafe.
   final String rotulo;
+
+  /// O mesmo em caixa normal, para o leitor de tela: em caixa alta alguns
+  /// sintetizadores soletram a palavra como sigla.
+  final String rotuloFalado;
   final TextStyle? estilo;
   final VoidCallback aoAbrir;
 
   @override
   Widget build(BuildContext context) {
+    // Nó próprio (`container`): dentro do WidgetSpan, sem ele o botão fundia
+    // no texto da epígrafe, e o leitor de tela anunciava a citação inteira
+    // como um botão só, com a referência lida duas vezes. Só o texto visível
+    // sai da semântica (ExcludeSemantics nele, não `excludeSemantics` aqui):
+    // o InkWell continua informando o toque e o foco, sem o que a referência
+    // sumia da ordem de Tab de quem usa leitor de tela com teclado.
     return Semantics(
+      container: true,
       button: true,
-      label: 'Abrir $rotulo na Bíblia',
+      label: 'Abrir $rotuloFalado na Bíblia',
       child: InkWell(
         borderRadius: BorderRadius.circular(4),
         onTap: aoAbrir,
@@ -101,9 +115,11 @@ class _ReferenciaDaCitacao extends StatelessWidget {
           padding: const EdgeInsets.symmetric(
             vertical: DevocionalEspacamento.sp14,
           ),
-          child: Text(
-            rotulo,
-            style: estilo?.copyWith(decoration: TextDecoration.underline),
+          child: ExcludeSemantics(
+            child: Text(
+              rotulo,
+              style: estilo?.copyWith(decoration: TextDecoration.underline),
+            ),
           ),
         ),
       ),

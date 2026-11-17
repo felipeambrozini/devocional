@@ -31,6 +31,7 @@ import 'dados/registro.dart';
 import 'dados/url_da_pagina.dart';
 import 'dados/voz.dart';
 import 'estilo/tema.dart';
+import 'funcoes/abrir_na_biblia.dart';
 import 'funcoes/lembretes_acoes.dart';
 import 'telas/admin.dart';
 import 'telas/biblia.dart';
@@ -424,6 +425,25 @@ final _router = GoRouter(
       builder: (context, state) => const TelaPrivacidade(),
     ),
     GoRoute(path: '/termos', builder: (context, state) => const TelaTermos()),
+    // A Bíblia aberta por cima de qualquer aba (epígrafe do devocional, faixa
+    // da leitura do dia, busca, marcações), com voltar para onde se estava.
+    // Rota, e não um Navigator.push avulso, para a URL dizer o capítulo e o F5
+    // reabri-lo; por cima do shell, para a barra de baixo não seguir marcando
+    // a aba de origem. Ver `lib/funcoes/abrir_na_biblia.dart`.
+    GoRoute(
+      path: '/ler/:livro/:capitulo',
+      redirect: (context, state) =>
+          _leituraDaRota(state) == null ? '/biblia' : null,
+      builder: (context, state) {
+        final (livro, capitulo, destacar) = _leituraDaRota(state)!;
+        return TelaBiblia(
+          livroInicial: livro,
+          capituloInicial: capitulo,
+          destacar: destacar,
+          voltarPara: '/hoje',
+        );
+      },
+    ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) => DevocionalMoldura(
         navigationShell: navigationShell,
@@ -563,6 +583,15 @@ final _router = GoRouter(
     ),
   ],
 );
+
+/// Livro, capítulo e versículos a destacar da rota `/ler`, ou `null` se o
+/// caminho não aponta para um capítulo que existe.
+(String, int, (int, int)?)? _leituraDaRota(GoRouterState state) =>
+    leituraDoCaminho(
+      state.pathParameters['livro'] ?? '',
+      state.pathParameters['capitulo'] ?? '',
+      state.uri.queryParameters['versiculos'],
+    );
 
 /// A data escolhida no calendário vem na URL como `?data=AAAA-MM-DD`, para o
 /// F5 e um link compartilhado reabrirem o dia certo. `null` (sem parâmetro ou

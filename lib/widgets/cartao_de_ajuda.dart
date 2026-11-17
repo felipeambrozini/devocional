@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../dados/estado.dart';
 import '../dados/nuvem.dart';
 import '../estilo/espacamento.dart';
+import '../funcoes/abrir_na_biblia.dart';
 import '../funcoes/linhas_de_ajuda.dart';
-import '../telas/biblia.dart';
 import 'botao.dart';
 import 'cartao.dart';
 
@@ -68,15 +68,6 @@ class DevocionalCartaoDeAjuda extends StatelessWidget {
   }
 
   void _abrirJoao1(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const TelaBiblia(
-          livroInicial: 'joao',
-          capituloInicial: 1,
-          destacar: (1, 18),
-        ),
-      ),
-    );
+    abrirNaBiblia(context, 'joao', 1, destacar: (1, 18));
   }
 }

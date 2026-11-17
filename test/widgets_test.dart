@@ -1,4 +1,5 @@
 import 'package:devocional/dados/canon.dart';
+import 'package:devocional/funcoes/aviso.dart';
 import 'package:devocional/funcoes/dialogos.dart';
 import 'package:devocional/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
@@ -218,6 +219,8 @@ void main() {
 
       expect(find.text('1 · Gênesis'), findsOneWidget);
       expect(find.text('2 · Êxodo'), findsOneWidget);
+      // O aviso sai por `mostrarAviso`, que fecha sozinho num timer próprio.
+      await tester.pump(duracaoDeAviso);
     });
 
     testWidgets('Limpar tira todos e o Desfazer traz de volta', (tester) async {
@@ -233,6 +236,7 @@ void main() {
 
       expect(find.text('1 · Gênesis'), findsOneWidget);
       expect(find.text('2 · Êxodo'), findsOneWidget);
+      await tester.pump(duracaoDeAviso);
     });
   });
 }

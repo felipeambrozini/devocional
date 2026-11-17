@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../dados/conteudo.dart';
 import '../dados/modelos.dart';
-import '../telas/biblia.dart';
+import '../funcoes/abrir_na_biblia.dart';
 import 'botao.dart';
 
 /// Botão que abre a Bíblia numa faixa do cronograma.
@@ -22,17 +22,13 @@ class DevocionalBotaoDeFaixa extends StatelessWidget {
     return DevocionalBotaoSecundario.icon(
       icon: const FaIcon(FontAwesomeIcons.bookBible, size: 17),
       label: Text(faixa.rotulo),
-      onPressed: () => Navigator.push(
+      onPressed: () => abrirNaBiblia(
         context,
-        MaterialPageRoute(
-          builder: (_) => TelaBiblia(
-            livroInicial: faixa.livro,
-            capituloInicial: faixa.deCapitulo,
-            destacar: faixa.porVersiculo
-                ? (faixa.deVersiculo!, faixa.ateVersiculo!)
-                : null,
-          ),
-        ),
+        faixa.livro,
+        faixa.deCapitulo,
+        destacar: faixa.porVersiculo
+            ? (faixa.deVersiculo!, faixa.ateVersiculo!)
+            : null,
       ),
     );
   }

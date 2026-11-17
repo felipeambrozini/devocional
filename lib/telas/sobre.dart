@@ -184,10 +184,10 @@ class _TelaSobreState extends State<TelaSobre> {
                           FontAwesomeIcons.trash,
                           color: cor.error,
                         ),
-                        title: const Text('Apagar meus dados da nuvem'),
-                        subtitle: const Text(
-                          'Remove a cópia salva na conta. O que está neste '
-                          'navegador não é tocado.',
+                        title: const Text('Apagar conta e dados da nuvem'),
+                        subtitle: Text(
+                          'Apaga sua conta no app e tudo o que ela guarda. '
+                          'O que está $_ondeFicaACopiaLocal não é tocado.',
                         ),
                         onTap: () => _apagarDaNuvem(context),
                       )
@@ -410,24 +410,34 @@ Future<void> _relatarProblema() async {
   await launchUrl(uri, webOnlyWindowName: '_self');
 }
 
-/// Confirma e apaga a cópia da conta. O "não pode ser desfeita" é literal:
-/// `Nuvem.apagarDados` remove o documento no Firestore e a conta em si.
+/// Onde fica a cópia que o apagar da nuvem não toca: o navegador na web, o
+/// aparelho nas outras plataformas.
+const _ondeFicaACopiaLocal = kIsWeb ? 'neste navegador' : 'neste aparelho';
+
+/// Confirma e apaga a conta. O texto diz tudo o que `Nuvem.apagarDados` faz,
+/// porque é a retirada do consentimento da LGPD: sai de todos os planos
+/// compartilhados, remove o documento no Firestore (cópia, conversas,
+/// leituras da Biblioteca) e a conta em si, o que também encerra a sessão. Com
+/// login antigo, o Firebase exige reautenticar antes, e o Google abre a janela.
 Future<void> _apagarDaNuvem(BuildContext context) async {
   final confirmou = await confirmar(
     context,
-    titulo: 'Apagar dados da nuvem?',
+    titulo: 'Apagar conta e dados da nuvem?',
     conteudo:
-        'Favoritos, anotações e progresso salvos na sua conta serão '
-        'apagados. O que está neste navegador continua intacto. Essa ação '
-        'não pode ser desfeita.',
-    rotuloDaAcao: 'Apagar',
+        'Sua conta no Devocional será apagada, com tudo o que ela guarda na '
+        'nuvem: favoritos, anotações, progresso, leituras da Biblioteca e '
+        'conversas. Você sai de todos os planos compartilhados e da conta. '
+        'Sua conta do Google não é tocada, e o que está '
+        '$_ondeFicaACopiaLocal continua intacto. O Google pode pedir que você '
+        'entre de novo para confirmar. Essa ação não pode ser desfeita.',
+    rotuloDaAcao: 'Apagar conta',
   );
   if (!confirmou || !context.mounted) return;
 
   final mensageiro = ScaffoldMessenger.of(context);
   try {
     await Nuvem.instancia.apagarDados();
-    mostrarAvisoNo(mensageiro, 'Dados apagados da nuvem.');
+    mostrarAvisoNo(mensageiro, 'Conta e dados apagados da nuvem.');
   } catch (erro, pilha) {
     Registro.erro('Sobre.apagarDaNuvem', erro, pilha);
     mostrarErroNo(mensageiro, 'Não foi possível apagar agora. Tente de novo.');

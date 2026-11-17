@@ -17,7 +17,7 @@ do mesmo código).
   - Calendário para ver o devocional de qualquer data, passada ou futura.
 - **Biblioteca** de livros de Spurgeon, lidos por capítulo, com continuar de
   onde
-  parou, progresso por livro, destaques e notas por parágrafo (ver "A
+  parou, progresso por livro, favoritos e notas por parágrafo (ver "A
   Biblioteca" abaixo). São 22 livros, na ordem de publicação em inglês: a
   estante abre com *O Santo e o Seu Salvador*.
 - **Cronograma de leitura anual**, 365 dias (366 em ano bissexto), agrupado por
@@ -202,7 +202,17 @@ compartilhar qualquer uma direto. Dentro das abas:
 - `/plano/novo` cria um plano e `/plano/<id>` abre um plano.
 
 Fora das abas, `/notas`, `/sobre`, `/faq`, `/privacidade`, `/termos` e
-`/admin` também têm URL própria, e cada persona do chat também:
+`/admin` também têm URL própria. `/ler/<livro>/<capítulo>` (com
+`?versiculos=16` ou `?versiculos=16-18` para destacar) é a Bíblia aberta por
+cima de qualquer aba: a epígrafe do devocional, a faixa da leitura do dia, o
+"Começar por João 1", a busca e as marcações a abrem por
+`abrirNaBiblia` (`lib/funcoes/abrir_na_biblia.dart`), com `push` do go_router
+em vez do `Navigator.push` avulso de antes, para a URL mostrar o capítulo, o
+F5 reabri-lo e a barra de baixo não seguir marcando a aba de origem. Chegando
+sozinha na pilha (F5, link), o voltar dela leva à Hoje
+(`DevocionalAppBar.voltarPara`). O "Ler tudo" das prévias da Hoje vai para a
+aba Devocional (`DevocionalControlador.caminhoDaLeitura`). Cada persona do
+chat também tem URL própria:
 `/charles-spurgeon` (ou `/felipe-ambrozini`) abre o histórico,
 `/<slug>/conversa` uma conversa nova e `/<slug>/conversa/<id>` uma conversa
 salva. Parâmetros na URL: `?ler=joao.3.16` abre esse versículo por cima da
@@ -680,10 +690,11 @@ motivo novo.
   envolve `SelectionArea` e acrescenta "Compartilhar" ao menu de seleção**,
   usada no corpo aberto do cartão de introdução do livro
   (`lib/widgets/abertura_de_livro.dart`, na Bíblia e no Devocional) e no
-  capítulo da Biblioteca fora da web (`lib/widgets/capitulo_aberto.dart`); o
-  cartão de leitura do Devocional usa um `SelectionArea` simples, e o
-  compartilhar dele é o botão próprio (abaixo). O texto vira selecionável e
-  copiável
+  capítulo da Biblioteca e no cartão de leitura do Devocional, nesses dois só
+  fora da web (`lib/widgets/capitulo_aberto.dart`,
+  `lib/widgets/cartao_de_leitura.dart`): ali o toque no parágrafo abre a folha
+  de ações, e na web o clique que tira uma seleção também a abriria. O texto
+  vira selecionável e copiável
   de fábrica, e o mesmo clique forte que abre a seleção nativa ganha um botão
   a mais para compartilhar o trecho escolhido (via `share_plus`, sem
   formatação de referência — a seleção pode não bater com um parágrafo

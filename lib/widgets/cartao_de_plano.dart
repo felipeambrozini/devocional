@@ -87,8 +87,12 @@ class DevocionalCartaoDePlano extends StatelessWidget {
                   else
                     IconButton(
                       tooltip: souCriador ? 'Excluir plano' : 'Sair do plano',
+                      // O ícone do menu do plano: lixeira para excluir,
+                      // porta de saída para quem só participa e sai.
                       icon: FaIcon(
-                        FontAwesomeIcons.trash,
+                        souCriador
+                            ? FontAwesomeIcons.trash
+                            : FontAwesomeIcons.rightFromBracket,
                         size: 20,
                         color: cor.onSurfaceVariant,
                       ),

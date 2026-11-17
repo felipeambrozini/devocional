@@ -145,6 +145,10 @@ Future<bool> confirmar(
   final confirmou = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
+      // Rolável: com fonte grande ou celular deitado, um texto longo (o de
+      // apagar a conta tem sete linhas) seria cortado, e o "não pode ser
+      // desfeita" do fim sumiria.
+      scrollable: true,
       title: Text(titulo),
       content: Text(conteudo),
       actions: [
