@@ -19,7 +19,12 @@ plugins {
 
 android {
     namespace = "com.felipeambrozini.devocional"
-    compileSdk = flutter.compileSdkVersion
+    // O flutter_local_notifications 23 (e o androidx.core 1.19 que ele puxa)
+    // é compilado contra o SDK 37, e o checkReleaseAarMetadata recusa o APK
+    // com o app no 36, que é o padrão do Flutter estável. O maior dos dois,
+    // para um Flutter que já venha com 37 ou mais continuar mandando. Só o
+    // compileSdk muda: targetSdk e minSdk seguem os do Flutter.
+    compileSdk = maxOf(flutter.compileSdkVersion, 37)
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
