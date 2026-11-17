@@ -27,6 +27,27 @@
   ou alterado, após codificar, rode o agente `ui-reviewer` nos arquivos mudados
   e corrija os achados de gravidade alta antes de dar a tarefa por concluída.
 
+## Ferramentas de Flutter
+
+- Acessibilidade automática: ao criar ou alterar uma tela ou widget de UI,
+  cubra-o com um teste de widget que use o `meetsGuideline` do
+  `flutter_test` (`androidTapTargetGuideline`, `labeledTapTargetGuideline`,
+  `textContrastGuideline`), nos dois temas. É o detector automático que o
+  impeccable não tem para Flutter, e roda dentro do `fvm flutter test`. Use os
+  skills `accessibility-as-code` e `widget-golden-and-a11y-testing` (plugin
+  Flutter Skills) como guia. Hoje só `test/instalacao_test.dart` faz isso.
+- Verificação em execução: o Flutter web desenha tudo num canvas, então o
+  navegador não enxerga a árvore de widgets. Para conferir uma mudança com o
+  app rodando (árvore de widgets, erros em tempo de execução, hot reload), use
+  o servidor MCP do Dart (plugin Dart and Flutter).
+- `flutter-reviewer` (plugin Very Good AI): só como segunda opinião de
+  engenharia, nunca no lugar do `ui-reviewer`. O plugin assume BLoC,
+  `very_good_analysis` e arquitetura em camadas; este projeto usa controladores
+  e `flutter_lints`, então descarte sugestões que só sigam esse estilo. Os
+  ganchos dele rodam `dart format` e `dart analyze` sem `fvm`: não conte com
+  eles; a verificação oficial continua sendo
+  `fvm flutter analyze && fvm flutter test`.
+
 ## Plugin EGM (Elephant-Goldfish Model)
 
 EGM artifact directory: docs/designs
