@@ -89,15 +89,11 @@ class TelaHistorico extends StatelessWidget {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ClipOval(
-              child: Image.asset(
-                persona.foto,
-                width: 34,
-                height: 34,
-                fit: BoxFit.cover,
-                excludeFromSemantics: true,
-                alignment: Alignment.topCenter,
-              ),
+            DevocionalRetratoDePersona(
+              persona: persona,
+              tamanho: 34,
+              anel: false,
+              decorativo: true,
             ),
             const SizedBox(width: DevocionalEspacamento.sp10),
             Flexible(

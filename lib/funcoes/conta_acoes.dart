@@ -10,14 +10,14 @@ import '../dados/registro.dart';
 import '../widgets/consentimento_da_nuvem.dart';
 import 'aviso.dart';
 
-/// Tenta o login e mostra o motivo quando não completa. Público porque três
-/// botões chamam isto: o do cabeçalho da Hoje (`DevocionalBotaoDeConta`),
-/// o cartão de plano compartilhado (`meu_plano.dart`) e o convite de acesso
-/// das Conversas (`cartao_de_pedir_acesso.dart`). Quem chama precisa
-/// fazê-lo direto do `onTap`/`onPressed` (sem `await` antes): o navegador só
-/// deixa abrir a janela do login dentro do gesto do usuário, e qualquer
-/// espera antes do `signInWithPopup` consome esse gesto e a janela sai
-/// bloqueada.
+/// Tenta o login e mostra o motivo quando não completa. Público porque os
+/// botões de entrar chamam isto: o `DevocionalBotaoDeEntrar` (cabeçalho da
+/// Hoje, cartão de plano compartilhado e convite de acesso das Conversas) e
+/// o entrar do plano aberto por link (`plano_controlador.dart`). Quem chama
+/// precisa fazê-lo direto do `onTap`/`onPressed` (sem `await` antes): o
+/// navegador só deixa abrir a janela do login dentro do gesto do usuário, e
+/// qualquer espera antes do `signInWithPopup` consome esse gesto e a janela
+/// sai bloqueada.
 ///
 /// Antes do primeiro login neste aparelho, pede o consentimento da LGPD
 /// ([DevocionalConsentimentoDaNuvem]); o "Concordo e entrar" do diálogo é o

@@ -22,24 +22,11 @@ class DevocionalBoasVindas extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: cor.primary, width: 2),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(DevocionalEspacamento.sp2),
-                child: ClipOval(
-                  child: Image.asset(
-                    persona.foto,
-                    width: 92,
-                    height: 92,
-                    fit: BoxFit.cover,
-                    excludeFromSemantics: true,
-                    alignment: Alignment.topCenter,
-                  ),
-                ),
-              ),
+            DevocionalRetratoDePersona(
+              persona: persona,
+              tamanho: 92,
+              espessuraDoAnel: 2,
+              decorativo: true,
             ),
             const SizedBox(height: DevocionalEspacamento.sp18),
             const DevocionalFilete(largura: 64),

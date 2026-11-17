@@ -135,7 +135,7 @@ vitoriana dele, tratando o leitor por "tu".
   `avisoDaBibliaDeEstudo` em `lib/funcoes/aviso.dart`), para ninguém tomar
   essas linhas por textos de Spurgeon.
 - Comentário de Spurgeon por versículo: a folha de ações do versículo na
-  Bíblia (Favoritar, Copiar, Anotar) mostra o comentário daquele versículo,
+  Bíblia (Copiar, Compartilhar, Anotar, Favoritar) mostra o comentário daquele versículo,
   nos 66 livros. O mesmo comentário aparece também direto no leitor, abaixo de
   cada versículo, para todos; só o admin o desliga (interruptor do painel, como
   os outros recursos), sem escolha do leitor nos ajustes.
@@ -145,11 +145,13 @@ vitoriana dele, tratando o leitor por "tu".
   forte que já abre a seleção) ganha um botão de Compartilhar para o trecho
   escolhido. O texto da Bíblia não é selecionável: o toque longo seleciona
   versículos, e Compartilhar vem pelo toque no versículo (a mesma folha de
-  Favoritar, Copiar, Anotar). No Devocional (Manhã, Noite e Promessas de
-  Deus), tocar no texto abre a folha com Favoritar, Anotar, Copiar e
-  Compartilhar (o Compartilhar saiu do cartão): manda título, citação e
+  Copiar, Anotar, Favoritar). No Devocional (Manhã, Noite e Promessas de
+  Deus), tocar no texto abre a folha com Copiar, Compartilhar, Anotar e
+  Favoritar (o Compartilhar saiu do cartão): manda título, citação e
   comentário do dia com um link que reabre a mesma leitura. Favoritar tem o
-  mesmo nome e ícone na Bíblia, no Devocional e na Biblioteca.
+  mesmo nome e ícone na Bíblia, no Devocional e na Biblioteca, e as folhas
+  de ações das três seguem a mesma ordem: Copiar, Compartilhar, Anotar,
+  Favoritar (a da Biblioteca sem Compartilhar, que vem pela seleção).
 - Favoritos e notas são separados por aba: o ícone de marcador da barra de
   cima da Bíblia, do Devocional e da Biblioteca abre a tela só com o que foi
   marcado naquela aba (`/notas?aba=biblia|devocional|biblioteca`).

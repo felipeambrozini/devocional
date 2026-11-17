@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../estilo/espacamento.dart';
+import 'caixa_de_citacao.dart';
 
 /// O comentário de Spurgeon abaixo de um versículo, em corpo menor e com o
 /// fio do metal à esquerda (como a caixa de citação). Some sem rastro quando
@@ -21,18 +22,18 @@ class DevocionalComentarioNoCapitulo extends StatelessWidget {
     return Semantics(
       container: true,
       label: 'Comentário no estilo de Spurgeon',
-      child: Container(
-        width: double.infinity,
-        margin: const EdgeInsets.only(top: DevocionalEspacamento.sp8),
-        padding: const EdgeInsets.only(left: DevocionalEspacamento.sp12),
-        decoration: BoxDecoration(
-          border: Border(left: BorderSide(color: cor.primary, width: 3)),
-        ),
-        child: Text(
-          comentario,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: cor.onSurfaceVariant,
-            height: 1.5,
+      child: Padding(
+        padding: const EdgeInsets.only(top: DevocionalEspacamento.sp8),
+        child: DevocionalCaixaDeCitacao(
+          comFundo: false,
+          expandir: true,
+          padding: const EdgeInsets.only(left: DevocionalEspacamento.sp12),
+          child: Text(
+            comentario,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: cor.onSurfaceVariant,
+              height: 1.5,
+            ),
           ),
         ),
       ),

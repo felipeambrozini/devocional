@@ -4,11 +4,16 @@ import '../estilo/espacamento.dart';
 import 'cartao.dart';
 import 'filete.dart';
 
-class DevocionalCartaoLeituraProgressoErro extends StatelessWidget {
-  const DevocionalCartaoLeituraProgressoErro({
+/// O cartão da leitura de hoje enquanto o cronograma não chegou: carregando,
+/// ou a falha. Mesmo filete e mesmo título do cartão pronto, para a Hoje não
+/// pular de lugar quando ele entra.
+class DevocionalCartaoLeituraProgressoAviso extends StatelessWidget {
+  const DevocionalCartaoLeituraProgressoAviso({
     super.key,
     required this.mensagem,
   });
+
+  /// "Carregando..." ou o motivo da falha.
   final String mensagem;
 
   @override

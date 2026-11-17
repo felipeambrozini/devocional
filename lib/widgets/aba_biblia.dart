@@ -5,9 +5,9 @@ import '../dados/canon.dart';
 import '../dados/conteudo.dart';
 import '../dados/modelos.dart';
 import '../estilo/espacamento.dart';
+import '../funcoes/abrir_na_biblia.dart';
 import 'aviso_vazio.dart';
 import 'cartao_de_referencia.dart';
-import 'erro_de_busca.dart';
 import 'item_de_achado.dart';
 
 class DevocionalAbaBiblia extends StatelessWidget {
@@ -31,7 +31,10 @@ class DevocionalAbaBiblia extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (erro) {
-      return DevocionalErroDeBusca(aoTentarDeNovo: aoTentarDeNovo);
+      return DevocionalAvisoDeErro(
+        detalhe: 'A busca falhou. Tente de novo.',
+        aoTentarDeNovo: aoTentarDeNovo,
+      );
     }
     if (termoBuscado.isEmpty) {
       return const DevocionalAvisoVazio(
@@ -102,10 +105,17 @@ class DevocionalAbaBiblia extends StatelessWidget {
               if (temReferencia && i == 0) {
                 return DevocionalCartaoDeReferencia(referencia: referencia!);
               }
-              final indice = temReferencia ? i - 1 : i;
+              final achado = achados[temReferencia ? i - 1 : i];
               return DevocionalItemDeAchado(
-                achado: achados[indice],
+                titulo: achado.referencia,
+                texto: achado.texto,
                 termo: termoBuscado,
+                aoAbrir: () => abrirNaBiblia(
+                  context,
+                  achado.livro,
+                  achado.capitulo,
+                  destacar: (achado.versiculo, achado.versiculo),
+                ),
               );
             },
           ),

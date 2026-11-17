@@ -159,34 +159,25 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
     await showModalBottomSheet<void>(
       context: context,
       // Em paisagem a alça mais as três ações passam dos 9/16 da tela: a
-      // rolagem mantém "Copiar" alcançável em vez de cortá-lo.
+      // rolagem mantém a última ação alcançável em vez de cortá-la.
       builder: (folha) => SafeArea(
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            // A ordem de toda folha de ações de texto: Copiar, Compartilhar,
+            // Anotar, Favoritar (ver `linha_de_versiculo.dart`); aqui sem
+            // Compartilhar, que no parágrafo vem pelo menu da seleção.
             children: [
-              if (!temNota)
-                ListTile(
-                  // Mesmo nome e ícone da Bíblia e do Devocional: é o mesmo
-                  // gesto, e a tela de marcações o lista como favorito.
-                  leading: FaIcon(
-                    destaque == null
-                        ? FontAwesomeIcons.bookmark
-                        : FontAwesomeIcons.solidBookmark,
-                    color: cor.primary,
-                  ),
-                  title: Text(
-                    destaque == null ? 'Favoritar' : 'Remover dos favoritos',
-                  ),
-                  onTap: () async {
-                    await leitura.alternarDestaque(
-                      _slug,
-                      widget.indice,
-                      paragrafo,
-                    );
-                    if (folha.mounted) Navigator.pop(folha);
-                  },
-                ),
+              ListTile(
+                leading: FaIcon(FontAwesomeIcons.copy, color: cor.primary),
+                title: const Text('Copiar'),
+                onTap: () async {
+                  await Clipboard.setData(
+                    ClipboardData(text: _capitulo.paragrafos[paragrafo]),
+                  );
+                  if (folha.mounted) Navigator.pop(folha);
+                },
+              ),
               ListTile(
                 leading: FaIcon(
                   FontAwesomeIcons.penToSquare,
@@ -211,16 +202,28 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
                   if (folha.mounted) Navigator.pop(folha);
                 },
               ),
-              ListTile(
-                leading: FaIcon(FontAwesomeIcons.copy, color: cor.primary),
-                title: const Text('Copiar'),
-                onTap: () async {
-                  await Clipboard.setData(
-                    ClipboardData(text: _capitulo.paragrafos[paragrafo]),
-                  );
-                  if (folha.mounted) Navigator.pop(folha);
-                },
-              ),
+              if (!temNota)
+                ListTile(
+                  // Mesmo nome e ícone da Bíblia e do Devocional: é o mesmo
+                  // gesto, e a tela de marcações o lista como favorito.
+                  leading: FaIcon(
+                    destaque == null
+                        ? FontAwesomeIcons.bookmark
+                        : FontAwesomeIcons.solidBookmark,
+                    color: cor.primary,
+                  ),
+                  title: Text(
+                    destaque == null ? 'Favoritar' : 'Remover dos favoritos',
+                  ),
+                  onTap: () async {
+                    await leitura.alternarDestaque(
+                      _slug,
+                      widget.indice,
+                      paragrafo,
+                    );
+                    if (folha.mounted) Navigator.pop(folha);
+                  },
+                ),
             ],
           ),
         ),

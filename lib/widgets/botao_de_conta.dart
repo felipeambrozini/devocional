@@ -3,10 +3,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../dados/nuvem.dart';
 import '../dados/registro.dart';
-import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
-import '../funcoes/conta_acoes.dart';
 import 'botao.dart';
+import 'botao_de_entrar.dart';
 
 /// Confirma e executa o logout. Um toque no "Sair" não pode deslogar sem
 /// pergunta: na web, o espelho na nuvem é a proteção contra o navegador
@@ -71,22 +70,7 @@ class DevocionalBotaoDeConta extends StatelessWidget {
             ),
           );
         }
-        return DevocionalBotaoSecundario.icon(
-          onPressed: nuvem.entrando
-              ? null
-              : () => entrarNaConta(context, nuvem),
-          icon: nuvem.entrando
-              ? const SizedBox(
-                  width: DevocionalEspacamento.sp18,
-                  height: DevocionalEspacamento.sp18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    semanticsLabel: 'Carregando',
-                  ),
-                )
-              : const FaIcon(FontAwesomeIcons.google, size: 16),
-          label: const Text('Entrar'),
-        );
+        return const DevocionalBotaoDeEntrar(rotulo: 'Entrar', discreto: true);
       },
     );
   }

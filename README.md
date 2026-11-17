@@ -93,8 +93,9 @@ do mesmo código).
   de favoritos, notas e dias lidos do cronograma para reimportar em outro
   aparelho (planos, conversas e a leitura dos livros não entram na cópia).
 - **Comentário de Spurgeon por versículo**: a mesma folha que abre ao tocar um
-  versículo (Favoritar, Copiar, Anotar) mostra também o comentário de Charles
-  Spurgeon para aquele versículo, nos 31.102 versículos dos 66 livros.
+  versículo (Copiar, Compartilhar, Anotar, Favoritar) mostra também o
+  comentário de Charles Spurgeon para aquele versículo, nos 31.102 versículos
+  dos 66 livros.
 - **Conta Google (Web, Android e iOS)**: opcional — favoritos, notas, progresso,
   conversas, horários dos lembretes, planos e a leitura dos livros da
   Biblioteca sobem sozinhos para a conta de quem entrar (depois do
@@ -703,7 +704,8 @@ motivo novo.
   e lê o valor mais recente ao montar o menu. **O texto dos versículos no
   leitor da Bíblia não é selecionável**: ali o toque longo seleciona versículos
   (abaixo), e a seleção de palavras brigaria com ele. Compartilhar um
-  versículo vive na folha de ações (Favoritar, Copiar, Compartilhar, Anotar),
+  versículo vive na folha de ações (Copiar, Compartilhar, Anotar, Favoritar, a mesma
+  ordem das folhas do Devocional e da Biblioteca),
   aberta pelo toque na linha, e na barra da seleção.
 - **Selecionar vários versículos do capítulo**
   (`BibliaControlador.selecionados`,
@@ -1130,6 +1132,12 @@ que está funcionando.
   plugins Firebase continuam listados no aviso de KGP do build — o Flutter os
   detecta por regex no texto do `build.gradle` —, mas com a flag ligada não
   aplicam o KGP.
+- **`compileSdk` 37** (17/11/2026): o `flutter_local_notifications` 23 (e o
+  `androidx.core` 1.19 que vem com ele) é compilado contra o Android SDK 37,
+  e o `checkReleaseAarMetadata` recusava o APK com o app no 36, o padrão do
+  Flutter estável. `android/app/build.gradle.kts` usa
+  `maxOf(flutter.compileSdkVersion, 37)`; `targetSdk` e `minSdk` seguem os do
+  Flutter. Localmente o build também pede o NDK 28.2 instalado no SDK.
 - **FAQ e Política de privacidade** (20/08/2026): `lib/telas/faq.dart` e
   `lib/telas/privacidade.dart`, com rotas próprias (`/faq`, `/privacidade`) e
   entradas na folha de ajustes, ao lado de Sobre. A política é a versão

@@ -174,7 +174,7 @@ class DevocionalCartaoDeLeitura extends StatelessWidget {
   static Widget _comSelecao(Widget filho) =>
       kIsWeb ? filho : DevocionalAreaDeSelecaoComCompartilhar(child: filho);
 
-  /// A folha do texto: favoritar, anotar, copiar e compartilhar a leitura. O
+  /// A folha do texto: copiar, compartilhar, anotar e favoritar a leitura. O
   /// compartilhar mora aqui, e não solto no cartão, junto das outras ações do
   /// texto; favorito com nota não se desmarca (ver
   /// `LeituraDeLivros.alternarDestaque`), então a ação some enquanto há nota.
@@ -194,27 +194,25 @@ class DevocionalCartaoDeLeitura extends StatelessWidget {
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            // A ordem de toda folha de ações de texto: Copiar, Compartilhar,
+            // Anotar, Favoritar (ver `linha_de_versiculo.dart`).
             children: [
-              if (!temNota)
-                ListTile(
-                  leading: FaIcon(
-                    destaque == null
-                        ? FontAwesomeIcons.bookmark
-                        : FontAwesomeIcons.solidBookmark,
-                    color: cor.primary,
-                  ),
-                  title: Text(
-                    destaque == null ? 'Favoritar' : 'Remover dos favoritos',
-                  ),
-                  onTap: () async {
-                    await leitura.alternarDestaque(
-                      slugDeNota,
-                      diaDeNota,
-                      paragrafoDoDevocional,
-                    );
-                    if (folha.mounted) Navigator.pop(folha);
-                  },
+              ListTile(
+                leading: FaIcon(FontAwesomeIcons.copy, color: cor.primary),
+                title: const Text('Copiar'),
+                onTap: () async {
+                  await Clipboard.setData(ClipboardData(text: texto));
+                  if (folha.mounted) Navigator.pop(folha);
+                },
+              ),
+              ListTile(
+                leading: FaIcon(
+                  FontAwesomeIcons.arrowUpFromBracket,
+                  color: cor.primary,
                 ),
+                title: const Text('Compartilhar'),
+                onTap: () => Navigator.pop(folha, true),
+              ),
               ListTile(
                 leading: FaIcon(
                   FontAwesomeIcons.penToSquare,
@@ -238,22 +236,26 @@ class DevocionalCartaoDeLeitura extends StatelessWidget {
                   if (folha.mounted) Navigator.pop(folha);
                 },
               ),
-              ListTile(
-                leading: FaIcon(FontAwesomeIcons.copy, color: cor.primary),
-                title: const Text('Copiar'),
-                onTap: () async {
-                  await Clipboard.setData(ClipboardData(text: texto));
-                  if (folha.mounted) Navigator.pop(folha);
-                },
-              ),
-              ListTile(
-                leading: FaIcon(
-                  FontAwesomeIcons.arrowUpFromBracket,
-                  color: cor.primary,
+              if (!temNota)
+                ListTile(
+                  leading: FaIcon(
+                    destaque == null
+                        ? FontAwesomeIcons.bookmark
+                        : FontAwesomeIcons.solidBookmark,
+                    color: cor.primary,
+                  ),
+                  title: Text(
+                    destaque == null ? 'Favoritar' : 'Remover dos favoritos',
+                  ),
+                  onTap: () async {
+                    await leitura.alternarDestaque(
+                      slugDeNota,
+                      diaDeNota,
+                      paragrafoDoDevocional,
+                    );
+                    if (folha.mounted) Navigator.pop(folha);
+                  },
                 ),
-                title: const Text('Compartilhar'),
-                onTap: () => Navigator.pop(folha, true),
-              ),
             ],
           ),
         ),

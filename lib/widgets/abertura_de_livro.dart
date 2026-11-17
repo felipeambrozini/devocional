@@ -9,6 +9,7 @@ import '../funcoes/aviso.dart';
 import '../funcoes/capa_biblia.dart';
 import '../estilo/espacamento.dart';
 import 'area_de_selecao.dart';
+import 'caixa_de_citacao.dart';
 import 'botao_de_voz.dart';
 import 'carrega_uma_vez.dart';
 import 'filete.dart';
@@ -155,14 +156,9 @@ class _IntroducaoAberta extends StatelessWidget {
             const SizedBox(height: DevocionalEspacamento.sp12),
           ],
           if (introducao.frase.isNotEmpty)
-            Container(
-              width: double.infinity,
+            DevocionalCaixaDeCitacao(
+              expandir: true,
               padding: const EdgeInsets.all(DevocionalEspacamento.sp14),
-              decoration: BoxDecoration(
-                color: cor.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(10),
-                border: Border(left: BorderSide(color: cor.primary, width: 3)),
-              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

@@ -221,46 +221,64 @@ class _AcoesDoVersiculo {
 
   Widget folha(BuildContext contextoDaFolha) {
     final cor = Theme.of(contextoDaFolha).colorScheme;
+    final cabecalho = Padding(
+      padding: const EdgeInsets.fromLTRB(
+        DevocionalEspacamento.sp20,
+        DevocionalEspacamento.sp20,
+        DevocionalEspacamento.sp8,
+        DevocionalEspacamento.sp20,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$referencia:$numero',
+            style: Theme.of(contextoDaFolha).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: DevocionalEspacamento.sp8),
+          Text(texto, style: Theme.of(contextoDaFolha).textTheme.bodyMedium),
+          FutureBuilder<String?>(
+            future: comentario,
+            builder: (context, snap) => _comentario(context, cor, snap),
+          ),
+        ],
+      ),
+    );
+    // A mesma ordem em toda folha de ações de texto (versículo, devocional,
+    // parágrafo da Biblioteca): Copiar, Compartilhar, Anotar, Favoritar.
+    final acoes = [
+      const Divider(height: 1),
+      _itemCopiar(contextoDaFolha, cor),
+      _itemCompartilhar(contextoDaFolha, cor),
+      _itemAnotar(contextoDaFolha),
+      _itemFavoritar(contextoDaFolha, cor),
+    ];
     return SafeArea(
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                DevocionalEspacamento.sp20,
-                DevocionalEspacamento.sp20,
-                DevocionalEspacamento.sp8,
-                DevocionalEspacamento.sp20,
-              ),
+      child: LayoutBuilder(
+        builder: (context, limites) {
+          // As ações ficam fixas embaixo e só o versículo e o comentário
+          // rolam: com o comentário longo de Spurgeon em cima, a última ação
+          // (Favoritar) caía abaixo da folha sem nada indicando que havia
+          // mais. Com pouca altura (paisagem com fonte grande), as quatro
+          // ações sozinhas podem não caber: aí tudo rola junto, como antes.
+          final escala = MediaQuery.textScalerOf(context).scale(1);
+          final cabemFixas = limites.maxHeight >= (4 * 56 + 160) * escala;
+          if (!cabemFixas) {
+            return SingleChildScrollView(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '$referencia:$numero',
-                    style: Theme.of(contextoDaFolha).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: DevocionalEspacamento.sp8),
-                  Text(
-                    texto,
-                    style: Theme.of(contextoDaFolha).textTheme.bodyMedium,
-                  ),
-                  FutureBuilder<String?>(
-                    future: comentario,
-                    builder: (context, snap) => _comentario(context, cor, snap),
-                  ),
-                ],
+                mainAxisSize: MainAxisSize.min,
+                children: [cabecalho, ...acoes],
               ),
-            ),
-            const Divider(height: 1),
-            _itemFavoritar(contextoDaFolha, cor),
-            // Copiar é o que mais se faz com um versículo, e não existia. Vem
-            // antes de anotar porque é a ação sem consequência das três.
-            _itemCopiar(contextoDaFolha, cor),
-            _itemCompartilhar(contextoDaFolha, cor),
-            _itemAnotar(contextoDaFolha),
-          ],
-        ),
+            );
+          }
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(child: SingleChildScrollView(child: cabecalho)),
+              ...acoes,
+            ],
+          );
+        },
       ),
     );
   }

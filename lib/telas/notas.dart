@@ -1,15 +1,19 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:material_ui/material_ui.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../controladores/notas_controlador.dart';
+import '../dados/conteudo.dart';
 import '../dados/estado.dart';
 import '../dados/leitura_de_livros.dart';
 import '../dados/modelos.dart';
 import '../estilo/espacamento.dart';
+import '../funcoes/abrir_na_biblia.dart';
 import '../funcoes/aviso.dart';
 import '../funcoes/dialogos.dart';
+import '../funcoes/origem_do_destaque.dart';
 import '../widgets/widgets.dart';
 
 /// Favoritos e anotações de uma aba do app ([origem]), em duas abas, com busca.
@@ -122,6 +126,7 @@ class _TelaNotasState extends State<TelaNotas> {
                     child: TabBarView(
                       children: [
                         _lista(
+                          estado: estado,
                           ehBiblia: ehBiblia,
                           marcacoes: [...favoritos],
                           destaques: destaques,
@@ -132,6 +137,7 @@ class _TelaNotasState extends State<TelaNotas> {
                           ),
                         ),
                         _lista(
+                          estado: estado,
                           ehBiblia: ehBiblia,
                           marcacoes: [...notas],
                           destaques: destaquesComNota,
@@ -190,23 +196,82 @@ extension on _TelaNotasState {
         );
 
   Widget _lista({
+    required Estado estado,
     required bool ehBiblia,
     required List<Marcacao> marcacoes,
     required List<DestaqueDeLivro> destaques,
     required Widget vazio,
     bool mostrarNota = false,
-  }) => ehBiblia
-      ? DevocionalLista(
-          itens: marcacoes,
-          mostrarNota: mostrarNota,
-          vazio: vazio,
-        )
-      : DevocionalListaDeDestaques(
-          itens: destaques,
-          mostrarNota: mostrarNota,
-          vazio: vazio,
-        );
+  }) {
+    if (ehBiblia) {
+      return DevocionalListaDeNotas(
+        quantidade: marcacoes.length,
+        vazio: vazio,
+        construir: (context, i) =>
+            _cartaoDaMarcacao(context, estado, marcacoes[i], mostrarNota),
+      );
+    }
+    // Destaque de um livro que saiu do catálogo não tem para onde levar.
+    final visiveis = [
+      for (final d in destaques)
+        if (OrigemDoDestaque.de(d) case final origem?) (d, origem),
+    ];
+    return DevocionalListaDeNotas(
+      quantidade: visiveis.length,
+      vazio: vazio,
+      construir: (context, i) => _cartaoDoDestaque(
+        context,
+        estado.leituraDeLivros,
+        visiveis[i].$1,
+        visiveis[i].$2,
+        mostrarNota,
+      ),
+    );
+  }
 }
+
+Widget _cartaoDaMarcacao(
+  BuildContext context,
+  Estado estado,
+  Marcacao m,
+  bool mostrarNota,
+) => DevocionalCartaoDeNota(
+  referencia: m.referencia,
+  chaveDoTexto: m.chave,
+  carregarTexto: () =>
+      Conteudo.instancia.versiculo(m.livro, m.capitulo, m.versiculo),
+  mensagemDeFalha: 'Não foi possível carregar o texto deste versículo.',
+  nota: m.nota,
+  mostrarNota: mostrarNota,
+  aoAbrir: () => abrirNaBiblia(
+    context,
+    m.livro,
+    m.capitulo,
+    destacar: (m.versiculo, m.versiculo),
+  ),
+  aoSalvarNota: (nota) =>
+      estado.definirNota(m.livro, m.capitulo, m.versiculo, nota),
+  aoRemover: () => estado.removerMarcacao(m),
+);
+
+Widget _cartaoDoDestaque(
+  BuildContext context,
+  LeituraDeLivros leitura,
+  DestaqueDeLivro d,
+  OrigemDoDestaque origem,
+  bool mostrarNota,
+) => DevocionalCartaoDeNota(
+  referencia: origem.referencia,
+  chaveDoTexto: d.chave,
+  carregarTexto: () => textoDoDestaque(d),
+  maxLinhas: 4,
+  nota: d.nota,
+  mostrarNota: mostrarNota,
+  aoAbrir: () => context.go(origem.rotaDeAbrir),
+  aoSalvarNota: (nota) =>
+      leitura.definirNota(d.slug, d.capitulo, d.paragrafo, nota),
+  aoRemover: () => leitura.removerDestaque(d),
+);
 
 String _dicaDeFavorito(OrigemDasNotas origem) => switch (origem) {
   OrigemDasNotas.biblia => 'Toque num versículo na Bíblia para favoritá-lo.',

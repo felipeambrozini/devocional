@@ -4,8 +4,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../dados/nuvem.dart';
 import '../estilo/espacamento.dart';
-import '../funcoes/conta_acoes.dart';
 import 'botao.dart';
+import 'botao_de_entrar.dart';
 
 /// Número que recebe o pedido de acesso pelo WhatsApp, para quem ainda não
 /// está numa allowlist de recurso (ver `lib/dados/recursos.dart`).
@@ -83,13 +83,7 @@ class DevocionalCartaoDePedirAcesso extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: DevocionalEspacamento.sp24),
-          DevocionalBotaoPrimario.icon(
-            onPressed: nuvem.entrando
-                ? null
-                : () => entrarNaConta(context, nuvem),
-            icon: const FaIcon(FontAwesomeIcons.google, size: 16),
-            label: const Text('Entrar com Google'),
-          ),
+          const DevocionalBotaoDeEntrar(),
         ],
       );
     }

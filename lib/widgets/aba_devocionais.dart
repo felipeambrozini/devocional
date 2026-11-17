@@ -3,9 +3,10 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../dados/modelos.dart';
 import '../estilo/espacamento.dart';
+import '../funcoes/datas.dart';
+import '../telas/devocional.dart';
 import 'aviso_vazio.dart';
-import 'erro_de_busca.dart';
-import 'item_de_achado_devocional.dart';
+import 'item_de_achado.dart';
 
 class DevocionalAbaDevocionais extends StatefulWidget {
   const DevocionalAbaDevocionais({
@@ -49,7 +50,10 @@ class _DevocionalAbaDevocionaisState extends State<DevocionalAbaDevocionais> {
   @override
   Widget build(BuildContext context) {
     if (widget.erro) {
-      return DevocionalErroDeBusca(aoTentarDeNovo: widget.aoTentarDeNovo);
+      return DevocionalAvisoDeErro(
+        detalhe: 'A busca falhou. Tente de novo.',
+        aoTentarDeNovo: widget.aoTentarDeNovo,
+      );
     }
     if (widget.termoBuscado.isEmpty) {
       return const DevocionalAvisoVazio(
@@ -164,13 +168,37 @@ class _DevocionalAbaDevocionaisState extends State<DevocionalAbaDevocionais> {
             itemCount: lista.length,
             separatorBuilder: (_, _) =>
                 const Divider(height: DevocionalEspacamento.sp18),
-            itemBuilder: (context, i) => DevocionalItemDeAchadoDevocional(
-              achado: lista[i],
-              termo: widget.termoBuscado,
-            ),
+            itemBuilder: (context, i) => _item(context, lista[i]),
           ),
         ),
       ],
     );
   }
+
+  Widget _item(BuildContext context, AchadoDevocional achado) {
+    final leitura = Leitura.values.byName(achado.leitura);
+    final data = _dataDoDevocional(achado.data);
+    return DevocionalItemDeAchado(
+      titulo: '${leitura.rotulo} · ${dataLonga(data)}',
+      subtitulo: achado.titulo,
+      texto: achado.texto,
+      termo: widget.termoBuscado,
+      aoAbrir: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              TelaDevocional(dataInicial: data, leituraInicial: leitura),
+        ),
+      ),
+    );
+  }
+}
+
+/// Uma data qualquer, só para navegar até o dia certo do devocional: os
+/// assets são anuais e a chave 'DD-MM' não guarda ano. 2024 é bissexto de
+/// propósito: sem isso, '29-02' normalizaria sozinho para 1º de março (ver
+/// `test/bissexto_test.dart`) e a busca levaria para o dia errado, calada.
+DateTime _dataDoDevocional(String chave) {
+  final partes = chave.split('-');
+  return DateTime(2024, int.parse(partes[1]), int.parse(partes[0]));
 }

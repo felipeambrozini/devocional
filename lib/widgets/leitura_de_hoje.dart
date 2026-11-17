@@ -6,8 +6,7 @@ import '../dados/modelos.dart';
 import '../dados/recursos.dart';
 import 'carrega_uma_vez.dart';
 import 'cartao_leitura_progresso.dart';
-import 'cartao_leitura_progresso_carregando.dart';
-import 'cartao_leitura_progresso_erro.dart';
+import 'cartao_leitura_progresso_aviso.dart';
 
 class DevocionalLeituraDeHoje extends StatelessWidget {
   const DevocionalLeituraDeHoje({super.key, required this.data});
@@ -26,12 +25,14 @@ class DevocionalLeituraDeHoje extends StatelessWidget {
       carregar: () => Conteudo.instancia.diaDoPlano(data),
       construir: (context, snap) {
         if (snap.hasError) {
-          return DevocionalCartaoLeituraProgressoErro(
+          return const DevocionalCartaoLeituraProgressoAviso(
             mensagem: 'Não foi possível carregar o cronograma.',
           );
         }
         if (snap.connectionState != ConnectionState.done) {
-          return const DevocionalCartaoLeituraProgressoCarregando();
+          return const DevocionalCartaoLeituraProgressoAviso(
+            mensagem: 'Carregando...',
+          );
         }
         final dia = snap.data!;
         return DevocionalCartaoLeituraProgresso(

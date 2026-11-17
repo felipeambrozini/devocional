@@ -101,15 +101,11 @@ class _TelaChatState extends State<TelaChat> {
             title: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ClipOval(
-                  child: Image.asset(
-                    widget.persona.foto,
-                    width: 34,
-                    height: 34,
-                    fit: BoxFit.cover,
-                    excludeFromSemantics: true,
-                    alignment: Alignment.topCenter,
-                  ),
+                DevocionalRetratoDePersona(
+                  persona: widget.persona,
+                  tamanho: 34,
+                  anel: false,
+                  decorativo: true,
                 ),
                 const SizedBox(width: DevocionalEspacamento.sp10),
                 // Flexible com reticências, como na barra do leitor
@@ -211,8 +207,12 @@ class _TelaChatState extends State<TelaChat> {
                       child: Semantics(
                         label: '${widget.persona.nome} está respondendo',
                         liveRegion: true,
-                        child: DevocionalBolha(
-                          avatar: widget.persona.foto,
+                        child: DevocionalFalaDaPersona(
+                          persona: widget.persona,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: DevocionalEspacamento.sp14,
+                            vertical: DevocionalEspacamento.sp12,
+                          ),
                           child: SizedBox(
                             width: DevocionalEspacamento.sp18,
                             height: DevocionalEspacamento.sp18,

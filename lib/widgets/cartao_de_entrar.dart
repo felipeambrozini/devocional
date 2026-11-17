@@ -1,10 +1,7 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-import '../dados/nuvem.dart';
 import '../estilo/espacamento.dart';
-import '../funcoes/conta_acoes.dart';
-import 'botao.dart';
+import 'botao_de_entrar.dart';
 import 'layout_leitura.dart';
 
 /// O caminho para entrar na conta — usado quando o plano foi aberto por link
@@ -57,27 +54,7 @@ class DevocionalCartaoDeEntrar extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: DevocionalEspacamento.sp16),
-                    ListenableBuilder(
-                      listenable: Nuvem.instancia,
-                      builder: (context, _) => DevocionalBotaoPrimario.icon(
-                        onPressed: Nuvem.instancia.entrando
-                            ? null
-                            : () async {
-                                await entrarNaConta(context, Nuvem.instancia);
-                                onEntrar?.call();
-                              },
-                        icon: Nuvem.instancia.entrando
-                            ? const SizedBox(
-                                width: DevocionalEspacamento.sp18,
-                                height: DevocionalEspacamento.sp18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const FaIcon(FontAwesomeIcons.google, size: 18),
-                        label: const Text('Entrar com Google'),
-                      ),
-                    ),
+                    DevocionalBotaoDeEntrar(aoEntrar: onEntrar),
                   ],
                 ),
               ),
