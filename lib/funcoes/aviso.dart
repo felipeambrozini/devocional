@@ -7,8 +7,9 @@ import '../widgets/botao.dart';
 /// mesmo em toda parte.
 
 /// Divulgação de que o chat responde por inteligência artificial. O mesmo
-/// texto em todo lugar em que uma IA fala: rodapé do chat, boas-vindas e
-/// histórico vazio — repetir é o que o torna um aviso, não um enfeite.
+/// texto em todo lugar em que uma IA fala: o rodapé do chat, que acompanha a
+/// conversa em todos os estados, e o histórico vazio — repetir é o que o
+/// torna um aviso, não um enfeite.
 const avisoDeIa = 'Respostas geradas por inteligência artificial';
 
 /// Divulgação de que introduções e comentários da Bíblia de Estudo não são

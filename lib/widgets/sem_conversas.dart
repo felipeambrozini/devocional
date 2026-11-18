@@ -44,7 +44,7 @@ class DevocionalSemConversas extends StatelessWidget {
             const SizedBox(height: DevocionalEspacamento.sp12),
             // O histórico é a porta de entrada do chat: o aviso de que as
             // respostas são geradas por IA aparece aqui, antes da conversa,
-            // além do rodapé do chat e da carta de boas-vindas.
+            // e de novo no rodapé do chat, que o repete em todos os estados.
             Text(
               avisoDeIa,
               textAlign: TextAlign.center,

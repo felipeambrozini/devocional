@@ -2,7 +2,6 @@ import 'package:material_ui/material_ui.dart';
 
 import '../dados/personas.dart';
 import '../estilo/espacamento.dart';
-import '../funcoes/aviso.dart';
 import 'widgets.dart';
 
 /// Primeira visita: o retrato, o nome e a fala de boas-vindas da persona, no
@@ -40,14 +39,6 @@ class DevocionalBoasVindas extends StatelessWidget {
                 color: cor.onSurfaceVariant,
                 height: 1.6,
               ),
-            ),
-            const SizedBox(height: DevocionalEspacamento.sp16),
-            // A divulgação se repete aqui, fora do rodapé: quem lê a carta de
-            // boas-vindas ainda não chegou ao campo de escrever, e o aviso de
-            // que a resposta é gerada não pode aparecer só depois do convite.
-            Text(
-              avisoDeIa,
-              style: tema.labelMedium?.copyWith(color: cor.onSurfaceVariant),
             ),
           ],
         ),

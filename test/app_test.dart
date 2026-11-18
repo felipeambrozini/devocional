@@ -751,6 +751,41 @@ void main() {
     },
   );
 
+  testWidgets('o aviso de IA aparece uma vez só no chat, vazio ou com falas', (
+    tester,
+  ) async {
+    // A carta de boas-vindas fica no lugar da lista vazia; o rodapé fica em
+    // todos os estados. O aviso é um só: sem isto, a conversa vazia mostrava
+    // dois "Respostas geradas por inteligência artificial" na mesma tela — e
+    // a conversa reaberta, nenhum.
+    final estado = await estadoLimpo();
+    final conversa = await estado.novaConversa('spurgeon', titulo: 'vazia');
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: EscopoDoEstado(
+          estado: estado,
+          child: TelaChat(persona: personaSpurgeon, conversaId: conversa.id),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text(avisoDeIa), findsOneWidget);
+
+    // Com a primeira fala, a carta some; o aviso do rodapé continua, que é o
+    // que divulga a IA numa conversa reaberta pelo histórico.
+    await estado.registrarMensagem(
+      'spurgeon',
+      conversa.id,
+      Mensagem(id: 'u1', papel: 'user', texto: 'oi', momento: 1),
+    );
+    await tester.pump();
+
+    expect(find.text(avisoDeIa), findsOneWidget);
+  });
+
   testWidgets('conversa que passou do teto mostra o aviso quieto do corte', (
     tester,
   ) async {

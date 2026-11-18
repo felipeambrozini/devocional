@@ -26,7 +26,8 @@ import '../widgets/widgets.dart';
 /// resposta interrompida espera com "Tentar de novo".
 /// FIRST VIEWPORT: AppBar com o retrato e o título; a conversa abre com o
 /// DevocionalFilete de 64; respostas à esquerda na gramática da citação, perguntas à
-/// direita recuadas; rodapé com o campo e a nota da IA.
+/// direita recuadas; rodapé com o campo e a nota da IA — a única que
+/// acompanha a conversa em todos os estados.
 /// FORM: redesenho da superfície do chat no mundo estabelecido da Estante,
 /// direção fixada pelo usuário (carta enquadrada pelo DevocionalFilete); sem sorteio.
 
