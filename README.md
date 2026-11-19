@@ -113,9 +113,8 @@ do mesmo código).
   e do Espírito Santo saem em vermelho (carmim no claro, vermelho claro no
   escuro), ligado por padrão e desligável nos Ajustes ("Palavras de Deus em
   vermelho"). As edições comuns de letra vermelha marcam só Jesus; aqui segue
-  as que marcam as três Pessoas, com fala direta em toda a Bíblia (inclusive os
-  oráculos dos profetas em primeira pessoa de Deus), mas não as citações do AT
-  feitas pelos apóstolos. Os trechos vêm de `assets/falas_divinas/<slug>.json`,
+  as que marcam as três Pessoas, em toda a Bíblia (ver a regra abaixo). Os
+  trechos vêm de `assets/falas_divinas/<slug>.json`,
   gerados por `tools/falas_divinas/gerar.py` a partir do MACULA Quotation and
   Speaker Data (Clear Bible, CC BY 4.0, crédito na tela Sobre). Como a King
   James não
@@ -128,10 +127,29 @@ do mesmo código).
   aplicada por `aplicar_correcoes.py` por cima do MACULA, inclusive quando o
   `gerar.py` roda de novo. `test/falas_divinas_test.dart` confere que os assets
   batem com as correções, e `mostrar.py` mostra um livro com o vermelho entre
-  `<<` e `>>` para revisar. Regra do produto: é vermelho a fala direta de Deus
-  Pai, de Jesus e do Espírito Santo e o oráculo do profeta em primeira pessoa
-  de Deus, mesmo repassado por um profeta (a fórmula "Assim diz o SENHOR" e a
-  introdução narrada ficam em preto); o anjo do SENHOR segue a fonte. Os casos
+  `<<` e `>>` para revisar. Regra do produto: é vermelho o que é palavra de
+  Deus Pai, de Jesus ou do Espírito Santo, ou seja, Deus falando ou uma fala
+  que a Escritura comprova que Ele disse. Isso inclui:
+  - a fala direta das três Pessoas;
+  - o oráculo do profeta que vem depois de "Assim diz o SENHOR" (ou "Isto diz
+    o Espírito Santo"), mesmo quando fala de Deus em terceira pessoa;
+  - a palavra de Deus repetida por quem a ouviu (Moisés, Jacó, Davi, Paulo
+    contando a visão de Jesus) ou citada de boa-fé por outra pessoa, quando a
+    fala está registrada (Salomão citando a promessa a Davi, Pedro lembrando
+    "Antes que o galo cante", os judeus repetindo o que Jesus disse);
+  - a citação do Antigo Testamento que o Novo atribui a Deus, ao Senhor, a
+    Cristo ou ao Espírito ("como diz o Espírito Santo", "diz o Senhor", "como
+    Deus disse"). O texto de origem no AT também fica vermelho, mesmo quando
+    lá quem fala é o salmista ou o profeta (Salmos 2:1–2, 40:6–8, Isaías
+    7:14), porque o NT revela que a fala é de Deus.
+
+  Ficam em preto: a fórmula ("Assim diz o SENHOR", "diz o Senhor" antes da
+  fala) e a introdução narrada; a fala que alguém atribui a Deus sem registro
+  nem comprovação (1 Samuel 24:4, os homens de Davi; 2 Samuel 3:18, Abner); a
+  citação com palavras trocadas ou acrescentadas (Gênesis 3:3) ou distorcida
+  por inimigos (as falsas testemunhas sobre o templo); o falso profeta; e a
+  citação do AT apresentada só como "está escrito", "a Escritura diz" ou "diz
+  o profeta". O anjo do SENHOR segue a fonte. Os casos
   de fronteira deixados como estão ficam anotados, com o motivo, em
   `tools/falas_divinas/excecoes/<slug>.json`. Em Deuteronômio, que o MACULA
   quase

@@ -8,11 +8,22 @@
     "5": ["E cobrirão a face da terra, de modo que não se possa ver a terra: e comerão o resto do que escapou, o que vos restou da chuva de pedra, e comerão toda árvore que vos cresce no campo:"],
     "6": ["E encherão as tuas casas, e as casas de todos os teus servos, e as casas de todos os egípcios; coisa que nem os teus pais, nem os pais dos teus pais viram, desde o dia em que estiveram sobre a terra até este dia."]
   },
-  "11": {"4": ["Por volta da meia-noite sairei pelo meio do Egito:"]},
+  "11": {
+    "4": ["Por volta da meia-noite sairei pelo meio do Egito:"],
+    "5": ["E morrerá todo primogênito na terra do Egito, desde o primogênito de Faraó que se assenta sobre o seu trono, até o primogênito da serva que está detrás do moinho; e todo primogênito dos animais."],
+    "6": ["E haverá um grande clamor por toda a terra do Egito, qual nunca houve outro semelhante, nem haverá outro semelhante nunca mais."],
+    "7": ["Mas contra nenhum dos filhos de Israel moverá um cão a sua língua, contra homem ou animal: para que saibais como o SENHOR faz diferença entre os egípcios e Israel."]
+  },
+  "19": {"23": ["Põe limites ao redor do monte, e santifica-o."]},
   "30": {
     "18": ["Farás também uma pia de bronze, e a sua base também de bronze, para lavar; e a porás entre o tabernáculo da congregação e o altar, e nela porás água."],
     "23": ["Toma também para ti as principais especiarias: de mirra pura, quinhentos siclos; e de canela aromática, a metade disso, isto é, duzentos e cinquenta siclos; e de cálamo aromático, duzentos e cinquenta siclos;"]
   },
   "31": {"13": ["Fala também aos filhos de Israel, dizendo: Certamente guardareis os meus sábados; porque é um sinal entre mim e vós através das vossas gerações; para que saibais que eu sou o SENHOR que vos santifica."]},
-  "32": {"9": ["Tenho visto este povo, e eis que é povo de dura cerviz;"]}
+  "32": {
+    "9": ["Tenho visto este povo, e eis que é povo de dura cerviz;"],
+    "13": ["Multiplicarei a vossa semente como as estrelas do céu, e toda esta terra de que tenho falado darei à vossa semente, e a herdarão para sempre."],
+    "27": ["Ponha cada um a sua espada ao seu lado, e passai de porta em porta por todo o arraial, e matai cada um a seu irmão, e cada um a seu companheiro, e cada um a seu vizinho."]
+  },
+  "33": {"12": ["Faze subir este povo", "Conheço-te pelo nome, e também achaste graça diante de mim."]}
 }

@@ -27,7 +27,14 @@
    [
     "Quem me tocou?",
     1
+   ],
+   [
+    "Quem me tocou?",
+    2
    ]
+  ],
+  "25": [
+   "Onde está a vossa fé?"
   ]
  },
  "9": {
@@ -36,6 +43,9 @@
   ],
   "59": [
    "Segue-me."
+  ],
+  "55": [
+   "Vós não sabeis de que espírito sois."
   ]
  },
  "11": {
@@ -62,6 +72,12 @@
  "20": {
   "16": [
    "Virá e destruirá estes lavradores, e dará a outros a vinha."
+  ],
+  "23": [
+   "Por que me tentais?"
+  ],
+  "25": [
+   "Dai, pois, a César o que é de César, e a Deus o que é de Deus."
   ]
  },
  "21": {
@@ -75,6 +91,9 @@
   ],
   "35": [
    "Quando vos mandei sem bolsa, alforje e sandálias, faltou-vos alguma coisa?"
+  ],
+  "61": [
+   "Antes que o galo cante, hoje me negarás três vezes."
   ]
  },
  "23": {
@@ -88,6 +107,25 @@
   ],
   "19": [
    "Quais?"
+  ],
+  "7": [
+   "Convém que o Filho do homem seja entregue nas mãos de homens pecadores, e seja crucificado, e, ao terceiro dia, ressuscite."
+  ]
+ },
+ "12": {
+  "22": [
+   "Por isso vos digo: Não estejais ansiosos pela vossa vida, pelo que comereis; nem pelo corpo, pelo que vestireis."
+  ]
+ },
+ "19": {
+  "30": [
+   "Ide à aldeia que está defronte; e, entrando nela, achareis um jumentinho preso, em que nenhum homem ainda se assentou; soltai-o, e trazei-o."
+  ],
+  "31": [
+   "E, se alguém vos perguntar: Por que o soltais? Assim lhe direis: Porque o Senhor o há mister."
+  ],
+  "34": [
+   "O Senhor o há mister."
   ]
  }
 }
