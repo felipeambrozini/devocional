@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 
 import '../controladores/chat_controlador.dart';
 import '../dados/conversas.dart';
@@ -97,6 +98,23 @@ class _TelaChatState extends State<TelaChat> {
             (estado.conversaDe(widget.persona.id, conversaId)?.cortada ??
                 false);
 
+        // O portão de idade vem antes de qualquer conteúdo: sem a
+        // declaração, nem o histórico nem o campo de mensagem aparecem.
+        if (estado.maiorDeIdade != true) {
+          return Scaffold(
+            appBar: DevocionalAppBar(title: Text(widget.persona.nome)),
+            body: DevocionalPortaoDeIdade(
+              // O `ListenableBuilder` externo escuta só o controlador; sem o
+              // setState a resposta ficaria no Estado sem a tela trocar.
+              aoConfirmar: () async {
+                await estado.registrarMaiorDeIdade(true);
+                if (mounted) setState(() {});
+              },
+              aoRecusar: () => context.go('/hoje'),
+            ),
+          );
+        }
+
         return Scaffold(
           appBar: DevocionalAppBar(
             title: Row(
@@ -184,9 +202,21 @@ class _TelaChatState extends State<TelaChat> {
                             // conversa não começa na primeira pergunta.
                             return const DevocionalAvisoDeCorte();
                           }
+                          final indice = i - 1 - (cortada ? 1 : 0);
+                          final mensagem = mensagens[indice];
                           return DevocionalBalcaoDeMensagem(
-                            mensagem: mensagens[i - 1 - (cortada ? 1 : 0)],
+                            mensagem: mensagem,
                             persona: widget.persona,
+                            // Só a resposta da IA pode ser denunciada; a
+                            // pergunta é de quem está lendo. A pergunta que
+                            // antecedeu vai junto para dar contexto à revisão.
+                            aoDenunciar: mensagem.doUsuario
+                                ? null
+                                : () => _controller.denunciar(
+                                    context,
+                                    mensagem,
+                                    _perguntaAntes(mensagens, indice),
+                                  ),
                           );
                         },
                       );
@@ -337,3 +367,13 @@ String _comMilhar(int numero) => numero.toString().replaceAllMapped(
   RegExp(r'\B(?=(\d{3})+(?!\d))'),
   (_) => '.',
 );
+
+/// A última pergunta do visitante antes da resposta: é o par que dá sentido à
+/// denúncia. Numa conversa cortada pelo teto a pergunta pode ter saído; aí a
+/// denúncia vai só com a resposta (ver `denunciaDaResposta`).
+Mensagem? _perguntaAntes(List<Mensagem> mensagens, int indice) {
+  for (var i = indice - 1; i >= 0; i--) {
+    if (mensagens[i].doUsuario) return mensagens[i];
+  }
+  return null;
+}

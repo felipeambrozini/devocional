@@ -363,6 +363,57 @@ await caso('cliente não grava proximoEnvio (só a Function, via Admin SDK)',
 await caso('lista de lembretes é negada',
   assertFails(getDocs(collection(anonimo.firestore(), 'lembretes'))));
 
+// --- Firestore: denúncias de resposta da IA ---------------------------- //
+const denunciaValida = () => ({
+  uid: 'alice',
+  criadoEm: serverTimestamp(),
+  motivo: 'doutrina',
+  detalhe: 'A referência do versículo está trocada.',
+  persona: 'spurgeon',
+  conversaId: 'c1',
+  mensagemId: 'm2',
+  pergunta: 'O que significa Gênesis 1:1?',
+  resposta: 'Uma resposta gerada pela IA.',
+  versao: '1.22.0',
+  plataforma: 'web',
+});
+const denuncia = (ctx, id = 'd1') => doc(ctx.firestore(), 'denuncias', id);
+
+await caso('denúncia com o próprio uid e os campos do contrato passa',
+  assertSucceeds(setDoc(denuncia(alice), denunciaValida())));
+await caso('denúncia com uid de outra conta é recusada',
+  assertFails(setDoc(denuncia(bob, 'd2'), {...denunciaValida(), uid: 'alice'})));
+await caso('denúncia anônima é recusada',
+  assertFails(setDoc(doc(anonimo.firestore(), 'denuncias', 'd3'),
+    {...denunciaValida(), uid: 'ninguem'})));
+await caso('denúncia de login que não é Google é recusada',
+  assertFails(setDoc(doc(semGoogle.firestore(), 'denuncias', 'd4'),
+    {...denunciaValida(), uid: 'carol'})));
+await caso('denúncia com motivo fora da lista é recusada',
+  assertFails(setDoc(denuncia(alice, 'd5'),
+    {...denunciaValida(), motivo: 'qualquer coisa'})));
+await caso('denúncia com campo extra é recusada',
+  assertFails(setDoc(denuncia(alice, 'd6'),
+    {...denunciaValida(), extra: 'x'})));
+await caso('denúncia com resposta acima do teto é recusada',
+  assertFails(setDoc(denuncia(alice, 'd7'),
+    {...denunciaValida(), resposta: 'x'.repeat(30001)})));
+await caso('denúncia não é legível pelo cliente',
+  assertFails(getDoc(denuncia(alice))));
+await caso('denúncias não podem ser listadas',
+  assertFails(getDocs(collection(alice.firestore(), 'denuncias'))));
+await caso('denúncia não pode ser alterada',
+  assertFails(updateDoc(denuncia(alice), {detalhe: 'outro texto'})));
+await caso('denúncia não pode ser apagada',
+  assertFails(deleteDoc(denuncia(alice))));
+
+// --- Firestore: erros (só a Function, via Admin SDK) ------------------- //
+await caso('cliente não grava relatório de erro',
+  assertFails(setDoc(doc(alice.firestore(), 'erros', 'e1'),
+    {origem: 'dart', mensagem: 'x'})));
+await caso('cliente não lê relatório de erro',
+  assertFails(getDoc(doc(alice.firestore(), 'erros', 'e1'))));
+
 await env.cleanup();
 console.log(falhas === 0 ? '\nTodas as regras ok.' : `\n${falhas} falha(s).`);
 process.exit(falhas === 0 ? 0 : 1);

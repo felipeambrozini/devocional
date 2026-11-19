@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:path_provider/path_provider.dart';
 
+import 'monitoramento.dart';
+
 /// Tamanho máximo do arquivo antes de recomeçar do zero.
 ///
 /// Sem rotação por data nem histórico de arquivos antigos — se um
@@ -63,12 +65,15 @@ abstract final class Registro {
   }
 
   /// Registra um erro: sempre no console (`debugPrint`) e no arquivo quando
-  /// [inicializar] já preparou um. Sem envio remoto: o app não tem coleta
-  /// de erro nem de uso (ver PRIVACIDADE, sem Sentry e sem Analytics).
+  /// [inicializar] já preparou um. Na web em release, também manda um
+  /// relatório anônimo para a Function `registrarErro` (ver
+  /// [Monitoramento]) — mensagem, pilha, caminho da página e versão, nunca o
+  /// que a pessoa digitou.
   static void erro(String origem, Object erro, [StackTrace? pilha]) {
     final linha = formatarLinha(origem, erro, pilha);
     debugPrint(linha);
     _gravarNoArquivo(linha);
+    Monitoramento.registrar(origem, erro, pilha);
   }
 
   static void _gravarNoArquivo(String linha) {

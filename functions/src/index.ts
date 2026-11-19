@@ -37,16 +37,25 @@
 // (manha_e_noite/promessas_de_deus) só com referência e título, que é tudo
 // que a notificação usa ("Venha ler a reflexão para sua manhã em
 // Gênesis 1:2"). Regenerar se algum dia o conteúdo anual mudar.
+import {randomBytes} from "node:crypto";
 import {initializeApp} from "firebase-admin/app";
 import {
   DocumentReference,
+  FieldValue,
   getFirestore,
   Timestamp,
 } from "firebase-admin/firestore";
 import {getMessaging, Message, SendResponse} from "firebase-admin/messaging";
 import {onDocumentWritten} from "firebase-functions/v2/firestore";
+import {onRequest} from "firebase-functions/v2/https";
 import {onSchedule} from "firebase-functions/v2/scheduler";
 import conteudoJson from "./assets/conteudo-lembretes.json";
+import {
+  chaveDoCliente,
+  chaveDoErro,
+  LimitadorDeTaxa,
+  normalizarErro,
+} from "./erro";
 import {
   calcularProximoEnvio,
   deveEnviar,
@@ -422,5 +431,79 @@ export const prepararLembrete = onDocumentWritten(
     const depois = evento.data?.after;
     if (!depois?.exists || depois.get("proximoEnvio") !== undefined) return;
     await depois.ref.update({proximoEnvio: Timestamp.now()});
+  },
+);
+
+// --- relatórios de erro da web ------------------------------------------- //
+//
+// `POST /devocional/api/erro` (rewrite do Hosting, ver firebase.json) recebe
+// os erros que acontecem antes do primeiro quadro (beacon do index.html) e os
+// que o Dart já trata (lib/dados/monitoramento.dart). Sem login e sem cookie:
+// a defesa é o formato fechado de normalizarErro, o limite por cliente e o
+// teto de instâncias. Nada é lido de volta pelo cliente; a coleção `erros`
+// existe para o dono investigar no console.
+const TAMANHO_MAXIMO_DO_RELATORIO = 32 * 1024;
+
+// Sal por instância: o hash do IP só vive na memória deste processo.
+const SAL_DO_CLIENTE = randomBytes(16).toString("hex");
+const LIMITE_DE_ERROS = new LimitadorDeTaxa();
+
+function ipDoPedido(cabecalho: string | undefined, ip: string | undefined): string {
+  // `x-forwarded-for` traz a cadeia inteira; o primeiro é o cliente.
+  const primeiro = cabecalho?.split(",")[0]?.trim();
+  return primeiro || ip || "desconhecido";
+}
+
+export const registrarErro = onRequest(
+  {
+    timeoutSeconds: 10,
+    memory: "256MiB",
+    // Sem isso a Function fica privada e o rewrite do Hosting não a alcança.
+    invoker: "public",
+    // Teto de custo: um pico de spam não escala para dezenas de instâncias.
+    maxInstances: 10,
+  },
+  async (pedido, resposta) => {
+    resposta.set("Cache-Control", "no-store");
+    if (pedido.method !== "POST") {
+      resposta.status(405).json({ok: false});
+      return;
+    }
+    // Content-Length ausente (chunked) passa e é barrado no formato abaixo.
+    const tamanho = Number(pedido.get("content-length") ?? "0");
+    if (Number.isFinite(tamanho) && tamanho > TAMANHO_MAXIMO_DO_RELATORIO) {
+      resposta.status(413).json({ok: false});
+      return;
+    }
+
+    const dados = normalizarErro(pedido.body);
+    if (dados === null) {
+      resposta.status(400).json({ok: false});
+      return;
+    }
+
+    const cliente = chaveDoCliente(
+        ipDoPedido(pedido.get("x-forwarded-for"), pedido.ip),
+        SAL_DO_CLIENTE);
+    if (!LIMITE_DE_ERROS.permitir(cliente)) {
+      resposta.status(429).json({ok: false});
+      return;
+    }
+
+    try {
+      await getFirestore().collection("erros").doc(chaveDoErro(dados)).set(
+          {
+            ...dados,
+            ocorrencias: FieldValue.increment(1),
+            ultimaEm: FieldValue.serverTimestamp(),
+          },
+          {merge: true},
+      );
+    } catch (erro) {
+      // O beacon não tenta de novo: registrar a falha no Cloud Logging já é
+      // o suficiente para o dono perceber que a coleção parou de crescer.
+      console.error("Falha ao gravar relatório de erro:", erro);
+    }
+    resposta.status(204).end();
   },
 );

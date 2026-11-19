@@ -62,6 +62,11 @@ jobs:
           # baixava o Flutter inteiro de novo.
           cache: true
       - run: flutter pub get
+      # O smoke test roda no fim do job (node tool/smoke_web.mjs); sem o Node
+      # fixo ele herdava a versão do runner, que muda sem aviso.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
       # O mesmo gate do dart.yml e do distribute-android.yml, antes de
       # publicar: os workflows rodam em paralelo no mesmo push, então sem
       # este passo um erro do analyzer não impedia o deploy do site.
@@ -79,6 +84,7 @@ jobs:
             -e "s/__FIREBASE_PROJECT_ID__/${{ secrets.FIREBASE_PROJECT_ID }}/" \
             -e "s/__FIREBASE_AUTH_DOMAIN__/${{ secrets.FIREBASE_AUTH_DOMAIN }}/" \
             -e "s/__FIREBASE_STORAGE_BUCKET__/${{ secrets.FIREBASE_STORAGE_BUCKET }}/" \
+            -e "s/__BUILD_ID__/${{ github.sha }}/" \
             web/firebase-messaging-sw.js
       # --no-tree-shake-icons: o subsetter de fontes de ícone do Flutter (que
       # roda por padrão em todo `flutter build`) corrompe as fontes CFF/OTF
@@ -87,8 +93,17 @@ jobs:
       # tree-shaking, mas o rasterizador nativo tolera o resultado). Custo:
       # ~700KB a mais no bundle, aceitável para um app que não é
       # dado-sensível.
+      # --web-content-hash: nomes de asset passam a carregar o hash do conteúdo
+      # (`main.dart.<hash>.js`, `assets/...` com hash). Sem isso o navegador
+      # não sabe que o arquivo mudou: um deploy novo poderia continuar
+      # servindo o JS velho do cache, e o service worker não teria como
+      # distinguir a build antiga da nova para limpar o cache offline.
+      # --no-web-resources-cdn: o CanvasKit sai do próprio Hosting em vez do
+      # gstatic. O gstatic é rápido, mas fica fora do nosso controle: um cache
+      # offline que depende dele quebra sem rede e some do nosso teste.
       - run: |
           flutter build web --release --no-tree-shake-icons --base-href /devocional/ \
+            --web-content-hash --no-web-resources-cdn \
             --dart-define=FIREBASE_API_KEY_WEB=${{ secrets.FIREBASE_API_KEY_WEB }} \
             --dart-define=FIREBASE_API_KEY_ANDROID=${{ secrets.FIREBASE_API_KEY_ANDROID }} \
             --dart-define=FIREBASE_API_KEY_IOS=${{ secrets.FIREBASE_API_KEY_IOS }} \
@@ -121,6 +136,11 @@ jobs:
       - run: |
           mkdir -p public/devocional
           cp -r build/web/* public/devocional/
+          # O Flutter ainda emite o service worker padrão mesmo com o bootstrap
+          # próprio. Ele se auto-desregistra (o index.html também desregistra um
+          # que já esteja instalado), mas não deve nem subir: um arquivo a menos
+          # no Hosting e nenhuma chance de o navegador registrar os dois.
+          rm -f public/devocional/flutter_service_worker.js
           cp build/web/404.html public/404.html
           cp build/web/robots.txt public/robots.txt
           cp build/web/llms.txt public/llms.txt
@@ -134,10 +154,23 @@ jobs:
       # (firebase target:apply), não como seletor de recurso — como o
       # firebase.json não define target, "storage:rules" falhava com
       # "Could not find rules for the following storage targets: rules".
+      # functions antes de hosting de propósito: o `firebase.json` tem um
+      # rewrite de /devocional/api/erro para `registrarErro`, e o CLI recusa
+      # publicar o Hosting se a Function ainda não existe no projeto — na
+      # primeira publicação depois desta mudança, ordem inversa quebraria.
       - uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15.27.0
         with:
-          args: deploy --only hosting,firestore:rules,storage,functions
+          args: deploy --only functions,hosting,firestore:rules,storage
         env:
           # JSON da conta de serviço do Firebase (IAM → Service accounts → Create
           # key). Cadastrar no mesmo environment do workflow (github-pages).
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      # O que está no ar é o build recém-publicado, e o caminho do app
+      # (shell, manifest, service worker, rewrite da API, cabeçalhos)
+      # responde? Fica dentro do workflow porque a falha precisa aparecer no
+      # push, não numa visita dias depois. SMOKE_BUILD_ID faz o script esperar
+      # o SHA do commit aparecer no worker antes de checar o resto — é o sinal
+      # de que o CDN já serve a versão nova.
+      - run: node tool/smoke_web.mjs
+        env:
+          SMOKE_BUILD_ID: ${{ github.sha }}

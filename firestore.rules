@@ -219,6 +219,63 @@ service cloud.firestore {
       allow read: if dono();
     }
 
+    // Denúncias de resposta da IA (ver lib/dados/denuncias.dart e o botão
+    // "Denunciar resposta" do chat).
+    //
+    // Contrato do documento denuncias/{id}:
+    //   uid         string - o próprio autor; a denúncia é da conta logada
+    //   criadoEm    timestamp do servidor
+    //   motivo      string - inadequada | doutrina | fora_do_tema | outro
+    //   detalhe     string - texto livre do denunciante (pode ser vazio)
+    //   persona     string - a persona que respondeu
+    //   conversaId  string - a conversa, para o dono achar o contexto
+    //   mensagemId  string - a mensagem denunciada
+    //   pergunta    string - a pergunta que antecedeu a resposta
+    //   resposta    string - o texto gerado que motivou a denúncia
+    //   versao      string - versão do app no momento
+    //   plataforma  string - web, android ou ios
+    //
+    // Só create: o app nunca lê, altera nem apaga denúncias (o dono lê pelo
+    // console, com o Admin SDK, que ignora estas regras). O teto de tamanho
+    // existe porque pergunta e resposta são texto livre; sem ele, uma conta
+    // convidada inflava o documento até 1 MiB por denúncia.
+    match /denuncias/{id} {
+      function google() {
+        return request.auth != null &&
+            request.auth.token.firebase.sign_in_provider == 'google.com';
+      }
+
+      function valida() {
+        let d = request.resource.data;
+        return d.keys().hasOnly([
+          'uid', 'criadoEm', 'motivo', 'detalhe', 'persona', 'conversaId',
+          'mensagemId', 'pergunta', 'resposta', 'versao', 'plataforma'
+        ]) &&
+            d.uid == request.auth.uid &&
+            d.criadoEm is timestamp &&
+            d.motivo in ['inadequada', 'doutrina', 'fora_do_tema', 'outro'] &&
+            d.detalhe is string && d.detalhe.size() <= 1000 &&
+            d.persona is string && d.persona.size() <= 40 &&
+            d.conversaId is string && d.conversaId.size() <= 100 &&
+            d.mensagemId is string && d.mensagemId.size() <= 100 &&
+            d.pergunta is string && d.pergunta.size() <= 20000 &&
+            d.resposta is string && d.resposta.size() <= 30000 &&
+            d.versao is string && d.versao.size() <= 40 &&
+            d.plataforma is string && d.plataforma.size() <= 20;
+      }
+
+      allow create: if google() && valida();
+      allow read, update, delete: if false;
+    }
+
+    // Relatórios de erro da web (ver functions/src/erro.ts). A Function grava
+    // com o Admin SDK, que ignora estas regras; o cliente não lê nem escreve
+    // aqui — o beacon do index.html fala com o rewrite do Hosting, não com o
+    // Firestore. A coleção guarda mensagem e pilha, nunca conteúdo digitado.
+    match /erros/{id} {
+      allow read, write: if false;
+    }
+
     // Planos de leitura compartilhados (ver lib/dados/planos_nuvem.dart).
     //
     // Contrato do documento planos/{planoId}:

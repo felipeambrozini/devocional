@@ -25,22 +25,24 @@ builds oficiais do aplicativo Android recebem atualizações diretas de seguran�
 O aplicativo foi projetado com o princípio de exposição mínima de dados e
 processamento prioritariamente local. Os pontos em que algo sai do aparelho
 estão descritos abaixo: a sincronia da conta (2.3), o cadastro do lembrete
-diário (2.2 e 3.4) e o chat com IA, que fala com a API Gemini (2.5).
+diário (2.2 e 3.4), o chat com IA, que fala com a API Gemini (2.5), as
+denúncias de resposta (2.6) e os relatórios de erro próprios, sem PII (2.4).
 
-### 2.1 Ausência de Cookies, Publicidade e Coleta Remota
+### 2.1 Ausência de Cookies, Publicidade e SDKs de Terceiros
 
 O aplicativo **não grava cookie próprio**, não tem anúncio, não vende nem
-compartilha dados com terceiros para fins de publicidade e **não tem coleta
-remota de erro nem de uso**: sem Sentry, sem Analytics, sem diálogo de aceite.
-Erro fica no console e, fora da web, em arquivo local
-(`lib/dados/registro.dart`); "Relatar um problema" (Sobre) abre e-mail com a
-versão já preenchida. Na web, as preferências e o progresso ficam no
-`localStorage` (via `shared_preferences`) e a sessão do Firebase Auth no
-`IndexedDB` — armazenamento estritamente necessário ao funcionamento, sob o
-domínio do próprio app. O único terceiro que pode gravar cookie é o reCAPTCHA v3
-do App Check (ver 3.3), para separar o app de scripts, sem finalidade de
-rastreamento nem de anúncio; a política de privacidade o declara. Por isso não
-há banner de cookies. O que há é o consentimento da LGPD para os dados sensíveis
+compartilha dados com terceiros para fins de publicidade e **não usa SDK de
+terceiros para monitoramento nem Analytics**. O monitoramento é próprio e
+mínimo (2.4): na web de release, erros técnicos vão para uma Cloud Function do
+próprio projeto, sem texto digitado, sem conversa, sem e-mail e sem uid.
+"Relatar um problema" (Sobre) abre e-mail com a versão já preenchida. Na web,
+as preferências e o progresso ficam no `localStorage` (via
+`shared_preferences`) e a sessão do Firebase Auth no `IndexedDB` —
+armazenamento estritamente necessário ao funcionamento, sob o domínio do
+próprio app. O único terceiro que pode gravar cookie é o reCAPTCHA v3 do App
+Check (ver 3.3), para separar o app de scripts, sem finalidade de rastreamento
+nem de anúncio; a política de privacidade o declara. Por isso não há banner de
+cookies. O que há é o consentimento da LGPD para os dados sensíveis
 da conta (favoritos, anotações, progresso, planos e conversas revelam convicção
 religiosa): `DevocionalConsentimentoDaNuvem` aparece antes do primeiro login no
 aparelho e, para quem já tinha a sessão aberta, ao abrir o app
@@ -104,6 +106,15 @@ lembrete apaga o documento.
     `delete: if true`), mas listar a coleção é negado: só quem já conhece o
     identificador alcança o documento, e o pior abuso é reagendar o lembrete
     daquela instalação. Nenhum dado de conta ou de leitura passa por aqui.
+  - `denuncias/{id}` (denúncia de resposta da IA): só cria, e só com login
+    Google e `uid` igual ao da conta. O contrato aceita motivo de uma lista
+    fixa, a persona, os ids de conversa e mensagem, a pergunta, a resposta, o
+    detalhe e a versão, com tetos de tamanho (20.000 e 30.000 caracteres para
+    pergunta e resposta). Ler, alterar e apagar é negado ao cliente: quem
+    revisa é o dono, pelo Admin SDK/console.
+  - `erros/{hash}` (relatório de erro da web): leitura e escrita negadas ao
+    cliente. A Function `registrarErro` grava com o Admin SDK, agregando por
+    hash; o app não fala com o Firestore para isso.
 - **Regras do Storage (`storage.rules`):** `/audio/**` (os MP3 pré-gerados da
   leitura em voz alta) tem leitura pública e escrita negada ao app; o resto do
   bucket fica no padrão, que nega tudo.
@@ -112,13 +123,29 @@ lembrete apaga o documento.
   Conta e privacidade) remove também a participação em planos compartilhados,
   além do documento e da própria conta.
 
-### 2.4 Sem Coleta Remota (sem Sentry, sem Analytics)
+### 2.4 Monitoramento de Erros Próprio, sem PII
 
-O app não envia erro técnico nem uso para fora do aparelho: não há SDK de
-reporte nem de medição, e por isso não há diálogo de aceite nem interruptor em
-Sobre. O registro local (`lib/dados/registro.dart`) grava no console e, fora da
-web, em arquivo no aparelho. Nenhum canal de diagnóstico recebe o texto lido,
-escrito ou de conversas — porque nenhum canal de diagnóstico existe.
+O app não tem SDK de terceiros de reporte nem de medição. O que existe é um
+canal próprio, só para falha técnica e só na web de release:
+
+- **Origem:** o beacon do `web/index.html` captura `error` e
+  `unhandledrejection` antes do primeiro frame; depois dele,
+  `Registro.erro` chama `Monitoramento.registrar` (`lib/dados/monitoramento.dart`).
+  Não roda em debug nem no Android/iOS (o APK é só de testadores).
+- **Conteúdo:** origem, mensagem, pilha, arquivo e linha, contexto, caminho da
+  página, versão do app e plataforma. Nunca vão texto digitado, histórico de
+  conversa, e-mail, uid, cookie ou query string; o servidor
+  (`functions/src/erro.ts`) recorta e rejeita o que estiver fora do contrato.
+- **Destino e limites:** POST em `/devocional/api/erro`, rewrite do Hosting para
+  a Function `registrarErro` (`invoker: public`, `maxInstances: 10`), que grava
+  em `erros/{hash}` com `FieldValue.increment(1)`. O cliente envia no máximo 5
+  por sessão, um por mensagem distinta; o servidor aplica limite por cliente e
+  por instância e recusa corpo acima de 32 KB. Falhar no envio não afeta o app.
+- **Leitura:** só o dono, pelo console/Admin SDK; o cliente não tem acesso à
+  coleção.
+
+O registro local (`lib/dados/registro.dart`) continua no console e, fora da
+web, em arquivo no aparelho.
 
 ### 2.5 Conversas com IA (Gemini)
 
@@ -132,6 +159,23 @@ sistema da persona. Não há servidor próprio no meio: o processamento da respo
 é do Google, nos termos da Gemini API (plano pago por uso). Fora o Firebase da
 própria conta (2.3), esse é o único serviço que recebe texto escrito pelo
 leitor; quem não usa o chat não envia nada a ele.
+
+O chat é restrito a maiores de 18 anos: `TelaChat` não monta histórico nem
+campo de mensagem sem `Estado.maiorDeIdade == true`, declarado uma vez por
+aparelho/navegador no portão de idade. É autodeclaração documentada no aviso,
+não prova de idade.
+
+### 2.6 Denúncias de Resposta da IA
+
+Cada resposta das personas tem "Denunciar resposta". Ao enviar, o app grava
+`denuncias/{id}` com a pergunta que antecedeu (se ainda estiver no histórico),
+a resposta, o motivo escolhido (`inadequada`, `doutrina`, `fora_do_tema`,
+`outro`), o detalhe opcional, a persona, os ids de conversa e mensagem, a
+versão e a plataforma. O `uid` do documento é o da conta que denunciou e as
+regras exigem que seja igual ao `request.auth.uid`; o e-mail e o nome não
+entram no texto. A denúncia serve só para o mantenedor revisar conteúdo e
+funcionamento do chat: não é pública, não é lida por outros usuários e não
+altera a conversa.
 
 ---
 
@@ -152,9 +196,9 @@ desenho (ver 3.2):
 - `android/app/google-services.json` e `ios/Runner/GoogleService-Info.plist` são
   **versionados** no repositório, com a chave de API do Firebase de cada
   plataforma, como o plugin nativo do Firebase exige.
-- `web/firebase-messaging-sw.js` (o service worker do push na web) não lê
-  `--dart-define`: o CI (`deploy-web.yml`) troca os placeholders
-  `__FIREBASE_...__` pelos secrets com `sed` antes do build.
+- `web/firebase-messaging-sw.js` (o service worker do push e do cache
+  offline na web) não lê `--dart-define`: o CI (`deploy-web.yml`) troca os
+  placeholders `__FIREBASE_...__` pelos secrets com `sed` antes do build.
 
 Variáveis lidas pelo Dart:
 

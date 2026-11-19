@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../dados/modelos.dart';
 import '../dados/personas.dart';
@@ -16,10 +17,16 @@ class DevocionalBalcaoDeMensagem extends StatelessWidget {
     super.key,
     required this.mensagem,
     required this.persona,
+    this.aoDenunciar,
   });
 
   final Mensagem mensagem;
   final Persona persona;
+
+  /// Só as respostas da IA têm denúncia: a pergunta é do visitante e não é
+  /// conteúdo gerado. null na tela que não oferece o caminho (a conversa é a
+  /// mesma, mas o teste e a prévia não precisam do botão).
+  final VoidCallback? aoDenunciar;
 
   static const _larguraMaxima = 460.0;
 
@@ -31,45 +38,70 @@ class DevocionalBalcaoDeMensagem extends StatelessWidget {
 
     final estilo = tema.bodyMedium?.copyWith(color: cor.onSurface, height: 1.5);
 
+    final bolha = usuario
+        // A pergunta do visitante recua em pergaminho, com fio fechado e
+        // discreto. Text puro: ela já está no campo de entrada, é só rolar.
+        ? Container(
+            constraints: const BoxConstraints(maxWidth: _larguraMaxima),
+            padding: const EdgeInsets.symmetric(
+              horizontal: DevocionalEspacamento.sp14,
+              vertical: DevocionalEspacamento.sp10,
+            ),
+            decoration: BoxDecoration(
+              color: cor.surfaceContainer,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: cor.primary.withValues(alpha: 0.4),
+                width: 1,
+              ),
+            ),
+            child: Text(mensagem.texto, style: estilo),
+          )
+        // A resposta da persona é selecionável: copiar um trecho (ou
+        // mandar para o app de Notas pela folha nativa do aparelho) é o
+        // jeito de guardar o que ela disse, já que a conversa mora só
+        // neste aparelho.
+        : DevocionalFalaDaPersona(
+            persona: persona,
+            larguraMaxima: _larguraMaxima,
+            // Altura mínima de alvo: o texto selecionável aceita toque
+            // longo, e uma resposta de uma linha só ficava com 46.
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                minHeight: DevocionalToque.minimo,
+              ),
+              child: SelectableText(mensagem.texto, style: estilo),
+            ),
+          );
+
     return Padding(
       padding: const EdgeInsets.only(bottom: DevocionalEspacamento.sp10),
       child: Align(
         alignment: usuario ? Alignment.centerRight : Alignment.centerLeft,
-        child: usuario
-            // A pergunta do visitante recua em pergaminho, com fio fechado e
-            // discreto. Text puro: ela já está no campo de entrada, é só rolar.
-            ? Container(
-                constraints: const BoxConstraints(maxWidth: _larguraMaxima),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: DevocionalEspacamento.sp14,
-                  vertical: DevocionalEspacamento.sp10,
-                ),
-                decoration: BoxDecoration(
-                  color: cor.surfaceContainer,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: cor.primary.withValues(alpha: 0.4),
-                    width: 1,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: usuario
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
+          children: [
+            bolha,
+            if (!usuario && aoDenunciar != null)
+              TextButton.icon(
+                onPressed: aoDenunciar,
+                icon: const FaIcon(FontAwesomeIcons.flag, size: 12),
+                label: const Text('Denunciar resposta'),
+                style: TextButton.styleFrom(
+                  foregroundColor: cor.onSurfaceVariant,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DevocionalEspacamento.sp4,
                   ),
-                ),
-                child: Text(mensagem.texto, style: estilo),
-              )
-            // A resposta da persona é selecionável: copiar um trecho (ou
-            // mandar para o app de Notas pela folha nativa do aparelho) é o
-            // jeito de guardar o que ela disse, já que a conversa mora só
-            // neste aparelho.
-            : DevocionalFalaDaPersona(
-                persona: persona,
-                larguraMaxima: _larguraMaxima,
-                // Altura mínima de alvo: o texto selecionável aceita toque
-                // longo, e uma resposta de uma linha só ficava com 46.
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    minHeight: DevocionalToque.minimo,
-                  ),
-                  child: SelectableText(mensagem.texto, style: estilo),
+                  minimumSize: const Size(0, DevocionalToque.minimo),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  textStyle: tema.labelMedium,
                 ),
               ),
+          ],
+        ),
       ),
     );
   }

@@ -117,7 +117,10 @@ class _LeitorFalsoDoApp implements LeitorDeAudio {
 /// É o substituto verificável de olhar o app rodando.
 void main() {
   setUp(() {
-    SharedPreferences.setMockInitialValues({});
+    // O portão de idade do chat não é o objeto destes testes; quem testa o
+    // portão é test/denuncia_test.dart. Sem isto, toda tela de chat abriria
+    // no aviso em vez da conversa.
+    SharedPreferences.setMockInitialValues({'maior_de_idade': true});
     // O login de verdade nunca roda no ambiente de teste; sem isto, o chat
     // ficaria trancado em todos os testes deste arquivo (ver
     // Recursos.conversas).

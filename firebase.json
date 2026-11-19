@@ -49,6 +49,10 @@
     ],
     "rewrites": [
       {
+        "source": "/devocional/api/erro",
+        "function": "registrarErro"
+      },
+      {
         "source": "/devocional/**",
         "destination": "/devocional/index.html"
       }
@@ -80,6 +84,24 @@
         ]
       },
       {
+        "source": "/devocional",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/devocional/",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
         "source": "**/*.html",
         "headers": [
           {
@@ -89,7 +111,43 @@
         ]
       },
       {
-        "source": "**/flutter_service_worker.js",
+        "source": "**/*.png",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=86400"
+          }
+        ]
+      },
+      {
+        "source": "**/assets/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
+        "source": "**/main.dart.*.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
+        "source": "**/canvaskit/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=3600"
+          }
+        ]
+      },
+      {
+        "source": "**/firebase-messaging-sw.js",
         "headers": [
           {
             "key": "Cache-Control",
@@ -107,7 +165,34 @@
         ]
       },
       {
-        "source": "**/assets/**",
+        "source": "**/flutter.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "**/precache_manifest.json",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "**/version.json",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "**/manifest.json",
         "headers": [
           {
             "key": "Cache-Control",
@@ -125,7 +210,7 @@
         ]
       },
       {
-        "source": "**/FontManifest.json",
+        "source": "**/AssetManifest.bin",
         "headers": [
           {
             "key": "Cache-Control",
@@ -134,29 +219,11 @@
         ]
       },
       {
-        "source": "**/AssetManifest*",
+        "source": "**/AssetManifest.json",
         "headers": [
           {
             "key": "Cache-Control",
             "value": "no-cache"
-          }
-        ]
-      },
-      {
-        "source": "**/font_awesome_flutter/**",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache"
-          }
-        ]
-      },
-      {
-        "source": "**/canvaskit/**",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "public, max-age=31536000, immutable"
           }
         ]
       }

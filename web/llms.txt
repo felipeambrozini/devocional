@@ -20,5 +20,11 @@ artificial: Charles Spurgeon e Felipe Ambrozini, o criador do aplicativo.
 
 ## Notas
 - Conteúdo só em português brasileiro.
-- Sem anúncio, sem venda de dados, sem ferramenta de análise de uso de terceiros.
-- Distribuído por link direto (site no Firebase Hosting; Android pelo Firebase App Distribution), sem listagem em loja de aplicativos.
+- Sem anúncio, sem venda de dados, sem ferramenta de análise de uso de
+  terceiros. Há monitoramento próprio de falhas técnicas, sem dado pessoal e
+  sem texto digitado (ver a política de privacidade).
+- Pode ser instalado como aplicativo (PWA) e, depois da primeira visita com
+  internet, abre e lê o conteúdo já visitado também offline.
+- As conversas com inteligência artificial são só para maiores de 18 anos.
+- Público na web e como PWA; o aplicativo Android é distribuído apenas a
+  testadores, pelo Firebase App Distribution, sem listagem em loja.

@@ -26,8 +26,10 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
   final _planos = GlobalKey();
   final _lembretes = GlobalKey();
   final _chat = GlobalKey();
+  final _denuncias = GlobalKey();
   final _voz = GlobalKey();
   final _appGenuino = GlobalKey();
+  final _erros = GlobalKey();
   final _ondeEQuanto = GlobalKey();
   final _apagar = GlobalKey();
   final _direitos = GlobalKey();
@@ -78,8 +80,10 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                 'Planos de leitura compartilhados': _planos,
                 'Lembretes diários': _lembretes,
                 if (chat) 'Chat com inteligência artificial': _chat,
+                if (chat) 'Denúncias de resposta': _denuncias,
                 'Leitura em voz alta': _voz,
                 'Verificação de app genuíno': _appGenuino,
+                'Relatórios de erro': _erros,
                 'Onde os dados ficam e por quanto tempo': _ondeEQuanto,
                 'Apagar seus dados': _apagar,
                 'Seus direitos': _direitos,
@@ -111,9 +115,13 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                     Text(
                       'Este aplicativo não tem anúncio e não vende nem '
                       'compartilha dados com terceiros para fins de '
-                      'publicidade. Também não tem coleta de erro nem de uso: '
-                      'sem Sentry, sem Analytics. O que segue é a lista completa do '
-                      'que é guardado, onde e por quê.',
+                      'publicidade. Também não usa Analytics nem serviço de '
+                      'terceiros de monitoramento: os únicos relatórios que '
+                      'saem do aplicativo são os de erro e as denúncias '
+                      'descritos abaixo. Os de erro não levam nada do que você '
+                      'digita; a denúncia leva a pergunta, a resposta e o '
+                      'detalhe que você enviar. O que segue é a lista completa '
+                      'do que é guardado, onde e por quê.',
                       style: tema.bodyLarge?.copyWith(height: 1.7),
                     ),
                     const SizedBox(height: DevocionalEspacamento.sp16),
@@ -215,9 +223,27 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                             'melhorar os produtos do Google, e fica registrado por '
                             'tempo limitado só para detectar abuso. Mesmo assim, '
                             'não escreva no chat informações que você não queira '
-                            'compartilhar. O histórico de cada '
-                            'conversa é salvo no aparelho e, para quem tem conta, '
-                            'também na nuvem descrita acima.',
+                            'compartilhar. O chat é destinado a maiores de 18 '
+                            'anos; a declaração de idade fica neste aparelho e '
+                            'não sobe para a nuvem. O histórico de cada conversa '
+                            'é salvo no aparelho e, para quem tem conta, também '
+                            'na nuvem descrita acima.',
+                      ),
+                    if (chat)
+                      DevocionalSecaoDeTexto(
+                        key: _denuncias,
+                        titulo: 'Denúncias de resposta',
+                        texto:
+                            'Ao tocar em "Denunciar resposta" numa mensagem '
+                            'gerada pela inteligência artificial, a pergunta, a '
+                            'resposta, o motivo escolhido, o detalhe que você '
+                            'escrever, a versão do aplicativo e o identificador '
+                            'da sua conta vão para o desenvolvedor revisar. Seu '
+                            'e-mail e seu nome não entram no texto da denúncia, '
+                            'mas o identificador da conta permite ligá-la a '
+                            'você; ela não aparece para outros usuários e serve '
+                            'só para corrigir o conteúdo e o funcionamento do '
+                            'chat.',
                       ),
                     DevocionalSecaoDeTexto(
                       key: _voz,
@@ -245,17 +271,36 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                           'de Serviço do Google.',
                     ),
                     DevocionalSecaoDeTexto(
+                      key: _erros,
+                      titulo: 'Relatórios de erro',
+                      texto:
+                          'Quando o aplicativo aberto no navegador, na versão '
+                          'publicada, encontra uma falha, ele pode enviar um '
+                          'relatório técnico para o Firebase: a mensagem do erro, '
+                          'a pilha, o arquivo e a linha, o caminho da página, a '
+                          'versão do aplicativo e a plataforma. Não vão o texto '
+                          'que você digitou, o histórico de conversa, o e-mail nem '
+                          'o identificador da conta; a URL é reduzida ao caminho, '
+                          'sem parâmetros. Os relatórios iguais são agrupados e '
+                          'usados só para encontrar e corrigir falhas. Não há '
+                          'registro de páginas visitadas, de tempo de uso nem de '
+                          'toques.',
+                    ),
+                    DevocionalSecaoDeTexto(
                       key: _ondeEQuanto,
                       titulo: 'Onde os dados ficam e por quanto tempo',
                       texto:
                           'Os dados da nuvem ficam no Firebase, serviço do Google que'
                           ' pode guardá-los em servidores fora do Brasil, sob os '
                           'termos de proteção de dados que o Google oferece a quem '
-                          'usa o serviço (LGPD, art. 33). Eles ficam guardados '
-                          'enquanto a conta existir no aplicativo e saem quando você '
-                          'apaga a cópia da nuvem. Ninguém além de você tem acesso a '
-                          'eles, a não ser o progresso que você mesmo compartilha num'
-                          ' plano.',
+                          'usa o serviço (LGPD, art. 33). Os dados da conta ficam '
+                          'guardados enquanto a conta existir no aplicativo e saem '
+                          'quando você apaga a cópia da nuvem. Ninguém além de você '
+                          'tem acesso a eles, a não ser o progresso que você mesmo '
+                          'compartilha num plano. Os relatórios de erro e as '
+                          'denúncias ficam no mesmo projeto, são lidos só pelo '
+                          'mantenedor para corrigir falhas e conteúdo, e são '
+                          'apagados quando já cumpriram essa função.',
                     ),
                     DevocionalSecaoDeTexto(
                       key: _apagar,

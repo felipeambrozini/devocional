@@ -1,12 +1,17 @@
 {
+    "id": "./",
     "name": "Devocional",
     "short_name": "Devocional",
     "start_url": ".",
+    "scope": "./",
+    "lang": "pt-BR",
+    "dir": "ltr",
     "display": "standalone",
     "background_color": "#2E1B10",
     "theme_color": "#C9A227",
     "description": "Bíblia em tradução própria da King James 1611, devocionais de Spurgeon e plano de leitura anual.",
     "orientation": "any",
+    "categories": ["books", "education", "lifestyle"],
     "prefer_related_applications": false,
     "icons": [
         {

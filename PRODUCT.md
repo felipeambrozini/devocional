@@ -170,14 +170,37 @@ vitoriana dele, tratando o leitor por "tu".
   do Dia): push de Cloud Function agendada, mais reserva local no Android;
   só a referência do dia no corpo ("em Gênesis 1:2"), versículo recusado de
   propósito — ver README.md. Respeita os interruptores do painel.
+- PWA offline (19/11/2026): o site instalável também abre sem rede. Um service
+  worker único (`web/firebase-messaging-sw.js`) pré-cacheia o shell (HTML,
+  bootstrap, `main.dart` com hash, fontes, CanvasKit, ícones, capas) e guarda o
+  conteúdo (capítulos, devocionais, comentários) conforme é lido, com
+  stale-while-revalidate; navegação tenta a rede por 4 s e cai no shell em
+  cache. Nomes de arquivo com hash de conteúdo tornam o cache imutável e
+  seguro entre deploys (ver README.md, `--web-content-hash`).
+- Portão de 18 anos no chat: a primeira visita pede uma declaração explícita
+  ("Tenho 18 anos ou mais") e guarda a resposta neste aparelho
+  (`Estado.maiorDeIdade`); sem ela, nem histórico nem campo de mensagem
+  aparecem. É autodeclaração documentada, não prova de idade.
+- Denúncia de resposta da IA: cada resposta das personas tem "Denunciar
+  resposta". A pergunta, a resposta, o motivo, o detalhe opcional, a versão e a
+  plataforma vão para `denuncias/{id}` no Firestore (regras create-only, uid da
+  própria conta); o e-mail e o nome não entram no texto. Serve para revisar
+  conteúdo doutrinário errado ou resposta inadequada.
+- Relatórios de erro sem dados pessoais (19/11/2026): em build de release na
+  web, falhas viram um POST para a Function `registrarErro` (mensagem, pilha,
+  arquivo, caminho da página sem query, versão e plataforma), agregadas por
+  hash em `erros`; nunca vão texto digitado, conversa, e-mail ou uid. Sem
+  Sentry nem Analytics; o beacon do `index.html` cobre falhas antes do primeiro
+  frame e o Dart cobre o resto (ver `lib/dados/monitoramento.dart`).
 - Regras de texto do produto: sem travessões em nenhum texto do app e sem
   aspas curvas (só aspas retas); voz vitoriana de Spurgeon tratando o leitor
   por "tu"; citações bíblicas no registro King James do app.
 - Decisões recusadas de propósito (não reabrir sem motivo novo): streak de
   dias, cores de marcação, widget na tela inicial, lembretes em iOS (exigiria
-  a chave APNs no Console — Android e web já têm), offline de verdade na
-  web, sincronização fora da conta Google. Áudio foi recusado no início e
-  revisto depois (ver Operating Context).
+  a chave APNs no Console — Android e web já têm), sincronização fora da conta
+  Google. Offline de verdade na web foi recusado no início e implementado
+  depois (ver Capabilities). Áudio foi recusado no início e revisto depois
+  (ver Operating Context).
 - Flutter no canal `stable` (`.fvmrc` e `deploy-web.yml`).
 
 ## Brand Commitments

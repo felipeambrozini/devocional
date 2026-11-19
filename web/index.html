@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -18,7 +18,15 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <!-- Sem viewport o Chrome móvel usa a largura de layout de 980 px e o app
+       abre como uma miniatura. Flutter não injeta esta meta: ela precisa
+       estar aqui. `viewport-fit=cover` deixa o canvas ir até as bordas do
+       aparelho; o zoom do navegador continua permitido (o app tem escala de
+       texto própria, mas WCAG pede que o zoom da página não seja bloqueado). -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="Bíblia em tradução própria da King James 1611, devocionais de Spurgeon e plano de leitura anual.">
+  <meta name="application-name" content="Devocional">
+  <link rel="canonical" href="https://www.felipeambrozini.com.br/devocional/">
 
   <!--
     Prévia de link (WhatsApp, Instagram, descrição de live). `og:image`
@@ -26,11 +34,21 @@
     é gerada por script, nunca editada à mão (ver README.md).
   -->
   <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Devocional">
+  <meta property="og:locale" content="pt_BR">
   <meta property="og:title" content="Devocional">
   <meta property="og:description" content="Bíblia na tradução autoral da King James 1611, devocionais de Spurgeon, plano de leitura anual e narração em voz.">
   <meta property="og:image" content="https://www.felipeambrozini.com.br/devocional/og.png">
   <meta property="og:url" content="https://www.felipeambrozini.com.br/devocional/">
   <meta name="twitter:card" content="summary_large_image">
+
+  <!-- A cor da barra do navegador acompanha o tema do app (ver o <style>
+       abaixo). O par claro/escuro evita uma faixa escura em cima de quem
+       está no tema claro — e vice-versa. -->
+  <meta name="theme-color" content="#2E1B10">
+  <meta name="theme-color" content="#F7F1E3" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#2E1B10" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
 
   <!-- iOS meta tags & icons -->
   <!-- A variante sem prefixo (acima seria "mobile-web-app-capable" sozinho)
@@ -56,6 +74,36 @@
 
   <title>Devocional</title>
   <link rel="manifest" href="manifest.json">
+
+  <!--
+    Dados estruturados para o buscador: o app inteiro é desenhado em canvas,
+    então o HTML estático é a única coisa que um rastreador lê sem executar
+    JavaScript. Isto descreve o que existe, sem inventar páginas por dentro
+    do app (as rotas internas não têm conteúdo HTML próprio).
+  -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Devocional",
+    "url": "https://www.felipeambrozini.com.br/devocional/",
+    "description": "Bíblia em tradução própria da King James 1611, devocionais de Charles Spurgeon e plano de leitura anual, gratuitos e sem anúncios.",
+    "applicationCategory": "LifestyleApplication",
+    "operatingSystem": "Any",
+    "inLanguage": "pt-BR",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "BRL"
+    },
+    "author": {
+      "@type": "Person",
+      "name": "Felipe Ambrozini",
+      "url": "https://www.felipeambrozini.com.br/devocional/sobre"
+    }
+  }
+  </script>
 
   <!--
     O app é marrom escuro, e sem isto o navegador pinta branco puro até o Flutter
@@ -119,16 +167,121 @@
     </footer>
   </noscript>
   <script>
+    // O app abre antes do Flutter: um erro de carregamento (bootstrap, engine,
+    // CanvasKit, fonte) não tem onde aparecer e some no console de quem usa.
+    // Este beacon manda só o suficiente para reproduzir a falha — mensagem,
+    // pilha, arquivo e linha, sem query string, sem cookie e sem nada do que
+    // a pessoa escreveu. Depois do primeiro frame o Dart assume (ver
+    // lib/dados/monitoramento.dart), então o handler se cala para não contar
+    // a mesma falha duas vezes.
+    (function () {
+      var primeiraTela = false;
+      var enviados = 0;
+      var vistos = {};
+
+      window.addEventListener('flutter-first-frame', function () {
+        primeiraTela = true;
+      });
+
+      function enviar(origem, mensagem, pilha, arquivo, linha) {
+        if (primeiraTela || enviados >= 5 || !mensagem) return;
+        var chave = origem + '|' + mensagem;
+        if (vistos[chave]) return;
+        vistos[chave] = true;
+        enviados++;
+        try {
+          // Caminho absoluto: o beacon também roda em link direto
+          // (/devocional/biblia/gn/1), onde "api/erro" relativo cairia na
+          // rota errada.
+          fetch('/devocional/api/erro', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              origem: origem,
+              mensagem: String(mensagem).slice(0, 1000),
+              pilha: pilha ? String(pilha).slice(0, 8000) : '',
+              arquivo: arquivo ? String(arquivo).slice(0, 300) : '',
+              linha: typeof linha === 'number' ? linha : 0,
+              url: location.pathname
+            }),
+            keepalive: true
+          }).catch(function () {});
+        } catch (_) {}
+      }
+
+      window.addEventListener('error', function (evento) {
+        // "Script error." é falha de outro domínio sem CORS: sem arquivo, sem
+        // pilha e sem mensagem útil, não vale um registro.
+        if (evento.message && evento.message !== 'Script error.') {
+          enviar(
+            'janela',
+            evento.message,
+            evento.error && evento.error.stack,
+            evento.filename,
+            evento.lineno
+          );
+        }
+      });
+
+      window.addEventListener('unhandledrejection', function (evento) {
+        var motivo = evento.reason;
+        var mensagem = motivo && motivo.message
+          ? motivo.message
+          : String(motivo || '');
+        enviar('promessa', mensagem, motivo && motivo.stack, '', 0);
+      });
+    })();
+
     window.addEventListener('flutter-first-frame', function () {
       document.getElementById('carregando')?.remove();
     });
-    // Registro do service worker do lembrete diário (ver
-    // lib/dados/lembretes.dart) — independente do flutter_service_worker.js
-    // que o build do Flutter gera e registra por conta própria via
-    // flutter_bootstrap.js abaixo; cada um cuida do próprio escopo de evento.
+
+    // Service worker: um só, este, para o app inteiro. Ele cuida do cache
+    // offline E do push do lembrete (ver web/firebase-messaging-sw.js).
+    // O loader do Flutter, quando recebe `serviceWorkerSettings`, registra o
+    // flutter_service_worker.js no mesmo escopo e derruba este — por isso o
+    // web/flutter_bootstrap.js chama load() sem settings nenhum. Quem já
+    // visitou antes pode ter aquele registro antigo (que só se desregistrava);
+    // ele sai daqui para não disputar o escopo.
+    //
+    // O registro espera o primeiro quadro: o `install` pré-cacheia o shell
+    // inteiro (main.dart.js, fontes, CanvasKit), e disparar isso junto com o
+    // carregamento da página faria os dois downloads competirem pela mesma
+    // conexão na primeira visita. Com o app já na tela, o install só completa
+    // o que falta para abrir offline. O `load` com atraso é a rede de
+    // segurança para o caso de o primeiro quadro não chegar.
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('firebase-messaging-sw.js');
+      navigator.serviceWorker.getRegistrations().then(function (registros) {
+        registros.forEach(function (registro) {
+          var ativo = registro.active || registro.waiting || registro.installing;
+          if (ativo && ativo.scriptURL.endsWith('/flutter_service_worker.js')) {
+            registro.unregister();
+          }
+        });
+      }).catch(function () {});
+
+      var pedido = false;
+      function registrarServiceWorker() {
+        if (pedido) return;
+        pedido = true;
+        navigator.serviceWorker.register('/devocional/firebase-messaging-sw.js', {
+          // Escopo explícito: um link direto (/devocional/biblia/gn/1) resolve
+          // URL relativa contra a rota, e o worker seria procurado dentro dela.
+          scope: '/devocional/',
+          updateViaCache: 'none'
+        }).catch(function (erro) {
+          // Sem service worker o app abre e funciona online: ficam de fora o
+          // cache offline e a notificação com o app fechado.
+          console.warn('Service worker não registrado:', erro);
+        });
+      }
+
+      window.addEventListener('flutter-first-frame', registrarServiceWorker);
+      window.addEventListener('load', function () {
+        setTimeout(registrarServiceWorker, 4000);
+      });
     }
+
     // Convite de instalação como app (PWA), só no Chrome/Edge: o evento
     // costuma chegar antes do Flutter carregar, então fica guardado aqui até
     // o botão "Instalar como app" de Sobre usá-lo (ver

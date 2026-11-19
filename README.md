@@ -296,7 +296,7 @@ test/          testes de unidade e de widget
 test_regras/   testes das regras do Firestore e do Storage no emulador
 functions/     Cloud Function dos lembretes (TypeScript)
 tools/         scripts de apoio ao conteúdo (Python)
-web/           index.html, manifesto, service worker do push e arquivos da raiz
+web/           index.html, manifesto, service worker (push e offline) e raiz
 ```
 
 ## Conteúdo
@@ -477,11 +477,6 @@ motivo novo.
 - **Lembretes em iOS** — recusado por ora: o lembrete híbrido (push + reserva
   local) já cobre Android e web (ver acima e "Lembretes diários" abaixo);
   iOS exigiria a chave APNs que este projeto não tem cadastrada no Console.
-- **Offline de verdade na web** — investigado e recusado: o Flutter removeu o
-  cache automático do service worker gerado e o CanvasKit carrega de CDN por
-  padrão; fazer direito exigiria um service worker próprio contra um mecanismo
-  que o próprio Flutter avisa que vai descontinuar. Não reabrir sem o Flutter
-  trazer de volta um jeito suportado.
 - **Sincronização entre aparelhos** — a cópia por exportar/importar cobria o
   risco real (perder as notas). Reaberta em 09/08/2026 quando o motivo mudou
   (o app passou a ser compartilhado com dezenas de pessoas): a conta Google,
@@ -1168,10 +1163,13 @@ que está funcionando.
   JavaScript — sem aparecer para quem usa o app normalmente.
 - **Sem Google Analytics, Sentry ou outra ferramenta de terceiros, de
   propósito** — o `llms.txt` declara publicamente "sem ferramenta de análise
-  de uso de terceiros". Erro fica no console e em arquivo local
-  (`lib/dados/registro.dart`); "Relatar um problema" (Sobre) abre e-mail com
-  a versão já preenchida. Não reabrir sem primeiro decidir remover essa linha
-  do `llms.txt` e da política de privacidade.
+  de uso de terceiros". O que existe é monitoramento próprio, sem PII: na web
+  de release, `Registro.erro` chama `Monitoramento.registrar`
+  (`lib/dados/monitoramento.dart`), que faz um POST para a Function
+  `registrarErro` (máximo de 5 por sessão, um por mensagem distinta, sem query
+  string, sem texto digitado, sem e-mail e sem uid); o beacon do `index.html`
+  cobre falhas antes do primeiro frame. "Relatar um problema" (Sobre) continua
+  abrindo e-mail com a versão já preenchida.
 - **Instalar como app (PWA)** (14/11/2026): o site já era instalável
   (manifesto com `display: standalone`, ícones maskable, meta tags da Apple);
   faltava avisar. O `web/index.html` guarda o `beforeinstallprompt` do
@@ -1188,7 +1186,42 @@ que está funcionando.
   navegador; sem convite (Safari, Firefox) ou se ela falhar, mostra o
   caminho pelo menu para o sistema da pessoa. O `preventDefault` no convite
   troca a faixa automática do Chrome no celular pelo cartão da Hoje.
-  Offline continua fora (ver "Offline de verdade na web" em Produto).
+- **Offline de verdade na web** (19/11/2026): o mesmo service worker que
+  entrega o push (`web/firebase-messaging-sw.js`) é o único do site e também
+  mantém o app inteiro disponível sem rede. O build usa
+  `--web-content-hash --no-web-resources-cdn`
+  (`.github/workflows/deploy-web.yml`): todo asset ganha o hash do conteúdo no
+  nome (e o CanvasKit sai do próprio Hosting, não do gstatic), o build emite
+  `precache_manifest.json`, e o `install` do worker pré-cacheia o shell (HTML,
+  bootstrap, `main.dart.<hash>.js`, fontes, CanvasKit da variante do motor,
+  ícones, capas) com `cache: 'reload'`, para não guardar a cópia velha de um
+  nome sem hash. O conteúdo (capítulos, devocionais, comentários) entra no cache
+  conforme é lido, em stale-while-revalidate; navegação é rede-primeiro com
+  teto de 4 s e cai no `index.html` em cache. `activate` apaga do cache o que
+  não está no manifesto do build atual. O `flutter_service_worker.js` não é
+  registrado (o `web/flutter_bootstrap.js` chama `load()` sem
+  `serviceWorkerSettings`) e é removido do `public` no deploy; o `index.html`
+  desregistra um que tenha ficado de visitas antigas. Ver `firebase.json`
+  para os cabeçalhos: shell sem cache, arquivo com hash imutável por um ano e
+  `canvaskit/**` por uma hora.
+- **Portão de 18 anos no chat** (19/11/2026): `DevocionalPortaoDeIdade`
+  (`lib/widgets/portao_de_idade.dart`) é a primeira coisa de `TelaChat`; sem
+  `Estado.maiorDeIdade == true` não há histórico nem campo de mensagem. A
+  resposta fica por navegador/aparelho (`maior_de_idade` no
+  `SharedPreferences`, fora da cópia da nuvem), e "Não tenho" volta para a
+  Hoje. É autodeclaração documentada no aviso, não prova de idade.
+- **Denúncia de resposta da IA** (19/11/2026): o botão "Denunciar resposta"
+  aparece só nas falas da persona (`DevocionalBalcaoDeMensagem.aoDenunciar`),
+  abre o diálogo com os motivos de `lib/dados/denuncias.dart` e grava em
+  `denuncias/{id}` (create-only nas regras, uid igual ao da conta Google).
+  Vão a pergunta que antecedeu (se ainda estiver no histórico), a resposta, o
+  motivo, o detalhe opcional, a persona, os ids de conversa e mensagem, a
+  versão e a plataforma; nunca o e-mail ou o nome.
+- **Smoke test do site publicado** (19/11/2026): `tool/smoke_web.mjs` roda no
+  fim do `deploy-web.yml` com o SHA do commit e confere o build novo no ar
+  (o SHA vai no corpo do service worker), HTML/manifest/precache, o rewrite
+  da API de erro, os cabeçalhos de cache e segurança e a rota interna. Falha
+  no push, não numa visita dias depois.
 
 ### Ícone, splash e fontes
 
@@ -1296,10 +1329,13 @@ desinstalar antes de instalar de novo.
 O deploy é pelo GitHub Actions (`.github/workflows/deploy-web.yml`), com o
 Flutter no canal `stable` (ver `.fvmrc`), para o Firebase Hosting — e junto,
 as regras e as functions
-(`firebase deploy --only hosting,firestore:rules,storage,functions`), então uma
+(`firebase deploy --only functions,hosting,firestore:rules,storage`), então uma
 mudança em `firestore.rules` ou `storage.rules` vai para produção no próximo
-push, sem publicar à mão no console. Por isso, antes de mexer nelas,
-rode os testes de regras no emulador (precisa de Java):
+push, sem publicar à mão no console. Functions vêm primeiro de propósito: o
+`firebase.json` tem um rewrite de `/devocional/api/erro` para `registrarErro`,
+e o CLI recusa publicar o Hosting enquanto a Function não existir no projeto.
+Por isso, antes de mexer nelas, rode os testes de regras no emulador (precisa
+de Java):
 
 ```bash
 npm --prefix test_regras install
@@ -1317,20 +1353,33 @@ rewrite em `firebase.json` cuida do SPA). O build usa `--base-href
 `--dart-define`, ver `.env.example.json` e `SECURITY.md §3.1` — entre elas
 `FIREBASE_API_KEY_WEB`, `GEMINI_API_KEY_WEB`, `AUDIO_BASE_URL`). O deploy usa
 `FIREBASE_SERVICE_ACCOUNT` (JSON da conta de serviço do Firebase) e publica
-`hosting,firestore:rules,storage,functions` juntos. As actions estão fixadas em
-commit SHA completo, não em tag mutável.
+`functions,hosting,firestore:rules,storage` juntos. As actions estão fixadas
+em commit SHA completo, não em tag mutável.
 
-Cache: `index.html`, `flutter_bootstrap.js`, `main.dart.js` e todo o `assets/`
-(a Bíblia, os comentários, os livros, os manifestos e as fontes) saem com
-`no-cache`: o navegador guarda a cópia, mas pergunta ao Hosting se ela mudou, e
-o ETag responde com um 304 de poucos bytes. Só o `canvaskit/` fica imutável por
-um ano. Os nomes dos assets do Flutter não levam hash, então um cache longo
-fazia uma correção de versículo ou de comentário levar até um ano para chegar a
-quem já tinha visitado, e congelar o manifesto por um ano quebra os ícones
-quando o conjunto de fontes muda (foi o que apagou os ícones na troca de
-Material para FontAwesome). Um caminho inexistente sob `assets/` cai no rewrite
-do SPA e devolve o `index.html`, que agora também não fica em cache por um ano.
-Ver `headers` em `firebase.json`.
+O build ainda leva `--web-content-hash --no-web-resources-cdn`: nomes de asset
+com hash de conteúdo (o `main.dart.<hash>.js`, os manifestos, as fontes) e
+CanvasKit servido pelo próprio Hosting. É o que permite o cache offline do
+service worker guardar nomes imutáveis e limpar o build velho sem misturar
+arquivo de duas versões (ver "Offline de verdade na web" acima).
+
+Cache (ver `headers` em `firebase.json`): `index.html`, `flutter_bootstrap.js`,
+`flutter.js`, o worker, os manifestos e `version.json` saem com `no-cache` —
+o navegador guarda, mas pergunta ao Hosting se mudou. Arquivo com hash no nome
+(`**/assets/**`, `**/main.dart.*.js`) é imutável por um ano; `canvaskit/**`,
+que não tem hash, fica uma hora; PNG solto (favicon, ícones, `og.png`) fica um
+dia. Antes do `--web-content-hash`, os assets não tinham hash e um cache de um
+ano congelaria uma correção de versículo ou de comentário para quem já tivesse
+visitado.
+
+Depois do deploy, `node tool/smoke_web.mjs` (com `SMOKE_BUILD_ID=${{ github.sha }}`)
+espera o SHA do commit aparecer no service worker publicado e confere o caminho
+do app: HTML e metadados, o `load()` final do bootstrap sem
+`serviceWorkerSettings`, manifest PWA, `precache_manifest.json` com o
+`main.dart` hasheado e imutável, o worker com push e cache, o rewrite
+`/devocional/api/erro` (GET deve responder 405 JSON) e os arquivos da raiz.
+Falha no job, não numa visita dias depois. Para rodar
+localmente contra outro endereço:
+`SMOKE_BASE_URL=http://localhost:5000 node tool/smoke_web.mjs`.
 
 Antes de publicar, o job `regras-e-functions` do `deploy-web.yml` roda os testes
 das regras no emulador (`npm --prefix test_regras test`) e os da Function

@@ -2,11 +2,15 @@ import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../dados/conversador.dart';
+import '../dados/denuncias.dart';
 import '../dados/estado.dart';
 import '../dados/ia.dart';
+import '../dados/modelos.dart';
 import '../dados/personas.dart';
+import '../dados/registro.dart';
 import '../funcoes/aviso.dart';
 import '../telas/chat.dart';
+import '../widgets/denuncia_de_resposta.dart';
 
 /// Estado e ações da tela de chat: o conversador (pergunta/resposta com a
 /// IA), o campo de mensagem, a rolagem e o aviso de corte da conversa. A tela
@@ -129,6 +133,42 @@ class ChatControlador extends ChangeNotifier {
   /// Para a resposta em andamento: a pergunta fica pendente e a tela oferece
   /// "Tentar de novo" (ver [Conversador.interromper]).
   void interromper() => conversador?.interromper();
+
+  /// Abre o diálogo de denúncia da resposta e grava a escolha em
+  /// `denuncias` (ver [Denuncias]). O aviso é dado aqui, não no diálogo: é
+  /// o resultado da escrita que interessa a quem denunciou.
+  Future<void> denunciar(
+    BuildContext context,
+    Mensagem resposta,
+    Mensagem? pergunta,
+  ) async {
+    final denuncia = await mostrarDenunciaDeResposta(
+      context,
+      persona: persona,
+      resposta: resposta,
+      pergunta: pergunta,
+      conversaId: conversador?.id ?? conversaId,
+    );
+    if (denuncia == null || !context.mounted) return;
+    try {
+      await Denuncias.registrar(denuncia);
+      if (!context.mounted) return;
+      mostrarAviso(context, 'Denúncia enviada. Obrigado por avisar.');
+    } on DenunciaSemConta {
+      if (!context.mounted) return;
+      mostrarErro(context, 'Entre na sua conta para denunciar uma resposta.');
+    } catch (erro, pilha) {
+      // A falha não pode sumir em silêncio: sem isto, o botão parecia não
+      // funcionar e a denúncia nunca chegava. O Registro também alimenta o
+      // monitoramento remoto da web.
+      Registro.erro('Denuncias.registrar', erro, pilha);
+      if (!context.mounted) return;
+      mostrarErro(
+        context,
+        'Não foi possível enviar a denúncia agora. Tente de novo.',
+      );
+    }
+  }
 
   Future<void> limparConversa(BuildContext context) async {
     final id = conversador?.id;

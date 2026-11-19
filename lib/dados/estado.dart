@@ -47,6 +47,7 @@ class Estado extends ChangeNotifier {
   static const _kMinutosLembreteNoite = 'minutos_lembrete_noite';
   static const _kBoasVindasVistas = 'boas_vindas_vistas';
   static const _kConsentimentoDaNuvem = 'consentimento_da_nuvem';
+  static const _kMaiorDeIdade = 'maior_de_idade';
   static const _kPlanos = 'planos_do_usuario';
   static const _kPlanosLidos = 'planos_lidos';
 
@@ -103,6 +104,11 @@ class Estado extends ChangeNotifier {
   /// Se o aviso de boas-vindas (que apresenta o plano de Jesus) já apareceu.
   bool _boasVindasVistas = false;
   bool _consentimentoDaNuvem = false;
+
+  /// null = ainda não respondeu ao portão de idade; true/false = a resposta
+  /// guardada neste aparelho. É autodeclaração: serve para lembrar a escolha e
+  /// documentar o aviso, não para provar idade.
+  bool? _maiorDeIdade;
 
   /// Se o tooltip de primeiro uso do deslize para trocar capítulo já foi dispensado.
   bool _swipeTooltipDispensado = false;
@@ -215,6 +221,7 @@ class Estado extends ChangeNotifier {
         _prefs.getBool(_kConviteDeInstalarDispensado) ?? false;
     _boasVindasVistas = _prefs.getBool(_kBoasVindasVistas) ?? false;
     _consentimentoDaNuvem = _prefs.getBool(_kConsentimentoDaNuvem) ?? false;
+    _maiorDeIdade = _prefs.getBool(_kMaiorDeIdade);
 
     _swipeTooltipDispensado = _prefs.getBool(_kSwipeTooltipDispensado) ?? false;
 
@@ -461,6 +468,18 @@ class Estado extends ChangeNotifier {
     if (_consentimentoDaNuvem) return;
     _consentimentoDaNuvem = true;
     await _prefs.setBool(_kConsentimentoDaNuvem, true);
+  }
+
+  /// A resposta ao portão de idade do chat: null (nunca respondeu), true
+  /// (declarou ter 18 anos ou mais) ou false. Fica neste aparelho, não na
+  /// cópia da nuvem: a declaração vale para o navegador onde foi dada.
+  bool? get maiorDeIdade => _maiorDeIdade;
+
+  Future<void> registrarMaiorDeIdade(bool novo) async {
+    if (novo == _maiorDeIdade) return;
+    _maiorDeIdade = novo;
+    notifyListeners();
+    await _prefs.setBool(_kMaiorDeIdade, novo);
   }
 
   // --- progresso do cronograma --------------------------------------------- //
