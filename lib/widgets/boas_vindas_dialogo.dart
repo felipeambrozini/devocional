@@ -13,10 +13,8 @@ class DevocionalBoasVindasDialogo extends StatelessWidget {
       scrollable: true,
       title: const Text('Bem-vindo ao Devocional!'),
       content: const Text(
-        'Que bom ter você aqui. Para começar, sua conta já vem com um plano '
-        'especial: A Vida de Jesus em 30 dias. Em um mês você percorre os '
-        'quatro evangelhos em harmonia, acompanhando a vida e o ministério '
-        'de Jesus dia após dia.\n\n'
+        'Sua conta já vem com o plano "A Vida de Jesus em 30 dias": os quatro '
+        'evangelhos em harmonia, um trecho por dia.\n\n'
         'Você o encontra na aba Plano, em Meus Planos. Ele é fixo: não pode ser '
         'alterado nem excluído.',
       ),

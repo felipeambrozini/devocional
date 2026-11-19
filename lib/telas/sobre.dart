@@ -203,13 +203,11 @@ class _TelaSobreState extends State<TelaSobre> {
                 titulo: 'Fontes do texto',
                 children: [
                   Text(
-                    'Este aplicativo utiliza uma tradução autoral e inédita da '
-                    'King James 1611, elaborada diretamente do texto '
-                    'inglês em domínio público. Também reúne traduções próprias '
-                    'dos devocionais clássicos de Charles H. Spurgeon, Morning '
-                    'and Evening e Faith\'s Checkbook. O texto busca conservar '
-                    'fidelidade teológica, reverência literária e rigor no respeito '
-                    'aos direitos autorais.',
+                    'A Bíblia daqui é uma tradução nova da King James 1611, '
+                    'feita a partir do inglês. O app traz também traduções '
+                    'próprias de dois devocionais de Charles H. Spurgeon: '
+                    'Morning and Evening e Faith\'s Checkbook. Os originais '
+                    'estão em domínio público.',
                     style: tema.bodyLarge?.copyWith(height: 1.7),
                   ),
                   const SizedBox(height: DevocionalEspacamento.sp16),
@@ -235,12 +233,12 @@ class _TelaSobreState extends State<TelaSobre> {
                 abertaPorPadrao: true,
                 children: [
                   Text(
-                    'O retrato de Spurgeon nas telas de leitura lê o texto em voz '
-                    'alta: MP3 pré-gravados numa voz que remete ao tom de Charles '
-                    'Spurgeon, mais natural que uma síntese em tempo real. Fora '
-                    'da web dá para '
-                    'baixar por categoria e ouvir offline, nos Ajustes. A '
-                    'demonstração abaixo toca o Salmo 23.',
+                    'Nas telas de leitura, toque em Ouvir, ao lado do retrato '
+                    'de Spurgeon, para escutar o texto. O áudio vem gravado de antemão, numa voz '
+                    'inspirada na de Spurgeon, e soa mais natural que uma voz '
+                    'sintetizada na hora. Fora da web dá para baixar por '
+                    'categoria e ouvir offline, nos Ajustes. A demonstração '
+                    'abaixo toca o Salmo 23.',
                     style: tema.bodyLarge?.copyWith(height: 1.7),
                   ),
                   const SizedBox(height: DevocionalEspacamento.sp16),
@@ -319,11 +317,9 @@ class _TelaSobreState extends State<TelaSobre> {
                   ),
                   const SizedBox(height: DevocionalEspacamento.sp12),
                   Text(
-                    'Sou cristão, criador de conteúdo e desenvolvedor. Criei este '
-                    'app para meu uso diário de leitura bíblica e dos devocionais '
-                    'de Spurgeon e o abri para quem quiser usar também. Aqui reúno '
-                    'ensino bíblico, devocionais e ferramentas simples de leitura, '
-                    'sempre apontando para Cristo.',
+                    'Sou cristão, criador de conteúdo e desenvolvedor. Fiz este '
+                    'app para ler a Bíblia e os devocionais de Spurgeon todo '
+                    'dia, e depois abri para quem quiser usar também.',
                     style: tema.bodyLarge?.copyWith(height: 1.7),
                   ),
                   const SizedBox(height: DevocionalEspacamento.sp16),

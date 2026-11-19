@@ -79,10 +79,9 @@ List<(String, String)> _perguntas(bool chat) => [
   ),
   (
     'Por que essa tradução da Bíblia?',
-    'O texto é uma tradução autoral e inédita da King James 1611, feita '
-        'diretamente do inglês em domínio público, com a mesma contagem de '
-        'versículos do canon: 31.102. Nenhum outro aplicativo tem este '
-        'texto, porque ele nasceu aqui.',
+    'É uma tradução própria da King James 1611, feita a partir do inglês, '
+        'que está em domínio público. Ela mantém os 31.102 versículos do '
+        'original e só existe neste aplicativo.',
   ),
   (
     'Funciona sem internet?',
@@ -111,8 +110,7 @@ List<(String, String)> _perguntas(bool chat) => [
   ),
   (
     'Em quais aparelhos o aplicativo funciona?',
-    'No Android e em qualquer navegador, com a mesma experiência e o '
-        'mesmo design nas duas plataformas.',
+    'No Android e em qualquer navegador. O app é o mesmo nos dois.',
   ),
   if (chat)
     (

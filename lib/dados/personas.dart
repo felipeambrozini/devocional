@@ -178,8 +178,7 @@ const personaFelipe = Persona(
       'música cristã, o livro "As 365 Lições que Jesus me Ensinou", o plano '
       'de leitura bíblica e as citações de Spurgeon); Charles Spurgeon e '
       'Jonathan Edwards; e desenvolvimento de aplicativos em Flutter',
-  boasVindas:
-      'Boa conversa começa com sinceridade. No que posso te ajudar hoje?',
+  boasVindas: 'Oi! No que posso te ajudar hoje?',
   sistema: instrucoesDoFelipe,
 );
 

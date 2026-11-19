@@ -26,7 +26,7 @@ class DevocionalCartasDeConversa extends StatelessWidget {
         const SizedBox(height: DevocionalEspacamento.sp16),
         DevocionalCartaDeConversa(
           persona: personaFelipe,
-          sobre: 'Sobre a fé e a jornada',
+          sobre: 'Sobre fé e criação de conteúdo',
         ),
       ],
     );
