@@ -1356,6 +1356,12 @@ rewrite em `firebase.json` cuida do SPA). O build usa `--base-href
 `functions,hosting,firestore:rules,storage` juntos. As actions estão fixadas
 em commit SHA completo, não em tag mutável.
 
+O service account precisa do papel **Cloud Functions Admin**
+(`roles/cloudfunctions.admin`): publicar a primeira Function HTTPS pública
+(`registrarErro`, `invoker: public`) exige
+`cloudfunctions.functions.setIamPolicy`, que os papéis de Hosting e Firestore
+não dão. Sem ele o deploy falha antes de publicar o site.
+
 O build ainda leva `--web-content-hash --no-web-resources-cdn`: nomes de asset
 com hash de conteúdo (o `main.dart.<hash>.js`, os manifestos, as fontes) e
 CanvasKit servido pelo próprio Hosting. É o que permite o cache offline do

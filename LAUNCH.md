@@ -57,11 +57,17 @@ depois da virada:
    contas fora da lista de testadores possam entrar com Google.
 3. **Firestore: PITR e backup.** Ligar point-in-time recovery e a exportação
    agendada no console; nenhum dos dois tem configuração no repositório.
-4. **Orçamento e cotas.** Alertas de orçamento no Cloud Billing e limite de
+4. **Permissão do service account do deploy.** Dar **Cloud Functions Admin**
+   (`roles/cloudfunctions.admin`) à conta de serviço de
+   `FIREBASE_SERVICE_ACCOUNT`: publicar a primeira Function HTTPS pública
+   (`registrarErro`, `invoker: public`) exige
+   `cloudfunctions.functions.setIamPolicy`, que o papel usado para Hosting e
+   Firestore não dá. Sem isso o deploy falha antes de publicar o site.
+5. **Orçamento e cotas.** Alertas de orçamento no Cloud Billing e limite de
    cota para a Gemini API e para a Function pública de erro.
-5. **Restrições da chave Gemini.** Restringir a chave web por referenciador e
+6. **Restrições da chave Gemini.** Restringir a chave web por referenciador e
    a Android/iOS por pacote/assinatura no Console do Google Cloud.
-6. **Teste em aparelho real.** iPhone (Safari, instalar na tela de início e
+7. **Teste em aparelho real.** iPhone (Safari, instalar na tela de início e
    push) e Android (Chrome e APK de testador) com rede instável e offline.
    O comportamento do service worker e do CanvasKit varia por motor.
 
