@@ -13,14 +13,14 @@
   reimplantar. Use esse mecanismo em vez de reimplementar gating na mão.
 - O arquivo `.env.json` na raiz precisa existir localmente (chaves
   Firebase/Gemini) para rodar o app; não versionar o conteúdo dele.
-- Versionamento (`version: X.Y.Z+N` em `pubspec.yaml`): bug fix soma 1 ao patch
-  e ao `+N` (`1.15.0+34` → `1.15.1+35`); funcionalidade nova soma 1 à minor,
-  zera o patch e soma 1 ao `+N` (`1.15.1+35` → `1.16.0+36`). Bumpe quando o push
-  para `main` estiver prestes a acontecer. Refactor, ajuste de texto ou de
-  documentação e iteração local não mexem na versão — bumpar a cada commit infla
-  o número sem que nenhum build correspondente chegue a ser distribuído. O que o
-  número precisa marcar é a build que o testador tem na mão: sem bump nenhum,
-  todo build do Firebase App Distribution
+- Versionamento (`version: X.Y.Z+N` em `pubspec.yaml`): bug fix e refactor
+  somam 1 ao patch e ao `+N` (`1.15.0+34` → `1.15.1+35`); funcionalidade nova
+  soma 1 à minor, zera o patch e soma 1 ao `+N` (`1.15.1+35` → `1.16.0+36`).
+  Bumpe quando o push para `main` estiver prestes a acontecer. Ajuste de texto
+  ou de documentação e iteração local não mexem na versão — bumpar a cada
+  commit infla o número sem que nenhum build correspondente chegue a ser
+  distribuído. O que o número precisa marcar é a build que o testador tem na
+  mão: sem bump nenhum, todo build do Firebase App Distribution
   (`.github/workflows/distribute-android.yml`/`distribute-ios.yml`) sai com a
   mesma versão e o testador não consegue saber se está numa desatualizada — foi
   essa a causa de um bug de notificação que parecia não ter fix nenhum, quando

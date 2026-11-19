@@ -288,8 +288,8 @@ List<File> _markdownsDoProjeto() {
 
 /// Números (a partir de 1) das linhas acima de 80 colunas, com as mesmas
 /// exceções do MD013 configurado em `.markdownlint.jsonc`: front matter,
-/// bloco de código e tabela não contam, e uma linha só conta se tiver espaço
-/// depois da coluna 80 (uma URL comprida não tem onde quebrar).
+/// bloco de código e tabela não contam, e a última palavra da linha vale um
+/// caractere (uma URL comprida não tem onde quebrar).
 List<int> _linhasLongas(List<String> linhas) {
   const limite = 80;
   final achadas = <int>[];
@@ -308,7 +308,9 @@ List<int> _linhasLongas(List<String> linhas) {
     }
     if (noCodigo || aparada.startsWith('|')) continue;
     if (linha.length <= limite) continue;
-    if (!linha.substring(limite).contains(RegExp(r'\s'))) continue;
+    // Como o MD013 sem `strict`: a última palavra conta como um caractere,
+    // então a linha só passa se o último espaço couber nas 80 colunas.
+    if (linha.replaceFirst(RegExp(r'\S*$'), '#').length <= limite) continue;
     achadas.add(i + 1);
   }
   return achadas;

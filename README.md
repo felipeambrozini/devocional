@@ -89,9 +89,10 @@ do mesmo código).
   Anotar e, no Devocional, Copiar e Compartilhar; os do Devocional vivem
   junto dos destaques de livros, com os slugs
   `devocional_manha|noite|promessas` e o dia como capítulo, e sobem com a
-  conta), com busca por referência ou por texto da nota, e exporta uma cópia de segurança
-  de favoritos, notas e dias lidos do cronograma para reimportar em outro
-  aparelho (planos, conversas e a leitura dos livros não entram na cópia).
+  conta), com busca por referência ou por texto da nota, e exporta uma cópia
+  de segurança de favoritos, notas e dias lidos do cronograma para reimportar
+  em outro aparelho (planos, conversas e a leitura dos livros não entram na
+  cópia).
 - **Comentário de Spurgeon por versículo**: a mesma folha que abre ao tocar um
   versículo (Copiar, Compartilhar, Anotar, Favoritar) mostra também o
   comentário de Charles Spurgeon para aquele versículo, nos 31.102 versículos
@@ -1377,11 +1378,12 @@ dia. Antes do `--web-content-hash`, os assets não tinham hash e um cache de um
 ano congelaria uma correção de versículo ou de comentário para quem já tivesse
 visitado.
 
-Depois do deploy, `node tool/smoke_web.mjs` (com `SMOKE_BUILD_ID=${{ github.sha }}`)
-espera o SHA do commit aparecer no service worker publicado e confere o caminho
-do app: HTML e metadados, o `load()` final do bootstrap sem
-`serviceWorkerSettings`, manifest PWA, `precache_manifest.json` com o
-`main.dart` hasheado e imutável, o worker com push e cache, o rewrite
+Depois do deploy, `node tool/smoke_web.mjs` (com
+`SMOKE_BUILD_ID=${{ github.sha }}`) espera o SHA do commit aparecer no service
+worker publicado e confere o caminho do app: HTML e metadados, o `load()`
+final do bootstrap sem `serviceWorkerSettings`, manifest PWA,
+`precache_manifest.json` com o `main.dart` hasheado e imutável, o worker com
+push e cache, o rewrite
 `/devocional/api/erro` (GET deve responder 405 JSON) e os arquivos da raiz.
 Falha no job, não numa visita dias depois. Para rodar
 localmente contra outro endereço:

@@ -15,17 +15,27 @@
   Firebase/Gemini) para rodar o app; não versionar o conteúdo dele.
 - Versionamento (`version: X.Y.Z+N` em `pubspec.yaml`): o Android só atualiza
   por cima de um build com `+N` maior, sem precisar desinstalar, então todo bump
-  soma 1 ao `+N`, que nunca volta atrás nem é zerado. Bug fix soma 1 ao patch e
-  ao `+N` (`1.15.0+34` → `1.15.1+35`). Funcionalidade nova soma 1 à minor, zera
-  o patch e soma 1 ao `+N` (`1.15.1+35` → `1.16.0+36`). Bumpe quando o push para
-  `main` estiver prestes a acontecer. Refactor, ajuste de texto/documentação e
-  iteração local não mexem na versão.
+  soma 1 ao `+N`, que nunca volta atrás nem é zerado. Bug fix e refactor somam
+  1 ao patch e ao `+N` (`1.15.0+34` → `1.15.1+35`). Funcionalidade nova soma 1
+  à minor, zera o patch e soma 1 ao `+N` (`1.15.1+35` → `1.16.0+36`). Bumpe
+  quando o push para `main` estiver prestes a acontecer. Ajuste de
+  texto/documentação e iteração local não mexem na versão.
 - Trabalhe sempre direto na branch `main`. Nunca crie branch nem worktree para
   implementar tarefas deste projeto — nada de isolamento por branch/worktree,
   mesmo quando um skill ou processo sugerir isso por padrão.
 - Sempre que uma tela (`lib/telas/`) ou widget de UI (`lib/widgets/`) for criado
   ou alterado, após codificar, rode o agente `ui-reviewer` nos arquivos mudados
   e corrija os achados de gravidade alta antes de dar a tarefa por concluída.
+- Sempre que um texto visível ao usuário for criado ou alterado (strings de
+  `lib/telas/` e `lib/widgets/`, textos de `lib/dados/` que vão para a tela,
+  como o `boasVindas` das personas, e os metadados de `web/index.html` e
+  `web/manifest.json`), após codificar, aplique o skill `stop-slop` nos textos
+  mudados e reescreva o que cair nas regras dele antes de dar a tarefa por
+  concluída. Ficam de fora os comentários e introduções de `assets/` e as
+  instruções de sistema das personas. Leia o skill pelo caminho,
+  [.agents/skills/stop-slop/SKILL.md](.agents/skills/stop-slop/SKILL.md): no
+  Windows sem link simbólico, `.claude/skills` vira um arquivo de texto e os
+  skills do projeto não aparecem na lista.
 
 ## Ferramentas de Flutter
 
