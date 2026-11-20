@@ -488,7 +488,16 @@ do metal nos estados certos.
   (`abertura_de_livro.dart`) em cantos quase retos (3px). O devocional tem capa
   própria — Manhã e Noite ou Promessas de Deus —, à esquerda do título, com
   cantos de 4px, e as obras da Biblioteca (22 capas) usam a mesma moldura
-  (`capa_de_obra.dart`). As capas são a peça de ilustração do sistema; as outras
+  (`capa_de_obra.dart`). Os renders formam três famílias, todas em dourado
+  sobre o couro e com a mesma gravura de Spurgeon no púlpito, a marca da casa:
+  a Bíblia de Estudo em couro liso, cantos arredondados e corte dourado, com
+  uma cruz no alto e Spurgeon num arco gótico (a clara e a escura têm o mesmo
+  desenho); os devocionais em meia-encadernação de couro e linho, com o título
+  numa cartela e Spurgeon num oval sob o céu do livro (sol e lua em Manhã e
+  Noite, estrelas em Promessas); os livros em couro granulado com nervuras,
+  medalhão com o símbolo da obra e Spurgeon sem moldura. O título tem pelo
+  menos 4,5:1 de contraste com o couro. As capas são a peça de ilustração do
+  sistema; as outras
   imagens do app são os retratos de Spurgeon e do Felipe (no anel do metal, nas
   conversas e no botão de voz), a assinatura de Spurgeon e os ícones dos canais
   em Sobre. Nada de ilustração decorativa.

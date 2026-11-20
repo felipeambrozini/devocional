@@ -420,8 +420,9 @@ para um livro volta para a estante.
   o livro de novo, que então começa do primeiro capítulo.
 - **Asset**: `assets/livros/<slug>.json`, `{slug, capitulos: [{titulo,
   paragrafos: []}]}`. Carregado sob demanda, um livro por vez.
-- **Capa**: `assets/imagens/capa_<slug>.webp`, 225x300, na linha das capas
-  de Manhã e Noite e Promessas. Sem o arquivo, aparece uma capa tipográfica.
+- **Capa**: `assets/imagens/capa_<slug>.webp`, 225x300, na família das capas
+  de livro descrita em `DESIGN.md` (couro granulado, medalhão com o símbolo da
+  obra, Spurgeon no púlpito). Sem o arquivo, aparece uma capa tipográfica.
   `python tools/capa_para_webp.py <png> <slug>` tira o fundo branco do render e
   grava o WebP.
 - **O que o usuário guarda** (`lib/dados/leitura_de_livros.dart`, dentro do
