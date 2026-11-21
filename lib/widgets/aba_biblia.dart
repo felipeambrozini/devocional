@@ -40,14 +40,14 @@ class DevocionalAbaBiblia extends StatelessWidget {
       return const DevocionalAvisoVazio(
         icone: FontAwesomeIcons.magnifyingGlass,
         titulo: 'Busque um versículo',
-        detalhe: 'A busca ignora acentos e maiúsculas.',
+        detalhe: 'A busca ignora acentos e maiúsculas',
       );
     }
     if (achados.isEmpty && referencia == null && !buscando) {
       return DevocionalAvisoVazio(
         icone: FontAwesomeIcons.magnifyingGlassMinus,
         titulo: 'Nada encontrado',
-        detalhe: 'Nenhum versículo com "$termoBuscado".',
+        detalhe: 'Nenhum versículo com "$termoBuscado"',
       );
     }
 

@@ -67,8 +67,8 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
       mostrarAviso(
         context,
         referencia == null
-            ? 'Leitura concluída.'
-            : 'Leitura concluída: $referencia.',
+            ? 'Leitura concluída'
+            : 'Leitura concluída: $referencia',
       );
     });
     _checarDisponibilidade();
@@ -252,7 +252,7 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
                               // pelo corte alinhado ao topo.
                               DevocionalRetratoDePersona(
                                 persona: personaSpurgeon,
-                                folga: DevocionalEspacamento.sp3,
+                                folga: DevocionalEspacamento.sp4,
                                 decorativo: true,
                               ),
                               const SizedBox(width: DevocionalEspacamento.sp10),

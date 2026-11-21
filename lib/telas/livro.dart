@@ -44,7 +44,7 @@ class _TelaDoLivroState extends State<TelaDoLivro> {
           ? const DevocionalAvisoVazio(
               icone: FontAwesomeIcons.book,
               titulo: 'Livro não encontrado',
-              detalhe: 'Este livro não está na biblioteca.',
+              detalhe: 'Este livro não está na biblioteca',
             )
           : DevocionalLarguraDeLeitura(
               child: DevocionalCarregaUmaVez<List<CapituloDoLivro>?>(

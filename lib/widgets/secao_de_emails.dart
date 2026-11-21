@@ -55,7 +55,7 @@ class _DevocionalSecaoDeEmailsState extends State<DevocionalSecaoDeEmails> {
     try {
       await widget.aoAdicionar(_email.text);
       _email.clear();
-      if (mounted) mostrarAviso(context, 'E-mail liberado.');
+      if (mounted) mostrarAviso(context, 'E-mail liberado');
     } on FormatException catch (erro) {
       // Erro de digitação volta para o campo, não só para o aviso: o foco
       // fica onde se corrige.
@@ -80,7 +80,7 @@ class _DevocionalSecaoDeEmailsState extends State<DevocionalSecaoDeEmails> {
     if (!pode || !mounted) return;
     try {
       await widget.aoRemover(email);
-      if (mounted) mostrarAviso(context, 'Acesso removido.');
+      if (mounted) mostrarAviso(context, 'Acesso removido');
     } catch (erro, pilha) {
       Registro.erro(widget.contextoDeErro, erro, pilha);
       if (mounted) {

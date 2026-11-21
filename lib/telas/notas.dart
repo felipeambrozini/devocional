@@ -240,7 +240,7 @@ Widget _cartaoDaMarcacao(
   chaveDoTexto: m.chave,
   carregarTexto: () =>
       Conteudo.instancia.versiculo(m.livro, m.capitulo, m.versiculo),
-  mensagemDeFalha: 'Não foi possível carregar o texto deste versículo.',
+  mensagemDeFalha: 'Não foi possível carregar o texto deste versículo',
   nota: m.nota,
   mostrarNota: mostrarNota,
   aoAbrir: () => abrirNaBiblia(
@@ -274,18 +274,18 @@ Widget _cartaoDoDestaque(
 );
 
 String _dicaDeFavorito(OrigemDasNotas origem) => switch (origem) {
-  OrigemDasNotas.biblia => 'Toque num versículo na Bíblia para favoritá-lo.',
+  OrigemDasNotas.biblia => 'Toque num versículo na Bíblia para favoritá-lo',
   OrigemDasNotas.devocional =>
-    'Toque no texto de um devocional para favoritá-lo.',
+    'Toque no texto de um devocional para favoritá-lo',
   OrigemDasNotas.biblioteca =>
-    'Toque num parágrafo de um livro da Biblioteca para favoritá-lo.',
+    'Toque num parágrafo de um livro da Biblioteca para favoritá-lo',
 };
 
 String _dicaDeNota(OrigemDasNotas origem) => switch (origem) {
-  OrigemDasNotas.biblia => 'Toque num versículo na Bíblia para anotar.',
-  OrigemDasNotas.devocional => 'Toque no texto de um devocional para anotar.',
+  OrigemDasNotas.biblia => 'Toque num versículo na Bíblia para anotar',
+  OrigemDasNotas.devocional => 'Toque no texto de um devocional para anotar',
   OrigemDasNotas.biblioteca =>
-    'Toque num parágrafo de um livro da Biblioteca para anotar.',
+    'Toque num parágrafo de um livro da Biblioteca para anotar',
 };
 
 /// A cópia sai pela folha de compartilhar, não pela área de transferência.
@@ -330,8 +330,8 @@ Future<void> _importar(BuildContext context, Estado estado) async {
     mostrarAvisoNo(
       mensageiro,
       marcacoes == 0 && dias == 0
-          ? 'Nada de novo na cópia; tudo já estava aqui.'
-          : 'Importado: $marcacoes favoritos, $dias dias de leitura.',
+          ? 'Nada de novo na cópia; tudo já estava aqui'
+          : 'Importado: $marcacoes favoritos, $dias dias de leitura',
     );
   } on FormatException {
     mostrarErroNo(

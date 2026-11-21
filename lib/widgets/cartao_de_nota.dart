@@ -21,7 +21,7 @@ class DevocionalCartaoDeNota extends StatelessWidget {
     required this.aoAbrir,
     required this.aoSalvarNota,
     required this.aoRemover,
-    this.mensagemDeFalha = 'Não foi possível carregar este texto.',
+    this.mensagemDeFalha = 'Não foi possível carregar este texto',
     this.maxLinhas,
   });
 

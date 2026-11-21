@@ -101,9 +101,9 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
                     autovalidateMode: AutovalidateMode.onUserInteraction,
                     decoration: InputDecoration(
                       helperText: totalDeCapitulos == 0
-                          ? 'Escolha os livros para ver o tamanho do plano.'
+                          ? 'Escolha os livros para ver o tamanho do plano'
                           : 'O plano terá $totalDeCapitulos '
-                                '${totalDeCapitulos == 1 ? 'capítulo' : 'capítulos'}.',
+                                '${totalDeCapitulos == 1 ? 'capítulo' : 'capítulos'}',
                     ),
                   ),
                   const SizedBox(height: DevocionalEspacamento.sp20),

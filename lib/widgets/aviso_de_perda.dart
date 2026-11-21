@@ -42,8 +42,8 @@ class DevocionalAvisoDePerda extends StatelessWidget {
               listenable: Nuvem.instancia,
               builder: (context, _) => Text(
                 Nuvem.instancia.logado
-                    ? 'Suas notas também estão salvas na sua conta Google.'
-                    : 'Na web, o navegador pode apagar suas notas sem aviso.',
+                    ? 'Suas notas também estão salvas na sua conta Google'
+                    : 'Na web, o navegador pode apagar suas notas sem aviso',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),

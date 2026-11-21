@@ -33,7 +33,7 @@ class DevocionalAbasDoPlano extends StatelessWidget {
             body: const DevocionalAvisoVazio(
               icone: FontAwesomeIcons.calendarDays,
               titulo: 'Plano desativado temporariamente',
-              detalhe: 'O cronograma e os planos próprios voltam em breve.',
+              detalhe: 'O cronograma e os planos próprios voltam em breve',
             ),
           );
         }

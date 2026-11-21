@@ -24,7 +24,7 @@ Future<void> _sairDaConta(BuildContext context) async {
   final mensageiro = ScaffoldMessenger.of(context);
   try {
     await Nuvem.instancia.sair();
-    mostrarAvisoNo(mensageiro, 'Você saiu da conta.');
+    mostrarAvisoNo(mensageiro, 'Você saiu da conta');
   } catch (erro, pilha) {
     Registro.erro('_sairDaConta', erro, pilha);
     mostrarErroNo(mensageiro, 'Não foi possível sair agora. Tente de novo.');

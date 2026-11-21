@@ -350,7 +350,7 @@ class _SecaoDeLembretes {
       else
         SwitchListTile(
           title: const Text('Avisar no horário do devocional'),
-          subtitle: const Text('Quatro horários independentes.'),
+          subtitle: const Text('Quatro horários independentes'),
           value: estado.lembretesAtivos,
           onChanged: (novo) => _alternar(context, novo),
         ),

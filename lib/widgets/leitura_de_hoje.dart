@@ -26,7 +26,7 @@ class DevocionalLeituraDeHoje extends StatelessWidget {
       construir: (context, snap) {
         if (snap.hasError) {
           return const DevocionalCartaoLeituraProgressoAviso(
-            mensagem: 'Não foi possível carregar o cronograma.',
+            mensagem: 'Não foi possível carregar o cronograma',
           );
         }
         if (snap.connectionState != ConnectionState.done) {

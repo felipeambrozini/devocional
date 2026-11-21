@@ -47,7 +47,7 @@ class DevocionalBarraDaSelecao extends StatelessWidget {
       ),
     );
     aoFechar();
-    mostrarAvisoNo(mensageiro, 'Versículos copiados.');
+    mostrarAvisoNo(mensageiro, 'Versículos copiados');
   }
 
   Future<void> _compartilhar(BuildContext context) async {
@@ -64,7 +64,7 @@ class DevocionalBarraDaSelecao extends StatelessWidget {
         ),
       );
     } catch (_) {
-      mostrarErroNo(mensageiro, 'Não foi possível compartilhar.');
+      mostrarErroNo(mensageiro, 'Não foi possível compartilhar');
     }
     aoFechar();
   }

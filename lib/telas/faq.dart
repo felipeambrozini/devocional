@@ -53,7 +53,7 @@ class TelaFAQ extends StatelessWidget {
                   color: Theme.of(context).colorScheme.primary,
                 ),
                 title: const Text('Política de privacidade completa'),
-                subtitle: const Text('O que é guardado, onde e por quê.'),
+                subtitle: const Text('O que é guardado, onde e por quê'),
                 onTap: () => context.push('/privacidade'),
               ),
             ],

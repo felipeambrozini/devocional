@@ -48,11 +48,11 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
   String? validarDias(String? valor) {
     final numero = int.tryParse(valor ?? '');
     if (numero == null || numero < 1) {
-      return 'Informe em quantos dias o plano acontece.';
+      return 'Informe em quantos dias o plano acontece';
     }
     final total = totalDeCapitulos();
     if (total > 0 && numero > total) {
-      return 'Os livros têm $total capítulos; o máximo é $total dias.';
+      return 'Os livros têm $total capítulos; o máximo é $total dias';
     }
     return null;
   }
@@ -90,7 +90,7 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
 
         Future<void> salvar() async {
           if (livros.isEmpty) {
-            mostrarAviso(dialogContext, 'Escolha pelo menos um livro.');
+            mostrarAviso(dialogContext, 'Escolha pelo menos um livro');
             return;
           }
           if (!(form.currentState?.validate() ?? false)) return;
@@ -203,9 +203,9 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 decoration: InputDecoration(
                   helperText: totalDeCapitulos() == 0
-                      ? 'Escolha os livros para ver o tamanho do plano.'
+                      ? 'Escolha os livros para ver o tamanho do plano'
                       : 'O plano terá ${totalDeCapitulos()} '
-                            '${totalDeCapitulos() == 1 ? 'capítulo' : 'capítulos'}.',
+                            '${totalDeCapitulos() == 1 ? 'capítulo' : 'capítulos'}',
                 ),
               ),
               const SizedBox(height: DevocionalEspacamento.sp20),

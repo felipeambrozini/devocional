@@ -58,7 +58,7 @@ Future<void> instalarComoApp(
   final mensageiro = ScaffoldMessenger.of(context);
   try {
     final aceitou = await instalacao.pedir();
-    if (aceitou) mostrarAvisoNo(mensageiro, 'Devocional instalado.');
+    if (aceitou) mostrarAvisoNo(mensageiro, 'Devocional instalado');
   } catch (erro, pilha) {
     // A janela do navegador não abriu: o toque não pode ficar sem resposta,
     // então cai no caminho pelo menu, que funciona igual.

@@ -101,7 +101,7 @@ class _TelaSobreState extends State<TelaSobre> {
                   color: cor.primary,
                 ),
                 title: const Text('Como usar'),
-                subtitle: const Text('O cartão da primeira visita, de novo.'),
+                subtitle: const Text('O cartão da primeira visita, de novo'),
                 onTap: () => _mostrarAjuda(context),
               ),
               if (emailDeContato.isNotEmpty)
@@ -113,7 +113,7 @@ class _TelaSobreState extends State<TelaSobre> {
                   ),
                   title: const Text('Relatar um problema'),
                   subtitle: const Text(
-                    'Abre um e-mail com a versão do app já preenchida.',
+                    'Abre um e-mail com a versão do app já preenchida',
                   ),
                   onTap: _relatarProblema,
                 ),
@@ -295,7 +295,9 @@ class _TelaSobreState extends State<TelaSobre> {
                       const DevocionalRetratoDePersona(
                         persona: personaFelipe,
                         tamanho: 72,
-                        folga: DevocionalEspacamento.sp3,
+                        folga: DevocionalEspacamento.sp4,
+                        // O nome está ao lado: a foto é enfeite.
+                        decorativo: true,
                       ),
                       const SizedBox(width: DevocionalEspacamento.sp14),
                       Expanded(
@@ -433,7 +435,7 @@ Future<void> _apagarDaNuvem(BuildContext context) async {
   final mensageiro = ScaffoldMessenger.of(context);
   try {
     await Nuvem.instancia.apagarDados();
-    mostrarAvisoNo(mensageiro, 'Conta e dados apagados da nuvem.');
+    mostrarAvisoNo(mensageiro, 'Conta e dados apagados da nuvem');
   } catch (erro, pilha) {
     Registro.erro('Sobre.apagarDaNuvem', erro, pilha);
     mostrarErroNo(mensageiro, 'Não foi possível apagar agora. Tente de novo.');

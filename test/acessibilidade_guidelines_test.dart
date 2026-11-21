@@ -175,7 +175,7 @@ void main() {
       },
     );
 
-    testWidgets('Copiar na folha do texto copia e avisa "Texto copiado."', (
+    testWidgets('Copiar na folha do texto copia e avisa "Texto copiado"', (
       tester,
     ) async {
       await montar(tester, Brightness.dark);
@@ -200,13 +200,13 @@ void main() {
 
       await tester.tap(find.text(texto));
       await tester.pumpAndSettle();
-      expect(find.text('Texto copiado.'), findsNothing);
+      expect(find.text('Texto copiado'), findsNothing);
       await tester.tap(find.text('Copiar'));
       await tester.pumpAndSettle();
 
       expect(copiado, texto);
       expect(find.text('Copiar'), findsNothing, reason: 'a folha fecha');
-      expect(find.text('Texto copiado.'), findsOneWidget);
+      expect(find.text('Texto copiado'), findsOneWidget);
       // O aviso arma o próprio timer; deixa fechar.
       await tester.pump(duracaoDeAviso);
       await tester.pumpAndSettle();
@@ -396,7 +396,7 @@ void main() {
             await montar(tester, brilho, ['genesis', 'exodo']);
             await tester.tap(find.text('Limpar'));
             await tester.pumpAndSettle();
-            expect(find.text('2 livros removidos.'), findsOneWidget);
+            expect(find.text('2 livros removidos'), findsOneWidget);
             await _conferir(tester, diretriz);
             semantica.dispose();
             // O aviso sai por `mostrarAviso`, que arma o próprio timer.

@@ -59,7 +59,7 @@ class _DevocionalAbaDevocionaisState extends State<DevocionalAbaDevocionais> {
       return const DevocionalAvisoVazio(
         icone: FontAwesomeIcons.bookOpen,
         titulo: 'Busque nos devocionais',
-        detalhe: 'Manhã e Noite e Promessas de Deus, na voz de Spurgeon.',
+        detalhe: 'Manhã e Noite e Promessas de Deus, na voz de Spurgeon',
       );
     }
     final lista = _filtrados;
@@ -183,7 +183,7 @@ class _DevocionalAbaDevocionaisState extends State<DevocionalAbaDevocionais> {
                   'Nenhum devocional com "${widget.termoBuscado}" nesta '
                       'data. Apague a data para ver os outros dias.',
                 (false, false) =>
-                  'Nenhum devocional com "${widget.termoBuscado}".',
+                  'Nenhum devocional com "${widget.termoBuscado}"',
               },
             ),
           )

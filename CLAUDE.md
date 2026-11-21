@@ -36,6 +36,29 @@
   [.agents/skills/stop-slop/SKILL.md](.agents/skills/stop-slop/SKILL.md): no
   Windows sem link simbólico, `.claude/skills` vira um arquivo de texto e os
   skills do projeto não aparecem na lista.
+- Sempre que uma tela (`lib/telas/`) ou widget de UI (`lib/widgets/`) for criado
+  ou alterado, após codificar, aplique o skill `unslop` (plugin
+  `unslop@heydamir`; se não aparecer na lista de skills, instale com
+  `claude plugin install unslop@heydamir`) nos arquivos mudados, junto com o
+  `ui-reviewer`. Use só o modo polimento do skill: audite pela lista de
+  sinais (`references/signs.md`), corrija o que achar e leve ideias maiores
+  para o relato como sugestão, sem os nove passes, sem nova direção, sem
+  imagem gerada e sem vídeo. O [DESIGN.md](DESIGN.md) é a marca e vence onde
+  os dois divergirem. Decisões já tomadas, que o unslop não deve reabrir:
+  - Cinzel com os pesos do DESIGN.md (700 nos `display`, 600 nos títulos) e
+    superfícies de pergaminho e couro, não cinza neutro;
+  - a escala de `DevocionalEspacamento`, com 6, 10, 14 e 18 (não é grade de
+    4px);
+  - a saudação "Bom dia, Nome" da aba Hoje e a voz das personas (o
+    `boasVindas` e as instruções de sistema, inclusive o emoji do modelo de
+    descrição do YouTube);
+  - ponto final: avisos curtos, subtítulos curtos, estados vazios e erros de
+    uma linha vão sem ponto; frases descritivas completas, passos de
+    instrução, corpo de diálogo e parágrafos mantêm (PRODUCT.md, "Regras de
+    texto do produto");
+  - itálico em citações, títulos formais de livros e notas; referência da
+    epígrafe em caixa-alta; os gradientes funcionais do filete, da alça de
+    deslize e do esmaecimento no fim do texto.
 
 ## Orquestração por modelo
 

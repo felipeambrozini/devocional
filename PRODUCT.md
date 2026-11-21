@@ -193,8 +193,12 @@ vitoriana dele, tratando o leitor por "tu".
   Sentry nem Analytics; o beacon do `index.html` cobre falhas antes do primeiro
   frame e o Dart cobre o resto (ver `lib/dados/monitoramento.dart`).
 - Regras de texto do produto: sem travessões em nenhum texto do app e sem
-  aspas curvas (só aspas retas); voz vitoriana de Spurgeon tratando o leitor
-  por "tu"; citações bíblicas no registro King James do app.
+  aspas curvas (só aspas retas); sem exclamação em texto da interface (a fala
+  das personas é dela); avisos curtos, subtítulos curtos, estados vazios e
+  erros de uma linha sem ponto final, e frases descritivas completas, passos
+  de instrução, corpo de diálogo e parágrafos com ponto; voz vitoriana de
+  Spurgeon tratando o leitor por "tu"; citações bíblicas no registro King
+  James do app.
 - Decisões recusadas de propósito (não reabrir sem motivo novo): streak de
   dias, cores de marcação, widget na tela inicial, lembretes em iOS (exigiria
   a chave APNs no Console — Android e web já têm), sincronização fora da conta

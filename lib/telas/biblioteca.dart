@@ -32,7 +32,7 @@ class TelaBiblioteca extends StatelessWidget {
             ? const DevocionalAvisoVazio(
                 icone: FontAwesomeIcons.bookBookmark,
                 titulo: 'Biblioteca desativada',
-                detalhe: 'A Biblioteca está desativada temporariamente.',
+                detalhe: 'A Biblioteca está desativada temporariamente',
               )
             : DevocionalLarguraDeLeitura(
                 child: ListView.separated(

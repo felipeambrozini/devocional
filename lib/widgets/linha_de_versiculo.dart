@@ -377,7 +377,7 @@ class _AcoesDoVersiculo {
           final mensageiro = ScaffoldMessenger.of(folha);
           mostrarAvisoNo(
             mensageiro,
-            'Removido dos favoritos.',
+            'Removido dos favoritos',
             rotuloDeAcao: 'Desfazer',
             aoAgir: () =>
                 estado.alternarFavorito(livro, capituloNumero, numero),
@@ -396,7 +396,7 @@ class _AcoesDoVersiculo {
         final navegador = Navigator.of(folha);
         await Clipboard.setData(ClipboardData(text: _textoDoVersiculo));
         navegador.pop();
-        mostrarAvisoNo(mensageiro, 'Versículo copiado.');
+        mostrarAvisoNo(mensageiro, 'Versículo copiado');
       },
     );
   }
@@ -419,7 +419,7 @@ class _AcoesDoVersiculo {
             textoParaAcompanhar: _textoDoVersiculo,
           );
         } catch (_) {
-          mostrarErroNo(mensageiro, 'Não foi possível compartilhar.');
+          mostrarErroNo(mensageiro, 'Não foi possível compartilhar');
         }
         navegador.pop();
       },

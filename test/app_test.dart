@@ -1800,7 +1800,7 @@ void main() {
     leitor.encerrar();
     await tester.pumpAndSettle();
     await leitura;
-    // O fim da leitura mostra "Leitura concluída."; deixa o aviso fechar.
+    // O fim da leitura mostra "Leitura concluída"; deixa o aviso fechar.
     await tester.pump(duracaoDeAviso);
     await tester.pumpAndSettle();
   });

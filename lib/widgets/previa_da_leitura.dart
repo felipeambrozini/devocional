@@ -103,7 +103,7 @@ class DevocionalPreviaDaLeitura extends StatelessWidget {
         }
         final dev = snap.data;
         if (snap.hasError || dev == null) {
-          return _aviso(context, 'Não foi possível carregar esta leitura.');
+          return _aviso(context, 'Não foi possível carregar esta leitura');
         }
 
         final spans = spansDeCitacao(

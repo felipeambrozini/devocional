@@ -164,7 +164,7 @@ void main() {
     await tester.pump();
 
     expect(instalacao.pedidos, 1);
-    expect(find.text('Devocional instalado.'), findsOneWidget);
+    expect(find.text('Devocional instalado'), findsOneWidget);
     expect(find.byType(AlertDialog), findsNothing);
     // Deixa a snackbar fechar sozinha: o timer dela não pode sobrar.
     await tester.pump(const Duration(seconds: 4));
@@ -182,7 +182,7 @@ void main() {
     await tester.pump();
 
     expect(instalacao.pedidos, 1);
-    expect(find.text('Devocional instalado.'), findsNothing);
+    expect(find.text('Devocional instalado'), findsNothing);
   });
 
   testWidgets('se a janela do navegador falha, mostra o caminho pelo menu', (

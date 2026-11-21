@@ -70,7 +70,7 @@ class DevocionalAvisoDeErro extends StatelessWidget {
   const DevocionalAvisoDeErro({
     super.key,
     required this.aoTentarDeNovo,
-    this.detalhe = 'Verifique a conexão e tente de novo.',
+    this.detalhe = 'Verifique a conexão e tente de novo',
   });
 
   /// A recuperação fica na tela onde a falha aconteceu: mandar fechar o

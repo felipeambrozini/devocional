@@ -1,15 +1,13 @@
 /// Cada token guarda o próprio valor em pixels: é o conjunto de números que o
 /// layout pode usar, não uma palavra que esconde o número. Isso permite trocar
 /// o valor de um degrau inteiro num lugar só e deixa explícito no código o
-/// espaço usado. A escala cresce de 2 em 2 até 6, salta para 8 e depois anda
+/// espaço usado. A escala vai de 2 a 6 (2, 4, 6), salta para 8 e depois anda
 /// por múltiplos de 2 (10, 12, 14, 16, 18, 20), refletindo o que as telas
 /// realmente precisam; a partir de 24 sobe em saltos de 8, e os degraus maiores
 /// (40 a 200) ficam reservados para vãos estruturais e áreas de respiro.
 abstract final class DevocionalEspacamento {
   static const double sp2 = 2.0;
-  static const double sp3 = 3.0;
   static const double sp4 = 4.0;
-  static const double sp5 = 5.0;
   static const double sp6 = 6.0;
   static const double sp8 = 8.0;
   static const double sp10 = 10.0;

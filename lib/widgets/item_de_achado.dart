@@ -56,7 +56,7 @@ class DevocionalItemDeAchado extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(height: DevocionalEspacamento.sp5),
+            const SizedBox(height: DevocionalEspacamento.sp4),
             Text.rich(
               destacar(texto, termo, tema, cor),
               maxLines: 4,

@@ -213,7 +213,7 @@ void main() {
       await tester.tap(find.byTooltip('Delete').first);
       await tester.pumpAndSettle();
 
-      expect(find.text('Gênesis removido.'), findsOneWidget);
+      expect(find.text('Gênesis removido'), findsOneWidget);
       await tester.tap(find.text('Desfazer'));
       await tester.pumpAndSettle();
 
@@ -230,7 +230,7 @@ void main() {
       await tester.tap(find.text('Limpar'));
       await tester.pumpAndSettle();
 
-      expect(find.text('2 livros removidos.'), findsOneWidget);
+      expect(find.text('2 livros removidos'), findsOneWidget);
       await tester.tap(find.text('Desfazer'));
       await tester.pumpAndSettle();
 

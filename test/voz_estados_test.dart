@@ -299,7 +299,7 @@ void main() {
         expect(
           recebidas,
           isEmpty,
-          reason: 'uma pausa de fora não é um fim: não há "Leitura concluída."',
+          reason: 'uma pausa de fora não é um fim: não há "Leitura concluída"',
         );
 
         final retomada = Voz.instancia.alternar('capitulo:l.12');
@@ -409,7 +409,7 @@ void main() {
         expect(
           recebidas,
           isEmpty,
-          reason: 'não tocou, não há fim: nada de "Leitura concluída."',
+          reason: 'não tocou, não há fim: nada de "Leitura concluída"',
         );
         await leitura;
 

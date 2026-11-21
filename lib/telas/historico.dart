@@ -48,7 +48,7 @@ class TelaHistorico extends StatelessWidget {
     // awaits porque o contexto pode não estar mais montado aqui.
     mostrarAvisoNo(
       mensageiro,
-      'Conversa apagada.',
+      'Conversa apagada',
       rotuloDeAcao: 'Desfazer',
       aoAgir: () => estado.restaurarConversa(persona.id, conversa),
     );
@@ -72,7 +72,7 @@ class TelaHistorico extends StatelessWidget {
     // Mesmo Desfazer do apagar uma (ver _apagarUma): bulk também tem volta.
     mostrarAvisoNo(
       mensageiro,
-      'Conversas apagadas.',
+      'Conversas apagadas',
       rotuloDeAcao: 'Desfazer',
       aoAgir: () => estado.restaurarConversas(persona.id, apagadas),
     );

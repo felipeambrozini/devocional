@@ -203,7 +203,7 @@ class DevocionalCartaoDeLeitura extends StatelessWidget {
                 onTap: () async {
                   await Clipboard.setData(ClipboardData(text: texto));
                   if (folha.mounted) Navigator.pop(folha);
-                  mostrarAvisoNo(mensageiro, 'Texto copiado.');
+                  mostrarAvisoNo(mensageiro, 'Texto copiado');
                 },
               ),
               ListTile(
@@ -276,7 +276,7 @@ class DevocionalCartaoDeLeitura extends StatelessWidget {
         textoParaAcompanhar: _textoParaCompartilhar,
       );
     } catch (_) {
-      mostrarErroNo(mensageiro, 'Não foi possível compartilhar.');
+      mostrarErroNo(mensageiro, 'Não foi possível compartilhar');
     }
   }
 

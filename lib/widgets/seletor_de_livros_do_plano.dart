@@ -136,7 +136,7 @@ class _DevocionalSeletorDeLivrosDoPlanoState
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('Nenhum livro encontrado.'),
+                      const Text('Nenhum livro encontrado'),
                       const SizedBox(height: DevocionalEspacamento.sp8),
                       DevocionalBotaoTerciario(
                         onPressed: () => setState(_busca.clear),

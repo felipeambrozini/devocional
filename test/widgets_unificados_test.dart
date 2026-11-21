@@ -27,7 +27,7 @@ Future<void> _montar(
   Brightness brilho,
   List<Widget> filhos,
 ) async {
-  tester.view.physicalSize = const Size(400, 2400);
+  tester.view.physicalSize = const Size(400, 3000);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
@@ -114,6 +114,7 @@ List<Widget> _todos() => [
   const DevocionalBotaoDeEntrar(),
   const DevocionalBotaoDeEntrar(rotulo: 'Entrar', discreto: true),
   SizedBox(height: 320, child: DevocionalAvisoDeErro(aoTentarDeNovo: () {})),
+  const DevocionalBoasVindasDialogo(),
 ];
 
 void main() {
@@ -139,7 +140,7 @@ void main() {
         _cartao(carregarTexto: () async => throw StateError('sem asset')),
       ]);
       expect(
-        find.text('Não foi possível carregar este texto.'),
+        find.text('Não foi possível carregar este texto'),
         findsOneWidget,
       );
     });
@@ -236,7 +237,7 @@ void main() {
           ),
         ),
       ]);
-      expect(find.text('Verifique a conexão e tente de novo.'), findsOneWidget);
+      expect(find.text('Verifique a conexão e tente de novo'), findsOneWidget);
       expect(find.text('A busca falhou. Tente de novo.'), findsOneWidget);
     });
   });

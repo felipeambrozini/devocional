@@ -56,7 +56,7 @@ class _DevocionalLivrosEscolhidosState
     // do Flutter nunca fecha sozinho (ver `funcoes/aviso.dart`).
     mostrarAviso(
       context,
-      '${nomeDoLivro(slug)} removido.',
+      '${nomeDoLivro(slug)} removido',
       rotuloDeAcao: 'Desfazer',
       aoAgir: () => restaurar([slug], indice < 0 ? 0 : indice),
     );
@@ -71,7 +71,7 @@ class _DevocionalLivrosEscolhidosState
     if (restaurar == null) return;
     mostrarAviso(
       context,
-      '${backup.length} livros removidos.',
+      '${backup.length} livros removidos',
       rotuloDeAcao: 'Desfazer',
       aoAgir: () => restaurar(backup, 0),
     );

@@ -167,7 +167,7 @@ class _ListaDeLivros extends StatelessWidget {
                 DevocionalEspacamento.sp8,
               ),
               child: Text(
-                'Nenhum livro com "$filtro".',
+                'Nenhum livro com "$filtro"',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             )

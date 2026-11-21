@@ -11,7 +11,9 @@ class DevocionalBoasVindasDialogo extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       scrollable: true,
-      title: const Text('Bem-vindo ao Devocional!'),
+      // Sem isto o Android e a web anunciam a rota como "Alerta".
+      semanticLabel: 'Boas-vindas ao Devocional',
+      title: const Text('Boas-vindas ao Devocional'),
       content: const Text(
         'Sua conta já vem com o plano "A Vida de Jesus em 30 dias": os quatro '
         'evangelhos em harmonia, um trecho por dia.\n\n'

@@ -87,9 +87,7 @@ rounded:
   pill: "30px"
 spacing:
   sp2: "2px"
-  sp3: "3px"
   sp4: "4px"
-  sp5: "5px"
   sp6: "6px"
   sp8: "8px"
   sp10: "10px"
@@ -330,8 +328,8 @@ devocional, introdução) vive dentro de `LarguraDeLeitura` com máximo de
 **720px**, centralizado — nunca mais larga, em qualquer janela.
 
 O espaço sai de `DevocionalEspacamento` (`lib/estilo/espacamento.dart`), em que
-cada token guarda o próprio valor em pixels: os miúdos `sp2`, `sp3`, `sp4`,
-`sp5`, `sp6` (folgas de ícone, retrato e texto); o miolo do layout de 2 em 2,
+cada token guarda o próprio valor em pixels: os miúdos `sp2`, `sp4`, `sp6`
+(folgas de ícone, retrato e texto); o miolo do layout de 2 em 2,
 `sp8` a `sp20` (8, 10, 12, 14, 16, 18, 20; 16 é o padding do cartão, 20 o do
 devocional e o horizontal do leitor); depois `sp24`, `sp32` (fundo da lista),
 `sp40`, `sp48`, `sp56`, `sp64`, e `sp80` a `sp200` para vãos estruturais e áreas

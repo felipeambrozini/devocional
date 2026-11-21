@@ -28,7 +28,7 @@ class DevocionalRetratoDePersona extends StatelessWidget {
 
   /// A folga entre o anel dourado e a foto: sem ela a foto preenche o círculo
   /// até a borda e o cabelo encosta no aro. As entradas de conversa usam a
-  /// apertada; o botão de voz usa [DevocionalEspacamento.sp3].
+  /// apertada; o botão de voz usa [DevocionalEspacamento.sp4].
   final double folga;
 
   /// Dentro de um botão cujo rótulo já diz o que faz, a imagem é enfeite:
