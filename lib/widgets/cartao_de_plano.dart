@@ -52,7 +52,7 @@ class DevocionalCartaoDePlano extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: Text(plano.titulo, style: tema.titleMedium)),
+                  Expanded(child: Text(plano.titulo, style: tema.titleLarge)),
                   if (plano.compartilhado)
                     Padding(
                       padding: const EdgeInsets.only(

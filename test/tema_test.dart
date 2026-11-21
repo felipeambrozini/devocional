@@ -179,14 +179,28 @@ void main() {
         );
       });
 
+      test('$nome: o fio do versículo selecionado passa de 3:1 contra a '
+          'página e contra o próprio fundo', () {
+        // WCAG 1.4.11: o indicador de estado precisa de 3:1. O fio é o único
+        // sinal visual do selecionado no modo de seleção (ver
+        // linha_de_versiculo.dart); com o outline a 50% ele caía a 1,3:1.
+        final cor = construirTema(brilho: brilho).colorScheme;
+        expect(contraste(cor.primary, cor.surface), greaterThan(3));
+        expect(
+          contraste(cor.primary, cor.surfaceContainerHighest),
+          greaterThan(3),
+        );
+      });
+
       test('$nome: a letra vermelha passa de 4,5:1 em todo fundo de '
           'versículo, inclusive recuada', () {
-        // Fundo liso, marcado (outline a 18%) e selecionado (primary a 18%),
-        // com o vermelho cheio e a 0.9 de fora da faixa (ver biblia.dart).
+        // Fundo liso, marcado (outline a 18%) e selecionado
+        // (surfaceContainerHighest), com o vermelho cheio e a 0.9 de fora da
+        // faixa (ver biblia.dart).
         final fundos = [
           cor.surface,
           Color.alphaBlend(cor.outline.withValues(alpha: 0.18), cor.surface),
-          Color.alphaBlend(cor.primary.withValues(alpha: 0.18), cor.surface),
+          cor.surfaceContainerHighest,
         ];
         for (final fundo in fundos) {
           for (final alfa in [1.0, 0.9]) {

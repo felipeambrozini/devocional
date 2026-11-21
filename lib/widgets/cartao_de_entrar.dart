@@ -39,11 +39,15 @@ class DevocionalCartaoDeEntrar extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Container: sem ele o cabeçalho engolia a descrição
+                    // abaixo, e o leitor de tela lia o parágrafo inteiro
+                    // como título.
                     Semantics(
+                      container: true,
                       header: true,
                       child: Text(
                         titulo,
-                        style: Theme.of(context).textTheme.titleMedium,
+                        style: Theme.of(context).textTheme.titleLarge,
                         textAlign: TextAlign.center,
                       ),
                     ),

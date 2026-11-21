@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:material_ui/material_ui.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -7,17 +8,30 @@ import '../estilo/espacamento.dart';
 import 'widgets.dart';
 
 /// Seletor em duas etapas: escolhe o livro, depois o capítulo numa grade.
+///
+/// Abre já na grade do livro aberto, com "Todos os livros" para trocar de
+/// livro: é o único seletor da Bíblia. Antes havia dois (o título da barra
+/// trocava o livro, o título no corpo abria a grade de capítulos), e quem
+/// chegava não sabia qual tocar.
 class DevocionalSeletorDeLivro extends StatefulWidget {
-  const DevocionalSeletorDeLivro({super.key, required this.livroAtual});
+  const DevocionalSeletorDeLivro({
+    super.key,
+    required this.livroAtual,
+    this.capituloAtual,
+  });
 
   final String livroAtual;
+
+  /// O capítulo aberto, marcado na grade do livro atual como o chip
+  /// escolhido.
+  final int? capituloAtual;
 
   @override
   State<DevocionalSeletorDeLivro> createState() => _SeletorDeLivroState();
 }
 
 class _SeletorDeLivroState extends State<DevocionalSeletorDeLivro> {
-  Livro? _escolhido;
+  late Livro? _escolhido = livroPorSlug(widget.livroAtual);
   final _controle = TextEditingController();
   String _filtro = '';
 
@@ -45,9 +59,15 @@ class _SeletorDeLivroState extends State<DevocionalSeletorDeLivro> {
             child: Column(
               children: [
                 const SizedBox(height: DevocionalEspacamento.sp12),
-                Text(
-                  escolhido == null ? 'Escolha o livro' : escolhido.nome,
-                  style: Theme.of(context).textTheme.headlineSmall,
+                // liveRegion: trocar da grade para a lista (e de volta) muda
+                // a folha inteira, e o leitor de tela precisa ouvir isso.
+                Semantics(
+                  header: true,
+                  liveRegion: true,
+                  child: Text(
+                    escolhido == null ? 'Escolha o livro' : escolhido.nome,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
                 ),
                 const SizedBox(height: DevocionalEspacamento.sp8),
                 const DevocionalFilete(),
@@ -64,6 +84,11 @@ class _SeletorDeLivroState extends State<DevocionalSeletorDeLivro> {
                     child: DevocionalBusca(
                       controller: _controle,
                       hintText: 'Buscar livro',
+                      // Na web, quem tocou "Todos os livros" pelo teclado perde
+                      // o botão, que sai da tela; o foco vai para a busca em
+                      // vez de cair no começo da folha. No celular abriria o
+                      // teclado por cima da lista.
+                      autofocus: kIsWeb,
                       onChanged: (v) => setState(() => _filtro = v.trim()),
                     ),
                   ),
@@ -91,6 +116,9 @@ class _SeletorDeLivroState extends State<DevocionalSeletorDeLivro> {
                   )
                 : _GradeDeCapitulos(
                     livro: escolhido,
+                    atual: escolhido.slug == widget.livroAtual
+                        ? widget.capituloAtual
+                        : null,
                     ao: (c) => Navigator.pop(context, (escolhido.slug, c)),
                   ),
           ),
@@ -193,48 +221,12 @@ class _ListaDeLivros extends StatelessWidget {
   );
 }
 
-/// Folha com só a grade de capítulos do livro aberto: o atalho de um passo
-/// para quem já está lendo. Ver `_abrirGradeDeCapitulos` em `biblia.dart`.
-class DevocionalFolhaDeCapitulos extends StatelessWidget {
-  const DevocionalFolhaDeCapitulos({super.key, required this.livro});
-
-  final Livro livro;
-
-  @override
-  Widget build(BuildContext context) {
-    // Desconta a alça de arraste do tema: 55% + alça passaria do limite de
-    // 9/16 da folha e o encolhimento silencioso sairia da grade.
-    final altura =
-        MediaQuery.sizeOf(context).height * 0.55 - kMinInteractiveDimension;
-    return SizedBox(
-      height: altura,
-      child: Column(
-        children: [
-          const SizedBox(height: DevocionalEspacamento.sp12),
-          Text(
-            'Capítulo de ${livro.nome}',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: DevocionalEspacamento.sp8),
-          const DevocionalFilete(),
-          const SizedBox(height: DevocionalEspacamento.sp8),
-          Expanded(
-            child: _GradeDeCapitulos(
-              livro: livro,
-              ao: (c) => Navigator.pop(context, c),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _GradeDeCapitulos extends StatelessWidget {
-  const _GradeDeCapitulos({required this.livro, required this.ao});
+  const _GradeDeCapitulos({required this.livro, required this.ao, this.atual});
 
   final Livro livro;
   final ValueChanged<int> ao;
+  final int? atual;
 
   @override
   Widget build(BuildContext context) {
@@ -247,24 +239,42 @@ class _GradeDeCapitulos extends StatelessWidget {
         mainAxisSpacing: DevocionalEspacamento.sp8,
       ),
       itemCount: livro.capitulos,
-      itemBuilder: (context, i) => OutlinedButton(
-        onPressed: () => ao(i + 1),
-        // Fundo tonal: o fio a 50% sozinho mal separava as células na folha.
-        style: OutlinedButton.styleFrom(
-          padding: EdgeInsets.zero,
-          backgroundColor: Theme.of(
-            context,
-          ).colorScheme.surfaceContainerHighest,
-        ),
-        // Na escala de leitura máxima o "150" de Salmos não cabia na célula.
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            '${i + 1}',
-            style: Theme.of(context).textTheme.bodyMedium,
+      itemBuilder: (context, i) {
+        final cor = Theme.of(context).colorScheme;
+        final numero = i + 1;
+        // O capítulo aberto segue o chip escolhido: metal cheio com a letra
+        // do contrário por cima.
+        final eAtual = numero == atual;
+        // O rótulo "Capítulo N" mora dentro do botão, que funde a semântica
+        // do filho: assim o nó do botão leva o rótulo, o selecionado e as
+        // marcas de foco e toque dele. O número desenhado sai da semântica.
+        return OutlinedButton(
+          onPressed: () => ao(numero),
+          // Fundo tonal: o fio a 50% sozinho mal separava as células na folha.
+          style: OutlinedButton.styleFrom(
+            padding: EdgeInsets.zero,
+            backgroundColor: eAtual ? cor.primary : cor.surfaceContainerHighest,
+            foregroundColor: eAtual ? cor.onPrimary : null,
           ),
-        ),
-      ),
+          child: Semantics(
+            label: 'Capítulo $numero',
+            selected: eAtual,
+            child: ExcludeSemantics(
+              // Na escala de leitura máxima o "150" de Salmos não cabia na
+              // célula.
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  '$numero',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: eAtual ? cor.onPrimary : null,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

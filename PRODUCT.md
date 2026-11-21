@@ -136,9 +136,9 @@ vitoriana dele, tratando o leitor por "tu".
   essas linhas por textos de Spurgeon.
 - Comentário de Spurgeon por versículo: a folha de ações do versículo na
   Bíblia (Copiar, Compartilhar, Anotar, Favoritar) mostra o comentário daquele versículo,
-  nos 66 livros. O mesmo comentário aparece também direto no leitor, abaixo de
-  cada versículo, para todos; só o admin o desliga (interruptor do painel, como
-  os outros recursos), sem escolha do leitor nos ajustes.
+  nos 66 livros. Quem ligar "Comentário junto do texto" nos ajustes (desligado
+  por padrão) o vê também direto no leitor, abaixo de cada versículo; o
+  interruptor do painel admin tira a opção de todos.
 - Texto selecionável e copiável na Introdução; no Devocional e no capítulo
   da Biblioteca, só fora da web (na web o clique que tira uma seleção abriria
   a folha de ações do parágrafo). Onde há seleção, o menu dela (o clique
@@ -277,8 +277,8 @@ vitoriana dele, tratando o leitor por "tu".
 - Tema claro e escuro completos, seguindo o aparelho por padrão.
 - Palavras de Deus (Pai, Jesus e Espírito Santo) em vermelho no leitor da
   Bíblia, ligado por padrão e desligável na folha de ajustes. Os dois
-  vermelhos (`DevocionalCores.carmim` e `carmimClaro`) passam de 5:1 em todo
-  fundo de versículo, inclusive o selecionado.
+  vermelhos (`DevocionalCores.carmim` e `carmimClaro`) passam de 4,5:1 em
+  todo fundo de versículo, inclusive o selecionado.
 - Suporte à navegação por teclado no desktop (setas trocam capítulo, Ctrl+F
   abre a busca).
 - Os chevrons de capítulo no rodapé do leitor existem só na web e podem ser

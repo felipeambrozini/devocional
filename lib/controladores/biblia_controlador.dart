@@ -231,26 +231,15 @@ class BibliaControlador extends ChangeNotifier {
     MaterialPageRoute(builder: (_) => const TelaBusca()),
   );
 
-  /// Grade de capítulos do livro aberto, direto pelo título do capítulo no
-  /// corpo: um passo em vez dos dois do seletor de livros, e o caminho que
-  /// não depende do deslize (que é invisível para quem chegou agora).
-  Future<void> abrirGradeDeCapitulos(BuildContext context) async {
-    final livroEscolhido = livroAtual;
-    final capituloEscolhido = await showModalBottomSheet<int>(
-      context: context,
-      builder: (_) => DevocionalFolhaDeCapitulos(livro: livroEscolhido),
-    );
-    if (capituloEscolhido != null && context.mounted) {
-      irPara(context, livroEscolhido.slug, capituloEscolhido);
-    }
-  }
-
+  /// O seletor abre na grade de capítulos do livro aberto; "Todos os
+  /// livros" volta à lista para trocar de livro.
   Future<void> abrirSeletor(BuildContext context) async {
     final destino = await showModalBottomSheet<(String, int)>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (_) => DevocionalSeletorDeLivro(livroAtual: livro),
+      builder: (_) =>
+          DevocionalSeletorDeLivro(livroAtual: livro, capituloAtual: capitulo),
     );
     if (destino != null && context.mounted) {
       irPara(context, destino.$1, destino.$2);

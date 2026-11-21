@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../dados/config_admin.dart';
+import '../dados/estado.dart';
 import '../dados/nuvem.dart';
 import '../dados/recursos.dart';
 import '../widgets/widgets.dart';
@@ -18,7 +19,12 @@ class TelaConversas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: DevocionalAppBar(title: const Text('Conversas')),
+      // Ajustes em toda aba: o tema e o tamanho do texto valem aqui também, e
+      // Conversas era a única sem o botão.
+      appBar: DevocionalAppBar(
+        title: const Text('Conversas'),
+        actions: [DevocionalBotaoDeAjustes(estado: EscopoDoEstado.de(context))],
+      ),
       body: DevocionalLarguraDeLeitura(
         // Recursos.conversas depende do e-mail logado (ver Nuvem): sem
         // ouvir a nuvem, entrar ou sair da conta com a aba aberta deixava o

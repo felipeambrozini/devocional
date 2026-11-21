@@ -135,7 +135,9 @@ void main() {
 
         expect(find.text('1 resultado'), findsOneWidget);
 
-        await tester.tap(find.textContaining('Promessas de Deus'));
+        // "Promessas de Deus ·" é o título do achado; sem o ponto, o finder
+        // pegaria também o chip do filtro de leitura.
+        await tester.tap(find.textContaining('Promessas de Deus ·'));
         await tester.pumpAndSettle();
 
         expect(find.byType(TelaDevocional), findsOneWidget);

@@ -303,7 +303,7 @@ class _TelaSobreState extends State<TelaSobre> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Felipe Ambrozini', style: tema.titleMedium),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: DevocionalEspacamento.sp2),
                             Text(
                               'Criador do app',
                               style: tema.labelMedium?.copyWith(

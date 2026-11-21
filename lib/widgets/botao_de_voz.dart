@@ -223,75 +223,83 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
                         : pausado
                         ? () => _retomar(context, voz)
                         : () => _alternar(context, voz),
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        DevocionalEspacamento.sp6,
-                        DevocionalEspacamento.sp6,
-                        DevocionalEspacamento.sp16,
-                        DevocionalEspacamento.sp6,
+                    // Sem o mínimo, a pílula preparando (sem retrato e sem os
+                    // botões de velocidade e de encerrar) ficava com uns 32 dp
+                    // de alvo: só o ícone de 20 e o padding de 12.
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        minHeight: DevocionalToque.minimo,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // O retrato é o convite: quem já ouve (ou está
-                          // pausado no meio) não precisa do rosto de novo ao
-                          // lado do rótulo — a leitura em andamento é ação,
-                          // não apresentação, e um sinal a menos deixa o
-                          // estado falar mais alto.
-                          if (!preparando && !ativo && !pausado) ...[
-                            // O mesmo retrato das entradas de conversa
-                            // ([DevocionalRetratoDePersona]): aro dourado, e o cabelo,
-                            // que encosta na borda de cima da foto, preservado
-                            // pelo corte alinhado ao topo.
-                            DevocionalRetratoDePersona(
-                              persona: personaSpurgeon,
-                              folga: DevocionalEspacamento.sp3,
-                              decorativo: true,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          DevocionalEspacamento.sp6,
+                          DevocionalEspacamento.sp6,
+                          DevocionalEspacamento.sp16,
+                          DevocionalEspacamento.sp6,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // O retrato é o convite: quem já ouve (ou está
+                            // pausado no meio) não precisa do rosto de novo ao
+                            // lado do rótulo — a leitura em andamento é ação,
+                            // não apresentação, e um sinal a menos deixa o
+                            // estado falar mais alto.
+                            if (!preparando && !ativo && !pausado) ...[
+                              // O mesmo retrato das entradas de conversa
+                              // ([DevocionalRetratoDePersona]): aro dourado, e o cabelo,
+                              // que encosta na borda de cima da foto, preservado
+                              // pelo corte alinhado ao topo.
+                              DevocionalRetratoDePersona(
+                                persona: personaSpurgeon,
+                                folga: DevocionalEspacamento.sp3,
+                                decorativo: true,
+                              ),
+                              const SizedBox(width: DevocionalEspacamento.sp10),
+                            ],
+                            FaIcon(
+                              ativo
+                                  ? FontAwesomeIcons.pause
+                                  : preparando
+                                  ? FontAwesomeIcons.hourglassStart
+                                  : FontAwesomeIcons.play,
+                              size: 20,
+                              color: cor.primary,
                             ),
-                            const SizedBox(width: DevocionalEspacamento.sp10),
-                          ],
-                          FaIcon(
-                            ativo
-                                ? FontAwesomeIcons.pause
-                                : preparando
-                                ? FontAwesomeIcons.hourglassStart
-                                : FontAwesomeIcons.play,
-                            size: 20,
-                            color: cor.primary,
-                          ),
-                          const SizedBox(width: DevocionalEspacamento.sp6),
-                          // Flexible com reticências: em escala de texto 2x um
-                          // rótulo comprido ("O pregador está lendo…") não
-                          // pode estourar a largura da tela. Semantics: o
-                          // rótulo completo já vive no Semantics acima, e o
-                          // texto visível repetido faria o leitor de tela ler
-                          // a frase duas vezes.
-                          // Em repouso o rótulo quebra em até duas linhas em
-                          // vez de cortar: com fonte grande, "Ouvir o
-                          // comentário" virava "Ouvir o co…" e perdia
-                          // justamente a palavra que diz o que se ouve.
-                          Flexible(
-                            child: ExcludeSemantics(
-                              child: Text(
-                                visivel,
-                                maxLines: repouso ? 2 : null,
-                                overflow: repouso
-                                    ? null
-                                    : TextOverflow.ellipsis,
-                                style: tema.labelLarge?.copyWith(
-                                  color: ativo || pausado
-                                      ? cor.primary
-                                      : cor.onSurfaceVariant,
+                            const SizedBox(width: DevocionalEspacamento.sp6),
+                            // Flexible com reticências: em escala de texto 2x um
+                            // rótulo comprido ("O pregador está lendo…") não
+                            // pode estourar a largura da tela. Semantics: o
+                            // rótulo completo já vive no Semantics acima, e o
+                            // texto visível repetido faria o leitor de tela ler
+                            // a frase duas vezes.
+                            // Em repouso o rótulo quebra em até duas linhas em
+                            // vez de cortar: com fonte grande, "Ouvir o
+                            // comentário" virava "Ouvir o co…" e perdia
+                            // justamente a palavra que diz o que se ouve.
+                            Flexible(
+                              child: ExcludeSemantics(
+                                child: Text(
+                                  visivel,
+                                  maxLines: repouso ? 2 : null,
+                                  overflow: repouso
+                                      ? null
+                                      : TextOverflow.ellipsis,
+                                  style: tema.labelLarge?.copyWith(
+                                    color: ativo || pausado
+                                        ? cor.primary
+                                        : cor.onSurfaceVariant,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          if (ativo || pausado) _BotaoDeVelocidade(voz: voz),
-                          // Tocando ou pausada, a sessão precisa de um jeito
-                          // de ser encerrada de vez sem trocar de página.
-                          if (ativo || pausado)
-                            _BotaoDeEncerrar(voz: voz, pausado: pausado),
-                        ],
+                            if (ativo || pausado) _BotaoDeVelocidade(voz: voz),
+                            // Tocando ou pausada, a sessão precisa de um jeito
+                            // de ser encerrada de vez sem trocar de página.
+                            if (ativo || pausado)
+                              _BotaoDeEncerrar(voz: voz, pausado: pausado),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -451,7 +459,9 @@ class _BotaoDeVelocidade extends StatelessWidget {
     final cor = Theme.of(context).colorScheme;
     final rotulo = rotuloDaVelocidade(voz.velocidade);
     return Padding(
-      padding: const EdgeInsetsDirectional.only(start: 6),
+      padding: const EdgeInsetsDirectional.only(
+        start: DevocionalEspacamento.sp6,
+      ),
       child: Tooltip(
         message: 'Velocidade da leitura',
         child: Semantics(
@@ -499,7 +509,9 @@ class _BotaoDeEncerrar extends StatelessWidget {
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsetsDirectional.only(start: 6),
+      padding: const EdgeInsetsDirectional.only(
+        start: DevocionalEspacamento.sp6,
+      ),
       child: Tooltip(
         message: pausado ? 'Encerrar a leitura pausada' : 'Encerrar a leitura',
         child: InkWell(

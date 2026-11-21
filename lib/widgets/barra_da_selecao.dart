@@ -72,8 +72,12 @@ class DevocionalBarraDaSelecao extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
+    // A barra flutua sobre o texto sem sombra: tom mais alto e fio do metal
+    // em cima, como o menu e o aviso (Elevation & Depth). surfaceContainerHigh
+    // não existe no esquema e caía no tom da página, sem separação nenhuma.
     return Material(
-      color: cor.surfaceContainerHigh,
+      color: cor.surfaceContainerHighest,
+      shape: Border(top: BorderSide(color: cor.outline)),
       child: SafeArea(
         top: false,
         child: Padding(

@@ -36,7 +36,8 @@ abstract final class DevocionalCores {
   // Letra vermelha das falas de Deus (papel `tertiary`). Carmim de impressão
   // no claro; no escuro um vermelho claro, porque o carmim sobre marrom fica
   // abaixo de 3:1. Pior caso: versículo fora da faixa do cronograma (alfa 0.9)
-  // sobre o fundo de selecionado, 4,6:1 nos dois temas.
+  // sobre o fundo de selecionado (surfaceContainerHighest), 4,95:1 no escuro
+  // e 5,3:1 no claro.
   static const carmim = Color(0xFFA01C1C); // 7,0:1 sobre o pergaminho
   static const carmimClaro = Color(0xFFF2998E); // 7,6:1 sobre o fundo
 }

@@ -4,13 +4,16 @@ import 'package:devocional/dados/estado.dart';
 import 'package:devocional/dados/leitura_de_livros.dart';
 import 'package:devocional/dados/modelos.dart';
 import 'package:devocional/dados/personas.dart';
+import 'package:devocional/dados/planos.dart';
 import 'package:devocional/dados/recursos.dart';
 import 'package:devocional/dados/voz.dart';
 import 'package:devocional/estilo/tema.dart';
 import 'package:devocional/funcoes/aviso.dart';
 import 'package:devocional/telas/biblia.dart';
+import 'package:devocional/telas/conversas.dart';
 import 'package:devocional/telas/historico.dart';
 import 'package:devocional/widgets/widgets.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:material_ui/material_ui.dart';
@@ -171,6 +174,43 @@ void main() {
         semantica.dispose();
       },
     );
+
+    testWidgets('Copiar na folha do texto copia e avisa "Texto copiado."', (
+      tester,
+    ) async {
+      await montar(tester, Brightness.dark);
+      // Handler próprio no canal de plataforma, como em app_test.dart: o
+      // ambiente de teste nunca responde Clipboard.getData.
+      String? copiado;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (chamada) async {
+          if (chamada.method == 'Clipboard.setData') {
+            copiado = (chamada.arguments as Map)['text'] as String?;
+          }
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+
+      await tester.tap(find.text(texto));
+      await tester.pumpAndSettle();
+      expect(find.text('Texto copiado.'), findsNothing);
+      await tester.tap(find.text('Copiar'));
+      await tester.pumpAndSettle();
+
+      expect(copiado, texto);
+      expect(find.text('Copiar'), findsNothing, reason: 'a folha fecha');
+      expect(find.text('Texto copiado.'), findsOneWidget);
+      // O aviso arma o próprio timer; deixa fechar.
+      await tester.pump(duracaoDeAviso);
+      await tester.pumpAndSettle();
+    });
 
     for (final MapEntry(key: nomeDoTema, value: brilho) in _temas.entries) {
       for (final MapEntry(key: nomeDaDiretriz, value: diretriz)
@@ -481,6 +521,614 @@ void main() {
           await _conferir(tester, diretriz);
           semantica.dispose();
         });
+      }
+    }
+  });
+
+  group('DevocionalAbaDevocionais com os chips de leitura', () {
+    const achados = [
+      AchadoDevocional(
+        leitura: 'manha',
+        data: '01-01',
+        titulo: 'A graça da manhã',
+        texto: 'A graça de Deus é nova a cada manhã.',
+      ),
+      AchadoDevocional(
+        leitura: 'noite',
+        data: '02-01',
+        titulo: 'A graça da noite',
+        texto: 'Repouse na graça antes de dormir.',
+      ),
+      AchadoDevocional(
+        leitura: 'promessas',
+        data: '29-02',
+        titulo: 'A graça prometida',
+        texto: 'A minha graça te basta.',
+      ),
+    ];
+
+    Future<void> montar(WidgetTester tester, Brightness brilho) async {
+      _telaDeCelular(tester);
+      final estado = Estado(await SharedPreferences.getInstance());
+      await tester.pumpWidget(
+        _app(
+          brilho,
+          estado,
+          Scaffold(
+            body: DevocionalAbaDevocionais(
+              termoBuscado: 'graça',
+              achados: achados,
+              buscando: false,
+              erro: false,
+              aoTentarDeNovo: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    for (final MapEntry(key: nomeDoTema, value: brilho) in _temas.entries) {
+      for (final MapEntry(key: nomeDaDiretriz, value: diretriz)
+          in _diretrizes.entries) {
+        testWidgets('no tema $nomeDoTema, com Todas escolhida, atende '
+            '$nomeDaDiretriz', (tester) async {
+          final semantica = tester.ensureSemantics();
+          await montar(tester, brilho);
+          await _conferir(tester, diretriz);
+          semantica.dispose();
+        });
+
+        testWidgets('no tema $nomeDoTema, com Noite escolhida, atende '
+            '$nomeDaDiretriz', (tester) async {
+          final semantica = tester.ensureSemantics();
+          await montar(tester, brilho);
+          await tester.tap(find.widgetWithText(ChoiceChip, 'Noite'));
+          await tester.pumpAndSettle();
+          expect(find.text('1 resultado'), findsOneWidget);
+          await _conferir(tester, diretriz);
+          semantica.dispose();
+        });
+      }
+    }
+  });
+
+  group('DevocionalSeletorDeLivro aberto na grade', () {
+    Future<void> montar(
+      WidgetTester tester,
+      Brightness brilho, {
+      String livroAtual = 'rute',
+      int? capituloAtual,
+    }) async {
+      _telaDeCelular(tester);
+      final estado = Estado(await SharedPreferences.getInstance());
+      await tester.pumpWidget(
+        _app(
+          brilho,
+          estado,
+          Scaffold(
+            body: DevocionalSeletorDeLivro(
+              livroAtual: livroAtual,
+              capituloAtual: capituloAtual,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('a célula do capítulo atual se anuncia como "Capítulo N", '
+        'selecionada, e só ela', (tester) async {
+      final semantica = tester.ensureSemantics();
+      await montar(tester, Brightness.dark, capituloAtual: 3);
+      final atual = find.bySemanticsLabel('Capítulo 3');
+      expect(atual, findsOneWidget);
+      expect(
+        tester.getSemantics(atual),
+        isSemantics(
+          label: 'Capítulo 3',
+          isButton: true,
+          isSelected: true,
+          hasTapAction: true,
+        ),
+      );
+      for (final outro in [1, 2, 4]) {
+        final celula = find.bySemanticsLabel('Capítulo $outro');
+        expect(celula, findsOneWidget, reason: 'Capítulo $outro');
+        expect(
+          tester.getSemantics(celula),
+          isSemantics(label: 'Capítulo $outro', isSelected: false),
+        );
+      }
+      semantica.dispose();
+    });
+
+    testWidgets('sem capítulo atual, nenhuma célula vem selecionada', (
+      tester,
+    ) async {
+      final semantica = tester.ensureSemantics();
+      await montar(tester, Brightness.dark);
+      for (final numero in [1, 2, 3, 4]) {
+        expect(
+          tester.getSemantics(find.bySemanticsLabel('Capítulo $numero')),
+          isSemantics(isSelected: false),
+        );
+      }
+      semantica.dispose();
+    });
+
+    testWidgets('abre na grade do livro atual, e Todos os livros volta à '
+        'lista', (tester) async {
+      await montar(tester, Brightness.dark);
+      expect(find.text('Rute'), findsOneWidget);
+      expect(find.widgetWithText(OutlinedButton, '4'), findsOneWidget);
+      expect(find.widgetWithText(OutlinedButton, '5'), findsNothing);
+      expect(find.text('Escolha o livro'), findsNothing);
+
+      await tester.tap(find.text('Todos os livros'));
+      await tester.pumpAndSettle();
+      expect(find.text('Escolha o livro'), findsOneWidget);
+      expect(find.text('Todos os livros'), findsNothing);
+      expect(find.byType(OutlinedButton), findsNothing);
+    });
+
+    testWidgets('com um livro que não existe, abre na lista de livros', (
+      tester,
+    ) async {
+      await montar(tester, Brightness.dark, livroAtual: 'livro-x');
+      expect(find.text('Escolha o livro'), findsOneWidget);
+      expect(find.text('Todos os livros'), findsNothing);
+    });
+
+    for (final MapEntry(key: nomeDoTema, value: brilho) in _temas.entries) {
+      for (final MapEntry(key: nomeDaDiretriz, value: diretriz)
+          in _diretrizes.entries) {
+        testWidgets('no tema $nomeDoTema, na grade de Rute, atende '
+            '$nomeDaDiretriz', (tester) async {
+          final semantica = tester.ensureSemantics();
+          await montar(tester, brilho);
+          expect(find.text('Todos os livros'), findsOneWidget);
+          await _conferir(tester, diretriz);
+          semantica.dispose();
+        });
+
+        testWidgets('no tema $nomeDoTema, com o capítulo atual marcado, atende '
+            '$nomeDaDiretriz', (tester) async {
+          final semantica = tester.ensureSemantics();
+          await montar(tester, brilho, capituloAtual: 3);
+          await _conferir(tester, diretriz);
+          semantica.dispose();
+        });
+      }
+    }
+  });
+
+  group('DevocionalBarraDaSelecao', () {
+    const capitulo = Capitulo(
+      livro: 'joao',
+      numero: 3,
+      titulo: '',
+      versiculos: [
+        (16, 'Porque Deus amou o mundo de tal maneira.'),
+        (17, 'Porque Deus enviou o seu Filho ao mundo.'),
+      ],
+    );
+
+    Future<void> montar(
+      WidgetTester tester,
+      Brightness brilho,
+      Set<int> selecionados,
+    ) async {
+      _telaDeCelular(tester);
+      final estado = Estado(await SharedPreferences.getInstance());
+      await tester.pumpWidget(
+        _app(
+          brilho,
+          estado,
+          Scaffold(
+            body: const SizedBox.expand(),
+            bottomNavigationBar: DevocionalBarraDaSelecao(
+              capitulo: capitulo,
+              selecionados: selecionados,
+              aoFechar: () {},
+            ),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('conta um versículo no singular e dois no plural', (
+      tester,
+    ) async {
+      await montar(tester, Brightness.dark, {16});
+      expect(find.text('1 versículo'), findsOneWidget);
+      await montar(tester, Brightness.dark, {16, 17});
+      expect(find.text('2 versículos'), findsOneWidget);
+    });
+
+    for (final MapEntry(key: nomeDoTema, value: brilho) in _temas.entries) {
+      for (final MapEntry(key: nomeDaDiretriz, value: diretriz)
+          in _diretrizes.entries) {
+        testWidgets(
+          'no tema $nomeDoTema, com dois versículos, atende $nomeDaDiretriz',
+          (tester) async {
+            final semantica = tester.ensureSemantics();
+            await montar(tester, brilho, {16, 17});
+            await _conferir(tester, diretriz);
+            semantica.dispose();
+          },
+        );
+
+        testWidgets(
+          'no tema $nomeDoTema, com um versículo só, atende $nomeDaDiretriz',
+          (tester) async {
+            final semantica = tester.ensureSemantics();
+            await montar(tester, brilho, {16});
+            await _conferir(tester, diretriz);
+            semantica.dispose();
+          },
+        );
+      }
+    }
+  });
+
+  group('botão Próximo no fim do capítulo', () {
+    // Sem os comentários a lista fica curta e o botão chega em poucas
+    // rolagens; o objeto aqui é o fim do texto.
+    setUp(() => Recursos.comentarioNoCapituloForcado = false);
+    tearDown(() => Recursos.comentarioNoCapituloForcado = null);
+
+    Future<void> rolarAteOFim(WidgetTester tester, Brightness brilho) async {
+      _telaDeCelular(tester);
+      final estado = Estado(await SharedPreferences.getInstance());
+      await tester.runAsync(() async {
+        await Conteudo.instancia.capitulo('genesis', 1);
+        await Conteudo.instancia.introducao('genesis');
+      });
+      await tester.pumpWidget(
+        _app(brilho, estado, const TelaBiblia(livroInicial: 'genesis')),
+      );
+      await tester.pumpAndSettle();
+      final botao = find.text('Próximo: Gênesis 2');
+      await tester.scrollUntilVisible(
+        botao,
+        400,
+        scrollable: find
+            .ancestor(
+              of: find.byType(DevocionalLinhaDeVersiculo).first,
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
+      expect(botao, findsOneWidget);
+    }
+
+    for (final MapEntry(key: nomeDoTema, value: brilho) in _temas.entries) {
+      for (final MapEntry(key: nomeDaDiretriz, value: diretriz)
+          in _diretrizes.entries) {
+        testWidgets('no tema $nomeDoTema, em Gênesis 1 rolado até o fim, '
+            'atende $nomeDaDiretriz', (tester) async {
+          final semantica = tester.ensureSemantics();
+          await rolarAteOFim(tester, brilho);
+          await _conferir(tester, diretriz);
+          semantica.dispose();
+        });
+      }
+    }
+  });
+
+  group('DevocionalLinhaDeVersiculo selecionada', () {
+    // O versículo inteiro como fala de Jesus: a letra vermelha sobre o fundo
+    // de selecionado também passa pela diretriz de contraste.
+    const texto =
+        'Porque Deus amou o mundo de tal maneira que deu o seu Filho '
+        'unigênito.';
+
+    Future<void> montar(
+      WidgetTester tester,
+      Brightness brilho, {
+      required bool selecionado,
+    }) async {
+      _telaDeCelular(tester);
+      final estado = Estado(await SharedPreferences.getInstance());
+      await tester.pumpWidget(
+        _app(
+          brilho,
+          estado,
+          Scaffold(
+            body: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                DevocionalLinhaDeVersiculo(
+                  livro: 'joao',
+                  capituloNumero: 3,
+                  referencia: 'João 3:16',
+                  numero: 16,
+                  texto: texto,
+                  comentario: null,
+                  falasDivinas: const [(0, texto.length)],
+                  noRecorte: true,
+                  selecionando: true,
+                  selecionado: selecionado,
+                  aoAlternarSelecao: () {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('selecionado, o leitor de tela anuncia o estado', (
+      tester,
+    ) async {
+      final semantica = tester.ensureSemantics();
+      await montar(tester, Brightness.dark, selecionado: true);
+      expect(
+        tester.getSemantics(find.bySemanticsLabel(RegExp('Porque Deus amou'))),
+        isSemantics(isSelected: true),
+      );
+      semantica.dispose();
+    });
+
+    for (final MapEntry(key: nomeDoTema, value: brilho) in _temas.entries) {
+      for (final MapEntry(key: nomeDaDiretriz, value: diretriz)
+          in _diretrizes.entries) {
+        testWidgets(
+          'no tema $nomeDoTema, selecionado, atende $nomeDaDiretriz',
+          (tester) async {
+            final semantica = tester.ensureSemantics();
+            await montar(tester, brilho, selecionado: true);
+            await _conferir(tester, diretriz);
+            semantica.dispose();
+          },
+        );
+
+        testWidgets('no tema $nomeDoTema, selecionando sem estar selecionado, '
+            'atende $nomeDaDiretriz', (tester) async {
+          final semantica = tester.ensureSemantics();
+          await montar(tester, brilho, selecionado: false);
+          await _conferir(tester, diretriz);
+          semantica.dispose();
+        });
+      }
+    }
+  });
+
+  group('TelaConversas', () {
+    tearDown(() => Recursos.conversasForcado = null);
+
+    Future<void> montar(
+      WidgetTester tester,
+      Brightness brilho, {
+      required bool comAcesso,
+    }) async {
+      Recursos.conversasForcado = comAcesso;
+      _telaDeCelular(tester);
+      final estado = Estado(await SharedPreferences.getInstance());
+      await tester.pumpWidget(_app(brilho, estado, const TelaConversas()));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('a barra de cima tem o botão de ajustes rotulado', (
+      tester,
+    ) async {
+      await montar(tester, Brightness.dark, comAcesso: true);
+      expect(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.byTooltip('Ajustes e ajuda'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    for (final MapEntry(key: nomeDoTema, value: brilho) in _temas.entries) {
+      for (final MapEntry(key: nomeDaDiretriz, value: diretriz)
+          in _diretrizes.entries) {
+        testWidgets('no tema $nomeDoTema, com acesso às conversas, atende '
+            '$nomeDaDiretriz', (tester) async {
+          final semantica = tester.ensureSemantics();
+          await montar(tester, brilho, comAcesso: true);
+          await _conferir(tester, diretriz);
+          semantica.dispose();
+        });
+
+        testWidgets('no tema $nomeDoTema, sem acesso (pedir pelo WhatsApp), '
+            'atende $nomeDaDiretriz', (tester) async {
+          final semantica = tester.ensureSemantics();
+          await montar(tester, brilho, comAcesso: false);
+          await _conferir(tester, diretriz);
+          semantica.dispose();
+        });
+      }
+    }
+  });
+
+  group('DevocionalCartaoDeEntrar', () {
+    Future<void> montar(WidgetTester tester, Brightness brilho) async {
+      _telaDeCelular(tester);
+      final estado = Estado(await SharedPreferences.getInstance());
+      await tester.pumpWidget(
+        _app(brilho, estado, const Scaffold(body: DevocionalCartaoDeEntrar())),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('o título é um cabeçalho só dele, sem a descrição junto', (
+      tester,
+    ) async {
+      final semantica = tester.ensureSemantics();
+      await montar(tester, Brightness.dark);
+      // Hoje o Semantics(header: true) do título não é container e funde
+      // com a descrição: o leitor de tela anuncia o parágrafo inteiro
+      // como cabeçalho, e o rótulo exato do título não existe sozinho.
+      expect(
+        tester.getSemantics(
+          find.bySemanticsLabel('Este plano é compartilhado por link'),
+        ),
+        isSemantics(isHeader: true),
+      );
+      semantica.dispose();
+    });
+
+    for (final MapEntry(key: nomeDoTema, value: brilho) in _temas.entries) {
+      for (final MapEntry(key: nomeDaDiretriz, value: diretriz)
+          in _diretrizes.entries) {
+        testWidgets('no tema $nomeDoTema, atende $nomeDaDiretriz', (
+          tester,
+        ) async {
+          final semantica = tester.ensureSemantics();
+          await montar(tester, brilho);
+          await _conferir(tester, diretriz);
+          semantica.dispose();
+        });
+      }
+    }
+  });
+
+  group('DevocionalCartaoDePlano', () {
+    Future<void> montar(
+      WidgetTester tester,
+      Brightness brilho, {
+      bool compartilhado = false,
+    }) async {
+      _telaDeCelular(tester);
+      final estado = Estado(await SharedPreferences.getInstance());
+      final plano = PlanoDoUsuario(
+        id: 'plano-teste',
+        titulo: 'Evangelhos em 30 dias',
+        livros: const ['mateus', 'marcos', 'lucas', 'joao'],
+        dias: 30,
+        criadoEm: DateTime(2026, 1, 1),
+        compartilhado: compartilhado,
+      );
+      await tester.pumpWidget(
+        _app(
+          brilho,
+          estado,
+          Scaffold(
+            body: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [DevocionalCartaoDePlano(plano: plano)],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('mostra o título, o progresso e a lixeira rotulada', (
+      tester,
+    ) async {
+      await montar(tester, Brightness.dark);
+      expect(find.text('Evangelhos em 30 dias'), findsOneWidget);
+      expect(find.text('0 de 30 dias lidos'), findsOneWidget);
+      expect(find.byTooltip('Excluir plano'), findsOneWidget);
+    });
+
+    for (final MapEntry(key: nomeDoTema, value: brilho) in _temas.entries) {
+      for (final MapEntry(key: nomeDaDiretriz, value: diretriz)
+          in _diretrizes.entries) {
+        testWidgets('no tema $nomeDoTema, atende $nomeDaDiretriz', (
+          tester,
+        ) async {
+          final semantica = tester.ensureSemantics();
+          await montar(tester, brilho);
+          await _conferir(tester, diretriz);
+          semantica.dispose();
+        });
+
+        testWidgets(
+          'no tema $nomeDoTema, compartilhado, atende $nomeDaDiretriz',
+          (tester) async {
+            final semantica = tester.ensureSemantics();
+            await montar(tester, brilho, compartilhado: true);
+            await _conferir(tester, diretriz);
+            semantica.dispose();
+          },
+        );
+      }
+    }
+  });
+
+  group('DevocionalCartaoDeDia', () {
+    Future<void> montar(
+      WidgetTester tester,
+      Brightness brilho, {
+      required bool lido,
+      VoidCallback? aoAlternar,
+    }) async {
+      _telaDeCelular(tester);
+      final estado = Estado(await SharedPreferences.getInstance());
+      await tester.pumpWidget(
+        _app(
+          brilho,
+          estado,
+          Scaffold(
+            body: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                DevocionalCartaoDeDia(
+                  numero: 5,
+                  rotulo: 'Gênesis 13 a 15',
+                  itens: const [],
+                  lido: lido,
+                  aoAlternar: aoAlternar ?? () {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('não lido, o botão diz "Marcar como lido" e alterna', (
+      tester,
+    ) async {
+      var toques = 0;
+      await montar(
+        tester,
+        Brightness.light,
+        lido: false,
+        aoAlternar: () => toques++,
+      );
+      expect(find.text('Marcar como lido'), findsOneWidget);
+      expect(
+        find.byTooltip('Marcar Gênesis 13 a 15 como lido'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Marcar como lido'));
+      expect(toques, 1);
+    });
+
+    testWidgets('lido, o botão diz "Dia lido" e o tooltip oferece desmarcar', (
+      tester,
+    ) async {
+      await montar(tester, Brightness.dark, lido: true);
+      expect(find.text('Dia lido'), findsOneWidget);
+      expect(find.text('Marcar como lido'), findsNothing);
+      expect(find.byTooltip('Desmarcar Gênesis 13 a 15'), findsOneWidget);
+    });
+
+    for (final MapEntry(key: nomeDoTema, value: brilho) in _temas.entries) {
+      for (final MapEntry(key: nomeDaDiretriz, value: diretriz)
+          in _diretrizes.entries) {
+        for (final lido in [false, true]) {
+          testWidgets(
+            'no tema $nomeDoTema, ${lido ? 'lido' : 'não lido'}, atende '
+            '$nomeDaDiretriz',
+            (tester) async {
+              final semantica = tester.ensureSemantics();
+              await montar(tester, brilho, lido: lido);
+              await _conferir(tester, diretriz);
+              semantica.dispose();
+            },
+          );
+        }
       }
     }
   });

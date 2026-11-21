@@ -203,6 +203,7 @@ class DevocionalCartaoDeLeitura extends StatelessWidget {
                 onTap: () async {
                   await Clipboard.setData(ClipboardData(text: texto));
                   if (folha.mounted) Navigator.pop(folha);
+                  mostrarAvisoNo(mensageiro, 'Texto copiado.');
                 },
               ),
               ListTile(

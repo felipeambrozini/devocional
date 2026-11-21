@@ -1525,6 +1525,23 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    // O seletor abre já na grade do livro aberto; "Todos os livros" volta à
+    // lista para trocar de livro. A grade é preguiçosa e o 50 nasce abaixo
+    // da folha: desce até ele, como um dedo faria.
+    expect(find.widgetWithText(OutlinedButton, '1'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.widgetWithText(OutlinedButton, '50'),
+      300,
+      scrollable: find.descendant(
+        of: find.byType(GridView),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    expect(find.widgetWithText(OutlinedButton, '50'), findsOneWidget);
+    expect(find.widgetWithText(OutlinedButton, '51'), findsNothing);
+    await tester.tap(find.text('Todos os livros'));
+    await tester.pumpAndSettle();
+
     expect(find.text('Antigo Testamento'), findsOneWidget);
     expect(find.text('Escolha o livro'), findsOneWidget);
 
@@ -1555,6 +1572,8 @@ void main() {
 
     await tester.tap(find.widgetWithText(TextButton, 'Gênesis 1'));
     await tester.pumpAndSettle();
+    await tester.tap(find.text('Todos os livros'));
+    await tester.pumpAndSettle();
 
     // Digitar sem acento nem maiúscula ainda encontra Josué.
     await tester.enterText(find.byType(TextField), 'josue');
@@ -1577,6 +1596,213 @@ void main() {
       ),
     );
     expect(find.widgetWithText(ChoiceChip, 'Apocalipse'), findsOneWidget);
+  });
+
+  group('botão Próximo no fim do capítulo', () {
+    // Sem os comentários a lista fica curta e o botão chega em poucas
+    // rolagens; o objeto aqui é o fim do texto, não o comentário.
+    setUp(() => Recursos.comentarioNoCapituloForcado = false);
+    tearDown(() => Recursos.comentarioNoCapituloForcado = null);
+
+    Future<void> abrir(WidgetTester tester, String livro, int capitulo) async {
+      await aquecerAssets(tester);
+      await tester.runAsync(() async {
+        final conteudo = Conteudo.instancia;
+        await conteudo.capitulo(livro, capitulo);
+        await conteudo.introducao(livro);
+        await conteudo.capitulo('genesis', 2);
+        await conteudo.capitulo('exodo', 1);
+        await conteudo.introducao('exodo');
+      });
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EscopoDoEstado(
+            estado: await estadoLimpo(),
+            child: TelaBiblia(livroInicial: livro, capituloInicial: capitulo),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    /// A lista do leitor, e não um Scrollable qualquer da tela.
+    Finder leitor() => find
+        .ancestor(
+          of: find.byType(DevocionalLinhaDeVersiculo).first,
+          matching: find.byType(Scrollable),
+        )
+        .first;
+
+    Future<void> rolarAteOFim(WidgetTester tester, Finder alvo) =>
+        tester.scrollUntilVisible(alvo, 400, scrollable: leitor());
+
+    testWidgets('em Gênesis 1 leva a Gênesis 2', (tester) async {
+      await abrir(tester, 'genesis', 1);
+      final botao = find.text('Próximo: Gênesis 2');
+      await rolarAteOFim(tester, botao);
+      await tester.pumpAndSettle();
+      expect(botao, findsOneWidget);
+
+      await tester.tap(botao);
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.text('Gênesis 2'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Próximo: Gênesis 2'),
+        findsNothing,
+        reason: 'a página nova volta ao topo, longe do botão',
+      );
+    });
+
+    testWidgets('o título do capítulo no corpo não abre seletor nenhum', (
+      tester,
+    ) async {
+      await abrir(tester, 'genesis', 1);
+      final titulo = find.descendant(
+        of: find.byType(ListView),
+        matching: find.text('Gênesis 1'),
+      );
+      expect(titulo, findsOneWidget);
+      expect(find.byIcon(FontAwesomeIcons.tableCells.data), findsNothing);
+
+      // Escolher livro e capítulo mora só no título da barra de cima.
+      await tester.tap(titulo, warnIfMissed: false);
+      await tester.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(find.text('Todos os livros'), findsNothing);
+    });
+
+    testWidgets(
+      'para o leitor de tela, o título do capítulo é cabeçalho e não botão',
+      (tester) async {
+        final semantica = tester.ensureSemantics();
+        await abrir(tester, 'genesis', 1);
+        final titulo = find.descendant(
+          of: find.byType(ListView),
+          matching: find.text('Gênesis 1'),
+        );
+        // Hoje o cabeçalho e a pílula de ouvir caem no mesmo nó semântico
+        // (rótulo "...Gênesis 1\nOuvir na voz de Spurgeon", cabeçalho e
+        // botão, com o toque que toca o áudio): navegar por cabeçalhos para
+        // num botão que começa a leitura.
+        expect(
+          tester.getSemantics(titulo),
+          isSemantics(isHeader: true, isButton: false, hasTapAction: false),
+        );
+        semantica.dispose();
+      },
+    );
+
+    testWidgets('no último capítulo do livro aponta o primeiro do seguinte', (
+      tester,
+    ) async {
+      await abrir(tester, 'genesis', 50);
+      final botao = find.text('Próximo: Êxodo 1');
+      await rolarAteOFim(tester, botao);
+      await tester.pumpAndSettle();
+      expect(botao, findsOneWidget);
+
+      await tester.tap(botao);
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.text('Êxodo 1'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('em Apocalipse 22 não há próximo', (tester) async {
+      await abrir(tester, 'apocalipse', 22);
+      // A lista é preguiçosa: só depois de chegar ao último versículo o
+      // "nada" quer dizer que o botão não existe.
+      final ultimo = find.byWidgetPredicate(
+        (w) =>
+            w is RichText &&
+            w.text.toPlainText().contains(
+              'A graça de nosso Senhor Jesus Cristo',
+            ),
+      );
+      await rolarAteOFim(tester, ultimo);
+      await tester.drag(leitor(), const Offset(0, -2000));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Próximo:'), findsNothing);
+    });
+  });
+
+  testWidgets('a aba Conversas tem o botão de ajustes na barra de cima', (
+    tester,
+  ) async {
+    await aquecerAssets(tester);
+    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+    await tester.pumpAndSettle();
+
+    GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/conversas');
+    await tester.pumpAndSettle();
+
+    // Sem abrir a folha: o navigatorKey é global e uma folha aberta aqui
+    // sobreviveria ao próximo teste (ver o teste do áudio offline).
+    final ajustes = find.descendant(
+      of: find.byType(AppBar),
+      matching: find.byType(DevocionalBotaoDeAjustes),
+    );
+    expect(ajustes, findsOneWidget);
+    expect(
+      find.descendant(of: ajustes, matching: find.byTooltip('Ajustes e ajuda')),
+      findsOneWidget,
+    );
+    expect(tester.getSize(ajustes).height, greaterThanOrEqualTo(48));
+  });
+
+  testWidgets('a pílula de voz preparando tem alvo de 48 dp de altura', (
+    tester,
+  ) async {
+    await aquecerAssets(tester);
+    final leitor = _LeitorFalsoDoApp();
+    Voz.instancia.injetarLeitor = leitor;
+    addTearDown(() async {
+      await Voz.instancia.parar();
+      Voz.instancia.injetarLeitor = null;
+    });
+    await tester.pumpWidget(
+      MaterialApp(
+        home: EscopoDoEstado(
+          estado: await estadoLimpo(),
+          child: const TelaBiblia(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    leitor.atrasarProximoInicio = true;
+    final leitura = Voz.instancia.alternar('capitulo:genesis.1');
+    await tester.pump();
+    expect(find.text('Preparando a voz…'), findsOneWidget);
+
+    // Preparando, a pílula perde o retrato e os botões de velocidade e de
+    // encerrar: sobra o ícone e o rótulo, e o mínimo segura os 48 dp.
+    final pilula = find
+        .ancestor(
+          of: find.text('Preparando a voz…'),
+          matching: find.byType(InkWell),
+        )
+        .first;
+    expect(tester.getSize(pilula).height, greaterThanOrEqualTo(48));
+
+    leitor.simularInicio();
+    await tester.pumpAndSettle();
+    leitor.encerrar();
+    await tester.pumpAndSettle();
+    await leitura;
+    // O fim da leitura mostra "Leitura concluída."; deixa o aviso fechar.
+    await tester.pump(duracaoDeAviso);
+    await tester.pumpAndSettle();
   });
 
   testWidgets('o leitor aberto por link rola até o versículo pedido', (

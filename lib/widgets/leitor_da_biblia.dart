@@ -6,6 +6,7 @@ import '../dados/modelos.dart';
 import '../dados/voz.dart';
 import '../estilo/espacamento.dart';
 import 'abertura_de_livro.dart';
+import 'botao.dart';
 import 'botao_de_voz.dart';
 import 'comentarios_do_capitulo.dart';
 import 'filete.dart';
@@ -21,7 +22,8 @@ class DevocionalLeitorDaBiblia extends StatelessWidget {
     this.destacar,
     this.alvoDeRolagem,
     this.chaveDoAlvoDeRolagem,
-    this.aoAbrirCapitulos,
+    this.proximo,
+    this.aoAvancar,
     this.aoCarregarComentarios,
     required this.selecionados,
     required this.aoAlternarSelecao,
@@ -41,9 +43,12 @@ class DevocionalLeitorDaBiblia extends StatelessWidget {
   final int? alvoDeRolagem;
   final GlobalKey? chaveDoAlvoDeRolagem;
 
-  /// Sem o deslize (que é invisível), o título do capítulo no corpo abre a
-  /// grade de capítulos num toque.
-  final VoidCallback? aoAbrirCapitulos;
+  /// O capítulo seguinte por extenso ("Êxodo 1"), para o botão no fim do
+  /// texto; nulo em Apocalipse 22. O deslize é invisível para quem chegou
+  /// agora e os chevrons do rodapé só existem na web, então o fim do capítulo
+  /// precisa dizer para onde se vai.
+  final String? proximo;
+  final VoidCallback? aoAvancar;
 
   /// Com um versículo pedido, rola de novo até ele quando os comentários
   /// entram e crescem o conteúdo acima dele.
@@ -71,7 +76,7 @@ class DevocionalLeitorDaBiblia extends StatelessWidget {
         DevocionalEspacamento.sp20,
         DevocionalEspacamento.sp32,
       ),
-      itemCount: capitulo.versiculos.length + 1,
+      itemCount: capitulo.versiculos.length + 2,
       itemBuilder: (context, i) {
         if (i == 0) {
           return Column(
@@ -92,46 +97,14 @@ class DevocionalLeitorDaBiblia extends StatelessWidget {
                 ),
                 const SizedBox(height: DevocionalEspacamento.sp4),
               ],
+              // Título simples: escolher livro e capítulo mora num lugar só,
+              // o título da barra de cima. Container: sem ele, o leitor de
+              // tela fundia o título com a pílula de ouvir logo abaixo num nó
+              // só, cabeçalho e botão ao mesmo tempo.
               Semantics(
+                container: true,
                 header: true,
-                button: aoAbrirCapitulos != null,
-                child: aoAbrirCapitulos == null
-                    ? Text(capitulo.referencia, style: tema.displayMedium)
-                    : Tooltip(
-                        // O mesmo atalho da AppBar: a referência no corpo
-                        // também abre a grade, e só a AppBar tinha a dica.
-                        message: 'Toque para escolher o capítulo',
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: aoAbrirCapitulos,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: DevocionalEspacamento.sp4,
-                              horizontal: DevocionalEspacamento.sp2,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  capitulo.referencia,
-                                  style: tema.displayMedium,
-                                ),
-                                const SizedBox(
-                                  width: DevocionalEspacamento.sp8,
-                                ),
-                                // Grade, não chevron: este título abre a grade
-                                // de capítulos do livro, enquanto o da AppBar
-                                // (chevron) troca de livro.
-                                FaIcon(
-                                  FontAwesomeIcons.tableCells,
-                                  size: 20,
-                                  color: cor.primary,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                child: Text(capitulo.referencia, style: tema.displayMedium),
               ),
               const SizedBox(height: DevocionalEspacamento.sp8),
               const DevocionalFilete(),
@@ -153,6 +126,35 @@ class DevocionalLeitorDaBiblia extends StatelessWidget {
               ],
               const SizedBox(height: DevocionalEspacamento.sp16),
             ],
+          );
+        }
+
+        if (i > capitulo.versiculos.length) {
+          final proximo = this.proximo;
+          final aoAvancar = this.aoAvancar;
+          if (proximo == null || aoAvancar == null) {
+            return const SizedBox.shrink();
+          }
+          return Padding(
+            padding: const EdgeInsets.only(top: DevocionalEspacamento.sp24),
+            child: Center(
+              child: DevocionalBotaoSecundario(
+                onPressed: aoAvancar,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        'Próximo: $proximo',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(width: DevocionalEspacamento.sp8),
+                    const FaIcon(FontAwesomeIcons.arrowRight, size: 16),
+                  ],
+                ),
+              ),
+            ),
           );
         }
 

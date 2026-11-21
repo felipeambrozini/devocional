@@ -185,8 +185,12 @@ do mesmo código).
   janela larga (a partir de 720px), coluna de leitura com largura confortável
   e centralizada no desktop.
 - Navegação por gesto e por teclado: deslizar troca de capítulo no celular; na
-  web as setas passam de capítulo e `Ctrl+F` abre a busca. Os chevrons ‹ › do
-  rodapé do leitor são exclusivos da web e podem ser escondidos na folha de
+  web as setas passam de capítulo e `Ctrl+F` abre a busca. Em todas as
+  plataformas o capítulo termina com o botão "Próximo: Êxodo 1", e o título da
+  barra de cima é o único seletor: abre a grade de capítulos do livro aberto,
+  com o capítulo atual marcado e "Todos os livros" para trocar de livro. Os
+  chevrons ‹ › do rodapé do leitor são exclusivos da web e podem ser escondidos
+  na folha de
   ajustes (seção "Navegação") — ao esconder, o app avisa que setas, Enter ou
   espaço continuam virando o capítulo.
 

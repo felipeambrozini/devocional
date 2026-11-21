@@ -155,6 +155,7 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
     final destaque = leitura.destaquesDe(_slug, widget.indice)[paragrafo];
     final temNota = destaque != null && destaque.nota.isNotEmpty;
     final cor = Theme.of(context).colorScheme;
+    final mensageiro = ScaffoldMessenger.of(context);
 
     await showModalBottomSheet<void>(
       context: context,
@@ -176,6 +177,7 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
                     ClipboardData(text: _capitulo.paragrafos[paragrafo]),
                   );
                   if (folha.mounted) Navigator.pop(folha);
+                  mostrarAvisoNo(mensageiro, 'Texto copiado.');
                 },
               ),
               ListTile(

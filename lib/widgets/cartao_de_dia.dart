@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../dados/modelos.dart';
 import '../estilo/espacamento.dart';
@@ -6,6 +7,11 @@ import 'botao.dart';
 import 'faixa.dart';
 
 /// Um dia de leitura: número, o que se lê e o botão de marcar como lido.
+///
+/// O botão tem texto ("Marcar como lido" / "Dia lido"), como o da Biblioteca:
+/// o círculo sozinho no canto só dizia o que fazia no tooltip, que não existe
+/// no toque. O tooltip continua com o nome do dia para o leitor de tela, porque
+/// no cronograma são até 31 botões iguais por mês.
 ///
 /// Serve o cronograma anual (com data e borda dourada no dia de hoje) e os
 /// dias dos planos do usuário (uma sequência de 1 a N), porque são a mesma
@@ -47,8 +53,8 @@ class DevocionalCartaoDeDia extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(
           DevocionalEspacamento.sp14,
           DevocionalEspacamento.sp12,
-          DevocionalEspacamento.sp8,
-          DevocionalEspacamento.sp12,
+          DevocionalEspacamento.sp14,
+          DevocionalEspacamento.sp4,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,13 +97,28 @@ class DevocionalCartaoDeDia extends StatelessWidget {
                         },
                     ],
                   ),
+                  const SizedBox(height: DevocionalEspacamento.sp4),
+                  Tooltip(
+                    message: lido
+                        ? 'Desmarcar $rotulo'
+                        : 'Marcar $rotulo como lido',
+                    child: DevocionalBotaoTerciario.icon(
+                      onPressed: aoAlternar,
+                      icon: FaIcon(
+                        lido
+                            ? FontAwesomeIcons.circleCheck
+                            : FontAwesomeIcons.circle,
+                        size: 14,
+                        color: lido ? cor.secondary : null,
+                      ),
+                      label: Text(
+                        lido ? 'Dia lido' : 'Marcar como lido',
+                        style: lido ? TextStyle(color: cor.secondary) : null,
+                      ),
+                    ),
+                  ),
                 ],
               ),
-            ),
-            DevocionalBotaoDeLido(
-              lido: lido,
-              rotulo: rotulo,
-              aoAlternar: aoAlternar,
             ),
           ],
         ),

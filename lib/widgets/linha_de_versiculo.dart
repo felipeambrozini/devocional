@@ -109,10 +109,16 @@ class DevocionalLinhaDeVersiculo extends StatelessWidget {
             vertical: DevocionalEspacamento.sp12,
             horizontal: DevocionalEspacamento.sp6,
           ),
+          // Selecionado = tom mais alto e fio do metal cheio (estado, na Regra
+          // do Fio). O fio é o que se vê: contra a página e contra o tom dá
+          // cerca de 5:1 nos dois temas. Com o fio a 50% o selecionado ficava
+          // a 1,1:1 do fundo, igual ao marcado, e no modo de seleção não dava
+          // para ver o que tinha entrado. O fundo deixou de ser o metal a 18%
+          // (Regra do Metal: o metal não pinta área).
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             color: selecionado
-                ? cor.primary.withValues(alpha: 0.18)
+                ? cor.surfaceContainerHighest
                 : marcacao != null
                 ? cor.outline.withValues(alpha: 0.18)
                 : null,

@@ -24,8 +24,7 @@ class DevocionalBotaoDeBusca extends StatelessWidget {
   );
 }
 
-/// Abre os ajustes de leitura. Usado onde não há AppBar para pendurar a ação,
-/// que hoje é só a tela Hoje.
+/// Abre os ajustes de leitura e ajuda, na barra de cima de cada aba.
 class DevocionalBotaoDeAjustes extends StatelessWidget {
   const DevocionalBotaoDeAjustes({super.key, required this.estado});
 
@@ -59,8 +58,9 @@ class DevocionalBotaoDeData extends StatelessWidget {
 }
 
 /// Alterna "lido"/"não lido" de um dia: um círculo vazio enquanto falta ler,
-/// preenchido com o check assim que já foi. Usado no cartão de um dia
-/// qualquer (DevocionalCartaoDeDia) e na prévia da leitura de hoje.
+/// preenchido com o check assim que já foi. Usado nos cartões da Hoje (leitura
+/// de hoje e planos em andamento); o cartão de um dia do cronograma e dos
+/// planos (DevocionalCartaoDeDia) tem botão com texto.
 class DevocionalBotaoDeLido extends StatelessWidget {
   const DevocionalBotaoDeLido({
     super.key,

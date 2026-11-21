@@ -129,7 +129,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
                 appBar: DevocionalAppBar(
                   voltarPara: widget.voltarPara,
                   title: Tooltip(
-                    message: 'Toque para escolher livro',
+                    message: 'Escolher livro e capítulo',
                     child: DevocionalBotaoTerciario(
                       onPressed: () => _controller.abrirSeletor(context),
                       child: Row(
@@ -254,7 +254,11 @@ class _TelaBibliaState extends State<TelaBiblia> {
           chaveDoAlvoDeRolagem: widget.destacar == null
               ? null
               : _controller.chaveDoAlvoDeRolagem,
-          aoAbrirCapitulos: () => _controller.abrirGradeDeCapitulos(context),
+          proximo: switch (_controller.proximoCapitulo(1)) {
+            (final slug, final numero) => '${livroPorSlug(slug)!.nome} $numero',
+            null => null,
+          },
+          aoAvancar: () => _controller.passarCapitulo(context, 1),
           aoCarregarComentarios: widget.destacar == null
               ? null
               : () => _controller.rolarAteOAlvo(widget.destacar!.$1),

@@ -33,6 +33,10 @@ class DevocionalApoioEmCrise extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Montserrat e não o Cinzel dos títulos de cartão (exceção no
+              // DESIGN.md): o Cinzel, mais largo, quebra em duas ou três
+              // linhas com fonte grande e empurra o botão do 188 para fora
+              // da tela com o teclado aberto.
               Semantics(
                 header: true,
                 child: Text('Você não está sozinho', style: tema.titleMedium),

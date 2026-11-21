@@ -359,14 +359,19 @@ Os únicos gradientes do sistema são o do Filete e o da alça de deslize do lei
 (`lib/widgets/alca_de_deslize.dart`): uma faixa de 24px na borda da tela, do
 metal com pouca opacidade ao transparente, com o ícone de pegar, que avisa que
 dá para arrastar e trocar de capítulo. Nenhum fundo, cartão ou botão ganha
-gradiente.
+gradiente. A máscara que apaga o fim da prévia de um texto
+(`com_fade_ao_fim.dart`) usa um gradiente como transparência, não como cor:
+não pinta nada, só some com as últimas linhas.
 
 **A Regra do Chapado.** Superfícies são planas em repouso e em estado. Sombra
 não existe neste sistema; se um componente "pedir" profundidade, a resposta é
 tom (surfaceContainer) ou fio (outline/Filete), não `BoxShadow`. O que flutua
 sobre a página sem sombra (menu de opções e aviso de rodapé, o SnackBar) usa o
 tom mais alto, surfaceContainerHighest, com o fio do metal cheio em volta, senão
-some contra o fundo no tema claro.
+some contra o fundo no tema claro. A barra da seleção de versículos, presa ao
+pé da tela, segue a mesma gramática com o fio só na borda de cima. O
+`DropdownButton` não entra no app: o menu dele tem sombra fixa e um fio cinza
+por baixo; filtros de poucas opções são chips.
 
 ## Shapes
 
@@ -389,7 +394,10 @@ o cartão do dia destacado no cronograma (`cartao_de_dia.dart`, 1,6px), a pílul
 de voz tocando ou pausada (1,5px), o anel em volta do retrato de quem fala
 (1,5px) e a borda do que flutua sem sombra (menu e aviso, ver Elevation &
 Depth). O campo com erro troca o fio pela cor de erro (2px em foco). Fora desses
-casos, o metal cheio numa borda é um desvio.
+casos, o metal cheio numa borda é um desvio. O versículo selecionado (modo de
+seleção) também é estado: tom mais alto (surfaceContainerHighest) com o fio do
+metal cheio de 1,5px, cerca de 5:1 contra a página nos dois temas. O fundo não
+é o metal: a Regra do Metal não deixa o ouro pintar área.
 
 ## Components
 
@@ -439,7 +447,9 @@ do metal nos estados certos.
 - **Border:** fio do metal a 35%.
 - **Internal Padding:** 16px; 20px no cartão do devocional.
 - **Título:** Cinzel titleLarge (18px w600) na cor do metal, seguido de 12px de
-  respiro antes do conteúdo.
+  respiro antes do conteúdo. A exceção é o cartão de apoio em crise do chat,
+  em Montserrat titleMedium: o Cinzel, mais largo, quebra em várias linhas com
+  fonte grande e empurraria o botão do 188 para fora da tela.
 
 ### Inputs / Fields
 
@@ -472,6 +482,10 @@ do metal nos estados certos.
   Devocional, Biblioteca, Plano, Conversas. Os rótulos ficam sempre numa linha:
   em tela estreita (ou com fonte do sistema maior) o tamanho encolhe só o
   bastante para "Devocional" caber, nunca troca o nome.
+- **Título da barra do Devocional:** a data ("Hoje, 21 de novembro") divide a
+  barra com quatro ações e também encolhe só o bastante para caber numa linha,
+  como os rótulos da navegação. A data completa se repete no título do cartão,
+  que não encolhe.
 
 ### Signature Components
 
@@ -503,13 +517,19 @@ do metal nos estados certos.
   em Sobre. Nada de ilustração decorativa.
 - **O Cabeçalho do Leitor:** referência do capítulo em Cinzel displayMedium
   (28px w700), o título formal do livro em itálico discreto acima, e o Filete
-  separando do texto. O capítulo abre como uma página de livro.
+  separando do texto. O capítulo abre como uma página de livro. O título no
+  corpo é só título: livro e capítulo se escolhem num lugar só, o título da
+  barra de cima, que abre a grade de capítulos do livro aberto (com "Todos os
+  livros" para trocar de livro). O capítulo termina com o botão "Próximo:
+  Êxodo 1", em todas as plataformas, porque o deslize é invisível.
 - **A Caixa de Citação:** um bloco surfaceContainerHighest com cantos de 10px e
   fio de metal de 3px à esquerda — é como o sistema destaca uma voz citada
   dentro da página. Abriga a frase de abertura da introdução do livro (citação
   em itálico na cor de destaque, atribuição em `labelMedium`) e empresta a mesma
   gramática à bolha e ao balcão das conversas, à marcação, ao comentário no
-  capítulo e ao erro de resposta.
+  capítulo e ao erro de resposta. A exceção é a bolha de quem escreve, que leva
+  o fio a 40% em volta inteira e não o de 3px à esquerda: o fio lateral fica
+  para a voz citada (a persona), e a diferença de moldura diz quem fala.
 - **A Epígrafe do Devocional:** o versículo-base do devocional não usa a caixa:
   é uma epígrafe solta sob o título, ao lado da capa — citação em itálico na cor
   de destaque, seguida da referência (`titleSmall`, também na cor de destaque);
