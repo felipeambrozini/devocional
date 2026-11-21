@@ -2,7 +2,7 @@
 name: security-rules-reviewer
 description: Revisa mudanças em firestore.rules, storage.rules ou no código que lê/escreve na Nuvem (lib/dados/nuvem.dart) antes de deploy. Use proativamente sempre que essas regras ou esse código mudarem, ou quando o usuário pedir revisão de segurança do Firebase.
 tools: Read, Grep, Glob, Bash
-model: inherit
+model: sonnet
 ---
 
 # Revisor de regras de segurança

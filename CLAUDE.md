@@ -37,6 +37,27 @@
   Windows sem link simbólico, `.claude/skills` vira um arquivo de texto e os
   skills do projeto não aparecem na lista.
 
+## Orquestração por modelo
+
+A sessão principal (Opus) orquestra: planeja, decide o que delegar, junta os
+resultados e faz a revisão final antes do push. Ao delegar, escolha o modelo
+pela tarefa:
+
+- Haiku: busca e leitura (agente `Explore`, levantar onde algo é usado,
+  resumir arquivos) e mudanças mecânicas sem decisão (renomear, ajustar
+  import, aplicar textos já aprovados). Passe `model: haiku` na chamada
+  quando o agente não tiver modelo fixo.
+- Sonnet: implementação com escopo já definido, testes
+  (`flutter-test-writer`) e as revisões obrigatórias (`ui-reviewer`,
+  `security-rules-reviewer`). Revisor que barra qualidade não desce para
+  Haiku.
+- Opus: plano e arquitetura, mudanças que cruzam várias camadas, bugs sem
+  causa clara e a revisão de acabamento (`impeccable-finish-reviewer`).
+
+O modelo fixo de cada agente fica no campo `model:` de
+`.claude/agents/*.md`. Tarefa que cabe em poucas chamadas de ferramenta a
+sessão principal faz sozinha, sem delegar: cada repasse perde contexto.
+
 ## Ferramentas de Flutter
 
 - Acessibilidade automática: ao criar ou alterar uma tela ou widget de UI,

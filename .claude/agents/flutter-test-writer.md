@@ -2,7 +2,7 @@
 name: flutter-test-writer
 description: Escreve testes Dart/Flutter para código novo ou alterado neste projeto, seguindo as convenções já estabelecidas em test/. Use quando uma funcionalidade nova ou um bug fix precisar de cobertura de teste.
 tools: Read, Grep, Glob, Write, Edit, Bash
-model: inherit
+model: sonnet
 ---
 
 # Escritor de testes Flutter

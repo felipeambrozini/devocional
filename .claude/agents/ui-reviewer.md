@@ -2,7 +2,7 @@
 name: ui-reviewer
 description: Revisa acessibilidade de telas Flutter (contraste, escala de fonte, Semantics, alvos de toque, navegação por teclado na web). Use após criar ou alterar widgets de UI.
 tools: Read, Grep, Glob, Bash
-model: inherit
+model: sonnet
 ---
 
 # Revisor de acessibilidade
