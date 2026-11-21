@@ -45,15 +45,22 @@ do mesmo código).
   o
   interruptor `planoPersonalizadoAtivo` ligado no painel.
 - **Leitura em voz alta**: botão Ouvir narra capítulos da Bíblia, Manhã e
-  Noite, Promessas de Deus, as introduções e o comentário de Spurgeon de cada
-  versículo (na folha do versículo), numa voz que remete ao tom de
+  Noite, Promessas de Deus, as introduções, o comentário de Spurgeon de cada
+  versículo (na folha do versículo) e os capítulos dos livros da Biblioteca
+  (abaixo do filete do título, um MP3 por capítulo em
+  `livros/<slug>/<n>.mp3`, publicados livro a livro: o botão só aparece no
+  livro que já tem áudio), numa voz que remete ao tom de
   Charles Spurgeon (não é clone da voz do Felipe), em MP3 pré-gerado
   (hospedado em `AUDIO_BASE_URL`). Fora da web dá para baixar por categoria e
   ouvir offline, nos Ajustes ("Áudio offline"): Bíblia, introduções, Manhã e
-  Noite e Promessas; os comentários não têm categoria offline e só tocam com
-  rede. Nos Ajustes também dá para
+  Noite e Promessas; os comentários e os livros da Biblioteca não têm
+  categoria offline e só tocam com rede. Nos Ajustes também dá para
   ligar "Ouvir capítulos em sequência" (desligado por padrão): ao terminar um
-  capítulo da Bíblia, o leitor vira a página e o próximo começa sozinho.
+  capítulo da Bíblia, o leitor vira a página e o próximo começa sozinho. Nos
+  livros da Biblioteca o próximo capítulo não encadeia, a posição do áudio
+  não fica guardada ao fechar o app, e sair do capítulo (outro capítulo, o
+  sumário, o voltar do sistema) para a leitura dele; enquanto toca, a barra
+  de cima mostra os controles, como na Bíblia.
 - **Conversas com IA**: duas personas para conversar, Charles Spurgeon e
   Felipe Ambrozini, cada uma com o próprio jeito de falar (Gemini). Histórico
   salvo por conversa, numa aba própria em todas as plataformas. A aba é de
@@ -283,6 +290,11 @@ notificação na web) abre a leitura do lembrete.
   aparece quando o áudio já existe: `Voz.disponibilidadeRemota` faz um HEAD
   no arquivo do Storage (com cache por chave e timeout, para não repetir o
   HEAD a cada navegação nem travar sem rede), além de checar o cache offline.
+  As chaves e o caminho de cada MP3 moram em `voz.dart`
+  (`caminhoRelativoParaChave`): `biblia/<livro>/<n>.mp3`,
+  `introducoes/<livro>.mp3`, `comentarios/<livro>/<c>-<v>.mp3`,
+  `devocionais/...` e `livros/<slug>/<n>.mp3` (Biblioteca, `<n>` a partir
+  de 1, gerado por `audio_gen/gerar_livros.py`).
 - Fontes empacotadas localmente (Cinzel e Montserrat), sem depender de rede na
   primeira execução.
 - Conteúdo (Bíblia, comentários, falas divinas, introduções, devocionais,

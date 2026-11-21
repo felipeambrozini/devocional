@@ -1,4 +1,5 @@
 import 'package:devocional/dados/audio_offline.dart';
+import 'package:devocional/dados/biblioteca.dart';
 import 'package:devocional/dados/conteudo.dart';
 import 'package:devocional/dados/estado.dart';
 import 'package:devocional/dados/leitura_de_livros.dart';
@@ -12,10 +13,12 @@ import 'package:devocional/funcoes/aviso.dart';
 import 'package:devocional/telas/biblia.dart';
 import 'package:devocional/telas/conversas.dart';
 import 'package:devocional/telas/historico.dart';
+import 'package:devocional/telas/leitor_de_livro.dart';
 import 'package:devocional/widgets/widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -61,6 +64,8 @@ Future<void> _conferir(
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  _grupoDoCapituloDeLivro();
 
   group('DevocionalCartaoDeLeitura', () {
     setUp(() {
@@ -1129,6 +1134,69 @@ void main() {
             },
           );
         }
+      }
+    }
+  });
+}
+
+void _grupoDoCapituloDeLivro() {
+  group('capítulo de livro com o Ouvir', () {
+    // Ler o asset é I/O de verdade: carregado aqui, o leitor acha o livro na
+    // cache em vez de girar o "Carregando" até o pumpAndSettle desistir.
+    setUpAll(() => Biblioteca.instancia.capitulos('somente_pela_graca'));
+
+    setUp(() {
+      Recursos.ouvirTextosForcado = true;
+      Voz.baseUrlForTest = 'https://test.audio';
+      AudioOffline.temOfflineParaTeste = (_) => false;
+    });
+    tearDown(() {
+      Recursos.ouvirTextosForcado = null;
+      Voz.baseUrlForTest = null;
+      AudioOffline.temOfflineParaTeste = null;
+    });
+
+    Future<void> montar(WidgetTester tester, Brightness brilho) async {
+      _telaDeCelular(tester);
+      final estado = Estado(await SharedPreferences.getInstance());
+      await tester.pumpWidget(
+        EscopoDoEstado(
+          estado: estado,
+          child: MaterialApp.router(
+            theme: construirTema(brilho: brilho),
+            routerConfig: GoRouter(
+              routes: [
+                GoRoute(
+                  path: '/',
+                  builder: (context, state) => const TelaLeitorDeLivro(
+                    slug: 'somente_pela_graca',
+                    capitulo: 1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('mostra o Ouvir abaixo do título do capítulo', (tester) async {
+      await montar(tester, Brightness.light);
+      expect(find.text('Ouvir'), findsOneWidget);
+    });
+
+    for (final MapEntry(key: nomeDoTema, value: brilho) in _temas.entries) {
+      for (final MapEntry(key: nomeDaDiretriz, value: diretriz)
+          in _diretrizes.entries) {
+        testWidgets('no tema $nomeDoTema, atende $nomeDaDiretriz', (
+          tester,
+        ) async {
+          final semantica = tester.ensureSemantics();
+          await montar(tester, brilho);
+          await _conferir(tester, diretriz);
+          semantica.dispose();
+        });
       }
     }
   });

@@ -50,7 +50,8 @@ class Recursos {
     return planoPersonalizado && Nuvem.instancia.logado;
   }
 
-  /// Botão "Ouvir" nos textos (Bíblia, devocional, introduções, notas).
+  /// Botão "Ouvir" nos textos (Bíblia, devocional, introduções, notas e
+  /// capítulos dos livros da Biblioteca).
   static bool get ouvirTextos =>
       ouvirTextosForcado ?? ConfigAdmin.instancia.ouvirTextosAtivo;
 

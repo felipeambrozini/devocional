@@ -90,10 +90,12 @@ vitoriana dele, tratando o leitor por "tu".
   exceção à regra de "um app só em todas as plataformas".
 - Leitura em voz alta (MP3 pré-gerados, voz que remete ao tom de Charles
   Spurgeon): narra capítulos da Bíblia, os dois devocionais, Promessas de
-  Deus e as introduções; download opcional para ouvir offline fora da web.
+  Deus, as introduções e os capítulos dos livros da Biblioteca (publicados
+  livro a livro; o botão só aparece onde o MP3 já existe); download opcional
+  para ouvir offline fora da web, menos comentários e livros.
   Opt-in nos Ajustes ("Ouvir capítulos em sequência", desligado por padrão):
   ao terminar um capítulo da Bíblia, o leitor avança e o próximo começa
-  sozinho; devocionais, introduções e comentários nunca encadeiam.
+  sozinho; devocionais, introduções, comentários e livros nunca encadeiam.
 - Plano fixo "A Vida de Jesus em 30 dias": toda conta o ganha (não edita,
   não exclui, não compartilha), com boas-vindas no primeiro login. Planos em
   andamento aparecem na Hoje.

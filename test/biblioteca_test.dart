@@ -1,12 +1,15 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:devocional/dados/audio_offline.dart';
 import 'package:devocional/dados/biblioteca.dart';
 import 'package:devocional/dados/config_admin.dart';
 import 'package:devocional/dados/estado.dart';
 import 'package:devocional/dados/leitura_de_livros.dart';
 import 'package:devocional/dados/modelos.dart';
 import 'package:devocional/dados/recursos.dart';
+import 'package:devocional/dados/voz.dart';
 import 'package:devocional/estilo/espacamento.dart';
 import 'package:devocional/telas/biblioteca.dart';
 import 'package:devocional/telas/leitor_de_livro.dart';
@@ -642,6 +645,122 @@ void main() {
       expect(find.text('Capítulo não encontrado'), findsOneWidget);
     });
 
+    group('Ouvir no capítulo', () {
+      setUp(() {
+        // O botão aparece de verdade, sem rede nem path_provider.
+        Recursos.ouvirTextosForcado = true;
+        Voz.baseUrlForTest = 'https://test.audio';
+        AudioOffline.temOfflineParaTeste = (_) => false;
+      });
+      tearDown(() {
+        Recursos.ouvirTextosForcado = null;
+        Voz.baseUrlForTest = null;
+        Voz.disponibilidadeRemotaParaTeste = null;
+        AudioOffline.temOfflineParaTeste = null;
+      });
+
+      testWidgets('o capítulo mostra o Ouvir com a chave do livro', (
+        tester,
+      ) async {
+        await abrir(tester, '/biblioteca/$slug/1');
+        expect(find.text('Ouvir'), findsOneWidget);
+        final botao = tester.widget<DevocionalBotaoDeVoz>(
+          find.byType(DevocionalBotaoDeVoz),
+        );
+        // O capítulo 1 da tela é o 1.mp3, não o índice 0 da lista.
+        expect(botao.chave, 'livro:$slug.1');
+        expect(botao.referencia, 'Somente pela Graça, ${capitulos[0].titulo}');
+      });
+
+      testWidgets('sem o mp3 publicado, o capítulo não mostra o Ouvir', (
+        tester,
+      ) async {
+        Voz.disponibilidadeRemotaParaTeste = false;
+        await abrir(tester, '/biblioteca/$slug/1');
+        expect(find.text('Ouvir'), findsNothing);
+      });
+
+      group('com o áudio do capítulo tocando', () {
+        setUp(() => Voz.instancia.injetarLeitor = _LeitorFalso());
+        tearDown(() async {
+          await Voz.instancia.parar();
+          Voz.instancia.injetarLeitor = null;
+        });
+
+        // O `alternar` só retorna no fim do áudio: não espera, só deixa
+        // começar. Cada teste toca uma chave diferente: a `Voz` ignora a
+        // mesma chave logo depois de parada (o debounce do toque duplo), e
+        // os testes seguidos caem dentro dessa janela.
+        Future<void> tocar(WidgetTester tester, String chave) async {
+          unawaited(Voz.instancia.alternar(chave));
+          await tester.pumpAndSettle();
+          expect(Voz.instancia.tocando, isTrue);
+          expect(Voz.instancia.tocandoChave, chave);
+        }
+
+        testWidgets('a barra de cima mostra os controles da leitura', (
+          tester,
+        ) async {
+          await abrir(tester, '/biblioteca/$slug/5');
+          await tocar(tester, 'livro:$slug.5');
+          expect(find.byType(DevocionalIndicadorDeVozNaBarra), findsOneWidget);
+          final indicador = tester.widget<DevocionalIndicadorDeVozNaBarra>(
+            find.byType(DevocionalIndicadorDeVozNaBarra),
+          );
+          expect(indicador.chave, 'livro:$slug.5');
+        });
+
+        testWidgets('trocar de capítulo para o áudio do anterior', (
+          tester,
+        ) async {
+          await abrir(tester, '/biblioteca/$slug/2');
+          await tocar(tester, 'livro:$slug.2');
+
+          await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+          await tester.pumpAndSettle();
+
+          expect(find.text('Capítulo 3 de 20'), findsOneWidget);
+          expect(Voz.instancia.tocando, isFalse);
+          expect(Voz.instancia.pausado, isFalse);
+        });
+
+        testWidgets('voltar ao sumário para o áudio do capítulo', (
+          tester,
+        ) async {
+          await abrir(tester, '/biblioteca/$slug');
+          await tester.tap(find.text('Começar a ler'));
+          await tester.pumpAndSettle();
+          await tocar(tester, 'livro:$slug.1');
+
+          await tester.tap(find.byTooltip('Capítulos'));
+          await tester.pumpAndSettle();
+
+          expect(find.text('Capítulo 1 de 20'), findsNothing);
+          expect(Voz.instancia.tocando, isFalse);
+        });
+
+        testWidgets('áudio de outra tela não para ao sair do capítulo', (
+          tester,
+        ) async {
+          await abrir(tester, '/biblioteca/$slug/1');
+          await tocar(tester, 'introducao:joao');
+
+          await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+          await tester.pumpAndSettle();
+
+          expect(Voz.instancia.tocandoChave, 'introducao:joao');
+        });
+      });
+
+      testWidgets('com Ouvir textos desligado, o capítulo não mostra o Ouvir', (
+        tester,
+      ) async {
+        Recursos.ouvirTextosForcado = false;
+        await abrir(tester, '/biblioteca/$slug/1');
+        expect(find.text('Ouvir'), findsNothing);
+      });
+    });
+
     testWidgets('tocar no parágrafo destaca, anota e marca como lido', (
       tester,
     ) async {
@@ -726,4 +845,48 @@ void main() {
       expect(find.text('Parei aqui'), findsOneWidget);
     });
   });
+}
+
+/// Leitor que toca até o teste parar: sem ele a `Voz` não chega ao estado
+/// "tocando" em teste. Duração conhecida, para a barrinha de progresso da
+/// pílula não animar para sempre e o `pumpAndSettle` assentar.
+class _LeitorFalso implements LeitorDeAudio {
+  Completer<void>? _fim;
+
+  @override
+  Duration? posicaoAtual;
+
+  @override
+  bool concluida = true;
+
+  @override
+  bool pausadoDeFora = false;
+
+  @override
+  Future<void> tocar(
+    Uint8List bytes, {
+    Duration? de,
+    required void Function(Future<void> fim) aoFim,
+  }) {
+    final fim = Completer<void>();
+    _fim = fim;
+    aoFim(fim.future);
+    return Future<void>.value();
+  }
+
+  @override
+  Future<void> silenciar() async {
+    final fim = _fim;
+    if (fim != null && !fim.isCompleted) fim.complete();
+  }
+
+  @override
+  Future<void> pausar() async {}
+
+  @override
+  Stream<Duration> get posicao => Stream<Duration>.value(Duration.zero);
+
+  @override
+  Stream<Duration?> get duracao =>
+      Stream<Duration?>.value(const Duration(minutes: 20));
 }

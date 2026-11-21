@@ -215,7 +215,8 @@ class _TelaAdminState extends State<TelaAdmin> {
           DevocionalInterruptor(
             titulo: 'Ouvir textos',
             subtitulo:
-                'O botão Ouvir na Bíblia, no devocional e nas introduções.',
+                'O botão Ouvir na Bíblia, no devocional, nas introduções e '
+                'nos livros da Biblioteca.',
             valor: config.ouvirTextosAtivo,
             salvando: _salvando.contains('ouvirTextosAtivo'),
             aoMudar: (novo) =>

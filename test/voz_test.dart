@@ -8,6 +8,18 @@ void main() {
       expect(chaveDeCapitulo('joao', 3), 'capitulo:joao.3');
       expect(chaveDaIntroducao('genesis'), 'introducao:genesis');
     });
+
+    test('chaveDoCapituloDoLivro e o caminho do mp3 do livro', () {
+      expect(
+        chaveDoCapituloDoLivro('o_santo_e_o_seu_salvador', 1),
+        'livro:o_santo_e_o_seu_salvador.1',
+      );
+      expect(
+        caminhoRelativoParaChave('livro:o_santo_e_o_seu_salvador.1'),
+        'livros/o_santo_e_o_seu_salvador/1.mp3',
+      );
+      expect(caminhoRelativoParaChave('livro:somente_pela_graca'), isNull);
+    });
   });
 
   group('velocidade', () {

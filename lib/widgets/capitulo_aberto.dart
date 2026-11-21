@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../controladores/leitor_de_livro_controlador.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
+import '../dados/voz.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
 import '../funcoes/dialogos.dart';
@@ -17,6 +18,7 @@ import 'app_bar.dart';
 import 'area_de_selecao.dart';
 import 'barra_de_capitulo.dart';
 import 'botao.dart';
+import 'botao_de_voz.dart';
 import 'filete.dart';
 import 'layout_leitura.dart';
 import 'paragrafo_de_livro.dart';
@@ -48,6 +50,7 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
   CapituloDoLivro get _capitulo => widget.capitulos[widget.indice];
   String get _slug => widget.obra.slug;
   bool get _ehUltimo => widget.indice == widget.capitulos.length - 1;
+  String get _chaveDaVoz => chaveDoCapituloDoLivro(_slug, widget.indice + 1);
 
   @override
   void initState() {
@@ -65,7 +68,27 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
   @override
   void dispose() {
     _controlador.dispose();
+    _pararAVozDoCapitulo();
     super.dispose();
+  }
+
+  /// A leitura deste capítulo não continua depois que ele sai da tela: o
+  /// botão de parar sai junto, e a regra é não deixar um áudio tocando sem
+  /// ele à vista. Vale para toda saída (outro capítulo, sumário, voltar do
+  /// sistema, fim do livro), por isso mora no dispose. O observador da voz em
+  /// main.dart só vê os push opacos da raiz, e a troca de capítulo é um
+  /// pushReplacement dentro da aba. Fica para o fim do quadro porque
+  /// `parar()` avisa os ouvintes, e mexer na árvore durante a desmontagem
+  /// dela é erro. Áudio de outra tela (o capítulo novo, uma introdução) fica.
+  void _pararAVozDoCapitulo() {
+    final chave = _chaveDaVoz;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final voz = Voz.instancia;
+      if (voz.tocandoChave == chave &&
+          (voz.tocando || voz.pausado || voz.carregando)) {
+        voz.parar();
+      }
+    });
   }
 
   /// Troca de capítulo no lugar da tela atual, para o voltar continuar
@@ -258,6 +281,9 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
           appBar: DevocionalAppBar(
             title: Text(widget.obra.titulo, overflow: TextOverflow.ellipsis),
             actions: [
+              // Quem rolou para longe da pílula ainda pausa ou encerra a
+              // leitura daqui, como na Bíblia.
+              DevocionalIndicadorDeVozNaBarra(chave: _chaveDaVoz),
               IconButton(
                 tooltip: 'Capítulos',
                 icon: const FaIcon(FontAwesomeIcons.listUl),
@@ -317,14 +343,32 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
                                 const SizedBox(
                                   height: DevocionalEspacamento.sp4,
                                 ),
-                                Text(
-                                  _capitulo.titulo,
-                                  style: tema.headlineMedium,
+                                // Container: sem ele, o leitor de tela
+                                // fundia o título com a pílula de ouvir
+                                // logo abaixo num nó só, como na Bíblia.
+                                Semantics(
+                                  container: true,
+                                  header: true,
+                                  child: Text(
+                                    _capitulo.titulo,
+                                    style: tema.headlineMedium,
+                                  ),
                                 ),
                                 const SizedBox(
                                   height: DevocionalEspacamento.sp14,
                                 ),
                                 const DevocionalFilete(),
+                                const SizedBox(
+                                  height: DevocionalEspacamento.sp16,
+                                ),
+                                // Só aparece quando o mp3 do capítulo já foi
+                                // publicado: os livros ganham áudio aos
+                                // poucos, livro a livro.
+                                DevocionalBotaoDeVoz(
+                                  chave: _chaveDaVoz,
+                                  referencia:
+                                      '${widget.obra.titulo}, ${_capitulo.titulo}',
+                                ),
                                 const SizedBox(
                                   height: DevocionalEspacamento.sp16,
                                 ),

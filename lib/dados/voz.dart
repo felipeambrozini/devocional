@@ -43,6 +43,12 @@ String chaveDeCapitulo(String livro, int numero) => 'capitulo:$livro.$numero';
 
 String chaveDaIntroducao(String slug) => 'introducao:$slug';
 
+/// A chave da voz para um capítulo de livro da Biblioteca
+/// ("livro:somente_pela_graca.3"): [slug] é o nome do JSON em
+/// `assets/livros/` e [numero] começa em 1, como na rota
+/// `/biblioteca/<slug>/<n>` — não o índice da lista de capítulos.
+String chaveDoCapituloDoLivro(String slug, int numero) => 'livro:$slug.$numero';
+
 /// A chave da voz para o comentário de Spurgeon de um versículo
 /// ("comentario:joao.3.16") — um áudio por versículo, e não por capítulo:
 /// cada arquivo já anuncia "Livro Capítulo N Versículo M" antes do comentário.
@@ -61,6 +67,7 @@ String chaveDeDevocional(String leitura, int dia, int mes) =>
 
 /// O caminho relativo do mp3 pré-gerado para [chave] (sem base nem barra
 /// inicial): "biblia/joao/3.mp3", "introducoes/joao.mp3",
+/// "livros/somente_pela_graca/3.mp3",
 /// "devocionais/manha_e_noite/manha/8-19.mp3",
 /// "devocionais/promessas_de_deus/8-19.mp3" — o mesmo nome dos arquivos em
 /// `assets/`. Null se a chave não tiver um desses formatos. Único
@@ -75,6 +82,11 @@ String? caminhoRelativoParaChave(String chave) {
   }
   if (chave.startsWith('introducao:')) {
     return 'introducoes/${chave.substring('introducao:'.length)}.mp3';
+  }
+  if (chave.startsWith('livro:')) {
+    final partes = chave.substring('livro:'.length).split('.');
+    if (partes.length != 2) return null;
+    return 'livros/${partes[0]}/${partes[1]}.mp3';
   }
   if (chave.startsWith('comentario:')) {
     final partes = chave.substring('comentario:'.length).split('.');
