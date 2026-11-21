@@ -158,7 +158,7 @@ jobs:
       # rewrite de /devocional/api/erro para `registrarErro`, e o CLI recusa
       # publicar o Hosting se a Function ainda não existe no projeto — na
       # primeira publicação depois desta mudança, ordem inversa quebraria.
-      - uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15.27.0
+      - uses: w9jds/firebase-action@4cdc4914d02e1044478456e9d0f87118e13541d9 # v15.27.0
         with:
           args: deploy --only functions,hosting,firestore:rules,storage
         env:
