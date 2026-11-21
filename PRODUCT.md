@@ -269,8 +269,9 @@ vitoriana dele, tratando o leitor por "tu".
 
 - Contraste WCAG garantido por teste (`test/tema_test.dart` falha se
   clarearem o bronze ou piorarem os pares anotados).
-- Escala do texto de leitura ajustável pelo usuário (0,85× a 2×): o corpo de
-  leitura acompanha a escala inteira; títulos, rótulos e navegação crescem só
+- Escala do texto de leitura ajustável pelo usuário (0,7× a 2×): o corpo de
+  leitura acompanha a escala inteira, em seis passos (Mínimo a Máximo) que
+  diferem o bastante para se notar; títulos, rótulos e navegação crescem só
   30% do pedido, com teto de 1,3×, para não estourar a barra de cima nem a de
   navegação.
 - Tema claro e escuro completos, seguindo o aparelho por padrão.

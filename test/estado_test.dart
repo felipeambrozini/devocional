@@ -185,6 +185,20 @@ void main() {
       expect(estado.escalaDeLeitura, 1.3);
     });
 
+    test('aceita o passo minimo e o mantem ao reabrir', () async {
+      final estado = await Estado.abrir();
+      await estado.definirEscalaDeLeitura(escalasDeLeitura.first);
+      expect(escalasDeLeitura.first, 0.7);
+      expect((await reabrir()).escalaDeLeitura, 0.7);
+    });
+
+    test('passo que saiu da lista vai para o mais proximo', () async {
+      for (final (antigo, novo) in [(1.15, 1.3), (1.5, 1.6), (1.75, 1.6)]) {
+        SharedPreferences.setMockInitialValues({'escala_de_leitura': antigo});
+        expect((await Estado.abrir()).escalaDeLeitura, novo, reason: '$antigo');
+      }
+    });
+
     test('valor gravado fora da lista volta ao padrao', () async {
       SharedPreferences.setMockInitialValues({'escala_de_leitura': 42.0});
       expect((await Estado.abrir()).escalaDeLeitura, 1.0);

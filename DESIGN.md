@@ -307,11 +307,11 @@ arquivos por peso), em `lib/estilo/tema.dart`.
 todo o resto — corpo, rótulos, botões, legendas. Uma terceira família, ou Cinzel
 em texto corrido, quebra a hierarquia da estante.
 
-**A Regra da Escala.** A escala de leitura do usuário vai de 0,85× a 2×
+**A Regra da Escala.** A escala de leitura do usuário vai de 0,7× a 2×
 (`escalasDeLeitura`). O corpo de leitura (`bodyLarge`, `bodyMedium`) acompanha a
 escala inteira; títulos, rótulos, botões, chips, snackbar, navegação e todo o
 resto do texto do tema passam por `escalarTitulo` (`lib/estilo/tema.dart`), que
-aplica só 30% do pedido e fica preso entre 1× e 1,3× — não encolhem no Pequeno
+aplica só 30% do pedido e fica preso entre 1× e 1,3× — não encolhem no Mínimo
 e, no 2×, crescem só 30%. O texto que se lê cresce de verdade; o que emoldura a
 leitura cresce pouco, para não empurrar a barra de baixo nem quebrar o
 cabeçalho.

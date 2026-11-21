@@ -549,7 +549,7 @@ motivo novo.
   régua de meses do Plano, e deixava de fora as telas abertas por
   `MaterialPageRoute`.
 - **O tamanho do texto escala por inteiro só no corpo de leitura**: `bodyLarge`
-  e `bodyMedium` acompanham a escala pedida inteira (de 0,85× a 2×); títulos e
+  e `bodyMedium` acompanham a escala pedida inteira (de 0,7× a 2×); títulos e
   os demais textos escalam só 30% do pedido, sem encolher e com teto de 1,3×
   (`escalarTitulo` em
   `lib/estilo/tema.dart`), para não empurrar a barra de baixo nem quebrar o

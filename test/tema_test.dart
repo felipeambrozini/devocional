@@ -283,5 +283,17 @@ void main() {
       expect(escalasDeLeitura, contains(1.0));
       expect(escalasDeLeitura, orderedEquals([...escalasDeLeitura]..sort()));
     });
+
+    test('cada passo fica uns 18% ou mais acima do anterior', () {
+      // Abaixo disso o toque no chip mal muda o versículo, e o passo sobra.
+      for (var i = 1; i < escalasDeLeitura.length; i++) {
+        final razao = escalasDeLeitura[i] / escalasDeLeitura[i - 1];
+        expect(
+          razao,
+          greaterThanOrEqualTo(1.17),
+          reason: '${escalasDeLeitura[i]}',
+        );
+      }
+    });
   });
 }

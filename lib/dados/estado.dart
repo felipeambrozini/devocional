@@ -202,11 +202,12 @@ class Estado extends ChangeNotifier {
     }
 
     // Um valor gravado por uma versão futura, ou corrompido, não deve deixar o
-    // app com texto ilegível: só passa o que está na lista de passos conhecidos.
+    // app com texto ilegível: fora da faixa oferecida, fica o padrão. Dentro
+    // dela, um passo que saiu da lista (1,15×, 1,5×, 1,75×) vai para o mais
+    // próximo, para quem já tinha escolhido não perder a escolha.
     final escala = _prefs.getDouble(_kEscala);
-    if (escala != null && escalasDeLeitura.contains(escala)) {
-      _escalaDeLeitura = escala;
-    }
+    final passo = escala == null ? null : passoDeEscalaMaisProximo(escala);
+    if (passo != null) _escalaDeLeitura = passo;
     _velocidadeDaVoz = _prefs.getDouble(_kVelocidadeDaVoz) ?? 1.0;
     _reproducaoContinua = _prefs.getBool(_kReproducaoContinua) ?? false;
 
