@@ -6,6 +6,7 @@ import '../dados/canon.dart';
 import '../dados/conteudo.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
+import '../dados/recursos.dart';
 import '../dados/voz.dart';
 import '../estilo/espacamento.dart';
 import '../estilo/tema.dart';
@@ -201,6 +202,7 @@ class _AcoesDoVersiculo {
     required this.texto,
     required this.marcacao,
     required this.comentario,
+    required this.comentarioNoTexto,
   });
 
   final Estado estado;
@@ -218,6 +220,12 @@ class _AcoesDoVersiculo {
   /// Comentário de Spurgeon sobre este versículo, se já escrito. Criado uma
   /// vez antes da folha abrir, para os redesenhos não refazerem o pedido.
   final Future<String?> comentario;
+
+  /// O comentário já aparece embaixo do versículo, no capítulo: a folha não
+  /// repete o texto e fica só com o botão de ouvi-lo, que no capítulo não
+  /// existe (uma pílula por versículo pesaria na página e checaria o áudio de
+  /// todos de uma vez).
+  final bool comentarioNoTexto;
 
   Widget folha(BuildContext contextoDaFolha) {
     final cor = Theme.of(contextoDaFolha).colorScheme;
@@ -289,6 +297,10 @@ class _AcoesDoVersiculo {
     AsyncSnapshot<String?> snap,
   ) {
     if (snap.connectionState != ConnectionState.done) {
+      // Com o comentário no texto, o arquivo já está em cache e a espera é de
+      // um quadro: um "Carregando" aí seria anunciado ao leitor de tela por
+      // nada, já que o botão ainda pode sumir se o áudio não existir.
+      if (comentarioNoTexto) return const SizedBox.shrink();
       return const Padding(
         padding: EdgeInsets.only(top: DevocionalEspacamento.sp16),
         child: SizedBox.square(
@@ -302,6 +314,19 @@ class _AcoesDoVersiculo {
     }
     final texto = snap.data;
     if (texto == null || texto.isEmpty) return const SizedBox.shrink();
+    final ouvir = DevocionalBotaoDeVoz(
+      chave: chaveDoComentario(livro, capituloNumero, numero),
+      referencia: '$referencia:$numero, comentário',
+      oQueOuvir: comentarioNoTexto ? 'o comentário' : null,
+    );
+    if (comentarioNoTexto) {
+      // Sem título: se o áudio não existir, o botão some sozinho e não sobra
+      // um cabeçalho sem nada embaixo.
+      return Padding(
+        padding: const EdgeInsets.only(top: DevocionalEspacamento.sp16),
+        child: ouvir,
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -313,10 +338,7 @@ class _AcoesDoVersiculo {
               .comPeso(FontWeight.w700),
         ),
         const SizedBox(height: DevocionalEspacamento.sp8),
-        DevocionalBotaoDeVoz(
-          chave: chaveDoComentario(livro, capituloNumero, numero),
-          referencia: '$referencia:$numero, comentário',
-        ),
+        ouvir,
         const SizedBox(height: DevocionalEspacamento.sp8),
         Text(
           texto,
@@ -444,8 +466,11 @@ Future<void> _abrirAcoesDoVersiculo(
   // A folha abre já e o comentário chega dentro dela: o primeiro toque num
   // livro baixa o arquivo de comentários inteiro (1 MB em Salmos), e esperar
   // por ele antes de abrir deixava o toque sem resposta na web.
-  // Com o comentário já junto do texto, a folha não o repete.
-  final comentario = comentarioNoTextoAtivo(estado)
+  // Com o comentário já junto do texto, o arquivo do livro já está em cache e
+  // a busca só confirma que o versículo tem comentário a ouvir.
+  // Sem a voz ligada, não há o que oferecer na folha nesse modo.
+  final noTexto = comentarioNoTextoAtivo(estado);
+  final comentario = noTexto && !Recursos.ouvirTextos
       ? Future<String?>.value()
       : Conteudo.instancia.comentario(livro, capituloNumero, numero);
   final acoes = _AcoesDoVersiculo(
@@ -457,6 +482,7 @@ Future<void> _abrirAcoesDoVersiculo(
     texto: texto,
     marcacao: marcacao,
     comentario: comentario,
+    comentarioNoTexto: noTexto,
   );
   await showModalBottomSheet<void>(
     context: context,

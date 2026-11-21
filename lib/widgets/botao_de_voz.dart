@@ -26,10 +26,21 @@ import 'retrato_de_persona.dart';
 /// O botão escuta o fim da própria leitura para fechar o ciclo com a
 /// confirmação "Leitura concluída.": parar no meio não é um fim, e não avisa.
 class DevocionalBotaoDeVoz extends StatefulWidget {
-  const DevocionalBotaoDeVoz({super.key, required this.chave, this.referencia});
+  const DevocionalBotaoDeVoz({
+    super.key,
+    required this.chave,
+    this.referencia,
+    this.oQueOuvir,
+  });
 
   final String chave;
   final String? referencia;
+
+  /// O que se ouve, para o rótulo em repouso dizer "Ouvir o comentário" em
+  /// vez de só "Ouvir". Serve onde o botão aparece sozinho, sem um título
+  /// acima explicando o áudio: na folha do versículo, com o comentário já
+  /// junto do texto, um "Ouvir" solto pareceria ler o versículo.
+  final String? oQueOuvir;
 
   @override
   State<DevocionalBotaoDeVoz> createState() => _BotaoDeVozState();
@@ -149,6 +160,8 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
             voz.carregando && !voz.tocando && voz.tocandoChave == widget.chave;
         final ativo = voz.tocando && voz.tocandoChave == widget.chave;
         final pausado = voz.pausado && voz.tocandoChave == widget.chave;
+        final repouso = !ativo && !pausado && !preparando;
+        final ouvir = _ouvir;
         // A leitura fala como o pregador, não como painel de controle: quem
         // está lendo é uma pessoa, e o aviso completo vai no Semantics (o
         // rótulo visível é curto para caber na pílula em escala 2x).
@@ -158,14 +171,14 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
             ? 'A leitura foi pausada. Toque para retomar.'
             : preparando
             ? 'Preparando a voz de Spurgeon. Toque para cancelar.'
-            : 'Ouvir na voz de Spurgeon';
+            : '$ouvir na voz de Spurgeon';
         final visivel = ativo
             ? 'O pregador está lendo…'
             : pausado
             ? 'Pausado. Toque para retomar.'
             : preparando
             ? 'Preparando a voz…'
-            : 'Ouvir';
+            : ouvir;
         return Tooltip(
           message: preparando
               ? 'Cancelar o preparo'
@@ -173,7 +186,7 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
               ? 'Pausar a leitura'
               : pausado
               ? 'Retomar a leitura'
-              : 'Ouvir na voz de Spurgeon',
+              : '$ouvir na voz de Spurgeon',
           child: Semantics(
             button: true,
             label: rotulo,
@@ -253,11 +266,18 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
                           // rótulo completo já vive no Semantics acima, e o
                           // texto visível repetido faria o leitor de tela ler
                           // a frase duas vezes.
+                          // Em repouso o rótulo quebra em até duas linhas em
+                          // vez de cortar: com fonte grande, "Ouvir o
+                          // comentário" virava "Ouvir o co…" e perdia
+                          // justamente a palavra que diz o que se ouve.
                           Flexible(
                             child: ExcludeSemantics(
                               child: Text(
                                 visivel,
-                                overflow: TextOverflow.ellipsis,
+                                maxLines: repouso ? 2 : null,
+                                overflow: repouso
+                                    ? null
+                                    : TextOverflow.ellipsis,
                                 style: tema.labelLarge?.copyWith(
                                   color: ativo || pausado
                                       ? cor.primary
@@ -300,12 +320,17 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
   Widget _botaoSemRede(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
+    // Com [oQueOuvir], o texto visível diz o quê: na folha do versículo não
+    // há título acima, e um "Sem conexão" solto não diria do que se trata.
+    final visivel = widget.oQueOuvir == null
+        ? 'Sem conexão. Toque para tentar'
+        : 'Áudio do comentário sem conexão. Toque para tentar';
     return Tooltip(
       message: 'Sem conexão para checar o áudio. Toque para tentar de novo.',
       child: Semantics(
         button: true,
         label:
-            'Ouvir na voz de Spurgeon, indisponível sem conexão. Toque para tentar de novo',
+            '$_ouvir na voz de Spurgeon, indisponível sem conexão. Toque para tentar de novo',
         hint: 'Toca para verificar novamente',
         child: Material(
           color: cor.surfaceContainerHighest,
@@ -337,7 +362,7 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
                     const SizedBox(width: DevocionalEspacamento.sp6),
                     Flexible(
                       child: Text(
-                        'Sem conexão. Toque para tentar',
+                        visivel,
                         style: tema.labelMedium?.copyWith(
                           color: cor.onSurfaceVariant,
                         ),
@@ -351,6 +376,12 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
         ),
       ),
     );
+  }
+
+  /// "Ouvir" ou "Ouvir o comentário", conforme [DevocionalBotaoDeVoz.oQueOuvir].
+  String get _ouvir {
+    final oQue = widget.oQueOuvir;
+    return oQue == null ? 'Ouvir' : 'Ouvir $oQue';
   }
 
   Future<void> _alternar(BuildContext context, Voz voz) async {

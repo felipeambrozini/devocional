@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:devocional/dados/audio_offline.dart';
 import 'package:devocional/dados/canon.dart';
 import 'package:devocional/dados/config_admin.dart';
 import 'package:devocional/dados/conteudo.dart';
 import 'package:devocional/dados/estado.dart';
 import 'package:devocional/dados/recursos.dart';
+import 'package:devocional/dados/voz.dart';
 import 'package:devocional/telas/biblia.dart';
 import 'package:devocional/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
@@ -271,6 +273,53 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       expect(find.text('comentários: 0'), findsOneWidget);
+    });
+
+    group('folha do versículo', () {
+      setUp(() {
+        // O botão de ouvir aparece de verdade, sem rede nem path_provider.
+        Recursos.ouvirTextosForcado = true;
+        Voz.baseUrlForTest = 'https://test.audio';
+        Voz.disponibilidadeRemotaParaTeste = true;
+        AudioOffline.temOfflineParaTeste = (_) => false;
+      });
+      tearDown(() {
+        Recursos.ouvirTextosForcado = null;
+        Voz.baseUrlForTest = null;
+        Voz.disponibilidadeRemotaParaTeste = null;
+        AudioOffline.temOfflineParaTeste = null;
+      });
+
+      Future<void> tocarVersiculo1(WidgetTester tester) async {
+        await tester.tap(
+          find.byWidgetPredicate(
+            (w) =>
+                w is RichText &&
+                w.text.toPlainText().contains('No princípio era o Verbo'),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('Favoritar'), findsOneWidget);
+      }
+
+      testWidgets('com o comentário no texto, oferece só o ouvir, sem repetir '
+          'o texto', (tester) async {
+        await abrirLeitor(tester, flag: true);
+        await tocarVersiculo1(tester);
+        expect(find.text('Ouvir o comentário'), findsOneWidget);
+        expect(find.text('Comentário de Charles Spurgeon'), findsNothing);
+        // Só o do capítulo: a folha não repete o texto.
+        expect(find.textContaining(trechoDeJoao1v1), findsOneWidget);
+      });
+
+      testWidgets('com o comentário só na folha, mostra título, ouvir e '
+          'texto', (tester) async {
+        await abrirLeitor(tester, flag: false);
+        await tocarVersiculo1(tester);
+        expect(find.text('Comentário de Charles Spurgeon'), findsOneWidget);
+        expect(find.text('Ouvir o comentário'), findsNothing);
+        expect(find.textContaining(trechoDeJoao1v1), findsOneWidget);
+      });
     });
   });
 }

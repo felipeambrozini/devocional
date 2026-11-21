@@ -1,4 +1,5 @@
 import 'package:devocional/dados/audio_offline.dart';
+import 'package:devocional/dados/conteudo.dart';
 import 'package:devocional/dados/estado.dart';
 import 'package:devocional/dados/leitura_de_livros.dart';
 import 'package:devocional/dados/modelos.dart';
@@ -7,6 +8,7 @@ import 'package:devocional/dados/recursos.dart';
 import 'package:devocional/dados/voz.dart';
 import 'package:devocional/estilo/tema.dart';
 import 'package:devocional/funcoes/aviso.dart';
+import 'package:devocional/telas/biblia.dart';
 import 'package:devocional/telas/historico.dart';
 import 'package:devocional/widgets/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -424,6 +426,61 @@ void main() {
             semantica.dispose();
           },
         );
+      }
+    }
+  });
+
+  group('folha do versículo com o comentário no texto', () {
+    setUp(() {
+      Recursos.ouvirTextosForcado = true;
+      Recursos.comentarioNoCapituloForcado = true;
+      Voz.baseUrlForTest = 'https://test.audio';
+      Voz.disponibilidadeRemotaParaTeste = true;
+      AudioOffline.temOfflineParaTeste = (_) => false;
+    });
+    tearDown(() {
+      Recursos.ouvirTextosForcado = null;
+      Recursos.comentarioNoCapituloForcado = null;
+      Voz.baseUrlForTest = null;
+      Voz.disponibilidadeRemotaParaTeste = null;
+      AudioOffline.temOfflineParaTeste = null;
+    });
+
+    Future<void> abrirFolha(WidgetTester tester, Brightness brilho) async {
+      _telaDeCelular(tester);
+      final estado = Estado(await SharedPreferences.getInstance());
+      await estado.definirComentarioNoTexto(true);
+      await tester.runAsync(() async {
+        await Conteudo.instancia.capitulo('joao', 1);
+        await Conteudo.instancia.introducao('joao');
+        await Conteudo.instancia.comentariosDoCapitulo('joao', 1);
+      });
+      await tester.pumpWidget(
+        _app(brilho, estado, const TelaBiblia(livroInicial: 'joao')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) =>
+              w is RichText &&
+              w.text.toPlainText().contains('No princípio era o Verbo'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Ouvir o comentário'), findsOneWidget);
+    }
+
+    for (final MapEntry(key: nomeDoTema, value: brilho) in _temas.entries) {
+      for (final MapEntry(key: nomeDaDiretriz, value: diretriz)
+          in _diretrizes.entries) {
+        testWidgets('no tema $nomeDoTema, atende $nomeDaDiretriz', (
+          tester,
+        ) async {
+          final semantica = tester.ensureSemantics();
+          await abrirFolha(tester, brilho);
+          await _conferir(tester, diretriz);
+          semantica.dispose();
+        });
       }
     }
   });

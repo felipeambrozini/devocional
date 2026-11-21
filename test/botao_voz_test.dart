@@ -2,6 +2,7 @@ import 'package:devocional/dados/audio_offline.dart';
 import 'package:devocional/dados/voz.dart';
 import 'package:devocional/funcoes/aviso.dart';
 import 'package:devocional/widgets/widgets.dart';
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -68,6 +69,72 @@ void main() {
         expect(find.text('Ouvir'), findsNothing);
       },
     );
+
+    testWidgets('com o que se ouve, o rótulo e o sem-rede dizem o quê', (
+      tester,
+    ) async {
+      final semantica = tester.ensureSemantics();
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: DevocionalBotaoDeVoz(
+              chave: 'comentario:joao.1.1',
+              oQueOuvir: 'o comentário',
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Ouvir o comentário'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Ouvir o comentário na voz de Spurgeon'),
+        findsOneWidget,
+      );
+      semantica.dispose();
+
+      Voz.semRedeParaTeste = true;
+      addTearDown(() => Voz.semRedeParaTeste = false);
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: DevocionalBotaoDeVoz(
+              chave: 'comentario:joao.1.2',
+              oQueOuvir: 'o comentário',
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(
+        find.text('Áudio do comentário sem conexão. Toque para tentar'),
+        findsOneWidget,
+      );
+    });
+
+    // A fonte de teste desenha cada letra como um quadrado do tamanho da
+    // fonte, então medir se "Ouvir o comentário" cabe em 2x não diria nada
+    // sobre a Montserrat de verdade. O que se guarda aqui é a regra: em
+    // repouso o rótulo quebra em até duas linhas e não corta com reticências.
+    testWidgets('em repouso o rótulo quebra linha em vez de cortar', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: DevocionalBotaoDeVoz(
+              chave: 'comentario:joao.1.1',
+              oQueOuvir: 'o comentário',
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      final rotulo = tester.renderObject<RenderParagraph>(
+        find.text('Ouvir o comentário'),
+      );
+      expect(rotulo.maxLines, 2);
+      expect(rotulo.overflow, isNot(TextOverflow.ellipsis));
+    });
 
     testWidgets('o erro de leitura oferece "Tentar de novo"', (tester) async {
       // Disponível na checagem (default de teste = tudo disponível), mas

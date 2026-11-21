@@ -160,9 +160,10 @@ do mesmo código).
   texto"
   nos ajustes de leitura (`Estado.comentarioNoTexto`, padrão desligado) o vê
   abaixo
-  de cada versículo, em corpo menor e com o fio do metal à esquerda, e ele deixa
-  de
-  aparecer na folha. O interruptor `comentarioNoCapituloAtivo` do painel
+  de cada versículo, em corpo menor e com o fio do metal à esquerda. A folha
+  então não repete o texto e fica só com o botão "Ouvir o comentário", que não
+  aparece no capítulo para não pôr uma pílula de áudio embaixo de cada
+  versículo. O interruptor `comentarioNoCapituloAtivo` do painel
   `/admin`
   (`Recursos.comentarioNoCapitulo`, ligado quando o campo falta) é a
   chave-mestra:
