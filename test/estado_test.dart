@@ -193,7 +193,13 @@ void main() {
     });
 
     test('passo que saiu da lista vai para o mais proximo', () async {
-      for (final (antigo, novo) in [(1.15, 1.3), (1.5, 1.6), (1.75, 1.6)]) {
+      for (final (antigo, novo) in [
+        (1.15, 1.3),
+        (1.5, 2.0),
+        (1.6, 2.0),
+        (1.75, 2.0),
+        (0.8, 0.85),
+      ]) {
         SharedPreferences.setMockInitialValues({'escala_de_leitura': antigo});
         expect((await Estado.abrir()).escalaDeLeitura, novo, reason: '$antigo');
       }

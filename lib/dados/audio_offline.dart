@@ -7,12 +7,33 @@ import 'package:path_provider/path_provider.dart';
 
 import 'audio_config.dart';
 import 'canon.dart';
+import 'registro.dart';
 import 'voz.dart';
+
+/// A pasta, dentro de `audio_offline/`, com o áudio de um livro da Bíblia
+/// ("biblia/joao"). É a mesma de [caminhoRelativoParaChave]: um livro se baixa
+/// e se apaga pela pasta dele.
+String pastaDoLivroDaBiblia(String slug) => 'biblia/$slug';
+
+/// A pasta do áudio de um livro da Biblioteca ("livros/somente_pela_graca").
+String pastaDoLivroDaBiblioteca(String slug) => 'livros/$slug';
+
+/// As chaves da voz de todos os capítulos de [livro], na ordem.
+List<String> chavesDoLivroDaBiblia(Livro livro) => [
+  for (var c = 1; c <= livro.capitulos; c++) chaveDeCapitulo(livro.slug, c),
+];
+
+/// As chaves da voz dos [capitulos] capítulos de um livro da Biblioteca,
+/// numerados a partir de 1, como em [chaveDoCapituloDoLivro].
+List<String> chavesDoLivroDaBiblioteca(String slug, int capitulos) => [
+  for (var n = 1; n <= capitulos; n++) chaveDoCapituloDoLivro(slug, n),
+];
 
 /// Gerencia o download dos MP3 pré-gerados para uso offline.
 ///
-/// Ordem pedida pelo usuário: Bíblia, Introdução, Manhã e Noite, Promessas.
-/// Cada categoria é um lote de arquivos em `lib/dados/voz.dart` (`_urlParaChave`).
+/// Baixa por categoria (Bíblia, Introdução, Manhã e Noite, Promessas) ou por
+/// livro: um livro da Bíblia ou da Biblioteca é a pasta dele (ver
+/// [pastaDoLivroDaBiblia] e [pastaDoLivroDaBiblioteca]).
 /// Web não tem sistema de arquivos: todos os métodos viram no-op.
 class AudioOffline extends ChangeNotifier {
   AudioOffline._();
@@ -21,6 +42,8 @@ class AudioOffline extends ChangeNotifier {
   bool _baixando = false;
   bool _cancelado = false;
   String? _categoriaAtiva;
+  String? _loteAtivo;
+  String? _loteDoErro;
   double _progresso = 0; // 0..1 do lote atual
   int _baixadosNoLote = 0;
   int _totalNoLote = 0;
@@ -40,8 +63,26 @@ class AudioOffline extends ChangeNotifier {
   };
   int _tamanhoTotalBytes = 0;
 
+  /// Arquivos baixados por pasta de livro (`biblia/joao`, `livros/<slug>`).
+  /// Separado de [_contagemPorCategoria] de propósito: [estimarTamanhos]
+  /// percorre as chaves daquele mapa, e um livro ali viraria um HEAD a mais
+  /// cada vez que a folha de ajustes abre.
+  final Map<String, int> _contagemPorLivro = {};
+
   bool get baixando => _baixando;
+
+  /// A categoria em download, ou `null` quando o lote é um livro.
   String? get categoriaAtiva => _categoriaAtiva;
+
+  /// O lote em download agora: a categoria ou a pasta do livro.
+  String? get loteAtivo => _loteAtivo;
+
+  /// O lote em que [erro] aconteceu, para cada tela mostrar só o erro dela.
+  String? get loteDoErro => _loteDoErro;
+
+  /// Quantos arquivos da pasta [pasta] já estão no aparelho, ou `null` se
+  /// ainda não contou (ver [contarLivro] e [atualizarContagens]).
+  int? contagemDoLivro(String pasta) => _contagemPorLivro[pasta];
   double get progresso => _progresso;
   Map<String, int> get contagemPorCategoria =>
       Map.unmodifiable(_contagemPorCategoria);
@@ -128,23 +169,48 @@ class AudioOffline extends ChangeNotifier {
 
   /// Se AUDIO_BASE_URL não estiver configurada, não faz nada. Interrompível
   /// por [cancelar]: o que já baixou fica — só para de pedir o resto.
-  Future<void> baixarCategoria(String categoria, {http.Client? cliente}) async {
+  Future<void> baixarCategoria(String categoria, {http.Client? cliente}) =>
+      _baixarLote(
+        _chavesDaCategoria(categoria),
+        lote: categoria,
+        cliente: cliente,
+      );
+
+  /// Baixa os capítulos [chaves] de um livro, gravados em [pasta] (ver
+  /// [pastaDoLivroDaBiblia] e [pastaDoLivroDaBiblioteca]). Para no primeiro
+  /// arquivo que o Storage disser que não existe: os livros ganham áudio
+  /// inteiros, então um capítulo ausente quer dizer livro sem áudio, e seguir
+  /// seriam centenas de pedidos fadados ao mesmo erro.
+  Future<void> baixarLivro(
+    String pasta,
+    List<String> chaves, {
+    http.Client? cliente,
+  }) => _baixarLote(chaves, lote: pasta, pararSeFaltar: true, cliente: cliente);
+
+  Future<void> _baixarLote(
+    List<String> chaves, {
+    required String lote,
+    bool pararSeFaltar = false,
+    http.Client? cliente,
+  }) async {
     if (!_suportado) return;
     if (_baixando) return;
     final base = _baseUrl;
     if (base.isEmpty) {
       _erro = 'AUDIO_BASE_URL não configurada no build.';
+      _loteDoErro = lote;
       notifyListeners();
       return;
     }
-    final chaves = _chavesDaCategoria(categoria);
     _baixando = true;
     _cancelado = false;
-    _categoriaAtiva = categoria;
+    _loteAtivo = lote;
+    _categoriaAtiva = _contagemPorCategoria.containsKey(lote) ? lote : null;
     _baixadosNoLote = 0;
     _totalNoLote = chaves.length;
     _progresso = 0;
     _erro = null;
+    _loteDoErro = null;
     notifyListeners();
 
     final httpClient = cliente ?? http.Client();
@@ -169,17 +235,25 @@ class AudioOffline extends ChangeNotifier {
           // Incremental, não uma nova varredura do disco: os arquivos já
           // existentes ao abrir a folha já entraram na contagem em
           // [atualizarContagens] — só o recém-baixado soma aqui.
-          _contagemPorCategoria[categoria] =
-              (_contagemPorCategoria[categoria] ?? 0) + 1;
+          _somarArquivo(caminhoRelativoParaChave(chave) ?? '');
           _tamanhoTotalBytes += resp.bodyBytes.length;
         } else {
           falhou = true;
           _erro = 'Falha em $chave: ${resp.statusCode}';
+          // O Storage responde 403 para objeto ausente (sem permissão de
+          // listar), como em [Voz.disponibilidadeRemota].
+          if (pararSeFaltar &&
+              const {403, 404, 410}.contains(resp.statusCode)) {
+            _erro = 'Áudio deste livro ainda não publicado';
+            _loteDoErro = lote;
+            break;
+          }
         }
       } catch (e) {
         falhou = true;
         _erro = 'Erro em $chave: $e';
       }
+      if (falhou) _loteDoErro = lote;
       _baixadosNoLote++;
       _progresso = _baixadosNoLote / _totalNoLote;
       notifyListeners();
@@ -188,8 +262,49 @@ class AudioOffline extends ChangeNotifier {
     }
     _baixando = false;
     _categoriaAtiva = null;
-    if (!falhou) _erro = null;
+    _loteAtivo = null;
+    if (!falhou) {
+      _erro = null;
+      _loteDoErro = null;
+    }
     notifyListeners();
+  }
+
+  /// Soma um arquivo recém-baixado à categoria e ao livro de [relativo]
+  /// ("biblia/joao/3.mp3" conta para "biblia" e para "biblia/joao").
+  void _somarArquivo(String relativo) {
+    final categoria = _categoriaDoCaminho(relativo);
+    if (categoria != null) {
+      _contagemPorCategoria[categoria] =
+          (_contagemPorCategoria[categoria] ?? 0) + 1;
+    }
+    final pasta = _pastaDoLivroDoCaminho(relativo);
+    if (pasta != null) {
+      _contagemPorLivro[pasta] = (_contagemPorLivro[pasta] ?? 0) + 1;
+    }
+  }
+
+  /// A categoria de um caminho relativo a `audio_offline/`, ou `null` para o
+  /// que não tem categoria (livros da Biblioteca, comentários).
+  static String? _categoriaDoCaminho(String relativo) {
+    if (relativo.startsWith('biblia/')) return 'biblia';
+    if (relativo.startsWith('introducoes/')) return 'introducao';
+    if (relativo.startsWith('devocionais/promessas_de_deus/')) {
+      return 'promessas';
+    }
+    if (relativo.startsWith('devocionais/manha_e_noite/')) {
+      return 'manha_noite';
+    }
+    return null;
+  }
+
+  /// A pasta do livro de um caminho relativo ("biblia/joao/3.mp3" →
+  /// "biblia/joao"), ou `null` fora de `biblia/` e `livros/`.
+  static String? _pastaDoLivroDoCaminho(String relativo) {
+    final partes = relativo.split('/');
+    if (partes.length < 3) return null;
+    if (partes[0] != 'biblia' && partes[0] != 'livros') return null;
+    return '${partes[0]}/${partes[1]}';
   }
 
   /// Para o download em andamento no próximo arquivo — o que já baixou
@@ -231,6 +346,43 @@ class AudioOffline extends ChangeNotifier {
     await atualizarContagens();
   }
 
+  /// Apaga o áudio de um livro (a [pasta] dele) e reconta do disco.
+  Future<void> apagarLivro(String pasta) async {
+    if (!_suportado) return;
+    // Só pasta de livro: um caminho torto aqui apagaria outra coisa.
+    if (_pastaDoLivroDoCaminho('$pasta/x.mp3') != pasta) return;
+    final dir = await _dirBase();
+    final alvo = Directory('${dir.path}/$pasta');
+    if (await alvo.exists()) await alvo.delete(recursive: true);
+    await atualizarContagens();
+  }
+
+  /// Conta só os arquivos de [pasta], para a tela de um livro saber o que já
+  /// tem sem varrer o áudio inteiro como [atualizarContagens]. Sem disco (web,
+  /// teste de widget sem path_provider) a contagem fica em 0.
+  Future<void> contarLivro(String pasta) async {
+    // Quem chama costuma ser o initState de um widget: sem esta espera, o
+    // caminho sem disco avisava os ouvintes no meio do build.
+    await Future<void>.microtask(() {});
+    var total = 0;
+    if (_suportado && temOfflineParaTeste == null) {
+      try {
+        final dir = await _dirBase();
+        final alvo = Directory('${dir.path}/$pasta');
+        if (await alvo.exists()) {
+          await for (final e in alvo.list()) {
+            if (e is File) total++;
+          }
+        }
+      } catch (erro, pilha) {
+        Registro.erro('AudioOffline: contar $pasta', erro, pilha);
+      }
+    }
+    if (_contagemPorLivro[pasta] == total) return;
+    _contagemPorLivro[pasta] = total;
+    notifyListeners();
+  }
+
   /// Varre o disco uma vez e atualiza [contagemPorCategoria] e
   /// [tamanhoTotalBytes] em memória. Chamar ao abrir a tela que mostra esses
   /// números (ver `ajustesDeLeitura` em `lib/widgets/folha_de_ajustes.dart`)
@@ -245,8 +397,10 @@ class AudioOffline extends ChangeNotifier {
       'manha_noite': 0,
       'promessas': 0,
     };
+    final porLivro = <String, int>{};
     var bytes = 0;
     if (await dir.exists()) {
+      final raiz = '${dir.path.replaceAll('\\', '/')}/';
       await for (final e in dir.list(recursive: true)) {
         if (e is! File) continue;
         bytes += await e.length();
@@ -255,6 +409,10 @@ class AudioOffline extends ChangeNotifier {
         // o app roda de verdade) — normalizar antes de comparar evita a
         // contagem sempre zerada num dos dois mundos.
         final p = e.path.replaceAll('\\', '/');
+        if (p.startsWith(raiz)) {
+          final pasta = _pastaDoLivroDoCaminho(p.substring(raiz.length));
+          if (pasta != null) porLivro[pasta] = (porLivro[pasta] ?? 0) + 1;
+        }
         if (p.contains('/biblia/')) {
           contagem['biblia'] = contagem['biblia']! + 1;
         } else if (p.contains('/introducoes/')) {
@@ -269,6 +427,9 @@ class AudioOffline extends ChangeNotifier {
     _contagemPorCategoria
       ..clear()
       ..addAll(contagem);
+    _contagemPorLivro
+      ..clear()
+      ..addAll(porLivro);
     _tamanhoTotalBytes = bytes;
     notifyListeners();
   }
@@ -298,8 +459,27 @@ class AudioOffline extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<int?> _amostrarTamanho(String categoria, String base) async {
-    for (final chave in _chavesDaCategoria(categoria)) {
+  /// Bytes por arquivo de um livro, de uma amostra como em
+  /// [estimarTamanhos]; `null` se ainda não amostrou ou não deu.
+  int? tamanhoMedioDoLivro(String pasta) => _tamanhoMedioPorLivro[pasta];
+  final Map<String, int?> _tamanhoMedioPorLivro = {};
+
+  /// Amostra o tamanho de um arquivo de [chaves] para a tela do livro mostrar
+  /// o MB antes do toque em "Baixar". Uma vez por livro e por sessão.
+  Future<void> estimarLivro(String pasta, List<String> chaves) async {
+    if (!_suportado) return;
+    if (_tamanhoMedioPorLivro.containsKey(pasta)) return;
+    final base = _baseUrl;
+    if (base.isEmpty) return;
+    _tamanhoMedioPorLivro[pasta] = await _amostrarTamanhoDe(chaves, base);
+    notifyListeners();
+  }
+
+  Future<int?> _amostrarTamanho(String categoria, String base) =>
+      _amostrarTamanhoDe(_chavesDaCategoria(categoria), base);
+
+  Future<int?> _amostrarTamanhoDe(List<String> chaves, String base) async {
+    for (final chave in chaves) {
       if (await temOffline(chave)) continue;
       final url = _urlParaChaveHttp(chave, base);
       if (url == null) continue;

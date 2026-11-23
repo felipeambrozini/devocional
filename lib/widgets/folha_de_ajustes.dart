@@ -16,6 +16,7 @@ import '../dados/recursos.dart';
 import '../funcoes/aviso.dart';
 import '../funcoes/lembretes_acoes.dart';
 import '../estilo/espacamento.dart';
+import 'baixar_livro.dart';
 import 'botao.dart';
 import 'filete.dart';
 import 'item_de_instalar.dart';
@@ -511,7 +512,7 @@ class _SecaoAudioOffline {
           horizontal: DevocionalEspacamento.sp20,
         ),
         child: Text(
-          'Baixe para ouvir sem internet. Na ordem: Bíblia, Introdução, Manhã e Noite, Promessas. O player usa o arquivo local quando existir, senão baixa da nuvem.',
+          'O áudio baixado toca sem internet. Baixe a Bíblia inteira ou só alguns livros. Para os livros da Biblioteca, use o botão na página de cada livro.',
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ),
@@ -548,13 +549,11 @@ class _SecaoAudioOffline {
                     final baixandoEste =
                         off.baixando && off.categoriaAtiva == cat;
                     final mediaBytes = off.tamanhoMedioPorCategoria[cat];
-                    final faltam = total - baixados;
-                    final estimativaMb = mediaBytes == null || faltam <= 0
-                        ? null
-                        : (mediaBytes * faltam / (1024 * 1024)).toStringAsFixed(
-                            1,
-                          );
-                    return ListTile(
+                    final estimativa = estimativaEmMb(
+                      mediaBytes,
+                      total - baixados,
+                    );
+                    final linha = ListTile(
                       title: Text(rotulos[cat]!),
                       subtitle: baixandoEste
                           ? DevocionalProgressoFino(valor: off.progresso)
@@ -581,15 +580,32 @@ class _SecaoAudioOffline {
                                   baixados > 0 && baixados < total
                                       ? 'Continuar'
                                       : 'Baixar',
-                                  if (estimativaMb != null)
-                                    '(~$estimativaMb MB)',
+                                  if (estimativa != null) '($estimativa)',
                                 ].join(' '),
                               ),
                             ),
                     );
+                    if (cat != 'biblia') return linha;
+                    // A Bíblia inteira passa de mil arquivos: quem só ouve
+                    // alguns livros escolhe quais.
+                    return Column(
+                      children: [
+                        linha,
+                        ListTile(
+                          title: const Text('Escolher livros da Bíblia'),
+                          trailing: const FaIcon(
+                            FontAwesomeIcons.chevronRight,
+                            size: 14,
+                          ),
+                          onTap: () => mostrarLivrosDaBibliaOffline(context),
+                        ),
+                      ],
+                    );
                   },
                 ),
-              if (off.erro != null)
+              // Erro de um livro aparece na tela dele, não aqui.
+              if (off.erro != null &&
+                  (off.loteDoErro == null || ordem.contains(off.loteDoErro)))
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: DevocionalEspacamento.sp20,
@@ -604,7 +620,8 @@ class _SecaoAudioOffline {
               Builder(
                 builder: (context) {
                   final mb = (off.tamanhoTotalBytes / (1024 * 1024))
-                      .toStringAsFixed(1);
+                      .toStringAsFixed(1)
+                      .replaceAll('.', ',');
                   return ListTile(
                     title: Text('Armazenamento: $mb MB'),
                     trailing: DevocionalBotaoTerciario(

@@ -17,6 +17,7 @@ export 'area_de_selecao.dart';
 export 'aviso_de_corte.dart';
 export 'aviso_de_perda.dart';
 export 'aviso_vazio.dart';
+export 'baixar_livro.dart';
 export 'balcao_de_mensagem.dart';
 export 'barra_da_selecao.dart';
 export 'barra_de_capitulo.dart';

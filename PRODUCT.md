@@ -92,7 +92,9 @@ vitoriana dele, tratando o leitor por "tu".
   Spurgeon): narra capítulos da Bíblia, os dois devocionais, Promessas de
   Deus, as introduções e os capítulos dos livros da Biblioteca (publicados
   livro a livro; o botão só aparece onde o MP3 já existe); download opcional
-  para ouvir offline fora da web, menos comentários e livros.
+  para ouvir offline fora da web, por categoria ou por livro (Bíblia e
+  Biblioteca; o botão de baixar um livro só aparece quando o áudio dele já
+  está no Storage), menos os comentários.
   Opt-in nos Ajustes ("Ouvir capítulos em sequência", desligado por padrão):
   ao terminar um capítulo da Bíblia, o leitor avança e o próximo começa
   sozinho; devocionais, introduções, comentários e livros nunca encadeiam.
@@ -276,8 +278,9 @@ vitoriana dele, tratando o leitor por "tu".
 - Contraste WCAG garantido por teste (`test/tema_test.dart` falha se
   clarearem o bronze ou piorarem os pares anotados).
 - Escala do texto de leitura ajustável pelo usuário (0,7× a 2×): o corpo de
-  leitura acompanha a escala inteira, em seis passos (Mínimo a Máximo) que
-  diferem o bastante para se notar; títulos, rótulos e navegação crescem só
+  leitura acompanha a escala inteira, em cinco passos (Mínimo, Pequeno,
+  Padrão, Grande e Máximo) que diferem o bastante para se notar; títulos,
+  rótulos e navegação crescem só
   30% do pedido, com teto de 1,3×, para não estourar a barra de cima nem a de
   navegação.
 - Tema claro e escuro completos, seguindo o aparelho por padrão.

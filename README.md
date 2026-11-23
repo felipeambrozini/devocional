@@ -51,10 +51,14 @@ do mesmo código).
   `livros/<slug>/<n>.mp3`, publicados livro a livro: o botão só aparece no
   livro que já tem áudio), numa voz que remete ao tom de
   Charles Spurgeon (não é clone da voz do Felipe), em MP3 pré-gerado
-  (hospedado em `AUDIO_BASE_URL`). Fora da web dá para baixar por categoria e
-  ouvir offline, nos Ajustes ("Áudio offline"): Bíblia, introduções, Manhã e
-  Noite e Promessas; os comentários e os livros da Biblioteca não têm
-  categoria offline e só tocam com rede. Nos Ajustes também dá para
+  (hospedado em `AUDIO_BASE_URL`). Fora da web dá para baixar o áudio e
+  ouvir offline: nos Ajustes ("Áudio offline"), por categoria (Bíblia,
+  introduções, Manhã e Noite e Promessas) ou livro a livro da Bíblia
+  ("Escolher livros da Bíblia"); cada livro da Biblioteca se baixa no
+  sumário dele ("Baixar o áudio"). O botão de baixar um livro só aparece
+  quando o áudio dele já está no Storage (HEAD no capítulo 1, ver
+  `lib/widgets/baixar_livro.dart`). Os comentários não têm download e só
+  tocam com rede. Nos Ajustes também dá para
   ligar "Ouvir capítulos em sequência" (desligado por padrão): ao terminar um
   capítulo da Bíblia, o leitor vira a página e o próximo começa sozinho. Nos
   livros da Biblioteca o próximo capítulo não encadeia, a posição do áudio
@@ -284,10 +288,12 @@ notificação na web) abre a leitura do lembrete.
   (`lib/dados/voz.dart`), servidos a partir de `AUDIO_BASE_URL`
   (`lib/dados/audio_config.dart`); `AudioOffline`
   (`lib/dados/audio_offline.dart`) baixa e cacheia esses arquivos em disco
-  fora da web, para ouvir sem internet. A geração dos MP3 é em lotes (roda por
-  semanas fora deste repo, na pasta `audio_gen` citada em "Conteúdo"), então o
-  botão de ouvir só
-  aparece quando o áudio já existe: `Voz.disponibilidadeRemota` faz um HEAD
+  fora da web, para ouvir sem internet, por categoria (`baixarCategoria`) ou
+  por livro (`baixarLivro`, pela pasta `biblia/<livro>` ou `livros/<slug>`;
+  para no primeiro 403/404, porque os livros ganham áudio inteiros). A
+  geração dos MP3 é em lotes (roda por semanas fora deste repo, na pasta
+  `audio_gen` citada em "Conteúdo"), então o botão de ouvir só aparece quando
+  o áudio já existe: `Voz.disponibilidadeRemota` faz um HEAD
   no arquivo do Storage (com cache por chave e timeout, para não repetir o
   HEAD a cada navegação nem travar sem rede), além de checar o cache offline.
   As chaves e o caminho de cada MP3 moram em `voz.dart`

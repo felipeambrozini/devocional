@@ -14,24 +14,32 @@
 ///
 /// Vivem aqui, e não no tema, porque o [Estado] precisa deles para recusar um
 /// valor gravado fora da lista, e o `dados` não importa `tema.dart`.
-const escalasDeLeitura = <double>[0.7, 0.85, 1.0, 1.3, 1.6, 2.0];
+///
+/// O "Muito grande" (1,6×) saiu da lista em 23/11/2026, a pedido. Quem tinha
+/// escolhido ele sobe para o Máximo (ver [passoDeEscalaMaisProximo]).
+const escalasDeLeitura = <double>[0.7, 0.85, 1.0, 1.3, 2.0];
 const rotulosDeEscala = <String>[
   'Mínimo',
   'Pequeno',
   'Padrão',
   'Grande',
-  'Muito grande',
   'Máximo',
 ];
 
-/// O passo de [escalasDeLeitura] mais perto de [escala], ou `null` se ela
+/// O passo de [escalasDeLeitura] para um valor gravado, ou `null` se ele
 /// estiver fora da faixa oferecida (valor corrompido ou de versão futura).
 ///
-/// No empate fica o maior: quem tinha escolhido 1,15× queria o texto acima do
-/// padrão, e voltar ao padrão desfaria a escolha.
+/// Acima do padrão, sobe para o primeiro passo que não seja menor: quem
+/// escolheu texto maior pode precisar dele para enxergar, e o texto encolher
+/// numa atualização seria pior que crescer (1,6× vira 2×, não 1,3×). Abaixo
+/// do padrão, fica o passo mais próximo, e no empate o maior.
 double? passoDeEscalaMaisProximo(double escala) {
   if (escala < escalasDeLeitura.first || escala > escalasDeLeitura.last) {
     return null;
+  }
+  if (escala > 1.0) {
+    // Mesma tolerância do arredondamento abaixo, contra ponto flutuante.
+    return escalasDeLeitura.firstWhere((p) => (p - escala) * 1000 >= -0.5);
   }
   var melhor = escalasDeLeitura.first;
   for (final passo in escalasDeLeitura) {

@@ -2,9 +2,11 @@ import 'package:material_ui/material_ui.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
+import '../dados/audio_offline.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
 import '../estilo/espacamento.dart';
+import 'baixar_livro.dart';
 import 'botao.dart';
 import 'cartao_da_obra.dart';
 import 'linha_do_capitulo.dart';
@@ -50,6 +52,12 @@ class DevocionalSumarioDoLivro extends StatelessWidget {
               posicao == null ? 'Começar a ler' : 'Continuar de onde parei',
             ),
           ),
+        ),
+        // Só aparece quando o áudio do livro já está no Storage.
+        DevocionalBaixarLivro(
+          titulo: obra.titulo,
+          pasta: pastaDoLivroDaBiblioteca(obra.slug),
+          chaves: chavesDoLivroDaBiblioteca(obra.slug, capitulos.length),
         ),
         const SizedBox(height: DevocionalEspacamento.sp20),
         for (final (indice, capitulo) in capitulos.indexed)

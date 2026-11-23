@@ -6,10 +6,18 @@ import 'package:material_ui/material_ui.dart';
 /// propósito: o trilho dela precisa contrastar com o fundo do próprio
 /// comprimido, não com a página.
 class DevocionalProgressoFino extends StatelessWidget {
-  const DevocionalProgressoFino({super.key, required this.valor});
+  const DevocionalProgressoFino({
+    super.key,
+    required this.valor,
+    this.rotulo = 'Progresso',
+  });
 
   /// Fração concluída, de 0,0 a 1,0. Valor fora da faixa é cortado.
   final double valor;
+
+  /// O que o leitor de tela anuncia antes da porcentagem. Numa lista com
+  /// várias barras, diga de qual item é ("Baixando Gênesis").
+  final String rotulo;
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +26,7 @@ class DevocionalProgressoFino extends StatelessWidget {
       child: LinearProgressIndicator(
         value: valor.clamp(0.0, 1.0),
         minHeight: 6,
-        semanticsLabel: 'Progresso',
+        semanticsLabel: rotulo,
         semanticsValue: '${(valor.clamp(0.0, 1.0) * 100).round()}%',
       ),
     );
