@@ -137,8 +137,7 @@ do mesmo código).
   literais que ficam em vermelho no versículo; lista vazia tira o vermelho),
   aplicada por `aplicar_correcoes.py` por cima do MACULA, inclusive quando o
   `gerar.py` roda de novo. `test/falas_divinas_test.dart` confere que os assets
-  batem com as correções, e `mostrar.py` mostra um livro com o vermelho entre
-  `<<` e `>>` para revisar. Regra do produto: é vermelho o que é palavra de
+  batem com as correções. Regra do produto: é vermelho o que é palavra de
   Deus Pai, de Jesus ou do Espírito Santo, ou seja, Deus falando ou uma fala
   que a Escritura comprova que Ele disse. Isso inclui:
   - a fala direta das três Pessoas;
