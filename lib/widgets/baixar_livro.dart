@@ -85,8 +85,9 @@ enum _Forma { botao, linha }
 ///
 /// O Storage não deixa listar pastas, então um HEAD no primeiro capítulo (com
 /// o cache de [Voz.disponibilidadeRemota]) responde pelo livro: os livros
-/// ganham áudio inteiros. Some na web (não há disco) e com o Ouvir desligado
-/// no painel, como a seção de áudio offline dos ajustes.
+/// ganham áudio inteiros. Some onde não há onde guardar o áudio (web sem
+/// service worker, ver [AudioOffline.suportado]) e com o Ouvir desligado no
+/// painel, como a seção de áudio offline dos ajustes.
 class DevocionalBaixarLivro extends StatefulWidget {
   const DevocionalBaixarLivro({
     super.key,
@@ -119,7 +120,7 @@ class _BaixarLivroState extends State<DevocionalBaixarLivro> {
   @override
   void initState() {
     super.initState();
-    if (!kIsWeb) unawaited(_conferir());
+    if (AudioOffline.instancia.suportado) unawaited(_conferir());
   }
 
   @override
@@ -127,7 +128,7 @@ class _BaixarLivroState extends State<DevocionalBaixarLivro> {
     super.didUpdateWidget(antigo);
     if (antigo.livro != widget.livro) {
       _noStorage = null;
-      if (!kIsWeb) unawaited(_conferir());
+      if (AudioOffline.instancia.suportado) unawaited(_conferir());
     }
   }
 
@@ -157,7 +158,7 @@ class _BaixarLivroState extends State<DevocionalBaixarLivro> {
 
   @override
   Widget build(BuildContext context) {
-    if (kIsWeb) return const SizedBox.shrink();
+    if (!AudioOffline.instancia.suportado) return const SizedBox.shrink();
     return ListenableBuilder(
       listenable: Listenable.merge([
         AudioOffline.instancia,
@@ -214,7 +215,9 @@ class _BaixarLivroState extends State<DevocionalBaixarLivro> {
           const SizedBox(width: DevocionalEspacamento.sp8),
           Expanded(
             child: Text(
-              'Áudio no aparelho, toca sem internet',
+              kIsWeb
+                  ? 'Áudio neste navegador, toca sem internet'
+                  : 'Áudio no aparelho, toca sem internet',
               style: tema.bodyMedium,
             ),
           ),

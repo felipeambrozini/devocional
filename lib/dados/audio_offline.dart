@@ -1,10 +1,9 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
 
+import 'armazem_de_audio.dart';
 import 'audio_config.dart';
 import 'canon.dart';
 import 'modelos.dart';
@@ -61,11 +60,23 @@ class LivroParaBaixar {
   int get hashCode => pasta.hashCode;
 }
 
+/// O parâmetro que marca, na web, a URL de um áudio já guardado no navegador.
+/// O service worker (`web/firebase-messaging-sw.js`, `MARCA_DE_AUDIO`) só
+/// intercepta o pedido que leva esta marca, e responde do cache; o áudio que
+/// não foi baixado segue direto para a rede, como sempre.
+const marcaDeAudioGuardado = 'devocional-guardado';
+
+/// [url] com a marca de [marcaDeAudioGuardado].
+String urlDoAudioGuardado(String url) =>
+    '$url${url.contains('?') ? '&' : '?'}$marcaDeAudioGuardado=1';
+
 /// Gerencia o download dos MP3 pré-gerados para uso offline.
 ///
 /// Baixa por categoria (Bíblia, Introdução, Manhã e Noite, Promessas) ou por
-/// livro ([LivroParaBaixar], da Bíblia ou da Biblioteca).
-/// Web não tem sistema de arquivos: todos os métodos viram no-op.
+/// livro ([LivroParaBaixar], da Bíblia ou da Biblioteca). Onde os arquivos
+/// ficam é com o [ArmazemDeAudio] da plataforma: o disco no app instalado, o
+/// Cache Storage do navegador na web e no PWA. Sem armazém utilizável (web
+/// sem service worker), todos os métodos viram no-op e [suportado] é falso.
 class AudioOffline extends ChangeNotifier {
   AudioOffline._();
   static final AudioOffline instancia = AudioOffline._();
@@ -137,21 +148,13 @@ class AudioOffline extends ChangeNotifier {
   final Map<String, int?> _tamanhoMedioPorCategoria = {};
   String? get erro => _erro;
 
-  bool get _suportado => !kIsWeb;
+  late final ArmazemDeAudio _armazem = criarArmazemDeAudio(() => _baseUrl);
 
-  Future<Directory> _dirBase() async {
-    final base = await getApplicationDocumentsDirectory();
-    return Directory('${base.path}/audio_offline');
-  }
+  /// Se dá para baixar áudio aqui. Quem desenha a seção de áudio offline e os
+  /// botões de baixar some com eles quando é falso.
+  bool get suportado => _suportado;
 
-  String _caminhoLocalParaChave(String chave) =>
-      caminhoRelativoParaChave(chave) ??
-      '${chave.replaceAll(':', '_').replaceAll('/', '-')}.mp3';
-
-  Future<File> _arquivoLocal(String chave) async {
-    final dir = await _dirBase();
-    return File('${dir.path}/${_caminhoLocalParaChave(chave)}');
-  }
+  bool get _suportado => _armazem.suportado;
 
   /// Override para testes: evita bater no path_provider de verdade (sem
   /// plugin registrado em teste de widget). Null usa o caminho real.
@@ -169,8 +172,14 @@ class AudioOffline extends ChangeNotifier {
     final paraTeste = temOfflineParaTeste;
     if (paraTeste != null) return paraTeste(chave);
     if (!_suportado) return false;
-    final f = await _arquivoLocal(chave);
-    return f.exists();
+    final relativo = caminhoRelativoParaChave(chave);
+    if (relativo == null) return false;
+    try {
+      return await _armazem.existe(relativo);
+    } catch (erro, pilha) {
+      Registro.erro('AudioOffline: conferir $chave', erro, pilha);
+      return false;
+    }
   }
 
   List<String> _chavesDaCategoria(String categoria) {
@@ -253,6 +262,7 @@ class AudioOffline extends ChangeNotifier {
     _erro = null;
     _loteDoErro = null;
     notifyListeners();
+    await _armazem.pedirParaGuardar();
 
     final httpClient = cliente ?? http.Client();
     var falhou = false;
@@ -260,9 +270,9 @@ class AudioOffline extends ChangeNotifier {
       if (_cancelado) break;
       final chave = chaves[i];
       final url = _urlParaChaveHttp(chave, base);
-      if (url == null) continue;
-      final arquivo = await _arquivoLocal(chave);
-      if (await arquivo.exists()) {
+      final relativo = caminhoRelativoParaChave(chave);
+      if (url == null || relativo == null) continue;
+      if (await _armazem.existe(relativo)) {
         _baixadosNoLote++;
         _progresso = _baixadosNoLote / _totalNoLote;
         notifyListeners();
@@ -271,12 +281,11 @@ class AudioOffline extends ChangeNotifier {
       try {
         final resp = await httpClient.get(Uri.parse(url));
         if (resp.statusCode == 200) {
-          await arquivo.parent.create(recursive: true);
-          await arquivo.writeAsBytes(resp.bodyBytes);
+          await _armazem.gravar(relativo, url, resp.bodyBytes);
           // Incremental, não uma nova varredura do disco: os arquivos já
           // existentes ao abrir a folha já entraram na contagem em
           // [atualizarContagens] — só o recém-baixado soma aqui.
-          _somarArquivo(caminhoRelativoParaChave(chave) ?? '');
+          _somarArquivo(relativo);
           _tamanhoTotalBytes += resp.bodyBytes.length;
         } else {
           falhou = true;
@@ -363,7 +372,6 @@ class AudioOffline extends ChangeNotifier {
 
   Future<void> apagarCategoria(String categoria) async {
     if (!_suportado) return;
-    final dir = await _dirBase();
     final sub = switch (categoria) {
       'biblia' => 'biblia',
       'introducao' => 'introducoes',
@@ -372,8 +380,7 @@ class AudioOffline extends ChangeNotifier {
       _ => null,
     };
     if (sub == null) return;
-    final alvo = Directory('${dir.path}/$sub');
-    if (await alvo.exists()) await alvo.delete(recursive: true);
+    await _armazem.apagar('$sub/');
     // Apagar é ação rara e deliberada — ao contrário do download, uma
     // varredura aqui não vira um loop apertado, então recontar do disco é
     // mais simples e mais seguro do que tentar acertar a subtração exata.
@@ -382,8 +389,7 @@ class AudioOffline extends ChangeNotifier {
 
   Future<void> apagarTudo() async {
     if (!_suportado) return;
-    final dir = await _dirBase();
-    if (await dir.exists()) await dir.delete(recursive: true);
+    await _armazem.apagar('');
     await atualizarContagens();
   }
 
@@ -393,9 +399,7 @@ class AudioOffline extends ChangeNotifier {
     final pasta = livro.pasta;
     // Só pasta de livro: um caminho torto aqui apagaria outra coisa.
     if (_pastaDoLivroDoCaminho('$pasta/x.mp3') != pasta) return;
-    final dir = await _dirBase();
-    final alvo = Directory('${dir.path}/$pasta');
-    if (await alvo.exists()) await alvo.delete(recursive: true);
+    await _armazem.apagar('$pasta/');
     await atualizarContagens();
   }
 
@@ -410,13 +414,7 @@ class AudioOffline extends ChangeNotifier {
     var total = 0;
     if (_suportado && temOfflineParaTeste == null) {
       try {
-        final dir = await _dirBase();
-        final alvo = Directory('${dir.path}/$pasta');
-        if (await alvo.exists()) {
-          await for (final e in alvo.list()) {
-            if (e is File) total++;
-          }
-        }
+        total = await _armazem.contarNaPasta(pasta);
       } catch (erro, pilha) {
         Registro.erro('AudioOffline: contar $pasta', erro, pilha);
       }
@@ -433,7 +431,6 @@ class AudioOffline extends ChangeNotifier {
   /// durante um download grande.
   Future<void> atualizarContagens() async {
     if (!_suportado) return;
-    final dir = await _dirBase();
     final contagem = {
       'biblia': 0,
       'introducao': 0,
@@ -442,30 +439,16 @@ class AudioOffline extends ChangeNotifier {
     };
     final porLivro = <String, int>{};
     var bytes = 0;
-    if (await dir.exists()) {
-      final raiz = '${dir.path.replaceAll('\\', '/')}/';
-      await for (final e in dir.list(recursive: true)) {
-        if (e is! File) continue;
-        bytes += await e.length();
-        // `Directory.list()` devolve o separador nativo da plataforma
-        // (`\` no Windows do desenvolvimento, `/` em Android/iOS/web, onde
-        // o app roda de verdade) — normalizar antes de comparar evita a
-        // contagem sempre zerada num dos dois mundos.
-        final p = e.path.replaceAll('\\', '/');
-        if (p.startsWith(raiz)) {
-          final pasta = _pastaDoLivroDoCaminho(p.substring(raiz.length));
-          if (pasta != null) porLivro[pasta] = (porLivro[pasta] ?? 0) + 1;
-        }
-        if (p.contains('/biblia/')) {
-          contagem['biblia'] = contagem['biblia']! + 1;
-        } else if (p.contains('/introducoes/')) {
-          contagem['introducao'] = contagem['introducao']! + 1;
-        } else if (p.contains('/promessas_de_deus/')) {
-          contagem['promessas'] = contagem['promessas']! + 1;
-        } else if (p.contains('/manha_e_noite/')) {
-          contagem['manha_noite'] = contagem['manha_noite']! + 1;
-        }
+    try {
+      for (final (relativo, tamanho) in await _armazem.listar()) {
+        bytes += tamanho;
+        final categoria = _categoriaDoCaminho(relativo);
+        if (categoria != null) contagem[categoria] = contagem[categoria]! + 1;
+        final pasta = _pastaDoLivroDoCaminho(relativo);
+        if (pasta != null) porLivro[pasta] = (porLivro[pasta] ?? 0) + 1;
       }
+    } catch (erro, pilha) {
+      Registro.erro('AudioOffline: contar o que foi baixado', erro, pilha);
     }
     _contagemPorCategoria
       ..clear()

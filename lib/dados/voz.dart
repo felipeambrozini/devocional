@@ -10,6 +10,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'audio_config.dart';
+import 'audio_offline.dart';
 import 'canon.dart';
 import 'registro.dart';
 
@@ -558,7 +559,18 @@ class Voz extends ChangeNotifier {
   }
 
   Future<String?> _fonteComOffline(String url, String chave) async {
-    if (kIsWeb) return url;
+    // Na web o arquivo baixado mora no Cache Storage do navegador, que o
+    // player não lê: a URL marcada faz o service worker responder dali.
+    if (kIsWeb) {
+      try {
+        if (await AudioOffline.instancia.temOffline(chave)) {
+          return urlDoAudioGuardado(url);
+        }
+      } catch (erro, pilha) {
+        Registro.erro('Voz: áudio guardado de $chave', erro, pilha);
+      }
+      return url;
+    }
     try {
       final dir = await getApplicationDocumentsDirectory();
       final local = _caminhoLocalParaChave(chave);

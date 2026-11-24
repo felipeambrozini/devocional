@@ -61,8 +61,8 @@ do mesmo código).
   `livros/<slug>/<n>.mp3`, publicados livro a livro: o botão só aparece no
   livro que já tem áudio), numa voz que remete ao tom de
   Charles Spurgeon (não é clone da voz do Felipe), em MP3 pré-gerado
-  (hospedado em `AUDIO_BASE_URL`). Fora da web dá para baixar o áudio e
-  ouvir offline: nos Ajustes ("Áudio offline"), por categoria (Bíblia,
+  (hospedado em `AUDIO_BASE_URL`). No app, na web e no PWA dá para baixar
+  o áudio e ouvir offline: nos Ajustes ("Áudio offline"), por categoria (Bíblia,
   introduções, Manhã e Noite e Promessas) ou livro a livro da Bíblia
   ("Escolher livros da Bíblia"). Também dá para baixar um livro na página
   dele: na Bíblia, no seletor de capítulos (a folha que abre pelo nome do
@@ -300,11 +300,24 @@ notificação na web) abre a leitura do lembrete.
 - `just_audio` toca os MP3 pré-gerados da leitura em voz alta
   (`lib/dados/voz.dart`), servidos a partir de `AUDIO_BASE_URL`
   (`lib/dados/audio_config.dart`); `AudioOffline`
-  (`lib/dados/audio_offline.dart`) baixa e cacheia esses arquivos em disco
-  fora da web, para ouvir sem internet, por categoria (`baixarCategoria`) ou
+  (`lib/dados/audio_offline.dart`) baixa e guarda esses arquivos para ouvir
+  sem internet, por categoria (`baixarCategoria`) ou
   por livro (`baixarLivro` de um `LivroParaBaixar`, pela pasta
   `biblia/<livro>` ou `livros/<slug>`;
-  para no primeiro 403/404, porque os livros ganham áudio inteiros). A
+  para no primeiro 403/404, porque os livros ganham áudio inteiros). Onde
+  guarda é o `ArmazemDeAudio` da plataforma (`lib/dados/armazem_de_audio*.dart`,
+  import condicional): a pasta `audio_offline/` no app instalado; na web e no
+  PWA, o Cache Storage `devocional-audio`, com a URL do MP3 como chave. Na web
+  o player não lê esse cache: quando o áudio está guardado, `Voz` pede a URL
+  com `?devocional-guardado=1` (`urlDoAudioGuardado`), e o service worker
+  (`web/firebase-messaging-sw.js`, `servirAudioGuardado`) responde do cache,
+  com 206 e o pedaço pedido quando o player manda `Range` (o Safari só toca
+  assim). O áudio não baixado segue direto para a rede, sem passar pelo
+  worker. A web só oferece download com o service worker no controle da
+  página (`ArmazemDeAudio.suportado`), e pede `navigator.storage.persist()`
+  no primeiro download. Limites: o Safari dá cerca de 1 GB por site e apaga o
+  que um site sem visita guardou depois de alguns dias, a menos que o PWA
+  esteja na tela inicial; no iPhone, o download para quando se sai do app. A
   geração dos MP3 é em lotes (roda por semanas fora deste repo, na pasta
   `audio_gen` citada em "Conteúdo"), então o botão de ouvir só aparece quando
   o áudio já existe: `Voz.disponibilidadeRemota` faz um HEAD

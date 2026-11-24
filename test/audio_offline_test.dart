@@ -90,6 +90,40 @@ void main() {
     });
   });
 
+  group('áudio guardado na web', () {
+    // O service worker (web/firebase-messaging-sw.js) só intercepta a URL
+    // com esta marca e responde do cache; tirando a marca, sobra a URL que
+    // é a chave do cache. Os dois lados precisam concordar.
+    test('a marca entra como parâmetro, com ? ou &', () {
+      expect(
+        urlDoAudioGuardado('https://audio.test/biblia/joao/3.mp3'),
+        'https://audio.test/biblia/joao/3.mp3?$marcaDeAudioGuardado=1',
+      );
+      expect(
+        urlDoAudioGuardado('https://audio.test/a.mp3?alt=media'),
+        'https://audio.test/a.mp3?alt=media&$marcaDeAudioGuardado=1',
+      );
+    });
+
+    test('tirar a marca devolve a URL original', () {
+      for (final original in [
+        'https://audio.test/biblia/joao/3.mp3',
+        'https://audio.test/a.mp3?alt=media',
+      ]) {
+        final marcada = Uri.parse(urlDoAudioGuardado(original));
+        final limpa = marcada.replace(
+          queryParameters: Map.of(marcada.queryParameters)
+            ..remove(marcaDeAudioGuardado),
+        );
+        expect(limpa.toString().replaceFirst(RegExp(r'\?$'), ''), original);
+      }
+    });
+
+    test('no app instalado o armazém é o disco e sempre serve', () {
+      expect(AudioOffline.instancia.suportado, isTrue);
+    });
+  });
+
   group('livros', () {
     http.Client clienteDe200(List<Uri> pedidos, {int bytes = 10}) =>
         MockClient((requisicao) async {

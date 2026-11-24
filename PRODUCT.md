@@ -97,7 +97,8 @@ vitoriana dele, tratando o leitor por "tu".
   Spurgeon): narra capítulos da Bíblia, os dois devocionais, Promessas de
   Deus, as introduções e os capítulos dos livros da Biblioteca (publicados
   livro a livro; o botão só aparece onde o MP3 já existe); download opcional
-  para ouvir offline fora da web, por categoria ou por livro (nos Ajustes,
+  para ouvir offline no app, na web e no PWA (na web, guardado no navegador),
+  por categoria ou por livro (nos Ajustes,
   no seletor de capítulos da Bíblia e no sumário dos livros da Biblioteca,
   nunca dentro da leitura; o botão só aparece quando o áudio do livro já
   está no Storage), menos os comentários.

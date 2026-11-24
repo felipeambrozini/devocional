@@ -44,7 +44,7 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
   // Varre o disco (contagem e tamanho) e amostra o MB estimado uma vez, ao
   // abrir — não a cada notificação de progresso do download, que é o que
   // travava a folha (ver AudioOffline.atualizarContagens/estimarTamanhos).
-  if (!kIsWeb) {
+  if (AudioOffline.instancia.suportado) {
     unawaited(AudioOffline.instancia.atualizarContagens());
     unawaited(AudioOffline.instancia.estimarTamanhos());
   }
@@ -209,7 +209,10 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 // some em toda parte (ver BotaoDeVoz) e o download viraria
                 // peso morto no disco. O Listenable é só desta seção para o
                 // resto da folha não remontar a cada aviso da configuração.
-                if (!kIsWeb)
+                // Na web, só com o service worker no controle (ver
+                // `ArmazemDeAudio.suportado`): sem ele o áudio guardado não
+                // seria servido.
+                if (AudioOffline.instancia.suportado)
                   ListenableBuilder(
                     listenable: ConfigAdmin.instancia,
                     builder: (context, _) => Recursos.ouvirTextos
@@ -512,10 +515,34 @@ class _SecaoAudioOffline {
           horizontal: DevocionalEspacamento.sp20,
         ),
         child: Text(
-          'O áudio baixado toca sem internet. Baixe a Bíblia inteira ou só alguns livros. Para os livros da Biblioteca, use o botão na página de cada livro.',
+          kIsWeb
+              ? 'O áudio baixado toca sem internet, guardado neste navegador. Baixe a Bíblia inteira ou só alguns livros. Para os livros da Biblioteca, use o botão na página de cada livro.'
+              : 'O áudio baixado toca sem internet. Baixe a Bíblia inteira ou só alguns livros. Para os livros da Biblioteca, use o botão na página de cada livro.',
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ),
+      // Na web o áudio fica no armazenamento do navegador, que pode apagá-lo:
+      // o Safari apaga o que um site guardou depois de dias sem visita, a
+      // menos que ele esteja instalado na tela inicial. Só aparece enquanto
+      // dá para instalar: no PWA já instalado o pedido não faria sentido.
+      if (kIsWeb)
+        ListenableBuilder(
+          listenable: InstalacaoDoApp.instancia,
+          builder: (context, _) => InstalacaoDoApp.instancia.disponivel
+              ? ListTile(
+                  title: const Text('Instalar para guardar o áudio'),
+                  subtitle: const Text(
+                    'O navegador pode apagar o áudio de um site não instalado',
+                  ),
+                  trailing: FaIcon(
+                    FontAwesomeIcons.mobileScreen,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  onTap: () =>
+                      instalarComoApp(context, InstalacaoDoApp.instancia),
+                )
+              : const SizedBox.shrink(),
+        ),
       const SizedBox(height: DevocionalEspacamento.sp8),
       ListenableBuilder(
         listenable: AudioOffline.instancia,

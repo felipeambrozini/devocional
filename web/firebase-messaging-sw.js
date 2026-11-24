@@ -152,6 +152,14 @@ self.addEventListener('notificationclick', (evento) => {
 // exigiria saber a versão antes do primeiro fetch, e offline ela não está em
 // lugar nenhum.
 const CACHE = 'devocional-offline';
+
+// O áudio baixado na web (ver `lib/dados/armazem_de_audio_web.dart`): um cache
+// à parte, que a limpeza de build do `activate` não toca, com a URL do MP3 na
+// nuvem como chave. O app só marca com MARCA_DE_AUDIO a URL de um áudio que
+// já está guardado (`urlDoAudioGuardado` em `lib/dados/audio_offline.dart`);
+// o resto do áudio nem passa por aqui.
+const CACHE_DE_AUDIO = 'devocional-audio';
+const MARCA_DE_AUDIO = 'devocional-guardado';
 const ESCOPO = self.registration.scope;
 const INDICE = new URL('index.html', ESCOPO).href;
 const MANIFESTO = new URL('precache_manifest.json', ESCOPO).href;
@@ -346,11 +354,74 @@ async function servir(requisicao, evento) {
   return resposta;
 }
 
+// Responde o MP3 guardado, inteiro ou no pedaço que o player pediu. O
+// player de áudio pede em pedaços (Range), e o Safari só toca se a resposta
+// for um 206 com o pedaço certo; o Cache Storage guarda o arquivo inteiro,
+// então o pedaço sai do blob aqui. Se o áudio sumiu do cache (apagado entre a
+// conferência do app e o play), busca na rede sem a marca.
+async function servirAudioGuardado(requisicao, url) {
+  const limpa = new URL(url.href);
+  limpa.searchParams.delete(MARCA_DE_AUDIO);
+  try {
+    const cache = await caches.open(CACHE_DE_AUDIO);
+    const guardado = await cache.match(limpa.href);
+    if (guardado) return await comPedaco(guardado, requisicao.headers.get('range'));
+  } catch (_) {
+    // Cache indisponível: cai na rede.
+  }
+  return fetch(limpa.href);
+}
+
+async function comPedaco(resposta, pedido) {
+  const tipo = resposta.headers.get('content-type') || 'audio/mpeg';
+  const blob = await resposta.blob();
+  const total = blob.size;
+  const cabecalhos = { 'Content-Type': tipo, 'Accept-Ranges': 'bytes' };
+  if (!pedido) {
+    return new Response(blob, {
+      status: 200,
+      headers: { ...cabecalhos, 'Content-Length': String(total) },
+    });
+  }
+  const faixa = /^bytes=(\d*)-(\d*)$/.exec(pedido.trim());
+  let inicio;
+  let fim;
+  if (faixa && faixa[1] === '' && faixa[2] !== '') {
+    // "bytes=-500": os últimos 500 bytes.
+    inicio = Math.max(total - Number(faixa[2]), 0);
+    fim = total - 1;
+  } else if (faixa && faixa[1] !== '') {
+    inicio = Number(faixa[1]);
+    fim = faixa[2] === '' ? total - 1 : Math.min(Number(faixa[2]), total - 1);
+  }
+  if (inicio === undefined || inicio >= total || inicio > fim) {
+    return new Response(null, {
+      status: 416,
+      headers: { 'Content-Range': `bytes */${total}` },
+    });
+  }
+  const pedaco = blob.slice(inicio, fim + 1, tipo);
+  return new Response(pedaco, {
+    status: 206,
+    statusText: 'Partial Content',
+    headers: {
+      ...cabecalhos,
+      'Content-Length': String(pedaco.size),
+      'Content-Range': `bytes ${inicio}-${fim}/${total}`,
+    },
+  });
+}
+
 self.addEventListener('fetch', (evento) => {
   const requisicao = evento.request;
   if (requisicao.method !== 'GET') return;
 
   const url = new URL(requisicao.url);
+  // Antes do filtro de origem: o áudio vem do Storage, outro domínio.
+  if (url.searchParams.has(MARCA_DE_AUDIO)) {
+    evento.respondWith(servirAudioGuardado(requisicao, url));
+    return;
+  }
   if (url.origin !== self.location.origin) return;
   // O próprio service worker e o manifesto do build não são conteúdo do app;
   // deixá-los passar direto evita servir uma versão velha do manifesto no
