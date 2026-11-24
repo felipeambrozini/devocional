@@ -144,9 +144,7 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                 controller: titulo,
                 autofocus: !kIsWeb,
                 textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  labelText: 'Nome do plano',
-                ),
+                decoration: const InputDecoration(labelText: 'Nome do plano'),
               ),
               const SizedBox(height: DevocionalEspacamento.sp20),
               Text(

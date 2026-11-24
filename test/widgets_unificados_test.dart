@@ -139,10 +139,7 @@ void main() {
       await _montar(tester, Brightness.dark, [
         _cartao(carregarTexto: () async => throw StateError('sem asset')),
       ]);
-      expect(
-        find.text('Não foi possível carregar este texto'),
-        findsOneWidget,
-      );
+      expect(find.text('Não foi possível carregar este texto'), findsOneWidget);
     });
 
     testWidgets('o toque abre e a lixeira remove depois de confirmar', (

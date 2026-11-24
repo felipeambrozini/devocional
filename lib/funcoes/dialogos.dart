@@ -76,9 +76,7 @@ class _DialogoDeTextoState extends State<DialogoDeTexto> {
             autofocus: widget.autofocus,
             maxLines: widget.linhasMax,
             minLines: widget.linhasMin,
-            decoration: InputDecoration(
-              labelText: widget.rotuloDoCampo,
-            ),
+            decoration: InputDecoration(labelText: widget.rotuloDoCampo),
           ),
         ],
       ),
