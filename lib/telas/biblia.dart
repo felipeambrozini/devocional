@@ -10,10 +10,12 @@ import '../controladores/biblia_controlador.dart';
 import '../controladores/notas_controlador.dart';
 import '../dados/canon.dart';
 import '../dados/conteudo.dart';
+import '../dados/dia_da_leitura.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
 import '../dados/voz.dart';
 import '../estilo/espacamento.dart';
+import '../funcoes/marcar_dia_da_leitura.dart';
 import '../widgets/widgets.dart';
 
 /// Leitor da Bíblia. Abre em Gênesis 1 ou onde a leitura parou.
@@ -23,6 +25,7 @@ class TelaBiblia extends StatefulWidget {
     this.livroInicial,
     this.capituloInicial,
     this.destacar,
+    this.dia,
     this.voltarPara,
   });
 
@@ -32,6 +35,10 @@ class TelaBiblia extends StatefulWidget {
   /// Faixa de versículos a destacar, para quando o cronograma pede
   /// "Salmos 119:1 a 56" e não o capítulo inteiro.
   final (int, int)? destacar;
+
+  /// O dia do cronograma ou do plano de onde a leitura veio, quando veio de
+  /// um: chegar ao fim do último capítulo dele marca o dia como lido.
+  final DiaDaLeitura? dia;
 
   /// Ver [DevocionalAppBar.voltarPara]: a Bíblia aberta por cima (rota `/ler`)
   /// precisa de saída quando o F5 a deixa sozinha na pilha.
@@ -205,6 +212,24 @@ class _TelaBibliaState extends State<TelaBiblia> {
     );
   }
 
+  /// Com [TelaBiblia.dia], envolve o leitor no vigia do fim: quem rolou até o
+  /// fim do último capítulo do dia (ou ficou com ele aberto, se cabe na tela)
+  /// leu o dia, e o dia é marcado. Sem dia, a leitura segue como sempre, sem
+  /// vigia nem espera correndo à toa.
+  Widget _comVigiaDoDia(Estado estado, Capitulo capitulo, Widget leitor) {
+    final dia = widget.dia;
+    if (dia == null) return leitor;
+    return DevocionalVigiaDoFim(
+      chave: '${capitulo.livro}.${capitulo.numero}',
+      rolagem: _controller.rolagem,
+      aoChegarAoFim: () {
+        if (!dia.ehOFim(capitulo.livro, capitulo.numero)) return;
+        marcarDiaDaLeituraAoTerminar(context, estado, dia);
+      },
+      child: leitor,
+    );
+  }
+
   /// O corpo do capítulo carregado: erro, espera, vazio, ou o leitor com o
   /// gesto de deslize e a alça de arraste. Extraído do [build] para cada caso
   /// ler direto, sem um método de duzentas linhas.
@@ -246,24 +271,29 @@ class _TelaBibliaState extends State<TelaBiblia> {
       child: GestureDetector(
         onHorizontalDragEnd: (detalhe) =>
             _controller.aoArrastarCapitulo(context, detalhe),
-        child: DevocionalLeitorDaBiblia(
-          capitulo: capitulo,
-          rolagem: _controller.rolagem,
-          destacar: widget.destacar,
-          alvoDeRolagem: widget.destacar?.$1,
-          chaveDoAlvoDeRolagem: widget.destacar == null
-              ? null
-              : _controller.chaveDoAlvoDeRolagem,
-          proximo: switch (_controller.proximoCapitulo(1)) {
-            (final slug, final numero) => '${livroPorSlug(slug)!.nome} $numero',
-            null => null,
-          },
-          aoAvancar: () => _controller.passarCapitulo(context, 1),
-          aoCarregarComentarios: widget.destacar == null
-              ? null
-              : () => _controller.rolarAteOAlvo(widget.destacar!.$1),
-          selecionados: _controller.selecionados,
-          aoAlternarSelecao: _controller.alternarSelecao,
+        child: _comVigiaDoDia(
+          estado,
+          capitulo,
+          DevocionalLeitorDaBiblia(
+            capitulo: capitulo,
+            rolagem: _controller.rolagem,
+            destacar: widget.destacar,
+            alvoDeRolagem: widget.destacar?.$1,
+            chaveDoAlvoDeRolagem: widget.destacar == null
+                ? null
+                : _controller.chaveDoAlvoDeRolagem,
+            proximo: switch (_controller.proximoCapitulo(1)) {
+              (final slug, final numero) =>
+                '${livroPorSlug(slug)!.nome} $numero',
+              null => null,
+            },
+            aoAvancar: () => _controller.passarCapitulo(context, 1),
+            aoCarregarComentarios: widget.destacar == null
+                ? null
+                : () => _controller.rolarAteOAlvo(widget.destacar!.$1),
+            selecionados: _controller.selecionados,
+            aoAlternarSelecao: _controller.alternarSelecao,
+          ),
         ),
       ),
     );

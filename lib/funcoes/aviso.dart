@@ -36,6 +36,11 @@ const duracaoDeAviso = Duration(seconds: 3);
 /// "Link copiado.".
 const duracaoDeErro = Duration(seconds: 8);
 
+/// Quanto tempo fica o aviso de algo que o app fez sozinho, com "Desfazer"
+/// (o dia marcado como lido ao fim da leitura). A pessoa não tocou em nada:
+/// precisa de tempo para notar, ouvir no leitor de tela e achar o botão.
+const duracaoDeAvisoAutomatico = Duration(seconds: 8);
+
 /// Mostra um aviso de confirmação (ação completada, link copiado, dia lido).
 /// Para falhas, use [mostrarErro]: fica mais tempo na tela.
 void mostrarAviso(
@@ -43,11 +48,13 @@ void mostrarAviso(
   String texto, {
   String? rotuloDeAcao,
   VoidCallback? aoAgir,
+  Duration duracao = duracaoDeAviso,
 }) => mostrarAvisoNo(
   ScaffoldMessenger.of(context),
   texto,
   rotuloDeAcao: rotuloDeAcao,
   aoAgir: aoAgir,
+  duracao: duracao,
 );
 
 /// O mesmo que [mostrarAviso], mas com o messenger já em mãos — o caso das
@@ -58,10 +65,11 @@ void mostrarAvisoNo(
   String texto, {
   String? rotuloDeAcao,
   VoidCallback? aoAgir,
+  Duration duracao = duracaoDeAviso,
 }) => _mostrarNo(
   mensageiro,
   texto,
-  duracao: duracaoDeAviso,
+  duracao: duracao,
   rotuloDeAcao: rotuloDeAcao,
   aoAgir: aoAgir,
 );

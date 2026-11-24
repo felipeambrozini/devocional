@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:material_ui/material_ui.dart';
 
+import '../dados/dia_da_leitura.dart';
 import '../dados/conteudo.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
@@ -152,6 +153,11 @@ class _CartaoDoPlanoDeHoje extends StatelessWidget {
                 switch (item) {
                   ItemDeCapitulo(:final faixa) => DevocionalBotaoDeFaixa(
                     faixa: faixa,
+                    dia: DiaDaLeitura.doPlano(
+                      plano.id,
+                      proximo.numero,
+                      proximo.itens,
+                    ),
                   ),
                   ItemDeDevocional(:final tipo, :final chaveDoDia) =>
                     DevocionalBotaoDeDevocional(

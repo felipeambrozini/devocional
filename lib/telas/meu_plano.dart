@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../controladores/plano_controlador.dart';
+import '../dados/dia_da_leitura.dart';
 import '../dados/estado.dart';
 import '../dados/planos.dart';
 import '../estilo/espacamento.dart';
@@ -284,6 +285,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
             numero: dia.numero,
             rotulo: dia.rotulo,
             itens: dia.itens,
+            dia: DiaDaLeitura.doPlano(widget.planoId, dia.numero, dia.itens),
             lido: _controller.meusLidos().contains(dia.numero),
             aoAlternar: () => _controller.alternarDia(context, dia.numero),
           );

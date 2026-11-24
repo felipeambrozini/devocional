@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import '../controladores/notas_controlador.dart';
 import '../dados/biblioteca.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
@@ -38,7 +39,10 @@ class _TelaDoLivroState extends State<TelaDoLivro> {
           obra?.titulo ?? 'Biblioteca',
           overflow: TextOverflow.ellipsis,
         ),
-        actions: [DevocionalBotaoDeAjustes(estado: estado)],
+        actions: [
+          const DevocionalBotaoDeNotas(origem: OrigemDasNotas.biblioteca),
+          DevocionalBotaoDeAjustes(estado: estado),
+        ],
       ),
       body: obra == null
           ? const DevocionalAvisoVazio(

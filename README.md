@@ -22,6 +22,16 @@ do mesmo código).
   estante abre com *O Santo e o Seu Salvador*.
 - **Cronograma de leitura anual**, 365 dias (366 em ano bissexto), agrupado por
   mês, com marcação de lido e barra de progresso do ano.
+- **Dia marcado ao terminar a leitura**: a Bíblia aberta pela faixa de um dia
+  (a leitura de hoje, o cronograma, um plano) recebe o dia na URL
+  (`/ler/joao/3?diaDoCronograma=2026-11-24&fim=joao.3`, ou `plano` e
+  `diaDoPlano`; ver `DiaDaLeitura` em `lib/dados/dia_da_leitura.dart`). Chegar
+  ao fim do último capítulo do dia (mesma regra do "capítulo lido" da
+  Biblioteca) marca o dia como lido, com aviso e "Desfazer"; plano
+  compartilhado grava na nuvem, como o botão do dia. Ficam de fora: o dia que
+  termina num devocional, a mesma leitura aberta direto pela aba Bíblia e,
+  na prática, o dia cuja última faixa é um recorte de versículos (Salmos
+  119:1 a 56), que só marca ao fim do capítulo inteiro.
 - **A Vida de Jesus em 30 dias**: plano fixo (`planoDeJesus`, dias em
   `lib/dados/plano_de_jesus_dias.dart`) que toda conta ganha em Meus Planos —
   os quatro evangelhos em harmonia. Não vive no armazenamento nem na nuvem:
@@ -54,10 +64,13 @@ do mesmo código).
   (hospedado em `AUDIO_BASE_URL`). Fora da web dá para baixar o áudio e
   ouvir offline: nos Ajustes ("Áudio offline"), por categoria (Bíblia,
   introduções, Manhã e Noite e Promessas) ou livro a livro da Bíblia
-  ("Escolher livros da Bíblia"); cada livro da Biblioteca se baixa no
-  sumário dele ("Baixar o áudio"). O botão de baixar um livro só aparece
-  quando o áudio dele já está no Storage (HEAD no capítulo 1, ver
-  `lib/widgets/baixar_livro.dart`). Os comentários não têm download e só
+  ("Escolher livros da Bíblia"). Também dá para baixar um livro na página
+  dele: na Bíblia, no seletor de capítulos (a folha que abre pelo nome do
+  livro); na Biblioteca, no sumário ("Baixar o áudio"). Os três lugares usam
+  o mesmo componente, `DevocionalBaixarLivro`
+  (`lib/widgets/baixar_livro.dart`), sobre um `LivroParaBaixar` da Bíblia ou
+  da Biblioteca. O botão de baixar um livro só aparece quando o áudio dele
+  já está no Storage (HEAD no capítulo 1). Os comentários não têm download e só
   tocam com rede. Nos Ajustes também dá para
   ligar "Ouvir capítulos em sequência" (desligado por padrão): ao terminar um
   capítulo da Bíblia, o leitor vira a página e o próximo começa sozinho. Nos
@@ -215,8 +228,9 @@ do mesmo código).
 | Plano | Cronograma anual por mês, com marcação de lido; Meus Planos (personalizados e compartilhados) |
 | Conversas | Chat com Spurgeon e Felipe (IA, só para contas convidadas), numa aba própria em todas as plataformas; cada persona abre o histórico de conversas (`lib/telas/historico.dart`) |
 
-Notas não é aba: abre pelo ícone de marcador na barra de cima do Devocional e
-da Bíblia, com URL própria (`/notas`).
+Notas não é aba: abre pelo ícone de marcador na barra de cima do Devocional,
+da Bíblia e da Biblioteca (na estante, no sumário e no capítulo de cada
+livro), com URL própria (`/notas`).
 
 Sobre (créditos, fonte da tradução, canais e ajuda), Perguntas frequentes e
 Política de privacidade não são abas: moram no fim da folha de ajustes (seção
@@ -288,7 +302,8 @@ notificação na web) abre a leitura do lembrete.
   (`lib/dados/audio_config.dart`); `AudioOffline`
   (`lib/dados/audio_offline.dart`) baixa e cacheia esses arquivos em disco
   fora da web, para ouvir sem internet, por categoria (`baixarCategoria`) ou
-  por livro (`baixarLivro`, pela pasta `biblia/<livro>` ou `livros/<slug>`;
+  por livro (`baixarLivro` de um `LivroParaBaixar`, pela pasta
+  `biblia/<livro>` ou `livros/<slug>`;
   para no primeiro 403/404, porque os livros ganham áudio inteiros). A
   geração dos MP3 é em lotes (roda por semanas fora deste repo, na pasta
   `audio_gen` citada em "Conteúdo"), então o botão de ouvir só aparece quando
@@ -439,7 +454,17 @@ para um livro volta para a estante.
   "Terminar a leitura") pede confirmação, dá o livro como lido e volta à
   estante com a posição e os capítulos lidos zerados; destaques e notas
   ficam. O livro sai de "Seus livros" na Hoje e só volta quando o usuário abrir
-  o livro de novo, que então começa do primeiro capítulo.
+  o livro de novo, que então começa do primeiro capítulo. O sumário do livro
+  tem o mesmo "Terminar a leitura" enquanto há leitura em andamento, para quem
+  leu o livro em outro lugar ou quer recomeçar sem ir ao último capítulo; os
+  dois usam `terminarLeituraDoLivro` (`lib/funcoes/terminar_leitura.dart`).
+- **Capítulo lido sozinho**: chegar ao fim de um capítulo marca ele como lido
+  (o botão "Marcar como lido" vira "Capítulo lido" à vista, e desmarca num
+  toque). Conta a rolagem feita pelo usuário até o fim, ou, num capítulo que
+  cabe na tela, ficar 20 s com ele aberto, à vista e sem outra tela por cima.
+  A volta automática ao ponto em que se parou não conta. Marca uma vez por
+  abertura do capítulo: quem desmarcar não é contrariado. A regra mora em
+  `DevocionalVigiaDoFim` (`lib/widgets/vigia_do_fim.dart`), a mesma da Bíblia.
 - **Asset**: `assets/livros/<slug>.json`, `{slug, capitulos: [{titulo,
   paragrafos: []}]}`. Carregado sob demanda, um livro por vez.
 - **Capa**: `assets/imagens/capa_<slug>.webp`, 225x300, na família das capas

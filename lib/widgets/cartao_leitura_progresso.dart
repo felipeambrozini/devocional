@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../dados/dia_da_leitura.dart';
 import '../dados/conteudo.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
@@ -65,7 +66,13 @@ class DevocionalCartaoLeituraProgresso extends StatelessWidget {
             spacing: DevocionalEspacamento.sp8,
             runSpacing: DevocionalEspacamento.sp8,
             children: [
-              for (final f in dia.faixas) DevocionalBotaoDeFaixa(faixa: f),
+              for (final f in dia.faixas)
+                DevocionalBotaoDeFaixa(
+                  faixa: f,
+                  dia: DiaDaLeitura.doCronograma(chave, [
+                    for (final f in dia.faixas) ItemDeCapitulo(f),
+                  ]),
+                ),
             ],
           ),
           const SizedBox(height: DevocionalEspacamento.sp20),

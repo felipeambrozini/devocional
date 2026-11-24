@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:material_ui/material_ui.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import '../dados/audio_offline.dart';
 import '../dados/canon.dart';
 import '../dados/conteudo.dart';
 import '../estilo/espacamento.dart';
@@ -230,8 +231,38 @@ class _GradeDeCapitulos extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      padding: const EdgeInsets.all(DevocionalEspacamento.sp16),
+    return CustomScrollView(
+      slivers: [
+        // O seletor é o que a Bíblia tem de página do livro: baixar o áudio
+        // dele mora aqui, fora da leitura, e só aparece quando o áudio do
+        // livro já está no Storage. Fica na área que rola, e não no cabeçalho
+        // fixo: com o celular deitado ou letra a 2×, o cabeçalho com o botão
+        // tomava a folha e a grade de capítulos sumia.
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              DevocionalEspacamento.sp16,
+              0,
+              DevocionalEspacamento.sp16,
+              0,
+            ),
+            child: DevocionalBaixarLivro(
+              key: ValueKey(livro.slug),
+              livro: LivroParaBaixar.daBiblia(livro),
+              alinhamento: Alignment.center,
+            ),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.all(DevocionalEspacamento.sp16),
+          sliver: _grade(context),
+        ),
+      ],
+    );
+  }
+
+  Widget _grade(BuildContext context) {
+    return SliverGrid.builder(
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: 64,
         childAspectRatio: 1,

@@ -6,12 +6,14 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import '../controladores/leitor_de_livro_controlador.dart';
+import '../controladores/notas_controlador.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
 import '../dados/voz.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
 import '../funcoes/dialogos.dart';
+import '../funcoes/terminar_leitura.dart';
 import 'alca_de_deslize.dart';
 import 'ancora_de_foco.dart';
 import 'app_bar.dart';
@@ -22,6 +24,7 @@ import 'botao_de_voz.dart';
 import 'filete.dart';
 import 'layout_leitura.dart';
 import 'paragrafo_de_livro.dart';
+import 'vigia_do_fim.dart';
 
 /// Um capítulo aberto do leitor de livros: o texto com os destaques e notas,
 /// a troca de capítulo (deslize, setas e teclado) e o fim da leitura.
@@ -114,25 +117,32 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
   /// recomeço. Pede confirmação porque zera o progresso, e um deslize
   /// acidental não pode custar os capítulos marcados.
   Future<void> _terminarLeitura() async {
-    final confirmou = await confirmar(
-      context,
-      titulo: 'Terminar a leitura?',
-      conteudo:
-          '${widget.obra.titulo} será dado como lido e a leitura recomeça do '
-          'primeiro capítulo. Seus favoritos e notas continuam guardados.',
-      rotuloDaAcao: 'Terminar',
-    );
-    if (!confirmou || !mounted) return;
-    final mensageiro = ScaffoldMessenger.of(context);
     final roteador = GoRouter.of(context);
-    _controlador.encerrar();
-    await widget.estado.leituraDeLivros.concluir(_slug);
-    roteador.go('/biblioteca');
-    mostrarAvisoNo(
-      mensageiro,
-      'Você terminou ${widget.obra.titulo}. Ao abrir o livro de novo, a '
-      'leitura recomeça do primeiro capítulo.',
+    final terminou = await terminarLeituraDoLivro(
+      context,
+      widget.estado,
+      widget.obra,
+      antesDeConcluir: _controlador.encerrar,
     );
+    if (terminou) roteador.go('/biblioteca');
+  }
+
+  /// Quem chegou ao fim do capítulo leu: marca sozinho, sem aviso, porque o
+  /// botão logo abaixo vira "Capítulo lido" à vista e desmarca num toque.
+  /// `alternarLido` alterna, então só chama se ainda não estiver marcado.
+  void _marcarLidoAoChegarAoFim() {
+    final leitura = widget.estado.leituraDeLivros;
+    if (leitura.foiLido(_slug, widget.indice)) return;
+    leitura.alternarLido(_slug, widget.indice);
+    // Quem enxerga vê o botão mudar; quem usa leitor de tela está com o foco
+    // no texto, longe dele, e só saberia voltando lá.
+    if (MediaQuery.accessibleNavigationOf(context)) {
+      SemanticsService.sendAnnouncement(
+        View.of(context),
+        'Capítulo marcado como lido',
+        Directionality.of(context),
+      );
+    }
   }
 
   /// Arrastar na horizontal passa de capítulo, com as regras da Bíblia: o
@@ -279,7 +289,15 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
       child: DevocionalAncoraDeFoco(
         child: Scaffold(
           appBar: DevocionalAppBar(
-            title: Text(widget.obra.titulo, overflow: TextOverflow.ellipsis),
+            // Com Capítulos, Notas, Ajustes e a voz, um título longo vira
+            // reticências na barra: o tooltip dá o nome inteiro, e o corpo
+            // repete o livro acima do capítulo.
+            title: Tooltip(
+              message: widget.obra.titulo,
+              // O leitor de tela já lê o título: sem isto, lia duas vezes.
+              excludeFromSemantics: true,
+              child: Text(widget.obra.titulo, overflow: TextOverflow.ellipsis),
+            ),
             actions: [
               // Quem rolou para longe da pílula ainda pausa ou encerra a
               // leitura daqui, como na Bíblia.
@@ -289,6 +307,9 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
                 icon: const FaIcon(FontAwesomeIcons.listUl),
                 onPressed: _voltarAoSumario,
               ),
+              // Favoritos e notas da Biblioteca, como na Bíblia e no
+              // Devocional: quem lê um livro não precisa voltar à estante.
+              const DevocionalBotaoDeNotas(origem: OrigemDasNotas.biblioteca),
               DevocionalBotaoDeAjustes(estado: estado),
             ],
           ),
@@ -325,106 +346,129 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
                             _controlador.guardarPosicao();
                             return false;
                           },
-                          child: SingleChildScrollView(
-                            controller: _controlador.rolagem,
-                            padding: const EdgeInsets.fromLTRB(
-                              DevocionalEspacamento.sp16,
-                              DevocionalEspacamento.sp8,
-                              DevocionalEspacamento.sp16,
-                              DevocionalEspacamento.sp32,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Capítulo ${widget.indice + 1} de ${widget.capitulos.length}',
-                                  style: tema.labelMedium,
-                                ),
-                                const SizedBox(
-                                  height: DevocionalEspacamento.sp4,
-                                ),
-                                // Container: sem ele, o leitor de tela
-                                // fundia o título com a pílula de ouvir
-                                // logo abaixo num nó só, como na Bíblia.
-                                Semantics(
-                                  container: true,
-                                  header: true,
-                                  child: Text(
-                                    _capitulo.titulo,
-                                    style: tema.headlineMedium,
-                                  ),
-                                ),
-                                const SizedBox(
-                                  height: DevocionalEspacamento.sp14,
-                                ),
-                                const DevocionalFilete(),
-                                const SizedBox(
-                                  height: DevocionalEspacamento.sp16,
-                                ),
-                                // Só aparece quando o mp3 do capítulo já foi
-                                // publicado: os livros ganham áudio aos
-                                // poucos, livro a livro.
-                                DevocionalBotaoDeVoz(
-                                  chave: _chaveDaVoz,
-                                  referencia:
-                                      '${widget.obra.titulo}, ${_capitulo.titulo}',
-                                ),
-                                const SizedBox(
-                                  height: DevocionalEspacamento.sp16,
-                                ),
-                                KeyedSubtree(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      for (final (n, paragrafo)
-                                          in _capitulo.paragrafos.indexed)
-                                        DevocionalParagrafoDeLivro(
-                                          texto: paragrafo,
-                                          destaque: destaques[n],
-                                          aoTocar: () => _abrirAcoes(n),
+                          // Chegou ao fim do capítulo: marca como lido.
+                          child: DevocionalVigiaDoFim(
+                            chave: widget.indice,
+                            rolagem: _controlador.rolagem,
+                            aoChegarAoFim: _marcarLidoAoChegarAoFim,
+                            child: SingleChildScrollView(
+                              controller: _controlador.rolagem,
+                              padding: const EdgeInsets.fromLTRB(
+                                DevocionalEspacamento.sp16,
+                                DevocionalEspacamento.sp8,
+                                DevocionalEspacamento.sp16,
+                                DevocionalEspacamento.sp32,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // O nome do livro na barra some em
+                                  // reticências no celular: aqui ele cabe
+                                  // inteiro, quebrando linha se precisar. Um
+                                  // nó só para o leitor de tela, livro e
+                                  // capítulo, antes do título do capítulo.
+                                  MergeSemantics(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          widget.obra.titulo,
+                                          style: tema.labelMedium,
                                         ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(
-                                  height: DevocionalEspacamento.sp16,
-                                ),
-                                if (_ehUltimo) ...[
-                                  Center(
-                                    child: DevocionalBotaoPrimario.icon(
-                                      onPressed: _terminarLeitura,
-                                      icon: const FaIcon(
-                                        FontAwesomeIcons.flagCheckered,
-                                        size: 16,
-                                      ),
-                                      label: const Text('Terminar a leitura'),
+                                        Text(
+                                          'Capítulo ${widget.indice + 1} de ${widget.capitulos.length}',
+                                          style: tema.labelMedium,
+                                        ),
+                                      ],
                                     ),
                                   ),
                                   const SizedBox(
-                                    height: DevocionalEspacamento.sp8,
+                                    height: DevocionalEspacamento.sp4,
+                                  ),
+                                  // Container: sem ele, o leitor de tela
+                                  // fundia o título com a pílula de ouvir
+                                  // logo abaixo num nó só, como na Bíblia.
+                                  Semantics(
+                                    container: true,
+                                    header: true,
+                                    child: Text(
+                                      _capitulo.titulo,
+                                      style: tema.headlineMedium,
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    height: DevocionalEspacamento.sp14,
+                                  ),
+                                  const DevocionalFilete(),
+                                  const SizedBox(
+                                    height: DevocionalEspacamento.sp16,
+                                  ),
+                                  // Só aparece quando o mp3 do capítulo já foi
+                                  // publicado: os livros ganham áudio aos
+                                  // poucos, livro a livro.
+                                  DevocionalBotaoDeVoz(
+                                    chave: _chaveDaVoz,
+                                    referencia:
+                                        '${widget.obra.titulo}, ${_capitulo.titulo}',
+                                  ),
+                                  const SizedBox(
+                                    height: DevocionalEspacamento.sp16,
+                                  ),
+                                  KeyedSubtree(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        for (final (n, paragrafo)
+                                            in _capitulo.paragrafos.indexed)
+                                          DevocionalParagrafoDeLivro(
+                                            texto: paragrafo,
+                                            destaque: destaques[n],
+                                            aoTocar: () => _abrirAcoes(n),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    height: DevocionalEspacamento.sp16,
+                                  ),
+                                  if (_ehUltimo) ...[
+                                    Center(
+                                      child: DevocionalBotaoPrimario.icon(
+                                        onPressed: _terminarLeitura,
+                                        icon: const FaIcon(
+                                          FontAwesomeIcons.flagCheckered,
+                                          size: 16,
+                                        ),
+                                        label: const Text('Terminar a leitura'),
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      height: DevocionalEspacamento.sp8,
+                                    ),
+                                  ],
+                                  Center(
+                                    child: DevocionalBotaoTerciario.icon(
+                                      onPressed: () => leitura.alternarLido(
+                                        _slug,
+                                        widget.indice,
+                                      ),
+                                      icon: FaIcon(
+                                        lido
+                                            ? FontAwesomeIcons.circleCheck
+                                            : FontAwesomeIcons.circle,
+                                        size: 14,
+                                      ),
+                                      label: Text(
+                                        lido
+                                            ? 'Capítulo lido'
+                                            : 'Marcar como lido',
+                                      ),
+                                    ),
                                   ),
                                 ],
-                                Center(
-                                  child: DevocionalBotaoTerciario.icon(
-                                    onPressed: () => leitura.alternarLido(
-                                      _slug,
-                                      widget.indice,
-                                    ),
-                                    icon: FaIcon(
-                                      lido
-                                          ? FontAwesomeIcons.circleCheck
-                                          : FontAwesomeIcons.circle,
-                                      size: 14,
-                                    ),
-                                    label: Text(
-                                      lido
-                                          ? 'Capítulo lido'
-                                          : 'Marcar como lido',
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ),
                         ),

@@ -18,6 +18,7 @@ import 'package:material_ui/material_ui.dart';
 import 'controladores/notas_controlador.dart';
 import 'dados/canon.dart';
 import 'dados/config_admin.dart';
+import 'dados/dia_da_leitura.dart';
 import 'dados/estado.dart';
 import 'dados/espelho_do_tema.dart';
 import 'dados/lembretes.dart';
@@ -440,6 +441,7 @@ final _router = GoRouter(
           livroInicial: livro,
           capituloInicial: capitulo,
           destacar: destacar,
+          dia: DiaDaLeitura.doParametros(state.uri.queryParameters),
           voltarPara: '/hoje',
         );
       },

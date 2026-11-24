@@ -90,3 +90,4 @@ export 'seletor_de_livro.dart';
 export 'seletor_de_livros_do_plano.dart';
 export 'sem_conversas.dart';
 export 'sumario_do_livro.dart';
+export 'vigia_do_fim.dart';

@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import '../dados/conteudo.dart';
+import '../dados/dia_da_leitura.dart';
 import '../dados/modelos.dart';
 import '../funcoes/abrir_na_biblia.dart';
 import 'botao.dart';
@@ -13,9 +14,13 @@ import 'botao.dart';
 /// destaca só o recorte pedido; o resto do capítulo continua visível, apenas
 /// esmaecido, para não perder o contexto.
 class DevocionalBotaoDeFaixa extends StatelessWidget {
-  const DevocionalBotaoDeFaixa({super.key, required this.faixa});
+  const DevocionalBotaoDeFaixa({super.key, required this.faixa, this.dia});
 
   final Faixa faixa;
+
+  /// O dia do cronograma ou do plano a que a faixa pertence, para a Bíblia
+  /// marcar o dia ao fim do último capítulo dele (ver [DiaDaLeitura]).
+  final DiaDaLeitura? dia;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +34,7 @@ class DevocionalBotaoDeFaixa extends StatelessWidget {
         destacar: faixa.porVersiculo
             ? (faixa.deVersiculo!, faixa.ateVersiculo!)
             : null,
+        dia: dia,
       ),
     );
   }

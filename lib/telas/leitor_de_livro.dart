@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import '../controladores/notas_controlador.dart';
 import '../dados/biblioteca.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
@@ -38,8 +39,15 @@ class _TelaLeitorDeLivroState extends State<TelaLeitorDeLivro> {
 
     Widget aviso(String titulo, [Widget? corpo]) => Scaffold(
       appBar: DevocionalAppBar(
-        title: Text(obra?.titulo ?? 'Biblioteca'),
-        actions: [DevocionalBotaoDeAjustes(estado: estado)],
+        title: Text(
+          obra?.titulo ?? 'Biblioteca',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        actions: [
+          const DevocionalBotaoDeNotas(origem: OrigemDasNotas.biblioteca),
+          DevocionalBotaoDeAjustes(estado: estado),
+        ],
       ),
       body:
           corpo ??

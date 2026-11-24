@@ -1532,10 +1532,14 @@ void main() {
     await tester.scrollUntilVisible(
       find.widgetWithText(OutlinedButton, '50'),
       300,
-      scrollable: find.descendant(
-        of: find.byType(GridView),
-        matching: find.byType(Scrollable),
-      ),
+      // A rolagem da grade (com o botão de baixar o áudio no topo), achada
+      // pelo capítulo 1 em vez do tipo do widget.
+      scrollable: find
+          .ancestor(
+            of: find.widgetWithText(OutlinedButton, '1'),
+            matching: find.byType(Scrollable),
+          )
+          .first,
     );
     expect(find.widgetWithText(OutlinedButton, '50'), findsOneWidget);
     expect(find.widgetWithText(OutlinedButton, '51'), findsNothing);

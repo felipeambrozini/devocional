@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 // ScrollCacheExtent ainda não é reexportado por material.dart nesta versão.
 
+import '../dados/dia_da_leitura.dart';
 import '../dados/conteudo.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
@@ -215,6 +216,9 @@ class _DevocionalAbaDoCronogramaState extends State<DevocionalAbaDoCronograma>
                       numero: dia.dia,
                       rotulo: dia.rotulo,
                       itens: [for (final f in dia.faixas) ItemDeCapitulo(f)],
+                      dia: DiaDaLeitura.doCronograma(chaveDe(dia), [
+                        for (final f in dia.faixas) ItemDeCapitulo(f),
+                      ]),
                       lido: estado.foiLido(chaveDe(dia)),
                       destacar: ehHoje,
                       aoAlternar: () {

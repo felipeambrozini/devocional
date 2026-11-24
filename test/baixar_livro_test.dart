@@ -1,5 +1,6 @@
 import 'package:devocional/dados/audio_offline.dart';
 import 'package:devocional/dados/canon.dart';
+import 'package:devocional/dados/modelos.dart';
 import 'package:devocional/dados/recursos.dart';
 import 'package:devocional/dados/voz.dart';
 import 'package:devocional/estilo/tema.dart';
@@ -43,8 +44,15 @@ void main() {
     AudioOffline.temOfflineParaTeste = null;
   });
 
-  const pasta = 'livros/livro_do_teste';
-  final chaves = chavesDoLivroDaBiblioteca('livro_do_teste', 3);
+  final livro = LivroParaBaixar.daBiblioteca(
+    ObraDaBiblioteca(
+      slug: 'livro_do_teste',
+      titulo: 'Livro do teste',
+      subtitulo: '',
+      capa: '',
+    ),
+    3,
+  );
 
   Future<void> montarBotao(WidgetTester tester, Brightness brilho) async {
     _telaDeCelular(tester);
@@ -54,11 +62,7 @@ void main() {
         Scaffold(
           body: Padding(
             padding: const EdgeInsets.all(16),
-            child: DevocionalBaixarLivro(
-              titulo: 'Livro do teste',
-              pasta: pasta,
-              chaves: chaves,
-            ),
+            child: DevocionalBaixarLivro(livro: livro),
           ),
         ),
       ),
@@ -124,7 +128,7 @@ void main() {
       // antes de abrir a folha evita a chamada dentro do build.
       for (final livro in canon) {
         await AudioOffline.instancia.contarLivro(
-          pastaDoLivroDaBiblia(livro.slug),
+          LivroParaBaixar.daBiblia(livro),
         );
       }
       await tester.pumpWidget(

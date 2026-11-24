@@ -2,17 +2,31 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../dados/canon.dart';
+import '../dados/dia_da_leitura.dart';
 import '../telas/biblia.dart';
 
 /// Caminho da Bíblia aberta por cima de qualquer aba, como a epígrafe do
 /// devocional, a faixa da leitura do dia ou um achado da busca a abrem:
 /// `/ler/joao/3`, com `?versiculos=16` ou `?versiculos=16-18` quando há
-/// versículos a destacar. A rota mora em `main.dart`.
-String caminhoNaBiblia(String livro, int capitulo, {(int, int)? destacar}) {
+/// versículos a destacar, e os parâmetros de [dia] quando a leitura veio de
+/// um dia do cronograma ou de um plano (ver [DiaDaLeitura]). A rota mora em
+/// `main.dart`.
+String caminhoNaBiblia(
+  String livro,
+  int capitulo, {
+  (int, int)? destacar,
+  DiaDaLeitura? dia,
+}) {
   final base = '/ler/$livro/$capitulo';
-  if (destacar == null) return base;
-  final (de, ate) = destacar;
-  return de == ate ? '$base?versiculos=$de' : '$base?versiculos=$de-$ate';
+  final parametros = <String, String>{
+    if (destacar != null)
+      'versiculos': destacar.$1 == destacar.$2
+          ? '${destacar.$1}'
+          : '${destacar.$1}-${destacar.$2}',
+    ...?dia?.parametros,
+  };
+  if (parametros.isEmpty) return base;
+  return Uri(path: base, queryParameters: parametros).toString();
 }
 
 /// Livro, capítulo e faixa de versículos de [caminhoNaBiblia], a partir dos
@@ -50,10 +64,13 @@ void abrirNaBiblia(
   String livro,
   int capitulo, {
   (int, int)? destacar,
+  DiaDaLeitura? dia,
 }) {
   final roteador = GoRouter.maybeOf(context);
   if (roteador != null) {
-    roteador.push(caminhoNaBiblia(livro, capitulo, destacar: destacar));
+    roteador.push(
+      caminhoNaBiblia(livro, capitulo, destacar: destacar, dia: dia),
+    );
     return;
   }
   Navigator.push(
@@ -63,6 +80,7 @@ void abrirNaBiblia(
         livroInicial: livro,
         capituloInicial: capitulo,
         destacar: destacar,
+        dia: dia,
       ),
     ),
   );

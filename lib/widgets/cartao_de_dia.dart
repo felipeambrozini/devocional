@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../dados/modelos.dart';
+import '../dados/dia_da_leitura.dart';
 import '../estilo/espacamento.dart';
 import 'botao.dart';
 import 'faixa.dart';
@@ -25,6 +26,7 @@ class DevocionalCartaoDeDia extends StatelessWidget {
     required this.lido,
     required this.aoAlternar,
     this.destacar = false,
+    this.dia,
   });
 
   final int numero;
@@ -36,6 +38,10 @@ class DevocionalCartaoDeDia extends StatelessWidget {
   /// uma lista de trinta e um cartões parecidos.
   final bool destacar;
   final VoidCallback aoAlternar;
+
+  /// O dia a marcar quando a leitura chega ao fim dele, repassado às faixas
+  /// (ver [DiaDaLeitura]).
+  final DiaDaLeitura? dia;
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +94,7 @@ class DevocionalCartaoDeDia extends StatelessWidget {
                       for (final item in itens)
                         switch (item) {
                           ItemDeCapitulo(:final faixa) =>
-                            DevocionalBotaoDeFaixa(faixa: faixa),
+                            DevocionalBotaoDeFaixa(faixa: faixa, dia: dia),
                           ItemDeDevocional(:final tipo, :final chaveDoDia) =>
                             DevocionalBotaoDeDevocional(
                               tipo: tipo,

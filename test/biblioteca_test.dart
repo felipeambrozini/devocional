@@ -842,6 +842,14 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Continuar de onde parei'), findsOneWidget);
+      // Com "Terminar a leitura" ao lado, os botões descem para duas linhas
+      // na tela do teste e o capítulo 5 nasce abaixo da área montada pela
+      // lista preguiçosa: desce até ele, como um dedo faria.
+      await tester.scrollUntilVisible(
+        find.text('Parei aqui'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('Parei aqui'), findsOneWidget);
     });
   });

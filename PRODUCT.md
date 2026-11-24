@@ -44,6 +44,11 @@ vitoriana dele, tratando o leitor por "tu".
   capítulos, agrupado por mês, com marcação de lido e progresso do ano. O
   progresso é do ano (os dias lidos guardam o ano) e recomeça em 1º de janeiro;
   o histórico dos anos anteriores fica guardado.
+- Marcação ao terminar de ler: quem abre a Bíblia pela faixa de um dia (do
+  cronograma ou de um plano) e chega ao fim do último capítulo dele tem o dia
+  marcado como lido, com aviso e "Desfazer". Na Biblioteca, chegar ao fim de
+  um capítulo marca o capítulo. Conta rolar até o fim ou, em capítulo que cabe
+  na tela, ficar 20 s com ele aberto.
 - Tema claro ou escuro (padrão segue o aparelho, dá para fixar) e escala do
   texto de leitura, pelas barras do leitor e do devocional.
 - Lembrete diário opcional (Android e web; fora do iOS por ora), com horários
@@ -92,8 +97,9 @@ vitoriana dele, tratando o leitor por "tu".
   Spurgeon): narra capítulos da Bíblia, os dois devocionais, Promessas de
   Deus, as introduções e os capítulos dos livros da Biblioteca (publicados
   livro a livro; o botão só aparece onde o MP3 já existe); download opcional
-  para ouvir offline fora da web, por categoria ou por livro (Bíblia e
-  Biblioteca; o botão de baixar um livro só aparece quando o áudio dele já
+  para ouvir offline fora da web, por categoria ou por livro (nos Ajustes,
+  no seletor de capítulos da Bíblia e no sumário dos livros da Biblioteca,
+  nunca dentro da leitura; o botão só aparece quando o áudio do livro já
   está no Storage), menos os comentários.
   Opt-in nos Ajustes ("Ouvir capítulos em sequência", desligado por padrão):
   ao terminar um capítulo da Bíblia, o leitor avança e o próximo começa
@@ -157,12 +163,14 @@ vitoriana dele, tratando o leitor por "tu".
   de ações das três seguem a mesma ordem: Copiar, Compartilhar, Anotar,
   Favoritar (a da Biblioteca sem Compartilhar, que vem pela seleção).
 - Favoritos e notas são separados por aba: o ícone de marcador da barra de
-  cima da Bíblia, do Devocional e da Biblioteca abre a tela só com o que foi
+  cima da Bíblia, do Devocional e da Biblioteca (também dentro de um livro,
+  no sumário e no capítulo) abre a tela só com o que foi
   marcado naquela aba (`/notas?aba=biblia|devocional|biblioteca`).
 - Biblioteca de livros de Spurgeon em domínio público, traduzidos para o app
   (22 obras, entre elas *Somente pela Graça*): leitura por capítulo, continuar
   de onde
-  parou, progresso por livro e favoritos com nota por parágrafo. Os versículos
+  parou, progresso por livro e favoritos com nota por parágrafo. "Terminar a
+  leitura" fica no último capítulo e no sumário do livro. Os versículos
   citados saem da King James do app, nunca de tradução nova. É uma aba da barra
   de
   baixo (no lugar de Notas, que virou um ícone na barra de cima do Devocional,

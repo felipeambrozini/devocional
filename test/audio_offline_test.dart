@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:devocional/dados/audio_offline.dart';
 import 'package:devocional/dados/canon.dart';
+import 'package:devocional/dados/modelos.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -105,32 +106,79 @@ void main() {
     Future<bool> existe(String relativo) =>
         File('${tmp.path}/audio_offline/$relativo').exists();
 
+    LivroParaBaixar daBiblioteca(String slug, int capitulos) =>
+        LivroParaBaixar.daBiblioteca(
+          ObraDaBiblioteca(
+            slug: slug,
+            titulo: 'Livro $slug',
+            subtitulo: '',
+            capa: '',
+          ),
+          capitulos,
+        );
+
+    LivroParaBaixar pastaDe(String pasta) =>
+        LivroParaBaixar(titulo: pasta, pasta: pasta, chaves: const []);
+
     final judas = canon.firstWhere((l) => l.slug == 'judas');
     final tresJoao = canon.firstWhere((l) => l.slug == '3joao');
 
-    test('as pastas e as chaves de um livro seguem o formato da voz', () {
-      expect(pastaDoLivroDaBiblia('joao'), 'biblia/joao');
-      expect(pastaDoLivroDaBiblioteca('slug_x'), 'livros/slug_x');
-      expect(chavesDoLivroDaBiblioteca('x', 0), isEmpty);
-      expect(chavesDoLivroDaBiblioteca('x', 3), [
-        'livro:x.1',
-        'livro:x.2',
-        'livro:x.3',
+    test('as fábricas dão título, pasta e chaves no formato da voz', () {
+      final obra = ObraDaBiblioteca(
+        slug: 'slug_x',
+        titulo: 'Livro X',
+        subtitulo: '',
+        capa: '',
+      );
+      final daObra = LivroParaBaixar.daBiblioteca(obra, 3);
+      expect(daObra.titulo, 'Livro X');
+      expect(daObra.pasta, 'livros/slug_x');
+      expect(daObra.chaves, [
+        'livro:slug_x.1',
+        'livro:slug_x.2',
+        'livro:slug_x.3',
       ]);
-      expect(chavesDoLivroDaBiblia(judas), ['capitulo:judas.1']);
+      expect(LivroParaBaixar.daBiblioteca(obra, 0).chaves, isEmpty);
+
+      final daJudas = LivroParaBaixar.daBiblia(judas);
+      expect(daJudas.titulo, judas.nome);
+      expect(daJudas.pasta, 'biblia/judas');
+      expect(daJudas.chaves, ['capitulo:judas.1']);
       final joao = canon.firstWhere((l) => l.slug == 'joao');
-      expect(chavesDoLivroDaBiblia(joao), hasLength(joao.capitulos));
+      final daJoao = LivroParaBaixar.daBiblia(joao);
+      expect(daJoao.pasta, 'biblia/joao');
+      expect(daJoao.chaves, hasLength(joao.capitulos));
+    });
+
+    test('dois livros são iguais quando têm a mesma pasta', () {
+      final a = LivroParaBaixar(
+        titulo: 'A',
+        pasta: 'livros/x',
+        chaves: const [],
+      );
+      final b = LivroParaBaixar(
+        titulo: 'B',
+        pasta: 'livros/x',
+        chaves: const ['livro:x.1'],
+      );
+      final c = LivroParaBaixar(
+        titulo: 'A',
+        pasta: 'livros/y',
+        chaves: const [],
+      );
+      expect(a, b);
+      expect(a.hashCode, b.hashCode);
+      expect(a, isNot(c));
     });
 
     test('baixar um livro da Biblioteca grava em livros/<slug>/<n>.mp3 e '
         'conta só por livro', () async {
       final off = AudioOffline.instancia;
       final pedidos = <Uri>[];
-      final pasta = pastaDoLivroDaBiblioteca('livro_x');
+      final livro = daBiblioteca('livro_x', 3);
 
       await off.baixarLivro(
-        pasta,
-        chavesDoLivroDaBiblioteca('livro_x', 3),
+        daBiblioteca('livro_x', 3),
         cliente: clienteDe200(pedidos),
       );
 
@@ -142,7 +190,7 @@ void main() {
       for (final n in [1, 2, 3]) {
         expect(await existe('livros/livro_x/$n.mp3'), isTrue);
       }
-      expect(off.contagemDoLivro(pasta), 3);
+      expect(off.contagemDoLivro(livro), 3);
       expect(off.contagemPorCategoria.values, everyElement(0));
       expect(off.tamanhoTotalBytes, 30);
       expect(off.baixando, isFalse);
@@ -153,18 +201,14 @@ void main() {
 
     test('baixar um livro da Bíblia soma em "biblia" e no livro', () async {
       final off = AudioOffline.instancia;
-      final pasta = pastaDoLivroDaBiblia(judas.slug);
+      final livro = LivroParaBaixar.daBiblia(judas);
 
-      await off.baixarLivro(
-        pasta,
-        chavesDoLivroDaBiblia(judas),
-        cliente: clienteDe200([]),
-      );
+      await off.baixarLivro(livro, cliente: clienteDe200([]));
 
       expect(await existe('biblia/judas/1.mp3'), isTrue);
       expect(off.contagemPorCategoria['biblia'], 1);
       expect(off.contagemPorCategoria['introducao'], 0);
-      expect(off.contagemDoLivro(pasta), 1);
+      expect(off.contagemDoLivro(livro), 1);
     });
 
     test(
@@ -179,11 +223,7 @@ void main() {
           return http.Response.bytes(const [0], 200);
         });
 
-        await off.baixarLivro(
-          'livros/livro_x',
-          chavesDoLivroDaBiblioteca('livro_x', 1),
-          cliente: cliente,
-        );
+        await off.baixarLivro(daBiblioteca('livro_x', 1), cliente: cliente);
 
         expect(lote, 'livros/livro_x');
         expect(categoria, isNull);
@@ -194,8 +234,11 @@ void main() {
       final off = AudioOffline.instancia;
       final pedidos = <Uri>[];
       await off.baixarLivro(
-        'livros/vazio',
-        const [],
+        LivroParaBaixar(
+          titulo: 'Vazio',
+          pasta: 'livros/vazio',
+          chaves: const [],
+        ),
         cliente: clienteDe200(pedidos),
       );
       expect(pedidos, isEmpty);
@@ -212,11 +255,7 @@ void main() {
       });
       const pasta = 'livros/livro_x';
 
-      await off.baixarLivro(
-        pasta,
-        chavesDoLivroDaBiblioteca('livro_x', 5),
-        cliente: cliente,
-      );
+      await off.baixarLivro(daBiblioteca('livro_x', 5), cliente: cliente);
 
       expect(pedidos, 1);
       expect(off.erro, 'Áudio deste livro ainda não publicado');
@@ -233,11 +272,7 @@ void main() {
           pedidos++;
           return http.Response('', status);
         });
-        await off.baixarLivro(
-          'livros/livro_x',
-          chavesDoLivroDaBiblioteca('livro_x', 5),
-          cliente: cliente,
-        );
+        await off.baixarLivro(daBiblioteca('livro_x', 5), cliente: cliente);
         expect(pedidos, 1);
         expect(off.erro, 'Áudio deste livro ainda não publicado');
       });
@@ -252,13 +287,9 @@ void main() {
             ? http.Response.bytes(const [0], 200)
             : http.Response('', 403);
       });
-      await off.baixarLivro(
-        'livros/livro_x',
-        chavesDoLivroDaBiblioteca('livro_x', 5),
-        cliente: cliente,
-      );
+      await off.baixarLivro(daBiblioteca('livro_x', 5), cliente: cliente);
       expect(pedidos, 2);
-      expect(off.contagemDoLivro('livros/livro_x'), 1);
+      expect(off.contagemDoLivro(pastaDe('livros/livro_x')), 1);
       expect(off.loteDoErro, 'livros/livro_x');
     });
 
@@ -271,11 +302,7 @@ void main() {
           pedidos++;
           return http.Response('', 500);
         });
-        await off.baixarLivro(
-          'livros/livro_x',
-          chavesDoLivroDaBiblioteca('livro_x', 3),
-          cliente: cliente,
-        );
+        await off.baixarLivro(daBiblioteca('livro_x', 3), cliente: cliente);
         expect(pedidos, 3);
         expect(off.erro, contains('500'));
         expect(off.loteDoErro, 'livros/livro_x');
@@ -287,8 +314,7 @@ void main() {
       await gravar('livros/livro_x/1.mp3');
       final pedidos = <Uri>[];
       await off.baixarLivro(
-        'livros/livro_x',
-        chavesDoLivroDaBiblioteca('livro_x', 2),
+        daBiblioteca('livro_x', 2),
         cliente: clienteDe200(pedidos),
       );
       expect(pedidos.map((u) => u.path), ['/livros/livro_x/2.mp3']);
@@ -297,46 +323,41 @@ void main() {
     test('apagarLivro apaga só a pasta do livro e reconta', () async {
       final off = AudioOffline.instancia;
       await off.baixarLivro(
-        'livros/livro_x',
-        chavesDoLivroDaBiblioteca('livro_x', 2),
+        daBiblioteca('livro_x', 2),
         cliente: clienteDe200([]),
       );
       await off.baixarLivro(
-        'livros/livro_y',
-        chavesDoLivroDaBiblioteca('livro_y', 2),
+        daBiblioteca('livro_y', 2),
         cliente: clienteDe200([]),
       );
       await off.baixarLivro(
-        pastaDoLivroDaBiblia(judas.slug),
-        chavesDoLivroDaBiblia(judas),
+        LivroParaBaixar.daBiblia(judas),
         cliente: clienteDe200([]),
       );
 
-      await off.apagarLivro('livros/livro_x');
+      await off.apagarLivro(daBiblioteca('livro_x', 2));
 
       expect(await existe('livros/livro_x/1.mp3'), isFalse);
       expect(await existe('livros/livro_y/1.mp3'), isTrue);
       expect(await existe('biblia/judas/1.mp3'), isTrue);
-      expect(off.contagemDoLivro('livros/livro_x'), isNull);
-      expect(off.contagemDoLivro('livros/livro_y'), 2);
+      expect(off.contagemDoLivro(pastaDe('livros/livro_x')), isNull);
+      expect(off.contagemDoLivro(pastaDe('livros/livro_y')), 2);
       expect(off.contagemPorCategoria['biblia'], 1);
     });
 
     test('apagar um livro da Bíblia desconta de "biblia"', () async {
       final off = AudioOffline.instancia;
       await off.baixarLivro(
-        pastaDoLivroDaBiblia(judas.slug),
-        chavesDoLivroDaBiblia(judas),
+        LivroParaBaixar.daBiblia(judas),
         cliente: clienteDe200([]),
       );
       await off.baixarLivro(
-        pastaDoLivroDaBiblia(tresJoao.slug),
-        chavesDoLivroDaBiblia(tresJoao),
+        LivroParaBaixar.daBiblia(tresJoao),
         cliente: clienteDe200([]),
       );
       expect(off.contagemPorCategoria['biblia'], 2);
 
-      await off.apagarLivro(pastaDoLivroDaBiblia(judas.slug));
+      await off.apagarLivro(LivroParaBaixar.daBiblia(judas));
 
       expect(off.contagemPorCategoria['biblia'], 1);
       expect(await existe('biblia/3joao/1.mp3'), isTrue);
@@ -358,7 +379,9 @@ void main() {
         '',
         '../audio_offline',
       ]) {
-        await off.apagarLivro(pasta);
+        await off.apagarLivro(
+          LivroParaBaixar(titulo: 'Torto', pasta: pasta, chaves: const []),
+        );
       }
 
       expect(await existe('biblia/joao/1.mp3'), isTrue);
@@ -369,8 +392,8 @@ void main() {
 
     test('apagarLivro de pasta inexistente não lança', () async {
       final off = AudioOffline.instancia;
-      await off.apagarLivro('livros/nao_existe');
-      expect(off.contagemDoLivro('livros/nao_existe'), isNull);
+      await off.apagarLivro(daBiblioteca('nao_existe', 1));
+      expect(off.contagemDoLivro(pastaDe('livros/nao_existe')), isNull);
     });
 
     test('atualizarContagens preenche a contagem por livro', () async {
@@ -382,9 +405,9 @@ void main() {
 
       await off.atualizarContagens();
 
-      expect(off.contagemDoLivro('biblia/joao'), 2);
-      expect(off.contagemDoLivro('livros/livro_x'), 1);
-      expect(off.contagemDoLivro('introducoes'), isNull);
+      expect(off.contagemDoLivro(pastaDe('biblia/joao')), 2);
+      expect(off.contagemDoLivro(pastaDe('livros/livro_x')), 1);
+      expect(off.contagemDoLivro(pastaDe('introducoes')), isNull);
       expect(off.contagemPorCategoria['biblia'], 2);
       expect(off.contagemPorCategoria['introducao'], 1);
     });
@@ -393,10 +416,10 @@ void main() {
       final off = AudioOffline.instancia;
       await gravar('livros/livro_x/1.mp3');
       await off.atualizarContagens();
-      expect(off.contagemDoLivro('livros/livro_x'), 1);
+      expect(off.contagemDoLivro(pastaDe('livros/livro_x')), 1);
       await Directory('${tmp.path}/audio_offline').delete(recursive: true);
       await off.atualizarContagens();
-      expect(off.contagemDoLivro('livros/livro_x'), isNull);
+      expect(off.contagemDoLivro(pastaDe('livros/livro_x')), isNull);
     });
 
     test('contarLivro conta só os arquivos da pasta; vazia dá 0', () async {
@@ -405,11 +428,11 @@ void main() {
       await gravar('livros/livro_x/2.mp3');
       await gravar('livros/livro_y/1.mp3');
 
-      await off.contarLivro('livros/livro_x');
-      await off.contarLivro('livros/livro_z');
+      await off.contarLivro(pastaDe('livros/livro_x'));
+      await off.contarLivro(pastaDe('livros/livro_z'));
 
-      expect(off.contagemDoLivro('livros/livro_x'), 2);
-      expect(off.contagemDoLivro('livros/livro_z'), 0);
+      expect(off.contagemDoLivro(pastaDe('livros/livro_x')), 2);
+      expect(off.contagemDoLivro(pastaDe('livros/livro_z')), 0);
     });
   });
 }
