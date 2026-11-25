@@ -126,8 +126,8 @@ Flutter (Android, iOS e web a partir do mesmo código).
   comentário de Charles Spurgeon para aquele versículo, nos 31.102 versículos
   dos 66 livros.
 - **Conta Google (Web, Android e iOS)**: opcional — favoritos, notas, progresso,
-  conversas, horários dos lembretes, planos e a leitura dos livros da
-  Biblioteca sobem sozinhos para a conta de quem entrar (depois do
+  conversas, horários dos lembretes, planos (com a data de conclusão de cada
+  um) e a leitura dos livros da Biblioteca sobem sozinhos para a conta de quem entrar (depois do
   consentimento da LGPD neste aparelho), para não perder nada se o
   navegador limpar o armazenamento e para o mesmo plano aparecer no celular e
   na web. Quem entra vê o próprio avatar (foto da conta Google, ou a inicial do

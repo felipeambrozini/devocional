@@ -1,6 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart' show listEquals;
+import 'package:flutter/foundation.dart' show listEquals, mapEquals, setEquals;
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -54,6 +55,8 @@ class Estado extends ChangeNotifier {
   static const _kMaiorDeIdade = 'maior_de_idade';
   static const _kPlanos = 'planos_do_usuario';
   static const _kPlanosLidos = 'planos_lidos';
+  static const _kPlanosConcluidos = 'planos_concluidos';
+  static const _kPlanosRecomecados = 'planos_recomecados';
 
   /// 6h e 18h, os horários padrão do lembrete. Minutos desde meia-noite, não
   /// `TimeOfDay`: `estado.dart` não importa `material.dart`, e um `int` grava
@@ -149,6 +152,15 @@ class Estado extends ChangeNotifier {
   /// compartilhados isto é só o espelho local: a verdade vive no documento
   /// `planos/{id}` do Firestore, e quem a aplica é `aplicarPlanoDaNuvem`.
   Map<String, Set<int>> _planosLidos = {};
+
+  /// Quando cada plano foi concluído (id → milissegundos): o único registro
+  /// que fica de um plano terminado. Quem mantém é [_ajustarConclusoes].
+  Map<String, int> _planosConcluidos = {};
+
+  /// Quando cada plano foi recomeçado pelo "Fazer de novo" (id →
+  /// milissegundos). Marca interna, não aparece: existe para o recomeço
+  /// vencer a união dos dias lidos em [fundirPlanos].
+  Map<String, int> _planosRecomecados = {};
 
   /// Histórico das conversas do chat, com a fusão e as lápides de exclusão.
   ///
@@ -288,8 +300,31 @@ class Estado extends ChangeNotifier {
         _planosLidos = {};
       }
     }
+    _planosConcluidos = _lerMapaDeMs(_kPlanosConcluidos);
+    _planosRecomecados = _lerMapaDeMs(_kPlanosRecomecados);
+    // Plano concluído antes de a data existir ganha a de agora, gravada já
+    // para não mudar a cada abertura.
+    if (_ajustarConclusoes()) unawaited(_gravarConclusoes());
     // As conversas do chat são lidas pelo próprio `conversas`, no construtor.
   }
+
+  Map<String, int> _lerMapaDeMs(String chave) {
+    final cru = _prefs.getString(chave);
+    if (cru == null || cru.isEmpty) return {};
+    try {
+      return _mapaDeMs(json.decode(cru));
+    } catch (erro, pilha) {
+      Registro.erro('Estado.lerTudo', erro, pilha);
+      return {};
+    }
+  }
+
+  /// Lê um mapa id → milissegundos, descartando o que não for número.
+  static Map<String, int> _mapaDeMs(Object? cru) => {
+    if (cru is Map)
+      for (final MapEntry(:key, :value) in cru.entries)
+        if (key is String && value is num) key: value.toInt(),
+  };
 
   /// Um valor fora de 0..1439 não é um horário do dia; volta ao padrão em vez
   /// de deixar o lembrete agendado para uma hora que não existe.
@@ -670,6 +705,58 @@ class Estado extends ChangeNotifier {
 
   int diasLidosDoPlano(String planoId) => _planosLidos[planoId]?.length ?? 0;
 
+  /// Se todos os dias de [plano] estão marcados como lidos neste aparelho.
+  bool planoEstaConcluido(PlanoDoUsuario plano) {
+    final dias = plano.diasDoPlano;
+    return dias.isNotEmpty &&
+        dias.every((dia) => foiLidoNoPlano(plano.id, dia.numero));
+  }
+
+  /// Quando o plano foi concluído, ou null se não está concluído.
+  DateTime? concluidoEm(String planoId) {
+    final ms = _planosConcluidos[planoId];
+    return ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
+  }
+
+  /// "Fazer de novo": zera os dias lidos do plano, apaga a data de conclusão
+  /// e marca o recomeço, para que os dias antigos de outro aparelho não
+  /// voltem na fusão (ver [fundirPlanos]). Vale também para [planoDeJesus].
+  /// Num plano compartilhado, zera só o espelho local; a entrada da pessoa
+  /// no documento do plano é com quem chama.
+  Future<void> recomecarPlano(String planoId) async {
+    _planosLidos.remove(planoId);
+    _planosConcluidos.remove(planoId);
+    _planosRecomecados[planoId] = _agoraEmMs();
+    notifyListeners();
+    await _gravarPlanosLidos();
+    await _gravarConclusoes();
+  }
+
+  /// Mantém a data de conclusão em dia com os dias lidos: plano concluído
+  /// sem data ganha a de agora; plano que deixou de estar concluído perde a
+  /// sua. Só mexe na memória e diz se algo mudou; quem chama grava (com
+  /// [_gravarConclusoes]) e avisa os ouvintes depois, para a data já estar
+  /// na cópia que a sincronia sobe.
+  bool _ajustarConclusoes() {
+    var mudou = false;
+    final agora = _agoraEmMs();
+    for (final plano in planosParaExibir) {
+      final dias = plano.diasDoPlano;
+      // Sem dias montados não há como saber: nem dá nem tira a data.
+      if (dias.isEmpty) continue;
+      final concluido = dias.every(
+        (dia) => foiLidoNoPlano(plano.id, dia.numero),
+      );
+      if (concluido && !_planosConcluidos.containsKey(plano.id)) {
+        _planosConcluidos[plano.id] = agora;
+        mudou = true;
+      } else if (!concluido && _planosConcluidos.remove(plano.id) != null) {
+        mudou = true;
+      }
+    }
+    return mudou;
+  }
+
   Future<PlanoDoUsuario> criarPlano({
     required String titulo,
     required List<String> livros,
@@ -729,9 +816,11 @@ class Estado extends ChangeNotifier {
     final mudouODiaADia =
         !listEquals(novosLivros, atual.livros) || novosDias != atual.dias;
     if (mudouODiaADia) _planosLidos.remove(id);
+    final conclusoesMudaram = _ajustarConclusoes();
     notifyListeners();
     await _gravarPlanos();
     if (mudouODiaADia) await _gravarPlanosLidos();
+    if (conclusoesMudaram) await _gravarConclusoes();
     return atualizado;
   }
 
@@ -740,16 +829,21 @@ class Estado extends ChangeNotifier {
     _planos.removeWhere((p) => p.id == id);
     if (_planos.length == antes) return;
     _planosLidos.remove(id);
+    _planosConcluidos.remove(id);
+    _planosRecomecados.remove(id);
     notifyListeners();
     await _gravarPlanos();
     await _gravarPlanosLidos();
+    await _gravarConclusoes();
   }
 
   Future<void> alternarLidoNoPlano(String planoId, int dia) async {
     final lidos = _planosLidos.putIfAbsent(planoId, () => <int>{});
     if (!lidos.remove(dia)) lidos.add(dia);
+    final conclusoesMudaram = _ajustarConclusoes();
     notifyListeners();
     await _gravarPlanosLidos();
+    if (conclusoesMudaram) await _gravarConclusoes();
   }
 
   /// Substitui os dias lidos de um plano inteiros. Usado pelos planos
@@ -757,8 +851,10 @@ class Estado extends ChangeNotifier {
   /// espelho velho apagaria dias marcados noutro aparelho.
   Future<void> substituirLidosDoPlano(String planoId, Set<int> lidos) async {
     _planosLidos[planoId] = {...lidos};
+    final conclusoesMudaram = _ajustarConclusoes();
     notifyListeners();
     await _gravarPlanosLidos();
+    if (conclusoesMudaram) await _gravarConclusoes();
   }
 
   /// Guarda (ou substitui) um plano que veio da nuvem, com os dias que o
@@ -778,9 +874,11 @@ class Estado extends ChangeNotifier {
       _planos.insert(0, plano);
     }
     _planosLidos[plano.id] = lidos;
+    final conclusoesMudaram = _ajustarConclusoes();
     notifyListeners();
     await _gravarPlanos();
     await _gravarPlanosLidos();
+    if (conclusoesMudaram) await _gravarConclusoes();
   }
 
   /// Marca um plano como compartilhado depois de ele subir para a nuvem.
@@ -806,6 +904,15 @@ class Estado extends ChangeNotifier {
         for (final MapEntry(key: id, value: dias) in _planosLidos.entries)
           id: dias.toList()..sort(),
       }),
+    );
+  }
+
+  /// Grava a data de conclusão e a marca de recomeço dos planos.
+  Future<void> _gravarConclusoes() async {
+    await _prefs.setString(_kPlanosConcluidos, json.encode(_planosConcluidos));
+    await _prefs.setString(
+      _kPlanosRecomecados,
+      json.encode(_planosRecomecados),
     );
   }
 
@@ -918,13 +1025,20 @@ class Estado extends ChangeNotifier {
       for (final MapEntry(key: id, value: dias) in _planosLidos.entries)
         id: dias.toList()..sort(),
     },
+    // Só na cópia da própria conta, nunca no documento do plano
+    // compartilhado: os outros participantes não precisam dessas datas.
+    'planos_concluidos': {..._planosConcluidos},
+    'planos_recomecados': {..._planosRecomecados},
   });
 
   /// Funde planos remotos com os locais, por id e por dias lidos.
   ///
   /// Funde, não substitui: criar planos em dois aparelhos offline e depois
   /// conectar não perde nenhum. O mesmo vale para os dias marcados: a união
-  /// dos dois lados é o que fica. Remoção não sincroniza (mesma limitação da
+  /// dos dois lados é o que fica, salvo depois de um "Fazer de novo"
+  /// ([recomecarPlano]), quando a marca de recomeço mais nova decide os dias
+  /// e a data de conclusão daquele plano. Entre duas datas de conclusão, fica
+  /// a mais antiga. Remoção não sincroniza (mesma limitação da
   /// cópia de favoritos em `importar()`): apagar num aparelho e o plano
   /// continua no outro até ser apagado lá também — o caminho para lápides é
   /// análogo ao do chat, mas ainda não é necessário para o bug de criação.
@@ -934,6 +1048,11 @@ class Estado extends ChangeNotifier {
       final planosRemotos = mapa['planos'] as List? ?? const [];
       final lidosRemotos =
           mapa['planos_lidos'] as Map<String, dynamic>? ?? const {};
+
+      final concluidosRemotos = _mapaDeMs(mapa['planos_concluidos']);
+      final recomecadosRemotos = _mapaDeMs(mapa['planos_recomecados']);
+      final concluidosAntes = {..._planosConcluidos};
+      final recomecadosAntes = {..._planosRecomecados};
 
       var mudou = false;
       final idsLocais = {for (final p in _planos) p.id};
@@ -1001,10 +1120,59 @@ class Estado extends ChangeNotifier {
         _planos.sort((a, b) => b.criadoEm.compareTo(a.criadoEm));
       }
 
+      // O recomeço ("Fazer de novo") vence a união dos dias: o lado com a
+      // marca mais nova fica com os seus dias e a sua data de conclusão, e o
+      // que o outro lado marcou antes do recomeço não volta.
+      final recomecadosLaFora = <String>{};
+      final recomecadosAqui = <String>{};
+      for (final id in {
+        ..._planosRecomecados.keys,
+        ...recomecadosRemotos.keys,
+      }) {
+        final local = _planosRecomecados[id];
+        final remoto = recomecadosRemotos[id];
+        if (remoto != null && (local == null || remoto > local)) {
+          recomecadosLaFora.add(id);
+          _planosRecomecados[id] = remoto;
+        } else if (local != null && (remoto == null || local > remoto)) {
+          recomecadosAqui.add(id);
+        }
+      }
+
+      for (final id in recomecadosLaFora) {
+        final dias = lidosRemotos[id];
+        // Remontado aqui depois da cópia remota: os dias de lá são da
+        // montagem antiga, então o recomeço só zera.
+        final remotos = <int>{
+          if (dias is List && !remontadosAqui.contains(id))
+            for (final d in dias)
+              if (d is int) d,
+        };
+        if (!setEquals(_planosLidos[id] ?? const <int>{}, remotos)) {
+          mudou = true;
+        }
+        if (remotos.isEmpty) {
+          _planosLidos.remove(id);
+        } else {
+          _planosLidos[id] = remotos;
+        }
+        final data = concluidosRemotos[id];
+        if (data == null) {
+          _planosConcluidos.remove(id);
+        } else {
+          _planosConcluidos[id] = data;
+        }
+      }
+
       for (final entry in lidosRemotos.entries) {
         final id = entry.key;
         final dias = entry.value;
-        if (dias is! List || remontadosAqui.contains(id)) continue;
+        if (dias is! List ||
+            remontadosAqui.contains(id) ||
+            recomecadosLaFora.contains(id) ||
+            recomecadosAqui.contains(id)) {
+          continue;
+        }
         final remotos = {
           for (final d in dias)
             if (d is int) d,
@@ -1021,10 +1189,27 @@ class Estado extends ChangeNotifier {
         }
       }
 
-      if (!mudou) return;
+      // Data de conclusão: a mais antiga dos dois lados, fora os planos em
+      // que um recomeço decidiu acima. Depois a regra de sempre confere se o
+      // plano está mesmo concluído com os dias que ficaram.
+      for (final MapEntry(key: id, value: remota)
+          in concluidosRemotos.entries) {
+        if (recomecadosLaFora.contains(id) || recomecadosAqui.contains(id)) {
+          continue;
+        }
+        final local = _planosConcluidos[id];
+        if (local == null || remota < local) _planosConcluidos[id] = remota;
+      }
+      _ajustarConclusoes();
+      final conclusoesMudaram =
+          !mapEquals(concluidosAntes, _planosConcluidos) ||
+          !mapEquals(recomecadosAntes, _planosRecomecados);
+
+      if (!mudou && !conclusoesMudaram) return;
       notifyListeners();
       await _gravarPlanos();
       await _gravarPlanosLidos();
+      await _gravarConclusoes();
     } catch (erro, pilha) {
       Registro.erro('Estado.fundirPlanos', erro, pilha);
     }
@@ -1051,6 +1236,8 @@ class Estado extends ChangeNotifier {
     _ultimaLeitura = null;
     _planos = [];
     _planosLidos = {};
+    _planosConcluidos = {};
+    _planosRecomecados = {};
     _lembretesAtivos = false;
     _minutosLembreteManha = minutosPadraoManha;
     _minutosLembretePromessas = minutosPadraoPromessas;
@@ -1076,6 +1263,8 @@ class Estado extends ChangeNotifier {
       _kUltima,
       _kPlanos,
       _kPlanosLidos,
+      _kPlanosConcluidos,
+      _kPlanosRecomecados,
       _kLembretesAtivos,
       _kMinutosLembreteManha,
       _kMinutosLembretePromessas,

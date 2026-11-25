@@ -951,4 +951,227 @@ void main() {
       expect(apagadas['conv-b'], 3);
     });
   });
+
+  group('planos concluídos e recomeço na fusão', () {
+    int ms(DateTime d) => d.millisecondsSinceEpoch;
+
+    /// A cópia de planos deste aparelho com mudanças, como se viesse da conta
+    /// gravada por outro aparelho.
+    String copiaCom(
+      Estado estado, {
+      Map<String, List<int>>? lidos,
+      Map<String, int>? concluidos,
+      Map<String, int>? recomecados,
+    }) {
+      final mapa =
+          json.decode(estado.serializarPlanos()) as Map<String, dynamic>;
+      if (lidos != null) mapa['planos_lidos'] = lidos;
+      if (concluidos != null) mapa['planos_concluidos'] = concluidos;
+      if (recomecados != null) mapa['planos_recomecados'] = recomecados;
+      return json.encode(mapa);
+    }
+
+    test('a cópia da conta leva a data de conclusão e o recomeço', () async {
+      final estado = await reabrir();
+      final plano = await estado.criarPlano(
+        titulo: 'Cartas',
+        livros: ['3joao'],
+        dias: 1,
+      );
+      await estado.alternarLidoNoPlano(plano.id, 1);
+      final mapa = json.decode(estado.serializarPlanos()) as Map;
+      expect((mapa['planos_concluidos'] as Map).keys, [plano.id]);
+      expect(mapa['planos_recomecados'], isEmpty);
+
+      await estado.recomecarPlano(plano.id);
+      final depois = json.decode(estado.serializarPlanos()) as Map;
+      expect(depois['planos_concluidos'], isEmpty);
+      expect((depois['planos_recomecados'] as Map).keys, [plano.id]);
+    });
+
+    for (final comRecomecoAntigo in [false, true]) {
+      test(
+        'recomeço local vence os dias antigos da nuvem'
+        '${comRecomecoAntigo ? ' (nuvem com recomeço mais velho)' : ''}',
+        () async {
+          final estado = await reabrir();
+          final plano = await estado.criarPlano(
+            titulo: 'Gênesis',
+            livros: ['genesis'],
+            dias: 30,
+          );
+          for (var dia = 1; dia <= 30; dia++) {
+            await estado.alternarLidoNoPlano(plano.id, dia);
+          }
+          final remota = copiaCom(
+            estado,
+            recomecados: comRecomecoAntigo
+                ? {
+                    plano.id: ms(
+                      DateTime.now().subtract(const Duration(days: 60)),
+                    ),
+                  }
+                : {},
+          );
+
+          await estado.recomecarPlano(plano.id);
+          await estado.fundirPlanos(remota);
+
+          expect(estado.diasLidosDoPlano(plano.id), 0);
+          expect(
+            estado.concluidoEm(plano.id),
+            isNull,
+            reason: 'a conclusão da nuvem é de antes do recomeço',
+          );
+        },
+      );
+    }
+
+    test('recomeço remoto mais novo substitui os dias locais', () async {
+      final estado = await reabrir();
+      final plano = await estado.criarPlano(
+        titulo: 'Gênesis',
+        livros: ['genesis'],
+        dias: 30,
+      );
+      for (var dia = 1; dia <= 5; dia++) {
+        await estado.alternarLidoNoPlano(plano.id, dia);
+      }
+      final depois = ms(DateTime.now().add(const Duration(minutes: 1)));
+
+      await estado.fundirPlanos(
+        copiaCom(
+          estado,
+          lidos: {
+            plano.id: [1],
+          },
+          recomecados: {plano.id: depois},
+        ),
+      );
+      expect(estado.foiLidoNoPlano(plano.id, 1), isTrue);
+      expect(
+        estado.diasLidosDoPlano(plano.id),
+        1,
+        reason:
+            'os dias daqui são de antes do recomeço feito no outro aparelho',
+      );
+
+      // Um recomeço remoto ainda mais novo, sem nenhum dia: zera aqui também.
+      await estado.fundirPlanos(
+        copiaCom(estado, lidos: {}, recomecados: {plano.id: depois + 1}),
+      );
+      expect(estado.diasLidosDoPlano(plano.id), 0);
+      final reaberto = await reabrir();
+      expect(reaberto.diasLidosDoPlano(plano.id), 0);
+    });
+
+    test('fusão fica com a data de conclusão mais antiga', () async {
+      final estado = await reabrir();
+      final plano = await estado.criarPlano(
+        titulo: 'Cartas',
+        livros: ['3joao'],
+        dias: 1,
+      );
+      await estado.alternarLidoNoPlano(plano.id, 1);
+      final local = estado.concluidoEm(plano.id)!;
+
+      // Uma data mais nova da nuvem não troca a daqui.
+      await estado.fundirPlanos(
+        copiaCom(
+          estado,
+          concluidos: {plano.id: ms(local.add(const Duration(days: 3)))},
+        ),
+      );
+      expect(estado.concluidoEm(plano.id), local);
+
+      final antiga = DateTime.now().subtract(const Duration(days: 10));
+      await estado.fundirPlanos(
+        copiaCom(estado, concluidos: {plano.id: ms(antiga)}),
+      );
+      expect(ms(estado.concluidoEm(plano.id)!), ms(antiga));
+      expect(ms((await reabrir()).concluidoEm(plano.id)!), ms(antiga));
+    });
+
+    test('data de conclusão anterior ao recomeço não volta na fusão', () async {
+      final estado = await reabrir();
+      final plano = await estado.criarPlano(
+        titulo: 'Cartas',
+        livros: ['3joao'],
+        dias: 1,
+      );
+      // Outro aparelho ainda tem a primeira conclusão, de dez dias atrás.
+      final antiga = DateTime.now().subtract(const Duration(days: 10));
+      final remota = copiaCom(
+        estado,
+        lidos: {
+          plano.id: [1],
+        },
+        concluidos: {plano.id: ms(antiga)},
+      );
+
+      await estado.recomecarPlano(plano.id);
+      await estado.alternarLidoNoPlano(plano.id, 1);
+      final nova = estado.concluidoEm(plano.id)!;
+
+      await estado.fundirPlanos(remota);
+      expect(estado.concluidoEm(plano.id), nova);
+    });
+
+    test('um plano concluído só pela fusão ganha data', () async {
+      final estado = await reabrir();
+      final plano = await estado.criarPlano(
+        titulo: 'Cartas',
+        livros: ['2joao', '3joao'],
+        dias: 2,
+      );
+      await estado.alternarLidoNoPlano(plano.id, 1);
+      await estado.fundirPlanos(
+        copiaCom(
+          estado,
+          lidos: {
+            plano.id: [2],
+          },
+        ),
+      );
+      expect(estado.concluidoEm(plano.id), isNotNull);
+    });
+
+    test('apagar o plano leva a data e a marca de recomeço', () async {
+      final estado = await reabrir();
+      final plano = await estado.criarPlano(
+        titulo: 'Cartas',
+        livros: ['3joao'],
+        dias: 1,
+      );
+      await estado.recomecarPlano(plano.id);
+      await estado.alternarLidoNoPlano(plano.id, 1);
+      await estado.removerPlano(plano.id);
+
+      final mapa = json.decode(estado.serializarPlanos()) as Map;
+      expect(mapa['planos_concluidos'], isEmpty);
+      expect(mapa['planos_recomecados'], isEmpty);
+    });
+
+    test('sair apaga a data de conclusão e o recomeço', () async {
+      final estado = await reabrir();
+      final plano = await estado.criarPlano(
+        titulo: 'Cartas',
+        livros: ['3joao'],
+        dias: 1,
+      );
+      await estado.recomecarPlano(plano.id);
+      await estado.alternarLidoNoPlano(plano.id, 1);
+
+      final limpeza = estado.limparDadosPessoais();
+      // A memória zera antes da primeira espera (o Sair conta com isso).
+      expect(estado.concluidoEm(plano.id), isNull);
+      final mapa = json.decode(estado.serializarPlanos()) as Map;
+      expect(mapa['planos_recomecados'], isEmpty);
+      await limpeza;
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('planos_concluidos'), isNull);
+      expect(prefs.getString('planos_recomecados'), isNull);
+    });
+  });
 }

@@ -304,9 +304,6 @@ class PlanoControlador extends ChangeNotifier {
   }
 
   Future<void> alternarDia(BuildContext context, int dia) async {
-    // O total de dias do plano, para saber quando ele termina (ver
-    // [_avisarConclusao]): sem plano carregado não há o que concluir.
-    final total = plano?.diasDoPlano.length ?? 0;
     if (compartilhado) {
       if (!Nuvem.instancia.logado) {
         if (context.mounted) {
@@ -323,14 +320,7 @@ class PlanoControlador extends ChangeNotifier {
       await estado.substituirLidosDoPlano(planoId, novo);
       try {
         await PlanosNaNuvem.instancia.gravarDias(planoId, dia, marcou);
-        if (context.mounted) {
-          _avisarConclusao(
-            context,
-            marcou: marcou,
-            lidos: novo.length,
-            total: total,
-          );
-        }
+        if (context.mounted) _avisarConclusao(context, marcou: marcou);
       } on PlanosNaNuvemExcecao catch (erro) {
         // Devolve o espelho ao que o documento diz: sem rede a marcação não
         // aconteceu de verdade.
@@ -340,28 +330,19 @@ class PlanoControlador extends ChangeNotifier {
     } else {
       final marcou = !estado.foiLidoNoPlano(planoId, dia);
       await estado.alternarLidoNoPlano(planoId, dia);
-      if (context.mounted) {
-        _avisarConclusao(
-          context,
-          marcou: marcou,
-          lidos: meusLidos().length,
-          total: total,
-        );
-      }
+      if (context.mounted) _avisarConclusao(context, marcou: marcou);
     }
   }
 
   /// Mensagem discreta ao fechar o último dia do plano: sem streak, sem
   /// cobrança, só o ponto final. Só quando marcou (desmarcar o último dia
-  /// não celebra) e só na transição para o plano cheio.
-  void _avisarConclusao(
-    BuildContext context, {
-    required bool marcou,
-    required int lidos,
-    required int total,
-  }) {
+  /// não celebra) e só na transição para o plano cheio. A regra de "cheio" é
+  /// a mesma dos outros caminhos ([planoConcluido]); no plano compartilhado
+  /// ela lê o espelho local, já atualizado antes de chegar aqui.
+  void _avisarConclusao(BuildContext context, {required bool marcou}) {
     final planoAtual = plano;
-    if (!marcou || planoAtual == null || total <= 0 || lidos < total) return;
+    if (!marcou || planoAtual == null) return;
+    if (!planoConcluido(estado, planoAtual)) return;
     if (context.mounted) {
       mostrarAviso(context, avisoDePlanoConcluido(planoAtual));
     }

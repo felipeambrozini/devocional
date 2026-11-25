@@ -337,6 +337,19 @@ await caso('grava os próprios planos',
   assertSucceeds(mesclar(alice, 'alice', {planos: planosDoUsuario()})));
 await caso('planos com chave extra são recusados',
   assertFails(mesclar(alice, 'alice', {planos: {...planosDoUsuario(), x: 1}})));
+await caso('planos aceita planos_concluidos e planos_recomecados',
+  assertSucceeds(mesclar(alice, 'alice', {planos: {...planosDoUsuario(),
+    planos_concluidos: {p1: 1764000000000},
+    planos_recomecados: {p1: 1763000000000}}})));
+await caso('planos recusa chave desconhecida',
+  assertFails(mesclar(alice, 'alice', {planos: {...planosDoUsuario(),
+    planos_concluidos: {}, planos_pausados: {}}})));
+await caso('planos_concluidos como lista é recusado',
+  assertFails(mesclar(alice, 'alice', {planos: {...planosDoUsuario(),
+    planos_concluidos: ['p1']}})));
+await caso('planos_recomecados como número é recusado',
+  assertFails(mesclar(alice, 'alice', {planos: {...planosDoUsuario(),
+    planos_recomecados: 1}})));
 await caso('não grava os planos do bob',
   assertFails(mesclar(alice, 'bob', {planos: planosDoUsuario()})));
 await caso('grava a própria leitura de livros',

@@ -130,7 +130,9 @@ vitoriana dele, tratando o leitor por "tu".
   o cronograma anual fixo.
 - Fim de plano: marcar o último dia que faltava, pela tela do plano, pelo
   cartão da Hoje ou chegando ao fim da leitura, mostra "Você concluiu o
-  plano {nome}", sem comemoração nem sequência de dias.
+  plano {nome}", sem comemoração nem sequência de dias. O único registro
+  que fica é a data de conclusão, que sobe com a conta e some se um dia for
+  desmarcado ou se o plano for feito de novo.
 - Avatar da conta (foto do Google ou inicial do nome) na saudação da aba
   Hoje, só exibição, sem upload.
 - Compartilhar gera cartão-imagem (fundo couro, filete dourado) com o texto

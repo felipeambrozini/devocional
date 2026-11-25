@@ -174,12 +174,23 @@ service cloud.firestore {
             l.noite is int && l.noite >= 0 && l.noite < 1440;
       }
 
+      // `planos_concluidos` (data de conclusão) e `planos_recomecados` (marca
+      // interna do "Fazer de novo", que vence a união dos dias na fusão): id
+      // → milissegundos, opcionais porque cópias de versões antigas não os
+      // têm. Ver `fundirPlanos` em lib/dados/estado.dart.
       function planosValidos() {
         let p = request.resource.data.planos;
         return p is map &&
-            p.keys().hasOnly(['planos', 'planos_lidos']) &&
+            p.keys().hasOnly(['planos', 'planos_lidos', 'planos_concluidos',
+                'planos_recomecados']) &&
             p.planos is list && p.planos.size() < 5000 &&
-            p.planos_lidos is map && p.planos_lidos.size() < 5000;
+            p.planos_lidos is map && p.planos_lidos.size() < 5000 &&
+            (!('planos_concluidos' in p) ||
+                (p.planos_concluidos is map &&
+                    p.planos_concluidos.size() < 5000)) &&
+            (!('planos_recomecados' in p) ||
+                (p.planos_recomecados is map &&
+                    p.planos_recomecados.size() < 5000));
       }
 
       // Leitura dos livros da biblioteca (ver lib/dados/leitura_de_livros.dart):
