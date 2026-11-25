@@ -1,5 +1,5 @@
 ---
-name: Devocional
+name: Tabernáculo
 description: Bíblia de estudo e devocionais de Spurgeon: pergaminho, couro e metal.
 colors:
   ouro-de-missal: "#C9A227"
@@ -235,7 +235,7 @@ Nunca em botão, ícone ou título.
 - **Erro** (#E57373 no escuro, sobre o couro; #9B2C2C no claro, sobre o
   pergaminho): o papel `error`. Os dois tons são definidos direto em
   `lib/estilo/tema.dart`, no `ColorScheme` de cada paleta, e não em
-  `DevocionalCores`.
+  `TabernaculoCores`.
 
 ### Named Rules
 
@@ -258,11 +258,11 @@ contrastes da WCAG e falha se os pares anotados piorarem.
 `Theme.of(context).colorScheme` (surface fundo, surfaceContainer cartão,
 surfaceContainerHighest citação e chip, primary título e ícone, secondary
 destaque, outline borda, outlineVariant divisor (o outline a 40%), onSurface
-corpo, onSurfaceVariant apoio). Um `DevocionalCores.` solto numa tela é um
+corpo, onSurfaceVariant apoio). Um `TabernaculoCores.` solto numa tela é um
 vazamento. A única exceção é o cartão de compartilhar
 (`lib/funcoes/cartao_imagem.dart`): é uma imagem exportada, pintada fora da
 árvore de widgets e sempre na paleta escura (de propósito, para a imagem ser a
-mesma em qualquer tema), então lê `DevocionalCores` direto — Cinzel na marca e
+mesma em qualquer tema), então lê `TabernaculoCores` direto — Cinzel na marca e
 na assinatura, Montserrat no corpo.
 
 ## Typography
@@ -327,7 +327,7 @@ A coluna de leitura é a unidade do layout: tudo que se lê (versículos,
 devocional, introdução) vive dentro de `LarguraDeLeitura` com máximo de
 **720px**, centralizado — nunca mais larga, em qualquer janela.
 
-O espaço sai de `DevocionalEspacamento` (`lib/estilo/espacamento.dart`), em que
+O espaço sai de `TabernaculoEspacamento` (`lib/estilo/espacamento.dart`), em que
 cada token guarda o próprio valor em pixels: os miúdos `sp2`, `sp4`, `sp6`
 (folgas de ícone, retrato e texto); o miolo do layout de 2 em 2,
 `sp8` a `sp20` (8, 10, 12, 14, 16, 18, 20; 16 é o padding do cartão, 20 o do
@@ -336,7 +336,7 @@ devocional e o horizontal do leitor); depois `sp24`, `sp32` (fundo da lista),
 de respiro. Não é um ritmo de 8px: 4, 6 e 18 são degraus de uso corrente, e é a
 escala, não o múltiplo, que mantém o espaço coerente. Áreas tocáveis desenhadas
 à mão (fora dos controles do Material, que já trazem a própria área) têm no
-mínimo `DevocionalToque.minimo`, 48dp (`lib/estilo/toque.dart`) — o mesmo alvo
+mínimo `TabernaculoToque.minimo`, 48dp (`lib/estilo/toque.dart`) — o mesmo alvo
 do `materialTapTargetSize.padded`.
 
 **A Regra da Coluna de Leitura.** Texto de leitura nunca ultrapassa 720px de
@@ -421,9 +421,9 @@ do metal nos estados certos.
   reforçado (o anel de 2px foi testado e recusado: a troca de aba punha o foco
   no primeiro botão da tela, e o anel aparecia num botão que ninguém tinha
   tocado). A troca de aba hoje põe o foco numa âncora invisível
-  (`DevocionalAncoraDeFoco`), então só um Tab de verdade chega aos botões. Alvos
+  (`TabernaculoAncoraDeFoco`), então só um Tab de verdade chega aos botões. Alvos
   de toque sempre com 48dp (`materialTapTargetSize.padded`;
-  `DevocionalToque.minimo` nas áreas tocáveis desenhadas à mão), inclusive no
+  `TabernaculoToque.minimo` nas áreas tocáveis desenhadas à mão), inclusive no
   desktop web.
 
 ### Chips
@@ -532,7 +532,7 @@ do metal nos estados certos.
   é uma epígrafe solta sob o título, ao lado da capa — citação em itálico na cor
   de destaque, seguida da referência (`titleSmall`, também na cor de destaque);
   tocar na referência abre o capítulo com os versículos citados marcados.
-- **A Faixa de Progresso (`DevocionalProgressoFino`):** trilho do tema com o fio
+- **A Faixa de Progresso (`TabernaculoProgressoFino`):** trilho do tema com o fio
   do metal por cima, cantos quase retos de 3px e 6px de altura. Um só desenho
   para o progresso do ano, dos planos, dos participantes de um plano
   compartilhado e do download de áudio por categoria na folha de ajustes; a
@@ -554,9 +554,9 @@ do metal nos estados certos.
   destacado, voz ativa, retrato de quem fala).
 - **Do** usar Cinzel só em títulos e cabeçalhos; Montserrat em todo o resto.
 - **Do** manter a coluna de leitura em no máximo 720px, centralizada.
-- **Do** tirar todo espaço dos degraus de `DevocionalEspacamento`
+- **Do** tirar todo espaço dos degraus de `TabernaculoEspacamento`
   (`sp2`…`sp200`), nunca de um número solto, e dar 48dp
-  (`DevocionalToque.minimo`) a toda área tocável desenhada à mão.
+  (`TabernaculoToque.minimo`) a toda área tocável desenhada à mão.
 - **Do** desenhar sempre os dois temas com a mesma relação de tons — e conferir
   os contrastes anotados, que o teste da WCAG guarda.
 
@@ -571,7 +571,7 @@ do metal nos estados certos.
 - **Don't** deixar o texto de leitura passar de 720px, nem deixar títulos e
   rótulos passarem de 1,3× pela escala do usuário (só o corpo de leitura vai até
   2×).
-- **Don't** ler a paleta direto de `DevocionalCores` numa tela — só
+- **Don't** ler a paleta direto de `TabernaculoCores` numa tela — só
   `Theme.of(context).colorScheme` (o cartão de compartilhar, imagem sempre
   escura, é a exceção).
 - **Don't** usar sombra, gradiente de fundo (fora o Filete e a alça de deslize),

@@ -19,16 +19,16 @@ import 'filete.dart';
 /// Recolhida porque o texto é longo e quem já leu a introdução quer chegar ao
 /// texto sem rolar páginas. Expandida, lê inteira ali mesmo. Aparece tanto no
 /// leitor da Bíblia quanto no devocional, por isso vive aqui e não numa tela só.
-class DevocionalAberturaDeLivro extends StatefulWidget {
-  const DevocionalAberturaDeLivro({super.key, required this.slug});
+class TabernaculoAberturaDeLivro extends StatefulWidget {
+  const TabernaculoAberturaDeLivro({super.key, required this.slug});
 
   final String slug;
 
   @override
-  State<DevocionalAberturaDeLivro> createState() => _AberturaDeLivroState();
+  State<TabernaculoAberturaDeLivro> createState() => _AberturaDeLivroState();
 }
 
-class _AberturaDeLivroState extends State<DevocionalAberturaDeLivro> {
+class _AberturaDeLivroState extends State<TabernaculoAberturaDeLivro> {
   bool _aberta = false;
 
   @override
@@ -36,7 +36,7 @@ class _AberturaDeLivroState extends State<DevocionalAberturaDeLivro> {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
 
-    return DevocionalCarregaUmaVez<Introducao?>(
+    return TabernaculoCarregaUmaVez<Introducao?>(
       chave: widget.slug,
       carregar: () => Conteudo.instancia.introducao(widget.slug),
       construir: (context, snap) {
@@ -44,7 +44,7 @@ class _AberturaDeLivroState extends State<DevocionalAberturaDeLivro> {
         if (introducao == null) return const SizedBox.shrink();
 
         return Padding(
-          padding: const EdgeInsets.only(bottom: DevocionalEspacamento.sp24),
+          padding: const EdgeInsets.only(bottom: TabernaculoEspacamento.sp24),
           child: Card(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,7 +53,7 @@ class _AberturaDeLivroState extends State<DevocionalAberturaDeLivro> {
                   borderRadius: BorderRadius.circular(14),
                   onTap: () => setState(() => _aberta = !_aberta),
                   child: Padding(
-                    padding: const EdgeInsets.all(DevocionalEspacamento.sp16),
+                    padding: const EdgeInsets.all(TabernaculoEspacamento.sp16),
                     child: Row(
                       children: [
                         ClipRRect(
@@ -66,7 +66,7 @@ class _AberturaDeLivroState extends State<DevocionalAberturaDeLivro> {
                             excludeFromSemantics: true,
                           ),
                         ),
-                        const SizedBox(width: DevocionalEspacamento.sp14),
+                        const SizedBox(width: TabernaculoEspacamento.sp14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,12 +75,16 @@ class _AberturaDeLivroState extends State<DevocionalAberturaDeLivro> {
                                 tituloDaIntroducao(livroPorSlug(widget.slug)!),
                                 style: tema.titleLarge,
                               ),
-                              const SizedBox(height: DevocionalEspacamento.sp4),
+                              const SizedBox(
+                                height: TabernaculoEspacamento.sp4,
+                              ),
                               Text(
                                 'Bíblia de Estudo Charles Haddon Spurgeon',
                                 style: tema.labelMedium,
                               ),
-                              const SizedBox(height: DevocionalEspacamento.sp4),
+                              const SizedBox(
+                                height: TabernaculoEspacamento.sp4,
+                              ),
                               Text(
                                 avisoCurtoDaBibliaDeEstudo,
                                 style: tema.bodySmall?.copyWith(
@@ -116,7 +120,7 @@ class _AberturaDeLivroState extends State<DevocionalAberturaDeLivro> {
 /// devocional), ela é reaproveitada — aninhar outra aqui truncaria a seleção
 /// que cruza a borda do cartão. No leitor da Bíblia não há área acima: o
 /// toque longo ali é a seleção de versículos, então o corpo carrega a própria
-/// [DevocionalAreaDeSelecaoComCompartilhar].
+/// [TabernaculoAreaDeSelecaoComCompartilhar].
 class _IntroducaoAberta extends StatelessWidget {
   const _IntroducaoAberta({required this.slug, required this.introducao});
 
@@ -131,34 +135,34 @@ class _IntroducaoAberta extends StatelessWidget {
 
     final conteudo = Padding(
       padding: const EdgeInsets.fromLTRB(
-        DevocionalEspacamento.sp16,
+        TabernaculoEspacamento.sp16,
         0,
-        DevocionalEspacamento.sp16,
-        DevocionalEspacamento.sp16,
+        TabernaculoEspacamento.sp16,
+        TabernaculoEspacamento.sp16,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const DevocionalFilete(),
-          const SizedBox(height: DevocionalEspacamento.sp16),
-          DevocionalBotaoDeVoz(
+          const TabernaculoFilete(),
+          const SizedBox(height: TabernaculoEspacamento.sp16),
+          TabernaculoBotaoDeVoz(
             chave: chaveDaIntroducao(slug),
             referencia: 'Introdução de ${introducao.livro}',
           ),
-          const SizedBox(height: DevocionalEspacamento.sp16),
+          const SizedBox(height: TabernaculoEspacamento.sp16),
           for (final (titulo, corpo) in introducao.secoes) ...[
             Text(titulo, style: tema.headlineSmall),
-            const SizedBox(height: DevocionalEspacamento.sp8),
+            const SizedBox(height: TabernaculoEspacamento.sp8),
             for (final paragrafo in corpo.split('\n\n')) ...[
               Text(paragrafo, style: tema.bodyMedium?.copyWith(height: 1.7)),
-              const SizedBox(height: DevocionalEspacamento.sp10),
+              const SizedBox(height: TabernaculoEspacamento.sp10),
             ],
-            const SizedBox(height: DevocionalEspacamento.sp12),
+            const SizedBox(height: TabernaculoEspacamento.sp12),
           ],
           if (introducao.frase.isNotEmpty)
-            DevocionalCaixaDeCitacao(
+            TabernaculoCaixaDeCitacao(
               expandir: true,
-              padding: const EdgeInsets.all(DevocionalEspacamento.sp14),
+              padding: const EdgeInsets.all(TabernaculoEspacamento.sp14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -170,7 +174,7 @@ class _IntroducaoAberta extends StatelessWidget {
                       height: 1.6,
                     ),
                   ),
-                  const SizedBox(height: DevocionalEspacamento.sp8),
+                  const SizedBox(height: TabernaculoEspacamento.sp8),
                   Text(introducao.atribuicao, style: tema.labelMedium),
                 ],
               ),
@@ -180,6 +184,6 @@ class _IntroducaoAberta extends StatelessWidget {
     );
 
     if (dentroDeAreaDeSelecao) return conteudo;
-    return DevocionalAreaDeSelecaoComCompartilhar(child: conteudo);
+    return TabernaculoAreaDeSelecaoComCompartilhar(child: conteudo);
   }
 }

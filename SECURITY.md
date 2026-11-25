@@ -9,7 +9,7 @@ arquitetura de proteção de dados e gestão de segredos.
 ## 1. Versões Suportadas
 
 Apenas a versão mais recente em execução no ambiente de produção (Web via
-Firebase Hosting, em `https://www.felipeambrozini.com.br/devocional/`) e os
+Firebase Hosting, em `https://www.felipeambrozini.com.br/tabernaculo/`) e os
 builds oficiais do aplicativo Android recebem atualizações diretas de segurança.
 
 | Plataforma | Suporte a Correções de Segurança |
@@ -44,7 +44,7 @@ Check (ver 3.3), para separar o app de scripts, sem finalidade de rastreamento
 nem de anúncio; a política de privacidade o declara. Por isso não há banner de
 cookies. O que há é o consentimento da LGPD para os dados sensíveis
 da conta (favoritos, anotações, progresso, planos e conversas revelam convicção
-religiosa): `DevocionalConsentimentoDaNuvem` aparece antes do primeiro login no
+religiosa): `TabernaculoConsentimentoDaNuvem` aparece antes do primeiro login no
 aparelho e, para quem já tinha a sessão aberta, ao abrir o app
 (`Estado.consentimentoDaNuvem`). Sem esse consentimento neste aparelho nenhuma
 sincronia da conta começa, a dos planos (próprios e compartilhados) inclusive:
@@ -136,7 +136,7 @@ canal próprio, só para falha técnica e só na web de release:
   página, versão do app e plataforma. Nunca vão texto digitado, histórico de
   conversa, e-mail, uid, cookie ou query string; o servidor
   (`functions/src/erro.ts`) recorta e rejeita o que estiver fora do contrato.
-- **Destino e limites:** POST em `/devocional/api/erro`, rewrite do Hosting para
+- **Destino e limites:** POST em `/tabernaculo/api/erro`, rewrite do Hosting para
   a Function `registrarErro` (`invoker: public`, `maxInstances: 10`), que grava
   em `erros/{hash}` com `FieldValue.increment(1)`. O cliente envia no máximo 5
   por sessão, um por mensagem distinta; o servidor aplica limite por cliente e

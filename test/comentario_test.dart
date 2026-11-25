@@ -198,7 +198,7 @@ void main() {
         EscopoDoEstado(
           estado: estado,
           child: MaterialApp(
-            home: DevocionalComentariosDoCapitulo(
+            home: TabernaculoComentariosDoCapitulo(
               livro: 'joao',
               capituloNumero: 1,
               aoCarregar: () => chamadas++,
@@ -224,7 +224,7 @@ void main() {
         EscopoDoEstado(
           estado: estado,
           child: MaterialApp(
-            home: DevocionalComentariosDoCapitulo(
+            home: TabernaculoComentariosDoCapitulo(
               livro: 'joao',
               capituloNumero: 1,
               aoCarregar: () => chamadas++,
@@ -261,7 +261,7 @@ void main() {
         EscopoDoEstado(
           estado: estado,
           child: MaterialApp(
-            home: DevocionalComentariosDoCapitulo(
+            home: TabernaculoComentariosDoCapitulo(
               livro: 'livro-x',
               capituloNumero: 1,
               construir: (context, comentarios) =>

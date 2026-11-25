@@ -44,7 +44,7 @@ void main() {
         child: MaterialApp(
           theme: construirTema(brilho: brilho),
           home: const Scaffold(
-            body: DevocionalSeletorDeLivro(
+            body: TabernaculoSeletorDeLivro(
               livroAtual: 'joao',
               capituloAtual: 3,
             ),
@@ -55,7 +55,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  group('DevocionalSeletorDeLivro e o áudio do livro', () {
+  group('TabernaculoSeletorDeLivro e o áudio do livro', () {
     testWidgets('com o áudio disponível, mostra "Baixar o áudio"', (
       tester,
     ) async {

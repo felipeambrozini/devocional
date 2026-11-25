@@ -27,23 +27,23 @@ void main() {
 
   /// A cor de fundo que o app está de fato pintando.
   Color fundoEmUso(WidgetTester tester) => Theme.of(
-    tester.element(find.byType(DevocionalMoldura)),
+    tester.element(find.byType(TabernaculoMoldura)),
   ).colorScheme.surface;
 
   testWidgets('escolher claro ou escuro troca a paleta na hora', (
     tester,
   ) async {
     final estado = Estado(await SharedPreferences.getInstance());
-    await tester.pumpWidget(AppDevocional(estado: estado));
+    await tester.pumpWidget(AppTabernaculo(estado: estado));
     await tester.pump();
 
     await estado.definirModoDoTema(ModoDoTema.escuro);
     await passarATransicao(tester);
-    expect(fundoEmUso(tester), DevocionalCores.fundo);
+    expect(fundoEmUso(tester), TabernaculoCores.fundo);
 
     await estado.definirModoDoTema(ModoDoTema.claro);
     await passarATransicao(tester);
-    expect(fundoEmUso(tester), DevocionalCores.pergaminho);
+    expect(fundoEmUso(tester), TabernaculoCores.pergaminho);
   });
 
   testWidgets('no automático, quem manda é o aparelho', (tester) async {
@@ -53,15 +53,15 @@ void main() {
 
     final estado = Estado(await SharedPreferences.getInstance());
     expect(estado.modoDoTema, ModoDoTema.sistema);
-    await tester.pumpWidget(AppDevocional(estado: estado));
+    await tester.pumpWidget(AppTabernaculo(estado: estado));
     await passarATransicao(tester);
-    expect(fundoEmUso(tester), DevocionalCores.pergaminho);
+    expect(fundoEmUso(tester), TabernaculoCores.pergaminho);
 
     tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
     await passarATransicao(tester);
     expect(
       fundoEmUso(tester),
-      DevocionalCores.fundo,
+      TabernaculoCores.fundo,
       reason:
           'o MaterialApp tem os dois temas montados, então virar o sistema '
           'não pode depender de passar pelo Estado',
@@ -77,13 +77,13 @@ void main() {
         estado: estado,
         child: MaterialApp(
           home: Scaffold(
-            body: Center(child: DevocionalBotaoDeAjustes(estado: estado)),
+            body: Center(child: TabernaculoBotaoDeAjustes(estado: estado)),
           ),
         ),
       ),
     );
 
-    await tester.tap(find.byType(DevocionalBotaoDeAjustes));
+    await tester.tap(find.byType(TabernaculoBotaoDeAjustes));
     await tester.pumpAndSettle();
 
     // As duas escolhas moram na mesma folha: quem abre para aumentar a letra vê
@@ -118,11 +118,11 @@ void main() {
 
     final estado = Estado(await SharedPreferences.getInstance());
     await estado.definirModoDoTema(ModoDoTema.escuro);
-    await tester.pumpWidget(AppDevocional(estado: estado));
+    await tester.pumpWidget(AppTabernaculo(estado: estado));
     await passarATransicao(tester);
 
     // Às nove da noite o celular pode ainda estar no claro; quem lê na cama
     // escolheu escuro e a escolha tem que valer.
-    expect(fundoEmUso(tester), DevocionalCores.fundo);
+    expect(fundoEmUso(tester), TabernaculoCores.fundo);
   });
 }

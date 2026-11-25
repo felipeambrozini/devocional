@@ -15,8 +15,8 @@ import '../funcoes/citacao.dart';
 import '../funcoes/dialogos.dart';
 import '../widgets/widgets.dart';
 
-class DevocionalCartaoDeLeitura extends StatelessWidget {
-  const DevocionalCartaoDeLeitura({
+class TabernaculoCartaoDeLeitura extends StatelessWidget {
+  const TabernaculoCartaoDeLeitura({
     super.key,
     required this.titulo,
     required this.dev,
@@ -78,8 +78,8 @@ class DevocionalCartaoDeLeitura extends StatelessWidget {
             destacar: (deVersiculo, ateVersiculo),
           ),
     );
-    return DevocionalCartao(
-      padding: const EdgeInsets.all(DevocionalEspacamento.sp20),
+    return TabernaculoCartao(
+      padding: const EdgeInsets.all(TabernaculoEspacamento.sp20),
       // A mesma regra do capítulo da Biblioteca, que também abre a folha de
       // ações no toque do parágrafo: fora da web o texto é selecionável (toque
       // longo seleciona, com Compartilhar no menu; toque curto abre a folha);
@@ -102,7 +102,7 @@ class DevocionalCartaoDeLeitura extends StatelessWidget {
                       excludeFromSemantics: true,
                     ),
                   ),
-                  const SizedBox(width: DevocionalEspacamento.sp14),
+                  const SizedBox(width: TabernaculoEspacamento.sp14),
                 ],
                 Expanded(
                   child: Column(
@@ -115,7 +115,7 @@ class DevocionalCartaoDeLeitura extends StatelessWidget {
                       // seguida da atribuição. Mais de uma linha no raro dia com
                       // mais de um versículo-base.
                       if (spans.isNotEmpty) ...[
-                        const SizedBox(height: DevocionalEspacamento.sp10),
+                        const SizedBox(height: TabernaculoEspacamento.sp10),
                         Text.rich(TextSpan(children: spans)),
                       ],
                     ],
@@ -123,11 +123,11 @@ class DevocionalCartaoDeLeitura extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: DevocionalEspacamento.sp14),
+            const SizedBox(height: TabernaculoEspacamento.sp14),
             // A linha dourada só separa a citação do comentário, por isso vem
             // depois dela, não antes.
-            const DevocionalFilete(),
-            const SizedBox(height: DevocionalEspacamento.sp14),
+            const TabernaculoFilete(),
+            const SizedBox(height: TabernaculoEspacamento.sp14),
             // Flexible, não solto: sem largura limitada, a barra de
             // progresso do botão (que preenche a largura disponível durante a
             // leitura) tenta se esticar ao infinito numa Row, e o layout
@@ -135,23 +135,23 @@ class DevocionalCartaoDeLeitura extends StatelessWidget {
             Row(
               children: [
                 Flexible(
-                  child: DevocionalBotaoDeVoz(
+                  child: TabernaculoBotaoDeVoz(
                     chave: vozChave,
                     referencia: vozReferencia,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: DevocionalEspacamento.sp14),
+            const SizedBox(height: TabernaculoEspacamento.sp14),
             // O texto abre a folha de ações, como um parágrafo dos livros da
             // Biblioteca: favoritar, anotar, copiar e compartilhar a leitura.
-            DevocionalParagrafoDeLivro(
+            TabernaculoParagrafoDeLivro(
               texto: texto,
               destaque: destaque,
               outrasAcoes: 'anotar, copiar ou compartilhar',
               aoTocar: () => _abrirAcoes(context, estado, destaque),
             ),
-            const SizedBox(height: DevocionalEspacamento.sp8),
+            const SizedBox(height: TabernaculoEspacamento.sp8),
             Center(
               child: Image.asset(
                 'assets/imagens/assinatura_spurgeon.webp',
@@ -172,7 +172,7 @@ class DevocionalCartaoDeLeitura extends StatelessWidget {
   }
 
   static Widget _comSelecao(Widget filho) =>
-      kIsWeb ? filho : DevocionalAreaDeSelecaoComCompartilhar(child: filho);
+      kIsWeb ? filho : TabernaculoAreaDeSelecaoComCompartilhar(child: filho);
 
   /// A folha do texto: copiar, compartilhar, anotar e favoritar a leitura. O
   /// compartilhar mora aqui, e não solto no cartão, junto das outras ações do

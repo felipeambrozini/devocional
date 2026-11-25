@@ -15,8 +15,8 @@ import 'filete.dart';
 ///
 /// O portão não prova idade (nada no navegador prova): ele garante que a
 /// declaração foi lida e feita, que é o que cabe ao app.
-class DevocionalPortaoDeIdade extends StatelessWidget {
-  const DevocionalPortaoDeIdade({
+class TabernaculoPortaoDeIdade extends StatelessWidget {
+  const TabernaculoPortaoDeIdade({
     super.key,
     required this.aoConfirmar,
     required this.aoRecusar,
@@ -31,20 +31,20 @@ class DevocionalPortaoDeIdade extends StatelessWidget {
     final tema = Theme.of(context).textTheme;
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(DevocionalEspacamento.sp32),
+        padding: const EdgeInsets.all(TabernaculoEspacamento.sp32),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 460),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Center(child: DevocionalFilete(largura: 64)),
-              const SizedBox(height: DevocionalEspacamento.sp18),
+              const Center(child: TabernaculoFilete(largura: 64)),
+              const SizedBox(height: TabernaculoEspacamento.sp18),
               Text(
                 'Antes de conversar',
                 style: tema.headlineSmall,
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: DevocionalEspacamento.sp12),
+              const SizedBox(height: TabernaculoEspacamento.sp12),
               Text(
                 'As respostas são geradas por inteligência artificial a partir '
                 'do que você escrever. Elas podem tratar de temas sensíveis, '
@@ -56,7 +56,7 @@ class DevocionalPortaoDeIdade extends StatelessWidget {
                   height: 1.6,
                 ),
               ),
-              const SizedBox(height: DevocionalEspacamento.sp12),
+              const SizedBox(height: TabernaculoEspacamento.sp12),
               Text(
                 'O chat é destinado a maiores de 18 anos. Confirme para '
                 'continuar.',
@@ -66,13 +66,13 @@ class DevocionalPortaoDeIdade extends StatelessWidget {
                   height: 1.5,
                 ),
               ),
-              const SizedBox(height: DevocionalEspacamento.sp24),
-              DevocionalBotaoPrimario(
+              const SizedBox(height: TabernaculoEspacamento.sp24),
+              TabernaculoBotaoPrimario(
                 onPressed: aoConfirmar,
                 child: const Text('Tenho 18 anos ou mais'),
               ),
-              const SizedBox(height: DevocionalEspacamento.sp8),
-              DevocionalBotaoTerciario(
+              const SizedBox(height: TabernaculoEspacamento.sp8),
+              TabernaculoBotaoTerciario(
                 onPressed: aoRecusar,
                 child: const Text('Não tenho 18 anos'),
               ),

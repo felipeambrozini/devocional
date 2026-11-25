@@ -113,7 +113,7 @@ class _ReferenciaDaCitacao extends StatelessWidget {
         onTap: aoAbrir,
         child: Padding(
           padding: const EdgeInsets.symmetric(
-            vertical: DevocionalEspacamento.sp14,
+            vertical: TabernaculoEspacamento.sp14,
           ),
           child: ExcludeSemantics(
             child: Text(

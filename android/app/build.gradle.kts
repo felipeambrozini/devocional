@@ -18,7 +18,7 @@ plugins {
 }
 
 android {
-    namespace = "com.felipeambrozini.devocional"
+    namespace = "com.felipeambrozini.tabernaculo"
     // O flutter_local_notifications 23 (e o androidx.core 1.19 que ele puxa)
     // é compilado contra o SDK 37, e o checkReleaseAarMetadata recusa o APK
     // com o app no 36, que é o padrão do Flutter estável. O maior dos dois,
@@ -37,7 +37,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.felipeambrozini.devocional"
+        applicationId = "com.felipeambrozini.tabernaculo"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

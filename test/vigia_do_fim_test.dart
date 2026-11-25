@@ -8,9 +8,9 @@ import 'package:material_ui/material_ui.dart';
 const _espera = Duration(milliseconds: 100);
 
 void main() {
-  setUp(() => DevocionalVigiaDoFim.esperaSemRolagem = _espera);
+  setUp(() => TabernaculoVigiaDoFim.esperaSemRolagem = _espera);
   tearDown(() {
-    DevocionalVigiaDoFim.esperaSemRolagem = const Duration(seconds: 20);
+    TabernaculoVigiaDoFim.esperaSemRolagem = const Duration(seconds: 20);
     // Deixa o app "à vista" para o próximo teste.
     TestWidgetsFlutterBinding.instance.handleAppLifecycleStateChanged(
       AppLifecycleState.resumed,
@@ -37,7 +37,7 @@ void main() {
         home: Scaffold(
           body: ValueListenableBuilder<Object>(
             valueListenable: chave,
-            builder: (context, valor, _) => DevocionalVigiaDoFim(
+            builder: (context, valor, _) => TabernaculoVigiaDoFim(
               chave: valor,
               rolagem: rolagem,
               aoChegarAoFim: () => avisos++,
@@ -186,7 +186,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: DevocionalVigiaDoFim(
+            body: TabernaculoVigiaDoFim(
               chave: 'joao.3',
               rolagem: rolagem,
               aoChegarAoFim: () => avisos++,
@@ -239,7 +239,7 @@ void main() {
     });
 
     testWidgets('a espera padrão é de 20 segundos', (tester) async {
-      DevocionalVigiaDoFim.esperaSemRolagem = const Duration(seconds: 20);
+      TabernaculoVigiaDoFim.esperaSemRolagem = const Duration(seconds: 20);
       await montar(tester, altura: 300);
       await tester.pump();
       await tester.pump(const Duration(seconds: 19));
@@ -278,7 +278,7 @@ void main() {
     ) async {
       await montar(tester, altura: 300);
       await tester.pump();
-      final contexto = tester.element(find.byType(DevocionalVigiaDoFim));
+      final contexto = tester.element(find.byType(TabernaculoVigiaDoFim));
       unawaited(
         Navigator.of(contexto).push(
           MaterialPageRoute<void>(

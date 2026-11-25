@@ -5,8 +5,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 /// espaçamento, mesmo padrão de limpar/buscar — sem isto, cada tela
 /// reescrevia o próprio `TextField`, e um ajuste (como o espaçamento da
 /// lupa) tinha de ser repetido em todo lugar que tinha um.
-class DevocionalBusca extends StatelessWidget {
-  const DevocionalBusca({
+class TabernaculoBusca extends StatelessWidget {
+  const TabernaculoBusca({
     super.key,
     required this.controller,
     required this.hintText,

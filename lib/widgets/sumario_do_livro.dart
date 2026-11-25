@@ -14,8 +14,8 @@ import 'linha_do_capitulo.dart';
 
 /// O corpo do sumário de um livro: o cartão da obra, o botão de começar ou
 /// continuar a leitura e a lista de capítulos.
-class DevocionalSumarioDoLivro extends StatelessWidget {
-  const DevocionalSumarioDoLivro({
+class TabernaculoSumarioDoLivro extends StatelessWidget {
+  const TabernaculoSumarioDoLivro({
     super.key,
     required this.obra,
     required this.capitulos,
@@ -37,22 +37,22 @@ class DevocionalSumarioDoLivro extends StatelessWidget {
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
-        DevocionalEspacamento.sp16,
-        DevocionalEspacamento.sp8,
-        DevocionalEspacamento.sp16,
-        DevocionalEspacamento.sp32,
+        TabernaculoEspacamento.sp16,
+        TabernaculoEspacamento.sp8,
+        TabernaculoEspacamento.sp16,
+        TabernaculoEspacamento.sp32,
       ),
       children: [
-        DevocionalCartaoDaObra(obra: obra, aoAbrir: null),
-        const SizedBox(height: DevocionalEspacamento.sp16),
+        TabernaculoCartaoDaObra(obra: obra, aoAbrir: null),
+        const SizedBox(height: TabernaculoEspacamento.sp16),
         // Wrap: em tela estreita ou letra grande, os dois botões descem um
         // para cada linha em vez de estourar.
         Wrap(
-          spacing: DevocionalEspacamento.sp8,
-          runSpacing: DevocionalEspacamento.sp8,
+          spacing: TabernaculoEspacamento.sp8,
+          runSpacing: TabernaculoEspacamento.sp8,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            DevocionalBotaoPrimario.icon(
+            TabernaculoBotaoPrimario.icon(
               onPressed: () =>
                   context.push('/biblioteca/${obra.slug}/${capituloAtual + 1}'),
               icon: const FaIcon(FontAwesomeIcons.bookOpenReader, size: 16),
@@ -64,7 +64,7 @@ class DevocionalSumarioDoLivro extends StatelessWidget {
             // livro em outro lugar, ou quer recomeçar. O mesmo fluxo do botão
             // do último capítulo, com a mesma confirmação.
             if (emLeitura)
-              DevocionalBotaoTerciario.icon(
+              TabernaculoBotaoTerciario.icon(
                 onPressed: () => terminarLeituraDoLivro(context, estado, obra),
                 icon: const FaIcon(FontAwesomeIcons.flagCheckered, size: 16),
                 label: const Text('Terminar a leitura'),
@@ -72,12 +72,12 @@ class DevocionalSumarioDoLivro extends StatelessWidget {
           ],
         ),
         // Só aparece quando o áudio do livro já está no Storage.
-        DevocionalBaixarLivro(
+        TabernaculoBaixarLivro(
           livro: LivroParaBaixar.daBiblioteca(obra, capitulos.length),
         ),
-        const SizedBox(height: DevocionalEspacamento.sp20),
+        const SizedBox(height: TabernaculoEspacamento.sp20),
         for (final (indice, capitulo) in capitulos.indexed)
-          DevocionalLinhaDoCapitulo(
+          TabernaculoLinhaDoCapitulo(
             numero: indice + 1,
             titulo: capitulo.titulo,
             lido: leitura.foiLido(obra.slug, indice),

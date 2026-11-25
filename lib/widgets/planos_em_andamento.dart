@@ -20,17 +20,18 @@ import 'progresso_fino.dart';
 /// Os planos personalizados que o usuário já começou e ainda não terminou,
 /// para a Hoje: cada um com o próximo dia por ler. Nenhum: não mostra nada.
 /// Um só: o cartão. Mais de um: lista horizontal, como em
-/// [DevocionalLivrosEmLeitura].
-class DevocionalPlanosEmAndamento extends StatefulWidget {
-  const DevocionalPlanosEmAndamento({super.key, required this.estado});
+/// [TabernaculoLivrosEmLeitura].
+class TabernaculoPlanosEmAndamento extends StatefulWidget {
+  const TabernaculoPlanosEmAndamento({super.key, required this.estado});
 
   final Estado estado;
 
   @override
-  State<DevocionalPlanosEmAndamento> createState() => _PlanosEmAndamentoState();
+  State<TabernaculoPlanosEmAndamento> createState() =>
+      _PlanosEmAndamentoState();
 }
 
-class _PlanosEmAndamentoState extends State<DevocionalPlanosEmAndamento> {
+class _PlanosEmAndamentoState extends State<TabernaculoPlanosEmAndamento> {
   static const _larguraDoCartao = 320.0;
 
   final _rolagem = ScrollController();
@@ -70,14 +71,14 @@ class _PlanosEmAndamentoState extends State<DevocionalPlanosEmAndamento> {
         child: SingleChildScrollView(
           controller: _rolagem,
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.only(bottom: DevocionalEspacamento.sp12),
+          padding: const EdgeInsets.only(bottom: TabernaculoEspacamento.sp12),
           child: IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 for (final (indice, cartao) in cartoes.indexed) ...[
                   if (indice > 0)
-                    const SizedBox(width: DevocionalEspacamento.sp8),
+                    const SizedBox(width: TabernaculoEspacamento.sp8),
                   SizedBox(width: _larguraDoCartao, child: cartao),
                 ],
               ],
@@ -117,8 +118,8 @@ class _CartaoDoPlanoDeHoje extends StatelessWidget {
     );
     final lidos = estado.diasLidosDoPlano(plano.id);
 
-    return DevocionalCartao(
-      padding: const EdgeInsets.all(DevocionalEspacamento.sp20),
+    return TabernaculoCartao(
+      padding: const EdgeInsets.all(TabernaculoEspacamento.sp20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -129,29 +130,29 @@ class _CartaoDoPlanoDeHoje extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const DevocionalFilete(),
-                    const SizedBox(height: DevocionalEspacamento.sp12),
+                    const TabernaculoFilete(),
+                    const SizedBox(height: TabernaculoEspacamento.sp12),
                     Text(plano.titulo, style: tema.titleLarge),
                   ],
                 ),
               ),
-              DevocionalBotaoDeLido(
+              TabernaculoBotaoDeLido(
                 lido: estado.foiLidoNoPlano(plano.id, proximo.numero),
                 rotulo: proximo.rotulo,
                 aoAlternar: () => _alternar(context, proximo.numero),
               ),
             ],
           ),
-          const SizedBox(height: DevocionalEspacamento.sp8),
+          const SizedBox(height: TabernaculoEspacamento.sp8),
           Text(proximo.rotulo, style: tema.bodyLarge),
-          const SizedBox(height: DevocionalEspacamento.sp12),
+          const SizedBox(height: TabernaculoEspacamento.sp12),
           Wrap(
-            spacing: DevocionalEspacamento.sp8,
-            runSpacing: DevocionalEspacamento.sp8,
+            spacing: TabernaculoEspacamento.sp8,
+            runSpacing: TabernaculoEspacamento.sp8,
             children: [
               for (final item in proximo.itens)
                 switch (item) {
-                  ItemDeCapitulo(:final faixa) => DevocionalBotaoDeFaixa(
+                  ItemDeCapitulo(:final faixa) => TabernaculoBotaoDeFaixa(
                     faixa: faixa,
                     dia: DiaDaLeitura.doPlano(
                       plano.id,
@@ -160,21 +161,21 @@ class _CartaoDoPlanoDeHoje extends StatelessWidget {
                     ),
                   ),
                   ItemDeDevocional(:final tipo, :final chaveDoDia) =>
-                    DevocionalBotaoDeDevocional(
+                    TabernaculoBotaoDeDevocional(
                       tipo: tipo,
                       chaveDoDia: chaveDoDia,
                     ),
                 },
             ],
           ),
-          const SizedBox(height: DevocionalEspacamento.sp20),
-          const DevocionalFilete(),
-          const SizedBox(height: DevocionalEspacamento.sp14),
+          const SizedBox(height: TabernaculoEspacamento.sp20),
+          const TabernaculoFilete(),
+          const SizedBox(height: TabernaculoEspacamento.sp14),
           Wrap(
             alignment: WrapAlignment.spaceBetween,
             crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: DevocionalEspacamento.sp8,
-            runSpacing: DevocionalEspacamento.sp4,
+            spacing: TabernaculoEspacamento.sp8,
+            runSpacing: TabernaculoEspacamento.sp4,
             children: [
               Text('Progresso do plano', style: tema.labelMedium),
               Row(
@@ -186,14 +187,14 @@ class _CartaoDoPlanoDeHoje extends StatelessWidget {
                     '$lidos',
                     style: tema.titleMedium?.copyWith(color: cor.primary),
                   ),
-                  const SizedBox(width: DevocionalEspacamento.sp6),
+                  const SizedBox(width: TabernaculoEspacamento.sp6),
                   Text('de ${dias.length} dias', style: tema.bodySmall),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: DevocionalEspacamento.sp8),
-          DevocionalProgressoFino(
+          const SizedBox(height: TabernaculoEspacamento.sp8),
+          TabernaculoProgressoFino(
             valor: dias.isEmpty ? 0 : (lidos / dias.length).clamp(0.0, 1.0),
           ),
         ],

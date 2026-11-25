@@ -55,7 +55,7 @@ class DevocionalControlador extends ChangeNotifier {
     ),
   );
 
-  /// Navega para a leitura com a data na URL (`/manha?data=AAAA-MM-DD`):
+  /// Navega para a leitura com a data na URL (`/devocional/manha?data=AAAA-MM-DD`):
   /// o chip, o calendário e o "voltar para hoje" escrevem a URL, e a rota
   /// (main.dart) reconstrói a tela com `dataInicial`. A data de hoje não
   /// aparece na URL de propósito, para o link continuar limpo.
@@ -64,11 +64,20 @@ class DevocionalControlador extends ChangeNotifier {
     GoRouter.of(context).go(caminhoDaLeitura(novaLeitura, novaData));
   }
 
-  /// O caminho da aba Devocional numa leitura e num dia (`/manha`,
-  /// `/noite?data=AAAA-MM-DD`): o mesmo que main.dart declara, para quem leva
-  /// até a leitura de fora da aba (a prévia da Hoje) cair na própria aba.
+  /// O caminho da aba Devocional numa leitura e num dia
+  /// (`/devocional/manha`, `/devocional/noite?data=AAAA-MM-DD`): o mesmo que
+  /// main.dart declara, para quem leva até a leitura de fora da aba (a prévia
+  /// da Hoje) cair na própria aba.
   static String caminhoDaLeitura(Leitura leitura, DateTime data) =>
-      '/${leitura.name}${_parametroDeData(data)}';
+      '/devocional/${leitura.name}${_parametroDeData(data)}';
+
+  /// O mesmo caminho a partir do `?data=` cru de uma URL (os redirects de
+  /// main.dart), repassado como veio: a rota da leitura é quem o interpreta.
+  static String caminhoDaLeituraPeloParametro(Leitura leitura, String? data) =>
+      Uri(
+        path: '/devocional/${leitura.name}',
+        queryParameters: data == null ? null : {'data': data},
+      ).toString();
 
   /// `?data=AAAA-MM-DD`, ou vazio no dia de hoje — para a URL de hoje
   /// continuar limpa, na navegação ([irPara]) e no link de [linkDaLeitura].
@@ -76,10 +85,11 @@ class DevocionalControlador extends ChangeNotifier {
       _mesmoDia(data, DateTime.now()) ? '' : '?data=${_formatoDeData(data)}';
 
   /// Link absoluto da leitura atual, o mesmo caminho que main.dart declara
-  /// para cada leitura (`/manha`, `/noite`, `/promessas`): quem abre o link
-  /// cai direto nela. Vai no texto de Compartilhar do cartão.
+  /// para cada leitura (`/devocional/manha`, `/devocional/noite`,
+  /// `/devocional/promessas`): quem abre o link cai direto nela. Vai no texto
+  /// de Compartilhar do cartão.
   String linkDaLeitura() =>
-      '$enderecoDoSite${leitura.name}${_parametroDeData(data)}';
+      '${enderecoDoSite}devocional/${leitura.name}${_parametroDeData(data)}';
 
   /// O ano entra na comparação: a data da URL é completa, e "19 de agosto"
   /// de um ano não é o mesmo dia de outro. Sem ele, escolher no calendário o

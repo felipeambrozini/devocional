@@ -28,7 +28,7 @@ const _vapidKey = String.fromEnvironment('FCM_VAPID_KEY');
 ///
 /// Precisa ser passado à mão: sem ele o SDK registra por conta própria
 /// `/firebase-messaging-sw.js` **na raiz do domínio**, e o app mora em
-/// `/devocional/` — na raiz o Hosting devolve a página 404 em HTML, o
+/// `/tabernaculo/` — na raiz o Hosting devolve a página 404 em HTML, o
 /// registro falha por tipo MIME e `register` lança. Resultado: nenhum FID
 /// web chegava ao Firestore, e a Function não tinha para quem enviar.
 ///
@@ -125,8 +125,8 @@ bool pushAindaVale({required int minutoAgora, required int minutoAlvo}) =>
 /// visível e só era uma fonte a mais de `PlatformException(invalid_icon)`.
 const _iconeLembrete = 'ic_lembrete';
 
-/// Mesmo par de destaque de `lib/estilo/cores.dart` (`DevocionalCores.dourado`/
-/// `DevocionalCores.bronze`), duplicado aqui em vez de importado: `lib/data` não
+/// Mesmo par de destaque de `lib/estilo/cores.dart` (`TabernaculoCores.dourado`/
+/// `TabernaculoCores.bronze`), duplicado aqui em vez de importado: `lib/data` não
 /// depende do pacote de estilo, e são só dois inteiros — a duplicação vale
 /// menos que o acoplamento entre camadas.
 const _douradoDoTemaEscuro = Color(0xFFC9A227);

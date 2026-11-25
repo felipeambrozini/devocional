@@ -14,8 +14,8 @@ import 'item_de_instalar.dart';
 /// fixo em Sobre. Quem chama decide a vez dele: a Hoje só o mostra depois que
 /// o cartão "Como usar" foi dispensado, para dois cartões de boas-vindas não
 /// se empilharem antes da leitura.
-class DevocionalCartaoDeInstalar extends StatelessWidget {
-  const DevocionalCartaoDeInstalar({
+class TabernaculoCartaoDeInstalar extends StatelessWidget {
+  const TabernaculoCartaoDeInstalar({
     super.key,
     required this.estado,
     this.instalacao,
@@ -38,8 +38,8 @@ class DevocionalCartaoDeInstalar extends StatelessWidget {
           return const SizedBox.shrink();
         }
         return Padding(
-          padding: const EdgeInsets.only(bottom: DevocionalEspacamento.sp16),
-          child: DevocionalCartao(
+          padding: const EdgeInsets.only(bottom: TabernaculoEspacamento.sp16),
+          child: TabernaculoCartao(
             titulo: 'Instalar como app',
             acessorio: FaIcon(
               FontAwesomeIcons.mobileScreen,
@@ -50,21 +50,21 @@ class DevocionalCartaoDeInstalar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'O Devocional ganha ícone como os outros apps e abre em '
+                  'O Tabernáculo ganha ícone como os outros apps e abre em '
                   'janela própria, sem passar por loja. Se preferir depois, '
                   'a opção fica em Sobre.',
                   style: tema.bodyMedium,
                 ),
-                const SizedBox(height: DevocionalEspacamento.sp8),
+                const SizedBox(height: TabernaculoEspacamento.sp8),
                 Wrap(
                   alignment: WrapAlignment.end,
                   crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: DevocionalEspacamento.sp8,
-                  runSpacing: DevocionalEspacamento.sp8,
+                  spacing: TabernaculoEspacamento.sp8,
+                  runSpacing: TabernaculoEspacamento.sp8,
                   children: [
                     Semantics(
                       hint: 'Esconde este convite; a opção continua em Sobre',
-                      child: DevocionalBotaoTerciario(
+                      child: TabernaculoBotaoTerciario(
                         onPressed: () {
                           // O botão some junto com o cartão: o foco do
                           // teclado segue para a leitura do dia em vez de
@@ -76,8 +76,8 @@ class DevocionalCartaoDeInstalar extends StatelessWidget {
                       ),
                     ),
                     Semantics(
-                      hint: 'Instala o Devocional como app',
-                      child: DevocionalBotaoSecundario(
+                      hint: 'Instala o Tabernáculo como app',
+                      child: TabernaculoBotaoSecundario(
                         onPressed: () => instalarComoApp(context, instalacao),
                         child: const Text('Instalar'),
                       ),

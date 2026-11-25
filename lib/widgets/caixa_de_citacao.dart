@@ -5,15 +5,15 @@ import '../estilo/espacamento.dart';
 /// A gramática da citação: fio do metal de 3 à esquerda sobre o tom de cartão
 /// dentro de cartão. Marca a palavra de alguém (a fala da persona, a frase de
 /// abertura de um livro, a nota que a pessoa escreveu); a nota de sistema usa
-/// outra caixa, de fio fechado (ver `DevocionalAvisoDeCorte`).
+/// outra caixa, de fio fechado (ver `TabernaculoAvisoDeCorte`).
 ///
 /// Sem [comFundo] fica só o fio, reto, para o comentário que acompanha o
 /// versículo sem pesar sobre ele.
-class DevocionalCaixaDeCitacao extends StatelessWidget {
-  const DevocionalCaixaDeCitacao({
+class TabernaculoCaixaDeCitacao extends StatelessWidget {
+  const TabernaculoCaixaDeCitacao({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(DevocionalEspacamento.sp12),
+    this.padding = const EdgeInsets.all(TabernaculoEspacamento.sp12),
     this.comFundo = true,
     this.expandir = false,
   });

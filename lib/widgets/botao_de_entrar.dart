@@ -13,8 +13,8 @@ import 'botao.dart';
 ///
 /// O toque chama `entrarNaConta` direto, sem `await` antes: na web, a janela
 /// do login só abre dentro do gesto do usuário.
-class DevocionalBotaoDeEntrar extends StatelessWidget {
-  const DevocionalBotaoDeEntrar({
+class TabernaculoBotaoDeEntrar extends StatelessWidget {
+  const TabernaculoBotaoDeEntrar({
     super.key,
     this.rotulo = 'Entrar com Google',
     this.discreto = false,
@@ -45,8 +45,8 @@ class DevocionalBotaoDeEntrar extends StatelessWidget {
               };
         final icone = nuvem.entrando
             ? const SizedBox(
-                width: DevocionalEspacamento.sp18,
-                height: DevocionalEspacamento.sp18,
+                width: TabernaculoEspacamento.sp18,
+                height: TabernaculoEspacamento.sp18,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   semanticsLabel: 'Carregando',
@@ -54,12 +54,12 @@ class DevocionalBotaoDeEntrar extends StatelessWidget {
               )
             : const FaIcon(FontAwesomeIcons.google, size: 16);
         return discreto
-            ? DevocionalBotaoSecundario.icon(
+            ? TabernaculoBotaoSecundario.icon(
                 onPressed: onPressed,
                 icon: icone,
                 label: Text(rotulo),
               )
-            : DevocionalBotaoPrimario.icon(
+            : TabernaculoBotaoPrimario.icon(
                 onPressed: onPressed,
                 icon: icone,
                 label: Text(rotulo),

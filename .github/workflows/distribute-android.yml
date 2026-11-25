@@ -107,6 +107,6 @@ jobs:
       - name: Distribute to Firebase App Distribution
         uses: w9jds/firebase-action@e01972352bce28ca4658ce13d6abefd26053a4e2 # v15
         with:
-          args: appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk --app 1:169480227109:android:286f46640a25846c3c72cc --groups testadores --release-notes-file release-notes.txt
+          args: appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk --app 1:169480227109:android:43c8eedac3663d093c72cc --groups testadores --release-notes-file release-notes.txt
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

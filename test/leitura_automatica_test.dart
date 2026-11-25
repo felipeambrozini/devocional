@@ -45,10 +45,10 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    DevocionalVigiaDoFim.esperaSemRolagem = _espera;
+    TabernaculoVigiaDoFim.esperaSemRolagem = _espera;
   });
   tearDown(() {
-    DevocionalVigiaDoFim.esperaSemRolagem = const Duration(seconds: 20);
+    TabernaculoVigiaDoFim.esperaSemRolagem = const Duration(seconds: 20);
   });
 
   Future<Estado> abrirEstado() async =>
@@ -146,7 +146,7 @@ void main() {
       tester,
     ) async {
       await abrir(tester, 3);
-      expect(find.byType(DevocionalBotaoDeNotas), findsOneWidget);
+      expect(find.byType(TabernaculoBotaoDeNotas), findsOneWidget);
 
       final corpo = find.byType(SingleChildScrollView).first;
       expect(
@@ -181,7 +181,10 @@ void main() {
           child: MaterialApp(
             theme: construirTema(brilho: brilho),
             home: Scaffold(
-              body: DevocionalSumarioDoLivro(obra: _obra, capitulos: capitulos),
+              body: TabernaculoSumarioDoLivro(
+                obra: _obra,
+                capitulos: capitulos,
+              ),
             ),
           ),
         ),
@@ -295,21 +298,33 @@ void main() {
 
   group('TelaBiblia com o dia da leitura', () {
     const chave = '2026-11-24';
+    const umCapitulo = DiaDoCronograma(chave: chave, capitulos: ['3joao.1']);
+    const duasCartas = DiaDoCronograma(
+      chave: chave,
+      capitulos: ['2joao.1', '3joao.1'],
+    );
 
-    Future<Estado> abrir(WidgetTester tester, DiaDaLeitura? dia) async {
-      // Alta, para 3 João (um capítulo curto) caber sem rolar.
+    Future<void> montarTela(
+      WidgetTester tester,
+      Estado estado,
+      String livro,
+      DiaDaLeitura? dia,
+    ) async {
+      // Alta, para 2 e 3 João (capítulos curtos) caberem sem rolar.
       tester.view.physicalSize = const Size(800, 3000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      await tester.runAsync(() => Conteudo.instancia.capitulo('3joao', 1));
-      final estado = await abrirEstado();
+      await tester.runAsync(() => Conteudo.instancia.capitulo(livro, 1));
       await tester.pumpWidget(
         EscopoDoEstado(
           estado: estado,
           child: MaterialApp(
+            // A chave nova faz uma TelaBiblia nova a cada leitura, como abrir
+            // outro link /ler.
             home: TelaBiblia(
-              livroInicial: '3joao',
+              key: UniqueKey(),
+              livroInicial: livro,
               capituloInicial: 1,
               dia: dia,
             ),
@@ -317,6 +332,15 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+    }
+
+    Future<Estado> abrir(
+      WidgetTester tester,
+      DiaDaLeitura? dia, {
+      String livro = '3joao',
+    }) async {
+      final estado = await abrirEstado();
+      await montarTela(tester, estado, livro, dia);
       return estado;
     }
 
@@ -325,15 +349,10 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('o capítulo que é o fim do dia marca o dia', (tester) async {
-      final estado = await abrir(
-        tester,
-        const DiaDoCronograma(
-          chave: chave,
-          livroDoFim: '3joao',
-          capituloDoFim: 1,
-        ),
-      );
+    testWidgets('o único capítulo do dia, lido até o fim, marca o dia', (
+      tester,
+    ) async {
+      final estado = await abrir(tester, umCapitulo);
 
       await esperar(tester);
 
@@ -342,18 +361,45 @@ void main() {
       await tester.pump(const Duration(seconds: 9));
     });
 
-    testWidgets('um capítulo que não é o fim do dia não marca', (tester) async {
+    testWidgets('um capítulo que não é do dia não marca', (tester) async {
       final estado = await abrir(
         tester,
-        const DiaDoCronograma(
-          chave: chave,
-          livroDoFim: 'joao',
-          capituloDoFim: 3,
-        ),
+        const DiaDoCronograma(chave: chave, capitulos: ['joao.3']),
       );
       await esperar(tester);
       expect(estado.foiLido(chave), isFalse);
       expect(find.text('Leitura do dia marcada como lida'), findsNothing);
+      expect(estado.progressoDosDias.lidosDoDia('cronograma:$chave'), isEmpty);
+    });
+
+    testWidgets('num dia de dois capítulos, o primeiro sozinho não marca', (
+      tester,
+    ) async {
+      final estado = await abrir(tester, duasCartas, livro: '2joao');
+
+      await esperar(tester);
+
+      expect(estado.foiLido(chave), isFalse);
+      expect(find.text('Leitura do dia marcada como lida'), findsNothing);
+      expect(estado.progressoDosDias.lidosDoDia('cronograma:$chave'), {
+        '2joao.1',
+      });
+    });
+
+    testWidgets('abrir o outro capítulo depois completa o dia e marca', (
+      tester,
+    ) async {
+      final estado = await abrir(tester, duasCartas, livro: '2joao');
+      await esperar(tester);
+      expect(estado.foiLido(chave), isFalse);
+
+      await montarTela(tester, estado, '3joao', duasCartas);
+      await esperar(tester);
+
+      expect(estado.foiLido(chave), isTrue);
+      expect(find.text('Leitura do dia marcada como lida'), findsOneWidget);
+      expect(estado.progressoDosDias.lidosDoDia('cronograma:$chave'), isEmpty);
+      await tester.pump(const Duration(seconds: 9));
     });
 
     testWidgets('sem dia, ler não marca nada', (tester) async {
@@ -361,39 +407,23 @@ void main() {
       await esperar(tester);
       expect(estado.foiLido(chave), isFalse);
       expect(find.byType(SnackBar), findsNothing);
+      expect(estado.progressoDosDias.lidosDoDia('cronograma:$chave'), isEmpty);
     });
 
     testWidgets('o dia de um plano local marca o dia do plano', (tester) async {
-      SharedPreferences.setMockInitialValues({});
       final estado = await abrirEstado();
       final plano = await estado.criarPlano(
         titulo: 'Cartas',
         livros: ['3joao'],
         dias: 1,
       );
-      tester.view.physicalSize = const Size(800, 3000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      await tester.runAsync(() => Conteudo.instancia.capitulo('3joao', 1));
-      await tester.pumpWidget(
-        EscopoDoEstado(
-          estado: estado,
-          child: MaterialApp(
-            home: TelaBiblia(
-              livroInicial: '3joao',
-              capituloInicial: 1,
-              dia: DiaDePlano(
-                planoId: plano.id,
-                numero: 1,
-                livroDoFim: '3joao',
-                capituloDoFim: 1,
-              ),
-            ),
-          ),
-        ),
+
+      await montarTela(
+        tester,
+        estado,
+        '3joao',
+        DiaDePlano(planoId: plano.id, numero: 1, capitulos: const ['3joao.1']),
       );
-      await tester.pumpAndSettle();
       await esperar(tester);
 
       expect(estado.foiLidoNoPlano(plano.id, 1), isTrue);

@@ -7,8 +7,8 @@ import 'layout_leitura.dart';
 /// O caminho para entrar na conta — usado quando o plano foi aberto por link
 /// e só participantes o veem, ou quando a aba Meus Planos depende de conta
 /// para guardar planos próprios na nuvem (ver `titulo`/`descricao`).
-class DevocionalCartaoDeEntrar extends StatelessWidget {
-  const DevocionalCartaoDeEntrar({
+class TabernaculoCartaoDeEntrar extends StatelessWidget {
+  const TabernaculoCartaoDeEntrar({
     super.key,
     this.onEntrar,
     this.titulo = 'Este plano é compartilhado por link',
@@ -25,17 +25,17 @@ class DevocionalCartaoDeEntrar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DevocionalLarguraDeLeitura(
+    return TabernaculoLarguraDeLeitura(
       // Center + SingleChildScrollView: sem isto, um título/descrição mais
       // longos (ver o uso em aba_dos_meus_planos.dart) podem estourar a
       // altura disponível numa janela baixa, em vez de só rolar.
       child: Center(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(DevocionalEspacamento.sp16),
+            padding: const EdgeInsets.all(TabernaculoEspacamento.sp16),
             child: Card(
               child: Padding(
-                padding: const EdgeInsets.all(DevocionalEspacamento.sp20),
+                padding: const EdgeInsets.all(TabernaculoEspacamento.sp20),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -51,14 +51,14 @@ class DevocionalCartaoDeEntrar extends StatelessWidget {
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    const SizedBox(height: DevocionalEspacamento.sp8),
+                    const SizedBox(height: TabernaculoEspacamento.sp8),
                     Text(
                       descricao,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                    const SizedBox(height: DevocionalEspacamento.sp16),
-                    DevocionalBotaoDeEntrar(aoEntrar: onEntrar),
+                    const SizedBox(height: TabernaculoEspacamento.sp16),
+                    TabernaculoBotaoDeEntrar(aoEntrar: onEntrar),
                   ],
                 ),
               ),

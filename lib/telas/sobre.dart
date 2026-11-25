@@ -45,35 +45,35 @@ class _TelaSobreState extends State<TelaSobre> {
     return ListenableBuilder(
       listenable: _controller,
       builder: (context, _) => Scaffold(
-        appBar: DevocionalAppBar(
+        appBar: TabernaculoAppBar(
           title: const Text('Sobre'),
           actions: [
-            DevocionalBotaoDeAjustes(estado: EscopoDoEstado.de(context)),
+            TabernaculoBotaoDeAjustes(estado: EscopoDoEstado.de(context)),
             // A demonstração vive dentro de "A voz de Spurgeon", uma seção
-            // expansível aberta por padrão (ver DevocionalSecaoExpansivel): quem rola
+            // expansível aberta por padrão (ver TabernaculoSecaoExpansivel): quem rola
             // para longe dela, ou a fecha, não vê mais a pílula, e o trecho
             // não pode tocar sem o botão de parar à vista. O indicador também
             // cobre o trecho pausado (chamada).
-            const DevocionalIndicadorDeVozNaBarra(chave: 'trecho:salmos.1'),
+            const TabernaculoIndicadorDeVozNaBarra(chave: 'trecho:salmos.1'),
           ],
         ),
-        body: DevocionalLarguraDeLeitura(
+        body: TabernaculoLarguraDeLeitura(
           child: ListView(
             padding: const EdgeInsets.fromLTRB(
-              DevocionalEspacamento.sp20,
-              DevocionalEspacamento.sp16,
-              DevocionalEspacamento.sp20,
-              DevocionalEspacamento.sp40,
+              TabernaculoEspacamento.sp20,
+              TabernaculoEspacamento.sp16,
+              TabernaculoEspacamento.sp20,
+              TabernaculoEspacamento.sp40,
             ),
             children: [
               Semantics(
                 header: true,
-                child: Text('Devocional', style: tema.displayMedium),
+                child: Text('Tabernáculo', style: tema.displayMedium),
               ),
-              const SizedBox(height: DevocionalEspacamento.sp8),
-              const DevocionalFilete(largura: 64),
-              const SizedBox(height: DevocionalEspacamento.sp12),
-              DevocionalCarregaUmaVez<String>(
+              const SizedBox(height: TabernaculoEspacamento.sp8),
+              const TabernaculoFilete(largura: 64),
+              const SizedBox(height: TabernaculoEspacamento.sp12),
+              TabernaculoCarregaUmaVez<String>(
                 chave: 'versao',
                 carregar: () async =>
                     (await PackageInfo.fromPlatform()).version,
@@ -82,7 +82,7 @@ class _TelaSobreState extends State<TelaSobre> {
                   style: tema.bodySmall?.copyWith(color: cor.onSurfaceVariant),
                 ),
               ),
-              const SizedBox(height: DevocionalEspacamento.sp24),
+              const SizedBox(height: TabernaculoEspacamento.sp24),
               // Ajuda e Conta e privacidade vêm primeiro: são a razão mais
               // comum de abrir Sobre (ajuda, apagar dados). O que é crédito/leitura de referência (fontes,
               // voz, biografia, canais) vem depois, colapsado.
@@ -90,7 +90,7 @@ class _TelaSobreState extends State<TelaSobre> {
                 header: true,
                 child: Text('Ajuda', style: tema.headlineSmall),
               ),
-              const SizedBox(height: DevocionalEspacamento.sp10),
+              const SizedBox(height: TabernaculoEspacamento.sp10),
               // A ajuda não pode morar só no primeiro dia: quem dispensou o
               // cartão da Hoje não tem como vê-lo de novo, e Sobre é onde se
               // procura por ajuda quando se procura.
@@ -118,16 +118,16 @@ class _TelaSobreState extends State<TelaSobre> {
                   onTap: _relatarProblema,
                 ),
               // Só aparece na web, fora do app já instalado (ver o widget).
-              const DevocionalItemDeInstalar(),
+              const TabernaculoItemDeInstalar(),
               // Sem coleta remota neste app (sem Sentry, sem Analytics):
               // erro fica no console e em arquivo local. "Relatar um
               // problema" acima abre e-mail com a versão já preenchida.
-              const SizedBox(height: DevocionalEspacamento.sp32),
+              const SizedBox(height: TabernaculoEspacamento.sp32),
               Semantics(
                 header: true,
                 child: Text('Conta e privacidade', style: tema.headlineSmall),
               ),
-              const SizedBox(height: DevocionalEspacamento.sp10),
+              const SizedBox(height: TabernaculoEspacamento.sp10),
               ListenableBuilder(
                 listenable: Nuvem.instancia,
                 // O histórico do chat só existe para quem tem acesso à
@@ -158,7 +158,7 @@ class _TelaSobreState extends State<TelaSobre> {
                   style: tema.bodyLarge?.copyWith(height: 1.7),
                 ),
               ),
-              const SizedBox(height: DevocionalEspacamento.sp10),
+              const SizedBox(height: TabernaculoEspacamento.sp10),
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: FaIcon(
@@ -174,7 +174,7 @@ class _TelaSobreState extends State<TelaSobre> {
                 title: const Text('Termos de serviço'),
                 onTap: () => GoRouter.of(context).push('/termos'),
               ),
-              const SizedBox(height: DevocionalEspacamento.sp8),
+              const SizedBox(height: TabernaculoEspacamento.sp8),
               ListenableBuilder(
                 listenable: Nuvem.instancia,
                 builder: (context, _) => Nuvem.instancia.logado
@@ -193,12 +193,12 @@ class _TelaSobreState extends State<TelaSobre> {
                       )
                     : const SizedBox.shrink(),
               ),
-              const SizedBox(height: DevocionalEspacamento.sp32),
+              const SizedBox(height: TabernaculoEspacamento.sp32),
               // As quatro seções abaixo são conteúdo de referência, lido uma
               // vez e raramente revisitado — colapsadas por padrão e depois
               // de Ajuda/Conta e privacidade, que são a razão mais comum de
               // abrir esta tela.
-              DevocionalSecaoExpansivel(
+              TabernaculoSecaoExpansivel(
                 icone: FontAwesomeIcons.bookBible,
                 titulo: 'Fontes do texto',
                 children: [
@@ -210,12 +210,12 @@ class _TelaSobreState extends State<TelaSobre> {
                     'estão em domínio público.',
                     style: tema.bodyLarge?.copyWith(height: 1.7),
                   ),
-                  const SizedBox(height: DevocionalEspacamento.sp16),
+                  const SizedBox(height: TabernaculoEspacamento.sp16),
                   Text(
                     avisoDaBibliaDeEstudo,
                     style: tema.bodyLarge?.copyWith(height: 1.7),
                   ),
-                  const SizedBox(height: DevocionalEspacamento.sp16),
+                  const SizedBox(height: TabernaculoEspacamento.sp16),
                   // Atribuição exigida pela licença CC BY 4.0 dos dados.
                   Text(
                     'As palavras de Deus em vermelho seguem os dados de falas '
@@ -224,10 +224,10 @@ class _TelaSobreState extends State<TelaSobre> {
                     'Faith Comes By Hearing, adaptados ao texto em português.',
                     style: tema.bodyLarge?.copyWith(height: 1.7),
                   ),
-                  const SizedBox(height: DevocionalEspacamento.sp16),
+                  const SizedBox(height: TabernaculoEspacamento.sp16),
                 ],
               ),
-              DevocionalSecaoExpansivel(
+              TabernaculoSecaoExpansivel(
                 icone: FontAwesomeIcons.volumeHigh,
                 titulo: 'A voz de Spurgeon',
                 abertaPorPadrao: true,
@@ -241,7 +241,7 @@ class _TelaSobreState extends State<TelaSobre> {
                     'abaixo toca o Salmo 23.',
                     style: tema.bodyLarge?.copyWith(height: 1.7),
                   ),
-                  const SizedBox(height: DevocionalEspacamento.sp16),
+                  const SizedBox(height: TabernaculoEspacamento.sp16),
                   // A demonstração no próprio lugar da explicação: quem descobre a
                   // voz aqui ouve na hora, sem caçar um capítulo para testar.
                   Text(
@@ -250,8 +250,8 @@ class _TelaSobreState extends State<TelaSobre> {
                       color: cor.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(height: DevocionalEspacamento.sp10),
-                  DevocionalCarregaUmaVez<Capitulo>(
+                  const SizedBox(height: TabernaculoEspacamento.sp10),
+                  TabernaculoCarregaUmaVez<Capitulo>(
                     chave: 'voz-demo-salmos-23-${_controller.tentativasDaDemo}',
                     carregar: () => Conteudo.instancia.capitulo('salmos', 23),
                     construir: (context, snap) {
@@ -261,7 +261,7 @@ class _TelaSobreState extends State<TelaSobre> {
                         // de pedir de novo.
                         return Align(
                           alignment: Alignment.centerLeft,
-                          child: DevocionalBotaoTerciario.icon(
+                          child: TabernaculoBotaoTerciario.icon(
                             icon: const FaIcon(FontAwesomeIcons.arrowsRotate),
                             label: const Text('Tentar de novo'),
                             onPressed: _controller.tentarDeNovo,
@@ -276,36 +276,36 @@ class _TelaSobreState extends State<TelaSobre> {
                       // O Salmo 23 tem só seis versículos: curto o bastante
                       // para servir de amostra tocando o capítulo inteiro, com
                       // a mesma chave (e o mesmo arquivo) que o leitor usa.
-                      return DevocionalBotaoDeVoz(
+                      return TabernaculoBotaoDeVoz(
                         chave: chaveDeCapitulo(capitulo.livro, capitulo.numero),
                         referencia: capitulo.referencia,
                       );
                     },
                   ),
-                  const SizedBox(height: DevocionalEspacamento.sp16),
+                  const SizedBox(height: TabernaculoEspacamento.sp16),
                 ],
               ),
-              DevocionalSecaoExpansivel(
+              TabernaculoSecaoExpansivel(
                 icone: FontAwesomeIcons.user,
                 titulo: 'Sobre mim',
                 children: [
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const DevocionalRetratoDePersona(
+                      const TabernaculoRetratoDePersona(
                         persona: personaFelipe,
                         tamanho: 72,
-                        folga: DevocionalEspacamento.sp4,
+                        folga: TabernaculoEspacamento.sp4,
                         // O nome está ao lado: a foto é enfeite.
                         decorativo: true,
                       ),
-                      const SizedBox(width: DevocionalEspacamento.sp14),
+                      const SizedBox(width: TabernaculoEspacamento.sp14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Felipe Ambrozini', style: tema.titleMedium),
-                            const SizedBox(height: DevocionalEspacamento.sp2),
+                            const SizedBox(height: TabernaculoEspacamento.sp2),
                             Text(
                               'Criador do app',
                               style: tema.labelMedium?.copyWith(
@@ -317,26 +317,26 @@ class _TelaSobreState extends State<TelaSobre> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: DevocionalEspacamento.sp12),
+                  const SizedBox(height: TabernaculoEspacamento.sp12),
                   Text(
                     'Sou cristão, criador de conteúdo e desenvolvedor. Fiz este '
                     'app para ler a Bíblia e os devocionais de Spurgeon todo '
                     'dia, e depois abri para quem quiser usar também.',
                     style: tema.bodyLarge?.copyWith(height: 1.7),
                   ),
-                  const SizedBox(height: DevocionalEspacamento.sp16),
+                  const SizedBox(height: TabernaculoEspacamento.sp16),
                 ],
               ),
-              DevocionalSecaoExpansivel(
+              TabernaculoSecaoExpansivel(
                 icone: FontAwesomeIcons.shareNodes,
                 titulo: 'Onde me encontrar',
                 children: [
-                  DevocionalLinkDeCanal(
+                  TabernaculoLinkDeCanal(
                     asset: 'assets/imagens/youtube.webp',
                     rotulo: 'YouTube',
                     url: 'https://www.youtube.com/@felipe_ambrozini',
                   ),
-                  DevocionalLinkDeCanal(
+                  TabernaculoLinkDeCanal(
                     asset: 'assets/imagens/instagram.webp',
                     rotulo: 'Instagram',
                     url: 'https://www.instagram.com/felipe_ambrozini/',
@@ -364,17 +364,17 @@ Future<void> _mostrarAjuda(BuildContext context) {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const DevocionalFilete(largura: 64),
-            const SizedBox(height: DevocionalEspacamento.sp12),
+            const TabernaculoFilete(largura: 64),
+            const SizedBox(height: TabernaculoEspacamento.sp12),
             for (final linha in linhasDeAjuda) ...[
               Text(linha, style: tema.bodyMedium?.copyWith(height: 1.5)),
-              const SizedBox(height: DevocionalEspacamento.sp8),
+              const SizedBox(height: TabernaculoEspacamento.sp8),
             ],
           ],
         ),
       ),
       actions: [
-        DevocionalBotaoTerciario(
+        TabernaculoBotaoTerciario(
           onPressed: () => Navigator.pop(dialogo),
           child: const Text('Entendi'),
         ),
@@ -398,7 +398,7 @@ Future<void> _relatarProblema() async {
         };
   final uri = mailtoPara(
     emailDeContato,
-    assunto: 'Devocional: relatar um problema',
+    assunto: 'Tabernáculo: relatar um problema',
     corpo:
         'Versão ${info.version}+${info.buildNumber}, $plataforma\n\n'
         'Descreva o que aconteceu:\n',
@@ -422,7 +422,7 @@ Future<void> _apagarDaNuvem(BuildContext context) async {
     context,
     titulo: 'Apagar conta e dados da nuvem?',
     conteudo:
-        'Sua conta no Devocional será apagada, com tudo o que ela guarda na '
+        'Sua conta no Tabernáculo será apagada, com tudo o que ela guarda na '
         'nuvem: favoritos, anotações, progresso, leituras da Biblioteca e '
         'conversas. Você sai de todos os planos compartilhados e da conta. '
         'Sua conta do Google não é tocada, e o que está '

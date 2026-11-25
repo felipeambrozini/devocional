@@ -11,7 +11,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 ///   usa. O navegador manda o cabeçalho Origin, que é a prova que essa
 ///   restrição confere.
 /// * chaveAndroid: criada no Google Cloud Console, restrita ao app Android
-///   (`com.felipeambrozini.devocional` + SHA-1 da assinatura) e às APIs que o
+///   (`com.felipeambrozini.tabernaculo` + SHA-1 da assinatura) e às APIs que o
 ///   app usa. O celular prova a identidade com os cabeçalhos
 ///   X-Android-Package/X-Android-Cert, calculados em tempo de execução (ver
 ///   [cabecalhosGoogle]) — então debug e release funcionam sem trocar nada,

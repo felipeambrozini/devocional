@@ -19,8 +19,8 @@ import 'comentarios_do_capitulo.dart';
 
 /// Um versículo: número, texto e, se houver, a nota. Usado tanto pelo leitor
 /// de uma coluna quanto por cada lado do leitor duplo.
-class DevocionalLinhaDeVersiculo extends StatelessWidget {
-  const DevocionalLinhaDeVersiculo({
+class TabernaculoLinhaDeVersiculo extends StatelessWidget {
+  const TabernaculoLinhaDeVersiculo({
     super.key,
     required this.livro,
     required this.capituloNumero,
@@ -106,8 +106,8 @@ class DevocionalLinhaDeVersiculo extends StatelessWidget {
           // linha ficava em cerca de 41 dp de alvo, abaixo dos 48 dp mínimos.
           // Os curtos são justamente os mais marcados.
           padding: const EdgeInsets.symmetric(
-            vertical: DevocionalEspacamento.sp12,
-            horizontal: DevocionalEspacamento.sp6,
+            vertical: TabernaculoEspacamento.sp12,
+            horizontal: TabernaculoEspacamento.sp6,
           ),
           // Selecionado = tom mais alto e fio do metal cheio (estado, na Regra
           // do Fio). O fio é o que se vê: contra a página e contra o tom dá
@@ -143,7 +143,7 @@ class DevocionalLinhaDeVersiculo extends StatelessWidget {
                         alignment: PlaceholderAlignment.middle,
                         child: Padding(
                           padding: const EdgeInsets.only(
-                            right: DevocionalEspacamento.sp6,
+                            right: TabernaculoEspacamento.sp6,
                           ),
                           child: FaIcon(
                             FontAwesomeIcons.solidBookmark,
@@ -163,9 +163,9 @@ class DevocionalLinhaDeVersiculo extends StatelessWidget {
                   ],
                 ),
               ),
-              DevocionalComentarioNoCapitulo(texto: comentario),
+              TabernaculoComentarioNoCapitulo(texto: comentario),
               if (marcacao != null && marcacao.nota.isNotEmpty) ...[
-                const SizedBox(height: DevocionalEspacamento.sp6),
+                const SizedBox(height: TabernaculoEspacamento.sp6),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -174,7 +174,7 @@ class DevocionalLinhaDeVersiculo extends StatelessWidget {
                       size: 15,
                       color: cor.primary,
                     ),
-                    const SizedBox(width: DevocionalEspacamento.sp6),
+                    const SizedBox(width: TabernaculoEspacamento.sp6),
                     Expanded(
                       child: Text(
                         marcacao.nota,
@@ -237,10 +237,10 @@ class _AcoesDoVersiculo {
     final cor = Theme.of(contextoDaFolha).colorScheme;
     final cabecalho = Padding(
       padding: const EdgeInsets.fromLTRB(
-        DevocionalEspacamento.sp20,
-        DevocionalEspacamento.sp20,
-        DevocionalEspacamento.sp8,
-        DevocionalEspacamento.sp20,
+        TabernaculoEspacamento.sp20,
+        TabernaculoEspacamento.sp20,
+        TabernaculoEspacamento.sp8,
+        TabernaculoEspacamento.sp20,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -249,7 +249,7 @@ class _AcoesDoVersiculo {
             '$referencia:$numero',
             style: Theme.of(contextoDaFolha).textTheme.headlineSmall,
           ),
-          const SizedBox(height: DevocionalEspacamento.sp8),
+          const SizedBox(height: TabernaculoEspacamento.sp8),
           Text(texto, style: Theme.of(contextoDaFolha).textTheme.bodyMedium),
           FutureBuilder<String?>(
             future: comentario,
@@ -308,7 +308,7 @@ class _AcoesDoVersiculo {
       // nada, já que o botão ainda pode sumir se o áudio não existir.
       if (comentarioNoTexto) return const SizedBox.shrink();
       return const Padding(
-        padding: EdgeInsets.only(top: DevocionalEspacamento.sp16),
+        padding: EdgeInsets.only(top: TabernaculoEspacamento.sp16),
         child: SizedBox.square(
           dimension: 20,
           child: CircularProgressIndicator(
@@ -320,7 +320,7 @@ class _AcoesDoVersiculo {
     }
     final texto = snap.data;
     if (texto == null || texto.isEmpty) return const SizedBox.shrink();
-    final ouvir = DevocionalBotaoDeVoz(
+    final ouvir = TabernaculoBotaoDeVoz(
       chave: chaveDoComentario(livro, capituloNumero, numero),
       referencia: '$referencia:$numero, comentário',
       oQueOuvir: comentarioNoTexto ? 'o comentário' : null,
@@ -329,23 +329,23 @@ class _AcoesDoVersiculo {
       // Sem título: se o áudio não existir, o botão some sozinho e não sobra
       // um cabeçalho sem nada embaixo.
       return Padding(
-        padding: const EdgeInsets.only(top: DevocionalEspacamento.sp16),
+        padding: const EdgeInsets.only(top: TabernaculoEspacamento.sp16),
         child: ouvir,
       );
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: DevocionalEspacamento.sp16),
+        const SizedBox(height: TabernaculoEspacamento.sp16),
         Text(
           'Comentário de Charles Spurgeon',
           style: Theme.of(context).textTheme.labelMedium
               ?.copyWith(color: cor.primary)
               .comPeso(FontWeight.w700),
         ),
-        const SizedBox(height: DevocionalEspacamento.sp8),
+        const SizedBox(height: TabernaculoEspacamento.sp8),
         ouvir,
-        const SizedBox(height: DevocionalEspacamento.sp8),
+        const SizedBox(height: TabernaculoEspacamento.sp8),
         Text(
           texto,
           style: Theme.of(

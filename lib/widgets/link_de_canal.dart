@@ -1,8 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class DevocionalLinkDeCanal extends StatelessWidget {
-  const DevocionalLinkDeCanal({
+class TabernaculoLinkDeCanal extends StatelessWidget {
+  const TabernaculoLinkDeCanal({
     super.key,
     required this.asset,
     required this.rotulo,

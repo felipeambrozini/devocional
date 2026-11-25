@@ -7,7 +7,7 @@ void main() {
     final bytes = await gerarImagemDoCartao(
       texto: '"Porque Deus amou o mundo de tal maneira."',
       referencia: 'João 3:16',
-      rodape: 'https://www.felipeambrozini.com.br/devocional/?ler=joao.3.16',
+      rodape: 'https://www.felipeambrozini.com.br/tabernaculo/?ler=joao.3.16',
     );
     expect(bytes.lengthInBytes, greaterThan(1000));
     // Assinatura do PNG: 137 80 78 71 13 10 26 10.

@@ -15,22 +15,22 @@ import '../widgets/widgets.dart';
 ///
 /// THESIS: a conversa recusa a casca de messenger: sem sombra, sem metal em
 /// área grande, sem ponta de balão. É uma página do livro: abre-se pelo
-/// DevocionalFilete, a palavra da persona entra como citação das introduções e o texto
+/// TabernaculoFilete, a palavra da persona entra como citação das introduções e o texto
 /// do visitante recua em pergaminho.
 /// OWN-WORLD: chapado sobre chapado; fio do metal no lugar da sombra; citação
 /// com fio esquerdo de 3 (a gramática das introduções em
 /// `widgets/abertura_de_livro.dart`);
 /// rostos recortados sempre pelo topo; Cinzel nos títulos, Montserrat no
 /// corpo.
-/// STORY: quem chega vê o retrato, o DevocionalFilete e a primeira palavra da persona
+/// STORY: quem chega vê o retrato, o TabernaculoFilete e a primeira palavra da persona
 /// como quem abre uma página; o erro tem o rosto de quem respondeu; uma
 /// resposta interrompida espera com "Tentar de novo".
 /// FIRST VIEWPORT: AppBar com o retrato e o título; a conversa abre com o
-/// DevocionalFilete de 64; respostas à esquerda na gramática da citação, perguntas à
+/// TabernaculoFilete de 64; respostas à esquerda na gramática da citação, perguntas à
 /// direita recuadas; rodapé com o campo e a nota da IA — a única que
 /// acompanha a conversa em todos os estados.
 /// FORM: redesenho da superfície do chat no mundo estabelecido da Estante,
-/// direção fixada pelo usuário (carta enquadrada pelo DevocionalFilete); sem sorteio.
+/// direção fixada pelo usuário (carta enquadrada pelo TabernaculoFilete); sem sorteio.
 
 /// O aviso de que o teto de mensagens cortou as falas mais antigas. O mesmo
 /// texto na snackbar do momento do corte e na nota quieta no topo da conversa:
@@ -102,8 +102,8 @@ class _TelaChatState extends State<TelaChat> {
         // declaração, nem o histórico nem o campo de mensagem aparecem.
         if (estado.maiorDeIdade != true) {
           return Scaffold(
-            appBar: DevocionalAppBar(title: Text(widget.persona.nome)),
-            body: DevocionalPortaoDeIdade(
+            appBar: TabernaculoAppBar(title: Text(widget.persona.nome)),
+            body: TabernaculoPortaoDeIdade(
               // O `ListenableBuilder` externo escuta só o controlador; sem o
               // setState a resposta ficaria no Estado sem a tela trocar.
               aoConfirmar: () async {
@@ -116,17 +116,17 @@ class _TelaChatState extends State<TelaChat> {
         }
 
         return Scaffold(
-          appBar: DevocionalAppBar(
+          appBar: TabernaculoAppBar(
             title: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                DevocionalRetratoDePersona(
+                TabernaculoRetratoDePersona(
                   persona: widget.persona,
                   tamanho: 34,
                   anel: false,
                   decorativo: true,
                 ),
-                const SizedBox(width: DevocionalEspacamento.sp10),
+                const SizedBox(width: TabernaculoEspacamento.sp10),
                 // Flexible com reticências, como na barra do leitor
                 // (biblia.dart): o nome longo de uma persona em celular estreito
                 // com escala 2x estouraria a linha da AppBar.
@@ -160,7 +160,7 @@ class _TelaChatState extends State<TelaChat> {
                 ),
             ],
           ),
-          body: DevocionalLarguraDeLeitura(
+          body: TabernaculoLarguraDeLeitura(
             child: Column(
               children: [
                 Expanded(
@@ -171,28 +171,28 @@ class _TelaChatState extends State<TelaChat> {
                           ? const <Mensagem>[]
                           : estado.mensagensDe(widget.persona.id, conversaId);
                       if (mensagens.isEmpty) {
-                        return DevocionalBoasVindas(persona: widget.persona);
+                        return TabernaculoBoasVindas(persona: widget.persona);
                       }
-                      // O cabeçalho (o DevocionalFilete) é o índice 0; as mensagens vêm depois.
+                      // O cabeçalho (o TabernaculoFilete) é o índice 0; as mensagens vêm depois.
                       return ListView.builder(
                         controller: _controller.rolagem,
                         padding: const EdgeInsets.fromLTRB(
-                          DevocionalEspacamento.sp16,
-                          DevocionalEspacamento.sp16,
-                          DevocionalEspacamento.sp16,
-                          DevocionalEspacamento.sp8,
+                          TabernaculoEspacamento.sp16,
+                          TabernaculoEspacamento.sp16,
+                          TabernaculoEspacamento.sp16,
+                          TabernaculoEspacamento.sp8,
                         ),
                         itemCount: mensagens.length + 1 + (cortada ? 1 : 0),
                         itemBuilder: (context, i) {
                           if (i == 0) {
-                            // A conversa abre como página: o DevocionalFilete que abre cada
+                            // A conversa abre como página: o TabernaculoFilete que abre cada
                             // leitura da Estante sinaliza onde o fio começa.
                             return const Padding(
                               padding: EdgeInsets.only(
-                                bottom: DevocionalEspacamento.sp18,
+                                bottom: TabernaculoEspacamento.sp18,
                               ),
                               child: Center(
-                                child: DevocionalFilete(largura: 64),
+                                child: TabernaculoFilete(largura: 64),
                               ),
                             );
                           }
@@ -200,11 +200,11 @@ class _TelaChatState extends State<TelaChat> {
                             // A conversa passou do teto e as falas mais antigas
                             // saíram do histórico: a nota quieta explica por que a
                             // conversa não começa na primeira pergunta.
-                            return const DevocionalAvisoDeCorte();
+                            return const TabernaculoAvisoDeCorte();
                           }
                           final indice = i - 1 - (cortada ? 1 : 0);
                           final mensagem = mensagens[indice];
-                          return DevocionalBalcaoDeMensagem(
+                          return TabernaculoBalcaoDeMensagem(
                             mensagem: mensagem,
                             persona: widget.persona,
                             // Só a resposta da IA pode ser denunciada; a
@@ -226,9 +226,9 @@ class _TelaChatState extends State<TelaChat> {
                 if (respondendo)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
-                      DevocionalEspacamento.sp16,
-                      DevocionalEspacamento.sp4,
-                      DevocionalEspacamento.sp16,
+                      TabernaculoEspacamento.sp16,
+                      TabernaculoEspacamento.sp4,
+                      TabernaculoEspacamento.sp16,
                       0,
                     ),
                     child: Align(
@@ -238,15 +238,15 @@ class _TelaChatState extends State<TelaChat> {
                       child: Semantics(
                         label: '${widget.persona.nome} está respondendo',
                         liveRegion: true,
-                        child: DevocionalFalaDaPersona(
+                        child: TabernaculoFalaDaPersona(
                           persona: widget.persona,
                           padding: const EdgeInsets.symmetric(
-                            horizontal: DevocionalEspacamento.sp14,
-                            vertical: DevocionalEspacamento.sp12,
+                            horizontal: TabernaculoEspacamento.sp14,
+                            vertical: TabernaculoEspacamento.sp12,
                           ),
                           child: SizedBox(
-                            width: DevocionalEspacamento.sp18,
-                            height: DevocionalEspacamento.sp18,
+                            width: TabernaculoEspacamento.sp18,
+                            height: TabernaculoEspacamento.sp18,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               semanticsLabel: 'Carregando',
@@ -261,11 +261,11 @@ class _TelaChatState extends State<TelaChat> {
                 if (conversador?.apoioEmCrise ?? false)
                   const Flexible(
                     child: SingleChildScrollView(
-                      child: DevocionalApoioEmCrise(),
+                      child: TabernaculoApoioEmCrise(),
                     ),
                   ),
                 if (conversador?.erro != null)
-                  DevocionalErroDeResposta(
+                  TabernaculoErroDeResposta(
                     persona: widget.persona,
                     mensagem: conversador!.erro!,
                     aoTentarDeNovo: conversador.repetir,
@@ -274,16 +274,16 @@ class _TelaChatState extends State<TelaChat> {
                   top: false,
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(
-                      DevocionalEspacamento.sp12,
-                      DevocionalEspacamento.sp6,
-                      DevocionalEspacamento.sp12,
-                      DevocionalEspacamento.sp10,
+                      TabernaculoEspacamento.sp12,
+                      TabernaculoEspacamento.sp6,
+                      TabernaculoEspacamento.sp12,
+                      TabernaculoEspacamento.sp10,
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(avisoDeIa, style: tema.labelMedium),
-                        const SizedBox(height: DevocionalEspacamento.sp6),
+                        const SizedBox(height: TabernaculoEspacamento.sp6),
                         TextField(
                           controller: _controller.controle,
                           minLines: 1,

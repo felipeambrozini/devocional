@@ -12,8 +12,8 @@ import 'fala_da_persona.dart';
 /// visitante recua em pergaminho com um fio mais discreto. Nada aqui é
 /// elevado nem usa o metal como fundo: a palavra da persona é o elemento
 /// mais alto da página, não a caixa do visitante.
-class DevocionalBalcaoDeMensagem extends StatelessWidget {
-  const DevocionalBalcaoDeMensagem({
+class TabernaculoBalcaoDeMensagem extends StatelessWidget {
+  const TabernaculoBalcaoDeMensagem({
     super.key,
     required this.mensagem,
     required this.persona,
@@ -44,8 +44,8 @@ class DevocionalBalcaoDeMensagem extends StatelessWidget {
         ? Container(
             constraints: const BoxConstraints(maxWidth: _larguraMaxima),
             padding: const EdgeInsets.symmetric(
-              horizontal: DevocionalEspacamento.sp14,
-              vertical: DevocionalEspacamento.sp10,
+              horizontal: TabernaculoEspacamento.sp14,
+              vertical: TabernaculoEspacamento.sp10,
             ),
             decoration: BoxDecoration(
               color: cor.surfaceContainer,
@@ -61,21 +61,21 @@ class DevocionalBalcaoDeMensagem extends StatelessWidget {
         // mandar para o app de Notas pela folha nativa do aparelho) é o
         // jeito de guardar o que ela disse, já que a conversa mora só
         // neste aparelho.
-        : DevocionalFalaDaPersona(
+        : TabernaculoFalaDaPersona(
             persona: persona,
             larguraMaxima: _larguraMaxima,
             // Altura mínima de alvo: o texto selecionável aceita toque
             // longo, e uma resposta de uma linha só ficava com 46.
             child: ConstrainedBox(
               constraints: const BoxConstraints(
-                minHeight: DevocionalToque.minimo,
+                minHeight: TabernaculoToque.minimo,
               ),
               child: SelectableText(mensagem.texto, style: estilo),
             ),
           );
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: DevocionalEspacamento.sp10),
+      padding: const EdgeInsets.only(bottom: TabernaculoEspacamento.sp10),
       child: Align(
         alignment: usuario ? Alignment.centerRight : Alignment.centerLeft,
         child: Column(
@@ -93,9 +93,9 @@ class DevocionalBalcaoDeMensagem extends StatelessWidget {
                 style: TextButton.styleFrom(
                   foregroundColor: cor.onSurfaceVariant,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: DevocionalEspacamento.sp4,
+                    horizontal: TabernaculoEspacamento.sp4,
                   ),
-                  minimumSize: const Size(0, DevocionalToque.minimo),
+                  minimumSize: const Size(0, TabernaculoToque.minimo),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   textStyle: tema.labelMedium,
                 ),

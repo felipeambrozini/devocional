@@ -8,8 +8,8 @@ import 'cartao_da_obra.dart';
 /// Os livros que o usuário está lendo, para a Hoje. Nenhum livro iniciado: não
 /// mostra nada. Um só: o cartão do livro. Mais de um: uma lista horizontal com
 /// todos, do mais recente ao mais antigo.
-class DevocionalLivrosEmLeitura extends StatelessWidget {
-  const DevocionalLivrosEmLeitura({
+class TabernaculoLivrosEmLeitura extends StatelessWidget {
+  const TabernaculoLivrosEmLeitura({
     super.key,
     required this.obras,
     required this.aoAbrir,
@@ -27,26 +27,26 @@ class DevocionalLivrosEmLeitura extends StatelessWidget {
     if (obras.isEmpty) return const SizedBox.shrink();
     if (obras.length == 1) {
       final obra = obras.first;
-      return DevocionalCartaoDaObra(obra: obra, aoAbrir: () => aoAbrir(obra));
+      return TabernaculoCartaoDaObra(obra: obra, aoAbrir: () => aoAbrir(obra));
     }
 
     final altura =
-        alturaCapa(context, 104) + 2 * DevocionalEspacamento.sp16 + 8;
+        alturaCapa(context, 104) + 2 * TabernaculoEspacamento.sp16 + 8;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Seus livros', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: DevocionalEspacamento.sp8),
+        const SizedBox(height: TabernaculoEspacamento.sp8),
         SizedBox(
           height: altura,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: obras.length,
             separatorBuilder: (_, _) =>
-                const SizedBox(width: DevocionalEspacamento.sp8),
+                const SizedBox(width: TabernaculoEspacamento.sp8),
             itemBuilder: (context, indice) => SizedBox(
               width: _larguraDoCartao,
-              child: DevocionalCartaoDaObra(
+              child: TabernaculoCartaoDaObra(
                 obra: obras[indice],
                 aoAbrir: () => aoAbrir(obras[indice]),
                 compacto: true,

@@ -5,8 +5,8 @@ import 'package:material_ui/material_ui.dart';
 /// e para o que mais medir ritmo de leitura. A pílula de voz fica de fora de
 /// propósito: o trilho dela precisa contrastar com o fundo do próprio
 /// comprimido, não com a página.
-class DevocionalProgressoFino extends StatelessWidget {
-  const DevocionalProgressoFino({
+class TabernaculoProgressoFino extends StatelessWidget {
+  const TabernaculoProgressoFino({
     super.key,
     required this.valor,
     this.rotulo = 'Progresso',

@@ -4,7 +4,7 @@
       "android": {
         "default": {
           "projectId": "devocional-15815",
-          "appId": "1:169480227109:android:286f46640a25846c3c72cc",
+          "appId": "1:169480227109:android:43c8eedac3663d093c72cc",
           "fileOutput": "android/app/google-services.json"
         }
       },
@@ -12,7 +12,7 @@
         "lib/firebase_options.dart": {
           "projectId": "devocional-15815",
           "configurations": {
-            "android": "1:169480227109:android:286f46640a25846c3c72cc",
+            "android": "1:169480227109:android:43c8eedac3663d093c72cc",
             "ios": "1:169480227109:ios:92036ffd7a2950673c72cc",
             "web": "1:169480227109:web:5069341719b146783c72cc"
           }
@@ -43,14 +43,22 @@
     "redirects": [
       {
         "source": "/",
-        "destination": "/devocional",
+        "destination": "/tabernaculo/",
         "type": 301
       }
     ],
     "rewrites": [
       {
+        "source": "/tabernaculo/api/erro",
+        "function": "registrarErro"
+      },
+      {
         "source": "/devocional/api/erro",
         "function": "registrarErro"
+      },
+      {
+        "source": "/tabernaculo/**",
+        "destination": "/tabernaculo/index.html"
       },
       {
         "source": "/devocional/**",
@@ -84,7 +92,7 @@
         ]
       },
       {
-        "source": "/devocional",
+        "source": "/tabernaculo",
         "headers": [
           {
             "key": "Cache-Control",
@@ -93,7 +101,7 @@
         ]
       },
       {
-        "source": "/devocional/",
+        "source": "/tabernaculo/",
         "headers": [
           {
             "key": "Cache-Control",

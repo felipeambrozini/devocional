@@ -41,7 +41,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: DevocionalAbaDevocionais(
+          body: TabernaculoAbaDevocionais(
             termoBuscado: 'graça',
             achados: achados,
             buscando: buscando,
@@ -59,7 +59,7 @@ void main() {
   bool escolhido(WidgetTester tester, String rotulo) =>
       tester.widget<ChoiceChip>(chip(rotulo)).selected;
 
-  group('DevocionalAbaDevocionais, filtro de leitura', () {
+  group('TabernaculoAbaDevocionais, filtro de leitura', () {
     testWidgets('mostra Todas e um chip por leitura, com Todas escolhida', (
       tester,
     ) async {
@@ -134,7 +134,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: DevocionalAbaDevocionais(
+            body: TabernaculoAbaDevocionais(
               termoBuscado: '',
               achados: achados,
               buscando: false,

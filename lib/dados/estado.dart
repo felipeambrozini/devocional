@@ -9,6 +9,7 @@ import 'conversas.dart';
 import 'leitura_de_livros.dart';
 import 'modelos.dart';
 import 'planos.dart';
+import 'progresso_dos_dias.dart';
 import 'registro.dart';
 
 /// Estado persistido do app: progresso de leitura, favoritos, notas e preferências.
@@ -21,6 +22,9 @@ class Estado extends ChangeNotifier {
   Estado(this._prefs) {
     conversas = Conversas.ler(_prefs, notifyListeners);
     leituraDeLivros = LeituraDeLivros.ler(_prefs, notifyListeners);
+    // Sem avisar os ouvintes: o andamento é só local e nenhuma tela o
+    // mostra; avisar faria a sincronia com a nuvem acordar à toa.
+    progressoDosDias = ProgressoDosDias.ler(_prefs, () {});
     _lerTudo();
   }
 
@@ -157,6 +161,11 @@ class Estado extends ChangeNotifier {
   /// `lib/dados/leitura_de_livros.dart`; as telas falam com ele por aqui para
   /// continuarem ouvindo um único ChangeNotifier.
   late final LeituraDeLivros leituraDeLivros;
+
+  /// Os capítulos lidos até o fim de cada dia do cronograma ou de um plano,
+  /// para marcar o dia só com todos lidos. Ver
+  /// `lib/dados/progresso_dos_dias.dart`.
+  late final ProgressoDosDias progressoDosDias;
 
   /// O que a conta guarda dos livros (campo `livros` do documento do usuário).
   /// Repassa à [leituraDeLivros], como as conversas: a sincronia fala com o

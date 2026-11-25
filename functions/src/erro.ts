@@ -1,6 +1,6 @@
 // Normalização e limite de taxa dos relatórios de erro da web.
 //
-// O app manda o relatório por `POST /devocional/api/erro` (rewrite do Hosting
+// O app manda o relatório por `POST /tabernaculo/api/erro` (rewrite do Hosting
 // para a Function `registrarErro`, ver firebase.json). O corpo é hostil por
 // definição: vem de qualquer navegador, sem login. Nada do que chega é
 // gravado como veio — só os campos conhecidos, com teto de tamanho, e a URL

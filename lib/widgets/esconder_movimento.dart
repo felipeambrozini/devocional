@@ -6,8 +6,8 @@ import '../funcoes/movimento.dart';
 /// transições de rota e rolagens que leem `disableAnimationsOf` continuavam
 /// animadas. Aqui o MediaQuery é sobrescrito uma vez, na raiz, e toda a
 /// árvore passa a respeitar a preferência (Android/iOS já a anunciam sozinhos).
-class DevocionalEsconderMovimento extends StatelessWidget {
-  const DevocionalEsconderMovimento({super.key, required this.child});
+class TabernaculoEsconderMovimento extends StatelessWidget {
+  const TabernaculoEsconderMovimento({super.key, required this.child});
 
   final Widget child;
 

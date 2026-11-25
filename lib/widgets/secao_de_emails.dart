@@ -8,8 +8,8 @@ import 'botao.dart';
 
 /// A allowlist do chat no painel: título, contagem, campo de adicionar e a
 /// lista com remover.
-class DevocionalSecaoDeEmails extends StatefulWidget {
-  const DevocionalSecaoDeEmails({
+class TabernaculoSecaoDeEmails extends StatefulWidget {
+  const TabernaculoSecaoDeEmails({
     super.key,
     required this.titulo,
     required this.legendaVazia,
@@ -31,11 +31,11 @@ class DevocionalSecaoDeEmails extends StatefulWidget {
   final String contextoDeErro;
 
   @override
-  State<DevocionalSecaoDeEmails> createState() =>
-      _DevocionalSecaoDeEmailsState();
+  State<TabernaculoSecaoDeEmails> createState() =>
+      _TabernaculoSecaoDeEmailsState();
 }
 
-class _DevocionalSecaoDeEmailsState extends State<DevocionalSecaoDeEmails> {
+class _TabernaculoSecaoDeEmailsState extends State<TabernaculoSecaoDeEmails> {
   final _email = TextEditingController();
   bool _adicionando = false;
   String? _erroDoEmail;
@@ -96,14 +96,14 @@ class _DevocionalSecaoDeEmailsState extends State<DevocionalSecaoDeEmails> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(widget.titulo, style: tema.headlineSmall),
-        const SizedBox(height: DevocionalEspacamento.sp4),
+        const SizedBox(height: TabernaculoEspacamento.sp4),
         Text(
           widget.emails.isEmpty
               ? widget.legendaVazia
               : widget.legendaCheia(widget.emails.length),
           style: tema.bodySmall,
         ),
-        const SizedBox(height: DevocionalEspacamento.sp8),
+        const SizedBox(height: TabernaculoEspacamento.sp8),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -130,8 +130,8 @@ class _DevocionalSecaoDeEmailsState extends State<DevocionalSecaoDeEmails> {
                 onSubmitted: (_) => _adicionar(),
               ),
             ),
-            const SizedBox(width: DevocionalEspacamento.sp8),
-            DevocionalBotaoPrimario(
+            const SizedBox(width: TabernaculoEspacamento.sp8),
+            TabernaculoBotaoPrimario(
               onPressed: _adicionando ? null : _adicionar,
               child: _adicionando
                   ? const SizedBox.square(
@@ -145,7 +145,7 @@ class _DevocionalSecaoDeEmailsState extends State<DevocionalSecaoDeEmails> {
             ),
           ],
         ),
-        const SizedBox(height: DevocionalEspacamento.sp8),
+        const SizedBox(height: TabernaculoEspacamento.sp8),
         for (final email in widget.emails)
           ListTile(
             contentPadding: EdgeInsets.zero,

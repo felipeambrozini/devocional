@@ -18,8 +18,8 @@ String _saudacaoPelaHora(int hora) {
   return 'Boa noite';
 }
 
-class DevocionalCabecalhoDaHoje extends StatelessWidget {
-  const DevocionalCabecalhoDaHoje({super.key, required this.data});
+class TabernaculoCabecalhoDaHoje extends StatelessWidget {
+  const TabernaculoCabecalhoDaHoje({super.key, required this.data});
 
   final DateTime data;
 
@@ -55,7 +55,7 @@ class DevocionalCabecalhoDaHoje extends StatelessWidget {
                       : null,
                 ),
               ),
-              const SizedBox(width: DevocionalEspacamento.sp14),
+              const SizedBox(width: TabernaculoEspacamento.sp14),
             ],
             Expanded(
               child: Column(
@@ -65,7 +65,7 @@ class DevocionalCabecalhoDaHoje extends StatelessWidget {
                     nome != null ? '$saudacao, $nome' : saudacao,
                     style: tema.headlineMedium,
                   ),
-                  const SizedBox(height: DevocionalEspacamento.sp4),
+                  const SizedBox(height: TabernaculoEspacamento.sp4),
                   Text(dataLonga(data), style: tema.bodySmall),
                 ],
               ),
@@ -73,10 +73,10 @@ class DevocionalCabecalhoDaHoje extends StatelessWidget {
             // Entrar ou sair da conta, no fim do cabeçalho: o convite para
             // entrar mora aqui (e não mais na folha de ajustes), porque o
             // estado da conta muda a saudação ao lado.
-            const DevocionalBotaoDeConta(),
+            const TabernaculoBotaoDeConta(),
             // Hoje não tem AppBar onde pendurar a ação, e sem isto os ajustes
             // só seriam alcançáveis de duas das seis abas.
-            DevocionalBotaoDeAjustes(estado: EscopoDoEstado.de(context)),
+            TabernaculoBotaoDeAjustes(estado: EscopoDoEstado.de(context)),
           ],
         );
       },

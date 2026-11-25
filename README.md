@@ -1,7 +1,7 @@
-# Devocional
+# Tabernáculo
 
-Aplicativo devocional pessoal do Felipe, em Flutter (Android, iOS e web a partir
-do mesmo código).
+Aplicativo devocional do Felipe, chamado Devocional até a versão 1.27, em
+Flutter (Android, iOS e web a partir do mesmo código).
 
 ## O que o app faz
 
@@ -23,15 +23,19 @@ do mesmo código).
 - **Cronograma de leitura anual**, 365 dias (366 em ano bissexto), agrupado por
   mês, com marcação de lido e barra de progresso do ano.
 - **Dia marcado ao terminar a leitura**: a Bíblia aberta pela faixa de um dia
-  (a leitura de hoje, o cronograma, um plano) recebe o dia na URL
-  (`/ler/joao/3?diaDoCronograma=2026-11-24&fim=joao.3`, ou `plano` e
-  `diaDoPlano`; ver `DiaDaLeitura` em `lib/dados/dia_da_leitura.dart`). Chegar
-  ao fim do último capítulo do dia (mesma regra do "capítulo lido" da
-  Biblioteca) marca o dia como lido, com aviso e "Desfazer"; plano
-  compartilhado grava na nuvem, como o botão do dia. Ficam de fora: o dia que
-  termina num devocional, a mesma leitura aberta direto pela aba Bíblia e,
-  na prática, o dia cuja última faixa é um recorte de versículos (Salmos
-  119:1 a 56), que só marca ao fim do capítulo inteiro.
+  (a leitura de hoje, o cronograma, um plano) recebe o dia e todos os
+  capítulos dele na URL
+  (`/ler/genesis/1?diaDoCronograma=2026-11-24&capitulos=genesis.1,salmos.1`,
+  ou `plano` e `diaDoPlano`; ver `DiaDaLeitura` em
+  `lib/dados/dia_da_leitura.dart`). Cada capítulo do dia lido até o fim (mesma
+  regra do "capítulo lido" da Biblioteca) fica guardado no aparelho
+  (`ProgressoDosDias`, até 60 dias em andamento), e o dia só é marcado quando
+  todos estão lidos, mesmo em momentos diferentes: Gênesis de manhã, Salmos à
+  noite. Marca com aviso e "Desfazer"; plano compartilhado grava na nuvem,
+  como o botão do dia. Ficam de fora: o dia com devocional (a leitura dele não
+  passa pela Bíblia), a mesma leitura aberta direto pela aba Bíblia e, na
+  prática, o dia com um recorte de versículos (Salmos 119:1 a 56), que só
+  conta ao fim do capítulo inteiro.
 - **A Vida de Jesus em 30 dias**: plano fixo (`planoDeJesus`, dias em
   `lib/dados/plano_de_jesus_dias.dart`) que toda conta ganha em Meus Planos —
   os quatro evangelhos em harmonia. Não vive no armazenamento nem na nuvem:
@@ -67,7 +71,7 @@ do mesmo código).
   ("Escolher livros da Bíblia"). Também dá para baixar um livro na página
   dele: na Bíblia, no seletor de capítulos (a folha que abre pelo nome do
   livro); na Biblioteca, no sumário ("Baixar o áudio"). Os três lugares usam
-  o mesmo componente, `DevocionalBaixarLivro`
+  o mesmo componente, `TabernaculoBaixarLivro`
   (`lib/widgets/baixar_livro.dart`), sobre um `LivroParaBaixar` da Bíblia ou
   da Biblioteca. O botão de baixar um livro só aparece quando o áudio dele
   já está no Storage (HEAD no capítulo 1). Os comentários não têm download e só
@@ -243,9 +247,12 @@ Na web, cada aba tem a própria URL (`/hoje`, `/biblia`, `/devocional`,
 `/biblioteca`, `/plano`, `/conversas`) — dá para abrir, atualizar ou
 compartilhar qualquer uma direto. Dentro das abas:
 
-- `/devocional` só redireciona para a leitura do horário (`/manha` ou
-  `/noite`), levando junto o `?data=`; cada leitura tem a própria URL
-  (`/manha`, `/noite`, `/promessas`), com `?data=AAAA-MM-DD` para outro dia.
+- `/devocional` só redireciona para a leitura do horário
+  (`/devocional/manha` ou `/devocional/noite`), levando junto o `?data=`; cada
+  leitura tem a própria URL (`/devocional/manha`, `/devocional/noite`,
+  `/devocional/promessas`), com `?data=AAAA-MM-DD` para outro dia. Os
+  caminhos de antes da 1.28 (`/manha`, `/noite`, `/promessas`) redirecionam
+  para os novos, com a data.
 - `/biblioteca/<slug>` abre o sumário de um livro e `/biblioteca/<slug>/<n>` o
   capítulo.
 - `/plano/novo` cria um plano e `/plano/<id>` abre um plano.
@@ -259,7 +266,7 @@ cima de qualquer aba: a epígrafe do devocional, a faixa da leitura do dia, o
 em vez do `Navigator.push` avulso de antes, para a URL mostrar o capítulo, o
 F5 reabri-lo e a barra de baixo não seguir marcando a aba de origem. Chegando
 sozinha na pilha (F5, link), o voltar dela leva à Hoje
-(`DevocionalAppBar.voltarPara`). O "Ler tudo" das prévias da Hoje vai para a
+(`TabernaculoAppBar.voltarPara`). O "Ler tudo" das prévias da Hoje vai para a
 aba Devocional (`DevocionalControlador.caminhoDaLeitura`). Cada persona do
 chat também tem URL própria:
 `/charles-spurgeon` (ou `/felipe-ambrozini`) abre o histórico,
@@ -287,7 +294,7 @@ notificação na web) abre a leitura do lembrete.
   a seção Lembretes diários abaixo. O lembrete respeita os interruptores do
   painel: leitura desligada não dispara nem abre.
 - `go_router` para as rotas por aba, com `StatefulShellRoute.indexedStack` (a
-  `DevocionalMoldura` continua preservando a rolagem e o capítulo aberto de cada
+  `TabernaculoMoldura` continua preservando a rolagem e o capítulo aberto de cada
   aba,
   como o `IndexedStack` antigo fazia).
 - `firebase_core` + `firebase_auth` + `cloud_firestore` para a conta na
@@ -477,7 +484,7 @@ para um livro volta para a estante.
   cabe na tela, ficar 20 s com ele aberto, à vista e sem outra tela por cima.
   A volta automática ao ponto em que se parou não conta. Marca uma vez por
   abertura do capítulo: quem desmarcar não é contrariado. A regra mora em
-  `DevocionalVigiaDoFim` (`lib/widgets/vigia_do_fim.dart`), a mesma da Bíblia.
+  `TabernaculoVigiaDoFim` (`lib/widgets/vigia_do_fim.dart`), a mesma da Bíblia.
 - **Asset**: `assets/livros/<slug>.json`, `{slug, capitulos: [{titulo,
   paragrafos: []}]}`. Carregado sob demanda, um livro por vez.
 - **Capa**: `assets/imagens/capa_<slug>.webp`, 225x300, na família das capas
@@ -592,17 +599,17 @@ motivo novo.
   por
   dois testes (`test/tema_test.dart` e `test/fontes_test.dart`, que mede o
   texto de verdade).
-- **Há dois temas, e nenhuma tela lê a paleta direto**: `DevocionalCores`
+- **Há dois temas, e nenhuma tela lê a paleta direto**: `TabernaculoCores`
   (`lib/estilo/cores.dart`) tem as duas paletas e só `tema.dart` a importa;
   as telas leem tudo de `Theme.of(context).colorScheme`. Se aparecer um
-  `DevocionalCores.` em `lib/telas/`, é um vazamento. O mapa dos papéis:
+  `TabernaculoCores.` em `lib/telas/`, é um vazamento. O mapa dos papéis:
   `surface` fundo, `surfaceContainer` cartão,
   `surfaceContainerHighest` citação e chip, `primary` título e ícone,
   `secondary` destaque, `outline` borda, `onSurface` corpo, `onSurfaceVariant`
   apoio. **O claro não é o escuro invertido**: o dourado sobre pergaminho dá
   2,1:1 e é ilegível, então o destaque vira bronze. `test/tema_test.dart`
   calcula os contrastes da WCAG e falha se clarearem o bronze.
-- **A `DevocionalLarguraDeLeitura` fica no corpo de cada tela**, nunca em volta
+- **A `TabernaculoLarguraDeLeitura` fica no corpo de cada tela**, nunca em volta
   do
   Scaffold nem do `IndexedStack` — em volta do stack ela prendia a AppBar e a
   régua de meses do Plano, e deixava de fora as telas abertas por
@@ -613,7 +620,7 @@ motivo novo.
   (`escalarTitulo` em
   `lib/estilo/tema.dart`), para não empurrar a barra de baixo nem quebrar o
   cabeçalho. O `Estado` recusa valores fora de `escalasDeLeitura`.
-- **Toda tela distingue carregando, erro e vazio** (`DevocionalAvisoDeErro` em
+- **Toda tela distingue carregando, erro e vazio** (`TabernaculoAvisoDeErro` em
   `lib/widgets/aviso_vazio.dart`); o padrão antigo confundia os três e
   deixava o spinner girando para sempre.
 - **A cópia de segurança das notas sai pela folha de compartilhar**, não por
@@ -671,7 +678,7 @@ motivo novo.
   partir de dentro da aba Plano. O botão físico de voltar do Android já
   funcionava com isso (`GoRouterDelegate.popRoute` prioriza o Navigator da
   aba ativa antes do raiz), mas `goBranch(initialLocation: true)` — o reset
-  que `DevocionalMoldura._irParaAba` (`lib/widgets/moldura.dart`) usa ao voltar
+  que `TabernaculoMoldura._irParaAba` (`lib/widgets/moldura.dart`) usa ao voltar
   para uma aba — só
   descarta rotas que o próprio go_router controla; uma rota empurrada por
   fora sobrevive ao reset porque ele nem sabe que ela existe. Por isso trocar
@@ -702,7 +709,7 @@ motivo novo.
   não deixam o criador escrever na entrada alheia.
 - **Funcionalidades se ligam/desligam pelo painel admin, sem reimplantar**:
   `lib/dados/recursos.dart` reúne os interruptores — `planoPersonalizado`
-  (aba "Meus planos"), `ouvirTextos` (`DevocionalBotaoDeVoz`, único ponto de
+  (aba "Meus planos"), `ouvirTextos` (`TabernaculoBotaoDeVoz`, único ponto de
   entrada
   da leitura em voz alta), `cronograma` (aba "Cronograma"), `devocionalManha`,
   `devocionalNoite`, `promessas` (cada leitura em separado), `biblioteca` (os
@@ -761,7 +768,7 @@ motivo novo.
   a escolha deliberada é acompanhar o estável mais recente, não travar numa
   patch antiga. **Atualizar o `.fvmrc` quando o `stable` local mudar** e rodar
   a suíte antes de comitar.
-- **`DevocionalAreaDeSelecaoComCompartilhar`
+- **`TabernaculoAreaDeSelecaoComCompartilhar`
   (`lib/widgets/area_de_selecao.dart`, 20/08/2026)
   envolve `SelectionArea` e acrescenta "Compartilhar" ao menu de seleção**,
   usada no corpo aberto do cartão de introdução do livro
@@ -784,7 +791,7 @@ motivo novo.
   aberta pelo toque na linha, e na barra da seleção.
 - **Selecionar vários versículos do capítulo**
   (`BibliaControlador.selecionados`,
-  `DevocionalBarraDaSelecao` em `lib/widgets/barra_da_selecao.dart`): toque
+  `TabernaculoBarraDaSelecao` em `lib/widgets/barra_da_selecao.dart`): toque
   longo num versículo
   entra no modo de seleção, e nele o toque simples marca ou desmarca. A barra
   de baixo mostra a contagem e oferece Copiar e Compartilhar (cartão-imagem,
@@ -793,19 +800,19 @@ motivo novo.
   texto sai na ordem do capítulo e o link aponta para o primeiro marcado.
   "Voltar", o X da barra e a troca de capítulo saem do modo.
 - **O cartão do Devocional tem um botão de Compartilhar próprio**
-  (`DevocionalCartaoDeLeitura`
+  (`TabernaculoCartaoDeLeitura`
   em `lib/widgets/cartao_de_leitura.dart`, 31/08/2026), ao lado do
-  `DevocionalBotaoDeVoz`: manda
+  `TabernaculoBotaoDeVoz`: manda
   título, citação (`textoDeCitacao`, extraído de `lib/funcoes/citacao.dart`
   para reuso sem os spans de toque de `spansDeCitacao`) e o comentário do dia,
   terminando no link da leitura (`$enderecoDoSite/{manha,noite,promessas}`,
   com `?data=` só fora de hoje — o mesmo caminho que `main.dart` já declara
   para cada leitura, sem overlay de parâmetro como o de versículo/plano).
-  Diferente da seleção de texto (`DevocionalAreaDeSelecaoComCompartilhar`,
+  Diferente da seleção de texto (`TabernaculoAreaDeSelecaoComCompartilhar`,
   acima), não
   exige selecionar nada antes.
-- **Os dois players de voz separam pausar de parar** (`DevocionalBotaoDeVoz` e
-  `DevocionalIndicadorDeVozNaBarra`, `lib/widgets/botao_de_voz.dart`,
+- **Os dois players de voz separam pausar de parar** (`TabernaculoBotaoDeVoz` e
+  `TabernaculoIndicadorDeVozNaBarra`, `lib/widgets/botao_de_voz.dart`,
   21/08/2026): tocando, a
   pílula pausa pelo corpo (ícone de pausa) e encerra pelo X ao lado; o anel
   da barra de cima (Bíblia e Sobre) faz o mesmo — pausa pelo anel
@@ -837,13 +844,13 @@ motivo novo.
   quebrou. `montarPlanoDeLeitura` ganhou `incluirDevocionais`/`devocionalAntes`
   (padrão preserva o comportamento de hoje), intercalando o devocional
   correspondente antes ou depois do(s) capítulo(s) do dia.
-  `DevocionalCartaoDeDia`
+  `TabernaculoCartaoDeDia`
   (cartão compartilhado do cronograma e dos planos) passou a renderizar uma
-  lista de `ItemDoDia`, despachando para `DevocionalBotaoDeFaixa` (capítulo) ou
+  lista de `ItemDoDia`, despachando para `TabernaculoBotaoDeFaixa` (capítulo) ou
   o novo
-  `DevocionalBotaoDeDevocional`, que abre a tela do devocional (`/manha`,
-  `/noite` ou
-  `/promessas`) na data em que ele foi publicado originalmente. `TelaNovoPlano`
+  `TabernaculoBotaoDeDevocional`, que abre a tela do devocional
+  (`/devocional/manha`, `/devocional/noite` ou `/devocional/promessas`) na
+  data em que ele foi publicado originalmente. `TelaNovoPlano`
   ganhou a caixa "Incluir devocionais dos livros" (desmarcada por padrão) e,
   quando marcada, dois `ChoiceChip` de antes/depois
   (`lib/widgets/opcoes_de_plano.dart`), os dois já refletidos
@@ -914,12 +921,12 @@ motivo novo.
   `list` (só participante), e o delete de um plano já inexistente passa. Só o
   reset de `planos_acoes.dart` substitui a lista inteira (`substituirDias`).
 - **Apoio em crise no chat**: `pedeApoioEmCrise` (`lib/dados/crise.dart`, lista
-  de expressões marcada `ponytail:`) liga o `DevocionalApoioEmCrise` acima do
+  de expressões marcada `ponytail:`) liga o `TabernaculoApoioEmCrise` acima do
   campo, com o CVV (188, cvv.org.br) e o 192, até a conversa fechar; e
   `instrucaoDoSistema` (`lib/dados/personas.dart`) anexa a toda persona a
   orientação de indicar essa ajuda.
 - **Consentimento da LGPD**: antes do primeiro login no aparelho,
-  `entrarNaConta` mostra `DevocionalConsentimentoDaNuvem`, cujo botão é o
+  `entrarNaConta` mostra `TabernaculoConsentimentoDaNuvem`, cujo botão é o
   próprio gesto que abre a janela do Google; quem já estava logado o recebe ao
   abrir o app (`_pedirConsentimento` em `main.dart`), e recusar sai da conta.
   Sem consentimento neste aparelho (`Estado.consentimentoDaNuvem`) nada sobe
@@ -1043,7 +1050,7 @@ que está funcionando.
   círculo de destaque atrás do ícone na gaveta expandida
   (`AndroidNotificationDetails.color`, calculada em `_corDoTema()`
   em `lib/dados/lembretes.dart`) — dourado no tema escuro, bronze no claro,
-  mesmo par de `DevocionalCores.dourado`/`DevocionalCores.bronze` de
+  mesmo par de `TabernaculoCores.dourado`/`TabernaculoCores.bronze` de
   `lib/estilo/cores.dart`
   (duplicado como constante, não importado — `lib/dados` não depende do
   pacote de estilo). Na web, que renderiza o ícone em cor cheia de verdade
@@ -1053,7 +1060,7 @@ que está funcionando.
 - **O SDK precisa ouvir onde está o service worker**: `register` (e o
   `getToken` da limpeza legada) recebe
   `serviceWorkerScriptPath: 'firebase-messaging-sw.js'` — relativo, para
-  resolver contra o `<base href="/devocional/">`. Sem esse argumento o SDK
+  resolver contra o `<base href="/tabernaculo/">`. Sem esse argumento o SDK
   registra por conta própria `/firebase-messaging-sw.js` na **raiz** do
   domínio, onde o Hosting devolve a página 404 em HTML: o registro falha por
   tipo MIME, o `register` lança e nenhum FID web chega ao Firestore — a
@@ -1090,8 +1097,8 @@ que está funcionando.
 
 - **Cada aba com a própria URL** (09/08/2026) via `go_router` com
   `StatefulShellRoute.indexedStack`. O Firebase Hosting devolve o index.html
-  para qualquer caminho sob `/devocional/` (rewrite em `firebase.json`), então
-  abrir `/devocional/biblia` direto ou dar F5 funciona sem truque de 404.
+  para qualquer caminho sob `/tabernaculo/` (rewrite em `firebase.json`), então
+  abrir `/tabernaculo/biblia` direto ou dar F5 funciona sem truque de 404.
 - **Chat com URL própria** (16/08/2026): as conversas (`/charles-spurgeon`,
   `/felipe-ambrozini`, que hoje abrem o histórico, com cada conversa em
   `/<slug>/conversa/<id>`) são empurradas por `push` por cima das abas, e a
@@ -1127,10 +1134,10 @@ que está funcionando.
   `linkDoVersiculo` em `lib/dados/canon.dart`
   fazem a ida e volta.
 - **Planos só para quem tem conta**: a aba "Meus planos" continua visível, mas
-  sem login mostra o `DevocionalCartaoDeEntrar` (aviso + "Entrar com Google")
+  sem login mostra o `TabernaculoCartaoDeEntrar` (aviso + "Entrar com Google")
   no lugar da lista, e o plano fixo "A Vida de Jesus em 30 dias" também some da
   Hoje (`Recursos.planos`). Um link de plano compartilhado aberto sem
-  conta continua pedindo login (o mesmo `DevocionalCartaoDeEntrar`, em
+  conta continua pedindo login (o mesmo `TabernaculoCartaoDeEntrar`, em
   `lib/telas/meu_plano.dart`).
 - **Link do plano compartilhado leva o título como slug** (20/08/2026),
   `?plano=<slug-do-titulo>-<id>` (`linkDoPlano` em
@@ -1139,7 +1146,7 @@ que está funcionando.
   trecho depois do último hífen (`idDoParametroDePlano`), que nunca tem hífen
   dentro e por isso continua único mesmo com dois planos de mesmo título.
 - **Identidade neutra**: `<title>`, `apple-mobile-web-app-title` e
-  `name`/`short_name` são "Devocional" (a foto e o nome do usuário saíram da
+  `name`/`short_name` são "Tabernáculo" (a foto e o nome do usuário saíram da
   web pública). `orientation` do manifesto é `any` (a trava em retrato
   contradizia o trilho lateral e a coluna dupla).
   **Cuidado ao regenerar ícones**: `dart run flutter_launcher_icons` reescreve
@@ -1192,8 +1199,17 @@ que está funcionando.
   As chaves são públicas por desenho: quem protege os dados são as regras do
   Firestore (`firestore.rules`, publicado pelo CI a cada push) e a lista de
   domínios autorizados.
-- **Nome do pacote** trocado para `com.felipeambrozini.devocional` (09/08/2026),
-  refletido no `android/app/build.gradle.kts`.
+- **Nome do pacote** trocado para `com.felipeambrozini.devocional` (09/08/2026)
+  e depois para `com.felipeambrozini.tabernaculo` (25/11/2026, com o nome
+  novo), refletido no `applicationId` e no `namespace` do
+  `android/app/build.gradle.kts` e no pacote do `MainActivity.kt`. Um pacote
+  novo é outro app para o Android (não atualiza por cima do antigo) e para o
+  Firebase (outro app Android no projeto, outro `google-services.json`, outro
+  `FIREBASE_APP_ID_ANDROID`). As SHA-1 de debug e de release precisam estar no
+  app novo do Firebase (login com Google) e na restrição da chave
+  `GEMINI_API_KEY_ANDROID` no Google Cloud (o chat manda o pacote no
+  `X-Android-Package`, ver `lib/dados/google.dart`). O iOS manteve o Bundle ID
+  `com.felipeambrozini.devocional`.
 - **Android em Kotlin embutido do AGP 9** (05/11/2026):
   `android.builtInKotlin=true`
   em `android/gradle.properties` e nada de `kotlin-android` no
@@ -1234,7 +1250,7 @@ que está funcionando.
   `robots.txt`. O domínio `felipeambrozini.com.br` é hoje dedicado só a este
   app, então o passo de deploy que já copiava `404.html` para a raiz do
   `public` (ver acima) também copia estes três: rastreador e ferramenta de IA
-  olham a raiz do domínio, não o subcaminho `/devocional/` onde o app mora.
+  olham a raiz do domínio, não o subcaminho `/tabernaculo/` onde o app mora.
 - **Rodapé estático em `<noscript>` no `web/index.html`** (21/08/2026): o app
   inteiro é pintado em canvas (CanvasKit), então nenhum rastreador lê texto de
   dentro das telas Flutter, nem os links de "Onde me encontrar" da tela Sobre.
@@ -1258,10 +1274,10 @@ que está funcionando.
   (fachada condicional, `_web`/`_io`) lê isso e sabe se o app já está aberto
   como app (`display-mode: standalone` ou `navigator.standalone` do iPhone).
   Dois pontos de entrada, os dois só na web e fora do app instalado: o
-  cartão `DevocionalCartaoDeInstalar` na Hoje, na vaga do "Como usar" depois
+  cartão `TabernaculoCartaoDeInstalar` na Hoje, na vaga do "Como usar" depois
   que ele é dispensado (para não empilhar dois cartões de boas-vindas), que
   some com "Agora não" (`Estado.conviteDeInstalarDispensado`, por
-  navegador); e o item fixo `DevocionalItemDeInstalar` em Sobre, para quem
+  navegador); e o item fixo `TabernaculoItemDeInstalar` em Sobre, para quem
   dispensou e mudou de ideia. Com convite, o toque abre a janela do
   navegador; sem convite (Safari, Firefox) ou se ela falhar, mostra o
   caminho pelo menu para o sistema da pessoa. O `preventDefault` no convite
@@ -1284,14 +1300,14 @@ que está funcionando.
   desregistra um que tenha ficado de visitas antigas. Ver `firebase.json`
   para os cabeçalhos: shell sem cache, arquivo com hash imutável por um ano e
   `canvaskit/**` por uma hora.
-- **Portão de 18 anos no chat** (19/11/2026): `DevocionalPortaoDeIdade`
+- **Portão de 18 anos no chat** (19/11/2026): `TabernaculoPortaoDeIdade`
   (`lib/widgets/portao_de_idade.dart`) é a primeira coisa de `TelaChat`; sem
   `Estado.maiorDeIdade == true` não há histórico nem campo de mensagem. A
   resposta fica por navegador/aparelho (`maior_de_idade` no
   `SharedPreferences`, fora da cópia da nuvem), e "Não tenho" volta para a
   Hoje. É autodeclaração documentada no aviso, não prova de idade.
 - **Denúncia de resposta da IA** (19/11/2026): o botão "Denunciar resposta"
-  aparece só nas falas da persona (`DevocionalBalcaoDeMensagem.aoDenunciar`),
+  aparece só nas falas da persona (`TabernaculoBalcaoDeMensagem.aoDenunciar`),
   abre o diálogo com os motivos de `lib/dados/denuncias.dart` e grava em
   `denuncias/{id}` (create-only nas regras, uid igual ao da conta Google).
   Vão a pergunta que antecedeu (se ainda estiver no histórico), a resposta, o
@@ -1305,10 +1321,15 @@ que está funcionando.
 
 ### Ícone, splash e fontes
 
-- **O ícone é a marca-texto "Devocional"** (fonte Cinzel, mesma composição do
-  `web/og.png`), não mais a foto do Felipe recortada no rosto (rebrand de
-  20/08/2026, junto com o nome do app no Android: `android:label` também
-  virou "Devocional"). As fontes ficam em `assets/icone/`, montadas por
+- **O ícone é o desenho do Tabernáculo** (25/11/2026, com o nome novo): a
+  tenda de Êxodo 26, com o telhado de coberturas, as colunas sustentando a
+  cortina da porta e a candeia acesa lá dentro, que também lembra o pórtico do
+  Metropolitan Tabernacle de Spurgeon. É geometria pura, numa cor só, desenhada
+  por `tools/icones.py` (`_formas`), nunca editada à mão. Antes foi a
+  marca-texto "Devocional" (20/08/2026) e, antes dela, a foto do Felipe.
+  `tools/icones.py --marcas` gera o resto: `web/og.png` (o desenho sobre o
+  nome), os ícones de notificação da web e o `ic_lembrete.png` do Android.
+  As fontes ficam em `assets/icone/`, montadas por
   `tools/icones.py --fontes`; os arquivos por plataforma saem de
   `dart run flutter_launcher_icons` e depois de `tools/icones.py --corrigir`
   (obrigatório: o gerador copia o ícone normal nos `Icon-maskable-*` sem
@@ -1323,7 +1344,7 @@ que está funcionando.
   quando o iOS 18 tiver variante clara configurada (ainda manual, o
   `flutter_launcher_icons` 0.14.4 não gera isso); `icone_tingido.png`
   (silhueta transparente) para o ícone tingido do iOS 18.
-- **A splash também é a marca-texto "Devocional"** (mesma fonte, dourada no
+- **A splash também é o desenho do Tabernáculo** (sem texto, dourado no
   tema escuro e em bronze no claro — dourado sobre pergaminho é ilegível,
   mesmo motivo do favicon claro acima), não mais a foto do Felipe (rebrand de
   21/08/2026). As artes ficam em `assets/icone/` (`splash.png`/
@@ -1412,7 +1433,7 @@ as regras e as functions
 (`firebase deploy --only functions,hosting,firestore:rules,storage`), então uma
 mudança em `firestore.rules` ou `storage.rules` vai para produção no próximo
 push, sem publicar à mão no console. Functions vêm primeiro de propósito: o
-`firebase.json` tem um rewrite de `/devocional/api/erro` para `registrarErro`,
+`firebase.json` tem um rewrite de `/tabernaculo/api/erro` para `registrarErro`,
 e o CLI recusa publicar o Hosting enquanto a Function não existir no projeto.
 Por isso, antes de mexer nelas, rode os testes de regras no emulador (precisa
 de Java):
@@ -1426,10 +1447,10 @@ npm --prefix test_regras test
 ```
 
 O site mora em
-`www.felipeambrozini.com.br/devocional/` (Firebase Hosting, não GitHub Pages;
-um nível abaixo da raiz do domínio; o build vai para `public/devocional` e o
+`www.felipeambrozini.com.br/tabernaculo/` (Firebase Hosting, não GitHub Pages;
+um nível abaixo da raiz do domínio; o build vai para `public/tabernaculo` e o
 rewrite em `firebase.json` cuida do SPA). O build usa `--base-href
-/devocional/` e as chaves de API vêm dos Secrets do repositório (21
+/tabernaculo/` e as chaves de API vêm dos Secrets do repositório (21
 `--dart-define`, ver `.env.example.json` e `SECURITY.md §3.1` — entre elas
 `FIREBASE_API_KEY_WEB`, `GEMINI_API_KEY_WEB`, `AUDIO_BASE_URL`). O deploy usa
 `FIREBASE_SERVICE_ACCOUNT` (JSON da conta de serviço do Firebase) e publica
@@ -1463,7 +1484,7 @@ worker publicado e confere o caminho do app: HTML e metadados, o `load()`
 final do bootstrap sem `serviceWorkerSettings`, manifest PWA,
 `precache_manifest.json` com o `main.dart` hasheado e imutável, o worker com
 push e cache, o rewrite
-`/devocional/api/erro` (GET deve responder 405 JSON) e os arquivos da raiz.
+`/tabernaculo/api/erro` (GET deve responder 405 JSON) e os arquivos da raiz.
 Falha no job, não numa visita dias depois. Para rodar
 localmente contra outro endereço:
 `SMOKE_BASE_URL=http://localhost:5000 node tool/smoke_web.mjs`.
@@ -1476,7 +1497,20 @@ Voltar atrás: o Hosting tem histórico de versões no console do Firebase (um
 clique em "Reverter"); regras e Function voltam com `git revert` do commit e um
 novo push.
 
-Além do build em `public/devocional`, o mesmo passo copia `404.html`,
+O endereço antigo, `/devocional/` (até a versão 1.27), continua respondendo:
+o passo copia `legado/devocional/` para `public/devocional/`, e o
+`firebase.json` reescreve todo `/devocional/**` para o `index.html` de lá, que
+troca o começo do caminho por `/tabernaculo/` e mantém o resto, a busca e o
+fragmento (`?plano=`, `?ler=`, lembretes, PWA instalado). Não é um redirect
+301 no Hosting de propósito: ele também redirecionaria o service worker
+antigo, e o navegador recusa atualizar um worker redirecionado. O
+`legado/devocional/firebase-messaging-sw.js` entra no lugar do worker antigo,
+se desregistra, apaga só as entradas do build velho no cache offline (o áudio
+baixado fica, os caches são do domínio inteiro) e leva as janelas abertas
+para o endereço novo. O PWA instalado no endereço antigo não migra sozinho:
+quem tinha instalado precisa instalar de novo.
+
+Além do build em `public/tabernaculo`, o mesmo passo copia `404.html`,
 `robots.txt`, `llms.txt` e `sitemap.xml` para a raiz do `public` — o Hosting só
 olha esses
 arquivos na raiz do domínio, nunca num subcaminho.

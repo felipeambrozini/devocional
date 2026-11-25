@@ -25,8 +25,8 @@
        texto própria, mas WCAG pede que o zoom da página não seja bloqueado). -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="Bíblia em tradução própria da King James 1611, devocionais de Spurgeon e plano de leitura anual.">
-  <meta name="application-name" content="Devocional">
-  <link rel="canonical" href="https://www.felipeambrozini.com.br/devocional/">
+  <meta name="application-name" content="Tabernáculo">
+  <link rel="canonical" href="https://www.felipeambrozini.com.br/tabernaculo/">
 
   <!--
     Prévia de link (WhatsApp, Instagram, descrição de live). `og:image`
@@ -34,12 +34,12 @@
     é gerada por script, nunca editada à mão (ver README.md).
   -->
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Devocional">
+  <meta property="og:site_name" content="Tabernáculo">
   <meta property="og:locale" content="pt_BR">
-  <meta property="og:title" content="Devocional">
+  <meta property="og:title" content="Tabernáculo">
   <meta property="og:description" content="Bíblia na tradução autoral da King James 1611, devocionais de Spurgeon, plano de leitura anual e narração em voz.">
-  <meta property="og:image" content="https://www.felipeambrozini.com.br/devocional/og.png">
-  <meta property="og:url" content="https://www.felipeambrozini.com.br/devocional/">
+  <meta property="og:image" content="https://www.felipeambrozini.com.br/tabernaculo/og.png">
+  <meta property="og:url" content="https://www.felipeambrozini.com.br/tabernaculo/">
   <meta name="twitter:card" content="summary_large_image">
 
   <!-- A cor da barra do navegador acompanha o tema do app (ver o <style>
@@ -60,7 +60,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="Devocional">
+  <meta name="apple-mobile-web-app-title" content="Tabernáculo">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!--
@@ -72,7 +72,7 @@
   <link rel="icon" type="image/png" href="favicon-claro.png" media="(prefers-color-scheme: light)"/>
   <link rel="icon" type="image/png" href="favicon-escuro.png" media="(prefers-color-scheme: dark)"/>
 
-  <title>Devocional</title>
+  <title>Tabernáculo</title>
   <link rel="manifest" href="manifest.json">
 
   <!--
@@ -85,8 +85,8 @@
   {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "Devocional",
-    "url": "https://www.felipeambrozini.com.br/devocional/",
+    "name": "Tabernáculo",
+    "url": "https://www.felipeambrozini.com.br/tabernaculo/",
     "description": "Bíblia em tradução própria da King James 1611, devocionais de Charles Spurgeon e plano de leitura anual, gratuitos e sem anúncios.",
     "applicationCategory": "LifestyleApplication",
     "operatingSystem": "Any",
@@ -100,7 +100,7 @@
     "author": {
       "@type": "Person",
       "name": "Felipe Ambrozini",
-      "url": "https://www.felipeambrozini.com.br/devocional/sobre"
+      "url": "https://www.felipeambrozini.com.br/tabernaculo/sobre"
     }
   }
   </script>
@@ -147,7 +147,7 @@
   </style>
 </head>
 <body>
-  <div id="carregando">Devocional</div>
+  <div id="carregando">Tabernáculo</div>
   <!--
     O app inteiro é desenhado em canvas (CanvasKit): nenhum rastreador lê o
     conteúdo das telas, nem os links de "Onde me encontrar" da tela Sobre.
@@ -156,7 +156,7 @@
   -->
   <noscript>
     <footer>
-      <p>Devocional — Bíblia em tradução própria da King James 1611, devocionais de Spurgeon e plano de leitura anual.</p>
+      <p>Tabernáculo — Bíblia em tradução própria da King James 1611, devocionais de Spurgeon e plano de leitura anual.</p>
       <p>
         <a href="https://www.youtube.com/@felipe_ambrozini">YouTube</a> ·
         <a href="https://www.instagram.com/felipe_ambrozini/">Instagram</a> ·
@@ -191,9 +191,9 @@
         enviados++;
         try {
           // Caminho absoluto: o beacon também roda em link direto
-          // (/devocional/biblia/gn/1), onde "api/erro" relativo cairia na
+          // (/tabernaculo/biblia/gn/1), onde "api/erro" relativo cairia na
           // rota errada.
-          fetch('/devocional/api/erro', {
+          fetch('/tabernaculo/api/erro', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
@@ -264,10 +264,10 @@
       function registrarServiceWorker() {
         if (pedido) return;
         pedido = true;
-        navigator.serviceWorker.register('/devocional/firebase-messaging-sw.js', {
-          // Escopo explícito: um link direto (/devocional/biblia/gn/1) resolve
+        navigator.serviceWorker.register('/tabernaculo/firebase-messaging-sw.js', {
+          // Escopo explícito: um link direto (/tabernaculo/biblia/gn/1) resolve
           // URL relativa contra a rota, e o worker seria procurado dentro dela.
-          scope: '/devocional/',
+          scope: '/tabernaculo/',
           updateViaCache: 'none'
         }).catch(function (erro) {
           // Sem service worker o app abre e funciona online: ficam de fora o

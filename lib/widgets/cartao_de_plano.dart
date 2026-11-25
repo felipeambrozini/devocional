@@ -12,8 +12,8 @@ import '../widgets/widgets.dart';
 /// Cartão de um plano na lista de Meus Planos: o que se lê, em quanto tempo
 /// e o progresso. Tocar abre o plano; excluir e compartilhar vivem na tela
 /// do plano.
-class DevocionalCartaoDePlano extends StatelessWidget {
-  const DevocionalCartaoDePlano({super.key, required this.plano});
+class TabernaculoCartaoDePlano extends StatelessWidget {
+  const TabernaculoCartaoDePlano({super.key, required this.plano});
 
   final PlanoDoUsuario plano;
 
@@ -41,10 +41,10 @@ class DevocionalCartaoDePlano extends StatelessWidget {
         onTap: () => context.push('/plano/${plano.id}'),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
-            DevocionalEspacamento.sp14,
-            DevocionalEspacamento.sp12,
-            DevocionalEspacamento.sp8,
-            DevocionalEspacamento.sp12,
+            TabernaculoEspacamento.sp14,
+            TabernaculoEspacamento.sp12,
+            TabernaculoEspacamento.sp8,
+            TabernaculoEspacamento.sp12,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,7 +56,7 @@ class DevocionalCartaoDePlano extends StatelessWidget {
                   if (plano.compartilhado)
                     Padding(
                       padding: const EdgeInsets.only(
-                        top: DevocionalEspacamento.sp2,
+                        top: TabernaculoEspacamento.sp2,
                       ),
                       child: Tooltip(
                         message: 'Plano compartilhado por link',
@@ -73,7 +73,9 @@ class DevocionalCartaoDePlano extends StatelessWidget {
                   // o alvo de toque fica nos 48dp padrão do IconButton.
                   if (plano.fixo)
                     Padding(
-                      padding: const EdgeInsets.all(DevocionalEspacamento.sp12),
+                      padding: const EdgeInsets.all(
+                        TabernaculoEspacamento.sp12,
+                      ),
                       child: Tooltip(
                         message:
                             'Plano fixo: não pode ser alterado nem excluído',
@@ -107,7 +109,7 @@ class DevocionalCartaoDePlano extends StatelessWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: DevocionalEspacamento.sp2),
+              const SizedBox(height: TabernaculoEspacamento.sp2),
               Text(
                 listaDosLivros(plano.livros),
                 style: tema.bodySmall?.copyWith(color: cor.onSurfaceVariant),
@@ -116,10 +118,10 @@ class DevocionalCartaoDePlano extends StatelessWidget {
                 '${plano.dias} dias · ${plano.totalDeCapitulos} capítulos',
                 style: tema.labelMedium?.copyWith(color: cor.onSurfaceVariant),
               ),
-              const SizedBox(height: DevocionalEspacamento.sp10),
+              const SizedBox(height: TabernaculoEspacamento.sp10),
               Text('$lidos de $dias dias lidos', style: tema.labelMedium),
-              const SizedBox(height: DevocionalEspacamento.sp6),
-              DevocionalProgressoFino(valor: dias == 0 ? 0 : lidos / dias),
+              const SizedBox(height: TabernaculoEspacamento.sp6),
+              TabernaculoProgressoFino(valor: dias == 0 ? 0 : lidos / dias),
             ],
           ),
         ),

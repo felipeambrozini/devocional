@@ -62,8 +62,8 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     return Scaffold(
-      appBar: DevocionalAppBar(title: const Text('Política de privacidade')),
-      body: DevocionalLarguraDeLeitura(
+      appBar: TabernaculoAppBar(title: const Text('Política de privacidade')),
+      body: TabernaculoLarguraDeLeitura(
         // O chat só existe para quem tem acesso à função (ver
         // Recursos.conversas); as seções que falam dele ficam de fora da
         // política para quem não pode usá-lo. Selecionável para o leitor
@@ -94,10 +94,10 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
               // tela, e o ListView só monta as que estão perto dela.
               return SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(
-                  DevocionalEspacamento.sp20,
-                  DevocionalEspacamento.sp16,
-                  DevocionalEspacamento.sp20,
-                  DevocionalEspacamento.sp40,
+                  TabernaculoEspacamento.sp20,
+                  TabernaculoEspacamento.sp16,
+                  TabernaculoEspacamento.sp20,
+                  TabernaculoEspacamento.sp40,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -109,9 +109,9 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                         style: tema.displayMedium,
                       ),
                     ),
-                    const SizedBox(height: DevocionalEspacamento.sp8),
-                    const DevocionalFilete(largura: 64),
-                    const SizedBox(height: DevocionalEspacamento.sp16),
+                    const SizedBox(height: TabernaculoEspacamento.sp8),
+                    const TabernaculoFilete(largura: 64),
+                    const SizedBox(height: TabernaculoEspacamento.sp16),
                     Text(
                       'Este aplicativo não tem anúncio e não vende nem '
                       'compartilha dados com terceiros para fins de '
@@ -124,24 +124,24 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                       'do que é guardado, onde e por quê.',
                       style: tema.bodyLarge?.copyWith(height: 1.7),
                     ),
-                    const SizedBox(height: DevocionalEspacamento.sp16),
+                    const SizedBox(height: TabernaculoEspacamento.sp16),
                     Text(
                       'Nesta página',
                       style: tema.labelLarge?.copyWith(color: cor.secondary),
                     ),
-                    const SizedBox(height: DevocionalEspacamento.sp4),
+                    const SizedBox(height: TabernaculoEspacamento.sp4),
                     Wrap(
-                      spacing: DevocionalEspacamento.sp4,
+                      spacing: TabernaculoEspacamento.sp4,
                       children: [
                         for (final entrada in indice.entries)
-                          DevocionalBotaoTerciario(
+                          TabernaculoBotaoTerciario(
                             onPressed: () =>
                                 _rolarAte(entrada.value, entrada.key),
                             child: Text(entrada.key),
                           ),
                       ],
                     ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _semConta,
                       titulo: 'Sem conta',
                       texto:
@@ -149,7 +149,7 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                           'tamanho do texto ficam só no aparelho ou no navegador '
                           '(armazenamento local). Nada disso sai daqui.',
                     ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _comConta,
                       titulo: 'Com conta Google',
                       texto: chat
@@ -175,7 +175,7 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                                 'entra com conta usa o aplicativo do mesmo '
                                 'jeito, sem nada saindo do aparelho.',
                     ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _baseLegal,
                       titulo: 'Base legal e consentimento',
                       texto:
@@ -187,7 +187,7 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                           'pode retirar o consentimento quando quiser, apagando a '
                           'cópia da nuvem como descrito em Apagar seus dados.',
                     ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _planos,
                       titulo: 'Planos de leitura compartilhados',
                       texto:
@@ -198,7 +198,7 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                           'quem só participa pode sair dele, afetando apenas o '
                           'próprio progresso.',
                     ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _lembretes,
                       titulo: 'Lembretes diários',
                       texto:
@@ -210,7 +210,7 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                           'certa. Desligar o lembrete apaga esse registro.',
                     ),
                     if (chat)
-                      DevocionalSecaoDeTexto(
+                      TabernaculoSecaoDeTexto(
                         key: _chat,
                         titulo: 'Chat com inteligência artificial',
                         texto:
@@ -230,7 +230,7 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                             'na nuvem descrita acima.',
                       ),
                     if (chat)
-                      DevocionalSecaoDeTexto(
+                      TabernaculoSecaoDeTexto(
                         key: _denuncias,
                         titulo: 'Denúncias de resposta',
                         texto:
@@ -245,7 +245,7 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                             'só para corrigir o conteúdo e o funcionamento do '
                             'chat.',
                       ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _voz,
                       titulo: 'Leitura em voz alta',
                       texto:
@@ -257,7 +257,7 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                           'aparelho, e pode apagá-los a qualquer momento na '
                           'mesma tela.',
                     ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _appGenuino,
                       titulo: 'Verificação de app genuíno',
                       texto:
@@ -270,7 +270,7 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                           'esse uso segue a Política de Privacidade e os Termos '
                           'de Serviço do Google.',
                     ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _erros,
                       titulo: 'Relatórios de erro',
                       texto:
@@ -286,7 +286,7 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                           'registro de páginas visitadas, de tempo de uso nem de '
                           'toques.',
                     ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _ondeEQuanto,
                       titulo: 'Onde os dados ficam e por quanto tempo',
                       texto:
@@ -302,7 +302,7 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                           'mantenedor para corrigir falhas e conteúdo, e são '
                           'apagados quando já cumpriram essa função.',
                     ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _apagar,
                       titulo: 'Apagar seus dados',
                       texto: chat
@@ -323,7 +323,7 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                                 'limpar os dados do aplicativo ou do site pelo próprio '
                                 'sistema ou navegador.',
                     ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _direitos,
                       titulo: 'Seus direitos',
                       texto:
@@ -336,7 +336,7 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                           'peça pelo contato abaixo. Você também pode reclamar à '
                           'Autoridade Nacional de Proteção de Dados (ANPD).',
                     ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _menores,
                       titulo: 'Menores de idade',
                       texto:
@@ -345,7 +345,7 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                           'responsáveis, e o chat com inteligência artificial é só '
                           'para maiores de 18 anos.',
                     ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _contato,
                       titulo: 'Contato',
                       texto: emailDeContato.isEmpty

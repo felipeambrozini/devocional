@@ -6,8 +6,8 @@ import '../funcoes/capa_biblia.dart';
 /// Capa de um livro da biblioteca, na mesma proporção das outras capas do app
 /// (3:4). Sem o arquivo da capa ainda, desenha uma capa tipográfica: o título
 /// em Cinzel sobre o tom do tema, com a borda dourada.
-class DevocionalCapaDeObra extends StatelessWidget {
-  const DevocionalCapaDeObra({
+class TabernaculoCapaDeObra extends StatelessWidget {
+  const TabernaculoCapaDeObra({
     super.key,
     required this.titulo,
     required this.capa,
@@ -65,7 +65,7 @@ class _CapaTipografica extends StatelessWidget {
     return Container(
       height: altura,
       width: largura,
-      padding: const EdgeInsets.all(DevocionalEspacamento.sp8),
+      padding: const EdgeInsets.all(TabernaculoEspacamento.sp8),
       decoration: BoxDecoration(
         color: cor.surfaceContainerHighest,
         border: Border.all(

@@ -14,8 +14,8 @@ import 'cartao.dart';
 /// competir com a leitura que abre a tela. A lista completa continua em Sobre
 /// ("Ver tudo"), junto com as fontes e a privacidade; o botão "Entendi" some
 /// com o cartão para sempre (ver `Estado.ajudaDispensada`).
-class DevocionalCartaoDeAjuda extends StatelessWidget {
-  const DevocionalCartaoDeAjuda({super.key, required this.estado});
+class TabernaculoCartaoDeAjuda extends StatelessWidget {
+  const TabernaculoCartaoDeAjuda({super.key, required this.estado});
 
   final Estado estado;
 
@@ -23,7 +23,7 @@ class DevocionalCartaoDeAjuda extends StatelessWidget {
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
-    return DevocionalCartao(
+    return TabernaculoCartao(
       titulo: 'Como usar',
       acessorio: FaIcon(
         FontAwesomeIcons.bookOpenReader,
@@ -35,28 +35,28 @@ class DevocionalCartaoDeAjuda extends StatelessWidget {
         children: [
           for (final linha in linhasDeAjuda.take(3)) ...[
             Text(linha, style: tema.bodyMedium),
-            const SizedBox(height: DevocionalEspacamento.sp6),
+            const SizedBox(height: TabernaculoEspacamento.sp6),
           ],
           if (!Nuvem.instancia.logado) ...[
-            const SizedBox(height: DevocionalEspacamento.sp2),
+            const SizedBox(height: TabernaculoEspacamento.sp2),
             Semantics(
               hint: 'Abre o Evangelho de João, capítulo 1',
-              child: DevocionalBotaoSecundario(
+              child: TabernaculoBotaoSecundario(
                 onPressed: () => _abrirJoao1(context),
                 child: const Text('Começar por João 1'),
               ),
             ),
           ],
-          const SizedBox(height: DevocionalEspacamento.sp2),
+          const SizedBox(height: TabernaculoEspacamento.sp2),
           Wrap(
             alignment: WrapAlignment.end,
-            spacing: DevocionalEspacamento.sp8,
+            spacing: TabernaculoEspacamento.sp8,
             children: [
-              DevocionalBotaoTerciario(
+              TabernaculoBotaoTerciario(
                 onPressed: () => context.push('/sobre'),
                 child: const Text('Ver tudo'),
               ),
-              DevocionalBotaoTerciario(
+              TabernaculoBotaoTerciario(
                 onPressed: () => estado.dispensarAjuda(),
                 child: const Text('Entendi'),
               ),

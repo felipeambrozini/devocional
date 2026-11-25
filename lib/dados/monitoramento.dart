@@ -19,7 +19,7 @@ import 'versao.dart';
 /// mensagem distinta, para um laço de erro não virar enxurrada de rede. Do
 /// lado do servidor há limite por cliente e por instância.
 abstract final class Monitoramento {
-  static const _endpoint = '/devocional/api/erro';
+  static const _endpoint = '/tabernaculo/api/erro';
   static const _maximoPorSessao = 5;
 
   static int _enviados = 0;

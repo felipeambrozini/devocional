@@ -4,16 +4,16 @@ import 'botao.dart';
 
 /// Boas-vindas do primeiro login: apresenta o plano que toda conta ganha.
 /// Devolve `true` quando a pessoa pede para ver o plano.
-class DevocionalBoasVindasDialogo extends StatelessWidget {
-  const DevocionalBoasVindasDialogo({super.key});
+class TabernaculoBoasVindasDialogo extends StatelessWidget {
+  const TabernaculoBoasVindasDialogo({super.key});
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       scrollable: true,
       // Sem isto o Android e a web anunciam a rota como "Alerta".
-      semanticLabel: 'Boas-vindas ao Devocional',
-      title: const Text('Boas-vindas ao Devocional'),
+      semanticLabel: 'Boas-vindas ao Tabernáculo',
+      title: const Text('Boas-vindas ao Tabernáculo'),
       content: const Text(
         'Sua conta já vem com o plano "A Vida de Jesus em 30 dias": os quatro '
         'evangelhos em harmonia, um trecho por dia.\n\n'
@@ -21,11 +21,11 @@ class DevocionalBoasVindasDialogo extends StatelessWidget {
         'alterado nem excluído.',
       ),
       actions: [
-        DevocionalBotaoTerciario(
+        TabernaculoBotaoTerciario(
           onPressed: () => Navigator.pop(context, false),
           child: const Text('Depois'),
         ),
-        DevocionalBotaoPrimario(
+        TabernaculoBotaoPrimario(
           onPressed: () => Navigator.pop(context, true),
           child: const Text('Ver o plano'),
         ),

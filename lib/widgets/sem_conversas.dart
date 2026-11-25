@@ -7,8 +7,8 @@ import '../funcoes/aviso.dart';
 import '../widgets/widgets.dart';
 
 /// Sem conversa nenhuma ainda: o convite para começar, no lugar da lista vazia.
-class DevocionalSemConversas extends StatelessWidget {
-  const DevocionalSemConversas({
+class TabernaculoSemConversas extends StatelessWidget {
+  const TabernaculoSemConversas({
     super.key,
     required this.persona,
     required this.aoComecar,
@@ -21,17 +21,17 @@ class DevocionalSemConversas extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(DevocionalEspacamento.sp32),
+        padding: const EdgeInsets.all(TabernaculoEspacamento.sp32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const DevocionalFilete(largura: 64),
-            const SizedBox(height: DevocionalEspacamento.sp18),
+            const TabernaculoFilete(largura: 64),
+            const SizedBox(height: TabernaculoEspacamento.sp18),
             Text(
               persona.nome,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
-            const SizedBox(height: DevocionalEspacamento.sp10),
+            const SizedBox(height: TabernaculoEspacamento.sp10),
             Text(
               'Nenhuma conversa com ${persona.nome} ainda. '
               'Comece pela primeira pergunta.',
@@ -41,7 +41,7 @@ class DevocionalSemConversas extends StatelessWidget {
                 height: 1.6,
               ),
             ),
-            const SizedBox(height: DevocionalEspacamento.sp12),
+            const SizedBox(height: TabernaculoEspacamento.sp12),
             // O histórico é a porta de entrada do chat: o aviso de que as
             // respostas são geradas por IA aparece aqui, antes da conversa,
             // e de novo no rodapé do chat, que o repete em todos os estados.
@@ -52,8 +52,8 @@ class DevocionalSemConversas extends StatelessWidget {
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: DevocionalEspacamento.sp18),
-            DevocionalBotaoPrimario.icon(
+            const SizedBox(height: TabernaculoEspacamento.sp18),
+            TabernaculoBotaoPrimario.icon(
               onPressed: aoComecar,
               icon: const FaIcon(FontAwesomeIcons.commentDots),
               label: const Text('Começar conversa'),

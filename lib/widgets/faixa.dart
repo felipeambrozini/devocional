@@ -13,8 +13,8 @@ import 'botao.dart';
 /// Quando a faixa é por versículo, como "Salmos 119:1 a 56", abre o capítulo e
 /// destaca só o recorte pedido; o resto do capítulo continua visível, apenas
 /// esmaecido, para não perder o contexto.
-class DevocionalBotaoDeFaixa extends StatelessWidget {
-  const DevocionalBotaoDeFaixa({super.key, required this.faixa, this.dia});
+class TabernaculoBotaoDeFaixa extends StatelessWidget {
+  const TabernaculoBotaoDeFaixa({super.key, required this.faixa, this.dia});
 
   final Faixa faixa;
 
@@ -24,7 +24,7 @@ class DevocionalBotaoDeFaixa extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DevocionalBotaoSecundario.icon(
+    return TabernaculoBotaoSecundario.icon(
       icon: const FaIcon(FontAwesomeIcons.bookBible, size: 17),
       label: Text(faixa.rotulo),
       onPressed: () => abrirNaBiblia(
@@ -43,8 +43,8 @@ class DevocionalBotaoDeFaixa extends StatelessWidget {
 /// Botão que abre o devocional (Manhã, Noite ou Promessas) citado por um
 /// capítulo do plano, na data em que foi publicado — o conteúdo não depende
 /// do ano, só do dia-mês (ver `Conteudo.chaveDoDia`).
-class DevocionalBotaoDeDevocional extends StatelessWidget {
-  const DevocionalBotaoDeDevocional({
+class TabernaculoBotaoDeDevocional extends StatelessWidget {
+  const TabernaculoBotaoDeDevocional({
     super.key,
     required this.tipo,
     required this.chaveDoDia,
@@ -69,7 +69,7 @@ class DevocionalBotaoDeDevocional extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DevocionalBotaoSecundario.icon(
+    return TabernaculoBotaoSecundario.icon(
       icon: FaIcon(_icone, size: 17),
       label: Text(_rotulo),
       onPressed: () {
@@ -82,10 +82,12 @@ class DevocionalBotaoDeDevocional extends StatelessWidget {
             '${dia.toString().padLeft(2, '0')}';
         // Push, não go: vindo de um plano (/plano/:id), o go trocava de aba
         // e o devocional abria como raiz da aba Devocional — sem volta para
-        // o plano (DevocionalAppBar esconde a seta quando não há o que
+        // o plano (TabernaculoAppBar esconde a seta quando não há o que
         // desempilhar). O push empilha por cima do plano, então voltar
         // (seta no app e na web) retorna ao plano personalizado.
-        GoRouter.of(context).push('/${tipo.rota}?data=$parametroDeData');
+        GoRouter.of(
+          context,
+        ).push('/devocional/${tipo.rota}?data=$parametroDeData');
       },
     );
   }

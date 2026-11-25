@@ -6,7 +6,7 @@ import 'cores.dart';
 /// integralmente e os títulos/rótulos com teto de 1,3× — Regra da Escala do
 /// DESIGN.md: aumentar o corpo não pode estourar AppBar/Nav.
 ///
-/// [brilho] escolhe a paleta. As telas nunca leem de [DevocionalCores] direto: tudo sai do
+/// [brilho] escolhe a paleta. As telas nunca leem de [TabernaculoCores] direto: tudo sai do
 /// `ColorScheme`, senão metade da interface continuaria marrom sobre pergaminho.
 ThemeData construirTema({
   Brightness brilho = Brightness.dark,
@@ -27,31 +27,31 @@ ThemeData construirTema({
   //   onSurfaceVariant        apoio: legenda, rótulo, texto secundário
   final base = escuro
       ? const ColorScheme.dark(
-          primary: DevocionalCores.dourado,
-          onPrimary: DevocionalCores.fundo,
-          secondary: DevocionalCores.douradoClaro,
-          onSecondary: DevocionalCores.fundo,
-          surface: DevocionalCores.fundo,
-          onSurface: DevocionalCores.bege,
-          surfaceContainer: DevocionalCores.superficie,
-          surfaceContainerHighest: DevocionalCores.superficieAlta,
-          onSurfaceVariant: DevocionalCores.begeSuave,
-          outline: DevocionalCores.douradoEscuro,
-          tertiary: DevocionalCores.carmimClaro,
+          primary: TabernaculoCores.dourado,
+          onPrimary: TabernaculoCores.fundo,
+          secondary: TabernaculoCores.douradoClaro,
+          onSecondary: TabernaculoCores.fundo,
+          surface: TabernaculoCores.fundo,
+          onSurface: TabernaculoCores.bege,
+          surfaceContainer: TabernaculoCores.superficie,
+          surfaceContainerHighest: TabernaculoCores.superficieAlta,
+          onSurfaceVariant: TabernaculoCores.begeSuave,
+          outline: TabernaculoCores.douradoEscuro,
+          tertiary: TabernaculoCores.carmimClaro,
           error: Color(0xFFE57373),
         )
       : const ColorScheme.light(
-          primary: DevocionalCores.bronze,
-          onPrimary: DevocionalCores.pergaminhoAlto,
-          secondary: DevocionalCores.bronzeEscuro,
-          onSecondary: DevocionalCores.pergaminhoAlto,
-          surface: DevocionalCores.pergaminho,
-          onSurface: DevocionalCores.tinta,
-          surfaceContainer: DevocionalCores.pergaminhoAlto,
-          surfaceContainerHighest: DevocionalCores.pergaminhoFundo,
-          onSurfaceVariant: DevocionalCores.tintaSuave,
-          outline: DevocionalCores.bronzeSuave,
-          tertiary: DevocionalCores.carmim,
+          primary: TabernaculoCores.bronze,
+          onPrimary: TabernaculoCores.pergaminhoAlto,
+          secondary: TabernaculoCores.bronzeEscuro,
+          onSecondary: TabernaculoCores.pergaminhoAlto,
+          surface: TabernaculoCores.pergaminho,
+          onSurface: TabernaculoCores.tinta,
+          surfaceContainer: TabernaculoCores.pergaminhoAlto,
+          surfaceContainerHighest: TabernaculoCores.pergaminhoFundo,
+          onSurfaceVariant: TabernaculoCores.tintaSuave,
+          outline: TabernaculoCores.bronzeSuave,
+          tertiary: TabernaculoCores.carmim,
           error: Color(0xFF9B2C2C),
         );
   // Sem outlineVariant o Material 3 cai no onSurface: Divider, VerticalDivider

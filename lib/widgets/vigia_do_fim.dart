@@ -23,8 +23,8 @@ import 'package:material_ui/material_ui.dart';
 /// Avisa no máximo uma vez por capítulo: se a pessoa desmarcar à mão depois,
 /// não marca de novo. Trocar [chave] (outro capítulo na mesma tela, como a
 /// Bíblia faz com o mesmo controlador de rolagem) recomeça do zero.
-class DevocionalVigiaDoFim extends StatefulWidget {
-  const DevocionalVigiaDoFim({
+class TabernaculoVigiaDoFim extends StatefulWidget {
+  const TabernaculoVigiaDoFim({
     super.key,
     required this.chave,
     required this.rolagem,
@@ -47,10 +47,10 @@ class DevocionalVigiaDoFim extends StatefulWidget {
   static Duration esperaSemRolagem = const Duration(seconds: 20);
 
   @override
-  State<DevocionalVigiaDoFim> createState() => _VigiaDoFimState();
+  State<TabernaculoVigiaDoFim> createState() => _VigiaDoFimState();
 }
 
-class _VigiaDoFimState extends State<DevocionalVigiaDoFim>
+class _VigiaDoFimState extends State<TabernaculoVigiaDoFim>
     with WidgetsBindingObserver {
   bool _avisou = false;
   bool _usuarioRolou = false;
@@ -65,7 +65,7 @@ class _VigiaDoFimState extends State<DevocionalVigiaDoFim>
   }
 
   @override
-  void didUpdateWidget(covariant DevocionalVigiaDoFim antigo) {
+  void didUpdateWidget(covariant TabernaculoVigiaDoFim antigo) {
     super.didUpdateWidget(antigo);
     if (antigo.chave != widget.chave) {
       _avisou = false;
@@ -95,7 +95,7 @@ class _VigiaDoFimState extends State<DevocionalVigiaDoFim>
       if (!rolagem.hasClients) return;
       if (rolagem.position.maxScrollExtent > 0) return;
       _espera?.cancel();
-      _espera = Timer(DevocionalVigiaDoFim.esperaSemRolagem, _aoAcabarAEspera);
+      _espera = Timer(TabernaculoVigiaDoFim.esperaSemRolagem, _aoAcabarAEspera);
     });
   }
 
@@ -108,7 +108,7 @@ class _VigiaDoFimState extends State<DevocionalVigiaDoFim>
     // App em segundo plano ou outra tela por cima: ninguém está lendo. Tenta
     // de novo depois, em vez de desistir de vez.
     if (!_appAVista || ModalRoute.of(context)?.isCurrent == false) {
-      _espera = Timer(DevocionalVigiaDoFim.esperaSemRolagem, _aoAcabarAEspera);
+      _espera = Timer(TabernaculoVigiaDoFim.esperaSemRolagem, _aoAcabarAEspera);
       return;
     }
     _avisar();

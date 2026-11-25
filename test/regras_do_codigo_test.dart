@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Trava mecânica das regras do projeto que o analyzer não conhece: o
 /// texto do app sem travessão e sem aspas curvas, e a Regra dos Papéis do
-/// DESIGN.md (tela e widget nunca leem `DevocionalCores`) e cada widget em
+/// DESIGN.md (tela e widget nunca leem `TabernaculoCores`) e cada widget em
 /// arquivo próprio em `lib/widgets/`, fora das telas e do `main.dart`.
 ///
 /// Varre `lib/` porque é o que vira tela. `test/`, `tools/` e `assets/` ficam
@@ -133,7 +133,7 @@ void main() {
           continue;
         }
         for (final linha in _codigoPorLinha(arquivo.fonte)) {
-          if (!linha.texto.contains('DevocionalCores')) continue;
+          if (!linha.texto.contains('TabernaculoCores')) continue;
           achados.add(
             '${arquivo.caminho}:${linha.numero}: ${linha.texto.trim()}',
           );
@@ -165,7 +165,7 @@ void main() {
           for (final m in declaracao.allMatches(arquivo.fonte)) m.group(1)!,
         ];
         final permitidos = widgets.where(
-          (nome) => ehTela ? nome.startsWith('Tela') : nome == 'AppDevocional',
+          (nome) => ehTela ? nome.startsWith('Tela') : nome == 'AppTabernaculo',
         );
         if (widgets.length > 1 || permitidos.length != widgets.length) {
           achados.add('${arquivo.caminho}: ${widgets.join(', ')}');
@@ -177,7 +177,7 @@ void main() {
         isEmpty,
         reason:
             'Cada tela declara só o próprio widget (Tela...) e main.dart só '
-            'AppDevocional; o resto mora em lib/widgets/, um por arquivo. '
+            'AppTabernaculo; o resto mora em lib/widgets/, um por arquivo. '
             'Achados:\n${achados.join('\n')}',
       );
     });
@@ -194,7 +194,7 @@ class _Linha {
 /// As linhas do arquivo com o comentário de linha apagado (o resto byte a
 /// byte, para o número da linha continuar valendo). É o que os dois testes
 /// precisam: um travessão que sobra só pode estar em string, e a
-/// `DevocionalCores` que sobra só pode ser referência de verdade, não a
+/// `TabernaculoCores` que sobra só pode ser referência de verdade, não a
 /// citação da própria regra.
 List<_Linha> _codigoPorLinha(String fonte) {
   final linhas = <_Linha>[];

@@ -10,7 +10,7 @@ void main() {
         contexto: 'Chat.enviar',
         mensagem: 'falhou',
         pilha: '#0 main',
-        url: '/devocional/hoje',
+        url: '/tabernaculo/hoje',
         versao: '1.22.0+47',
         plataforma: 'web-android',
       ),
@@ -23,7 +23,7 @@ void main() {
     expect(json['pilha'], '#0 main');
     expect(json['arquivo'], '');
     expect(json['linha'], 0);
-    expect(json['url'], '/devocional/hoje');
+    expect(json['url'], '/tabernaculo/hoje');
     expect(json['versao'], '1.22.0+47');
     expect(json['plataforma'], 'web-android');
   });

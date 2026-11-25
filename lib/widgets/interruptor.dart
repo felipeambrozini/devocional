@@ -3,8 +3,8 @@ import 'package:material_ui/material_ui.dart';
 /// Uma linha do painel: título, explicação e o interruptor. Com escrita no
 /// voo ([salvando]), o switch desabilita e o giro ocupa o lugar do ícone à
 /// esquerda — o toque tem resposta na hora, sem parecer morto.
-class DevocionalInterruptor extends StatelessWidget {
-  const DevocionalInterruptor({
+class TabernaculoInterruptor extends StatelessWidget {
+  const TabernaculoInterruptor({
     super.key,
     required this.titulo,
     required this.subtitulo,

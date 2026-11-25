@@ -12,12 +12,12 @@ import '../estilo/espacamento.dart';
 ///
 /// Sem [anel], é a foto pequena que acompanha a fala: ao lado de cada
 /// resposta no chat e no título da barra do chat e do histórico.
-class DevocionalRetratoDePersona extends StatelessWidget {
-  const DevocionalRetratoDePersona({
+class TabernaculoRetratoDePersona extends StatelessWidget {
+  const TabernaculoRetratoDePersona({
     super.key,
     required this.persona,
     this.tamanho = 38,
-    this.folga = DevocionalEspacamento.sp2,
+    this.folga = TabernaculoEspacamento.sp2,
     this.decorativo = false,
     this.anel = true,
     this.espessuraDoAnel = 1.5,
@@ -28,7 +28,7 @@ class DevocionalRetratoDePersona extends StatelessWidget {
 
   /// A folga entre o anel dourado e a foto: sem ela a foto preenche o círculo
   /// até a borda e o cabelo encosta no aro. As entradas de conversa usam a
-  /// apertada; o botão de voz usa [DevocionalEspacamento.sp4].
+  /// apertada; o botão de voz usa [TabernaculoEspacamento.sp4].
   final double folga;
 
   /// Dentro de um botão cujo rótulo já diz o que faz, a imagem é enfeite:

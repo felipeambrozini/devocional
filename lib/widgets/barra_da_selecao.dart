@@ -12,8 +12,8 @@ import '../funcoes/cartao_imagem.dart';
 /// as ações que valem para todos eles. Copiar e Compartilhar usam o mesmo
 /// texto da folha de um versículo só, com a referência em faixa
 /// ("João 3:16-18") e o link do primeiro versículo marcado.
-class DevocionalBarraDaSelecao extends StatelessWidget {
-  const DevocionalBarraDaSelecao({
+class TabernaculoBarraDaSelecao extends StatelessWidget {
+  const TabernaculoBarraDaSelecao({
     super.key,
     required this.capitulo,
     required this.selecionados,
@@ -82,8 +82,8 @@ class DevocionalBarraDaSelecao extends StatelessWidget {
         top: false,
         child: Padding(
           padding: const EdgeInsets.symmetric(
-            horizontal: DevocionalEspacamento.sp8,
-            vertical: DevocionalEspacamento.sp4,
+            horizontal: TabernaculoEspacamento.sp8,
+            vertical: TabernaculoEspacamento.sp4,
           ),
           child: Row(
             children: [

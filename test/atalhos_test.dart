@@ -134,12 +134,12 @@ void main() {
         estado: estado,
         child: MaterialApp(
           home: Scaffold(
-            body: Center(child: DevocionalBotaoDeAjustes(estado: estado)),
+            body: Center(child: TabernaculoBotaoDeAjustes(estado: estado)),
           ),
         ),
       ),
     );
-    await tester.tap(find.byType(DevocionalBotaoDeAjustes));
+    await tester.tap(find.byType(TabernaculoBotaoDeAjustes));
     await tester.pumpAndSettle();
 
     // No ambiente de teste `kIsWeb` é falso — o mesmo Android do teste acima.
@@ -183,7 +183,7 @@ void main() {
   ) async {
     await aquecer(tester);
     final estado = Estado(await SharedPreferences.getInstance());
-    await tester.pumpWidget(AppDevocional(estado: estado));
+    await tester.pumpWidget(AppTabernaculo(estado: estado));
     await tester.pumpAndSettle();
 
     // Abre em Hoje. A aba Bíblia está viva no IndexedStack, mas não na frente:

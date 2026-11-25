@@ -6,8 +6,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 /// primeiro uso só some quando o gesto acontece de verdade (ver
 /// `_passarCapituloComDesfazer`). Um toque nela não faz nada: quem desliza
 /// usa a tela inteira como alvo, muito maior que os 48px mínimos.
-class DevocionalAlcaDeDeslize extends StatelessWidget {
-  const DevocionalAlcaDeDeslize({super.key, required this.primeiraVez});
+class TabernaculoAlcaDeDeslize extends StatelessWidget {
+  const TabernaculoAlcaDeDeslize({super.key, required this.primeiraVez});
 
   final bool primeiraVez;
 

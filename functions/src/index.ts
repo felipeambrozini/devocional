@@ -436,7 +436,7 @@ export const prepararLembrete = onDocumentWritten(
 
 // --- relatórios de erro da web ------------------------------------------- //
 //
-// `POST /devocional/api/erro` (rewrite do Hosting, ver firebase.json) recebe
+// `POST /tabernaculo/api/erro` (rewrite do Hosting, ver firebase.json) recebe
 // os erros que acontecem antes do primeiro quadro (beacon do index.html) e os
 // que o Dart já trata (lib/dados/monitoramento.dart). Sem login e sem cookie:
 // a defesa é o formato fechado de normalizarErro, o limite por cliente e o

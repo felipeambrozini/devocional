@@ -45,8 +45,9 @@ vitoriana dele, tratando o leitor por "tu".
   progresso é do ano (os dias lidos guardam o ano) e recomeça em 1º de janeiro;
   o histórico dos anos anteriores fica guardado.
 - Marcação ao terminar de ler: quem abre a Bíblia pela faixa de um dia (do
-  cronograma ou de um plano) e chega ao fim do último capítulo dele tem o dia
-  marcado como lido, com aviso e "Desfazer". Na Biblioteca, chegar ao fim de
+  cronograma ou de um plano) e chega ao fim de todos os capítulos dele, mesmo
+  em momentos diferentes, tem o dia marcado como lido, com aviso e
+  "Desfazer". Na Biblioteca, chegar ao fim de
   um capítulo marca o capítulo. Conta rolar até o fim ou, em capítulo que cabe
   na tela, ficar 20 s com ele aberto.
 - Tema claro ou escuro (padrão segue o aparelho, dá para fixar) e escala do
@@ -222,16 +223,19 @@ vitoriana dele, tratando o leitor por "tu".
 
 ## Brand Commitments
 
-- Nome do produto: "Devocional". Identidade neutra em todas as plataformas
-  (rebrand de 20/08/2026, antes só a web pública era neutra): título,
-  manifest e Open Graph da web, ícone do app e `android:label` são
-  "Devocional", sem foto nem nome do Felipe.
-- Ícone do app: marca-texto "Devocional" (fonte Cinzel, mesma composição do
-  `web/og.png`), sobre marrom `#2E1B10` (fundo claro `#F7F1E3` para as
-  variantes que seguem o tema); montada por `tools/icones.py` e gerada nas
-  plataformas por `flutter_launcher_icons`, nunca editada à mão.
-- Tela de abertura (splash): a mesma marca-texto "Devocional", sem foto,
-  dourada no escuro e em bronze no claro (rebrand de 21/08/2026); montada por
+- Nome do produto: "Tabernáculo" (25/11/2026; antes "Devocional"), que
+  lembra a tenda da Bíblia e o Metropolitan Tabernacle de Spurgeon. A aba
+  Devocional e as leituras mantêm o nome. Identidade neutra em todas as
+  plataformas: título, manifest e Open Graph da web, ícone do app e
+  `android:label` são "Tabernáculo", sem foto nem nome do Felipe. O site mora
+  em `/tabernaculo/`, e o endereço antigo `/devocional/` leva para lá.
+- Ícone do app: o desenho do Tabernáculo (a tenda de Êxodo 26 com as colunas,
+  a cortina da porta aberta e a candeia acesa dentro), dourado sobre marrom
+  `#2E1B10` (bronze sobre `#F7F1E3` nas variantes que seguem o tema); desenhado
+  por `tools/icones.py` e gerado nas plataformas por `flutter_launcher_icons`,
+  nunca editado à mão.
+- Tela de abertura (splash): o mesmo desenho, sem texto, dourado no escuro e
+  em bronze no claro; montada por
   `tools/icones.py --splash` e gerada nas plataformas por
   `flutter_native_splash`.
 - Fontes empacotadas localmente: Cinzel (títulos) e Montserrat (corpo),
@@ -295,7 +299,7 @@ vitoriana dele, tratando o leitor por "tu".
 - Tema claro e escuro completos, seguindo o aparelho por padrão.
 - Palavras de Deus (Pai, Jesus e Espírito Santo) em vermelho no leitor da
   Bíblia, ligado por padrão e desligável na folha de ajustes. Os dois
-  vermelhos (`DevocionalCores.carmim` e `carmimClaro`) passam de 4,5:1 em
+  vermelhos (`TabernaculoCores.carmim` e `carmimClaro`) passam de 4,5:1 em
   todo fundo de versículo, inclusive o selecionado.
 - Suporte à navegação por teclado no desktop (setas trocam capítulo, Ctrl+F
   abre a busca).

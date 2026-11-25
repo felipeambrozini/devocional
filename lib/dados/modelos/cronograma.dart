@@ -78,8 +78,9 @@ class DiaDoPlano {
 }
 
 /// As três leituras diárias que podem ser citadas por um capítulo do plano.
-/// `rota` bate com o path que `main.dart` declara para cada uma (`/manha`,
-/// `/noite`, `/promessas`) e com `Leitura.name` em `lib/telas/devocional.dart`.
+/// `rota` bate com o fim do path que `main.dart` declara para cada uma
+/// (`/devocional/manha`, `/devocional/noite`, `/devocional/promessas`) e com
+/// `Leitura.name` em `lib/telas/devocional.dart`.
 enum TipoDeDevocional {
   manha('manha', 'Manhã'),
   noite('noite', 'Noite'),

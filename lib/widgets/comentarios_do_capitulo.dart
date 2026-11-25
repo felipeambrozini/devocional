@@ -25,8 +25,8 @@ bool comentarioNoTextoAtivo(Estado estado) =>
 /// Quem abriu o capítulo num versículo pedido rola de novo por ele: os
 /// comentários crescem o conteúdo acima do alvo e o empurrariam para fora da
 /// tela.
-class DevocionalComentariosDoCapitulo extends StatelessWidget {
-  const DevocionalComentariosDoCapitulo({
+class TabernaculoComentariosDoCapitulo extends StatelessWidget {
+  const TabernaculoComentariosDoCapitulo({
     super.key,
     required this.livro,
     required this.capituloNumero,
@@ -60,7 +60,7 @@ class DevocionalComentariosDoCapitulo extends StatelessWidget {
         if (!comentarioNoTextoAtivo(EscopoDoEstado.de(context))) {
           return construir(context, null);
         }
-        return DevocionalCarregaUmaVez<Map<int, String>>(
+        return TabernaculoCarregaUmaVez<Map<int, String>>(
           chave: '$livro:$capituloNumero',
           carregar: _carregar,
           construir: (context, instantaneo) =>

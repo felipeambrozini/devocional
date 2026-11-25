@@ -2,8 +2,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../estilo/espacamento.dart';
 
-class DevocionalPergunta extends StatelessWidget {
-  const DevocionalPergunta(this.item, {super.key});
+class TabernaculoPergunta extends StatelessWidget {
+  const TabernaculoPergunta(this.item, {super.key});
 
   final (String, String) item;
 
@@ -16,7 +16,7 @@ class DevocionalPergunta extends StatelessWidget {
       title: Text(item.$1, style: tema.titleMedium),
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: DevocionalEspacamento.sp12),
+          padding: const EdgeInsets.only(bottom: TabernaculoEspacamento.sp12),
           child: Text(item.$2, style: tema.bodyLarge?.copyWith(height: 1.7)),
         ),
       ],

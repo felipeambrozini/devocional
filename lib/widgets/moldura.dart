@@ -6,7 +6,7 @@ import '../dados/voz.dart';
 import 'ancora_de_foco.dart';
 import 'layout_leitura.dart';
 
-/// Uma aba da [DevocionalMoldura]: o que a barra de navegação mostra, o
+/// Uma aba da [TabernaculoMoldura]: o que a barra de navegação mostra, o
 /// caminho da rota e a tela que a rota abre (as rotas ficam em `main.dart`).
 class DestinoDaMoldura {
   const DestinoDaMoldura(
@@ -33,7 +33,7 @@ class DestinoDaMoldura {
 /// frame (antes dele a aba de destino ainda não está na frente). Sem isso, a
 /// aba que saiu fica em `Offstage` mas continua com o foco: Tab e Enter agiam
 /// num botão invisível e os atalhos da aba nova não respondiam. Serve à barra
-/// de baixo ([DevocionalMoldura]) e a quem troca de aba por um `go` de dentro
+/// de baixo ([TabernaculoMoldura]) e a quem troca de aba por um `go` de dentro
 /// de uma tela, como o "Ler tudo" das prévias da Hoje.
 ///
 /// Pedir foco ao escopo deixava o foco no nó do próprio escopo, que fica
@@ -69,8 +69,8 @@ void focarAba(StatefulNavigationShell shell, int indice, {FocusNode? reserva}) {
 /// Sem estado próprio: quem sabe a aba atual é o [navigationShell], do
 /// GoRouter — duplicar isso num `_indice` local só criaria duas fontes de
 /// verdade para a mesma coisa.
-class DevocionalMoldura extends StatelessWidget {
-  const DevocionalMoldura({
+class TabernaculoMoldura extends StatelessWidget {
+  const TabernaculoMoldura({
     super.key,
     required this.navigationShell,
     required this.destinos,
@@ -175,7 +175,7 @@ class DevocionalMoldura extends StatelessWidget {
   Widget _conteudo(BuildContext context) {
     final largo = telaLarga(context);
 
-    // A DevocionalLarguraDeLeitura não fica aqui. Envolvendo o shell inteiro, ela prendia
+    // A TabernaculoLarguraDeLeitura não fica aqui. Envolvendo o shell inteiro, ela prendia
     // também a AppBar e a régua de meses do Plano numa faixa de 720 px no meio da
     // janela, e deixava de fora as telas abertas por push (como "Sobre" e o
     // "Continuar leitura"), que nascem no Navigator raiz: o mesmo leitor ficava

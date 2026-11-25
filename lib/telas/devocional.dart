@@ -124,7 +124,7 @@ class _TelaDevocionalState extends State<TelaDevocional> {
 
         if (!leituraAtiva(leitura)) {
           return Scaffold(
-            appBar: DevocionalAppBar(
+            appBar: TabernaculoAppBar(
               title: FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: AlignmentDirectional.centerStart,
@@ -133,25 +133,27 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                 ),
               ),
               actions: [
-                const DevocionalBotaoDeNotas(origem: OrigemDasNotas.devocional),
-                DevocionalBotaoDeAjustes(estado: estado),
+                const TabernaculoBotaoDeNotas(
+                  origem: OrigemDasNotas.devocional,
+                ),
+                TabernaculoBotaoDeAjustes(estado: estado),
               ],
             ),
-            body: DevocionalLarguraDeLeitura(
+            body: TabernaculoLarguraDeLeitura(
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(
-                  DevocionalEspacamento.sp16,
-                  DevocionalEspacamento.sp8,
-                  DevocionalEspacamento.sp16,
-                  DevocionalEspacamento.sp32,
+                  TabernaculoEspacamento.sp16,
+                  TabernaculoEspacamento.sp8,
+                  TabernaculoEspacamento.sp16,
+                  TabernaculoEspacamento.sp32,
                 ),
                 children: [
-                  DevocionalAlternadorDeLeitura(
+                  TabernaculoAlternadorDeLeitura(
                     atual: leitura,
                     ao: (l) => _controller.irPara(context, l, data),
                   ),
-                  const SizedBox(height: DevocionalEspacamento.sp16),
-                  DevocionalAvisoVazio(
+                  const SizedBox(height: TabernaculoEspacamento.sp16),
+                  TabernaculoAvisoVazio(
                     icone: leitura.icone,
                     titulo: leitura.tituloCompleto,
                     detalhe:
@@ -164,7 +166,7 @@ class _TelaDevocionalState extends State<TelaDevocional> {
         }
 
         return Scaffold(
-          appBar: DevocionalAppBar(
+          appBar: TabernaculoAppBar(
             title: FittedBox(
               fit: BoxFit.scaleDown,
               alignment: AlignmentDirectional.centerStart,
@@ -173,34 +175,34 @@ class _TelaDevocionalState extends State<TelaDevocional> {
               ),
             ),
             actions: [
-              DevocionalBotaoDeBusca(
+              TabernaculoBotaoDeBusca(
                 aoBuscar: () => _controller.abrirBusca(context),
               ),
-              const DevocionalBotaoDeNotas(origem: OrigemDasNotas.devocional),
+              const TabernaculoBotaoDeNotas(origem: OrigemDasNotas.devocional),
               // Sem menu de uma opção só: com a volta para hoje no banner, a
               // única ação do canto é escolher a data, e ela vai direto.
-              DevocionalBotaoDeData(
+              TabernaculoBotaoDeData(
                 aoEscolher: () => _controller.escolherData(context),
               ),
-              DevocionalBotaoDeAjustes(estado: estado),
+              TabernaculoBotaoDeAjustes(estado: estado),
             ],
           ),
-          body: DevocionalLarguraDeLeitura(
+          body: TabernaculoLarguraDeLeitura(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(
-                DevocionalEspacamento.sp16,
-                DevocionalEspacamento.sp8,
-                DevocionalEspacamento.sp16,
-                DevocionalEspacamento.sp32,
+                TabernaculoEspacamento.sp16,
+                TabernaculoEspacamento.sp8,
+                TabernaculoEspacamento.sp16,
+                TabernaculoEspacamento.sp32,
               ),
               children: [
                 if (!ehHoje)
                   Padding(
                     padding: const EdgeInsets.only(
-                      bottom: DevocionalEspacamento.sp12,
+                      bottom: TabernaculoEspacamento.sp12,
                     ),
                     child: Center(
-                      child: DevocionalBotaoTerciario.icon(
+                      child: TabernaculoBotaoTerciario.icon(
                         onPressed: () =>
                             _controller.irPara(context, leitura, hoje),
                         icon: const FaIcon(
@@ -211,12 +213,12 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                       ),
                     ),
                   ),
-                DevocionalAlternadorDeLeitura(
+                TabernaculoAlternadorDeLeitura(
                   atual: leitura,
                   ao: (l) => _controller.irPara(context, l, data),
                 ),
-                const SizedBox(height: DevocionalEspacamento.sp16),
-                DevocionalCarregaUmaVez<Devocional?>(
+                const SizedBox(height: TabernaculoEspacamento.sp16),
+                TabernaculoCarregaUmaVez<Devocional?>(
                   chave:
                       '${leitura.name}/${data.month}/${data.day}/$_tentativa',
                   carregar: _controller.carregar,
@@ -224,16 +226,16 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                     if (snap.hasError) {
                       return Padding(
                         padding: const EdgeInsets.all(
-                          DevocionalEspacamento.sp32,
+                          TabernaculoEspacamento.sp32,
                         ),
-                        child: DevocionalAvisoDeErro(
+                        child: TabernaculoAvisoDeErro(
                           aoTentarDeNovo: _tentarDeNovo,
                         ),
                       );
                     }
                     if (snap.connectionState != ConnectionState.done) {
                       return const Padding(
-                        padding: EdgeInsets.all(DevocionalEspacamento.sp32),
+                        padding: EdgeInsets.all(TabernaculoEspacamento.sp32),
                         child: Center(
                           child: CircularProgressIndicator(
                             semanticsLabel: 'Carregando',
@@ -249,9 +251,9 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                       // falha de conteúdo, não dia vazio.
                       return Padding(
                         padding: const EdgeInsets.all(
-                          DevocionalEspacamento.sp32,
+                          TabernaculoEspacamento.sp32,
                         ),
-                        child: DevocionalAvisoDeErro(
+                        child: TabernaculoAvisoDeErro(
                           aoTentarDeNovo: _tentarDeNovo,
                         ),
                       );
@@ -266,8 +268,8 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         for (final livro in livros)
-                          DevocionalAberturaDeLivro(slug: livro.slug),
-                        DevocionalCartaoDeLeitura(
+                          TabernaculoAberturaDeLivro(slug: livro.slug),
+                        TabernaculoCartaoDeLeitura(
                           titulo: dev.titulo.isNotEmpty
                               ? dev.titulo
                               : '${leitura.tituloCompleto}, ${dataLonga(data)}',

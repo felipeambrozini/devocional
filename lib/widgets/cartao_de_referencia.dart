@@ -10,8 +10,8 @@ import '../funcoes/abrir_na_biblia.dart';
 /// referência bíblica reconhecida, para ir direto ao versículo em vez de
 /// depender da busca de texto — que nunca acharia isso, já que o corpo do
 /// versículo não contém a própria referência.
-class DevocionalCartaoDeReferencia extends StatelessWidget {
-  const DevocionalCartaoDeReferencia({super.key, required this.referencia});
+class TabernaculoCartaoDeReferencia extends StatelessWidget {
+  const TabernaculoCartaoDeReferencia({super.key, required this.referencia});
 
   final (Livro, int, int, int) referencia;
 
@@ -32,16 +32,16 @@ class DevocionalCartaoDeReferencia extends StatelessWidget {
       ),
       borderRadius: BorderRadius.circular(8),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: DevocionalToque.minimo),
+        constraints: const BoxConstraints(minHeight: TabernaculoToque.minimo),
         child: Padding(
           padding: const EdgeInsets.symmetric(
-            vertical: DevocionalEspacamento.sp10,
-            horizontal: DevocionalEspacamento.sp4,
+            vertical: TabernaculoEspacamento.sp10,
+            horizontal: TabernaculoEspacamento.sp4,
           ),
           child: Row(
             children: [
               FaIcon(FontAwesomeIcons.arrowRight, size: 18, color: cor.primary),
-              const SizedBox(width: DevocionalEspacamento.sp10),
+              const SizedBox(width: TabernaculoEspacamento.sp10),
               Text(
                 'Ir para $rotulo',
                 style: Theme.of(

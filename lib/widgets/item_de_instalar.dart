@@ -16,8 +16,8 @@ import 'filete.dart';
 /// instalação dele. Sem convite (Safari no iPhone e no Mac, Firefox, ou o
 /// Chrome ainda não mandou), abre um diálogo com o caminho pelo menu para o
 /// sistema em que a pessoa está.
-class DevocionalItemDeInstalar extends StatelessWidget {
-  const DevocionalItemDeInstalar({super.key, this.instalacao});
+class TabernaculoItemDeInstalar extends StatelessWidget {
+  const TabernaculoItemDeInstalar({super.key, this.instalacao});
 
   /// Nulo usa [InstalacaoDoApp.instancia]; os testes passam uma falsa.
   final InstalacaoDoApp? instalacao;
@@ -58,7 +58,7 @@ Future<void> instalarComoApp(
   final mensageiro = ScaffoldMessenger.of(context);
   try {
     final aceitou = await instalacao.pedir();
-    if (aceitou) mostrarAvisoNo(mensageiro, 'Devocional instalado');
+    if (aceitou) mostrarAvisoNo(mensageiro, 'Tabernáculo instalado');
   } catch (erro, pilha) {
     // A janela do navegador não abriu: o toque não pode ficar sem resposta,
     // então cai no caminho pelo menu, que funciona igual.
@@ -77,8 +77,8 @@ List<String> passosParaInstalar(TargetPlatform plataforma) =>
             'não estiver na barra do navegador, fica no botão de três '
             'pontinhos. Vale no Safari, no Chrome e no Edge.',
         '2. Role as opções e toque em Adicionar à Tela de Início.',
-        '3. Toque em Adicionar. O Devocional aparece entre os seus apps.',
-        '4. Para receber os lembretes, abra o Devocional pelo ícone novo, '
+        '3. Toque em Adicionar. O Tabernáculo aparece entre os seus apps.',
+        '4. Para receber os lembretes, abra o Tabernáculo pelo ícone novo, '
             'toque no botão de ajustes dele (os controles deslizantes, no '
             'alto da tela) e ligue os lembretes. No iPhone, eles só chegam '
             'assim.',
@@ -86,17 +86,17 @@ List<String> passosParaInstalar(TargetPlatform plataforma) =>
       TargetPlatform.android => const [
         '1. Abra o menu do navegador (os três pontinhos no canto).',
         '2. Toque em Instalar app ou Adicionar à tela inicial.',
-        '3. Confirme. O Devocional aparece entre os seus apps.',
+        '3. Confirme. O Tabernáculo aparece entre os seus apps.',
       ],
       TargetPlatform.macOS => const [
         'No Chrome ou no Edge, clique no ícone de instalar no fim da barra '
-            'de endereço, ou procure Instalar Devocional no menu do '
+            'de endereço, ou procure Instalar Tabernáculo no menu do '
             'navegador.',
         'No Safari, abra o menu Arquivo e escolha Adicionar ao Dock.',
       ],
       _ => const [
         'No Chrome ou no Edge, clique no ícone de instalar no fim da barra '
-            'de endereço, ou procure Instalar Devocional no menu do '
+            'de endereço, ou procure Instalar Tabernáculo no menu do '
             'navegador.',
         'O Firefox no computador não instala sites como app.',
       ],
@@ -114,17 +114,17 @@ Future<void> _mostrarPassos(BuildContext context) {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const DevocionalFilete(largura: 64),
-            const SizedBox(height: DevocionalEspacamento.sp12),
+            const TabernaculoFilete(largura: 64),
+            const SizedBox(height: TabernaculoEspacamento.sp12),
             for (final passo in passos) ...[
               Text(passo, style: tema.bodyMedium?.copyWith(height: 1.5)),
-              const SizedBox(height: DevocionalEspacamento.sp8),
+              const SizedBox(height: TabernaculoEspacamento.sp8),
             ],
           ],
         ),
       ),
       actions: [
-        DevocionalBotaoTerciario(
+        TabernaculoBotaoTerciario(
           onPressed: () => Navigator.pop(dialogo),
           child: const Text('Entendi'),
         ),

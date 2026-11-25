@@ -8,8 +8,8 @@ import 'fala_da_persona.dart';
 /// O aviso de resposta que não veio, com o motivo e o botão de tentar de
 /// novo. Não é parte do histórico: some sozinho dois segundos depois de
 /// aparecer, ou antes, quando a próxima tentativa começa.
-class DevocionalErroDeResposta extends StatelessWidget {
-  const DevocionalErroDeResposta({
+class TabernaculoErroDeResposta extends StatelessWidget {
+  const TabernaculoErroDeResposta({
     super.key,
     required this.persona,
     required this.mensagem,
@@ -28,20 +28,20 @@ class DevocionalErroDeResposta extends StatelessWidget {
     final tema = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        DevocionalEspacamento.sp16,
-        DevocionalEspacamento.sp4,
-        DevocionalEspacamento.sp16,
+        TabernaculoEspacamento.sp16,
+        TabernaculoEspacamento.sp4,
+        TabernaculoEspacamento.sp16,
         0,
       ),
       child: Align(
         alignment: Alignment.centerLeft,
-        child: DevocionalFalaDaPersona(
+        child: TabernaculoFalaDaPersona(
           persona: persona,
           padding: const EdgeInsets.fromLTRB(
-            DevocionalEspacamento.sp14,
-            DevocionalEspacamento.sp10,
-            DevocionalEspacamento.sp8,
-            DevocionalEspacamento.sp8,
+            TabernaculoEspacamento.sp14,
+            TabernaculoEspacamento.sp10,
+            TabernaculoEspacamento.sp8,
+            TabernaculoEspacamento.sp8,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,7 +54,7 @@ class DevocionalErroDeResposta extends StatelessWidget {
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(
-                      top: DevocionalEspacamento.sp2,
+                      top: TabernaculoEspacamento.sp2,
                     ),
                     child: FaIcon(
                       FontAwesomeIcons.triangleExclamation,
@@ -62,7 +62,7 @@ class DevocionalErroDeResposta extends StatelessWidget {
                       color: cor.error,
                     ),
                   ),
-                  const SizedBox(width: DevocionalEspacamento.sp8),
+                  const SizedBox(width: TabernaculoEspacamento.sp8),
                   Flexible(
                     child: Text(
                       mensagem,
@@ -80,7 +80,7 @@ class DevocionalErroDeResposta extends StatelessWidget {
                 label: const Text('Tentar de novo'),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: DevocionalEspacamento.sp8,
+                    horizontal: TabernaculoEspacamento.sp8,
                   ),
                 ),
               ),

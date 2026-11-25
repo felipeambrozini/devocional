@@ -21,33 +21,33 @@ class TelaBiblioteca extends StatelessWidget {
     return ListenableBuilder(
       listenable: ConfigAdmin.instancia,
       builder: (context, _) => Scaffold(
-        appBar: DevocionalAppBar(
+        appBar: TabernaculoAppBar(
           title: const Text('Biblioteca'),
           actions: [
-            const DevocionalBotaoDeNotas(origem: OrigemDasNotas.biblioteca),
-            DevocionalBotaoDeAjustes(estado: estado),
+            const TabernaculoBotaoDeNotas(origem: OrigemDasNotas.biblioteca),
+            TabernaculoBotaoDeAjustes(estado: estado),
           ],
         ),
         body: !Recursos.biblioteca
-            ? const DevocionalAvisoVazio(
+            ? const TabernaculoAvisoVazio(
                 icone: FontAwesomeIcons.bookBookmark,
                 titulo: 'Biblioteca desativada',
                 detalhe: 'A Biblioteca está desativada temporariamente',
               )
-            : DevocionalLarguraDeLeitura(
+            : TabernaculoLarguraDeLeitura(
                 child: ListView.separated(
                   padding: const EdgeInsets.fromLTRB(
-                    DevocionalEspacamento.sp16,
-                    DevocionalEspacamento.sp8,
-                    DevocionalEspacamento.sp16,
-                    DevocionalEspacamento.sp32,
+                    TabernaculoEspacamento.sp16,
+                    TabernaculoEspacamento.sp8,
+                    TabernaculoEspacamento.sp16,
+                    TabernaculoEspacamento.sp32,
                   ),
                   itemCount: obrasDaBiblioteca.length,
                   separatorBuilder: (_, _) =>
-                      const SizedBox(height: DevocionalEspacamento.sp12),
+                      const SizedBox(height: TabernaculoEspacamento.sp12),
                   itemBuilder: (context, indice) {
                     final obra = obrasDaBiblioteca[indice];
-                    return DevocionalCartaoDaObra(
+                    return TabernaculoCartaoDaObra(
                       obra: obra,
                       aoAbrir: () => context.push('/biblioteca/${obra.slug}'),
                     );

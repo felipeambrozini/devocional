@@ -8,7 +8,7 @@ import 'package:web/web.dart' as web;
 /// `navigatorKey.currentState?.push(...)` direto no Navigator — não um
 /// `push`/`go` do GoRouter. Só as chamadas imperativas do próprio GoRouter
 /// pedem `routeInformationUpdated` ao motor (é o que
-/// `GoRouter.optionURLReflectsImperativeAPIs`, ligada em [AppDevocional],
+/// `GoRouter.optionURLReflectsImperativeAPIs`, ligada em [AppTabernaculo],
 /// cobre — ver `test/url_no_motor_test.dart`); um push direto no Navigator
 /// fica de fora, e a barra de endereço ficaria presa no parâmetro para
 /// sempre, mesmo trocando de aba. Chamar isto depois de consumir o

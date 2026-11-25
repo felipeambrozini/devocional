@@ -12,8 +12,8 @@ import 'botao.dart';
 /// limpar — mas deixa de ser uma perda de verdade, porque agora tem de onde
 /// voltar. Por isso só o texto muda com `Nuvem.instancia.logado`; o botão
 /// "Exportar" fica, porque é a saída que não depende de conta nem de servidor.
-class DevocionalAvisoDePerda extends StatelessWidget {
-  const DevocionalAvisoDePerda({super.key, required this.onExportar});
+class TabernaculoAvisoDePerda extends StatelessWidget {
+  const TabernaculoAvisoDePerda({super.key, required this.onExportar});
 
   final VoidCallback onExportar;
 
@@ -24,10 +24,10 @@ class DevocionalAvisoDePerda extends StatelessWidget {
       width: double.infinity,
       color: cor.surfaceContainerHighest,
       padding: const EdgeInsets.fromLTRB(
-        DevocionalEspacamento.sp16,
-        DevocionalEspacamento.sp10,
-        DevocionalEspacamento.sp8,
-        DevocionalEspacamento.sp10,
+        TabernaculoEspacamento.sp16,
+        TabernaculoEspacamento.sp10,
+        TabernaculoEspacamento.sp8,
+        TabernaculoEspacamento.sp10,
       ),
       child: Row(
         children: [
@@ -36,7 +36,7 @@ class DevocionalAvisoDePerda extends StatelessWidget {
             color: cor.onSurfaceVariant,
             size: 20,
           ),
-          const SizedBox(width: DevocionalEspacamento.sp12),
+          const SizedBox(width: TabernaculoEspacamento.sp12),
           Expanded(
             child: ListenableBuilder(
               listenable: Nuvem.instancia,
@@ -48,7 +48,7 @@ class DevocionalAvisoDePerda extends StatelessWidget {
               ),
             ),
           ),
-          DevocionalBotaoTerciario(
+          TabernaculoBotaoTerciario(
             onPressed: onExportar,
             child: const Text('Exportar'),
           ),

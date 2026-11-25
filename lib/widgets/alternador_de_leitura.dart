@@ -9,8 +9,8 @@ import '../telas/devocional.dart';
 /// celular e o rótulo aparecia cortado. Cada chip se dimensiona pelo próprio
 /// texto, e o Wrap passa para uma segunda linha em telas muito estreitas em
 /// vez de cortar.
-class DevocionalAlternadorDeLeitura extends StatelessWidget {
-  const DevocionalAlternadorDeLeitura({
+class TabernaculoAlternadorDeLeitura extends StatelessWidget {
+  const TabernaculoAlternadorDeLeitura({
     super.key,
     required this.atual,
     required this.ao,
@@ -34,8 +34,8 @@ class DevocionalAlternadorDeLeitura extends StatelessWidget {
         if (ativas.length <= 1) return const SizedBox.shrink();
         return Wrap(
           alignment: WrapAlignment.center,
-          spacing: DevocionalEspacamento.sp8,
-          runSpacing: DevocionalEspacamento.sp8,
+          spacing: TabernaculoEspacamento.sp8,
+          runSpacing: TabernaculoEspacamento.sp8,
           children: [
             for (final l in ativas)
               ChoiceChip(

@@ -8,8 +8,8 @@ import 'carrega_uma_vez.dart';
 import 'cartao_leitura_progresso.dart';
 import 'cartao_leitura_progresso_aviso.dart';
 
-class DevocionalLeituraDeHoje extends StatelessWidget {
-  const DevocionalLeituraDeHoje({super.key, required this.data});
+class TabernaculoLeituraDeHoje extends StatelessWidget {
+  const TabernaculoLeituraDeHoje({super.key, required this.data});
 
   final DateTime data;
 
@@ -20,22 +20,22 @@ class DevocionalLeituraDeHoje extends StatelessWidget {
     // (ver TelaHoje), então desligar reflete na hora, sem trocar de tela.
     if (!Recursos.cronograma) return const SizedBox.shrink();
     final estado = EscopoDoEstado.de(context);
-    return DevocionalCarregaUmaVez<DiaDoPlano?>(
+    return TabernaculoCarregaUmaVez<DiaDoPlano?>(
       chave: Conteudo.chaveDoDia(data),
       carregar: () => Conteudo.instancia.diaDoPlano(data),
       construir: (context, snap) {
         if (snap.hasError) {
-          return const DevocionalCartaoLeituraProgressoAviso(
+          return const TabernaculoCartaoLeituraProgressoAviso(
             mensagem: 'Não foi possível carregar o cronograma',
           );
         }
         if (snap.connectionState != ConnectionState.done) {
-          return const DevocionalCartaoLeituraProgressoAviso(
+          return const TabernaculoCartaoLeituraProgressoAviso(
             mensagem: 'Carregando...',
           );
         }
         final dia = snap.data!;
-        return DevocionalCartaoLeituraProgresso(
+        return TabernaculoCartaoLeituraProgresso(
           dia: dia,
           estado: estado,
           ano: data.year,

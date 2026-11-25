@@ -10,14 +10,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 const _chave = '2026-11-24';
 
 DiaDoCronograma get _diaDoCronograma =>
-    const DiaDoCronograma(chave: _chave, livroDoFim: 'joao', capituloDoFim: 3);
+    const DiaDoCronograma(chave: _chave, capitulos: ['joao.3']);
 
-DiaDePlano _diaDoPlano(String planoId, [int numero = 1]) => DiaDePlano(
-  planoId: planoId,
-  numero: numero,
-  livroDoFim: 'joao',
-  capituloDoFim: 3,
-);
+DiaDePlano _diaDoPlano(String planoId, [int numero = 1]) =>
+    DiaDePlano(planoId: planoId, numero: numero, capitulos: const ['joao.3']);
 
 void main() {
   late Estado estado;
@@ -49,6 +45,160 @@ void main() {
     await tester.pump(const Duration(seconds: 9));
     await tester.pumpAndSettle();
   }
+
+  group('registrarCapituloLidoDoDia num dia de duas leituras', () {
+    const duas = DiaDoCronograma(
+      chave: _chave,
+      capitulos: ['genesis.1', 'salmos.1'],
+    );
+    const chaveDoProgresso = 'cronograma:$_chave';
+
+    testWidgets('ler só a primeira não marca, e a segunda marca', (
+      tester,
+    ) async {
+      await montar(tester);
+
+      await registrarCapituloLidoDoDia(contexto, estado, duas, 'genesis', 1);
+      await tester.pump();
+      expect(estado.foiLido(_chave), isFalse);
+      expect(find.byType(SnackBar), findsNothing);
+      expect(estado.progressoDosDias.lidosDoDia(chaveDoProgresso), {
+        'genesis.1',
+      });
+
+      await registrarCapituloLidoDoDia(contexto, estado, duas, 'salmos', 1);
+      await tester.pump();
+      expect(estado.foiLido(_chave), isTrue);
+      expect(find.text('Leitura do dia marcada como lida'), findsOneWidget);
+      await fecharOAviso(tester);
+    });
+
+    testWidgets('ler na ordem inversa também marca', (tester) async {
+      await montar(tester);
+
+      await registrarCapituloLidoDoDia(contexto, estado, duas, 'salmos', 1);
+      await tester.pump();
+      expect(estado.foiLido(_chave), isFalse);
+
+      await registrarCapituloLidoDoDia(contexto, estado, duas, 'genesis', 1);
+      await tester.pump();
+      expect(estado.foiLido(_chave), isTrue);
+      await fecharOAviso(tester);
+    });
+
+    testWidgets('ler o mesmo capítulo duas vezes não marca o dia', (
+      tester,
+    ) async {
+      await montar(tester);
+
+      await registrarCapituloLidoDoDia(contexto, estado, duas, 'genesis', 1);
+      await registrarCapituloLidoDoDia(contexto, estado, duas, 'genesis', 1);
+      await tester.pump();
+
+      expect(estado.foiLido(_chave), isFalse);
+      await fecharOAviso(tester);
+    });
+
+    testWidgets('capítulo de fora do dia não conta nem é guardado', (
+      tester,
+    ) async {
+      await montar(tester);
+
+      await registrarCapituloLidoDoDia(contexto, estado, duas, 'genesis', 1);
+      await registrarCapituloLidoDoDia(contexto, estado, duas, 'genesis', 2);
+      await registrarCapituloLidoDoDia(contexto, estado, duas, 'joao', 1);
+      await tester.pump();
+
+      expect(estado.foiLido(_chave), isFalse);
+      expect(estado.progressoDosDias.lidosDoDia(chaveDoProgresso), {
+        'genesis.1',
+      });
+      await fecharOAviso(tester);
+    });
+
+    testWidgets('depois de marcar, o andamento é esquecido', (tester) async {
+      await montar(tester);
+
+      await registrarCapituloLidoDoDia(contexto, estado, duas, 'genesis', 1);
+      await registrarCapituloLidoDoDia(contexto, estado, duas, 'salmos', 1);
+      await tester.pump();
+
+      expect(estado.progressoDosDias.lidosDoDia(chaveDoProgresso), isEmpty);
+      await fecharOAviso(tester);
+    });
+
+    testWidgets('dia já lido continua lido, sem aviso, e esquece o andamento', (
+      tester,
+    ) async {
+      await montar(tester);
+      await estado.alternarLido(_chave);
+
+      await registrarCapituloLidoDoDia(contexto, estado, duas, 'genesis', 1);
+      await registrarCapituloLidoDoDia(contexto, estado, duas, 'salmos', 1);
+      await tester.pump();
+
+      expect(estado.foiLido(_chave), isTrue);
+      expect(find.byType(SnackBar), findsNothing);
+      expect(estado.progressoDosDias.lidosDoDia(chaveDoProgresso), isEmpty);
+      await fecharOAviso(tester);
+    });
+
+    testWidgets('o andamento sobrevive a reabrir o Estado entre as leituras', (
+      tester,
+    ) async {
+      await montar(tester);
+      await registrarCapituloLidoDoDia(contexto, estado, duas, 'genesis', 1);
+
+      final reaberto = Estado(await SharedPreferences.getInstance());
+      await registrarCapituloLidoDoDia(contexto, reaberto, duas, 'salmos', 1);
+      await tester.pump();
+
+      expect(reaberto.foiLido(_chave), isTrue);
+      await fecharOAviso(tester);
+    });
+
+    testWidgets('num dia de plano local também espera todos os capítulos', (
+      tester,
+    ) async {
+      await montar(tester);
+      final plano = await estado.criarPlano(
+        titulo: 'Cartas',
+        livros: ['joao'],
+        dias: 5,
+      );
+      final dia = DiaDePlano(
+        planoId: plano.id,
+        numero: 2,
+        capitulos: const ['2joao.1', '3joao.1'],
+      );
+
+      await registrarCapituloLidoDoDia(contexto, estado, dia, '2joao', 1);
+      await tester.pump();
+      expect(estado.foiLidoNoPlano(plano.id, 2), isFalse);
+
+      await registrarCapituloLidoDoDia(contexto, estado, dia, '3joao', 1);
+      await tester.pump();
+      expect(estado.foiLidoNoPlano(plano.id, 2), isTrue);
+      expect(find.text('Dia 2 de Cartas marcado como lido'), findsOneWidget);
+      await fecharOAviso(tester);
+    });
+
+    testWidgets('dia de um capítulo só marca de uma vez', (tester) async {
+      await montar(tester);
+
+      await registrarCapituloLidoDoDia(
+        contexto,
+        estado,
+        _diaDoCronograma,
+        'joao',
+        3,
+      );
+      await tester.pump();
+
+      expect(estado.foiLido(_chave), isTrue);
+      await fecharOAviso(tester);
+    });
+  });
 
   group('marcarDiaDaLeituraAoTerminar no cronograma', () {
     testWidgets('marca o dia e avisa com Desfazer', (tester) async {

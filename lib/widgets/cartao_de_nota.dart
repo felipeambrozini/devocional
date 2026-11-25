@@ -10,8 +10,8 @@ import 'carrega_uma_vez.dart';
 /// a nota, com editar e remover. Serve às três origens (Bíblia, Devocional e
 /// Biblioteca), que só diferem em de onde vem o texto, para onde o toque leva
 /// e onde a nota é guardada; isso tudo chega por parâmetro.
-class DevocionalCartaoDeNota extends StatelessWidget {
-  const DevocionalCartaoDeNota({
+class TabernaculoCartaoDeNota extends StatelessWidget {
+  const TabernaculoCartaoDeNota({
     super.key,
     required this.referencia,
     required this.chaveDoTexto,
@@ -28,7 +28,7 @@ class DevocionalCartaoDeNota extends StatelessWidget {
   /// "João 3:16", "Manhã, 17 de novembro" ou "Respigas, capítulo 3".
   final String referencia;
 
-  /// Identifica o texto para o [DevocionalCarregaUmaVez] não recarregá-lo a
+  /// Identifica o texto para o [TabernaculoCarregaUmaVez] não recarregá-lo a
   /// cada quadro.
   final String chaveDoTexto;
 
@@ -65,10 +65,10 @@ class DevocionalCartaoDeNota extends StatelessWidget {
         onTap: aoAbrir,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
-            DevocionalEspacamento.sp16,
-            DevocionalEspacamento.sp12,
-            DevocionalEspacamento.sp8,
-            DevocionalEspacamento.sp12,
+            TabernaculoEspacamento.sp16,
+            TabernaculoEspacamento.sp12,
+            TabernaculoEspacamento.sp8,
+            TabernaculoEspacamento.sp12,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,8 +107,8 @@ class DevocionalCartaoDeNota extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: DevocionalEspacamento.sp4),
-              DevocionalCarregaUmaVez<String>(
+              const SizedBox(height: TabernaculoEspacamento.sp4),
+              TabernaculoCarregaUmaVez<String>(
                 chave: chaveDoTexto,
                 carregar: carregarTexto,
                 construir: (context, snap) => Text(
@@ -123,8 +123,8 @@ class DevocionalCartaoDeNota extends StatelessWidget {
                 ),
               ),
               if (mostrarNota && nota.isNotEmpty) ...[
-                const SizedBox(height: DevocionalEspacamento.sp12),
-                DevocionalCaixaDeCitacao(
+                const SizedBox(height: TabernaculoEspacamento.sp12),
+                TabernaculoCaixaDeCitacao(
                   expandir: true,
                   child: Text(
                     nota,
@@ -143,8 +143,8 @@ class DevocionalCartaoDeNota extends StatelessWidget {
 }
 
 /// A lista de cartões de uma aba de Notas, ou o [vazio] quando não há nenhum.
-class DevocionalListaDeNotas extends StatelessWidget {
-  const DevocionalListaDeNotas({
+class TabernaculoListaDeNotas extends StatelessWidget {
+  const TabernaculoListaDeNotas({
     super.key,
     required this.quantidade,
     required this.construir,
@@ -163,14 +163,14 @@ class DevocionalListaDeNotas extends StatelessWidget {
     if (quantidade == 0) return vazio;
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(
-        DevocionalEspacamento.sp16,
-        DevocionalEspacamento.sp16,
-        DevocionalEspacamento.sp16,
-        DevocionalEspacamento.sp32,
+        TabernaculoEspacamento.sp16,
+        TabernaculoEspacamento.sp16,
+        TabernaculoEspacamento.sp16,
+        TabernaculoEspacamento.sp32,
       ),
       itemCount: quantidade,
       separatorBuilder: (_, _) =>
-          const SizedBox(height: DevocionalEspacamento.sp10),
+          const SizedBox(height: TabernaculoEspacamento.sp10),
       itemBuilder: construir,
     );
   }

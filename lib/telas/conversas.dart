@@ -21,11 +21,13 @@ class TelaConversas extends StatelessWidget {
     return Scaffold(
       // Ajustes em toda aba: o tema e o tamanho do texto valem aqui também, e
       // Conversas era a única sem o botão.
-      appBar: DevocionalAppBar(
+      appBar: TabernaculoAppBar(
         title: const Text('Conversas'),
-        actions: [DevocionalBotaoDeAjustes(estado: EscopoDoEstado.de(context))],
+        actions: [
+          TabernaculoBotaoDeAjustes(estado: EscopoDoEstado.de(context)),
+        ],
       ),
-      body: DevocionalLarguraDeLeitura(
+      body: TabernaculoLarguraDeLeitura(
         // Recursos.conversas depende do e-mail logado (ver Nuvem): sem
         // ouvir a nuvem, entrar ou sair da conta com a aba aberta deixava o
         // conteúdo errado até trocar de aba e voltar.
@@ -35,8 +37,8 @@ class TelaConversas extends StatelessWidget {
             ConfigAdmin.instancia,
           ]),
           builder: (context, _) => Recursos.conversas
-              ? const DevocionalCartasDeConversa()
-              : const DevocionalCartaoDePedirAcesso(
+              ? const TabernaculoCartasDeConversa()
+              : const TabernaculoCartaoDePedirAcesso(
                   icone: FontAwesomeIcons.comments,
                   descricao:
                       'Por enquanto, as conversas com Spurgeon e com Felipe '

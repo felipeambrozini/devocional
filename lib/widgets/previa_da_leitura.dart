@@ -24,8 +24,8 @@ import 'moldura.dart';
 /// [destaque] marca a leitura do período da hora (a "de agora"): é a que
 /// ganha o filete dourado embaixo do título, dizendo que uma leitura começa
 /// ali. As outras leituras do dia mantêm o mesmo cartão, só sem o filete.
-class DevocionalPreviaDaLeitura extends StatelessWidget {
-  const DevocionalPreviaDaLeitura({
+class TabernaculoPreviaDaLeitura extends StatelessWidget {
+  const TabernaculoPreviaDaLeitura({
     super.key,
     required this.data,
     required this.leitura,
@@ -76,7 +76,7 @@ class DevocionalPreviaDaLeitura extends StatelessWidget {
   }
 
   /// Cartão de uma linha só, para quando ainda não há texto para mostrar.
-  Widget _aviso(BuildContext context, String texto) => DevocionalCartao(
+  Widget _aviso(BuildContext context, String texto) => TabernaculoCartao(
     titulo: _titulo,
     acessorio: FaIcon(
       leitura.icone,
@@ -90,7 +90,7 @@ class DevocionalPreviaDaLeitura extends StatelessWidget {
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
-    return DevocionalCarregaUmaVez<Devocional?>(
+    return TabernaculoCarregaUmaVez<Devocional?>(
       chave: '${leitura.name}/${Conteudo.chaveDoDia(data)}',
       carregar: _futuro,
       construir: (context, snap) {
@@ -124,7 +124,7 @@ class DevocionalPreviaDaLeitura extends StatelessWidget {
                 destacar: (deVersiculo, ateVersiculo),
               ),
         );
-        return DevocionalCartao(
+        return TabernaculoCartao(
           titulo: _titulo,
           acessorio: FaIcon(leitura.icone, color: cor.primary, size: 20),
           child: Column(
@@ -134,36 +134,36 @@ class DevocionalPreviaDaLeitura extends StatelessWidget {
               // ali, a mesma da capa do devocional: a prévia de agora tem o
               // mesmo gesto de chamada da leitura em si.
               if (destaque) ...[
-                const DevocionalFilete(),
-                const SizedBox(height: DevocionalEspacamento.sp12),
+                const TabernaculoFilete(),
+                const SizedBox(height: TabernaculoEspacamento.sp12),
               ],
               if (dev.titulo.isNotEmpty)
                 Text(
                   dev.titulo,
                   style: tema.titleMedium?.copyWith(color: cor.primary),
                 ),
-              const SizedBox(height: DevocionalEspacamento.sp8),
+              const SizedBox(height: TabernaculoEspacamento.sp8),
               // A citação vem antes do nome do livro, e o nome do livro fica
               // ao lado do fim da citação, não numa linha própria embaixo.
               // Mais de uma linha no raro dia com mais de um versículo-base.
               if (spans.isNotEmpty) ...[
                 Text.rich(TextSpan(children: spans)),
-                const SizedBox(height: DevocionalEspacamento.sp8),
+                const SizedBox(height: TabernaculoEspacamento.sp8),
               ],
               // O corte em 5 linhas precisa ler como corte, não como fim do
               // texto: a prévia desvanece a última linha quando o texto
               // realmente não cabe.
-              DevocionalComFadeAoFim(
+              TabernaculoComFadeAoFim(
                 texto: dev.texto,
                 estilo: tema.bodyMedium?.copyWith(height: 1.6),
               ),
-              const SizedBox(height: DevocionalEspacamento.sp10),
+              const SizedBox(height: TabernaculoEspacamento.sp10),
               Align(
                 alignment: Alignment.centerRight,
                 // "Ler tudo" é TextButton em todo lugar (ação quieta, ver
                 // DESIGN.md); esta prévia usava OutlinedButton e a mesma
                 // ação tinha dois controles na mesma tela.
-                child: DevocionalBotaoTerciario.icon(
+                child: TabernaculoBotaoTerciario.icon(
                   onPressed: () => _abrir(context),
                   icon: const FaIcon(FontAwesomeIcons.arrowRight, size: 16),
                   label: const Text('Ler tudo'),

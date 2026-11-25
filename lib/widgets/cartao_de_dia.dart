@@ -17,8 +17,8 @@ import 'faixa.dart';
 /// Serve o cronograma anual (com data e borda dourada no dia de hoje) e os
 /// dias dos planos do usuário (uma sequência de 1 a N), porque são a mesma
 /// peça de UI.
-class DevocionalCartaoDeDia extends StatelessWidget {
-  const DevocionalCartaoDeDia({
+class TabernaculoCartaoDeDia extends StatelessWidget {
+  const TabernaculoCartaoDeDia({
     super.key,
     required this.numero,
     required this.rotulo,
@@ -57,10 +57,10 @@ class DevocionalCartaoDeDia extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
-          DevocionalEspacamento.sp14,
-          DevocionalEspacamento.sp12,
-          DevocionalEspacamento.sp14,
-          DevocionalEspacamento.sp4,
+          TabernaculoEspacamento.sp14,
+          TabernaculoEspacamento.sp12,
+          TabernaculoEspacamento.sp14,
+          TabernaculoEspacamento.sp4,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,7 +74,7 @@ class DevocionalCartaoDeDia extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: DevocionalEspacamento.sp8),
+            const SizedBox(width: TabernaculoEspacamento.sp8),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,29 +86,29 @@ class DevocionalCartaoDeDia extends StatelessWidget {
                       color: lido ? cor.onSurfaceVariant : cor.onSurface,
                     ),
                   ),
-                  const SizedBox(height: DevocionalEspacamento.sp10),
+                  const SizedBox(height: TabernaculoEspacamento.sp10),
                   Wrap(
-                    spacing: DevocionalEspacamento.sp8,
-                    runSpacing: DevocionalEspacamento.sp8,
+                    spacing: TabernaculoEspacamento.sp8,
+                    runSpacing: TabernaculoEspacamento.sp8,
                     children: [
                       for (final item in itens)
                         switch (item) {
                           ItemDeCapitulo(:final faixa) =>
-                            DevocionalBotaoDeFaixa(faixa: faixa, dia: dia),
+                            TabernaculoBotaoDeFaixa(faixa: faixa, dia: dia),
                           ItemDeDevocional(:final tipo, :final chaveDoDia) =>
-                            DevocionalBotaoDeDevocional(
+                            TabernaculoBotaoDeDevocional(
                               tipo: tipo,
                               chaveDoDia: chaveDoDia,
                             ),
                         },
                     ],
                   ),
-                  const SizedBox(height: DevocionalEspacamento.sp4),
+                  const SizedBox(height: TabernaculoEspacamento.sp4),
                   Tooltip(
                     message: lido
                         ? 'Desmarcar $rotulo'
                         : 'Marcar $rotulo como lido',
-                    child: DevocionalBotaoTerciario.icon(
+                    child: TabernaculoBotaoTerciario.icon(
                       onPressed: aoAlternar,
                       icon: FaIcon(
                         lido

@@ -32,7 +32,7 @@ class _TelaHojeState extends State<TelaHoje> {
 
     return Scaffold(
       body: SafeArea(
-        child: DevocionalLarguraDeLeitura(
+        child: TabernaculoLarguraDeLeitura(
           child: ListenableBuilder(
             listenable: Listenable.merge([
               ConfigAdmin.instancia,
@@ -55,49 +55,49 @@ class _TelaHojeState extends State<TelaHoje> {
                   : null;
               return ListView(
                 padding: const EdgeInsets.fromLTRB(
-                  DevocionalEspacamento.sp16,
-                  DevocionalEspacamento.sp8,
-                  DevocionalEspacamento.sp16,
-                  DevocionalEspacamento.sp32,
+                  TabernaculoEspacamento.sp16,
+                  TabernaculoEspacamento.sp8,
+                  TabernaculoEspacamento.sp16,
+                  TabernaculoEspacamento.sp32,
                 ),
                 children: [
-                  DevocionalCabecalhoDaHoje(data: agora),
-                  const SizedBox(height: DevocionalEspacamento.sp20),
+                  TabernaculoCabecalhoDaHoje(data: agora),
+                  const SizedBox(height: TabernaculoEspacamento.sp20),
                   // Ajuda só para quem chega: um cartão curto na primeira visita,
                   // que some para sempre com "Entendi". Fica antes dos cards de
                   // leitura, para orientar quem não conhece o app antes de mostrar
                   // o conteúdo do dia.
                   if (!estado.ajudaDispensada) ...[
-                    DevocionalCartaoDeAjuda(estado: estado),
-                    const SizedBox(height: DevocionalEspacamento.sp16),
+                    TabernaculoCartaoDeAjuda(estado: estado),
+                    const SizedBox(height: TabernaculoEspacamento.sp16),
                   ] else
                     // Na mesma vaga, depois do "Como usar": o convite para
                     // instalar a versão web como app (só web, fora do app
                     // instalado, até "Agora não"). O cartão traz o próprio
                     // respiro de baixo, já que pode não aparecer.
-                    DevocionalCartaoDeInstalar(estado: estado),
+                    TabernaculoCartaoDeInstalar(estado: estado),
                   // A leitura do plano abre a tela, antes dos devocionais: é a
                   // razão do app existir. A leitura da hora vem logo depois, no
                   // cartão que ganha o filete; promessas mantém o cartão sem ele,
                   // e o progresso do ano segue a leitura como quem a acompanha.
-                  DevocionalLeituraDeHoje(data: agora),
+                  TabernaculoLeituraDeHoje(data: agora),
                   // Planos personalizados em andamento: o próximo dia de cada
                   // um, entre a leitura do cronograma e os devocionais.
                   if (Recursos.planos) ...[
-                    const SizedBox(height: DevocionalEspacamento.sp16),
-                    DevocionalPlanosEmAndamento(estado: estado),
+                    const SizedBox(height: TabernaculoEspacamento.sp16),
+                    TabernaculoPlanosEmAndamento(estado: estado),
                   ],
                   if (leituraEmDestaque != null) ...[
-                    const SizedBox(height: DevocionalEspacamento.sp16),
-                    DevocionalPreviaDaLeitura(
+                    const SizedBox(height: TabernaculoEspacamento.sp16),
+                    TabernaculoPreviaDaLeitura(
                       data: agora,
                       leitura: leituraEmDestaque,
                       destaque: true,
                     ),
                   ],
                   if (Recursos.promessas) ...[
-                    const SizedBox(height: DevocionalEspacamento.sp16),
-                    DevocionalPreviaDaLeitura(
+                    const SizedBox(height: TabernaculoEspacamento.sp16),
+                    TabernaculoPreviaDaLeitura(
                       data: agora,
                       leitura: Leitura.promessas,
                     ),
@@ -106,8 +106,8 @@ class _TelaHojeState extends State<TelaHoje> {
                   // nada; um, o cartão; mais de um, uma lista horizontal. A
                   // estante inteira fica na aba Biblioteca.
                   if (Recursos.biblioteca && livrosEmLeitura.isNotEmpty) ...[
-                    const SizedBox(height: DevocionalEspacamento.sp16),
-                    DevocionalLivrosEmLeitura(
+                    const SizedBox(height: TabernaculoEspacamento.sp16),
+                    TabernaculoLivrosEmLeitura(
                       obras: livrosEmLeitura,
                       aoAbrir: (obra) {
                         final capitulo =

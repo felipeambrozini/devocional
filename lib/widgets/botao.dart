@@ -11,8 +11,8 @@ import 'folha_de_ajustes.dart';
 
 /// Abre a busca. Usado nas telas de leitura (Bíblia e devocional): a mesma
 /// lupa, com o mesmo tooltip, sem cada AppBar declarar o próprio IconButton.
-class DevocionalBotaoDeBusca extends StatelessWidget {
-  const DevocionalBotaoDeBusca({super.key, required this.aoBuscar});
+class TabernaculoBotaoDeBusca extends StatelessWidget {
+  const TabernaculoBotaoDeBusca({super.key, required this.aoBuscar});
 
   final VoidCallback aoBuscar;
 
@@ -25,8 +25,8 @@ class DevocionalBotaoDeBusca extends StatelessWidget {
 }
 
 /// Abre os ajustes de leitura e ajuda, na barra de cima de cada aba.
-class DevocionalBotaoDeAjustes extends StatelessWidget {
-  const DevocionalBotaoDeAjustes({super.key, required this.estado});
+class TabernaculoBotaoDeAjustes extends StatelessWidget {
+  const TabernaculoBotaoDeAjustes({super.key, required this.estado});
 
   final Estado estado;
 
@@ -44,8 +44,8 @@ class DevocionalBotaoDeAjustes extends StatelessWidget {
 /// Abre o seletor de data. Usado onde a data é navegável, que hoje é só o
 /// devocional: sem isto, cada tela com calendário teria o próprio IconButton
 /// de elipse-e-item.
-class DevocionalBotaoDeData extends StatelessWidget {
-  const DevocionalBotaoDeData({super.key, required this.aoEscolher});
+class TabernaculoBotaoDeData extends StatelessWidget {
+  const TabernaculoBotaoDeData({super.key, required this.aoEscolher});
 
   final VoidCallback aoEscolher;
 
@@ -60,9 +60,9 @@ class DevocionalBotaoDeData extends StatelessWidget {
 /// Alterna "lido"/"não lido" de um dia: um círculo vazio enquanto falta ler,
 /// preenchido com o check assim que já foi. Usado nos cartões da Hoje (leitura
 /// de hoje e planos em andamento); o cartão de um dia do cronograma e dos
-/// planos (DevocionalCartaoDeDia) tem botão com texto.
-class DevocionalBotaoDeLido extends StatelessWidget {
-  const DevocionalBotaoDeLido({
+/// planos (TabernaculoCartaoDeDia) tem botão com texto.
+class TabernaculoBotaoDeLido extends StatelessWidget {
+  const TabernaculoBotaoDeLido({
     super.key,
     required this.lido,
     required this.rotulo,
@@ -95,15 +95,15 @@ class DevocionalBotaoDeLido extends StatelessWidget {
 /// diálogo: o fundo cheio de metal do [FilledButton] é a maior mancha de cor
 /// que o sistema permite, e é a exceção nomeada da Regra do Metal — competir
 /// com outro botão igual na mesma tela apaga o motivo de ela existir.
-class DevocionalBotaoPrimario extends StatelessWidget {
-  const DevocionalBotaoPrimario({
+class TabernaculoBotaoPrimario extends StatelessWidget {
+  const TabernaculoBotaoPrimario({
     super.key,
     required this.onPressed,
     required Widget this.child,
   }) : icon = null,
        label = null;
 
-  const DevocionalBotaoPrimario.icon({
+  const TabernaculoBotaoPrimario.icon({
     super.key,
     required this.onPressed,
     required Widget this.icon,
@@ -133,15 +133,15 @@ class DevocionalBotaoPrimario extends StatelessWidget {
 /// A ação de "abrir alguma coisa" — Continuar leitura, faixa do cronograma,
 /// Entrar com Google, Compartilhar, Escolher livros (ver Buttons em
 /// DESIGN.md). Fio do metal com letra de destaque, nunca preenchido.
-class DevocionalBotaoSecundario extends StatelessWidget {
-  const DevocionalBotaoSecundario({
+class TabernaculoBotaoSecundario extends StatelessWidget {
+  const TabernaculoBotaoSecundario({
     super.key,
     required this.onPressed,
     required Widget this.child,
   }) : icon = null,
        label = null;
 
-  const DevocionalBotaoSecundario.icon({
+  const TabernaculoBotaoSecundario.icon({
     super.key,
     required this.onPressed,
     required Widget this.icon,
@@ -170,15 +170,15 @@ class DevocionalBotaoSecundario extends StatelessWidget {
 
 /// A ação quieta — Cancelar, Ler tudo, Sair, Exportar (ver Buttons em
 /// DESIGN.md). Sem fundo, letra na cor de destaque.
-class DevocionalBotaoTerciario extends StatelessWidget {
-  const DevocionalBotaoTerciario({
+class TabernaculoBotaoTerciario extends StatelessWidget {
+  const TabernaculoBotaoTerciario({
     super.key,
     required this.onPressed,
     required Widget this.child,
   }) : icon = null,
        label = null;
 
-  const DevocionalBotaoTerciario.icon({
+  const TabernaculoBotaoTerciario.icon({
     super.key,
     required this.onPressed,
     required Widget this.icon,
@@ -204,8 +204,8 @@ class DevocionalBotaoTerciario extends StatelessWidget {
 /// Abre as Notas (favoritos e anotações) da aba [origem]. Não é aba: fica na
 /// barra de cima do Devocional, da Bíblia e da Biblioteca e abre a tela por
 /// cima, só com o que é daquela aba.
-class DevocionalBotaoDeNotas extends StatelessWidget {
-  const DevocionalBotaoDeNotas({super.key, required this.origem});
+class TabernaculoBotaoDeNotas extends StatelessWidget {
+  const TabernaculoBotaoDeNotas({super.key, required this.origem});
 
   final OrigemDasNotas origem;
 

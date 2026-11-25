@@ -16,8 +16,8 @@ import '../widgets/widgets.dart';
 /// A aba fica visível para todo mundo, mas os planos só existem para quem tem
 /// conta: sem ela, um aviso com o botão de entrar ocupa o lugar da lista. O
 /// interruptor [Recursos.planoPersonalizado] desliga a aba inteira.
-class DevocionalAbaDosMeusPlanos extends StatelessWidget {
-  const DevocionalAbaDosMeusPlanos({super.key});
+class TabernaculoAbaDosMeusPlanos extends StatelessWidget {
+  const TabernaculoAbaDosMeusPlanos({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +25,7 @@ class DevocionalAbaDosMeusPlanos extends StatelessWidget {
       listenable: Listenable.merge([Nuvem.instancia, ConfigAdmin.instancia]),
       builder: (context, _) {
         if (!Recursos.planoPersonalizado) {
-          return const DevocionalAvisoVazio(
+          return const TabernaculoAvisoVazio(
             icone: FontAwesomeIcons.calendarPlus,
             titulo: 'Planos indisponíveis',
             detalhe:
@@ -34,7 +34,7 @@ class DevocionalAbaDosMeusPlanos extends StatelessWidget {
           );
         }
         if (!Nuvem.instancia.logado) {
-          return const DevocionalCartaoDeEntrar(
+          return const TabernaculoCartaoDeEntrar(
             titulo: 'Entre para ver seus planos',
             descricao:
                 'Os planos de leitura ficam guardados na sua conta. Entre '
@@ -56,13 +56,13 @@ class _ListaDePlanos extends StatelessWidget {
   Widget build(BuildContext context) {
     final planos = estado.planosParaExibir;
 
-    return DevocionalLarguraDeLeitura(
+    return TabernaculoLarguraDeLeitura(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
-          DevocionalEspacamento.sp16,
-          DevocionalEspacamento.sp12,
-          DevocionalEspacamento.sp16,
-          DevocionalEspacamento.sp32,
+          TabernaculoEspacamento.sp16,
+          TabernaculoEspacamento.sp12,
+          TabernaculoEspacamento.sp16,
+          TabernaculoEspacamento.sp32,
         ),
         children: [
           Row(
@@ -73,17 +73,17 @@ class _ListaDePlanos extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
               ),
-              DevocionalBotaoPrimario.icon(
+              TabernaculoBotaoPrimario.icon(
                 icon: const FaIcon(FontAwesomeIcons.plus),
                 label: const Text('Criar plano'),
                 onPressed: () => _abrirNovoPlano(context),
               ),
             ],
           ),
-          const SizedBox(height: DevocionalEspacamento.sp12),
+          const SizedBox(height: TabernaculoEspacamento.sp12),
           for (final plano in planos) ...[
-            DevocionalCartaoDePlano(plano: plano),
-            const SizedBox(height: DevocionalEspacamento.sp10),
+            TabernaculoCartaoDePlano(plano: plano),
+            const SizedBox(height: TabernaculoEspacamento.sp10),
           ],
         ],
       ),
@@ -92,7 +92,7 @@ class _ListaDePlanos extends StatelessWidget {
 
   // Rotas próprias sob /plano (ver main.dart), não Navigator.push avulso: é o
   // que faz a aba resetar para esta lista ao voltar de outra aba com um
-  // plano aberto (DevocionalMoldura._irParaAba).
+  // plano aberto (TabernaculoMoldura._irParaAba).
   Future<void> _abrirNovoPlano(BuildContext context) async {
     final criado = await context.push<PlanoDoUsuario>('/plano/novo');
     if (criado == null || !context.mounted) return;

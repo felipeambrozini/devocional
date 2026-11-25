@@ -6,9 +6,9 @@ import 'caixa_de_citacao.dart';
 /// O comentário de Spurgeon abaixo de um versículo, em corpo menor e com o
 /// fio do metal à esquerda (como a caixa de citação). Some sem rastro quando
 /// o versículo não tem comentário ([texto] nulo); quem decide se o recurso
-/// está ligado é o [DevocionalComentariosDoCapitulo].
-class DevocionalComentarioNoCapitulo extends StatelessWidget {
-  const DevocionalComentarioNoCapitulo({super.key, required this.texto});
+/// está ligado é o [TabernaculoComentariosDoCapitulo].
+class TabernaculoComentarioNoCapitulo extends StatelessWidget {
+  const TabernaculoComentarioNoCapitulo({super.key, required this.texto});
 
   final String? texto;
 
@@ -23,11 +23,11 @@ class DevocionalComentarioNoCapitulo extends StatelessWidget {
       container: true,
       label: 'Comentário no estilo de Spurgeon',
       child: Padding(
-        padding: const EdgeInsets.only(top: DevocionalEspacamento.sp8),
-        child: DevocionalCaixaDeCitacao(
+        padding: const EdgeInsets.only(top: TabernaculoEspacamento.sp8),
+        child: TabernaculoCaixaDeCitacao(
           comFundo: false,
           expandir: true,
-          padding: const EdgeInsets.only(left: DevocionalEspacamento.sp12),
+          padding: const EdgeInsets.only(left: TabernaculoEspacamento.sp12),
           child: Text(
             comentario,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(

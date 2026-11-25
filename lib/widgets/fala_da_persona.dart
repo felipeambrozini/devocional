@@ -9,14 +9,14 @@ import 'retrato_de_persona.dart';
 /// caixa de citação. Um só desenho para a resposta, o "pensando" e o aviso de
 /// resposta que não veio, para o rodapé não parecer elemento diferente das
 /// mensagens.
-class DevocionalFalaDaPersona extends StatelessWidget {
-  const DevocionalFalaDaPersona({
+class TabernaculoFalaDaPersona extends StatelessWidget {
+  const TabernaculoFalaDaPersona({
     super.key,
     required this.persona,
     required this.child,
     this.padding = const EdgeInsets.symmetric(
-      horizontal: DevocionalEspacamento.sp14,
-      vertical: DevocionalEspacamento.sp10,
+      horizontal: TabernaculoEspacamento.sp14,
+      vertical: TabernaculoEspacamento.sp10,
     ),
     this.larguraMaxima = double.infinity,
   });
@@ -37,17 +37,17 @@ class DevocionalFalaDaPersona extends StatelessWidget {
       children: [
         // O rótulo de quem fala vem do contexto (a lista do chat, o
         // "está respondendo"): a foto é enfeite.
-        DevocionalRetratoDePersona(
+        TabernaculoRetratoDePersona(
           persona: persona,
           tamanho: 28,
           anel: false,
           decorativo: true,
         ),
-        const SizedBox(width: DevocionalEspacamento.sp8),
+        const SizedBox(width: TabernaculoEspacamento.sp8),
         Flexible(
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: larguraMaxima),
-            child: DevocionalCaixaDeCitacao(padding: padding, child: child),
+            child: TabernaculoCaixaDeCitacao(padding: padding, child: child),
           ),
         ),
       ],

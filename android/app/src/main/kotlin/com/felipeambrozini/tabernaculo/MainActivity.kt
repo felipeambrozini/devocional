@@ -1,4 +1,4 @@
-package com.felipeambrozini.devocional
+package com.felipeambrozini.tabernaculo
 
 import android.content.pm.PackageManager
 import android.content.pm.Signature

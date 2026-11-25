@@ -3,8 +3,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 /// Uma linha do sumário de um livro: o número (ou o visto de lido), o título
 /// do capítulo e a marca de onde a leitura parou.
-class DevocionalLinhaDoCapitulo extends StatelessWidget {
-  const DevocionalLinhaDoCapitulo({
+class TabernaculoLinhaDoCapitulo extends StatelessWidget {
+  const TabernaculoLinhaDoCapitulo({
     super.key,
     required this.numero,
     required this.titulo,

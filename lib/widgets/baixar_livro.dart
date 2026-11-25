@@ -76,10 +76,10 @@ enum _Forma { botao, linha }
 /// Baixar, parar ou apagar o áudio de um livro inteiro, da Bíblia ou da
 /// Biblioteca: o mesmo componente nos dois lugares, pelo [LivroParaBaixar].
 ///
-/// - [DevocionalBaixarLivro.new], o botão da página do livro: o sumário de um
+/// - [TabernaculoBaixarLivro.new], o botão da página do livro: o sumário de um
 ///   livro da Biblioteca e o seletor de capítulos da Bíblia. Some quando o
 ///   livro não tem áudio no Storage e nada dele está no aparelho.
-/// - [DevocionalBaixarLivro.emLista], a linha da lista "Livros da Bíblia" dos
+/// - [TabernaculoBaixarLivro.emLista], a linha da lista "Livros da Bíblia" dos
 ///   ajustes: o nome do livro fica sempre, e a ação aparece só quando há o que
 ///   baixar ou apagar.
 ///
@@ -88,14 +88,14 @@ enum _Forma { botao, linha }
 /// ganham áudio inteiros. Some onde não há onde guardar o áudio (web sem
 /// service worker, ver [AudioOffline.suportado]) e com o Ouvir desligado no
 /// painel, como a seção de áudio offline dos ajustes.
-class DevocionalBaixarLivro extends StatefulWidget {
-  const DevocionalBaixarLivro({
+class TabernaculoBaixarLivro extends StatefulWidget {
+  const TabernaculoBaixarLivro({
     super.key,
     required this.livro,
     this.alinhamento = Alignment.centerLeft,
   }) : _forma = _Forma.botao;
 
-  const DevocionalBaixarLivro.emLista({super.key, required this.livro})
+  const TabernaculoBaixarLivro.emLista({super.key, required this.livro})
     : alinhamento = Alignment.centerLeft,
       _forma = _Forma.linha;
 
@@ -108,10 +108,10 @@ class DevocionalBaixarLivro extends StatefulWidget {
   final _Forma _forma;
 
   @override
-  State<DevocionalBaixarLivro> createState() => _BaixarLivroState();
+  State<TabernaculoBaixarLivro> createState() => _BaixarLivroState();
 }
 
-class _BaixarLivroState extends State<DevocionalBaixarLivro> {
+class _BaixarLivroState extends State<TabernaculoBaixarLivro> {
   /// Se o áudio do livro está no Storage; `null` enquanto confere.
   bool? _noStorage;
 
@@ -124,7 +124,7 @@ class _BaixarLivroState extends State<DevocionalBaixarLivro> {
   }
 
   @override
-  void didUpdateWidget(covariant DevocionalBaixarLivro antigo) {
+  void didUpdateWidget(covariant TabernaculoBaixarLivro antigo) {
     super.didUpdateWidget(antigo);
     if (antigo.livro != widget.livro) {
       _noStorage = null;
@@ -193,16 +193,16 @@ class _BaixarLivroState extends State<DevocionalBaixarLivro> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Baixando o áudio', style: tema.bodyMedium),
-                const SizedBox(height: DevocionalEspacamento.sp6),
-                DevocionalProgressoFino(
+                const SizedBox(height: TabernaculoEspacamento.sp6),
+                TabernaculoProgressoFino(
                   valor: s.progresso,
                   rotulo: 'Baixando o áudio de ${_livro.titulo}',
                 ),
               ],
             ),
           ),
-          const SizedBox(width: DevocionalEspacamento.sp12),
-          DevocionalBotaoTerciario(
+          const SizedBox(width: TabernaculoEspacamento.sp12),
+          TabernaculoBotaoTerciario(
             onPressed: off.cancelar,
             child: const Text('Parar'),
           ),
@@ -212,7 +212,7 @@ class _BaixarLivroState extends State<DevocionalBaixarLivro> {
       linha = Row(
         children: [
           FaIcon(FontAwesomeIcons.circleCheck, size: 16, color: cor.primary),
-          const SizedBox(width: DevocionalEspacamento.sp8),
+          const SizedBox(width: TabernaculoEspacamento.sp8),
           Expanded(
             child: Text(
               kIsWeb
@@ -221,7 +221,7 @@ class _BaixarLivroState extends State<DevocionalBaixarLivro> {
               style: tema.bodyMedium,
             ),
           ),
-          DevocionalBotaoTerciario(
+          TabernaculoBotaoTerciario(
             onPressed: s.outroBaixando
                 ? null
                 : () => _apagarComConfirmacao(context, _livro),
@@ -232,7 +232,7 @@ class _BaixarLivroState extends State<DevocionalBaixarLivro> {
     } else {
       linha = Align(
         alignment: widget.alinhamento,
-        child: DevocionalBotaoTerciario.icon(
+        child: TabernaculoBotaoTerciario.icon(
           // Outro download em andamento: um lote por vez.
           onPressed: s.outroBaixando || _noStorage != true ? null : _baixar,
           icon: const FaIcon(FontAwesomeIcons.download, size: 16),
@@ -252,7 +252,7 @@ class _BaixarLivroState extends State<DevocionalBaixarLivro> {
     // da barra seria reanunciado. Quem tocou em Baixar já sabe que começou.
     final centralizado = widget.alinhamento == Alignment.center;
     return Padding(
-      padding: const EdgeInsets.only(top: DevocionalEspacamento.sp8),
+      padding: const EdgeInsets.only(top: TabernaculoEspacamento.sp8),
       child: Semantics(
         liveRegion: s.pronto || s.erro != null,
         child: Column(
@@ -281,8 +281,8 @@ class _BaixarLivroState extends State<DevocionalBaixarLivro> {
     final Widget subtitulo;
     if (s.baixandoEste) {
       subtitulo = Padding(
-        padding: const EdgeInsets.only(top: DevocionalEspacamento.sp6),
-        child: DevocionalProgressoFino(
+        padding: const EdgeInsets.only(top: TabernaculoEspacamento.sp6),
+        child: TabernaculoProgressoFino(
           valor: s.progresso,
           rotulo: 'Baixando $nome',
         ),
@@ -303,7 +303,7 @@ class _BaixarLivroState extends State<DevocionalBaixarLivro> {
     }
     final Widget? acao;
     if (s.baixandoEste) {
-      acao = DevocionalBotaoTerciario(
+      acao = TabernaculoBotaoTerciario(
         onPressed: off.cancelar,
         child: const Text('Parar'),
       );
@@ -369,10 +369,10 @@ class _LivrosDaBibliaOffline extends StatelessWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
-                  DevocionalEspacamento.sp20,
-                  DevocionalEspacamento.sp8,
-                  DevocionalEspacamento.sp20,
-                  DevocionalEspacamento.sp4,
+                  TabernaculoEspacamento.sp20,
+                  TabernaculoEspacamento.sp8,
+                  TabernaculoEspacamento.sp20,
+                  TabernaculoEspacamento.sp4,
                 ),
                 child: Semantics(
                   header: true,
@@ -383,7 +383,7 @@ class _LivrosDaBibliaOffline extends StatelessWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: DevocionalEspacamento.sp20,
+                  horizontal: TabernaculoEspacamento.sp20,
                 ),
                 child: Text(
                   'Baixe só os livros que vai ouvir',
@@ -392,11 +392,11 @@ class _LivrosDaBibliaOffline extends StatelessWidget {
               ),
             ),
             const SliverToBoxAdapter(
-              child: SizedBox(height: DevocionalEspacamento.sp8),
+              child: SizedBox(height: TabernaculoEspacamento.sp8),
             ),
             SliverList.builder(
               itemCount: canon.length,
-              itemBuilder: (context, i) => DevocionalBaixarLivro.emLista(
+              itemBuilder: (context, i) => TabernaculoBaixarLivro.emLista(
                 livro: LivroParaBaixar.daBiblia(canon[i]),
               ),
             ),

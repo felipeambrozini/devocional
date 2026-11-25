@@ -41,7 +41,7 @@ void main() {
       // antes de conferir e tocar.
       await tester.binding.setSurfaceSize(const Size(800, 900));
       addTearDown(() => tester.binding.setSurfaceSize(null));
-      await tester.pumpWidget(AppDevocional(estado: estado));
+      await tester.pumpWidget(AppTabernaculo(estado: estado));
       await tester.pumpAndSettle();
 
       // O GoRouter navega ate Hoje num frame: a lista nao existe ate a rota
@@ -75,7 +75,7 @@ void main() {
       expect(find.text('Como usar'), findsNothing);
 
       // E não volta: a escolha fica gravada no estado.
-      await tester.pumpWidget(AppDevocional(estado: estado));
+      await tester.pumpWidget(AppTabernaculo(estado: estado));
       await tester.pumpAndSettle();
       expect(find.text('Como usar'), findsNothing);
     },
@@ -86,7 +86,7 @@ void main() {
     final estado = Estado(await SharedPreferences.getInstance());
     await tester.binding.setSurfaceSize(const Size(800, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(AppDevocional(estado: estado));
+    await tester.pumpWidget(AppTabernaculo(estado: estado));
     await tester.pumpAndSettle();
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
     (app.routerConfig as GoRouter).go('/hoje');
@@ -136,7 +136,7 @@ void main() {
   ) async {
     await aquecerAssets(tester);
     final estado = Estado(await SharedPreferences.getInstance());
-    await tester.pumpWidget(AppDevocional(estado: estado));
+    await tester.pumpWidget(AppTabernaculo(estado: estado));
     await tester.pumpAndSettle();
 
     // O _router é um singleton global (lib/main.dart). O primeiro teste
@@ -153,7 +153,7 @@ void main() {
     }
     await tester.pumpAndSettle();
 
-    // O _LeituraDeHoje usa DevocionalCarregaUmaVez (FutureBuilder) que carrega
+    // O _LeituraDeHoje usa TabernaculoCarregaUmaVez (FutureBuilder) que carrega
     // assincronamente. Espera o FutureBuilder completar.
     await tester.pumpAndSettle(const Duration(seconds: 10));
 

@@ -7,26 +7,26 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:169480227109:android:286f46640a25846c3c72cc",
+        "mobilesdk_app_id": "1:169480227109:android:43c8eedac3663d093c72cc",
         "android_client_info": {
-          "package_name": "com.felipeambrozini.devocional"
+          "package_name": "com.felipeambrozini.tabernaculo"
         }
       },
       "oauth_client": [
         {
-          "client_id": "169480227109-29f5g9gj60fe67q008nmv9h8utjtegdi.apps.googleusercontent.com",
+          "client_id": "169480227109-jp8gt0046dp9ectspt1g0ir8nqlkm32d.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.felipeambrozini.devocional",
-            "certificate_hash": "f7bd18b0f29d0b207d83a2fb09ce0fb79602c050"
+            "package_name": "com.felipeambrozini.tabernaculo",
+            "certificate_hash": "53592683edc5abdddf263fff66c1278e96520ff8"
           }
         },
         {
-          "client_id": "169480227109-q5imtb38a2tcftrjaa7mh1kpivgkctsi.apps.googleusercontent.com",
+          "client_id": "169480227109-vcfsps4l1ndueohgio0ucgbdrld4e8k7.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.felipeambrozini.devocional",
-            "certificate_hash": "53592683edc5abdddf263fff66c1278e96520ff8"
+            "package_name": "com.felipeambrozini.tabernaculo",
+            "certificate_hash": "f7bd18b0f29d0b207d83a2fb09ce0fb79602c050"
           }
         },
         {

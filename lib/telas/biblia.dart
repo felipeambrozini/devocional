@@ -40,7 +40,7 @@ class TelaBiblia extends StatefulWidget {
   /// um: chegar ao fim do último capítulo dele marca o dia como lido.
   final DiaDaLeitura? dia;
 
-  /// Ver [DevocionalAppBar.voltarPara]: a Bíblia aberta por cima (rota `/ler`)
+  /// Ver [TabernaculoAppBar.voltarPara]: a Bíblia aberta por cima (rota `/ler`)
   /// precisa de saída quando o F5 a deixa sozinha na pilha.
   final String? voltarPara;
 
@@ -109,7 +109,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
     // de quem tem o foco, e o foco pode estar num botão da AppBar. Com o
     // atalho só no corpo, a tecla passava por fora dele e nada acontecia. A
     // âncora de foco fica dentro dos atalhos: é nela que a troca de aba põe o
-    // foco (ver DevocionalAncoraDeFoco).
+    // foco (ver TabernaculoAncoraDeFoco).
     return ListenableBuilder(
       listenable: _controller,
       builder: (context, _) {
@@ -128,16 +128,16 @@ class _TelaBibliaState extends State<TelaBiblia> {
                 _controller.abrirBusca(context),
           },
           // "Voltar" sai da seleção antes de sair da tela.
-          child: DevocionalAncoraDeFoco(
+          child: TabernaculoAncoraDeFoco(
             child: PopScope(
               canPop: !_controller.selecionando,
               onPopInvokedWithResult: (_, _) => _controller.limparSelecao(),
               child: Scaffold(
-                appBar: DevocionalAppBar(
+                appBar: TabernaculoAppBar(
                   voltarPara: widget.voltarPara,
                   title: Tooltip(
                     message: 'Escolher livro e capítulo',
-                    child: DevocionalBotaoTerciario(
+                    child: TabernaculoBotaoTerciario(
                       onPressed: () => _controller.abrirSeletor(context),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -153,7 +153,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
                               ).appBarTheme.titleTextStyle,
                             ),
                           ),
-                          const SizedBox(width: DevocionalEspacamento.sp8),
+                          const SizedBox(width: TabernaculoEspacamento.sp8),
                           FaIcon(
                             FontAwesomeIcons.chevronDown,
                             color: cor.primary,
@@ -164,23 +164,25 @@ class _TelaBibliaState extends State<TelaBiblia> {
                     ),
                   ),
                   actions: [
-                    DevocionalIndicadorDeVozNaBarra(
+                    TabernaculoIndicadorDeVozNaBarra(
                       chave: chaveDeCapitulo(livro, capitulo),
                     ),
-                    DevocionalBotaoDeBusca(
+                    TabernaculoBotaoDeBusca(
                       aoBuscar: () => _controller.abrirBusca(context),
                     ),
-                    const DevocionalBotaoDeNotas(origem: OrigemDasNotas.biblia),
-                    DevocionalBotaoDeAjustes(estado: estado),
+                    const TabernaculoBotaoDeNotas(
+                      origem: OrigemDasNotas.biblia,
+                    ),
+                    TabernaculoBotaoDeAjustes(estado: estado),
                   ],
                 ),
                 body: Focus(
                   autofocus: true,
-                  child: DevocionalLarguraDeLeitura(
+                  child: TabernaculoLarguraDeLeitura(
                     child: Column(
                       children: [
                         Expanded(
-                          child: DevocionalCarregaUmaVez<Capitulo>(
+                          child: TabernaculoCarregaUmaVez<Capitulo>(
                             chave: '$livro/$capitulo/$_tentativa',
                             carregar: () =>
                                 Conteudo.instancia.capitulo(livro, capitulo),
@@ -189,7 +191,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
                           ),
                         ),
                         if (_controller.semGestoDeToque && estado.setasDoRodape)
-                          DevocionalBarraDeCapitulo(
+                          TabernaculoBarraDeCapitulo(
                             podeVoltar:
                                 !(livro == canon.first.slug && capitulo == 1),
                             podeAvancar:
@@ -213,19 +215,23 @@ class _TelaBibliaState extends State<TelaBiblia> {
   }
 
   /// Com [TelaBiblia.dia], envolve o leitor no vigia do fim: quem rolou até o
-  /// fim do último capítulo do dia (ou ficou com ele aberto, se cabe na tela)
-  /// leu o dia, e o dia é marcado. Sem dia, a leitura segue como sempre, sem
-  /// vigia nem espera correndo à toa.
+  /// fim de um capítulo do dia (ou ficou com ele aberto, se cabe na tela) leu
+  /// esse capítulo, e o dia é marcado quando todos os capítulos dele foram
+  /// lidos. Sem dia, a leitura segue como sempre, sem vigia nem espera
+  /// correndo à toa.
   Widget _comVigiaDoDia(Estado estado, Capitulo capitulo, Widget leitor) {
     final dia = widget.dia;
     if (dia == null) return leitor;
-    return DevocionalVigiaDoFim(
+    return TabernaculoVigiaDoFim(
       chave: '${capitulo.livro}.${capitulo.numero}',
       rolagem: _controller.rolagem,
-      aoChegarAoFim: () {
-        if (!dia.ehOFim(capitulo.livro, capitulo.numero)) return;
-        marcarDiaDaLeituraAoTerminar(context, estado, dia);
-      },
+      aoChegarAoFim: () => registrarCapituloLidoDoDia(
+        context,
+        estado,
+        dia,
+        capitulo.livro,
+        capitulo.numero,
+      ),
       child: leitor,
     );
   }
@@ -239,7 +245,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
     AsyncSnapshot<Capitulo> snap,
   ) {
     if (snap.hasError) {
-      return DevocionalAvisoDeErro(aoTentarDeNovo: _tentarDeNovo);
+      return TabernaculoAvisoDeErro(aoTentarDeNovo: _tentarDeNovo);
     }
     if (snap.connectionState != ConnectionState.done) {
       return const Center(
@@ -250,7 +256,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
     // Os 66 livros estão completos e a navegação só pede capítulos do canon:
     // capítulo vazio é asset que não carregou (na web, quase sempre a rede).
     if (capitulo.versiculos.isEmpty) {
-      return DevocionalAvisoDeErro(aoTentarDeNovo: _tentarDeNovo);
+      return TabernaculoAvisoDeErro(aoTentarDeNovo: _tentarDeNovo);
     }
     // Quem chegou por link, nota ou busca pediu um versículo exato; rolar até
     // ele precisa de um frame depois do capítulo montado.
@@ -274,7 +280,7 @@ class _TelaBibliaState extends State<TelaBiblia> {
         child: _comVigiaDoDia(
           estado,
           capitulo,
-          DevocionalLeitorDaBiblia(
+          TabernaculoLeitorDaBiblia(
             capitulo: capitulo,
             rolagem: _controller.rolagem,
             destacar: widget.destacar,
@@ -312,14 +318,14 @@ class _TelaBibliaState extends State<TelaBiblia> {
                 // A alça é um indício de que dá para deslizar, não um
                 // controle: quem desliza usa a tela inteira como alvo de toque.
                 if (!kIsWeb)
-                  DevocionalAlcaDeDeslize(
+                  TabernaculoAlcaDeDeslize(
                     primeiraVez: !estado.swipeTooltipDispensado,
                   ),
               ],
             ),
           ),
           if (_controller.selecionando)
-            DevocionalBarraDaSelecao(
+            TabernaculoBarraDaSelecao(
               capitulo: capitulo,
               selecionados: _controller.selecionados,
               aoFechar: _controller.limparSelecao,

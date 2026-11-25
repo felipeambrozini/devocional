@@ -10,7 +10,7 @@ import 'package:material_ui/material_ui.dart';
 /// Todo par abaixo foi conferido contra o fundo em que é usado. Os números estão
 /// anotados porque é a única forma de a próxima pessoa saber que não pode
 /// clarear o bronze "só um pouco" sem refazer a conta.
-abstract final class DevocionalCores {
+abstract final class TabernaculoCores {
   // Escuro. Corpo em [bege] e não em dourado puro: dourado sobre marrom fica em
   // torno de 4:1, que cansa a vista num capítulo inteiro, e o bege chega a 11:1.
   static const fundo = Color(0xFF2E1B10);

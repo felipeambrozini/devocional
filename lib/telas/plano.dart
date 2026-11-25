@@ -8,7 +8,7 @@ import '../widgets/widgets.dart';
 ///
 /// As duas abas ficam sempre visíveis: a aba Meus Planos explica o que falta
 /// (conta ou o recurso premium) em vez de sumir em silêncio quando não se
-/// aplica — ver `DevocionalAbaDosMeusPlanos`.
+/// aplica — ver `TabernaculoAbaDosMeusPlanos`.
 class TelaPlano extends StatefulWidget {
   const TelaPlano({super.key, this.hoje});
 
@@ -25,9 +25,9 @@ class _TelaPlanoState extends State<TelaPlano> {
   Widget build(BuildContext context) {
     final estado = EscopoDoEstado.de(context);
 
-    return DevocionalAbasDoPlano(
+    return TabernaculoAbasDoPlano(
       hoje: widget.hoje,
-      acaoDeAjustes: DevocionalBotaoDeAjustes(estado: estado),
+      acaoDeAjustes: TabernaculoBotaoDeAjustes(estado: estado),
     );
   }
 }

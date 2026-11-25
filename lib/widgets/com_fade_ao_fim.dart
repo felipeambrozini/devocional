@@ -7,8 +7,8 @@ import 'package:material_ui/material_ui.dart';
 /// corte. O `TextPainter` decide antes de pintar se o texto estoura; só então
 /// o `ShaderMask` suaviza a quinta linha para o fundo (o `dstIn` usa só o
 /// alfa do gradiente, preservando a cor do texto).
-class DevocionalComFadeAoFim extends StatelessWidget {
-  const DevocionalComFadeAoFim({
+class TabernaculoComFadeAoFim extends StatelessWidget {
+  const TabernaculoComFadeAoFim({
     super.key,
     required this.texto,
     required this.estilo,

@@ -4,8 +4,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../estilo/espacamento.dart';
 import 'botao.dart';
 
-class DevocionalCartaoDeCompartilhar extends StatelessWidget {
-  const DevocionalCartaoDeCompartilhar({
+class TabernaculoCartaoDeCompartilhar extends StatelessWidget {
+  const TabernaculoCartaoDeCompartilhar({
     super.key,
     required this.compartilhado,
     required this.aoCompartilhar,
@@ -19,7 +19,7 @@ class DevocionalCartaoDeCompartilhar extends StatelessWidget {
     final cor = Theme.of(context).colorScheme;
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(DevocionalEspacamento.sp16),
+        padding: const EdgeInsets.all(TabernaculoEspacamento.sp16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -27,7 +27,7 @@ class DevocionalCartaoDeCompartilhar extends StatelessWidget {
               compartilhado ? 'Plano compartilhado' : 'Compartilhe o plano',
               style: Theme.of(context).textTheme.titleSmall,
             ),
-            const SizedBox(height: DevocionalEspacamento.sp4),
+            const SizedBox(height: TabernaculoEspacamento.sp4),
             Text(
               compartilhado
                   ? 'Quem abrir o link entra no plano e o progresso de cada '
@@ -38,8 +38,8 @@ class DevocionalCartaoDeCompartilhar extends StatelessWidget {
                 context,
               ).textTheme.bodySmall?.copyWith(color: cor.onSurfaceVariant),
             ),
-            const SizedBox(height: DevocionalEspacamento.sp10),
-            DevocionalBotaoSecundario.icon(
+            const SizedBox(height: TabernaculoEspacamento.sp10),
+            TabernaculoBotaoSecundario.icon(
               onPressed: aoCompartilhar,
               icon: FaIcon(
                 compartilhado

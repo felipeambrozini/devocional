@@ -6,8 +6,8 @@ import '../estilo/espacamento.dart';
 /// Só é montado onde não há gesto de toque; ver `BibliaControlador.semGestoDeToque`.
 /// No celular deslizar já faz isso, e a barra custava uma
 /// faixa do fim de toda tela, logo acima da barra de navegação.
-class DevocionalBarraDeCapitulo extends StatelessWidget {
-  const DevocionalBarraDeCapitulo({
+class TabernaculoBarraDeCapitulo extends StatelessWidget {
+  const TabernaculoBarraDeCapitulo({
     super.key,
     required this.podeVoltar,
     required this.podeAvancar,
@@ -26,8 +26,8 @@ class DevocionalBarraDeCapitulo extends StatelessWidget {
       top: false,
       child: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: DevocionalEspacamento.sp12,
-          vertical: DevocionalEspacamento.sp4,
+          horizontal: TabernaculoEspacamento.sp12,
+          vertical: TabernaculoEspacamento.sp4,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

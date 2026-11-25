@@ -14,8 +14,8 @@ import 'busca.dart';
 /// do conteúdo. Criado fora e descartado no `finally` do `Future`, ele morre
 /// com a rota ainda na transição de saída, e o campo da rota morta ainda o
 /// usa.
-class DevocionalSeletorDeLivrosDoPlano extends StatefulWidget {
-  const DevocionalSeletorDeLivrosDoPlano({
+class TabernaculoSeletorDeLivrosDoPlano extends StatefulWidget {
+  const TabernaculoSeletorDeLivrosDoPlano({
     super.key,
     required this.jaEscolhidos,
   });
@@ -23,12 +23,12 @@ class DevocionalSeletorDeLivrosDoPlano extends StatefulWidget {
   final List<String> jaEscolhidos;
 
   @override
-  State<DevocionalSeletorDeLivrosDoPlano> createState() =>
-      _DevocionalSeletorDeLivrosDoPlanoState();
+  State<TabernaculoSeletorDeLivrosDoPlano> createState() =>
+      _TabernaculoSeletorDeLivrosDoPlanoState();
 }
 
-class _DevocionalSeletorDeLivrosDoPlanoState
-    extends State<DevocionalSeletorDeLivrosDoPlano> {
+class _TabernaculoSeletorDeLivrosDoPlanoState
+    extends State<TabernaculoSeletorDeLivrosDoPlano> {
   static final _antigos = [
     for (final livro in canon)
       if (livro.testamento == Testamento.antigo) livro,
@@ -104,7 +104,7 @@ class _DevocionalSeletorDeLivrosDoPlanoState
             SliverToBoxAdapter(
               child: Column(
                 children: [
-                  DevocionalBusca(
+                  TabernaculoBusca(
                     controller: _busca,
                     // Mesmo padrão da aba de busca: no celular o teclado cobriria a
                     // lista de 66 livros antes de qualquer intenção.
@@ -112,12 +112,12 @@ class _DevocionalSeletorDeLivrosDoPlanoState
                     hintText: 'Buscar livro',
                     onChanged: (_) => setState(() {}),
                   ),
-                  const SizedBox(height: DevocionalEspacamento.sp12),
+                  const SizedBox(height: TabernaculoEspacamento.sp12),
                   _atalhoDeTestamento(_antigos, 'Antigo Testamento'),
                   _atalhoDeTestamento(_novos, 'Novo Testamento'),
                   Padding(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: DevocionalEspacamento.sp16,
+                      horizontal: TabernaculoEspacamento.sp16,
                     ),
                     child: Text(
                       'Caixa cheia marca o testamento inteiro. Traço quer dizer que só parte dele está marcada.',
@@ -137,8 +137,8 @@ class _DevocionalSeletorDeLivrosDoPlanoState
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text('Nenhum livro encontrado'),
-                      const SizedBox(height: DevocionalEspacamento.sp8),
-                      DevocionalBotaoTerciario(
+                      const SizedBox(height: TabernaculoEspacamento.sp8),
+                      TabernaculoBotaoTerciario(
                         onPressed: () => setState(_busca.clear),
                         child: const Text('Limpar busca'),
                       ),
@@ -173,11 +173,11 @@ class _DevocionalSeletorDeLivrosDoPlanoState
         ),
       ),
       actions: [
-        DevocionalBotaoTerciario(
+        TabernaculoBotaoTerciario(
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancelar'),
         ),
-        DevocionalBotaoPrimario(
+        TabernaculoBotaoPrimario(
           // Sem livro não há plano: o botão só acende com 1+ marcado, em vez
           // de confirmar vazio e avisar depois.
           onPressed: _selecionados.isEmpty

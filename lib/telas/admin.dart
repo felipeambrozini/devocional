@@ -89,8 +89,8 @@ class _TelaAdminState extends State<TelaAdmin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const DevocionalAppBar(title: Text('Administração')),
-      body: DevocionalLarguraDeLeitura(
+      appBar: const TabernaculoAppBar(title: Text('Administração')),
+      body: TabernaculoLarguraDeLeitura(
         child: ListenableBuilder(
           listenable: Listenable.merge([
             ConfigAdmin.instancia,
@@ -98,7 +98,7 @@ class _TelaAdminState extends State<TelaAdmin> {
           ]),
           builder: (context, _) {
             if (!kIsWeb) {
-              return const DevocionalAvisoVazio(
+              return const TabernaculoAvisoVazio(
                 icone: FontAwesomeIcons.globe,
                 titulo: 'Só na web',
                 detalhe:
@@ -106,14 +106,14 @@ class _TelaAdminState extends State<TelaAdmin> {
               );
             }
             if (!Nuvem.instancia.logado) {
-              return const DevocionalAvisoVazio(
+              return const TabernaculoAvisoVazio(
                 icone: FontAwesomeIcons.lock,
                 titulo: 'Entre para continuar',
                 detalhe: 'O painel admin exige a conta do dono logada.',
               );
             }
             if (!Recursos.ehAdmin) {
-              return const DevocionalAvisoVazio(
+              return const TabernaculoAvisoVazio(
                 icone: FontAwesomeIcons.lock,
                 titulo: 'Acesso restrito',
                 detalhe: 'Esta conta não tem acesso ao painel admin.',
@@ -131,36 +131,38 @@ class _TelaAdminState extends State<TelaAdmin> {
     final config = ConfigAdmin.instancia;
     return ListView(
       padding: const EdgeInsets.fromLTRB(
-        DevocionalEspacamento.sp20,
-        DevocionalEspacamento.sp16,
-        DevocionalEspacamento.sp20,
-        DevocionalEspacamento.sp40,
+        TabernaculoEspacamento.sp20,
+        TabernaculoEspacamento.sp16,
+        TabernaculoEspacamento.sp20,
+        TabernaculoEspacamento.sp40,
       ),
       children: [
         Text('Administração', style: tema.displayMedium),
-        const SizedBox(height: DevocionalEspacamento.sp8),
-        const DevocionalFilete(largura: 64),
-        const SizedBox(height: DevocionalEspacamento.sp8),
+        const SizedBox(height: TabernaculoEspacamento.sp8),
+        const TabernaculoFilete(largura: 64),
+        const SizedBox(height: TabernaculoEspacamento.sp8),
         Text(
           config.carregado
               ? 'Sincronizado com a nuvem. Mudar aqui vale na hora, sem reimplantar.'
               : 'Carregando a configuração...',
           style: tema.bodySmall,
         ),
-        const SizedBox(height: DevocionalEspacamento.sp16),
+        const SizedBox(height: TabernaculoEspacamento.sp16),
         Text('Recursos', style: tema.headlineSmall),
         // Sem a configuração, os switches mostravam o padrão ligado como se
         // fosse o estado real — e um toque ali sobrescrevia o servidor. Sem
         // ela, só o giro: nada se liga nem desliga antes de saber a verdade.
         if (!config.carregado)
           const Padding(
-            padding: EdgeInsets.symmetric(vertical: DevocionalEspacamento.sp24),
+            padding: EdgeInsets.symmetric(
+              vertical: TabernaculoEspacamento.sp24,
+            ),
             child: Center(
               child: CircularProgressIndicator(semanticsLabel: 'Carregando'),
             ),
           ),
         if (config.carregado)
-          DevocionalInterruptor(
+          TabernaculoInterruptor(
             titulo: 'Conversas (chat)',
             subtitulo: 'Interruptor geral: desligado, ninguém conversa.',
             valor: config.conversasAtivas,
@@ -168,7 +170,7 @@ class _TelaAdminState extends State<TelaAdmin> {
             aoMudar: (novo) => _alternar('conversasAtivas', 'Conversas', novo),
           ),
         if (config.carregado)
-          DevocionalInterruptor(
+          TabernaculoInterruptor(
             titulo: 'Planos personalizados',
             subtitulo: 'A aba Meus planos e a criação de planos próprios.',
             valor: config.planoPersonalizadoAtivo,
@@ -180,7 +182,7 @@ class _TelaAdminState extends State<TelaAdmin> {
             ),
           ),
         if (config.carregado)
-          DevocionalInterruptor(
+          TabernaculoInterruptor(
             titulo: 'Cronograma anual',
             subtitulo: 'A aba Cronograma dentro do Plano.',
             valor: config.cronogramaAtivo,
@@ -188,7 +190,7 @@ class _TelaAdminState extends State<TelaAdmin> {
             aoMudar: (novo) => _alternar('cronogramaAtivo', 'Cronograma', novo),
           ),
         if (config.carregado)
-          DevocionalInterruptor(
+          TabernaculoInterruptor(
             titulo: 'Devocional da manhã',
             subtitulo: 'A leitura Manhã no Devocional e na Hoje.',
             valor: config.manhaAtivo,
@@ -196,7 +198,7 @@ class _TelaAdminState extends State<TelaAdmin> {
             aoMudar: (novo) => _alternar('manhaAtivo', 'Manhã', novo),
           ),
         if (config.carregado)
-          DevocionalInterruptor(
+          TabernaculoInterruptor(
             titulo: 'Devocional da noite',
             subtitulo: 'A leitura Noite no Devocional e na Hoje.',
             valor: config.noiteAtivo,
@@ -204,7 +206,7 @@ class _TelaAdminState extends State<TelaAdmin> {
             aoMudar: (novo) => _alternar('noiteAtivo', 'Noite', novo),
           ),
         if (config.carregado)
-          DevocionalInterruptor(
+          TabernaculoInterruptor(
             titulo: 'Promessas de Deus',
             subtitulo: 'A leitura Promessas no Devocional e na Hoje.',
             valor: config.promessasAtivo,
@@ -212,7 +214,7 @@ class _TelaAdminState extends State<TelaAdmin> {
             aoMudar: (novo) => _alternar('promessasAtivo', 'Promessas', novo),
           ),
         if (config.carregado)
-          DevocionalInterruptor(
+          TabernaculoInterruptor(
             titulo: 'Ouvir textos',
             subtitulo:
                 'O botão Ouvir na Bíblia, no devocional, nas introduções e '
@@ -223,7 +225,7 @@ class _TelaAdminState extends State<TelaAdmin> {
                 _alternar('ouvirTextosAtivo', 'Ouvir textos', novo),
           ),
         if (config.carregado)
-          DevocionalInterruptor(
+          TabernaculoInterruptor(
             titulo: 'Biblioteca',
             subtitulo: 'Os livros de Spurgeon, na Hoje e no Devocional.',
             valor: config.bibliotecaAtiva,
@@ -231,7 +233,7 @@ class _TelaAdminState extends State<TelaAdmin> {
             aoMudar: (novo) => _alternar('bibliotecaAtiva', 'Biblioteca', novo),
           ),
         if (config.carregado)
-          DevocionalInterruptor(
+          TabernaculoInterruptor(
             titulo: 'Comentário no capítulo',
             subtitulo:
                 'O comentário de Spurgeon abaixo de cada versículo da Bíblia.',
@@ -243,9 +245,9 @@ class _TelaAdminState extends State<TelaAdmin> {
               novo,
             ),
           ),
-        const SizedBox(height: DevocionalEspacamento.sp24),
-        const DevocionalFilete(largura: 64),
-        const SizedBox(height: DevocionalEspacamento.sp16),
+        const SizedBox(height: TabernaculoEspacamento.sp24),
+        const TabernaculoFilete(largura: 64),
+        const SizedBox(height: TabernaculoEspacamento.sp16),
         if (config.emailsLegados.isNotEmpty) ...[
           Text(
             'A lista antiga ainda está no documento público, com '
@@ -253,12 +255,12 @@ class _TelaAdminState extends State<TelaAdmin> {
             'o próprio convite e apaga a lista.',
             style: tema.bodySmall,
           ),
-          const SizedBox(height: DevocionalEspacamento.sp8),
-          DevocionalBotaoPrimario(
+          const SizedBox(height: TabernaculoEspacamento.sp8),
+          TabernaculoBotaoPrimario(
             onPressed: _migrando ? null : _migrarConvidados,
             child: Text(_migrando ? 'Migrando...' : 'Migrar convidados'),
           ),
-          const SizedBox(height: DevocionalEspacamento.sp16),
+          const SizedBox(height: TabernaculoEspacamento.sp16),
         ],
         StreamBuilder<List<String>>(
           // O bloco de migração acima entra e sai da lista: sem a chave, a
@@ -273,7 +275,7 @@ class _TelaAdminState extends State<TelaAdmin> {
                 style: tema.bodyMedium,
               );
             }
-            return DevocionalSecaoDeEmails(
+            return TabernaculoSecaoDeEmails(
               titulo: 'E-mails com conversas',
               legendaVazia: convidados.hasData
                   ? 'Ninguém liberado ainda.'

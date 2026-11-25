@@ -239,7 +239,7 @@ class BibliaControlador extends ChangeNotifier {
       isScrollControlled: true,
       useSafeArea: true,
       builder: (_) =>
-          DevocionalSeletorDeLivro(livroAtual: livro, capituloAtual: capitulo),
+          TabernaculoSeletorDeLivro(livroAtual: livro, capituloAtual: capitulo),
     );
     if (destino != null && context.mounted) {
       irPara(context, destino.$1, destino.$2);

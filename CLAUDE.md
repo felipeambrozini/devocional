@@ -47,7 +47,7 @@
   os dois divergirem. Decisões já tomadas, que o unslop não deve reabrir:
   - Cinzel com os pesos do DESIGN.md (700 nos `display`, 600 nos títulos) e
     superfícies de pergaminho e couro, não cinza neutro;
-  - a escala de `DevocionalEspacamento`, com 6, 10, 14 e 18 (não é grade de
+  - a escala de `TabernaculoEspacamento`, com 6, 10, 14 e 18 (não é grade de
     4px);
   - a saudação "Bom dia, Nome" da aba Hoje e a voz das personas (o
     `boasVindas` e as instruções de sistema, inclusive o emoji do modelo de

@@ -11,8 +11,8 @@ import 'botao.dart';
 /// [aoConcordar] roda dentro do próprio toque do botão, sem `await` antes: na
 /// web é ele que abre a janela de login do Google, e o navegador só a deixa
 /// abrir dentro do gesto do usuário (ver `entrarNaConta`).
-class DevocionalConsentimentoDaNuvem extends StatelessWidget {
-  const DevocionalConsentimentoDaNuvem({
+class TabernaculoConsentimentoDaNuvem extends StatelessWidget {
+  const TabernaculoConsentimentoDaNuvem({
     super.key,
     required this.rotuloDeConcordar,
     required this.rotuloDeRecusar,
@@ -47,7 +47,7 @@ class DevocionalConsentimentoDaNuvem extends StatelessWidget {
           ),
           Align(
             alignment: Alignment.centerLeft,
-            child: DevocionalBotaoTerciario(
+            child: TabernaculoBotaoTerciario(
               onPressed: () => context.push('/privacidade'),
               child: const Text('Ler a política de privacidade'),
             ),
@@ -55,14 +55,14 @@ class DevocionalConsentimentoDaNuvem extends StatelessWidget {
         ],
       ),
       actions: [
-        DevocionalBotaoTerciario(
+        TabernaculoBotaoTerciario(
           onPressed: () {
             Navigator.pop(context);
             aoRecusar?.call();
           },
           child: Text(rotuloDeRecusar),
         ),
-        DevocionalBotaoPrimario(
+        TabernaculoBotaoPrimario(
           onPressed: () {
             Navigator.pop(context);
             aoConcordar();

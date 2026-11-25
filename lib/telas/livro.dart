@@ -20,7 +20,7 @@ class TelaDoLivro extends StatefulWidget {
 
 class _TelaDoLivroState extends State<TelaDoLivro> {
   /// A chave do carregamento muda a cada "Tentar de novo" para o
-  /// [DevocionalCarregaUmaVez] refazer o future em vez de reusar a falha.
+  /// [TabernaculoCarregaUmaVez] refazer o future em vez de reusar a falha.
   var _tentativa = 0;
 
   void _tentarDeNovo() {
@@ -34,24 +34,24 @@ class _TelaDoLivroState extends State<TelaDoLivro> {
     final estado = EscopoDoEstado.de(context);
 
     return Scaffold(
-      appBar: DevocionalAppBar(
+      appBar: TabernaculoAppBar(
         title: Text(
           obra?.titulo ?? 'Biblioteca',
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
-          const DevocionalBotaoDeNotas(origem: OrigemDasNotas.biblioteca),
-          DevocionalBotaoDeAjustes(estado: estado),
+          const TabernaculoBotaoDeNotas(origem: OrigemDasNotas.biblioteca),
+          TabernaculoBotaoDeAjustes(estado: estado),
         ],
       ),
       body: obra == null
-          ? const DevocionalAvisoVazio(
+          ? const TabernaculoAvisoVazio(
               icone: FontAwesomeIcons.book,
               titulo: 'Livro não encontrado',
               detalhe: 'Este livro não está na biblioteca',
             )
-          : DevocionalLarguraDeLeitura(
-              child: DevocionalCarregaUmaVez<List<CapituloDoLivro>?>(
+          : TabernaculoLarguraDeLeitura(
+              child: TabernaculoCarregaUmaVez<List<CapituloDoLivro>?>(
                 chave: '${widget.slug}/$_tentativa',
                 carregar: () => Biblioteca.instancia.capitulos(widget.slug),
                 construir: (context, snap) {
@@ -64,9 +64,11 @@ class _TelaDoLivroState extends State<TelaDoLivro> {
                   }
                   final capitulos = snap.data;
                   if (capitulos == null || capitulos.isEmpty) {
-                    return DevocionalAvisoDeErro(aoTentarDeNovo: _tentarDeNovo);
+                    return TabernaculoAvisoDeErro(
+                      aoTentarDeNovo: _tentarDeNovo,
+                    );
                   }
-                  return DevocionalSumarioDoLivro(
+                  return TabernaculoSumarioDoLivro(
                     obra: obra,
                     capitulos: capitulos,
                   );

@@ -6,8 +6,8 @@ import 'widgets.dart';
 
 /// Primeira visita: o retrato, o nome e a fala de boas-vindas da persona, no
 /// lugar da lista vazia.
-class DevocionalBoasVindas extends StatelessWidget {
-  const DevocionalBoasVindas({super.key, required this.persona});
+class TabernaculoBoasVindas extends StatelessWidget {
+  const TabernaculoBoasVindas({super.key, required this.persona});
 
   final Persona persona;
 
@@ -17,21 +17,21 @@ class DevocionalBoasVindas extends StatelessWidget {
     final tema = Theme.of(context).textTheme;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(DevocionalEspacamento.sp32),
+        padding: const EdgeInsets.all(TabernaculoEspacamento.sp32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            DevocionalRetratoDePersona(
+            TabernaculoRetratoDePersona(
               persona: persona,
               tamanho: 92,
               espessuraDoAnel: 2,
               decorativo: true,
             ),
-            const SizedBox(height: DevocionalEspacamento.sp18),
-            const DevocionalFilete(largura: 64),
-            const SizedBox(height: DevocionalEspacamento.sp12),
+            const SizedBox(height: TabernaculoEspacamento.sp18),
+            const TabernaculoFilete(largura: 64),
+            const SizedBox(height: TabernaculoEspacamento.sp12),
             Text(persona.nome, style: tema.headlineSmall),
-            const SizedBox(height: DevocionalEspacamento.sp10),
+            const SizedBox(height: TabernaculoEspacamento.sp10),
             Text(
               persona.boasVindas,
               textAlign: TextAlign.center,

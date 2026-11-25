@@ -14,17 +14,17 @@ import '../widgets/widgets.dart';
 /// Vive com `AutomaticKeepAliveClientMixin` porque o TabBarView desmonta a
 /// aba que sai da tela: sem isto, trocar para Meus Planos e voltar
 /// recomeçaria o mês em janeiro e perderia a rolagem.
-class DevocionalAbaDoCronograma extends StatefulWidget {
-  const DevocionalAbaDoCronograma({super.key, required this.hoje});
+class TabernaculoAbaDoCronograma extends StatefulWidget {
+  const TabernaculoAbaDoCronograma({super.key, required this.hoje});
 
   final DateTime? hoje;
 
   @override
-  State<DevocionalAbaDoCronograma> createState() =>
-      _DevocionalAbaDoCronogramaState();
+  State<TabernaculoAbaDoCronograma> createState() =>
+      _TabernaculoAbaDoCronogramaState();
 }
 
-class _DevocionalAbaDoCronogramaState extends State<DevocionalAbaDoCronograma>
+class _TabernaculoAbaDoCronogramaState extends State<TabernaculoAbaDoCronograma>
     with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
@@ -117,8 +117,8 @@ class _DevocionalAbaDoCronogramaState extends State<DevocionalAbaDoCronograma>
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(
-            horizontal: DevocionalEspacamento.sp12,
-            vertical: DevocionalEspacamento.sp8,
+            horizontal: TabernaculoEspacamento.sp12,
+            vertical: TabernaculoEspacamento.sp8,
           ),
           child: Row(
             children: [
@@ -126,7 +126,7 @@ class _DevocionalAbaDoCronogramaState extends State<DevocionalAbaDoCronograma>
                 Padding(
                   key: _chavesDeMes[m - 1],
                   padding: const EdgeInsets.only(
-                    right: DevocionalEspacamento.sp8,
+                    right: TabernaculoEspacamento.sp8,
                   ),
                   child: ChoiceChip(
                     label: Text(meses[m - 1]),
@@ -141,8 +141,8 @@ class _DevocionalAbaDoCronogramaState extends State<DevocionalAbaDoCronograma>
           ),
         ),
         Expanded(
-          child: DevocionalLarguraDeLeitura(
-            child: DevocionalCarregaUmaVez<List<DiaDoPlano>>(
+          child: TabernaculoLarguraDeLeitura(
+            child: TabernaculoCarregaUmaVez<List<DiaDoPlano>>(
               // A tela mostra o cronograma do ano corrente, então segue a mesma variante
               // que o resto do app: em ano bissexto, a de 366 dias, com 29 de fevereiro
               // como dia próprio. Sem isto, esta tela mostrava sempre a de 365 e
@@ -156,7 +156,7 @@ class _DevocionalAbaDoCronogramaState extends State<DevocionalAbaDoCronograma>
               ),
               construir: (context, snap) {
                 if (snap.hasError) {
-                  return DevocionalAvisoDeErro(aoTentarDeNovo: _tentarDeNovo);
+                  return TabernaculoAvisoDeErro(aoTentarDeNovo: _tentarDeNovo);
                 }
                 if (snap.connectionState != ConnectionState.done) {
                   return const Center(
@@ -176,10 +176,10 @@ class _DevocionalAbaDoCronogramaState extends State<DevocionalAbaDoCronograma>
                 return ListView.separated(
                   controller: _rolagem,
                   padding: const EdgeInsets.fromLTRB(
-                    DevocionalEspacamento.sp16,
-                    DevocionalEspacamento.sp12,
-                    DevocionalEspacamento.sp16,
-                    DevocionalEspacamento.sp32,
+                    TabernaculoEspacamento.sp16,
+                    TabernaculoEspacamento.sp12,
+                    TabernaculoEspacamento.sp16,
+                    TabernaculoEspacamento.sp32,
                   ),
                   // Monta o mês inteiro de uma vez em vez de só o visível.
                   // São no máximo 31 cartões leves, e é o que faz o cartão de hoje já
@@ -195,12 +195,12 @@ class _DevocionalAbaDoCronogramaState extends State<DevocionalAbaDoCronograma>
                   ),
                   itemCount: dias.length + 1,
                   separatorBuilder: (_, _) =>
-                      const SizedBox(height: DevocionalEspacamento.sp10),
+                      const SizedBox(height: TabernaculoEspacamento.sp10),
                   itemBuilder: (context, i) {
                     if (i == 0) {
                       return Padding(
                         padding: const EdgeInsets.only(
-                          bottom: DevocionalEspacamento.sp6,
+                          bottom: TabernaculoEspacamento.sp6,
                         ),
                         child: Text(
                           '$lidosNoMes de ${dias.length} dias concluídos em '
@@ -211,7 +211,7 @@ class _DevocionalAbaDoCronogramaState extends State<DevocionalAbaDoCronograma>
                     }
                     final dia = dias[i - 1];
                     final ehHoje = dia.mes == hoje.month && dia.dia == hoje.day;
-                    return DevocionalCartaoDeDia(
+                    return TabernaculoCartaoDeDia(
                       key: ehHoje ? _chaveDeHoje : null,
                       numero: dia.dia,
                       rotulo: dia.rotulo,

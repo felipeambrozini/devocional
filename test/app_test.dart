@@ -127,7 +127,7 @@ void main() {
     Recursos.conversasForcado = true;
     Voz.baseUrlForTest = 'https://test.audio';
     // Evita bater no path_provider de verdade: sem plugin registrado em
-    // teste de widget, o botão de ouvir (DevocionalBotaoDeVoz) ficaria escondido pra
+    // teste de widget, o botão de ouvir (TabernaculoBotaoDeVoz) ficaria escondido pra
     // sempre esperando essa checagem nunca resolver.
     AudioOffline.temOfflineParaTeste = (_) => false;
   });
@@ -294,7 +294,7 @@ void main() {
     tester,
   ) async {
     await aquecerAssets(tester);
-    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+    await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
     await tester.pumpAndSettle();
 
     // Sobre não é mais aba: o rail tem cinco destinos (Conversas fica nos
@@ -363,7 +363,7 @@ void main() {
       // cabeçalho mostra espera, não um "Entrar" que sumiria sozinho — era essa
       // a cara de "deslogou ao fechar o app".
       await aquecerAssets(tester);
-      await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+      await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
       await tester.pumpAndSettle();
 
       expect(find.text('Entrar'), findsNothing);
@@ -373,7 +373,7 @@ void main() {
       // Deslogado de verdade (override), o convite aparece.
       Nuvem.instancia.logadoForcado = false;
       addTearDown(() => Nuvem.instancia.logadoForcado = null);
-      await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+      await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
       await tester.pumpAndSettle();
       expect(find.text('Entrar'), findsOneWidget);
     },
@@ -388,7 +388,7 @@ void main() {
     Recursos.cronogramaForcado = false;
     addTearDown(() => Recursos.cronogramaForcado = null);
     await aquecerAssets(tester);
-    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+    await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
     await tester.pumpAndSettle();
 
     expect(find.text('Progresso do ano'), findsNothing);
@@ -422,7 +422,7 @@ void main() {
     final antigo = FlutterError.onError;
     FlutterError.onError = erros.add;
     try {
-      await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+      await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
       await tester.pumpAndSettle();
       // Traz o cartão para a área que a lista realiza, para a linha ser
       // medida de verdade na largura estreita.
@@ -454,10 +454,10 @@ void main() {
     // abriria a tela mas deixaria a barra de endereço presa na aba — este
     // teste prova as duas partes: o conteúdo abre e a URL interna segue.
     await aquecerAssets(tester);
-    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+    await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byType(DevocionalBotaoDeAjustes));
+    await tester.tap(find.byType(TabernaculoBotaoDeAjustes));
     await tester.pumpAndSettle();
 
     // A folha cresce até quase a tela inteira e rola; o tile de Sobre é o
@@ -510,7 +510,7 @@ void main() {
       scrollable: listaDeSobre,
     );
     expect(find.text('YouTube'), findsOneWidget);
-    // Assentamento extra: cada DevocionalBotaoDeVoz da tela checa disponibilidade do
+    // Assentamento extra: cada TabernaculoBotaoDeVoz da tela checa disponibilidade do
     // áudio de forma assíncrona (local e remoto) antes de decidir se aparece;
     // sem esperar essa checagem terminar, o resto da lista (Instagram em
     // diante) ainda não tinha acabado de montar quando a rolagem seguinte
@@ -534,7 +534,7 @@ void main() {
       // Baixar áudio sem o botão de ouvir é peso morto no disco: a seção
       // some junto, na hora, sem esconder o resto da folha.
       Future<void> abrirFolha() async {
-        await tester.tap(find.byType(DevocionalBotaoDeAjustes));
+        await tester.tap(find.byType(TabernaculoBotaoDeAjustes));
         await tester.pumpAndSettle();
       }
 
@@ -550,7 +550,7 @@ void main() {
       }
 
       await aquecerAssets(tester);
-      await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+      await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
       await tester.pumpAndSettle();
 
       await abrirFolha();
@@ -572,7 +572,7 @@ void main() {
     // cru): além de abrir o conteúdo, a barra de endereço precisa acompanhar
     // e voltar junto quando o histórico fecha.
     await aquecerAssets(tester);
-    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+    await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
     await tester.pumpAndSettle();
 
     GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/conversas');
@@ -587,7 +587,7 @@ void main() {
       '/charles-spurgeon',
     );
 
-    // O botão de voltar da AppBar é o IconButton do DevocionalAppBar, não o
+    // O botão de voltar da AppBar é o IconButton do TabernaculoAppBar, não o
     // widget BackButton que o pageBack() procura.
     await tester.tap(find.byIcon(FontAwesomeIcons.arrowLeft.data));
     await tester.pumpAndSettle();
@@ -601,7 +601,7 @@ void main() {
 
   testWidgets('cada leitura do Devocional tem URL própria', (tester) async {
     await aquecerAssets(tester);
-    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+    await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
     await tester.pumpAndSettle();
 
     // O router é global e os testes rodam no mesmo processo: o teste anterior
@@ -620,11 +620,11 @@ void main() {
     await tester.pumpAndSettle();
 
     // A aba cai na leitura do horário (Manhã antes das 18h, Noite depois),
-    // nunca em /devocional — é isto que livra a URL de repetir o nome da
-    // aba em devocional/devocional.
+    // nunca parada em /devocional: a rota da aba só redireciona para a
+    // leitura (/devocional/manha, /devocional/noite).
     expect(
       GoRouter.of(tester.element(find.byType(Scaffold).first)).state.uri.path,
-      anyOf('/manha', '/noite'),
+      anyOf('/devocional/manha', '/devocional/noite'),
       reason: 'a aba Devocional abre direto na leitura do horário',
     );
 
@@ -632,7 +632,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       GoRouter.of(tester.element(find.byType(Scaffold).first)).state.uri.path,
-      '/promessas',
+      '/devocional/promessas',
       reason: 'o chip de Promessas escreve a própria rota na URL',
     );
 
@@ -640,23 +640,46 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       GoRouter.of(tester.element(find.byType(Scaffold).first)).state.uri.path,
-      '/noite',
+      '/devocional/noite',
       reason: 'o chip de Noite escreve a própria rota na URL',
     );
+  });
+
+  testWidgets('links antigos das leituras (/manha, /noite) ainda abrem', (
+    tester,
+  ) async {
+    await aquecerAssets(tester);
+    await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
+    await tester.pumpAndSettle();
+
+    final roteador = GoRouter.of(tester.element(find.byType(Scaffold).first));
+    roteador.go('/noite?data=2025-12-25');
+    await tester.pump();
+    await tester.pump();
+    expect(
+      roteador.state.uri.toString(),
+      '/devocional/noite?data=2025-12-25',
+      reason: 'o link de antes da 1.28 cai na leitura nova, com a data',
+    );
+
+    roteador.go('/promessas');
+    await tester.pump();
+    await tester.pump();
+    expect(roteador.state.uri.path, '/devocional/promessas');
   });
 
   testWidgets('a data escolhida no calendário do Devocional atualiza a tela', (
     tester,
   ) async {
     await aquecerAssets(tester);
-    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+    await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
     await tester.pumpAndSettle();
 
     final roteador = GoRouter.of(tester.element(find.byType(Scaffold).first));
-    roteador.go('/manha');
+    roteador.go('/devocional/manha');
     await tester.pumpAndSettle();
 
-    // O calendário escreve a data na mesma rota (/manha?data=...), e o
+    // O calendário escreve a data na mesma rota (/devocional/manha?data=...), e o
     // go_router chaveia a página só pelo caminho: a tela não é recriada, o
     // State sobrevive e a data nova tem de ser recolhida pelo
     // didUpdateWidget. Regressão: o título ficava preso no dia anterior.
@@ -664,7 +687,7 @@ void main() {
     // Sem pumpAndSettle: o corpo do dia 10 de janeiro não está no cache de
     // assets do teste, e o spinner girando não deixaria a tela assentar.
     final anoPassado = DateTime.now().year - 1;
-    roteador.go('/manha?data=$anoPassado-01-10');
+    roteador.go('/devocional/manha?data=$anoPassado-01-10');
     await tester.pump();
     await tester.pump();
     await tester.pump();
@@ -675,11 +698,11 @@ void main() {
     tester,
   ) async {
     await aquecerAssets(tester);
-    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+    await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
     await tester.pumpAndSettle();
 
     final roteador = GoRouter.of(tester.element(find.byType(Scaffold).first));
-    roteador.go('/manha');
+    roteador.go('/devocional/manha');
     await tester.pumpAndSettle();
 
     // O ano entra na comparação de "mesmo dia": escolher 19 de agosto do
@@ -690,7 +713,7 @@ void main() {
     final agora = DateTime.now();
     final mes = agora.month.toString().padLeft(2, '0');
     final dia = agora.day.toString().padLeft(2, '0');
-    roteador.go('/manha?data=$anoPassado-$mes-$dia');
+    roteador.go('/devocional/manha?data=$anoPassado-$mes-$dia');
     await tester.pump();
     await tester.pump();
     await tester.pump();
@@ -818,7 +841,7 @@ void main() {
     // desenha a última fala é o seguinte.
     await tester.pump();
 
-    // A conversa reabre na última fala, não no DevocionalFilete: a última mensagem
+    // A conversa reabre na última fala, não no TabernaculoFilete: a última mensagem
     // está visível e o aviso do corte (que mora no topo) ainda não foi
     // construído.
     expect(find.text('fala 120'), findsOneWidget);
@@ -865,7 +888,7 @@ void main() {
   });
 
   Future<void> abrirHistorico(WidgetTester tester, Estado estado) async {
-    await tester.pumpWidget(AppDevocional(estado: estado));
+    await tester.pumpWidget(AppTabernaculo(estado: estado));
     await tester.pumpAndSettle();
     GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/conversas');
     await tester.pumpAndSettle();
@@ -1072,17 +1095,17 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await aquecerAssets(tester);
-    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+    await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
     await tester.pumpAndSettle();
 
     expect(find.byType(NavigationRail), findsOneWidget);
 
-    // Mede a caixa real que a DevocionalLarguraDeLeitura produz na árvore de verdade, não
+    // Mede a caixa real que a TabernaculoLarguraDeLeitura produz na árvore de verdade, não
     // uma versão isolada: o Center sozinho preenche todo o Expanded, quem tem a
     // largura de 720 é o ConstrainedBox logo dentro dele.
     final caixa = find
         .descendant(
-          of: find.byType(DevocionalLarguraDeLeitura),
+          of: find.byType(TabernaculoLarguraDeLeitura),
           matching: find.byType(ConstrainedBox),
         )
         .first;
@@ -1114,7 +1137,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await aquecerAssets(tester);
-      await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+      await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
       await tester.pumpAndSettle();
 
       GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/conversas');
@@ -1132,7 +1155,7 @@ void main() {
   testWidgets(
     'numa janela larga, a barra do leitor ocupa a janela e só o texto fica em coluna',
     (tester) async {
-      // A DevocionalLarguraDeLeitura já envolveu o IndexedStack inteiro, e então a AppBar
+      // A TabernaculoLarguraDeLeitura já envolveu o IndexedStack inteiro, e então a AppBar
       // de cada aba também ficava presa em 720 px no meio da janela, com fundo
       // vazio dos dois lados: cara de celular colado no meio de um monitor.
       tester.view.physicalSize = const Size(1600, 900);
@@ -1141,7 +1164,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await aquecerAssets(tester);
-      await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+      await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Bíblia').last);
       await tester.pumpAndSettle();
@@ -1151,7 +1174,7 @@ void main() {
       final coluna = tester.getRect(
         find
             .descendant(
-              of: find.byType(DevocionalLarguraDeLeitura),
+              of: find.byType(TabernaculoLarguraDeLeitura),
               matching: find.byType(ConstrainedBox),
             )
             .first,
@@ -1174,7 +1197,7 @@ void main() {
     tester,
   ) async {
     // As rotas empurradas nascem no Navigator raiz, fora da moldura. Com a
-    // DevocionalLarguraDeLeitura no lugar errado elas ficavam de fora dela, e o mesmo
+    // TabernaculoLarguraDeLeitura no lugar errado elas ficavam de fora dela, e o mesmo
     // leitor tinha 720 px pela aba e a janela inteira por uma rota empurrada.
     tester.view.physicalSize = const Size(1600, 900);
     tester.view.devicePixelRatio = 1.0;
@@ -1193,7 +1216,7 @@ void main() {
     final coluna = tester.getRect(
       find
           .descendant(
-            of: find.byType(DevocionalLarguraDeLeitura),
+            of: find.byType(TabernaculoLarguraDeLeitura),
             matching: find.byType(ConstrainedBox),
           )
           .first,
@@ -1384,7 +1407,7 @@ void main() {
       expect(
         copiado,
         '"No princípio, Deus criou os céus e a terra."\nGênesis 1:1\n'
-        'https://www.felipeambrozini.com.br/devocional/?ler=genesis.1.1',
+        'https://www.felipeambrozini.com.br/tabernaculo/?ler=genesis.1.1',
       );
       // Deixa o aviso fechar sozinho, senão o timer dele fica pendente.
       await tester.pump(const Duration(seconds: 3));
@@ -1428,7 +1451,7 @@ void main() {
     await tester.runAsync(
       () => Conteudo.instancia.devocional(data, Periodo.manha),
     );
-    // Pré-aquece a introdução de Josué: sem isso a Future do DevocionalCarregaUmaVez
+    // Pré-aquece a introdução de Josué: sem isso a Future do TabernaculoCarregaUmaVez
     // nunca completa dentro do tempo falso do teste.
     await tester.runAsync(() => Conteudo.instancia.introducao('josue'));
     await tester.pumpWidget(
@@ -1632,7 +1655,7 @@ void main() {
     /// A lista do leitor, e não um Scrollable qualquer da tela.
     Finder leitor() => find
         .ancestor(
-          of: find.byType(DevocionalLinhaDeVersiculo).first,
+          of: find.byType(TabernaculoLinhaDeVersiculo).first,
           matching: find.byType(Scrollable),
         )
         .first;
@@ -1744,7 +1767,7 @@ void main() {
     tester,
   ) async {
     await aquecerAssets(tester);
-    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+    await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
     await tester.pumpAndSettle();
 
     GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/conversas');
@@ -1754,7 +1777,7 @@ void main() {
     // sobreviveria ao próximo teste (ver o teste do áudio offline).
     final ajustes = find.descendant(
       of: find.byType(AppBar),
-      matching: find.byType(DevocionalBotaoDeAjustes),
+      matching: find.byType(TabernaculoBotaoDeAjustes),
     );
     expect(ajustes, findsOneWidget);
     expect(
@@ -2010,7 +2033,7 @@ void main() {
       expect(Voz.instancia.tocando, isTrue);
       expect(
         find.descendant(
-          of: find.byType(DevocionalBotaoDeVoz),
+          of: find.byType(TabernaculoBotaoDeVoz),
           matching: find.byType(Image),
         ),
         findsNothing,
@@ -2094,7 +2117,7 @@ void main() {
       expect(Voz.instancia.pausado, isTrue);
       expect(
         find.descendant(
-          of: find.byType(DevocionalBotaoDeVoz),
+          of: find.byType(TabernaculoBotaoDeVoz),
           matching: find.text('Pausado. Toque para retomar.'),
         ),
         findsOneWidget,
@@ -2163,7 +2186,7 @@ void main() {
       expect(Voz.instancia.pausado, isTrue);
       expect(
         find.descendant(
-          of: find.byType(DevocionalBotaoDeVoz),
+          of: find.byType(TabernaculoBotaoDeVoz),
           matching: find.byTooltip('Encerrar a leitura pausada'),
         ),
         findsOneWidget,
@@ -2171,7 +2194,7 @@ void main() {
       );
       await tester.tap(
         find.descendant(
-          of: find.byType(DevocionalBotaoDeVoz),
+          of: find.byType(TabernaculoBotaoDeVoz),
           matching: find.byTooltip('Encerrar a leitura pausada'),
         ),
       );
@@ -2255,7 +2278,7 @@ void main() {
   testWidgets('o cartão de ajuda da primeira visita some ao tocar Entendi', (
     tester,
   ) async {
-    // A tela Hoje direto, e não o AppDevocional inteiro: o GoRouter do app é
+    // A tela Hoje direto, e não o AppTabernaculo inteiro: o GoRouter do app é
     // um singleton global, e um teste anterior pode deixar a aba ativa longe
     // da Hoje. O cartão não tem nada a ver com a moldura.
     await aquecerAssets(tester);
@@ -2365,7 +2388,7 @@ void main() {
     });
     final estado = await estadoLimpo();
     await estado.registrarLeitura('genesis', 2);
-    await tester.pumpWidget(AppDevocional(estado: estado));
+    await tester.pumpWidget(AppTabernaculo(estado: estado));
     await tester.pumpAndSettle();
 
     // Ao abrir a aba, ela já está na última leitura gravada.

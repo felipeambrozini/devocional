@@ -214,12 +214,12 @@ void main() {
           estado: estado,
           child: MaterialApp(
             home: Scaffold(
-              body: Center(child: DevocionalBotaoDeAjustes(estado: estado)),
+              body: Center(child: TabernaculoBotaoDeAjustes(estado: estado)),
             ),
           ),
         ),
       );
-      await tester.tap(find.byType(DevocionalBotaoDeAjustes));
+      await tester.tap(find.byType(TabernaculoBotaoDeAjustes));
       await tester.pumpAndSettle();
     }
 

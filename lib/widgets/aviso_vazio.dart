@@ -5,8 +5,8 @@ import '../estilo/espacamento.dart';
 import 'botao.dart';
 
 /// Estado de "ainda não há texto para isto", em vez de uma tela em branco.
-class DevocionalAvisoVazio extends StatelessWidget {
-  const DevocionalAvisoVazio({
+class TabernaculoAvisoVazio extends StatelessWidget {
+  const TabernaculoAvisoVazio({
     super.key,
     required this.icone,
     required this.titulo,
@@ -27,12 +27,12 @@ class DevocionalAvisoVazio extends StatelessWidget {
     final cor = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(DevocionalEspacamento.sp32),
+        padding: const EdgeInsets.all(TabernaculoEspacamento.sp32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             FaIcon(icone, size: 44, color: cor.outline),
-            const SizedBox(height: DevocionalEspacamento.sp16),
+            const SizedBox(height: TabernaculoEspacamento.sp16),
             Semantics(
               header: true,
               child: Text(
@@ -42,7 +42,7 @@ class DevocionalAvisoVazio extends StatelessWidget {
               ),
             ),
             if (detalhe != null) ...[
-              const SizedBox(height: DevocionalEspacamento.sp8),
+              const SizedBox(height: TabernaculoEspacamento.sp8),
               Text(
                 detalhe!,
                 textAlign: TextAlign.center,
@@ -50,7 +50,7 @@ class DevocionalAvisoVazio extends StatelessWidget {
               ),
             ],
             if (acao != null) ...[
-              const SizedBox(height: DevocionalEspacamento.sp12),
+              const SizedBox(height: TabernaculoEspacamento.sp12),
               acao!,
             ],
           ],
@@ -66,8 +66,8 @@ class DevocionalAvisoVazio extends StatelessWidget {
 /// ausente deixava o CircularProgressIndicator girando para sempre, sem saída e
 /// sem dizer o que houve. Girar é promessa de que algo vai chegar; quando não
 /// vai, a tela precisa dizer isso.
-class DevocionalAvisoDeErro extends StatelessWidget {
-  const DevocionalAvisoDeErro({
+class TabernaculoAvisoDeErro extends StatelessWidget {
+  const TabernaculoAvisoDeErro({
     super.key,
     required this.aoTentarDeNovo,
     this.detalhe = 'Verifique a conexão e tente de novo',
@@ -83,11 +83,11 @@ class DevocionalAvisoDeErro extends StatelessWidget {
   final String detalhe;
 
   @override
-  Widget build(BuildContext context) => DevocionalAvisoVazio(
+  Widget build(BuildContext context) => TabernaculoAvisoVazio(
     icone: FontAwesomeIcons.triangleExclamation,
     titulo: 'Não foi possível carregar',
     detalhe: detalhe,
-    acao: DevocionalBotaoTerciario(
+    acao: TabernaculoBotaoTerciario(
       onPressed: aoTentarDeNovo,
       child: const Text('Tentar de novo'),
     ),

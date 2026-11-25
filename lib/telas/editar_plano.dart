@@ -115,7 +115,7 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
               if (mudouODiaADia()) ...[
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(DevocionalEspacamento.sp12),
+                  padding: const EdgeInsets.all(TabernaculoEspacamento.sp12),
                   decoration: BoxDecoration(
                     border: Border.all(
                       color: Theme.of(
@@ -128,8 +128,8 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const DevocionalFilete(largura: 48),
-                      const SizedBox(height: DevocionalEspacamento.sp8),
+                      const TabernaculoFilete(largura: 48),
+                      const SizedBox(height: TabernaculoEspacamento.sp8),
                       Text(
                         'Mudar os livros ou os dias remonta o plano: o '
                         'progresso já marcado será apagado.',
@@ -138,7 +138,7 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                     ],
                   ),
                 ),
-                const SizedBox(height: DevocionalEspacamento.sp16),
+                const SizedBox(height: TabernaculoEspacamento.sp16),
               ],
               TextField(
                 controller: titulo,
@@ -146,13 +146,13 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                 textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(labelText: 'Nome do plano'),
               ),
-              const SizedBox(height: DevocionalEspacamento.sp20),
+              const SizedBox(height: TabernaculoEspacamento.sp20),
               Text(
                 'Quais livros?',
                 style: Theme.of(dialogContext).textTheme.titleMedium,
               ),
-              const SizedBox(height: DevocionalEspacamento.sp8),
-              DevocionalBotaoSecundario.icon(
+              const SizedBox(height: TabernaculoEspacamento.sp8),
+              TabernaculoBotaoSecundario.icon(
                 onPressed: escolherLivros,
                 icon: const FaIcon(FontAwesomeIcons.book),
                 label: Text(
@@ -162,8 +162,8 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                 ),
               ),
               if (livros.isNotEmpty) ...[
-                const SizedBox(height: DevocionalEspacamento.sp10),
-                DevocionalLivrosEscolhidos(
+                const SizedBox(height: TabernaculoEspacamento.sp10),
+                TabernaculoLivrosEscolhidos(
                   livros: livros,
                   aoRemover: (slug) =>
                       setDialogState(() => livros.remove(slug)),
@@ -185,12 +185,12 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                   }),
                 ),
               ],
-              const SizedBox(height: DevocionalEspacamento.sp20),
+              const SizedBox(height: TabernaculoEspacamento.sp20),
               Text(
                 'Em quantos dias?',
                 style: Theme.of(dialogContext).textTheme.titleMedium,
               ),
-              const SizedBox(height: DevocionalEspacamento.sp8),
+              const SizedBox(height: TabernaculoEspacamento.sp8),
               TextFormField(
                 controller: dias,
                 keyboardType: TextInputType.number,
@@ -206,8 +206,8 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
                             '${totalDeCapitulos() == 1 ? 'capítulo' : 'capítulos'}',
                 ),
               ),
-              const SizedBox(height: DevocionalEspacamento.sp20),
-              DevocionalOpcaoDeDevocionais(
+              const SizedBox(height: TabernaculoEspacamento.sp20),
+              TabernaculoOpcaoDeDevocionais(
                 incluir: incluirDevocionais,
                 antes: devocionalAntes,
                 aoMudarIncluir: (marcado) =>
@@ -219,7 +219,7 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
           );
         }
 
-        final acaoSalvar = DevocionalBotaoPrimario(
+        final acaoSalvar = TabernaculoBotaoPrimario(
           onPressed: salvar,
           child: Text(mudouODiaADia() ? 'Mudar e reiniciar' : 'Salvar'),
         );
@@ -230,15 +230,15 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
         if (MediaQuery.sizeOf(dialogContext).width < 600) {
           return Dialog.fullscreen(
             child: Scaffold(
-              appBar: const DevocionalAppBar(title: Text('Editar plano')),
+              appBar: const TabernaculoAppBar(title: Text('Editar plano')),
               body: Form(
                 key: form,
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(
-                    DevocionalEspacamento.sp16,
-                    DevocionalEspacamento.sp12,
-                    DevocionalEspacamento.sp16,
-                    DevocionalEspacamento.sp32,
+                    TabernaculoEspacamento.sp16,
+                    TabernaculoEspacamento.sp12,
+                    TabernaculoEspacamento.sp16,
+                    TabernaculoEspacamento.sp32,
                   ),
                   child: campos(),
                 ),
@@ -246,10 +246,10 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
               bottomNavigationBar: SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    DevocionalEspacamento.sp16,
-                    DevocionalEspacamento.sp8,
-                    DevocionalEspacamento.sp16,
-                    DevocionalEspacamento.sp16,
+                    TabernaculoEspacamento.sp16,
+                    TabernaculoEspacamento.sp8,
+                    TabernaculoEspacamento.sp16,
+                    TabernaculoEspacamento.sp16,
                   ),
                   child: SizedBox(width: double.infinity, child: acaoSalvar),
                 ),
@@ -271,7 +271,7 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
             ),
           ),
           actions: [
-            DevocionalBotaoTerciario(
+            TabernaculoBotaoTerciario(
               onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Cancelar'),
             ),

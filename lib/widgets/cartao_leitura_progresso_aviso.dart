@@ -7,8 +7,8 @@ import 'filete.dart';
 /// O cartão da leitura de hoje enquanto o cronograma não chegou: carregando,
 /// ou a falha. Mesmo filete e mesmo título do cartão pronto, para a Hoje não
 /// pular de lugar quando ele entra.
-class DevocionalCartaoLeituraProgressoAviso extends StatelessWidget {
-  const DevocionalCartaoLeituraProgressoAviso({
+class TabernaculoCartaoLeituraProgressoAviso extends StatelessWidget {
+  const TabernaculoCartaoLeituraProgressoAviso({
     super.key,
     required this.mensagem,
   });
@@ -19,15 +19,15 @@ class DevocionalCartaoLeituraProgressoAviso extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context).textTheme;
-    return DevocionalCartao(
-      padding: const EdgeInsets.all(DevocionalEspacamento.sp20),
+    return TabernaculoCartao(
+      padding: const EdgeInsets.all(TabernaculoEspacamento.sp20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const DevocionalFilete(),
-          const SizedBox(height: DevocionalEspacamento.sp12),
+          const TabernaculoFilete(),
+          const SizedBox(height: TabernaculoEspacamento.sp12),
           Text('Leitura de hoje', style: tema.titleLarge),
-          const SizedBox(height: DevocionalEspacamento.sp8),
+          const SizedBox(height: TabernaculoEspacamento.sp8),
           Text(mensagem, style: tema.bodyMedium),
         ],
       ),

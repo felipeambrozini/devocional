@@ -60,9 +60,9 @@ void main() {
 
       // Gênesis 1 é citado por devocionais reais de Manhã e Noite de 05-01
       // (ver test/conteudo_test.dart); se a tela não aquecesse o índice,
-      // nenhum DevocionalBotaoDeDevocional apareceria mesmo depois do índice global
+      // nenhum TabernaculoBotaoDeDevocional apareceria mesmo depois do índice global
       // estar pronto, porque a tela nunca reconstruiria para lê-lo de novo.
-      expect(find.byType(DevocionalBotaoDeDevocional), findsWidgets);
+      expect(find.byType(TabernaculoBotaoDeDevocional), findsWidgets);
     },
   );
 }

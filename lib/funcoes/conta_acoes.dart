@@ -11,7 +11,7 @@ import '../widgets/consentimento_da_nuvem.dart';
 import 'aviso.dart';
 
 /// Tenta o login e mostra o motivo quando não completa. Público porque os
-/// botões de entrar chamam isto: o `DevocionalBotaoDeEntrar` (cabeçalho da
+/// botões de entrar chamam isto: o `TabernaculoBotaoDeEntrar` (cabeçalho da
 /// Hoje, cartão de plano compartilhado e convite de acesso das Conversas) e
 /// o entrar do plano aberto por link (`plano_controlador.dart`). Quem chama
 /// precisa fazê-lo direto do `onTap`/`onPressed` (sem `await` antes): o
@@ -20,14 +20,14 @@ import 'aviso.dart';
 /// sai bloqueada.
 ///
 /// Antes do primeiro login neste aparelho, pede o consentimento da LGPD
-/// ([DevocionalConsentimentoDaNuvem]); o "Concordo e entrar" do diálogo é o
+/// ([TabernaculoConsentimentoDaNuvem]); o "Concordo e entrar" do diálogo é o
 /// gesto que abre a janela de login.
 Future<void> entrarNaConta(BuildContext context, Nuvem nuvem) async {
   final estado = EscopoDoEstado.de(context);
   if (estado.consentimentoDaNuvem) return _entrar(context, nuvem);
   await showDialog<void>(
     context: context,
-    builder: (_) => DevocionalConsentimentoDaNuvem(
+    builder: (_) => TabernaculoConsentimentoDaNuvem(
       rotuloDeConcordar: 'Concordo e entrar',
       rotuloDeRecusar: 'Cancelar',
       aoConcordar: () {

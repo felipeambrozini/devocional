@@ -86,10 +86,10 @@ class _DialogoDeDenunciaState extends State<_DialogoDeDenuncia> {
             'revisar. Seu e-mail e seu nome não são enviados.',
             style: tema.bodyMedium,
           ),
-          const SizedBox(height: DevocionalEspacamento.sp16),
+          const SizedBox(height: TabernaculoEspacamento.sp16),
           Wrap(
-            spacing: DevocionalEspacamento.sp8,
-            runSpacing: DevocionalEspacamento.sp8,
+            spacing: TabernaculoEspacamento.sp8,
+            runSpacing: TabernaculoEspacamento.sp8,
             children: [
               for (final motivo in motivosDeDenuncia.entries)
                 ChoiceChip(
@@ -99,7 +99,7 @@ class _DialogoDeDenunciaState extends State<_DialogoDeDenuncia> {
                 ),
             ],
           ),
-          const SizedBox(height: DevocionalEspacamento.sp16),
+          const SizedBox(height: TabernaculoEspacamento.sp16),
           TextField(
             controller: _detalhe,
             minLines: 1,
@@ -112,11 +112,11 @@ class _DialogoDeDenunciaState extends State<_DialogoDeDenuncia> {
         ],
       ),
       actions: [
-        DevocionalBotaoTerciario(
+        TabernaculoBotaoTerciario(
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancelar'),
         ),
-        DevocionalBotaoPrimario(
+        TabernaculoBotaoPrimario(
           onPressed: _motivo == null ? null : _enviar,
           child: const Text('Enviar denúncia'),
         ),

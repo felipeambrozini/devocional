@@ -42,16 +42,16 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
         final totalDeCapitulos = _controller.totalDeCapitulos;
 
         return Scaffold(
-          appBar: DevocionalAppBar(title: const Text('Novo plano de leitura')),
-          body: DevocionalLarguraDeLeitura(
+          appBar: TabernaculoAppBar(title: const Text('Novo plano de leitura')),
+          body: TabernaculoLarguraDeLeitura(
             child: Form(
               key: _controller.form,
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(
-                  DevocionalEspacamento.sp16,
-                  DevocionalEspacamento.sp12,
-                  DevocionalEspacamento.sp16,
-                  DevocionalEspacamento.sp32,
+                  TabernaculoEspacamento.sp16,
+                  TabernaculoEspacamento.sp12,
+                  TabernaculoEspacamento.sp16,
+                  TabernaculoEspacamento.sp32,
                 ),
                 children: [
                   TextFormField(
@@ -64,10 +64,10 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
                           : tituloDePlano(livros, dias),
                     ),
                   ),
-                  const SizedBox(height: DevocionalEspacamento.sp20),
+                  const SizedBox(height: TabernaculoEspacamento.sp20),
                   Text('Quais livros?', style: tema.titleMedium),
-                  const SizedBox(height: DevocionalEspacamento.sp8),
-                  DevocionalBotaoSecundario.icon(
+                  const SizedBox(height: TabernaculoEspacamento.sp8),
+                  TabernaculoBotaoSecundario.icon(
                     onPressed: () => _controller.escolherLivros(context),
                     icon: const FaIcon(FontAwesomeIcons.book),
                     label: Text(
@@ -79,17 +79,17 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
                     ),
                   ),
                   if (livros.isNotEmpty) ...[
-                    const SizedBox(height: DevocionalEspacamento.sp10),
-                    DevocionalLivrosEscolhidos(
+                    const SizedBox(height: TabernaculoEspacamento.sp10),
+                    TabernaculoLivrosEscolhidos(
                       livros: livros,
                       aoRemover: _controller.removerLivro,
                       aoReordenar: _controller.reordenarLivros,
                       aoRestaurar: _controller.restaurarLivros,
                     ),
                   ],
-                  const SizedBox(height: DevocionalEspacamento.sp20),
+                  const SizedBox(height: TabernaculoEspacamento.sp20),
                   Text('Em quantos dias?', style: tema.titleMedium),
-                  const SizedBox(height: DevocionalEspacamento.sp8),
+                  const SizedBox(height: TabernaculoEspacamento.sp8),
                   TextFormField(
                     controller: _controller.dias,
                     keyboardType: TextInputType.number,
@@ -106,16 +106,16 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
                                 '${totalDeCapitulos == 1 ? 'capítulo' : 'capítulos'}',
                     ),
                   ),
-                  const SizedBox(height: DevocionalEspacamento.sp20),
-                  DevocionalOpcaoDeDevocionais(
+                  const SizedBox(height: TabernaculoEspacamento.sp20),
+                  TabernaculoOpcaoDeDevocionais(
                     incluir: _controller.incluirDevocionais,
                     antes: _controller.devocionalAntes,
                     aoMudarIncluir: _controller.definirIncluirDevocionais,
                     aoMudarOrdem: _controller.definirDevocionalAntes,
                   ),
                   if (previa.isNotEmpty) ...[
-                    const SizedBox(height: DevocionalEspacamento.sp20),
-                    DevocionalCartao(
+                    const SizedBox(height: TabernaculoEspacamento.sp20),
+                    TabernaculoCartao(
                       titulo: 'Prévia',
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,7 +123,7 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
                           for (final dia in previa.take(5))
                             Padding(
                               padding: const EdgeInsets.only(
-                                bottom: DevocionalEspacamento.sp4,
+                                bottom: TabernaculoEspacamento.sp4,
                               ),
                               child: Text(
                                 'Dia ${dia.numero} · ${dia.rotulo}',
@@ -143,8 +143,8 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
                       ),
                     ),
                   ],
-                  const SizedBox(height: DevocionalEspacamento.sp24),
-                  DevocionalBotaoPrimario.icon(
+                  const SizedBox(height: TabernaculoEspacamento.sp24),
+                  TabernaculoBotaoPrimario.icon(
                     onPressed: () => _controller.criar(context),
                     icon: const FaIcon(FontAwesomeIcons.check),
                     label: const Text('Criar plano'),
@@ -174,5 +174,5 @@ Future<List<String>?> mostrarSeletorDeLivros(
   required List<String> jaEscolhidos,
 }) => showDialog<List<String>>(
   context: context,
-  builder: (_) => DevocionalSeletorDeLivrosDoPlano(jaEscolhidos: jaEscolhidos),
+  builder: (_) => TabernaculoSeletorDeLivrosDoPlano(jaEscolhidos: jaEscolhidos),
 );

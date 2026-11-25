@@ -12,8 +12,8 @@ import 'faixa.dart';
 import 'filete.dart';
 import 'progresso_fino.dart';
 
-class DevocionalCartaoLeituraProgresso extends StatelessWidget {
-  const DevocionalCartaoLeituraProgresso({
+class TabernaculoCartaoLeituraProgresso extends StatelessWidget {
+  const TabernaculoCartaoLeituraProgresso({
     super.key,
     required this.dia,
     required this.estado,
@@ -33,8 +33,8 @@ class DevocionalCartaoLeituraProgresso extends StatelessWidget {
     final total = Conteudo.diasDoAno(ano);
     final progresso = estado.progressoDoAno(ano, total);
 
-    return DevocionalCartao(
-      padding: const EdgeInsets.all(DevocionalEspacamento.sp20),
+    return TabernaculoCartao(
+      padding: const EdgeInsets.all(TabernaculoEspacamento.sp20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -45,13 +45,13 @@ class DevocionalCartaoLeituraProgresso extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const DevocionalFilete(),
-                    const SizedBox(height: DevocionalEspacamento.sp12),
+                    const TabernaculoFilete(),
+                    const SizedBox(height: TabernaculoEspacamento.sp12),
                     Text('Leitura de hoje', style: tema.titleLarge),
                   ],
                 ),
               ),
-              DevocionalBotaoDeLido(
+              TabernaculoBotaoDeLido(
                 lido: lido,
                 rotulo: dia.rotulo,
                 aoAlternar: () =>
@@ -59,15 +59,15 @@ class DevocionalCartaoLeituraProgresso extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: DevocionalEspacamento.sp8),
+          const SizedBox(height: TabernaculoEspacamento.sp8),
           Text(dia.rotulo, style: tema.bodyLarge),
-          const SizedBox(height: DevocionalEspacamento.sp12),
+          const SizedBox(height: TabernaculoEspacamento.sp12),
           Wrap(
-            spacing: DevocionalEspacamento.sp8,
-            runSpacing: DevocionalEspacamento.sp8,
+            spacing: TabernaculoEspacamento.sp8,
+            runSpacing: TabernaculoEspacamento.sp8,
             children: [
               for (final f in dia.faixas)
-                DevocionalBotaoDeFaixa(
+                TabernaculoBotaoDeFaixa(
                   faixa: f,
                   dia: DiaDaLeitura.doCronograma(chave, [
                     for (final f in dia.faixas) ItemDeCapitulo(f),
@@ -75,9 +75,9 @@ class DevocionalCartaoLeituraProgresso extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: DevocionalEspacamento.sp20),
-          const DevocionalFilete(),
-          const SizedBox(height: DevocionalEspacamento.sp14),
+          const SizedBox(height: TabernaculoEspacamento.sp20),
+          const TabernaculoFilete(),
+          const SizedBox(height: TabernaculoEspacamento.sp14),
           // Progresso do ano. Wrap, não Row com Spacer: em largura curta
           // (ou fonte grande, ver a escala de leitura) o contador cai para a
           // linha de baixo em vez de estourar a linha — o Row exigia que
@@ -85,8 +85,8 @@ class DevocionalCartaoLeituraProgresso extends StatelessWidget {
           Wrap(
             alignment: WrapAlignment.spaceBetween,
             crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: DevocionalEspacamento.sp8,
-            runSpacing: DevocionalEspacamento.sp4,
+            spacing: TabernaculoEspacamento.sp8,
+            runSpacing: TabernaculoEspacamento.sp4,
             children: [
               Text('Progresso do ano', style: tema.labelMedium),
               Row(
@@ -98,17 +98,17 @@ class DevocionalCartaoLeituraProgresso extends StatelessWidget {
                     '${estado.diasLidosNoAno(ano)}',
                     style: tema.titleMedium?.copyWith(color: cor.primary),
                   ),
-                  const SizedBox(width: DevocionalEspacamento.sp6),
+                  const SizedBox(width: TabernaculoEspacamento.sp6),
                   Text('de $total dias', style: tema.bodySmall),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: DevocionalEspacamento.sp8),
-          // Trilho do tema, fio do metal por cima: o mesmo DevocionalProgressoFino do
+          const SizedBox(height: TabernaculoEspacamento.sp8),
+          // Trilho do tema, fio do metal por cima: o mesmo TabernaculoProgressoFino do
           // plano e do cronograma. O `outline` que vivia aqui era papel de
           // borda, não de trilho.
-          DevocionalProgressoFino(valor: progresso.clamp(0.0, 1.0)),
+          TabernaculoProgressoFino(valor: progresso.clamp(0.0, 1.0)),
         ],
       ),
     );

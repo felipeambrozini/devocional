@@ -1,20 +1,21 @@
 import 'package:material_ui/material_ui.dart';
 
 /// O ponto de foco invisível de uma aba: é para ele que a troca de aba manda
-/// o foco do teclado (ver `DevocionalMoldura._irParaAba` em `lib/widgets/moldura.dart`). Antes o foco
+/// o foco do teclado (ver `TabernaculoMoldura._irParaAba` em `lib/widgets/moldura.dart`). Antes o foco
 /// caía no primeiro botão da tela, que ganhava o realce de foco sem ninguém
 /// ter tocado nele (a lupa do Devocional, o título do capítulo na Bíblia).
 ///
 /// Fora da ordem do Tab: quem navega pelo teclado começa no primeiro
 /// controle de verdade. Uma tela com atalhos de teclado põe a sua dentro
 /// deles (a Bíblia e o leitor de livro), para a tecla subir a partir daqui e passar por eles.
-class DevocionalAncoraDeFoco extends StatefulWidget {
-  const DevocionalAncoraDeFoco({super.key, required this.child});
+class TabernaculoAncoraDeFoco extends StatefulWidget {
+  const TabernaculoAncoraDeFoco({super.key, required this.child});
 
   final Widget child;
 
   @override
-  State<DevocionalAncoraDeFoco> createState() => _DevocionalAncoraDeFocoState();
+  State<TabernaculoAncoraDeFoco> createState() =>
+      _TabernaculoAncoraDeFocoState();
 }
 
 /// Tipo próprio para a troca de aba achar a âncora entre os nós de foco da
@@ -23,7 +24,7 @@ class NoDeAncoraDeFoco extends FocusNode {
   NoDeAncoraDeFoco() : super(debugLabel: 'Âncora de foco', skipTraversal: true);
 }
 
-class _DevocionalAncoraDeFocoState extends State<DevocionalAncoraDeFoco> {
+class _TabernaculoAncoraDeFocoState extends State<TabernaculoAncoraDeFoco> {
   final _no = NoDeAncoraDeFoco();
 
   @override

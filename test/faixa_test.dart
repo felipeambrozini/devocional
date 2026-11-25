@@ -26,11 +26,11 @@ void main() {
       EscopoDoEstado(
         estado: Estado(await SharedPreferences.getInstance()),
         child: MaterialApp(
-          home: Scaffold(body: DevocionalBotaoDeFaixa(faixa: faixa)),
+          home: Scaffold(body: TabernaculoBotaoDeFaixa(faixa: faixa)),
         ),
       ),
     );
-    await tester.tap(find.byType(DevocionalBotaoDeFaixa));
+    await tester.tap(find.byType(TabernaculoBotaoDeFaixa));
     await tester.pumpAndSettle();
   }
 
@@ -68,7 +68,7 @@ void main() {
   });
 
   testWidgets(
-    'DevocionalBotaoDeDevocional mostra o nome do tipo e navega para a rota '
+    'TabernaculoBotaoDeDevocional mostra o nome do tipo e navega para a rota '
     'e data certas',
     (tester) async {
       final roteador = GoRouter(
@@ -77,14 +77,14 @@ void main() {
           GoRoute(
             path: '/inicio',
             builder: (context, state) => const Scaffold(
-              body: DevocionalBotaoDeDevocional(
+              body: TabernaculoBotaoDeDevocional(
                 tipo: TipoDeDevocional.noite,
                 chaveDoDia: '25-12',
               ),
             ),
           ),
           GoRoute(
-            path: '/noite',
+            path: '/devocional/noite',
             builder: (context, state) =>
                 Text('data=${state.uri.queryParameters['data']}'),
           ),
@@ -93,7 +93,7 @@ void main() {
       await tester.pumpWidget(MaterialApp.router(routerConfig: roteador));
 
       expect(find.text('Noite'), findsOneWidget);
-      await tester.tap(find.byType(DevocionalBotaoDeDevocional));
+      await tester.tap(find.byType(TabernaculoBotaoDeDevocional));
       await tester.pumpAndSettle();
 
       final ano = DateTime.now().year;

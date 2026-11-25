@@ -15,7 +15,7 @@ import 'package:web/web.dart' as web;
 /// app fechado, o espelho fica defasado até a próxima abertura — o ícone
 /// erra de lado uma vez, sem quebrar nada.
 const _nomeDoCache = 'devocional-preferencias';
-const _chaveDoTema = '/devocional/__modo-do-tema';
+const _chaveDoTema = '/tabernaculo/__modo-do-tema';
 
 Future<void> espelharTemaParaNotificacoes({required bool escuro}) async {
   if (!kIsWeb) return;

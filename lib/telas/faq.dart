@@ -18,8 +18,8 @@ class TelaFAQ extends StatelessWidget {
   Widget build(BuildContext context) {
     final tema = Theme.of(context).textTheme;
     return Scaffold(
-      appBar: DevocionalAppBar(title: const Text('Perguntas frequentes')),
-      body: DevocionalLarguraDeLeitura(
+      appBar: TabernaculoAppBar(title: const Text('Perguntas frequentes')),
+      body: TabernaculoLarguraDeLeitura(
         // O chat só existe para quem tem acesso à função (ver
         // Recursos.conversas); as perguntas sobre ele não fazem sentido
         // para quem não pode usá-lo.
@@ -30,22 +30,22 @@ class TelaFAQ extends StatelessWidget {
           ]),
           builder: (context, _) => ListView(
             padding: const EdgeInsets.fromLTRB(
-              DevocionalEspacamento.sp20,
-              DevocionalEspacamento.sp16,
-              DevocionalEspacamento.sp20,
-              DevocionalEspacamento.sp40,
+              TabernaculoEspacamento.sp20,
+              TabernaculoEspacamento.sp16,
+              TabernaculoEspacamento.sp20,
+              TabernaculoEspacamento.sp40,
             ),
             children: [
               Semantics(
                 header: true,
                 child: Text('Perguntas frequentes', style: tema.displayMedium),
               ),
-              const SizedBox(height: DevocionalEspacamento.sp8),
-              const DevocionalFilete(largura: 64),
-              const SizedBox(height: DevocionalEspacamento.sp16),
+              const SizedBox(height: TabernaculoEspacamento.sp8),
+              const TabernaculoFilete(largura: 64),
+              const SizedBox(height: TabernaculoEspacamento.sp16),
               for (final pergunta in _perguntas(Recursos.conversas))
-                DevocionalPergunta(pergunta),
-              const SizedBox(height: DevocionalEspacamento.sp16),
+                TabernaculoPergunta(pergunta),
+              const SizedBox(height: TabernaculoEspacamento.sp16),
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: FaIcon(

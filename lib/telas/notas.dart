@@ -60,10 +60,10 @@ class _TelaNotasState extends State<TelaNotas> {
         return DefaultTabController(
           length: 2,
           child: Scaffold(
-            appBar: DevocionalAppBar(
+            appBar: TabernaculoAppBar(
               title: Text('Notas: ${origem.rotulo}'),
               actions: [
-                DevocionalBotaoDeAjustes(estado: estado),
+                TabernaculoBotaoDeAjustes(estado: estado),
                 PopupMenuButton<void Function()>(
                   tooltip: 'Cópia de segurança',
                   icon: const FaIcon(FontAwesomeIcons.ellipsisVertical),
@@ -71,14 +71,14 @@ class _TelaNotasState extends State<TelaNotas> {
                   itemBuilder: (context) => [
                     PopupMenuItem(
                       value: () => _exportar(context, estado),
-                      child: const DevocionalItemDeMenu(
+                      child: const TabernaculoItemDeMenu(
                         icone: FontAwesomeIcons.upload,
                         rotulo: 'Exportar cópia',
                       ),
                     ),
                     PopupMenuItem(
                       value: () => _importar(context, estado),
-                      child: const DevocionalItemDeMenu(
+                      child: const TabernaculoItemDeMenu(
                         icone: FontAwesomeIcons.download,
                         rotulo: 'Importar cópia',
                       ),
@@ -93,7 +93,7 @@ class _TelaNotasState extends State<TelaNotas> {
                 ],
               ),
             ),
-            body: DevocionalLarguraDeLeitura(
+            body: TabernaculoLarguraDeLeitura(
               child: Column(
                 children: [
                   // Só na web: o navegador pode limpar o localStorage sem aviso,
@@ -105,17 +105,17 @@ class _TelaNotasState extends State<TelaNotas> {
                   if (kIsWeb &&
                       (estado.marcacoes.isNotEmpty ||
                           estado.diasLidosEmTodosOsAnos > 0))
-                    DevocionalAvisoDePerda(
+                    TabernaculoAvisoDePerda(
                       onExportar: () => _exportar(context, estado),
                     ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
-                      DevocionalEspacamento.sp16,
-                      DevocionalEspacamento.sp12,
-                      DevocionalEspacamento.sp16,
-                      DevocionalEspacamento.sp4,
+                      TabernaculoEspacamento.sp16,
+                      TabernaculoEspacamento.sp12,
+                      TabernaculoEspacamento.sp16,
+                      TabernaculoEspacamento.sp4,
                     ),
-                    child: DevocionalBusca(
+                    child: TabernaculoBusca(
                       controller: _controller.controle,
                       hintText: 'Buscar por referência ou anotação',
                       onChanged: _controller.aoDigitar,
@@ -189,8 +189,8 @@ extension on _TelaNotasState {
     required String titulo,
     required String detalhe,
   }) => _controller.busca.isEmpty
-      ? DevocionalAvisoVazio(icone: icone, titulo: titulo, detalhe: detalhe)
-      : const DevocionalAvisoVazio(
+      ? TabernaculoAvisoVazio(icone: icone, titulo: titulo, detalhe: detalhe)
+      : const TabernaculoAvisoVazio(
           icone: FontAwesomeIcons.magnifyingGlassMinus,
           titulo: 'Nada encontrado',
         );
@@ -204,7 +204,7 @@ extension on _TelaNotasState {
     bool mostrarNota = false,
   }) {
     if (ehBiblia) {
-      return DevocionalListaDeNotas(
+      return TabernaculoListaDeNotas(
         quantidade: marcacoes.length,
         vazio: vazio,
         construir: (context, i) =>
@@ -216,7 +216,7 @@ extension on _TelaNotasState {
       for (final d in destaques)
         if (OrigemDoDestaque.de(d) case final origem?) (d, origem),
     ];
-    return DevocionalListaDeNotas(
+    return TabernaculoListaDeNotas(
       quantidade: visiveis.length,
       vazio: vazio,
       construir: (context, i) => _cartaoDoDestaque(
@@ -235,7 +235,7 @@ Widget _cartaoDaMarcacao(
   Estado estado,
   Marcacao m,
   bool mostrarNota,
-) => DevocionalCartaoDeNota(
+) => TabernaculoCartaoDeNota(
   referencia: m.referencia,
   chaveDoTexto: m.chave,
   carregarTexto: () =>
@@ -260,7 +260,7 @@ Widget _cartaoDoDestaque(
   DestaqueDeLivro d,
   OrigemDoDestaque origem,
   bool mostrarNota,
-) => DevocionalCartaoDeNota(
+) => TabernaculoCartaoDeNota(
   referencia: origem.referencia,
   chaveDoTexto: d.chave,
   carregarTexto: () => textoDoDestaque(d),

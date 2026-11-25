@@ -3,8 +3,8 @@ import 'package:material_ui/material_ui.dart';
 import '../estilo/espacamento.dart';
 import 'progresso_fino.dart';
 
-class DevocionalLinhaDeParticipante extends StatelessWidget {
-  const DevocionalLinhaDeParticipante({
+class TabernaculoLinhaDeParticipante extends StatelessWidget {
+  const TabernaculoLinhaDeParticipante({
     super.key,
     required this.nome,
     required this.lidos,
@@ -31,7 +31,9 @@ class DevocionalLinhaDeParticipante extends StatelessWidget {
             Expanded(child: Text(nome, style: tema.bodyMedium)),
             if (ehCriador)
               Padding(
-                padding: const EdgeInsets.only(left: DevocionalEspacamento.sp8),
+                padding: const EdgeInsets.only(
+                  left: TabernaculoEspacamento.sp8,
+                ),
                 child: Text(
                   'criador',
                   style: tema.labelSmall?.copyWith(color: cor.onSurfaceVariant),
@@ -39,11 +41,13 @@ class DevocionalLinhaDeParticipante extends StatelessWidget {
               ),
             if (ehVoce)
               Padding(
-                padding: const EdgeInsets.only(left: DevocionalEspacamento.sp8),
+                padding: const EdgeInsets.only(
+                  left: TabernaculoEspacamento.sp8,
+                ),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: DevocionalEspacamento.sp8,
-                    vertical: DevocionalEspacamento.sp2,
+                    horizontal: TabernaculoEspacamento.sp8,
+                    vertical: TabernaculoEspacamento.sp2,
                   ),
                   decoration: BoxDecoration(
                     color: cor.primary.withValues(alpha: 0.12),
@@ -55,12 +59,12 @@ class DevocionalLinhaDeParticipante extends StatelessWidget {
                   ),
                 ),
               ),
-            const SizedBox(width: DevocionalEspacamento.sp8),
+            const SizedBox(width: TabernaculoEspacamento.sp8),
             Text('${lidos.length}/$totalDeDias', style: tema.labelMedium),
           ],
         ),
-        const SizedBox(height: DevocionalEspacamento.sp4),
-        DevocionalProgressoFino(
+        const SizedBox(height: TabernaculoEspacamento.sp4),
+        TabernaculoProgressoFino(
           valor: totalDeDias == 0 ? 0 : lidos.length / totalDeDias,
         ),
       ],

@@ -57,13 +57,13 @@ Future<void> _montar(
   await tester.pump();
 }
 
-DevocionalCartaoDeNota _cartao({
+TabernaculoCartaoDeNota _cartao({
   VoidCallback? aoAbrir,
   Future<void> Function(String)? aoSalvarNota,
   Future<void> Function()? aoRemover,
   Future<String> Function()? carregarTexto,
   int? maxLinhas,
-}) => DevocionalCartaoDeNota(
+}) => TabernaculoCartaoDeNota(
   referencia: 'João 3:16',
   chaveDoTexto: 'joao-3-16',
   carregarTexto:
@@ -85,36 +85,36 @@ Mensagem _mensagem(String papel, String texto) => Mensagem(
 
 List<Widget> _todos() => [
   _cartao(),
-  DevocionalItemDeAchado(
+  TabernaculoItemDeAchado(
     titulo: 'Manhã · 17 de novembro',
     subtitulo: 'A graça que basta',
     texto: 'A minha graça te basta, porque o meu poder se aperfeiçoa.',
     termo: 'graça',
     aoAbrir: () {},
   ),
-  DevocionalBalcaoDeMensagem(
+  TabernaculoBalcaoDeMensagem(
     mensagem: _mensagem(Mensagem.papelUsuario, 'Como orar melhor?'),
     persona: personaSpurgeon,
   ),
-  DevocionalBalcaoDeMensagem(
+  TabernaculoBalcaoDeMensagem(
     mensagem: _mensagem(Mensagem.papelAssistente, 'Ore com as Escrituras.'),
     persona: personaSpurgeon,
   ),
-  DevocionalErroDeResposta(
+  TabernaculoErroDeResposta(
     persona: personaSpurgeon,
     mensagem: 'A resposta não veio.',
     aoTentarDeNovo: () async {},
   ),
-  const DevocionalCaixaDeCitacao(
+  const TabernaculoCaixaDeCitacao(
     expandir: true,
     child: Text('Uma frase de abertura.'),
   ),
-  const DevocionalComentarioNoCapitulo(texto: 'O amor de Deus é o começo.'),
-  const DevocionalCartaoLeituraProgressoAviso(mensagem: 'Carregando...'),
-  const DevocionalBotaoDeEntrar(),
-  const DevocionalBotaoDeEntrar(rotulo: 'Entrar', discreto: true),
-  SizedBox(height: 320, child: DevocionalAvisoDeErro(aoTentarDeNovo: () {})),
-  const DevocionalBoasVindasDialogo(),
+  const TabernaculoComentarioNoCapitulo(texto: 'O amor de Deus é o começo.'),
+  const TabernaculoCartaoLeituraProgressoAviso(mensagem: 'Carregando...'),
+  const TabernaculoBotaoDeEntrar(),
+  const TabernaculoBotaoDeEntrar(rotulo: 'Entrar', discreto: true),
+  SizedBox(height: 320, child: TabernaculoAvisoDeErro(aoTentarDeNovo: () {})),
+  const TabernaculoBoasVindasDialogo(),
 ];
 
 void main() {
@@ -124,7 +124,7 @@ void main() {
   });
   tearDown(() => Nuvem.instancia.logadoForcado = null);
 
-  group('DevocionalCartaoDeNota', () {
+  group('TabernaculoCartaoDeNota', () {
     testWidgets('mostra referência, texto carregado e a nota', (tester) async {
       await _montar(tester, Brightness.dark, [_cartao()]);
       expect(find.text('João 3:16'), findsOneWidget);
@@ -159,7 +159,9 @@ void main() {
       await tester.tap(find.byTooltip('Remover João 3:16 dos favoritos'));
       await tester.pumpAndSettle();
       expect(removeu, isFalse);
-      await tester.tap(find.widgetWithText(DevocionalBotaoPrimario, 'Remover'));
+      await tester.tap(
+        find.widgetWithText(TabernaculoBotaoPrimario, 'Remover'),
+      );
       await tester.pumpAndSettle();
       expect(removeu, isTrue);
     });
@@ -168,7 +170,7 @@ void main() {
       await _montar(tester, Brightness.dark, [
         SizedBox(
           height: 200,
-          child: DevocionalListaDeNotas(
+          child: TabernaculoListaDeNotas(
             quantidade: 0,
             construir: (_, _) => _cartao(),
             vazio: const Text('Nenhum favorito'),
@@ -179,13 +181,13 @@ void main() {
     });
   });
 
-  group('DevocionalItemDeAchado', () {
+  group('TabernaculoItemDeAchado', () {
     testWidgets('sem subtítulo, só título e trecho; o toque abre', (
       tester,
     ) async {
       var abriu = false;
       await _montar(tester, Brightness.dark, [
-        DevocionalItemDeAchado(
+        TabernaculoItemDeAchado(
           titulo: 'João 3:16',
           texto: 'Porque Deus amou o mundo',
           termo: 'amou',
@@ -203,32 +205,32 @@ void main() {
     });
   });
 
-  group('DevocionalFalaDaPersona', () {
+  group('TabernaculoFalaDaPersona', () {
     testWidgets('a resposta da persona é selecionável e traz a foto', (
       tester,
     ) async {
       await _montar(tester, Brightness.dark, [_todos()[3]]);
       expect(find.byType(SelectableText), findsOneWidget);
-      expect(find.byType(DevocionalRetratoDePersona), findsOneWidget);
+      expect(find.byType(TabernaculoRetratoDePersona), findsOneWidget);
     });
 
     testWidgets('a pergunta do visitante não leva foto', (tester) async {
       await _montar(tester, Brightness.dark, [_todos()[2]]);
-      expect(find.byType(DevocionalRetratoDePersona), findsNothing);
+      expect(find.byType(TabernaculoRetratoDePersona), findsNothing);
       expect(find.byType(SelectableText), findsNothing);
     });
   });
 
-  group('DevocionalAvisoDeErro', () {
+  group('TabernaculoAvisoDeErro', () {
     testWidgets('usa o detalhe padrão ou o passado', (tester) async {
       await _montar(tester, Brightness.dark, [
         SizedBox(
           height: 300,
-          child: DevocionalAvisoDeErro(aoTentarDeNovo: () {}),
+          child: TabernaculoAvisoDeErro(aoTentarDeNovo: () {}),
         ),
         SizedBox(
           height: 300,
-          child: DevocionalAvisoDeErro(
+          child: TabernaculoAvisoDeErro(
             detalhe: 'A busca falhou. Tente de novo.',
             aoTentarDeNovo: () {},
           ),
@@ -239,20 +241,20 @@ void main() {
     });
   });
 
-  group('DevocionalBotaoDeEntrar', () {
+  group('TabernaculoBotaoDeEntrar', () {
     testWidgets('primário por padrão, secundário quando discreto', (
       tester,
     ) async {
       await _montar(tester, Brightness.dark, [
-        const DevocionalBotaoDeEntrar(),
-        const DevocionalBotaoDeEntrar(rotulo: 'Entrar', discreto: true),
+        const TabernaculoBotaoDeEntrar(),
+        const TabernaculoBotaoDeEntrar(rotulo: 'Entrar', discreto: true),
       ]);
       expect(
-        find.widgetWithText(DevocionalBotaoPrimario, 'Entrar com Google'),
+        find.widgetWithText(TabernaculoBotaoPrimario, 'Entrar com Google'),
         findsOneWidget,
       );
       expect(
-        find.widgetWithText(DevocionalBotaoSecundario, 'Entrar'),
+        find.widgetWithText(TabernaculoBotaoSecundario, 'Entrar'),
         findsOneWidget,
       );
     });

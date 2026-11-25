@@ -24,10 +24,10 @@ const _largura = 1080.0;
 const _margem = 96.0;
 // A imagem é sempre a paleta escura, qualquer que seja o tema do aparelho:
 // por isso lê as cores direto, e não do ColorScheme.
-const _fundo = DevocionalCores.fundo;
-const _corTexto = DevocionalCores.bege;
-const _destaque = DevocionalCores.douradoClaro;
-const _apoio = DevocionalCores.begeSuave;
+const _fundo = TabernaculoCores.fundo;
+const _corTexto = TabernaculoCores.bege;
+const _destaque = TabernaculoCores.douradoClaro;
+const _apoio = TabernaculoCores.begeSuave;
 
 /// Regra das Duas Vozes: Cinzel na marca e na assinatura, Montserrat no
 /// corpo. Sem `fontFamily` o motor caía na fonte padrão do sistema.

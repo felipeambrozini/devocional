@@ -12,8 +12,8 @@ void main() {
 
   setUp(() {
     PackageInfo.setMockInitialValues(
-      appName: 'Devocional',
-      packageName: 'com.felipeambrozini.devocional',
+      appName: 'Tabernáculo',
+      packageName: 'com.felipeambrozini.tabernaculo',
       version: '1.0.0',
       buildNumber: '1',
       buildSignature: '',
@@ -34,12 +34,20 @@ void main() {
 
     expect(await cabecalhosGoogle(), {
       'Content-Type': 'application/json',
-      'X-Android-Package': 'com.felipeambrozini.devocional',
+      'X-Android-Package': 'com.felipeambrozini.tabernaculo',
       'X-Android-Cert': 'ab12cd',
     });
   });
 
   test('no iOS prova a identidade com o Bundle ID', () async {
+    // O iOS manteve o Bundle ID de antes do nome Tabernáculo.
+    PackageInfo.setMockInitialValues(
+      appName: 'Tabernáculo',
+      packageName: 'com.felipeambrozini.devocional',
+      version: '1.0.0',
+      buildNumber: '1',
+      buildSignature: '',
+    );
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
 
     expect(await cabecalhosGoogle(), {

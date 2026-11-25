@@ -501,7 +501,10 @@ void main() {
       await tester.scrollUntilVisible(find.text('Somente pela Graça'), 300);
       expect(
         find.descendant(
-          of: find.widgetWithText(DevocionalCartaoDaObra, 'Somente pela Graça'),
+          of: find.widgetWithText(
+            TabernaculoCartaoDaObra,
+            'Somente pela Graça',
+          ),
           matching: find.text('20 capítulos'),
         ),
         findsOneWidget,
@@ -515,14 +518,14 @@ void main() {
 
     testWidgets('os cartões da estante têm espaço entre si', (tester) async {
       await abrir(tester, '/biblioteca');
-      final cartoes = find.byType(DevocionalCartaoDaObra);
+      final cartoes = find.byType(TabernaculoCartaoDaObra);
       expect(cartoes, findsAtLeastNWidgets(2));
 
       final primeiro = tester.getRect(cartoes.at(0));
       final segundo = tester.getRect(cartoes.at(1));
       expect(
         segundo.top - primeiro.bottom,
-        greaterThanOrEqualTo(DevocionalEspacamento.sp12),
+        greaterThanOrEqualTo(TabernaculoEspacamento.sp12),
       );
     });
 
@@ -664,8 +667,8 @@ void main() {
       ) async {
         await abrir(tester, '/biblioteca/$slug/1');
         expect(find.text('Ouvir'), findsOneWidget);
-        final botao = tester.widget<DevocionalBotaoDeVoz>(
-          find.byType(DevocionalBotaoDeVoz),
+        final botao = tester.widget<TabernaculoBotaoDeVoz>(
+          find.byType(TabernaculoBotaoDeVoz),
         );
         // O capítulo 1 da tela é o 1.mp3, não o índice 0 da lista.
         expect(botao.chave, 'livro:$slug.1');
@@ -703,9 +706,9 @@ void main() {
         ) async {
           await abrir(tester, '/biblioteca/$slug/5');
           await tocar(tester, 'livro:$slug.5');
-          expect(find.byType(DevocionalIndicadorDeVozNaBarra), findsOneWidget);
-          final indicador = tester.widget<DevocionalIndicadorDeVozNaBarra>(
-            find.byType(DevocionalIndicadorDeVozNaBarra),
+          expect(find.byType(TabernaculoIndicadorDeVozNaBarra), findsOneWidget);
+          final indicador = tester.widget<TabernaculoIndicadorDeVozNaBarra>(
+            find.byType(TabernaculoIndicadorDeVozNaBarra),
           );
           expect(indicador.chave, 'livro:$slug.5');
         });
@@ -808,7 +811,7 @@ void main() {
             estado: estado,
             child: MaterialApp(
               home: Scaffold(
-                body: DevocionalLivrosEmLeitura(obras: obras, aoAbrir: (_) {}),
+                body: TabernaculoLivrosEmLeitura(obras: obras, aoAbrir: (_) {}),
               ),
             ),
           ),
@@ -817,15 +820,15 @@ void main() {
       }
 
       await mostrar([]);
-      expect(find.byType(DevocionalCartaoDaObra), findsNothing);
+      expect(find.byType(TabernaculoCartaoDaObra), findsNothing);
 
       await mostrar([obrasDaBiblioteca.first]);
-      expect(find.byType(DevocionalCartaoDaObra), findsOneWidget);
+      expect(find.byType(TabernaculoCartaoDaObra), findsOneWidget);
       expect(find.text('Seus livros'), findsNothing);
 
       await mostrar(obrasDaBiblioteca.take(2).toList());
       expect(find.text('Seus livros'), findsOneWidget);
-      expect(find.byType(DevocionalCartaoDaObra), findsNWidgets(2));
+      expect(find.byType(TabernaculoCartaoDaObra), findsNWidgets(2));
     });
 
     testWidgets('com a leitura começada o sumário oferece continuar', (

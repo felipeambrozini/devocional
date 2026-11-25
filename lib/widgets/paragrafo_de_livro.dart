@@ -7,8 +7,8 @@ import '../estilo/toque.dart';
 /// Um parágrafo do livro. Grifado, ganha o fundo de citação e o fio do metal à
 /// esquerda; com nota, a nota aparece embaixo. A faixa à esquerda existe sempre
 /// (transparente) para o texto não pular de lugar quando o grifo liga.
-class DevocionalParagrafoDeLivro extends StatelessWidget {
-  const DevocionalParagrafoDeLivro({
+class TabernaculoParagrafoDeLivro extends StatelessWidget {
+  const TabernaculoParagrafoDeLivro({
     super.key,
     required this.texto,
     required this.destaque,
@@ -44,11 +44,11 @@ class DevocionalParagrafoDeLivro extends StatelessWidget {
         : 'Toque para favoritar, $outrasAcoes';
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: DevocionalEspacamento.sp12),
+      padding: const EdgeInsets.only(bottom: TabernaculoEspacamento.sp12),
       child: ConstrainedBox(
         // O alvo de uma linha curta ficava abaixo dos 48 dp: o mesmo mínimo da
         // Bíblia vale aqui, inclusive para quem lê com o texto ampliado.
-        constraints: const BoxConstraints(minHeight: DevocionalToque.minimo),
+        constraints: const BoxConstraints(minHeight: TabernaculoToque.minimo),
         child: Semantics(
           button: true,
           label: grifado ? 'Favorito' : null,
@@ -71,10 +71,10 @@ class DevocionalParagrafoDeLivro extends StatelessWidget {
                 width: double.infinity,
                 alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.fromLTRB(
-                  DevocionalEspacamento.sp10,
-                  DevocionalEspacamento.sp4,
-                  DevocionalEspacamento.sp4,
-                  DevocionalEspacamento.sp4,
+                  TabernaculoEspacamento.sp10,
+                  TabernaculoEspacamento.sp4,
+                  TabernaculoEspacamento.sp4,
+                  TabernaculoEspacamento.sp4,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,7 +84,7 @@ class DevocionalParagrafoDeLivro extends StatelessWidget {
                       style: estilo ?? tema.bodyLarge?.copyWith(height: 1.7),
                     ),
                     if (nota.isNotEmpty) ...[
-                      const SizedBox(height: DevocionalEspacamento.sp8),
+                      const SizedBox(height: TabernaculoEspacamento.sp8),
                       Text(
                         nota,
                         style: tema.bodyMedium?.copyWith(

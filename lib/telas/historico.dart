@@ -85,17 +85,17 @@ class TelaHistorico extends StatelessWidget {
     final estado = EscopoDoEstado.de(context);
 
     return Scaffold(
-      appBar: DevocionalAppBar(
+      appBar: TabernaculoAppBar(
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DevocionalRetratoDePersona(
+            TabernaculoRetratoDePersona(
               persona: persona,
               tamanho: 34,
               anel: false,
               decorativo: true,
             ),
-            const SizedBox(width: DevocionalEspacamento.sp10),
+            const SizedBox(width: TabernaculoEspacamento.sp10),
             Flexible(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,26 +145,26 @@ class TelaHistorico extends StatelessWidget {
           ),
         ],
       ),
-      body: DevocionalLarguraDeLeitura(
+      body: TabernaculoLarguraDeLeitura(
         child: ListenableBuilder(
           listenable: estado,
           builder: (context, _) {
             final conversas = estado.conversasDe(persona.id);
             if (conversas.isEmpty) {
-              return DevocionalSemConversas(
+              return TabernaculoSemConversas(
                 persona: persona,
                 aoComecar: () => _abrirNova(context),
               );
             }
             return ListView.separated(
               padding: const EdgeInsets.symmetric(
-                vertical: DevocionalEspacamento.sp8,
+                vertical: TabernaculoEspacamento.sp8,
               ),
               itemCount: conversas.length,
               separatorBuilder: (context, _) => Divider(
                 height: 1,
-                indent: DevocionalEspacamento.sp16,
-                endIndent: DevocionalEspacamento.sp16,
+                indent: TabernaculoEspacamento.sp16,
+                endIndent: TabernaculoEspacamento.sp16,
                 color: cor.outline.withValues(alpha: 0.4),
               ),
               itemBuilder: (context, i) {

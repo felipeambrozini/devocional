@@ -9,8 +9,8 @@ import 'package:go_router/go_router.dart';
 /// esse botão — e quando mostra, usa sempre o ícone do Material, sem jeito
 /// de trocar. Assumir a mesma decisão aqui é o único jeito de pôr o ícone
 /// certo nela.
-class DevocionalAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const DevocionalAppBar({
+class TabernaculoAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const TabernaculoAppBar({
     super.key,
     required this.title,
     this.actions,

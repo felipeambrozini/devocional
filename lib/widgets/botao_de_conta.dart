@@ -37,8 +37,8 @@ Future<void> _sairDaConta(BuildContext context) async {
 /// que o app tinha deslogado sozinho ao fechar), o convite para entrar, ou o
 /// botão "Sair" de quem já entrou (o e-mail fica no Sobre, em "Conta e
 /// privacidade").
-class DevocionalBotaoDeConta extends StatelessWidget {
-  const DevocionalBotaoDeConta({super.key});
+class TabernaculoBotaoDeConta extends StatelessWidget {
+  const TabernaculoBotaoDeConta({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +47,7 @@ class DevocionalBotaoDeConta extends StatelessWidget {
       listenable: nuvem,
       builder: (context, _) {
         if (nuvem.logado) {
-          return DevocionalBotaoTerciario.icon(
+          return TabernaculoBotaoTerciario.icon(
             onPressed: () => _sairDaConta(context),
             icon: const FaIcon(FontAwesomeIcons.rightFromBracket, size: 18),
             label: const Text('Sair'),
@@ -70,7 +70,7 @@ class DevocionalBotaoDeConta extends StatelessWidget {
             ),
           );
         }
-        return const DevocionalBotaoDeEntrar(rotulo: 'Entrar', discreto: true);
+        return const TabernaculoBotaoDeEntrar(rotulo: 'Entrar', discreto: true);
       },
     );
   }

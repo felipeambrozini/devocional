@@ -27,7 +27,7 @@ import 'progresso_fino.dart';
 /// para a folha quando a URL das conversas passou a ser refletida no
 /// navegador (ver `main.dart`, `optionURLReflectsImperativeAPIs`).
 ///
-/// A folha fala dois assuntos e um DevocionalFilete os divide: o que se ajusta na
+/// A folha fala dois assuntos e um TabernaculoFilete os divide: o que se ajusta na
 /// leitura (tamanho, aparência e, na web, as setas do rodapé) vem antes;
 /// o que é do app inteiro (conversas, lembretes, Sobre) vem depois. Quem
 /// abriu da AppBar do leitor encontra o assunto da leitura sem rolar.
@@ -66,20 +66,20 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    DevocionalEspacamento.sp20,
-                    DevocionalEspacamento.sp8,
-                    DevocionalEspacamento.sp20,
-                    DevocionalEspacamento.sp12,
+                    TabernaculoEspacamento.sp20,
+                    TabernaculoEspacamento.sp8,
+                    TabernaculoEspacamento.sp20,
+                    TabernaculoEspacamento.sp12,
                   ),
                   child: Text('Tamanho do texto', style: tema.headlineSmall),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: DevocionalEspacamento.sp20,
+                    horizontal: TabernaculoEspacamento.sp20,
                   ),
                   child: Wrap(
-                    spacing: DevocionalEspacamento.sp8,
-                    runSpacing: DevocionalEspacamento.sp8,
+                    spacing: TabernaculoEspacamento.sp8,
+                    runSpacing: TabernaculoEspacamento.sp8,
                     children: [
                       for (final (i, escala) in escalasDeLeitura.indexed)
                         ChoiceChip(
@@ -95,10 +95,10 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 // de leitura escala com o tema, e a linha abaixo é a amostra.
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    DevocionalEspacamento.sp20,
-                    DevocionalEspacamento.sp12,
-                    DevocionalEspacamento.sp20,
-                    DevocionalEspacamento.sp4,
+                    TabernaculoEspacamento.sp20,
+                    TabernaculoEspacamento.sp12,
+                    TabernaculoEspacamento.sp20,
+                    TabernaculoEspacamento.sp4,
                   ),
                   child: Text(
                     'O texto de leitura fica deste tamanho.',
@@ -107,20 +107,20 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    DevocionalEspacamento.sp20,
-                    DevocionalEspacamento.sp24,
-                    DevocionalEspacamento.sp20,
-                    DevocionalEspacamento.sp12,
+                    TabernaculoEspacamento.sp20,
+                    TabernaculoEspacamento.sp24,
+                    TabernaculoEspacamento.sp20,
+                    TabernaculoEspacamento.sp12,
                   ),
                   child: Text('Aparência', style: tema.headlineSmall),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: DevocionalEspacamento.sp20,
+                    horizontal: TabernaculoEspacamento.sp20,
                   ),
                   child: Wrap(
-                    spacing: DevocionalEspacamento.sp8,
-                    runSpacing: DevocionalEspacamento.sp8,
+                    spacing: TabernaculoEspacamento.sp8,
+                    runSpacing: TabernaculoEspacamento.sp8,
                     children: [
                       for (final modo in ModoDoTema.values)
                         ChoiceChip(
@@ -133,7 +133,7 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 ),
                 SwitchListTile(
                   contentPadding: const EdgeInsets.symmetric(
-                    horizontal: DevocionalEspacamento.sp20,
+                    horizontal: TabernaculoEspacamento.sp20,
                   ),
                   title: const Text('Palavras de Deus em vermelho'),
                   subtitle: const Text(
@@ -148,7 +148,7 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                   builder: (context, _) => Recursos.comentarioNoCapitulo
                       ? SwitchListTile(
                           contentPadding: const EdgeInsets.symmetric(
-                            horizontal: DevocionalEspacamento.sp20,
+                            horizontal: TabernaculoEspacamento.sp20,
                           ),
                           title: const Text('Comentário junto do texto'),
                           subtitle: const Text(
@@ -175,7 +175,7 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                   builder: (context, _) => Recursos.ouvirTextos
                       ? SwitchListTile(
                           contentPadding: const EdgeInsets.symmetric(
-                            horizontal: DevocionalEspacamento.sp20,
+                            horizontal: TabernaculoEspacamento.sp20,
                           ),
                           title: const Text('Ouvir capítulos em sequência'),
                           subtitle: const Text(
@@ -191,12 +191,12 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    DevocionalEspacamento.sp20,
-                    DevocionalEspacamento.sp24,
-                    DevocionalEspacamento.sp20,
+                    TabernaculoEspacamento.sp20,
+                    TabernaculoEspacamento.sp24,
+                    TabernaculoEspacamento.sp20,
                     0,
                   ),
-                  child: const DevocionalFilete(largura: 64),
+                  child: const TabernaculoFilete(largura: 64),
                 ),
                 // Lembretes e áudio colapsados por padrão: são os dois blocos
                 // mais densos da folha e, abertos, exigiam >2 swipes antes de
@@ -221,10 +221,10 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                   ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    DevocionalEspacamento.sp20,
-                    DevocionalEspacamento.sp16,
-                    DevocionalEspacamento.sp20,
-                    DevocionalEspacamento.sp4,
+                    TabernaculoEspacamento.sp20,
+                    TabernaculoEspacamento.sp16,
+                    TabernaculoEspacamento.sp20,
+                    TabernaculoEspacamento.sp4,
                   ),
                   child: Text('Sobre e ajuda', style: tema.headlineSmall),
                 ),
@@ -264,7 +264,7 @@ Future<void> ajustesDeLeitura(BuildContext context, Estado estado) {
                         )
                       : const SizedBox.shrink(),
                 ),
-                const SizedBox(height: DevocionalEspacamento.sp8),
+                const SizedBox(height: TabernaculoEspacamento.sp8),
               ],
             ),
           );
@@ -324,10 +324,10 @@ class _SecaoDeLembretes {
     return [
       Padding(
         padding: const EdgeInsets.fromLTRB(
-          DevocionalEspacamento.sp20,
-          DevocionalEspacamento.sp24,
-          DevocionalEspacamento.sp20,
-          DevocionalEspacamento.sp4,
+          TabernaculoEspacamento.sp20,
+          TabernaculoEspacamento.sp24,
+          TabernaculoEspacamento.sp20,
+          TabernaculoEspacamento.sp4,
         ),
         child: Text('Lembretes', style: tema.headlineSmall),
       ),
@@ -400,7 +400,7 @@ class _SecaoDeLembretes {
     final hora = horaDeMinutos(minutos);
     return ListTile(
       title: Text(titulo),
-      trailing: DevocionalBotaoTerciario(
+      trailing: TabernaculoBotaoTerciario(
         onPressed: () async {
           final escolhida = await showTimePicker(
             context: context,
@@ -503,16 +503,16 @@ class _SecaoAudioOffline {
     return [
       Padding(
         padding: const EdgeInsets.fromLTRB(
-          DevocionalEspacamento.sp20,
-          DevocionalEspacamento.sp24,
-          DevocionalEspacamento.sp20,
-          DevocionalEspacamento.sp4,
+          TabernaculoEspacamento.sp20,
+          TabernaculoEspacamento.sp24,
+          TabernaculoEspacamento.sp20,
+          TabernaculoEspacamento.sp4,
         ),
         child: Text('Áudio offline', style: tema.headlineSmall),
       ),
       Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: DevocionalEspacamento.sp20,
+          horizontal: TabernaculoEspacamento.sp20,
         ),
         child: Text(
           kIsWeb
@@ -543,7 +543,7 @@ class _SecaoAudioOffline {
                 )
               : const SizedBox.shrink(),
         ),
-      const SizedBox(height: DevocionalEspacamento.sp8),
+      const SizedBox(height: TabernaculoEspacamento.sp8),
       ListenableBuilder(
         listenable: AudioOffline.instancia,
         builder: (context, _) {
@@ -583,7 +583,7 @@ class _SecaoAudioOffline {
                     final linha = ListTile(
                       title: Text(rotulos[cat]!),
                       subtitle: baixandoEste
-                          ? DevocionalProgressoFino(valor: off.progresso)
+                          ? TabernaculoProgressoFino(valor: off.progresso)
                           : Text(pronto ? 'Baixado' : '$baixados/$total'),
                       trailing: pronto
                           ? IconButton(
@@ -594,11 +594,11 @@ class _SecaoAudioOffline {
                                   : () => off.apagarCategoria(cat),
                             )
                           : baixandoEste
-                          ? DevocionalBotaoSecundario(
+                          ? TabernaculoBotaoSecundario(
                               onPressed: off.cancelar,
                               child: const Text('Parar'),
                             )
-                          : DevocionalBotaoPrimario(
+                          : TabernaculoBotaoPrimario(
                               onPressed: off.baixando
                                   ? null
                                   : () => _baixarComEvento(off, cat),
@@ -635,7 +635,7 @@ class _SecaoAudioOffline {
                   (off.loteDoErro == null || ordem.contains(off.loteDoErro)))
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: DevocionalEspacamento.sp20,
+                    horizontal: TabernaculoEspacamento.sp20,
                   ),
                   child: Text(
                     off.erro!,
@@ -651,7 +651,7 @@ class _SecaoAudioOffline {
                       .replaceAll('.', ',');
                   return ListTile(
                     title: Text('Armazenamento: $mb MB'),
-                    trailing: DevocionalBotaoTerciario(
+                    trailing: TabernaculoBotaoTerciario(
                       onPressed: off.baixando ? null : () => off.apagarTudo(),
                       child: const Text('Apagar tudo'),
                     ),
@@ -683,10 +683,10 @@ class _SecaoDasSetas {
     return [
       Padding(
         padding: const EdgeInsets.fromLTRB(
-          DevocionalEspacamento.sp20,
-          DevocionalEspacamento.sp24,
-          DevocionalEspacamento.sp20,
-          DevocionalEspacamento.sp4,
+          TabernaculoEspacamento.sp20,
+          TabernaculoEspacamento.sp24,
+          TabernaculoEspacamento.sp20,
+          TabernaculoEspacamento.sp4,
         ),
         child: Text('Navegação', style: tema.headlineSmall),
       ),

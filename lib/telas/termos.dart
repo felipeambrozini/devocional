@@ -54,8 +54,8 @@ class _TelaTermosState extends State<TelaTermos> {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     return Scaffold(
-      appBar: DevocionalAppBar(title: const Text('Termos de serviço')),
-      body: DevocionalLarguraDeLeitura(
+      appBar: TabernaculoAppBar(title: const Text('Termos de serviço')),
+      body: TabernaculoLarguraDeLeitura(
         // O chat só existe para quem tem acesso à função (ver
         // Recursos.conversas); os termos não citam o que essa conta não
         // consegue usar. Selecionável para o leitor poder copiar o e-mail.
@@ -90,10 +90,10 @@ class _TelaTermosState extends State<TelaTermos> {
               // tela, e o ListView só monta as que estão perto dela.
               return SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(
-                  DevocionalEspacamento.sp20,
-                  DevocionalEspacamento.sp16,
-                  DevocionalEspacamento.sp20,
-                  DevocionalEspacamento.sp40,
+                  TabernaculoEspacamento.sp20,
+                  TabernaculoEspacamento.sp16,
+                  TabernaculoEspacamento.sp20,
+                  TabernaculoEspacamento.sp40,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -105,32 +105,32 @@ class _TelaTermosState extends State<TelaTermos> {
                         style: tema.displayMedium,
                       ),
                     ),
-                    const SizedBox(height: DevocionalEspacamento.sp8),
-                    const DevocionalFilete(largura: 64),
-                    const SizedBox(height: DevocionalEspacamento.sp16),
+                    const SizedBox(height: TabernaculoEspacamento.sp8),
+                    const TabernaculoFilete(largura: 64),
+                    const SizedBox(height: TabernaculoEspacamento.sp16),
                     Text(
                       'Ao usar este aplicativo você concorda com o que segue. Ele é '
                       'gratuito, sem anúncio e mantido por uma única pessoa como '
                       'projeto pessoal.',
                       style: tema.bodyLarge?.copyWith(height: 1.7),
                     ),
-                    const SizedBox(height: DevocionalEspacamento.sp16),
+                    const SizedBox(height: TabernaculoEspacamento.sp16),
                     Text(
                       'Nesta página',
                       style: tema.labelLarge?.copyWith(color: cor.secondary),
                     ),
-                    const SizedBox(height: DevocionalEspacamento.sp4),
+                    const SizedBox(height: TabernaculoEspacamento.sp4),
                     Wrap(
-                      spacing: DevocionalEspacamento.sp4,
+                      spacing: TabernaculoEspacamento.sp4,
                       children: [
                         for (final titulo in indice)
-                          DevocionalBotaoTerciario(
+                          TabernaculoBotaoTerciario(
                             onPressed: () => _rolarAte(chaves[titulo]!, titulo),
                             child: Text(titulo),
                           ),
                       ],
                     ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _servico,
                       titulo: 'O serviço',
                       texto: chat
@@ -150,7 +150,7 @@ class _TelaTermosState extends State<TelaTermos> {
                                 'descontinuado a qualquer momento, sem aviso '
                                 'prévio.',
                     ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _conta,
                       titulo: 'Conta e conteúdo do usuário',
                       texto: chat
@@ -168,7 +168,7 @@ class _TelaTermosState extends State<TelaTermos> {
                                 'leitura compartilhados expõem o progresso a '
                                 'quem participa do mesmo plano.',
                     ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _idade,
                       titulo: 'Idade mínima',
                       texto:
@@ -178,7 +178,7 @@ class _TelaTermosState extends State<TelaTermos> {
                           'aplicativo pode ser usado por menores de 18 anos com o '
                           'acompanhamento dos pais ou responsáveis.',
                     ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _uso,
                       titulo: 'Uso aceitável',
                       texto:
@@ -187,7 +187,7 @@ class _TelaTermosState extends State<TelaTermos> {
                           'para automatizar acesso em volume que sobrecarregue a '
                           'infraestrutura do serviço.',
                     ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _isencao,
                       titulo: 'Isenção de responsabilidade',
                       texto:
@@ -200,7 +200,7 @@ class _TelaTermosState extends State<TelaTermos> {
                           'aplicativo, nem por perdas decorrentes de '
                           'indisponibilidade do serviço.',
                     ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _encerramento,
                       titulo: 'Encerramento',
                       texto:
@@ -209,7 +209,7 @@ class _TelaTermosState extends State<TelaTermos> {
                           'privacidade. O criador pode encerrar o serviço ou '
                           'contas que violem estes termos.',
                     ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _alteracoes,
                       titulo: 'Alterações',
                       texto:
@@ -217,7 +217,7 @@ class _TelaTermosState extends State<TelaTermos> {
                           'aplicativo após uma mudança implica aceitação da nova '
                           'versão.',
                     ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _lei,
                       titulo: 'Lei e foro',
                       texto:
@@ -226,7 +226,7 @@ class _TelaTermosState extends State<TelaTermos> {
                           'questão sobre eles, sem prejuízo do direito de quem usa '
                           'o aplicativo de recorrer ao foro do próprio domicílio.',
                     ),
-                    DevocionalSecaoDeTexto(
+                    TabernaculoSecaoDeTexto(
                       key: _contato,
                       titulo: 'Contato',
                       texto: emailDeContato.isEmpty

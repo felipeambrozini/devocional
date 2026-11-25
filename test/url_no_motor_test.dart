@@ -44,7 +44,7 @@ void main() {
       },
     );
 
-    await tester.pumpWidget(AppDevocional(estado: await estadoLimpo()));
+    await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
     await tester.pumpAndSettle();
 
     expect(

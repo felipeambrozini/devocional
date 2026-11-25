@@ -6,7 +6,32 @@ import '../dados/nuvem.dart';
 import '../dados/planos_nuvem.dart';
 import 'aviso.dart';
 
-/// Marca [dia] como lido porque a pessoa chegou ao fim do último capítulo
+/// A pessoa chegou ao fim do capítulo [numero] de [livro], aberto pela
+/// leitura de [dia]: guarda o capítulo como lido no dia e, se era o último que
+/// faltava, marca o dia. As leituras de um dia podem ser feitas em momentos
+/// diferentes (Gênesis de manhã, Salmos à noite), por isso o andamento fica
+/// guardado em `Estado.progressoDosDias`.
+Future<void> registrarCapituloLidoDoDia(
+  BuildContext context,
+  Estado estado,
+  DiaDaLeitura dia,
+  String livro,
+  int numero,
+) async {
+  if (!dia.temCapitulo(livro, numero)) return;
+  final progresso = estado.progressoDosDias;
+  final chave = dia.chaveDoProgresso;
+  await progresso.registrar(chave, DiaDaLeitura.capitulo(livro, numero));
+  final lidos = progresso.lidosDoDia(chave);
+  if (!dia.capitulos.every(lidos.contains)) return;
+  if (!context.mounted) return;
+  await marcarDiaDaLeituraAoTerminar(context, estado, dia);
+  // Marcado (ou já estava): o andamento não serve mais. Quem desfizer a marca
+  // marca de novo à mão, ou relê o dia.
+  await progresso.esquecer(chave);
+}
+
+/// Marca [dia] como lido porque a pessoa chegou ao fim de todos os capítulos
 /// dele, e avisa com "Desfazer": ela não tocou em nada, então a marcação
 /// precisa aparecer e ter saída de um toque.
 ///

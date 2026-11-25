@@ -6,8 +6,8 @@ import '../telas/busca.dart';
 /// Um resultado da busca: de onde é ([titulo], e o [subtitulo] quando há),
 /// e o trecho com o [termo] destacado. Serve às duas abas da busca, Bíblia e
 /// Devocionais, que só diferem no título e em para onde o toque leva.
-class DevocionalItemDeAchado extends StatelessWidget {
-  const DevocionalItemDeAchado({
+class TabernaculoItemDeAchado extends StatelessWidget {
+  const TabernaculoItemDeAchado({
     super.key,
     required this.titulo,
     required this.texto,
@@ -36,8 +36,8 @@ class DevocionalItemDeAchado extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: Padding(
         padding: const EdgeInsets.symmetric(
-          vertical: DevocionalEspacamento.sp4,
-          horizontal: DevocionalEspacamento.sp4,
+          vertical: TabernaculoEspacamento.sp4,
+          horizontal: TabernaculoEspacamento.sp4,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,7 +47,7 @@ class DevocionalItemDeAchado extends StatelessWidget {
               style: tema.titleSmall?.copyWith(color: cor.secondary),
             ),
             if (subtitulo != null && subtitulo.isNotEmpty) ...[
-              const SizedBox(height: DevocionalEspacamento.sp2),
+              const SizedBox(height: TabernaculoEspacamento.sp2),
               Text(
                 subtitulo,
                 style: tema.bodySmall?.copyWith(
@@ -56,7 +56,7 @@ class DevocionalItemDeAchado extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(height: DevocionalEspacamento.sp4),
+            const SizedBox(height: TabernaculoEspacamento.sp4),
             Text.rich(
               destacar(texto, termo, tema, cor),
               maxLines: 4,

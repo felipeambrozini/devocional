@@ -13,9 +13,9 @@ import 'filete.dart';
 import 'linha_de_versiculo.dart';
 
 /// A lista rolável de um capítulo: o cabeçalho (abertura do livro, título e
-/// voz) e, abaixo dele, um [DevocionalLinhaDeVersiculo] por versículo.
-class DevocionalLeitorDaBiblia extends StatelessWidget {
-  const DevocionalLeitorDaBiblia({
+/// voz) e, abaixo dele, um [TabernaculoLinhaDeVersiculo] por versículo.
+class TabernaculoLeitorDaBiblia extends StatelessWidget {
+  const TabernaculoLeitorDaBiblia({
     super.key,
     required this.capitulo,
     required this.rolagem,
@@ -56,7 +56,7 @@ class DevocionalLeitorDaBiblia extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DevocionalComentariosDoCapitulo(
+    return TabernaculoComentariosDoCapitulo(
       livro: capitulo.livro,
       capituloNumero: capitulo.numero,
       construir: _lista,
@@ -71,10 +71,10 @@ class DevocionalLeitorDaBiblia extends StatelessWidget {
     return ListView.builder(
       controller: rolagem,
       padding: const EdgeInsets.fromLTRB(
-        DevocionalEspacamento.sp20,
-        DevocionalEspacamento.sp8,
-        DevocionalEspacamento.sp20,
-        DevocionalEspacamento.sp32,
+        TabernaculoEspacamento.sp20,
+        TabernaculoEspacamento.sp8,
+        TabernaculoEspacamento.sp20,
+        TabernaculoEspacamento.sp32,
       ),
       itemCount: capitulo.versiculos.length + 2,
       itemBuilder: (context, i) {
@@ -84,7 +84,7 @@ class DevocionalLeitorDaBiblia extends StatelessWidget {
             children: [
               // O cartão é o único caminho para a introdução, então fica
               // disponível em todo capítulo, não só antes do primeiro.
-              DevocionalAberturaDeLivro(slug: capitulo.livro),
+              TabernaculoAberturaDeLivro(slug: capitulo.livro),
               // O título completo do livro só aparece no capítulo 1: é a
               // abertura do livro, não algo para repetir a cada capítulo.
               if (capitulo.numero == 1) ...[
@@ -95,7 +95,7 @@ class DevocionalLeitorDaBiblia extends StatelessWidget {
                     color: cor.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: DevocionalEspacamento.sp4),
+                const SizedBox(height: TabernaculoEspacamento.sp4),
               ],
               // Título simples: escolher livro e capítulo mora num lugar só,
               // o título da barra de cima. Container: sem ele, o leitor de
@@ -106,16 +106,16 @@ class DevocionalLeitorDaBiblia extends StatelessWidget {
                 header: true,
                 child: Text(capitulo.referencia, style: tema.displayMedium),
               ),
-              const SizedBox(height: DevocionalEspacamento.sp8),
-              const DevocionalFilete(),
+              const SizedBox(height: TabernaculoEspacamento.sp8),
+              const TabernaculoFilete(),
               // A voz de Spurgeon lê o capítulo inteiro, do título ao último
               // versículo; tocar de novo para a leitura.
-              const SizedBox(height: DevocionalEspacamento.sp14),
-              DevocionalBotaoDeVoz(
+              const SizedBox(height: TabernaculoEspacamento.sp14),
+              TabernaculoBotaoDeVoz(
                 chave: chaveDeCapitulo(capitulo.livro, capitulo.numero),
               ),
               if (capitulo.titulo.isNotEmpty) ...[
-                const SizedBox(height: DevocionalEspacamento.sp12),
+                const SizedBox(height: TabernaculoEspacamento.sp12),
                 Text(
                   capitulo.titulo,
                   style: tema.bodyMedium?.copyWith(
@@ -124,7 +124,7 @@ class DevocionalLeitorDaBiblia extends StatelessWidget {
                   ),
                 ),
               ],
-              const SizedBox(height: DevocionalEspacamento.sp16),
+              const SizedBox(height: TabernaculoEspacamento.sp16),
             ],
           );
         }
@@ -136,9 +136,9 @@ class DevocionalLeitorDaBiblia extends StatelessWidget {
             return const SizedBox.shrink();
           }
           return Padding(
-            padding: const EdgeInsets.only(top: DevocionalEspacamento.sp24),
+            padding: const EdgeInsets.only(top: TabernaculoEspacamento.sp24),
             child: Center(
-              child: DevocionalBotaoSecundario(
+              child: TabernaculoBotaoSecundario(
                 onPressed: aoAvancar,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -149,7 +149,7 @@ class DevocionalLeitorDaBiblia extends StatelessWidget {
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    const SizedBox(width: DevocionalEspacamento.sp8),
+                    const SizedBox(width: TabernaculoEspacamento.sp8),
                     const FaIcon(FontAwesomeIcons.arrowRight, size: 16),
                   ],
                 ),
@@ -163,7 +163,7 @@ class DevocionalLeitorDaBiblia extends StatelessWidget {
             destacar == null ||
             (numero >= destacar!.$1 && numero <= destacar!.$2);
 
-        return DevocionalLinhaDeVersiculo(
+        return TabernaculoLinhaDeVersiculo(
           key: chaveDoAlvoDeRolagem != null && numero == alvoDeRolagem
               ? chaveDoAlvoDeRolagem
               : null,

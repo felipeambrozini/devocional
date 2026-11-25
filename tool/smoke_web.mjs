@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Smoke test do Devocional publicado.
+// Smoke test do Tabernáculo publicado.
 //
 // Roda depois do deploy (ver .github/workflows/deploy-web.yml) e responde a
 // uma pergunta só: o que está no ar é o build que acabou de ser publicado, e
@@ -19,7 +19,7 @@
 
 const BASE = (process.env.SMOKE_BASE_URL || 'https://www.felipeambrozini.com.br')
   .replace(/\/+$/, '');
-const APP = '/devocional';
+const APP = '/tabernaculo';
 const BUILD_ID = process.env.SMOKE_BUILD_ID || '';
 const ESPERA_MS = Number(process.env.SMOKE_ESPERA_MS || 5000);
 const TENTATIVAS = Number(process.env.SMOKE_TENTATIVAS || 24);
@@ -102,10 +102,10 @@ await caso('página inicial responde com HTML e metadados', async () => {
   conferir(html.includes('lang="pt-BR"'), 'falta lang="pt-BR"');
   conferir(html.includes('rel="manifest"'), 'falta o manifest');
   conferir(
-    html.includes("register('/devocional/firebase-messaging-sw.js'"),
+    html.includes("register('/tabernaculo/firebase-messaging-sw.js'"),
     'o index.html não registra o service worker do app',
   );
-  conferir(html.includes('/devocional/api/erro'), 'falta o beacon de erro');
+  conferir(html.includes('/tabernaculo/api/erro'), 'falta o beacon de erro');
   conferir(
     (resposta.headers.get('cache-control') || '').includes('no-cache'),
     'index.html sem no-cache',
@@ -215,7 +215,7 @@ await caso('rota interna cai no index.html do app', async () => {
     'rota interna não devolve HTML',
   );
   const html = await resposta.text();
-  conferir(html.includes('<title>Devocional</title>'), 'não é o index do app');
+  conferir(html.includes('<title>Tabernáculo</title>'), 'não é o index do app');
 });
 
 await caso('API de erro está publicada pelo rewrite', async () => {

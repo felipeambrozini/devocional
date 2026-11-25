@@ -96,7 +96,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
         final lidos = _controller.meusLidos().length;
 
         return Scaffold(
-          appBar: DevocionalAppBar(
+          appBar: TabernaculoAppBar(
             title: Text(plano?.titulo ?? 'Plano'),
             actions: [
               if (_controller.compartilhado && dados != null) ...[
@@ -117,7 +117,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
                   itemBuilder: (context) => [
                     const PopupMenuItem(
                       value: 'copiar',
-                      child: DevocionalItemDeMenu(
+                      child: TabernaculoItemDeMenu(
                         icone: FontAwesomeIcons.link,
                         rotulo: 'Copiar link do plano',
                       ),
@@ -128,7 +128,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
                     if (souCriador)
                       const PopupMenuItem(
                         value: 'editar',
-                        child: DevocionalItemDeMenu(
+                        child: TabernaculoItemDeMenu(
                           icone: FontAwesomeIcons.penToSquare,
                           rotulo: 'Editar plano',
                         ),
@@ -136,7 +136,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
                     if (!souCriador)
                       const PopupMenuItem(
                         value: 'sair',
-                        child: DevocionalItemDeMenu(
+                        child: TabernaculoItemDeMenu(
                           icone: FontAwesomeIcons.rightFromBracket,
                           rotulo: 'Sair do plano',
                         ),
@@ -144,7 +144,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
                     else
                       const PopupMenuItem(
                         value: 'excluir',
-                        child: DevocionalItemDeMenu(
+                        child: TabernaculoItemDeMenu(
                           icone: FontAwesomeIcons.trash,
                           rotulo: 'Excluir plano',
                         ),
@@ -165,14 +165,14 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
                   itemBuilder: (context) => const [
                     PopupMenuItem(
                       value: 'editar',
-                      child: DevocionalItemDeMenu(
+                      child: TabernaculoItemDeMenu(
                         icone: FontAwesomeIcons.penToSquare,
                         rotulo: 'Editar plano',
                       ),
                     ),
                     PopupMenuItem(
                       value: 'excluir',
-                      child: DevocionalItemDeMenu(
+                      child: TabernaculoItemDeMenu(
                         icone: FontAwesomeIcons.trash,
                         rotulo: 'Excluir plano',
                       ),
@@ -201,10 +201,10 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
     }
     final erro = _controller.erro;
     if (erro != null) {
-      return DevocionalAvisoVazio(
+      return TabernaculoAvisoVazio(
         icone: FontAwesomeIcons.triangleExclamation,
         titulo: erro,
-        acao: DevocionalBotaoPrimario.icon(
+        acao: TabernaculoBotaoPrimario.icon(
           icon: const FaIcon(FontAwesomeIcons.arrowsRotate),
           label: const Text('Tentar de novo'),
           onPressed: _controller.tentarDeNovo,
@@ -214,7 +214,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
     final planoLocal = _controller.plano;
     if (planoLocal == null) {
       // Link aberto sem conta: o plano não pôde ser lido.
-      return DevocionalCartaoDeEntrar(onEntrar: _controller.iniciar);
+      return TabernaculoCartaoDeEntrar(onEntrar: _controller.iniciar);
     }
 
     final dias = planoLocal.diasDoPlano;
@@ -228,13 +228,13 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
     }
     if (proximoIndice != -1) _rolarAteProximoDia();
 
-    return DevocionalLarguraDeLeitura(
+    return TabernaculoLarguraDeLeitura(
       child: ListView.separated(
         padding: const EdgeInsets.fromLTRB(
-          DevocionalEspacamento.sp16,
-          DevocionalEspacamento.sp12,
-          DevocionalEspacamento.sp16,
-          DevocionalEspacamento.sp32,
+          TabernaculoEspacamento.sp16,
+          TabernaculoEspacamento.sp12,
+          TabernaculoEspacamento.sp16,
+          TabernaculoEspacamento.sp32,
         ),
         // Monta o plano inteiro (como aba_do_cronograma.dart monta o mês
         // inteiro), dimensionado ao tamanho real do plano — sem isto o GlobalKey do
@@ -249,28 +249,28 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
         scrollCacheExtent: ScrollCacheExtent.pixels(dias.length * 240.0),
         itemCount: dias.length + 1,
         separatorBuilder: (_, _) =>
-            const SizedBox(height: DevocionalEspacamento.sp10),
+            const SizedBox(height: TabernaculoEspacamento.sp10),
         itemBuilder: (context, i) {
           if (i == 0) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                DevocionalCabecalhoDoPlano(
+                TabernaculoCabecalhoDoPlano(
                   plano: planoLocal,
                   lidos: lidos,
                   totalDeDias: diaCount,
                 ),
-                const SizedBox(height: DevocionalEspacamento.sp10),
+                const SizedBox(height: TabernaculoEspacamento.sp10),
                 if (!planoLocal.fixo)
-                  DevocionalCartaoDeCompartilhar(
+                  TabernaculoCartaoDeCompartilhar(
                     compartilhado: _controller.compartilhado,
                     aoCompartilhar: _controller.compartilhado
                         ? () => _controller.copiarLink(context)
                         : () => _controller.compartilhar(context),
                   ),
                 if (_controller.compartilhado && dados != null) ...[
-                  const SizedBox(height: DevocionalEspacamento.sp10),
-                  DevocionalSecaoDeParticipantes(
+                  const SizedBox(height: TabernaculoEspacamento.sp10),
+                  TabernaculoSecaoDeParticipantes(
                     dados: dados,
                     meuUid: _controller.uid,
                     totalDeDias: diaCount,
@@ -280,7 +280,7 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
             );
           }
           final dia = dias[i - 1];
-          return DevocionalCartaoDeDia(
+          return TabernaculoCartaoDeDia(
             key: (i - 1) == proximoIndice ? _chaveDoProximoDia : null,
             numero: dia.numero,
             rotulo: dia.rotulo,

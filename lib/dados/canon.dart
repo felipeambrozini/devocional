@@ -437,7 +437,7 @@ List<(Livro, int, int, int)> faixasDaReferencia(String referencia) {
 /// versículo (o rastreador de prévia do WhatsApp não resolve caminho relativo)
 /// e para reconhecer, em `main.dart`, se `Uri.base` é o próprio site ou o
 /// diretório de trabalho de uma plataforma que não é web.
-const enderecoDoSite = 'https://www.felipeambrozini.com.br/devocional/';
+const enderecoDoSite = 'https://www.felipeambrozini.com.br/tabernaculo/';
 
 /// Livro, capítulo e versículo (opcional) a partir do parâmetro `ler` de um
 /// link, como `joao.3.16` ou `joao.3`. Serve para main.dart abrir a leitura

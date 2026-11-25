@@ -14,8 +14,8 @@ import 'filete.dart';
 ///
 /// Não inclui o botão "Escolher livros" nem os campos de nome e dias: esses
 /// falam com o controlador de cada tela, e só a lista e a opção se repetem.
-class DevocionalLivrosEscolhidos extends StatefulWidget {
-  const DevocionalLivrosEscolhidos({
+class TabernaculoLivrosEscolhidos extends StatefulWidget {
+  const TabernaculoLivrosEscolhidos({
     super.key,
     required this.livros,
     required this.aoRemover,
@@ -35,12 +35,12 @@ class DevocionalLivrosEscolhidos extends StatefulWidget {
   final void Function(List<String> slugs, int indice)? aoRestaurar;
 
   @override
-  State<DevocionalLivrosEscolhidos> createState() =>
-      _DevocionalLivrosEscolhidosState();
+  State<TabernaculoLivrosEscolhidos> createState() =>
+      _TabernaculoLivrosEscolhidosState();
 }
 
-class _DevocionalLivrosEscolhidosState
-    extends State<DevocionalLivrosEscolhidos> {
+class _TabernaculoLivrosEscolhidosState
+    extends State<TabernaculoLivrosEscolhidos> {
   /// Acima disto os chips colapsam no resumo, para a lista não empurrar o
   /// resto do formulário para baixo do fold.
   static const _limiteVisivel = 6;
@@ -95,10 +95,10 @@ class _DevocionalLivrosEscolhidosState
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
-        if (colapsado) const SizedBox(height: DevocionalEspacamento.sp8),
+        if (colapsado) const SizedBox(height: TabernaculoEspacamento.sp8),
         Wrap(
-          spacing: DevocionalEspacamento.sp8,
-          runSpacing: DevocionalEspacamento.sp8,
+          spacing: TabernaculoEspacamento.sp8,
+          runSpacing: TabernaculoEspacamento.sp8,
           children: [
             for (var i = 0; i < visiveis.length; i++)
               InputChip(
@@ -115,28 +115,28 @@ class _DevocionalLivrosEscolhidosState
               ),
           ],
         ),
-        const SizedBox(height: DevocionalEspacamento.sp4),
+        const SizedBox(height: TabernaculoEspacamento.sp4),
         Wrap(
-          spacing: DevocionalEspacamento.sp8,
-          runSpacing: DevocionalEspacamento.sp4,
+          spacing: TabernaculoEspacamento.sp8,
+          runSpacing: TabernaculoEspacamento.sp4,
           children: [
             if (colapsado)
-              DevocionalBotaoTerciario(
+              TabernaculoBotaoTerciario(
                 onPressed: () => setState(() => _expandido = true),
                 child: Text('Ver todos (${livros.length})'),
               )
             else if (livros.length > _limiteVisivel)
-              DevocionalBotaoTerciario(
+              TabernaculoBotaoTerciario(
                 onPressed: () => setState(() => _expandido = false),
                 child: const Text('Ver menos'),
               ),
             if (livros.length > 1)
-              DevocionalBotaoTerciario(
+              TabernaculoBotaoTerciario(
                 onPressed: () => _limpar(context),
                 child: const Text('Limpar'),
               ),
             if (reordenar != null && livros.length > 1)
-              DevocionalBotaoTerciario.icon(
+              TabernaculoBotaoTerciario.icon(
                 onPressed: () async {
                   final novaOrdem = await mostrarEditorDeOrdemDosLivros(
                     context,
@@ -156,8 +156,8 @@ class _DevocionalLivrosEscolhidosState
 
 /// A caixa de incluir devocionais com o antes/depois: o mesmo bloco nos dois
 /// formulários, com o texto único da opção.
-class DevocionalOpcaoDeDevocionais extends StatelessWidget {
-  const DevocionalOpcaoDeDevocionais({
+class TabernaculoOpcaoDeDevocionais extends StatelessWidget {
+  const TabernaculoOpcaoDeDevocionais({
     super.key,
     required this.incluir,
     required this.antes,
@@ -191,17 +191,17 @@ class DevocionalOpcaoDeDevocionais extends StatelessWidget {
           onChanged: aoMudarIncluir,
         ),
         if (incluir) ...[
-          const SizedBox(height: DevocionalEspacamento.sp8),
+          const SizedBox(height: TabernaculoEspacamento.sp8),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(DevocionalEspacamento.sp12),
+            padding: const EdgeInsets.all(TabernaculoEspacamento.sp12),
             decoration: BoxDecoration(
               border: Border.all(color: cor.outline.withValues(alpha: 0.5)),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Wrap(
-              spacing: DevocionalEspacamento.sp8,
-              runSpacing: DevocionalEspacamento.sp8,
+              spacing: TabernaculoEspacamento.sp8,
+              runSpacing: TabernaculoEspacamento.sp8,
               children: [
                 ChoiceChip(
                   label: const Text('Antes do capítulo'),
@@ -255,15 +255,15 @@ Future<List<String>?> mostrarEditorDeOrdemDosLivros(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const DevocionalFilete(largura: 48),
-                const SizedBox(height: DevocionalEspacamento.sp8),
+                const TabernaculoFilete(largura: 48),
+                const SizedBox(height: TabernaculoEspacamento.sp8),
                 Text(
                   'Quem lê começa pelo primeiro livro: a ordem decide o que cai em cada dia.',
                   style: Theme.of(dialogContext).textTheme.bodySmall?.copyWith(
                     color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: DevocionalEspacamento.sp12),
+                const SizedBox(height: TabernaculoEspacamento.sp12),
                 Expanded(
                   child: ReorderableListView.builder(
                     itemCount: ordem.length,
@@ -313,11 +313,11 @@ Future<List<String>?> mostrarEditorDeOrdemDosLivros(
             ),
           ),
           actions: [
-            DevocionalBotaoTerciario(
+            TabernaculoBotaoTerciario(
               onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Cancelar'),
             ),
-            DevocionalBotaoPrimario(
+            TabernaculoBotaoPrimario(
               onPressed: () =>
                   Navigator.pop(dialogContext, List<String>.from(ordem)),
               child: const Text('Salvar ordem'),

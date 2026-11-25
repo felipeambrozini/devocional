@@ -17,67 +17,109 @@ DiaDaLeitura? _pelaUrl(String caminho) =>
     DiaDaLeitura.doParametros(Uri.parse(caminho).queryParameters);
 
 void main() {
-  group('fimDosItens', () {
-    test('lista vazia não tem fim', () {
-      expect(DiaDaLeitura.fimDosItens([]), isNull);
+  group('capitulosDosItens', () {
+    test('lista vazia não tem capítulo nenhum', () {
+      expect(DiaDaLeitura.capitulosDosItens([]), isNull);
     });
 
-    test('o fim é o último capítulo da última faixa', () {
+    test('faixa de vários capítulos abre capítulo a capítulo', () {
+      expect(DiaDaLeitura.capitulosDosItens([_capitulos('genesis', 1, 3)]), [
+        'genesis.1',
+        'genesis.2',
+        'genesis.3',
+      ]);
+    });
+
+    test('faixa de um capítulo só vira um capítulo', () {
+      expect(DiaDaLeitura.capitulosDosItens([_capitulos('judas', 1, 1)]), [
+        'judas.1',
+      ]);
+    });
+
+    test('várias faixas seguem a ordem da leitura', () {
       expect(
-        DiaDaLeitura.fimDosItens([
-          _capitulos('genesis', 1, 3),
-          _capitulos('joao', 2, 4),
+        DiaDaLeitura.capitulosDosItens([
+          _capitulos('genesis', 1, 2),
+          _capitulos('salmos', 1, 1),
         ]),
-        ('joao', 4),
+        ['genesis.1', 'genesis.2', 'salmos.1'],
       );
     });
 
-    test('faixa de um capítulo só termina nele mesmo', () {
-      expect(DiaDaLeitura.fimDosItens([_capitulos('judas', 1, 1)]), (
-        'judas',
-        1,
-      ));
+    test('capítulo repetido entre faixas entra uma vez só', () {
+      expect(
+        DiaDaLeitura.capitulosDosItens([
+          _capitulos('joao', 1, 2),
+          _capitulos('joao', 2, 3),
+        ]),
+        ['joao.1', 'joao.2', 'joao.3'],
+      );
     });
 
-    test('dia que termina num devocional não tem fim a marcar', () {
+    test('devocional no fim dá nulo', () {
       expect(
-        DiaDaLeitura.fimDosItens([_capitulos('joao', 1, 1), _devocional]),
+        DiaDaLeitura.capitulosDosItens([_capitulos('joao', 1, 1), _devocional]),
         isNull,
       );
     });
 
-    test('devocional no começo não atrapalha: o fim é o último capítulo', () {
+    test('devocional no começo dá nulo', () {
       expect(
-        DiaDaLeitura.fimDosItens([_devocional, _capitulos('joao', 1, 1)]),
-        ('joao', 1),
+        DiaDaLeitura.capitulosDosItens([_devocional, _capitulos('joao', 1, 1)]),
+        isNull,
       );
+    });
+
+    test('devocional no meio dá nulo', () {
+      expect(
+        DiaDaLeitura.capitulosDosItens([
+          _capitulos('joao', 1, 1),
+          _devocional,
+          _capitulos('salmos', 1, 1),
+        ]),
+        isNull,
+      );
+    });
+
+    test('só devocional dá nulo', () {
+      expect(DiaDaLeitura.capitulosDosItens([_devocional]), isNull);
     });
   });
 
   group('doCronograma e doPlano', () {
-    test('o cronograma guarda a chave e o fim do dia', () {
-      final dia = DiaDaLeitura.doCronograma('2026-11-24', [
-        _capitulos('salmos', 1, 2),
-      ])!;
-      expect(dia.chave, '2026-11-24');
-      expect(dia.livroDoFim, 'salmos');
-      expect(dia.capituloDoFim, 2);
-    });
+    test(
+      'o cronograma guarda a chave, os capítulos e a chave do progresso',
+      () {
+        final dia = DiaDaLeitura.doCronograma('2026-11-24', [
+          _capitulos('salmos', 1, 2),
+        ])!;
+        expect(dia.chave, '2026-11-24');
+        expect(dia.capitulos, ['salmos.1', 'salmos.2']);
+        expect(dia.chaveDoProgresso, 'cronograma:2026-11-24');
+      },
+    );
 
-    test('o plano guarda o id, o número e o fim do dia', () {
+    test('o plano guarda o id, o número, os capítulos e a chave', () {
       final dia = DiaDaLeitura.doPlano('abc', 7, [_capitulos('joao', 3, 5)])!;
       expect(dia.planoId, 'abc');
       expect(dia.numero, 7);
-      expect(dia.livroDoFim, 'joao');
-      expect(dia.capituloDoFim, 5);
+      expect(dia.capitulos, ['joao.3', 'joao.4', 'joao.5']);
+      expect(dia.chaveDoProgresso, 'plano:abc:7');
     });
 
-    test('dia vazio ou terminado em devocional devolve nulo', () {
+    test('dia vazio ou com devocional devolve nulo', () {
       expect(DiaDaLeitura.doCronograma('2026-11-24', []), isNull);
       expect(
         DiaDaLeitura.doCronograma('2026-11-24', [
           _capitulos('joao', 1, 1),
           _devocional,
+        ]),
+        isNull,
+      );
+      expect(
+        DiaDaLeitura.doCronograma('2026-11-24', [
+          _devocional,
+          _capitulos('joao', 1, 1),
         ]),
         isNull,
       );
@@ -89,19 +131,28 @@ void main() {
     });
   });
 
-  group('ehOFim', () {
+  group('temCapitulo', () {
     final dia = DiaDaLeitura.doCronograma('2026-11-24', [
       _capitulos('joao', 1, 3),
     ])!;
 
-    test('só o último capítulo do dia é o fim', () {
-      expect(dia.ehOFim('joao', 3), isTrue);
-      expect(dia.ehOFim('joao', 2), isFalse);
-      expect(dia.ehOFim('joao', 4), isFalse);
+    test('todo capítulo do dia faz parte dele', () {
+      for (var n = 1; n <= 3; n++) {
+        expect(dia.temCapitulo('joao', n), isTrue, reason: 'joao $n');
+      }
     });
 
-    test('o mesmo número em outro livro não é o fim', () {
-      expect(dia.ehOFim('marcos', 3), isFalse);
+    test('capítulo fora da faixa não faz parte', () {
+      expect(dia.temCapitulo('joao', 0), isFalse);
+      expect(dia.temCapitulo('joao', 4), isFalse);
+    });
+
+    test('o mesmo número em outro livro não faz parte', () {
+      expect(dia.temCapitulo('marcos', 2), isFalse);
+    });
+
+    test('capitulo monta o formato livro.numero', () {
+      expect(DiaDaLeitura.capitulo('genesis', 12), 'genesis.12');
     });
   });
 
@@ -114,8 +165,24 @@ void main() {
       expect(volta, isA<DiaDoCronograma>());
       final cronograma = volta as DiaDoCronograma;
       expect(cronograma.chave, '2026-11-24');
-      expect(cronograma.livroDoFim, 'joao');
-      expect(cronograma.capituloDoFim, 3);
+      expect(cronograma.capitulos, ['joao.1', 'joao.2', 'joao.3']);
+    });
+
+    test('o dia com vários capítulos vai na URL separado por vírgula', () {
+      final dia = DiaDaLeitura.doCronograma('2026-11-24', [
+        _capitulos('genesis', 1, 2),
+        _capitulos('salmos', 1, 1),
+      ])!;
+      final caminho = caminhoNaBiblia('genesis', 1, dia: dia);
+      expect(
+        Uri.parse(caminho).queryParameters['capitulos'],
+        'genesis.1,genesis.2,salmos.1',
+      );
+      expect(_pelaUrl(caminho)!.capitulos, [
+        'genesis.1',
+        'genesis.2',
+        'salmos.1',
+      ]);
     });
 
     test('o dia do plano volta igual', () {
@@ -127,8 +194,7 @@ void main() {
       final plano = volta as DiaDePlano;
       expect(plano.planoId, 'abc123');
       expect(plano.numero, 12);
-      expect(plano.livroDoFim, 'salmos');
-      expect(plano.capituloDoFim, 119);
+      expect(plano.capitulos, ['salmos.119']);
     });
 
     test('id de plano com caracteres especiais sobrevive à URL', () {
@@ -173,7 +239,7 @@ void main() {
       expect(DiaDaLeitura.doParametros({}), isNull);
     });
 
-    test('sem o fim, dá nulo', () {
+    test('sem os capítulos, dá nulo', () {
       expect(
         DiaDaLeitura.doParametros({'diaDoCronograma': '2026-11-24'}),
         isNull,
@@ -184,8 +250,8 @@ void main() {
       );
     });
 
-    test('fim malformado dá nulo', () {
-      for (final fim in [
+    test('capítulos malformados dão nulo', () {
+      for (final capitulos in [
         '',
         'joao',
         'joao.',
@@ -194,37 +260,43 @@ void main() {
         'joao.0',
         'joao.-1',
         'joao.3.1',
+        'joao.1,',
+        'joao.1,joao',
+        'joao.1,,joao.2',
       ]) {
         expect(
           DiaDaLeitura.doParametros({
             'diaDoCronograma': '2026-11-24',
-            'fim': fim,
+            'capitulos': capitulos,
           }),
           isNull,
-          reason: 'fim "$fim"',
+          reason: 'capitulos "$capitulos"',
         );
       }
     });
 
-    test('só o fim, sem dia nenhum, dá nulo', () {
-      expect(DiaDaLeitura.doParametros({'fim': 'joao.3'}), isNull);
+    test('só os capítulos, sem dia nenhum, dá nulo', () {
+      expect(DiaDaLeitura.doParametros({'capitulos': 'joao.3'}), isNull);
     });
 
     test('cronograma com a chave vazia dá nulo', () {
       expect(
-        DiaDaLeitura.doParametros({'diaDoCronograma': '', 'fim': 'joao.3'}),
+        DiaDaLeitura.doParametros({
+          'diaDoCronograma': '',
+          'capitulos': 'joao.3',
+        }),
         isNull,
       );
     });
 
     test('plano sem id, sem número ou com número torto dá nulo', () {
       for (final parametros in [
-        {'diaDoPlano': '3', 'fim': 'joao.3'},
-        {'plano': '', 'diaDoPlano': '3', 'fim': 'joao.3'},
-        {'plano': 'abc', 'fim': 'joao.3'},
-        {'plano': 'abc', 'diaDoPlano': 'x', 'fim': 'joao.3'},
-        {'plano': 'abc', 'diaDoPlano': '0', 'fim': 'joao.3'},
-        {'plano': 'abc', 'diaDoPlano': '-2', 'fim': 'joao.3'},
+        {'diaDoPlano': '3', 'capitulos': 'joao.3'},
+        {'plano': '', 'diaDoPlano': '3', 'capitulos': 'joao.3'},
+        {'plano': 'abc', 'capitulos': 'joao.3'},
+        {'plano': 'abc', 'diaDoPlano': 'x', 'capitulos': 'joao.3'},
+        {'plano': 'abc', 'diaDoPlano': '0', 'capitulos': 'joao.3'},
+        {'plano': 'abc', 'diaDoPlano': '-2', 'capitulos': 'joao.3'},
       ]) {
         expect(
           DiaDaLeitura.doParametros(parametros),
@@ -238,10 +310,10 @@ void main() {
       final dia = DiaDaLeitura.doParametros({
         'plano': 'abc',
         'diaDoPlano': '1',
-        'fim': 'joao.1',
+        'capitulos': 'joao.1',
       });
       expect(dia, isA<DiaDePlano>());
-      expect(dia!.capituloDoFim, 1);
+      expect(dia!.capitulos, ['joao.1']);
     });
 
     test('com os dois tipos de dia, o cronograma vence', () {
@@ -249,9 +321,49 @@ void main() {
         'diaDoCronograma': '2026-11-24',
         'plano': 'abc',
         'diaDoPlano': '3',
+        'capitulos': 'joao.3',
+      });
+      expect(dia, isA<DiaDoCronograma>());
+    });
+  });
+
+  group('doParametros com o fim da versão anterior', () {
+    test('o fim vira a lista de um capítulo só', () {
+      final dia = DiaDaLeitura.doParametros({
+        'diaDoCronograma': '2026-11-24',
         'fim': 'joao.3',
       });
       expect(dia, isA<DiaDoCronograma>());
+      expect(dia!.capitulos, ['joao.3']);
+    });
+
+    test('vale também para o plano', () {
+      final dia = DiaDaLeitura.doParametros({
+        'plano': 'abc',
+        'diaDoPlano': '2',
+        'fim': 'salmos.23',
+      });
+      expect(dia, isA<DiaDePlano>());
+      expect(dia!.capitulos, ['salmos.23']);
+    });
+
+    test('capitulos vence o fim quando vêm os dois', () {
+      final dia = DiaDaLeitura.doParametros({
+        'diaDoCronograma': '2026-11-24',
+        'capitulos': 'joao.1,joao.2',
+        'fim': 'joao.9',
+      });
+      expect(dia!.capitulos, ['joao.1', 'joao.2']);
+    });
+
+    test('fim torto dá nulo', () {
+      expect(
+        DiaDaLeitura.doParametros({
+          'diaDoCronograma': '2026-11-24',
+          'fim': 'joao',
+        }),
+        isNull,
+      );
     });
   });
 }

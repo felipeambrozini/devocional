@@ -12,7 +12,7 @@ import 'voz.dart';
 
 /// Um livro inteiro cujo áudio se baixa, se conta e se apaga junto: um livro
 /// da Bíblia ou um livro da Biblioteca. Quem baixa, conta ou desenha o botão
-/// ([AudioOffline], `DevocionalBaixarLivro`) não precisa saber qual dos dois é.
+/// ([AudioOffline], `TabernaculoBaixarLivro`) não precisa saber qual dos dois é.
 @immutable
 class LivroParaBaixar {
   const LivroParaBaixar({

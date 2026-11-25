@@ -3,8 +3,8 @@ import 'package:material_ui/material_ui.dart';
 import '../estilo/espacamento.dart';
 import 'linha_de_participante.dart';
 
-class DevocionalSecaoDeParticipantes extends StatelessWidget {
-  const DevocionalSecaoDeParticipantes({
+class TabernaculoSecaoDeParticipantes extends StatelessWidget {
+  const TabernaculoSecaoDeParticipantes({
     super.key,
     required this.dados,
     required this.meuUid,
@@ -25,7 +25,7 @@ class DevocionalSecaoDeParticipantes extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(DevocionalEspacamento.sp16),
+        padding: const EdgeInsets.all(TabernaculoEspacamento.sp16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -33,17 +33,17 @@ class DevocionalSecaoDeParticipantes extends StatelessWidget {
               'Participantes (${participantes.length})',
               style: tema.titleSmall,
             ),
-            const SizedBox(height: DevocionalEspacamento.sp8),
+            const SizedBox(height: TabernaculoEspacamento.sp8),
             for (final MapEntry(key: uid, value: entrada)
                 in participantes.entries) ...[
-              DevocionalLinhaDeParticipante(
+              TabernaculoLinhaDeParticipante(
                 nome: _nomeDe(entrada),
                 lidos: _lidosDe(entrada),
                 ehVoce: uid == meuUid,
                 ehCriador: uid == criador,
                 totalDeDias: totalDeDias,
               ),
-              const SizedBox(height: DevocionalEspacamento.sp10),
+              const SizedBox(height: TabernaculoEspacamento.sp10),
             ],
           ],
         ),

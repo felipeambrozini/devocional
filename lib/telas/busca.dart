@@ -37,7 +37,7 @@ class _TelaBuscaState extends State<TelaBusca> {
 
   @override
   Widget build(BuildContext context) {
-    // A DevocionalLarguraDeLeitura fica no corpo, não em volta do Scaffold: envolvendo o
+    // A TabernaculoLarguraDeLeitura fica no corpo, não em volta do Scaffold: envolvendo o
     // Scaffold, a própria AppBar ficava numa faixa de 720 px no meio da janela.
     return ListenableBuilder(
       listenable: _controller,
@@ -46,7 +46,7 @@ class _TelaBuscaState extends State<TelaBusca> {
           length: 2,
           initialIndex: widget.abaInicial == AbaDaBusca.devocionais ? 1 : 0,
           child: Scaffold(
-            appBar: DevocionalAppBar(
+            appBar: TabernaculoAppBar(
               title: const Text('Buscar'),
               bottom: TabBar(
                 tabs: const [
@@ -55,12 +55,12 @@ class _TelaBuscaState extends State<TelaBusca> {
                 ],
               ),
             ),
-            body: DevocionalLarguraDeLeitura(
+            body: TabernaculoLarguraDeLeitura(
               child: Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.all(DevocionalEspacamento.sp16),
-                    child: DevocionalBusca(
+                    padding: const EdgeInsets.all(TabernaculoEspacamento.sp16),
+                    child: TabernaculoBusca(
                       controller: _controller.controle,
                       // Só fora da web: no celular o teclado abre junto e cobre
                       // a lista antes de qualquer intenção de digitar.
@@ -76,7 +76,7 @@ class _TelaBuscaState extends State<TelaBusca> {
                   Expanded(
                     child: TabBarView(
                       children: [
-                        DevocionalAbaBiblia(
+                        TabernaculoAbaBiblia(
                           termoBuscado: _controller.termoBuscado,
                           referencia: _controller.referencia,
                           achados: _controller.achados,
@@ -84,7 +84,7 @@ class _TelaBuscaState extends State<TelaBusca> {
                           erro: _controller.erro,
                           aoTentarDeNovo: () => _controller.buscar(context),
                         ),
-                        DevocionalAbaDevocionais(
+                        TabernaculoAbaDevocionais(
                           termoBuscado: _controller.termoBuscado,
                           achados: _controller.achadosDevocionais,
                           buscando: _controller.buscandoDevocionais,

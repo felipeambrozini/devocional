@@ -67,7 +67,7 @@ void main() {
 
   _grupoDoCapituloDeLivro();
 
-  group('DevocionalCartaoDeLeitura', () {
+  group('TabernaculoCartaoDeLeitura', () {
     setUp(() {
       // O botão de ouvir aparece de verdade (sem rede nem path_provider),
       // para a pílula também passar pelas diretrizes.
@@ -116,7 +116,7 @@ void main() {
             body: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                DevocionalCartaoDeLeitura(
+                TabernaculoCartaoDeLeitura(
                   titulo: 'Manhã',
                   dev: dev,
                   texto: texto,
@@ -307,7 +307,7 @@ void main() {
     }
   });
 
-  group('DevocionalLivrosEscolhidos', () {
+  group('TabernaculoLivrosEscolhidos', () {
     const seteLivros = [
       'genesis',
       'exodo',
@@ -333,7 +333,7 @@ void main() {
             body: Padding(
               padding: const EdgeInsets.all(16),
               child: StatefulBuilder(
-                builder: (context, setState) => DevocionalLivrosEscolhidos(
+                builder: (context, setState) => TabernaculoLivrosEscolhidos(
                   livros: livros,
                   aoRemover: (slug) => setState(() => livros.remove(slug)),
                   aoRestaurar: (slugs, indice) =>
@@ -413,7 +413,7 @@ void main() {
     }
   });
 
-  group('DevocionalAppBar', () {
+  group('TabernaculoAppBar', () {
     Future<void> montar(
       WidgetTester tester,
       Brightness brilho, {
@@ -427,7 +427,7 @@ void main() {
           brilho,
           estado,
           Scaffold(
-            appBar: DevocionalAppBar(
+            appBar: TabernaculoAppBar(
               title: const Text('Leitura'),
               voltarPara: voltarPara,
             ),
@@ -530,7 +530,7 @@ void main() {
     }
   });
 
-  group('DevocionalAbaDevocionais com os chips de leitura', () {
+  group('TabernaculoAbaDevocionais com os chips de leitura', () {
     const achados = [
       AchadoDevocional(
         leitura: 'manha',
@@ -560,7 +560,7 @@ void main() {
           brilho,
           estado,
           Scaffold(
-            body: DevocionalAbaDevocionais(
+            body: TabernaculoAbaDevocionais(
               termoBuscado: 'graça',
               achados: achados,
               buscando: false,
@@ -598,7 +598,7 @@ void main() {
     }
   });
 
-  group('DevocionalSeletorDeLivro aberto na grade', () {
+  group('TabernaculoSeletorDeLivro aberto na grade', () {
     Future<void> montar(
       WidgetTester tester,
       Brightness brilho, {
@@ -612,7 +612,7 @@ void main() {
           brilho,
           estado,
           Scaffold(
-            body: DevocionalSeletorDeLivro(
+            body: TabernaculoSeletorDeLivro(
               livroAtual: livroAtual,
               capituloAtual: capituloAtual,
             ),
@@ -708,7 +708,7 @@ void main() {
     }
   });
 
-  group('DevocionalBarraDaSelecao', () {
+  group('TabernaculoBarraDaSelecao', () {
     const capitulo = Capitulo(
       livro: 'joao',
       numero: 3,
@@ -732,7 +732,7 @@ void main() {
           estado,
           Scaffold(
             body: const SizedBox.expand(),
-            bottomNavigationBar: DevocionalBarraDaSelecao(
+            bottomNavigationBar: TabernaculoBarraDaSelecao(
               capitulo: capitulo,
               selecionados: selecionados,
               aoFechar: () {},
@@ -800,7 +800,7 @@ void main() {
         400,
         scrollable: find
             .ancestor(
-              of: find.byType(DevocionalLinhaDeVersiculo).first,
+              of: find.byType(TabernaculoLinhaDeVersiculo).first,
               matching: find.byType(Scrollable),
             )
             .first,
@@ -823,7 +823,7 @@ void main() {
     }
   });
 
-  group('DevocionalLinhaDeVersiculo selecionada', () {
+  group('TabernaculoLinhaDeVersiculo selecionada', () {
     // O versículo inteiro como fala de Jesus: a letra vermelha sobre o fundo
     // de selecionado também passa pela diretriz de contraste.
     const texto =
@@ -845,7 +845,7 @@ void main() {
             body: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                DevocionalLinhaDeVersiculo(
+                TabernaculoLinhaDeVersiculo(
                   livro: 'joao',
                   capituloNumero: 3,
                   referencia: 'João 3:16',
@@ -952,12 +952,12 @@ void main() {
     }
   });
 
-  group('DevocionalCartaoDeEntrar', () {
+  group('TabernaculoCartaoDeEntrar', () {
     Future<void> montar(WidgetTester tester, Brightness brilho) async {
       _telaDeCelular(tester);
       final estado = Estado(await SharedPreferences.getInstance());
       await tester.pumpWidget(
-        _app(brilho, estado, const Scaffold(body: DevocionalCartaoDeEntrar())),
+        _app(brilho, estado, const Scaffold(body: TabernaculoCartaoDeEntrar())),
       );
       await tester.pumpAndSettle();
     }
@@ -994,7 +994,7 @@ void main() {
     }
   });
 
-  group('DevocionalCartaoDePlano', () {
+  group('TabernaculoCartaoDePlano', () {
     Future<void> montar(
       WidgetTester tester,
       Brightness brilho, {
@@ -1017,7 +1017,7 @@ void main() {
           Scaffold(
             body: ListView(
               padding: const EdgeInsets.all(16),
-              children: [DevocionalCartaoDePlano(plano: plano)],
+              children: [TabernaculoCartaoDePlano(plano: plano)],
             ),
           ),
         ),
@@ -1059,7 +1059,7 @@ void main() {
     }
   });
 
-  group('DevocionalCartaoDeDia', () {
+  group('TabernaculoCartaoDeDia', () {
     Future<void> montar(
       WidgetTester tester,
       Brightness brilho, {
@@ -1076,7 +1076,7 @@ void main() {
             body: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                DevocionalCartaoDeDia(
+                TabernaculoCartaoDeDia(
                   numero: 5,
                   rotulo: 'Gênesis 13 a 15',
                   itens: const [],

@@ -1,7 +1,7 @@
 # Lançamento público (1º de janeiro de 2027)
 
 O público do lançamento é a web e o PWA em
-`https://www.felipeambrozini.com.br/devocional/`. O aplicativo Android continua
+`https://www.felipeambrozini.com.br/tabernaculo/`. O aplicativo Android continua
 só para testadores, pelo Firebase App Distribution, sem listagem em loja; iOS
 não é distribuído ao público.
 
@@ -23,7 +23,7 @@ A última seção lista o roteiro de virada.
   `lang="pt-BR"`, canonical, Open Graph, tema claro/escuro, JSON-LD e
   carregamento com tela de espera. `robots.txt`, `sitemap.xml` e `llms.txt` na
   raiz do domínio.
-- **Portão de 18 anos.** `DevocionalPortaoDeIdade` precede o chat; a
+- **Portão de 18 anos.** `TabernaculoPortaoDeIdade` precede o chat; a
   declaração fica por aparelho/navegador (`Estado.maiorDeIdade`) e não sobe
   para a nuvem.
 - **Denúncia de resposta da IA.** "Denunciar resposta" nas falas das personas
@@ -31,7 +31,7 @@ A última seção lista o roteiro de virada.
   resposta, motivo e detalhe opcional, sem e-mail nem nome no texto.
 - **Monitoramento de erros.** Beacon no `index.html` e
   `lib/dados/monitoramento.dart` enviam falha técnica para a Function
-  `registrarErro` via `/devocional/api/erro`; agregação por hash em `erros`,
+  `registrarErro` via `/tabernaculo/api/erro`; agregação por hash em `erros`,
   limite no cliente e no servidor, sem PII, sem query string e sem texto
   digitado. Sem Sentry e sem Analytics.
 - **Cache e cabeçalhos.** Shell e entrypoints sem cache; arquivo com hash

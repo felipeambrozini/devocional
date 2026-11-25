@@ -24,7 +24,7 @@ class TelaLeitorDeLivro extends StatefulWidget {
 
 class _TelaLeitorDeLivroState extends State<TelaLeitorDeLivro> {
   /// A chave do carregamento muda a cada "Tentar de novo" para o
-  /// [DevocionalCarregaUmaVez] refazer o future em vez de reusar a falha.
+  /// [TabernaculoCarregaUmaVez] refazer o future em vez de reusar a falha.
   var _tentativa = 0;
 
   void _tentarDeNovo() {
@@ -38,25 +38,25 @@ class _TelaLeitorDeLivroState extends State<TelaLeitorDeLivro> {
     final estado = EscopoDoEstado.de(context);
 
     Widget aviso(String titulo, [Widget? corpo]) => Scaffold(
-      appBar: DevocionalAppBar(
+      appBar: TabernaculoAppBar(
         title: Text(
           obra?.titulo ?? 'Biblioteca',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
-          const DevocionalBotaoDeNotas(origem: OrigemDasNotas.biblioteca),
-          DevocionalBotaoDeAjustes(estado: estado),
+          const TabernaculoBotaoDeNotas(origem: OrigemDasNotas.biblioteca),
+          TabernaculoBotaoDeAjustes(estado: estado),
         ],
       ),
       body:
           corpo ??
-          DevocionalAvisoVazio(icone: FontAwesomeIcons.book, titulo: titulo),
+          TabernaculoAvisoVazio(icone: FontAwesomeIcons.book, titulo: titulo),
     );
 
     if (obra == null) return aviso('Livro não encontrado');
 
-    return DevocionalCarregaUmaVez<List<CapituloDoLivro>?>(
+    return TabernaculoCarregaUmaVez<List<CapituloDoLivro>?>(
       chave: '${widget.slug}/$_tentativa',
       carregar: () => Biblioteca.instancia.capitulos(widget.slug),
       construir: (context, snap) {
@@ -72,7 +72,7 @@ class _TelaLeitorDeLivroState extends State<TelaLeitorDeLivro> {
         if (capitulos == null || capitulos.isEmpty) {
           return aviso(
             '',
-            DevocionalAvisoDeErro(aoTentarDeNovo: _tentarDeNovo),
+            TabernaculoAvisoDeErro(aoTentarDeNovo: _tentarDeNovo),
           );
         }
         final indice = widget.capitulo - 1;
@@ -82,7 +82,7 @@ class _TelaLeitorDeLivroState extends State<TelaLeitorDeLivro> {
         // A chave leva o capítulo junto: o go_router pode reaproveitar a
         // página ao trocar só o parâmetro, e a rolagem do capítulo anterior
         // não pode sobrar no próximo.
-        return DevocionalCapituloAberto(
+        return TabernaculoCapituloAberto(
           key: ValueKey('${widget.slug}/$indice'),
           estado: estado,
           obra: obra,

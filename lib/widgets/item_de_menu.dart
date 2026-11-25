@@ -3,8 +3,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 /// Uma linha de opção num PopupMenuItem: ícone e rótulo, sem o respiro padrão
 /// do ListTile — que só sobra dentro de um menu compacto.
-class DevocionalItemDeMenu extends StatelessWidget {
-  const DevocionalItemDeMenu({
+class TabernaculoItemDeMenu extends StatelessWidget {
+  const TabernaculoItemDeMenu({
     super.key,
     required this.icone,
     required this.rotulo,

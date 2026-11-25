@@ -1,9 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 
-/// DevocionalFilete do metal do tema, usado para separar seções sem o peso de um Divider
+/// TabernaculoFilete do metal do tema, usado para separar seções sem o peso de um Divider
 /// comum. Dourado no escuro, bronze no claro.
-class DevocionalFilete extends StatelessWidget {
-  const DevocionalFilete({super.key, this.largura = 48});
+class TabernaculoFilete extends StatelessWidget {
+  const TabernaculoFilete({super.key, this.largura = 48});
 
   final double largura;
 

@@ -20,10 +20,10 @@ void main() {
   });
 
   Widget montar({String chave = 'capitulo:joao.3'}) => MaterialApp(
-    home: Scaffold(body: DevocionalBotaoDeVoz(chave: chave)),
+    home: Scaffold(body: TabernaculoBotaoDeVoz(chave: chave)),
   );
 
-  group('DevocionalBotaoDeVoz', () {
+  group('TabernaculoBotaoDeVoz', () {
     testWidgets('em repouso mostra "Ouvir" e anuncia o rótulo completo', (
       tester,
     ) async {
@@ -77,7 +77,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: DevocionalBotaoDeVoz(
+            body: TabernaculoBotaoDeVoz(
               chave: 'comentario:joao.1.1',
               oQueOuvir: 'o comentário',
             ),
@@ -97,7 +97,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: DevocionalBotaoDeVoz(
+            body: TabernaculoBotaoDeVoz(
               chave: 'comentario:joao.1.2',
               oQueOuvir: 'o comentário',
             ),
@@ -121,7 +121,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: DevocionalBotaoDeVoz(
+            body: TabernaculoBotaoDeVoz(
               chave: 'comentario:joao.1.1',
               oQueOuvir: 'o comentário',
             ),

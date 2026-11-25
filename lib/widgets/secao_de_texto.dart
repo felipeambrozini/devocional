@@ -4,8 +4,8 @@ import '../estilo/espacamento.dart';
 
 /// Uma seção de texto corrido com título: usada nas telas de Termos de
 /// Serviço e Política de Privacidade, que são só uma sequência dessas.
-class DevocionalSecaoDeTexto extends StatelessWidget {
-  const DevocionalSecaoDeTexto({
+class TabernaculoSecaoDeTexto extends StatelessWidget {
+  const TabernaculoSecaoDeTexto({
     super.key,
     required this.titulo,
     required this.texto,
@@ -18,7 +18,7 @@ class DevocionalSecaoDeTexto extends StatelessWidget {
   Widget build(BuildContext context) {
     final tema = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.only(top: DevocionalEspacamento.sp32),
+      padding: const EdgeInsets.only(top: TabernaculoEspacamento.sp32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -29,7 +29,7 @@ class DevocionalSecaoDeTexto extends StatelessWidget {
             header: true,
             child: Text(titulo, style: tema.headlineSmall),
           ),
-          const SizedBox(height: DevocionalEspacamento.sp10),
+          const SizedBox(height: TabernaculoEspacamento.sp10),
           Text(texto, style: tema.bodyLarge?.copyWith(height: 1.7)),
         ],
       ),

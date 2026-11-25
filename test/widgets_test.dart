@@ -6,7 +6,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('DevocionalLarguraDeLeitura', () {
+  group('TabernaculoLarguraDeLeitura', () {
     testWidgets('numa janela larga, centraliza e limita a largura do conteúdo', (
       tester,
     ) async {
@@ -19,7 +19,7 @@ void main() {
       const chave = Key('conteudo');
       await tester.pumpWidget(
         const MaterialApp(
-          home: DevocionalLarguraDeLeitura(
+          home: TabernaculoLarguraDeLeitura(
             maxWidth: 720,
             child: ColoredBox(
               key: chave,
@@ -46,7 +46,7 @@ void main() {
         const chave = Key('conteudo');
         await tester.pumpWidget(
           const MaterialApp(
-            home: DevocionalLarguraDeLeitura(
+            home: TabernaculoLarguraDeLeitura(
               maxWidth: 720,
               child: ColoredBox(
                 key: chave,
@@ -120,7 +120,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: DevocionalCartaoDeReferencia(
+            body: TabernaculoCartaoDeReferencia(
               referencia: (livroPorSlug('genesis')!, 1, 1, 1),
             ),
           ),
@@ -128,19 +128,19 @@ void main() {
       );
 
       expect(
-        tester.getSize(find.byType(DevocionalCartaoDeReferencia)).height,
+        tester.getSize(find.byType(TabernaculoCartaoDeReferencia)).height,
         greaterThanOrEqualTo(48),
       );
     });
   });
 
-  group('DevocionalAvisoDeErro', () {
+  group('TabernaculoAvisoDeErro', () {
     testWidgets('oferece Tentar de novo e chama', (tester) async {
       var tentativas = 0;
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: DevocionalAvisoDeErro(aoTentarDeNovo: () => tentativas++),
+            body: TabernaculoAvisoDeErro(aoTentarDeNovo: () => tentativas++),
           ),
         ),
       );
@@ -150,7 +150,7 @@ void main() {
     });
   });
 
-  group('DevocionalLivrosEscolhidos', () {
+  group('TabernaculoLivrosEscolhidos', () {
     const seteLivros = [
       'genesis',
       'exodo',
@@ -165,7 +165,7 @@ void main() {
       return MaterialApp(
         home: Scaffold(
           body: StatefulBuilder(
-            builder: (context, setState) => DevocionalLivrosEscolhidos(
+            builder: (context, setState) => TabernaculoLivrosEscolhidos(
               livros: livros,
               aoRemover: (slug) => setState(() => livros.remove(slug)),
               aoRestaurar: (slugs, indice) => setState(() {

@@ -350,16 +350,16 @@ class PlanoControlador extends ChangeNotifier {
               'Quem abrir este link entra no plano e o progresso de cada '
               'participante aparece para todos.',
             ),
-            const SizedBox(height: DevocionalEspacamento.sp12),
+            const SizedBox(height: TabernaculoEspacamento.sp12),
             SelectableText(link),
           ],
         ),
         actions: [
-          DevocionalBotaoTerciario(
+          TabernaculoBotaoTerciario(
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Fechar'),
           ),
-          DevocionalBotaoPrimario.icon(
+          TabernaculoBotaoPrimario.icon(
             icon: const FaIcon(FontAwesomeIcons.copy),
             label: const Text('Copiar link'),
             onPressed: () async {

@@ -3,13 +3,13 @@ import 'package:material_ui/material_ui.dart';
 import '../estilo/espacamento.dart';
 
 /// Cartão com título em Cinzel na cor do tema. Repete em quase toda tela.
-class DevocionalCartao extends StatelessWidget {
-  const DevocionalCartao({
+class TabernaculoCartao extends StatelessWidget {
+  const TabernaculoCartao({
     super.key,
     this.titulo,
     this.acessorio,
     required this.child,
-    this.padding = const EdgeInsets.all(DevocionalEspacamento.sp16),
+    this.padding = const EdgeInsets.all(TabernaculoEspacamento.sp16),
   });
 
   final String? titulo;
@@ -40,7 +40,7 @@ class DevocionalCartao extends StatelessWidget {
                   ?acessorio,
                 ],
               ),
-              const SizedBox(height: DevocionalEspacamento.sp12),
+              const SizedBox(height: TabernaculoEspacamento.sp12),
             ],
             child,
           ],

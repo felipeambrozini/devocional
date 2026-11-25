@@ -161,11 +161,11 @@ Future<bool> confirmar(
       title: Text(titulo),
       content: Text(conteudo),
       actions: [
-        DevocionalBotaoTerciario(
+        TabernaculoBotaoTerciario(
           onPressed: () => Navigator.pop(context, false),
           child: const Text('Cancelar'),
         ),
-        DevocionalBotaoPrimario(
+        TabernaculoBotaoPrimario(
           onPressed: () => Navigator.pop(context, true),
           child: Text(rotuloDaAcao),
         ),

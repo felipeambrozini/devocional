@@ -51,21 +51,21 @@ try {
 } catch (erro) {
   // Sem o SDK (gstatic fora do ar, config incompleta), o push do lembrete fica
   // de fora, mas o cache offline não: o resto do arquivo não usa `firebase`.
-  console.warn('Devocional: Firebase Messaging indisponível', erro);
+  console.warn('Tabernáculo: Firebase Messaging indisponível', erro);
 }
 
 // Ícones por tema: a página espelha o tema efetivo do app no Cache Storage
 // (lib/dados/espelho_do_tema.dart) — localStorage não serve, é invisível para
 // o service worker. Sem espelho (primeira visita, storage limpo), cai no
 // ícone fixo de sempre.
-const ICONE_PADRAO = '/devocional/icons/Icon-192.png';
-const ICONE_CLARO = '/devocional/icons/notificacao-tema-claro.png';
-const ICONE_ESCURO = '/devocional/icons/notificacao-tema-escuro.png';
+const ICONE_PADRAO = '/tabernaculo/icons/Icon-192.png';
+const ICONE_CLARO = '/tabernaculo/icons/notificacao-tema-claro.png';
+const ICONE_ESCURO = '/tabernaculo/icons/notificacao-tema-escuro.png';
 
 async function lerTemaEspelhado() {
   try {
     const cache = await caches.open('devocional-preferencias');
-    const resposta = await cache.match('/devocional/__modo-do-tema');
+    const resposta = await cache.match('/tabernaculo/__modo-do-tema');
     return resposta ? await resposta.text() : null;
   } catch (_) {
     return null;
@@ -101,7 +101,7 @@ async function exibirLembrete(dados) {
       : tema === 'claro'
         ? ICONE_CLARO
         : ICONE_PADRAO;
-  return self.registration.showNotification(dados.titulo || 'Devocional', {
+  return self.registration.showNotification(dados.titulo || 'Tabernáculo', {
     body: dados.corpo || '',
     icon: icone,
     // Tag por slot, não fixa: uma reentrega do mesmo lembrete (o FCM garante
@@ -121,8 +121,8 @@ self.addEventListener('notificationclick', (evento) => {
   evento.notification.close();
   const chave = evento.notification.data && evento.notification.data.chave;
   const url = chave
-    ? `/devocional/hoje?lembrete=${chave}`
-    : '/devocional/hoje';
+    ? `/tabernaculo/hoje?lembrete=${chave}`
+    : '/tabernaculo/hoje';
 
   evento.waitUntil(
     // includeUncontrolled: sem isto, uma aba aberta antes deste service
@@ -239,7 +239,7 @@ self.addEventListener('install', (evento) => {
           .filter((entrada) => ehNucleo(entrada.url, variante))
           .map((entrada) => new URL(entrada.url, ESCOPO).href);
         const cache = await caches.open(CACHE);
-        console.info('Devocional: pré-cache do build', BUILD_ID);
+        console.info('Tabernáculo: pré-cache do build', BUILD_ID);
         // `cache: 'reload'` fura o cache HTTP: nomes sem hash (index.html,
         // canvaskit.wasm, ícones) mudam de conteúdo sem mudar de URL, e sem
         // isto o install guardaria a cópia velha que o navegador ainda tem.
@@ -256,7 +256,7 @@ self.addEventListener('install', (evento) => {
           })
         );
       } catch (erro) {
-        console.warn('Devocional: pré-cache incompleto', erro);
+        console.warn('Tabernáculo: pré-cache incompleto', erro);
       }
     })()
   );
@@ -275,7 +275,7 @@ self.addEventListener('activate', (evento) => {
         await Promise.all(
           chaves.map((requisicao) => {
             const caminho = new URL(requisicao.url).pathname;
-            // Navegações (`/devocional/hoje`) não estão no manifesto e são
+            // Navegações (`/tabernaculo/hoje`) não estão no manifesto e são
             // sobrescritas a cada visita online; delas não se limpa nada.
             const doBuild =
               caminho.includes('/assets/') ||
@@ -317,8 +317,8 @@ async function navegar(requisicao) {
     return (await cache.match(requisicao.url)) ||
       (await cache.match(INDICE)) ||
       new Response(
-        '<!DOCTYPE html><meta charset="utf-8"><title>Devocional</title>' +
-          '<p>Sem conexão. Abra o Devocional uma vez com internet para ' +
+        '<!DOCTYPE html><meta charset="utf-8"><title>Tabernáculo</title>' +
+          '<p>Sem conexão. Abra o Tabernáculo uma vez com internet para ' +
           'usá-lo offline.</p>',
         {status: 503, headers: {'Content-Type': 'text/html; charset=utf-8'}}
       );

@@ -15,6 +15,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'controladores/devocional_controlador.dart';
 import 'controladores/notas_controlador.dart';
 import 'dados/canon.dart';
 import 'dados/config_admin.dart';
@@ -88,7 +89,9 @@ void _abrirLeituraDoLembrete(String chave) {
     _router.go('/hoje');
     return;
   }
-  _router.go('/${leitura.name}');
+  _router.go(
+    DevocionalControlador.caminhoDaLeituraPeloParametro(leitura, null),
+  );
 }
 
 /// Abre o versículo ou capítulo do parâmetro `ler` da URL (`?ler=joao.3.16`),
@@ -220,7 +223,7 @@ Future<void> _iniciar() async {
     Registro.erro('Lembretes.inicializar', erro, pilha);
   }
 
-  runApp(AppDevocional(estado: estado));
+  runApp(AppTabernaculo(estado: estado));
 
   final chave = chaveDeAbertura;
   if (chave != null) {
@@ -306,9 +309,9 @@ const _destinos = <DestinoDaMoldura>[
 ];
 
 /// Um nó de foco por aba, criados uma vez para o app inteiro, não por
-/// instância da DevocionalMoldura: as rotas de cada aba são estáticas em [_router], e
+/// instância da TabernaculoMoldura: as rotas de cada aba são estáticas em [_router], e
 /// tanto o `builder` da rota quanto o toque na barra de navegação (em
-/// `DevocionalMoldura._irParaAba`) precisam do mesmo nó.
+/// `TabernaculoMoldura._irParaAba`) precisam do mesmo nó.
 ///
 /// Existem porque o shell mantém as abas vivas ao mesmo tempo (para
 /// preservar rolagem e capítulo aberto ao trocar de aba) escondendo as
@@ -322,18 +325,18 @@ final _escoposDasAbas = [
 /// Cada aba com o próprio caminho (`/hoje`, `/biblia`, `/devocional`,
 /// `/plano`, `/biblioteca`, `/conversas`), para abrir direto por link e sobreviver
 /// a um F5 — o Firebase Hosting devolve o index.html para qualquer caminho sob
-/// `/devocional/` (rewrite em firebase.json). Sobre e as conversas também têm
+/// `/tabernaculo/` (rewrite em firebase.json). Sobre e as conversas também têm
 /// URL própria, fora do shell: são telas empurradas por cima das abas, não
 /// abas.
 ///
 /// `StatefulShellRoute.indexedStack`, não rotas soltas: rotas soltas
-/// trocariam de aba reconstruindo a DevocionalMoldura do zero, perdendo a rolagem e o
+/// trocariam de aba reconstruindo a TabernaculoMoldura do zero, perdendo a rolagem e o
 /// capítulo aberto que o antigo `IndexedStack` preservava. O shell preserva
 /// isso da mesma forma (por baixo, também é um `Offstage`+`IndexedStack`),
 /// só que agora cada aba também tem URL própria.
 ///
 /// Sem `GoRouter.optionURLReflectsImperativeAPIs` (ligada no initState de
-/// [AppDevocional]), um `push` a partir de dentro do shell abria a tela por
+/// [AppTabernaculo]), um `push` a partir de dentro do shell abria a tela por
 /// dentro do GoRouter mas deixava a barra de endereço presa na aba — o
 /// go_router só reflete na URL as navegações por `go`/`goBranch`; imperativas
 /// (push, pushReplacement, replace) ficam de fora por padrão, para trás.
@@ -411,6 +414,18 @@ final _router = GoRouter(
       builder: (context, state) => const TelaSobre(),
     ),
     GoRoute(path: '/faq', builder: (context, state) => const TelaFAQ()),
+    // Até a versão 1.27 as leituras moravam na raiz (`/manha`, `/noite`,
+    // `/promessas`): links compartilhados e lembretes antigos continuam
+    // abrindo a leitura certa, com a data junto.
+    for (final l in Leitura.values)
+      GoRoute(
+        path: '/${l.name}',
+        redirect: (context, state) =>
+            DevocionalControlador.caminhoDaLeituraPeloParametro(
+              l,
+              state.uri.queryParameters['data'],
+            ),
+      ),
     // Notas não é aba (a barra de baixo tem seis destinos): abre por cima, pelo
     // ícone de marcador da barra de cima do Devocional, da Bíblia e da
     // Biblioteca. `?aba=` diz de qual: cada aba só vê as próprias notas.
@@ -447,7 +462,7 @@ final _router = GoRouter(
       },
     ),
     StatefulShellRoute.indexedStack(
-      builder: (context, state, navigationShell) => DevocionalMoldura(
+      builder: (context, state, navigationShell) => TabernaculoMoldura(
         navigationShell: navigationShell,
         destinos: _destinos,
         escoposDasAbas: _escoposDasAbas,
@@ -455,33 +470,35 @@ final _router = GoRouter(
       branches: [
         for (final (i, d) in _destinos.indexed)
           // O Devocional não é uma rota só: cada leitura tem a própria
-          // (`/manha`, `/promessas`, `/noite`), para a URL dizer o que está
-          // na tela e um link compartilhado reabrir a leitura certa. A rota
-          // `/devocional` (a da aba) só redireciona para a leitura do
-          // horário — sem ela, tocar na aba na primeira vez não teria para
-          // onde ir, e links velhos para `/devocional` morreriam.
+          // (`/devocional/manha`, `/devocional/promessas`,
+          // `/devocional/noite`), para a URL dizer o que está na tela e um
+          // link compartilhado reabrir a leitura certa. A rota `/devocional`
+          // (a da aba) só redireciona para a leitura do horário — sem ela,
+          // tocar na aba na primeira vez não teria para onde ir. Irmãs, e não
+          // filhas de `/devocional`: o redirect de uma rota-mãe também
+          // rodaria para as filhas e as mandaria de volta para a do horário.
           if (d.caminho == 'devocional')
             StatefulShellBranch(
               routes: [
                 GoRoute(
                   path: '/devocional',
-                  redirect: (context, state) {
-                    final data = state.uri.queryParameters['data'];
-                    final leitura = Leitura.pelaHora(DateTime.now().hour).name;
-                    return data == null ? '/$leitura' : '/$leitura?data=$data';
-                  },
+                  redirect: (context, state) =>
+                      DevocionalControlador.caminhoDaLeituraPeloParametro(
+                        Leitura.pelaHora(DateTime.now().hour),
+                        state.uri.queryParameters['data'],
+                      ),
                 ),
-                // Sem transição entre as leituras: trocar /manha por
-                // /promessas é mudar de conteúdo na mesma aba, não empilhar
+                // Sem transição entre as leituras: trocar a Manhã pelas
+                // Promessas é mudar de conteúdo na mesma aba, não empilhar
                 // uma tela sobre outra — a animação de push ficaria estranha.
                 for (final l in Leitura.values)
                   GoRoute(
-                    path: '/${l.name}',
+                    path: '/devocional/${l.name}',
                     pageBuilder: (context, state) => NoTransitionPage(
                       key: state.pageKey,
                       child: FocusScope(
                         node: _escoposDasAbas[i],
-                        child: DevocionalAncoraDeFoco(
+                        child: TabernaculoAncoraDeFoco(
                           child: TelaDevocional(
                             leituraInicial: l,
                             dataInicial: _dataDaRota(state),
@@ -501,12 +518,12 @@ final _router = GoRouter(
                   path: '/${d.caminho}',
                   builder: (context, state) => FocusScope(
                     node: _escoposDasAbas[i],
-                    child: DevocionalAncoraDeFoco(child: d.tela),
+                    child: TabernaculoAncoraDeFoco(child: d.tela),
                   ),
                   routes: [
                     GoRoute(
                       path: ':slug',
-                      builder: (context, state) => DevocionalAncoraDeFoco(
+                      builder: (context, state) => TabernaculoAncoraDeFoco(
                         child: TelaDoLivro(slug: state.pathParameters['slug']!),
                       ),
                       routes: [
@@ -531,7 +548,7 @@ final _router = GoRouter(
             // Novo plano e o detalhe de um plano viram rotas próprias (não um
             // Navigator.push avulso): é o que faz `goBranch(initialLocation:
             // true)` descartar o plano aberto ao voltar para esta aba (ver
-            // `DevocionalMoldura._irParaAba`) — uma rota empurrada por fora do
+            // `TabernaculoMoldura._irParaAba`) — uma rota empurrada por fora do
             // go_router sobrevive ao reset, porque o go_router não sabe que
             // ela existe.
             StatefulShellBranch(
@@ -540,12 +557,12 @@ final _router = GoRouter(
                   path: '/${d.caminho}',
                   builder: (context, state) => FocusScope(
                     node: _escoposDasAbas[i],
-                    child: DevocionalAncoraDeFoco(child: d.tela),
+                    child: TabernaculoAncoraDeFoco(child: d.tela),
                   ),
                   routes: [
                     GoRoute(
                       path: 'novo',
-                      builder: (context, state) => DevocionalAncoraDeFoco(
+                      builder: (context, state) => TabernaculoAncoraDeFoco(
                         child: TelaNovoPlano(
                           estado: EscopoDoEstado.de(context),
                         ),
@@ -556,7 +573,7 @@ final _router = GoRouter(
                       builder: (context, state) {
                         final id = state.pathParameters['id']!;
                         final estado = EscopoDoEstado.de(context);
-                        return DevocionalAncoraDeFoco(
+                        return TabernaculoAncoraDeFoco(
                           child: TelaDeUmPlano(
                             estado: estado,
                             planoId: id,
@@ -576,7 +593,7 @@ final _router = GoRouter(
                   path: '/${d.caminho}',
                   builder: (context, state) => FocusScope(
                     node: _escoposDasAbas[i],
-                    child: DevocionalAncoraDeFoco(child: d.tela),
+                    child: TabernaculoAncoraDeFoco(child: d.tela),
                   ),
                 ),
               ],
@@ -606,16 +623,16 @@ DateTime? _dataDaRota(GoRouterState state) {
   return DateTime(data.year, data.month, data.day);
 }
 
-class AppDevocional extends StatefulWidget {
-  const AppDevocional({super.key, required this.estado});
+class AppTabernaculo extends StatefulWidget {
+  const AppTabernaculo({super.key, required this.estado});
 
   final Estado estado;
 
   @override
-  State<AppDevocional> createState() => _AppDevocionalState();
+  State<AppTabernaculo> createState() => _AppDevocionalState();
 }
 
-class _AppDevocionalState extends State<AppDevocional>
+class _AppDevocionalState extends State<AppTabernaculo>
     with WidgetsBindingObserver {
   late double _escala = widget.estado.escalaDeLeitura;
   late ModoDoTema _modo = widget.estado.modoDoTema;
@@ -694,7 +711,7 @@ class _AppDevocionalState extends State<AppDevocional>
     unawaited(estado.marcarBoasVindasVistas());
     showDialog<bool>(
       context: contexto,
-      builder: (_) => const DevocionalBoasVindasDialogo(),
+      builder: (_) => const TabernaculoBoasVindasDialogo(),
     ).then((verPlano) {
       if (verPlano != true) return;
       _router.go('/plano');
@@ -718,7 +735,7 @@ class _AppDevocionalState extends State<AppDevocional>
       // a conta ficaria aberta sem consentimento e sem escolha feita.
       builder: (_) => PopScope(
         canPop: false,
-        child: DevocionalConsentimentoDaNuvem(
+        child: TabernaculoConsentimentoDaNuvem(
           rotuloDeConcordar: 'Concordo',
           rotuloDeRecusar: 'Sair da conta',
           aoConcordar: () {
@@ -752,9 +769,10 @@ class _AppDevocionalState extends State<AppDevocional>
       estado: widget.estado,
       child: MaterialApp.router(
         routerConfig: _router,
-        title: 'Devocional',
+        title: 'Tabernáculo',
         debugShowCheckedModeBanner: false,
-        builder: (context, child) => DevocionalEsconderMovimento(child: child!),
+        builder: (context, child) =>
+            TabernaculoEsconderMovimento(child: child!),
         // Os dois temas vão sempre montados, e o `themeMode` escolhe. Assim
         // "Automático" funciona de verdade: o sistema pode virar o modo com o
         // app aberto, e o MaterialApp troca sozinho, sem passar pelo Estado.

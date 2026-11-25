@@ -10,8 +10,8 @@ import 'progresso_fino.dart';
 
 /// Cartão de um livro da biblioteca: capa, título, subtítulo e quanto já foi
 /// lido. Serve à estante e ao destaque "continuar lendo" da Hoje.
-class DevocionalCartaoDaObra extends StatelessWidget {
-  const DevocionalCartaoDaObra({
+class TabernaculoCartaoDaObra extends StatelessWidget {
+  const TabernaculoCartaoDaObra({
     super.key,
     required this.obra,
     required this.aoAbrir,
@@ -36,17 +36,17 @@ class DevocionalCartaoDaObra extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         onTap: aoAbrir,
         child: Padding(
-          padding: const EdgeInsets.all(DevocionalEspacamento.sp16),
+          padding: const EdgeInsets.all(TabernaculoEspacamento.sp16),
           child: Row(
             children: [
               // O título ao lado já nomeia a obra: a capa falada duplicaria.
               ExcludeSemantics(
-                child: DevocionalCapaDeObra(
+                child: TabernaculoCapaDeObra(
                   titulo: obra.titulo,
                   capa: obra.capa,
                 ),
               ),
-              const SizedBox(width: DevocionalEspacamento.sp14),
+              const SizedBox(width: TabernaculoEspacamento.sp14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,12 +57,12 @@ class DevocionalCartaoDaObra extends StatelessWidget {
                       maxLines: compacto ? 2 : null,
                       overflow: compacto ? TextOverflow.ellipsis : null,
                     ),
-                    const SizedBox(height: DevocionalEspacamento.sp4),
+                    const SizedBox(height: TabernaculoEspacamento.sp4),
                     if (!compacto) ...[
                       Text(obra.subtitulo, style: tema.bodySmall),
-                      const SizedBox(height: DevocionalEspacamento.sp12),
+                      const SizedBox(height: TabernaculoEspacamento.sp12),
                     ],
-                    DevocionalCarregaUmaVez<List<CapituloDoLivro>?>(
+                    TabernaculoCarregaUmaVez<List<CapituloDoLivro>?>(
                       chave: obra.slug,
                       carregar: () => Biblioteca.instancia.capitulos(obra.slug),
                       construir: (context, snap) {
@@ -110,8 +110,8 @@ class _Progresso extends StatelessWidget {
         // Trilho vazio num livro não aberto lia como "0% feito": só aparece
         // quando há o que medir.
         if (lidos > 0) ...[
-          DevocionalProgressoFino(valor: lidos / total),
-          const SizedBox(height: DevocionalEspacamento.sp6),
+          TabernaculoProgressoFino(valor: lidos / total),
+          const SizedBox(height: TabernaculoEspacamento.sp6),
         ],
         Text(legenda, style: Theme.of(context).textTheme.labelMedium),
       ],

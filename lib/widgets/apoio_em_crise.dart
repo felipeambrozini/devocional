@@ -11,8 +11,8 @@ import 'botao.dart';
 /// sinal de crise (ver `lib/dados/crise.dart`). Fica até a conversa fechar:
 /// quem precisa dele não pode depender de rolar até a resposta certa. Os
 /// botões vêm antes do texto para continuarem à vista quando o espaço aperta.
-class DevocionalApoioEmCrise extends StatelessWidget {
-  const DevocionalApoioEmCrise({super.key});
+class TabernaculoApoioEmCrise extends StatelessWidget {
+  const TabernaculoApoioEmCrise({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -23,13 +23,13 @@ class DevocionalApoioEmCrise extends StatelessWidget {
       liveRegion: true,
       child: Card(
         margin: const EdgeInsets.fromLTRB(
-          DevocionalEspacamento.sp16,
-          DevocionalEspacamento.sp8,
-          DevocionalEspacamento.sp16,
+          TabernaculoEspacamento.sp16,
+          TabernaculoEspacamento.sp8,
+          TabernaculoEspacamento.sp16,
           0,
         ),
         child: Padding(
-          padding: const EdgeInsets.all(DevocionalEspacamento.sp16),
+          padding: const EdgeInsets.all(TabernaculoEspacamento.sp16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -41,12 +41,12 @@ class DevocionalApoioEmCrise extends StatelessWidget {
                 header: true,
                 child: Text('Você não está sozinho', style: tema.titleMedium),
               ),
-              const SizedBox(height: DevocionalEspacamento.sp12),
+              const SizedBox(height: TabernaculoEspacamento.sp12),
               Wrap(
-                spacing: DevocionalEspacamento.sp8,
-                runSpacing: DevocionalEspacamento.sp8,
+                spacing: TabernaculoEspacamento.sp8,
+                runSpacing: TabernaculoEspacamento.sp8,
                 children: [
-                  DevocionalBotaoPrimario.icon(
+                  TabernaculoBotaoPrimario.icon(
                     onPressed: () => _abrir(
                       context,
                       Uri.parse('tel:188'),
@@ -55,7 +55,7 @@ class DevocionalApoioEmCrise extends StatelessWidget {
                     icon: const FaIcon(FontAwesomeIcons.phone, size: 16),
                     label: const Text('Ligar para o 188'),
                   ),
-                  DevocionalBotaoTerciario(
+                  TabernaculoBotaoTerciario(
                     onPressed: () => _abrir(
                       context,
                       Uri.https('cvv.org.br'),
@@ -65,7 +65,7 @@ class DevocionalApoioEmCrise extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: DevocionalEspacamento.sp12),
+              const SizedBox(height: TabernaculoEspacamento.sp12),
               Text(
                 'Se você pensa em tirar a própria vida, converse agora com '
                 'alguém. O CVV atende de graça, a qualquer hora, pelo '
@@ -92,7 +92,7 @@ Future<void> _abrir(
   try {
     if (await launchUrl(destino, mode: LaunchMode.externalApplication)) return;
   } catch (erro, pilha) {
-    Registro.erro('DevocionalApoioEmCrise', erro, pilha);
+    Registro.erro('TabernaculoApoioEmCrise', erro, pilha);
   }
   mostrarAvisoNo(mensageiro, seFalhar);
 }

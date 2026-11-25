@@ -6,8 +6,8 @@ import '../dados/recursos.dart';
 import '../widgets/widgets.dart';
 
 /// As duas abas de quem tem conta: o cronograma anual e os planos próprios.
-class DevocionalAbasDoPlano extends StatelessWidget {
-  const DevocionalAbasDoPlano({
+class TabernaculoAbasDoPlano extends StatelessWidget {
+  const TabernaculoAbasDoPlano({
     super.key,
     required this.hoje,
     required this.acaoDeAjustes,
@@ -26,11 +26,11 @@ class DevocionalAbasDoPlano extends StatelessWidget {
       builder: (context, _) {
         if (!Recursos.cronograma && !Recursos.planoPersonalizado) {
           return Scaffold(
-            appBar: DevocionalAppBar(
+            appBar: TabernaculoAppBar(
               title: const Text('Plano'),
               actions: [acaoDeAjustes],
             ),
-            body: const DevocionalAvisoVazio(
+            body: const TabernaculoAvisoVazio(
               icone: FontAwesomeIcons.calendarDays,
               titulo: 'Plano desativado temporariamente',
               detalhe: 'O cronograma e os planos próprios voltam em breve',
@@ -39,17 +39,17 @@ class DevocionalAbasDoPlano extends StatelessWidget {
         }
         if (!Recursos.cronograma) {
           return Scaffold(
-            appBar: DevocionalAppBar(
+            appBar: TabernaculoAppBar(
               title: const Text('Plano'),
               actions: [acaoDeAjustes],
             ),
-            body: const DevocionalAbaDosMeusPlanos(),
+            body: const TabernaculoAbaDosMeusPlanos(),
           );
         }
         return DefaultTabController(
           length: 2,
           child: Scaffold(
-            appBar: DevocionalAppBar(
+            appBar: TabernaculoAppBar(
               title: const Text('Plano'),
               actions: [acaoDeAjustes],
               bottom: const TabBar(
@@ -61,8 +61,8 @@ class DevocionalAbasDoPlano extends StatelessWidget {
             ),
             body: TabBarView(
               children: [
-                DevocionalAbaDoCronograma(hoje: hoje),
-                const DevocionalAbaDosMeusPlanos(),
+                TabernaculoAbaDoCronograma(hoje: hoje),
+                const TabernaculoAbaDosMeusPlanos(),
               ],
             ),
           ),

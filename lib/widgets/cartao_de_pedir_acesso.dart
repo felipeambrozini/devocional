@@ -17,8 +17,8 @@ const _numeroWhatsapp = String.fromEnvironment('WHATSAPP_NUMERO');
 /// quem abre a tela não está nela. Explicar o que falta e como pedir é a
 /// filosofia de gating do app: esconder a aba em silêncio quebra o próprio
 /// convite de crescimento por WhatsApp que o produto já usa em Conversas.
-class DevocionalCartaoDePedirAcesso extends StatelessWidget {
-  const DevocionalCartaoDePedirAcesso({
+class TabernaculoCartaoDePedirAcesso extends StatelessWidget {
+  const TabernaculoCartaoDePedirAcesso({
     super.key,
     required this.icone,
     required this.descricao,
@@ -35,18 +35,18 @@ class DevocionalCartaoDePedirAcesso extends StatelessWidget {
     final cor = Theme.of(context).colorScheme;
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(DevocionalEspacamento.sp24),
+        padding: const EdgeInsets.all(TabernaculoEspacamento.sp24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             FaIcon(icone, size: 56, color: cor.primary),
-            const SizedBox(height: DevocionalEspacamento.sp16),
+            const SizedBox(height: TabernaculoEspacamento.sp16),
             Text(
               'Acesso sob pedido',
               style: tema.titleLarge,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: DevocionalEspacamento.sp8),
+            const SizedBox(height: TabernaculoEspacamento.sp8),
             Text(
               descricao,
               style: tema.bodyMedium?.copyWith(color: cor.onSurfaceVariant),
@@ -73,7 +73,7 @@ class DevocionalCartaoDePedirAcesso extends StatelessWidget {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: DevocionalEspacamento.sp12),
+          const SizedBox(height: TabernaculoEspacamento.sp12),
           Text(
             'O acesso é liberado pelo e-mail da conta Google, então entre '
             'primeiro.',
@@ -82,15 +82,15 @@ class DevocionalCartaoDePedirAcesso extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: DevocionalEspacamento.sp24),
-          const DevocionalBotaoDeEntrar(),
+          const SizedBox(height: TabernaculoEspacamento.sp24),
+          const TabernaculoBotaoDeEntrar(),
         ],
       );
     }
     if (_numeroWhatsapp.isEmpty) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.only(top: DevocionalEspacamento.sp24),
-      child: DevocionalBotaoPrimario.icon(
+      padding: const EdgeInsets.only(top: TabernaculoEspacamento.sp24),
+      child: TabernaculoBotaoPrimario.icon(
         onPressed: () => _abrirWhatsapp(mensagemDoWhatsapp),
         icon: const FaIcon(FontAwesomeIcons.whatsapp),
         label: const Text('Falar no WhatsApp'),

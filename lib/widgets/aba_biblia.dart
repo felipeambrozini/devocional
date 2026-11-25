@@ -10,8 +10,8 @@ import 'aviso_vazio.dart';
 import 'cartao_de_referencia.dart';
 import 'item_de_achado.dart';
 
-class DevocionalAbaBiblia extends StatelessWidget {
-  const DevocionalAbaBiblia({
+class TabernaculoAbaBiblia extends StatelessWidget {
+  const TabernaculoAbaBiblia({
     super.key,
     required this.termoBuscado,
     required this.referencia,
@@ -31,20 +31,20 @@ class DevocionalAbaBiblia extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (erro) {
-      return DevocionalAvisoDeErro(
+      return TabernaculoAvisoDeErro(
         detalhe: 'A busca falhou. Tente de novo.',
         aoTentarDeNovo: aoTentarDeNovo,
       );
     }
     if (termoBuscado.isEmpty) {
-      return const DevocionalAvisoVazio(
+      return const TabernaculoAvisoVazio(
         icone: FontAwesomeIcons.magnifyingGlass,
         titulo: 'Busque um versículo',
         detalhe: 'A busca ignora acentos e maiúsculas',
       );
     }
     if (achados.isEmpty && referencia == null && !buscando) {
-      return DevocionalAvisoVazio(
+      return TabernaculoAvisoVazio(
         icone: FontAwesomeIcons.magnifyingGlassMinus,
         titulo: 'Nada encontrado',
         detalhe: 'Nenhum versículo com "$termoBuscado"',
@@ -56,10 +56,10 @@ class DevocionalAbaBiblia extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(
-            DevocionalEspacamento.sp16,
+            TabernaculoEspacamento.sp16,
             0,
-            DevocionalEspacamento.sp16,
-            DevocionalEspacamento.sp8,
+            TabernaculoEspacamento.sp16,
+            TabernaculoEspacamento.sp8,
           ),
           child: Row(
             children: [
@@ -77,7 +77,7 @@ class DevocionalAbaBiblia extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: DevocionalEspacamento.sp10),
+              const SizedBox(width: TabernaculoEspacamento.sp10),
               if (buscando)
                 const SizedBox(
                   width: 13,
@@ -93,20 +93,20 @@ class DevocionalAbaBiblia extends StatelessWidget {
         Expanded(
           child: ListView.separated(
             padding: const EdgeInsets.fromLTRB(
-              DevocionalEspacamento.sp16,
+              TabernaculoEspacamento.sp16,
               0,
-              DevocionalEspacamento.sp16,
-              DevocionalEspacamento.sp32,
+              TabernaculoEspacamento.sp16,
+              TabernaculoEspacamento.sp32,
             ),
             itemCount: achados.length + (temReferencia ? 1 : 0),
             separatorBuilder: (_, _) =>
-                const Divider(height: DevocionalEspacamento.sp18),
+                const Divider(height: TabernaculoEspacamento.sp18),
             itemBuilder: (context, i) {
               if (temReferencia && i == 0) {
-                return DevocionalCartaoDeReferencia(referencia: referencia!);
+                return TabernaculoCartaoDeReferencia(referencia: referencia!);
               }
               final achado = achados[temReferencia ? i - 1 : i];
-              return DevocionalItemDeAchado(
+              return TabernaculoItemDeAchado(
                 titulo: achado.referencia,
                 texto: achado.texto,
                 termo: termoBuscado,

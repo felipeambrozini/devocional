@@ -62,7 +62,7 @@ void main() {
         Scaffold(
           body: Padding(
             padding: const EdgeInsets.all(16),
-            child: DevocionalBaixarLivro(livro: livro),
+            child: TabernaculoBaixarLivro(livro: livro),
           ),
         ),
       ),
@@ -71,7 +71,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
   }
 
-  group('DevocionalBaixarLivro', () {
+  group('TabernaculoBaixarLivro', () {
     testWidgets('sem áudio no Storage, fica escondido', (tester) async {
       await montarBotao(tester, Brightness.light);
       expect(find.textContaining('Baixar o áudio'), findsNothing);

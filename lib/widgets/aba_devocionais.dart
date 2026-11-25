@@ -8,8 +8,8 @@ import '../telas/devocional.dart';
 import 'aviso_vazio.dart';
 import 'item_de_achado.dart';
 
-class DevocionalAbaDevocionais extends StatefulWidget {
-  const DevocionalAbaDevocionais({
+class TabernaculoAbaDevocionais extends StatefulWidget {
+  const TabernaculoAbaDevocionais({
     super.key,
     required this.termoBuscado,
     required this.achados,
@@ -25,11 +25,11 @@ class DevocionalAbaDevocionais extends StatefulWidget {
   final VoidCallback aoTentarDeNovo;
 
   @override
-  State<DevocionalAbaDevocionais> createState() =>
-      _DevocionalAbaDevocionaisState();
+  State<TabernaculoAbaDevocionais> createState() =>
+      _TabernaculoAbaDevocionaisState();
 }
 
-class _DevocionalAbaDevocionaisState extends State<DevocionalAbaDevocionais> {
+class _TabernaculoAbaDevocionaisState extends State<TabernaculoAbaDevocionais> {
   /// A data digitada e a leitura escolhida são campos de estado, e não a
   /// leitura de um controlador dentro de um getter: com o controlador, cada
   /// tecla-digitada era um `setState` sem nome, e o filtro inteiro rodava a
@@ -50,13 +50,13 @@ class _DevocionalAbaDevocionaisState extends State<DevocionalAbaDevocionais> {
   @override
   Widget build(BuildContext context) {
     if (widget.erro) {
-      return DevocionalAvisoDeErro(
+      return TabernaculoAvisoDeErro(
         detalhe: 'A busca falhou. Tente de novo.',
         aoTentarDeNovo: widget.aoTentarDeNovo,
       );
     }
     if (widget.termoBuscado.isEmpty) {
-      return const DevocionalAvisoVazio(
+      return const TabernaculoAvisoVazio(
         icone: FontAwesomeIcons.bookOpen,
         titulo: 'Busque nos devocionais',
         detalhe: 'Manhã e Noite e Promessas de Deus, na voz de Spurgeon',
@@ -64,10 +64,10 @@ class _DevocionalAbaDevocionaisState extends State<DevocionalAbaDevocionais> {
     }
     final lista = _filtrados;
     final espaco = const EdgeInsets.fromLTRB(
-      DevocionalEspacamento.sp16,
+      TabernaculoEspacamento.sp16,
       0,
-      DevocionalEspacamento.sp16,
-      DevocionalEspacamento.sp8,
+      TabernaculoEspacamento.sp16,
+      TabernaculoEspacamento.sp8,
     );
 
     // Contagem, data e chips rolam junto com a lista: fixos em cima, com o
@@ -91,7 +91,7 @@ class _DevocionalAbaDevocionaisState extends State<DevocionalAbaDevocionais> {
                     ),
                   ),
                 ),
-                const SizedBox(width: DevocionalEspacamento.sp10),
+                const SizedBox(width: TabernaculoEspacamento.sp10),
                 if (widget.buscando)
                   const SizedBox(
                     width: 13,
@@ -136,18 +136,18 @@ class _DevocionalAbaDevocionaisState extends State<DevocionalAbaDevocionais> {
         // quebra em duas linhas em vez de sumir aos poucos com fonte grande.
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
-            DevocionalEspacamento.sp16,
+            TabernaculoEspacamento.sp16,
             0,
-            DevocionalEspacamento.sp16,
-            DevocionalEspacamento.sp12,
+            TabernaculoEspacamento.sp16,
+            TabernaculoEspacamento.sp12,
           ),
           sliver: SliverToBoxAdapter(
             child: Semantics(
               container: true,
               label: 'Filtrar por leitura',
               child: Wrap(
-                spacing: DevocionalEspacamento.sp8,
-                runSpacing: DevocionalEspacamento.sp8,
+                spacing: TabernaculoEspacamento.sp8,
+                runSpacing: TabernaculoEspacamento.sp8,
                 children: [
                   ChoiceChip(
                     label: const Text('Todas'),
@@ -169,7 +169,7 @@ class _DevocionalAbaDevocionaisState extends State<DevocionalAbaDevocionais> {
         if (lista.isEmpty && !widget.buscando)
           SliverFillRemaining(
             hasScrollBody: false,
-            child: DevocionalAvisoVazio(
+            child: TabernaculoAvisoVazio(
               icone: FontAwesomeIcons.magnifyingGlassMinus,
               titulo: 'Nada encontrado',
               detalhe: switch ((_filtroDeLeitura != null, _data.isNotEmpty)) {
@@ -190,15 +190,15 @@ class _DevocionalAbaDevocionaisState extends State<DevocionalAbaDevocionais> {
         else
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(
-              DevocionalEspacamento.sp16,
+              TabernaculoEspacamento.sp16,
               0,
-              DevocionalEspacamento.sp16,
-              DevocionalEspacamento.sp32,
+              TabernaculoEspacamento.sp16,
+              TabernaculoEspacamento.sp32,
             ),
             sliver: SliverList.separated(
               itemCount: lista.length,
               separatorBuilder: (_, _) =>
-                  const Divider(height: DevocionalEspacamento.sp18),
+                  const Divider(height: TabernaculoEspacamento.sp18),
               itemBuilder: (context, i) => _item(context, lista[i]),
             ),
           ),
@@ -209,7 +209,7 @@ class _DevocionalAbaDevocionaisState extends State<DevocionalAbaDevocionais> {
   Widget _item(BuildContext context, AchadoDevocional achado) {
     final leitura = Leitura.values.byName(achado.leitura);
     final data = _dataDoDevocional(achado.data);
-    return DevocionalItemDeAchado(
+    return TabernaculoItemDeAchado(
       titulo: '${leitura.rotulo} · ${dataLonga(data)}',
       subtitulo: achado.titulo,
       texto: achado.texto,

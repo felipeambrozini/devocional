@@ -14,8 +14,8 @@ import 'widgets.dart';
 /// livro: é o único seletor da Bíblia. Antes havia dois (o título da barra
 /// trocava o livro, o título no corpo abria a grade de capítulos), e quem
 /// chegava não sabia qual tocar.
-class DevocionalSeletorDeLivro extends StatefulWidget {
-  const DevocionalSeletorDeLivro({
+class TabernaculoSeletorDeLivro extends StatefulWidget {
+  const TabernaculoSeletorDeLivro({
     super.key,
     required this.livroAtual,
     this.capituloAtual,
@@ -28,10 +28,10 @@ class DevocionalSeletorDeLivro extends StatefulWidget {
   final int? capituloAtual;
 
   @override
-  State<DevocionalSeletorDeLivro> createState() => _SeletorDeLivroState();
+  State<TabernaculoSeletorDeLivro> createState() => _SeletorDeLivroState();
 }
 
-class _SeletorDeLivroState extends State<DevocionalSeletorDeLivro> {
+class _SeletorDeLivroState extends State<TabernaculoSeletorDeLivro> {
   late Livro? _escolhido = livroPorSlug(widget.livroAtual);
   final _controle = TextEditingController();
   String _filtro = '';
@@ -59,7 +59,7 @@ class _SeletorDeLivroState extends State<DevocionalSeletorDeLivro> {
           SingleChildScrollView(
             child: Column(
               children: [
-                const SizedBox(height: DevocionalEspacamento.sp12),
+                const SizedBox(height: TabernaculoEspacamento.sp12),
                 // liveRegion: trocar da grade para a lista (e de volta) muda
                 // a folha inteira, e o leitor de tela precisa ouvir isso.
                 Semantics(
@@ -70,19 +70,19 @@ class _SeletorDeLivroState extends State<DevocionalSeletorDeLivro> {
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                 ),
-                const SizedBox(height: DevocionalEspacamento.sp8),
-                const DevocionalFilete(),
+                const SizedBox(height: TabernaculoEspacamento.sp8),
+                const TabernaculoFilete(),
                 // Busca só na etapa de livros: na grade de capítulos o texto
                 // já é o que se procura.
                 if (escolhido == null) ...[
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
-                      DevocionalEspacamento.sp16,
-                      DevocionalEspacamento.sp10,
-                      DevocionalEspacamento.sp16,
-                      DevocionalEspacamento.sp4,
+                      TabernaculoEspacamento.sp16,
+                      TabernaculoEspacamento.sp10,
+                      TabernaculoEspacamento.sp16,
+                      TabernaculoEspacamento.sp4,
                     ),
-                    child: DevocionalBusca(
+                    child: TabernaculoBusca(
                       controller: _controle,
                       hintText: 'Buscar livro',
                       // Na web, quem tocou "Todos os livros" pelo teclado perde
@@ -96,8 +96,8 @@ class _SeletorDeLivroState extends State<DevocionalSeletorDeLivro> {
                 ],
                 if (escolhido != null)
                   Padding(
-                    padding: const EdgeInsets.all(DevocionalEspacamento.sp8),
-                    child: DevocionalBotaoTerciario.icon(
+                    padding: const EdgeInsets.all(TabernaculoEspacamento.sp8),
+                    child: TabernaculoBotaoTerciario.icon(
                       onPressed: () => setState(() => _escolhido = null),
                       icon: const FaIcon(FontAwesomeIcons.arrowLeft),
                       label: const Text('Todos os livros'),
@@ -156,16 +156,16 @@ class _ListaDeLivros extends StatelessWidget {
           .toList();
       return ListView(
         padding: const EdgeInsets.symmetric(
-          horizontal: DevocionalEspacamento.sp16,
+          horizontal: TabernaculoEspacamento.sp16,
         ),
         children: [
           if (achados.isEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                DevocionalEspacamento.sp4,
-                DevocionalEspacamento.sp24,
-                DevocionalEspacamento.sp4,
-                DevocionalEspacamento.sp8,
+                TabernaculoEspacamento.sp4,
+                TabernaculoEspacamento.sp24,
+                TabernaculoEspacamento.sp4,
+                TabernaculoEspacamento.sp8,
               ),
               child: Text(
                 'Nenhum livro com "$filtro"',
@@ -174,7 +174,7 @@ class _ListaDeLivros extends StatelessWidget {
             )
           else
             _grade(achados),
-          const SizedBox(height: DevocionalEspacamento.sp16),
+          const SizedBox(height: TabernaculoEspacamento.sp16),
         ],
       );
     }
@@ -186,31 +186,31 @@ class _ListaDeLivros extends StatelessWidget {
 
     return ListView(
       padding: const EdgeInsets.symmetric(
-        horizontal: DevocionalEspacamento.sp16,
+        horizontal: TabernaculoEspacamento.sp16,
       ),
       children: [
         _tituloDeSecao(context, 'Antigo Testamento'),
         _grade(antigo),
         _tituloDeSecao(context, 'Novo Testamento'),
         _grade(novo),
-        const SizedBox(height: DevocionalEspacamento.sp16),
+        const SizedBox(height: TabernaculoEspacamento.sp16),
       ],
     );
   }
 
   Widget _tituloDeSecao(BuildContext context, String texto) => Padding(
     padding: const EdgeInsets.fromLTRB(
-      DevocionalEspacamento.sp4,
-      DevocionalEspacamento.sp12,
-      DevocionalEspacamento.sp4,
-      DevocionalEspacamento.sp8,
+      TabernaculoEspacamento.sp4,
+      TabernaculoEspacamento.sp12,
+      TabernaculoEspacamento.sp4,
+      TabernaculoEspacamento.sp8,
     ),
     child: Text(texto, style: Theme.of(context).textTheme.titleSmall),
   );
 
   Widget _grade(List<Livro> livros) => Wrap(
-    spacing: DevocionalEspacamento.sp8,
-    runSpacing: DevocionalEspacamento.sp8,
+    spacing: TabernaculoEspacamento.sp8,
+    runSpacing: TabernaculoEspacamento.sp8,
     children: [
       for (final l in livros)
         ChoiceChip(
@@ -241,12 +241,12 @@ class _GradeDeCapitulos extends StatelessWidget {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
-              DevocionalEspacamento.sp16,
+              TabernaculoEspacamento.sp16,
               0,
-              DevocionalEspacamento.sp16,
+              TabernaculoEspacamento.sp16,
               0,
             ),
-            child: DevocionalBaixarLivro(
+            child: TabernaculoBaixarLivro(
               key: ValueKey(livro.slug),
               livro: LivroParaBaixar.daBiblia(livro),
               alinhamento: Alignment.center,
@@ -254,7 +254,7 @@ class _GradeDeCapitulos extends StatelessWidget {
           ),
         ),
         SliverPadding(
-          padding: const EdgeInsets.all(DevocionalEspacamento.sp16),
+          padding: const EdgeInsets.all(TabernaculoEspacamento.sp16),
           sliver: _grade(context),
         ),
       ],
@@ -266,8 +266,8 @@ class _GradeDeCapitulos extends StatelessWidget {
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: 64,
         childAspectRatio: 1,
-        crossAxisSpacing: DevocionalEspacamento.sp8,
-        mainAxisSpacing: DevocionalEspacamento.sp8,
+        crossAxisSpacing: TabernaculoEspacamento.sp8,
+        mainAxisSpacing: TabernaculoEspacamento.sp8,
       ),
       itemCount: livro.capitulos,
       itemBuilder: (context, i) {

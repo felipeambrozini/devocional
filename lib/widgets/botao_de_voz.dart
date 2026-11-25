@@ -25,8 +25,8 @@ import 'retrato_de_persona.dart';
 ///
 /// O botão escuta o fim da própria leitura para fechar o ciclo com a
 /// confirmação "Leitura concluída.": parar no meio não é um fim, e não avisa.
-class DevocionalBotaoDeVoz extends StatefulWidget {
-  const DevocionalBotaoDeVoz({
+class TabernaculoBotaoDeVoz extends StatefulWidget {
+  const TabernaculoBotaoDeVoz({
     super.key,
     required this.chave,
     this.referencia,
@@ -43,10 +43,10 @@ class DevocionalBotaoDeVoz extends StatefulWidget {
   final String? oQueOuvir;
 
   @override
-  State<DevocionalBotaoDeVoz> createState() => _BotaoDeVozState();
+  State<TabernaculoBotaoDeVoz> createState() => _BotaoDeVozState();
 }
 
-class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
+class _BotaoDeVozState extends State<TabernaculoBotaoDeVoz> {
   StreamSubscription<String>? _conclusoes;
 
   // Null enquanto ainda não sabe se o áudio existe: o botão fica escondido
@@ -108,7 +108,7 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
   }
 
   @override
-  void didUpdateWidget(covariant DevocionalBotaoDeVoz oldWidget) {
+  void didUpdateWidget(covariant TabernaculoBotaoDeVoz oldWidget) {
     super.didUpdateWidget(oldWidget);
     // O mesmo State pode ser reaproveitado com outra chave (ex: navegação
     // entre capítulos sem remontar o widget) — sem isso o botão continuaria
@@ -228,14 +228,14 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
                     // de alvo: só o ícone de 20 e o padding de 12.
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(
-                        minHeight: DevocionalToque.minimo,
+                        minHeight: TabernaculoToque.minimo,
                       ),
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(
-                          DevocionalEspacamento.sp6,
-                          DevocionalEspacamento.sp6,
-                          DevocionalEspacamento.sp16,
-                          DevocionalEspacamento.sp6,
+                          TabernaculoEspacamento.sp6,
+                          TabernaculoEspacamento.sp6,
+                          TabernaculoEspacamento.sp16,
+                          TabernaculoEspacamento.sp6,
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -247,15 +247,17 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
                             // estado falar mais alto.
                             if (!preparando && !ativo && !pausado) ...[
                               // O mesmo retrato das entradas de conversa
-                              // ([DevocionalRetratoDePersona]): aro dourado, e o cabelo,
+                              // ([TabernaculoRetratoDePersona]): aro dourado, e o cabelo,
                               // que encosta na borda de cima da foto, preservado
                               // pelo corte alinhado ao topo.
-                              DevocionalRetratoDePersona(
+                              TabernaculoRetratoDePersona(
                                 persona: personaSpurgeon,
-                                folga: DevocionalEspacamento.sp4,
+                                folga: TabernaculoEspacamento.sp4,
                                 decorativo: true,
                               ),
-                              const SizedBox(width: DevocionalEspacamento.sp10),
+                              const SizedBox(
+                                width: TabernaculoEspacamento.sp10,
+                              ),
                             ],
                             FaIcon(
                               ativo
@@ -266,7 +268,7 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
                               size: 20,
                               color: cor.primary,
                             ),
-                            const SizedBox(width: DevocionalEspacamento.sp6),
+                            const SizedBox(width: TabernaculoEspacamento.sp6),
                             // Flexible com reticências: em escala de texto 2x um
                             // rótulo comprido ("O pregador está lendo…") não
                             // pode estourar a largura da tela. Semantics: o
@@ -352,12 +354,12 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
             onTap: _checarDisponibilidade,
             child: ConstrainedBox(
               constraints: const BoxConstraints(
-                minHeight: DevocionalToque.minimo,
+                minHeight: TabernaculoToque.minimo,
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: DevocionalEspacamento.sp14,
-                  vertical: DevocionalEspacamento.sp8,
+                  horizontal: TabernaculoEspacamento.sp14,
+                  vertical: TabernaculoEspacamento.sp8,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -367,7 +369,7 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
                       size: 16,
                       color: cor.onSurfaceVariant,
                     ),
-                    const SizedBox(width: DevocionalEspacamento.sp6),
+                    const SizedBox(width: TabernaculoEspacamento.sp6),
                     Flexible(
                       child: Text(
                         visivel,
@@ -386,7 +388,7 @@ class _BotaoDeVozState extends State<DevocionalBotaoDeVoz> {
     );
   }
 
-  /// "Ouvir" ou "Ouvir o comentário", conforme [DevocionalBotaoDeVoz.oQueOuvir].
+  /// "Ouvir" ou "Ouvir o comentário", conforme [TabernaculoBotaoDeVoz.oQueOuvir].
   String get _ouvir {
     final oQue = widget.oQueOuvir;
     return oQue == null ? 'Ouvir' : 'Ouvir $oQue';
@@ -460,7 +462,7 @@ class _BotaoDeVelocidade extends StatelessWidget {
     final rotulo = rotuloDaVelocidade(voz.velocidade);
     return Padding(
       padding: const EdgeInsetsDirectional.only(
-        start: DevocionalEspacamento.sp6,
+        start: TabernaculoEspacamento.sp6,
       ),
       child: Tooltip(
         message: 'Velocidade da leitura',
@@ -473,8 +475,8 @@ class _BotaoDeVelocidade extends StatelessWidget {
             // O mesmo alvo de 48dp de altura do X ao lado.
             child: ConstrainedBox(
               constraints: const BoxConstraints(
-                minWidth: DevocionalEspacamento.sp48,
-                minHeight: DevocionalEspacamento.sp48,
+                minWidth: TabernaculoEspacamento.sp48,
+                minHeight: TabernaculoEspacamento.sp48,
               ),
               child: Center(
                 child: ExcludeSemantics(
@@ -510,7 +512,7 @@ class _BotaoDeEncerrar extends StatelessWidget {
     final cor = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsetsDirectional.only(
-        start: DevocionalEspacamento.sp6,
+        start: TabernaculoEspacamento.sp6,
       ),
       child: Tooltip(
         message: pausado ? 'Encerrar a leitura pausada' : 'Encerrar a leitura',
@@ -521,7 +523,7 @@ class _BotaoDeEncerrar extends StatelessWidget {
           // vinte minutos, e um alvo de 26dp no topo da tela pedia mira.
           // O ícone continua pequeno dentro do quadrado centrado.
           child: SizedBox.square(
-            dimension: DevocionalEspacamento.sp48,
+            dimension: TabernaculoEspacamento.sp48,
             child: Center(
               child: FaIcon(
                 FontAwesomeIcons.xmark,
@@ -541,8 +543,8 @@ class _BotaoDeEncerrar extends StatelessWidget {
 /// botão ainda poder pausar, retomar, encerrar (ou cancelar o preparo) sem
 /// voltar ao topo. A mesma peça na Bíblia, na introdução e em Sobre: uma
 /// leitura não pode ficar sem os controles à vista.
-class DevocionalIndicadorDeVozNaBarra extends StatelessWidget {
-  const DevocionalIndicadorDeVozNaBarra({super.key, required this.chave});
+class TabernaculoIndicadorDeVozNaBarra extends StatelessWidget {
+  const TabernaculoIndicadorDeVozNaBarra({super.key, required this.chave});
 
   /// A chave de voz desta tela ("capitulo:joao.3", "introducao:joao"): só o
   /// áudio dela aparece aqui; o de outra tela não rouba a barra.

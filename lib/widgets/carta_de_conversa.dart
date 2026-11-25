@@ -8,8 +8,8 @@ import 'retrato_de_persona.dart';
 
 /// Uma carta da aba Conversas: o retrato no anel, o nome em Cinzel e o que
 /// aquela conversa é, tudo como um alvo só que abre o histórico da persona.
-class DevocionalCartaDeConversa extends StatelessWidget {
-  const DevocionalCartaDeConversa({
+class TabernaculoCartaDeConversa extends StatelessWidget {
+  const TabernaculoCartaDeConversa({
     super.key,
     required this.persona,
     required this.sobre,
@@ -27,17 +27,17 @@ class DevocionalCartaDeConversa extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         onTap: () => context.push('/${persona.slug}'),
         child: Padding(
-          padding: const EdgeInsets.all(DevocionalEspacamento.sp16),
+          padding: const EdgeInsets.all(TabernaculoEspacamento.sp16),
           child: Row(
             children: [
-              DevocionalRetratoDePersona(persona: persona, tamanho: 56),
-              const SizedBox(width: DevocionalEspacamento.sp16),
+              TabernaculoRetratoDePersona(persona: persona, tamanho: 56),
+              const SizedBox(width: TabernaculoEspacamento.sp16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(persona.nome, style: tema.titleLarge),
-                    const SizedBox(height: DevocionalEspacamento.sp4),
+                    const SizedBox(height: TabernaculoEspacamento.sp4),
                     Text(
                       sobre,
                       style: tema.bodyMedium?.copyWith(

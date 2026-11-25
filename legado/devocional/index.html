@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <!--
+    O app mudou de /devocional/ para /tabernaculo/ (versão 1.28). Links já
+    espalhados (planos compartilhados, ?ler=, lembretes, PWA instalado)
+    continuam chegando aqui: o firebase.json reescreve todo /devocional/** para
+    esta página, que troca só o começo do caminho e mantém o resto, a busca e
+    o fragmento. Um redirect 301 no Hosting faria o mesmo, mas também
+    redirecionaria o service worker antigo, e o navegador recusa atualizar um
+    worker redirecionado: o antigo nunca sairia do ar.
+  -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <link rel="canonical" href="https://www.felipeambrozini.com.br/tabernaculo/">
+  <title>Tabernáculo</title>
+  <script>
+    (function () {
+      var caminho = location.pathname.replace(/^\/devocional(?=\/|$)/, '/tabernaculo');
+      if (caminho === '/tabernaculo') caminho = '/tabernaculo/';
+      location.replace(caminho + location.search + location.hash);
+    })();
+  </script>
+  <noscript>
+    <meta http-equiv="refresh" content="0; url=/tabernaculo/">
+  </noscript>
+  <style>
+    html, body { margin: 0; height: 100%; background: #F7F1E3; color: #3D2417; }
+    @media (prefers-color-scheme: dark) {
+      html, body { background: #2E1B10; color: #EDE0C8; }
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Georgia, serif;
+    }
+    a { color: inherit; }
+  </style>
+</head>
+<body>
+  <p>O app agora se chama Tabernáculo. <a href="/tabernaculo/">Abrir o Tabernáculo</a></p>
+</body>
+</html>

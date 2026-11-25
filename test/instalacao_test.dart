@@ -42,7 +42,7 @@ class _InstalacaoFalsa extends InstalacaoDoApp {
 }
 
 Widget _app(InstalacaoDoApp instalacao) => MaterialApp(
-  home: Scaffold(body: DevocionalItemDeInstalar(instalacao: instalacao)),
+  home: Scaffold(body: TabernaculoItemDeInstalar(instalacao: instalacao)),
 );
 
 Widget _hoje(Estado estado, InstalacaoDoApp instalacao) => MaterialApp(
@@ -53,7 +53,7 @@ Widget _hoje(Estado estado, InstalacaoDoApp instalacao) => MaterialApp(
       listenable: estado,
       builder: (context, _) => ListView(
         children: [
-          DevocionalCartaoDeInstalar(estado: estado, instalacao: instalacao),
+          TabernaculoCartaoDeInstalar(estado: estado, instalacao: instalacao),
         ],
       ),
     ),
@@ -164,7 +164,7 @@ void main() {
     await tester.pump();
 
     expect(instalacao.pedidos, 1);
-    expect(find.text('Devocional instalado'), findsOneWidget);
+    expect(find.text('Tabernáculo instalado'), findsOneWidget);
     expect(find.byType(AlertDialog), findsNothing);
     // Deixa a snackbar fechar sozinha: o timer dela não pode sobrar.
     await tester.pump(const Duration(seconds: 4));
@@ -182,7 +182,7 @@ void main() {
     await tester.pump();
 
     expect(instalacao.pedidos, 1);
-    expect(find.text('Devocional instalado'), findsNothing);
+    expect(find.text('Tabernáculo instalado'), findsNothing);
   });
 
   testWidgets('se a janela do navegador falha, mostra o caminho pelo menu', (

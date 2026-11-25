@@ -28,8 +28,8 @@ import 'vigia_do_fim.dart';
 
 /// Um capítulo aberto do leitor de livros: o texto com os destaques e notas,
 /// a troca de capítulo (deslize, setas e teclado) e o fim da leitura.
-class DevocionalCapituloAberto extends StatefulWidget {
-  const DevocionalCapituloAberto({
+class TabernaculoCapituloAberto extends StatefulWidget {
+  const TabernaculoCapituloAberto({
     super.key,
     required this.estado,
     required this.obra,
@@ -44,10 +44,10 @@ class DevocionalCapituloAberto extends StatefulWidget {
   final int indice;
 
   @override
-  State<DevocionalCapituloAberto> createState() => _CapituloAbertoState();
+  State<TabernaculoCapituloAberto> createState() => _CapituloAbertoState();
 }
 
-class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
+class _CapituloAbertoState extends State<TabernaculoCapituloAberto> {
   late final LeitorDeLivroControlador _controlador;
 
   CapituloDoLivro get _capitulo => widget.capitulos[widget.indice];
@@ -279,16 +279,16 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
     // contrário: o reconhecedor mais fundo da árvore ganha a disputa, como na
     // Bíblia.
     Widget comSelecao(Widget filho) =>
-        kIsWeb ? filho : DevocionalAreaDeSelecaoComCompartilhar(child: filho);
+        kIsWeb ? filho : TabernaculoAreaDeSelecaoComCompartilhar(child: filho);
 
     return CallbackShortcuts(
       bindings: {
         const SingleActivator(LogicalKeyboardKey.arrowRight): () => _passar(1),
         const SingleActivator(LogicalKeyboardKey.arrowLeft): () => _passar(-1),
       },
-      child: DevocionalAncoraDeFoco(
+      child: TabernaculoAncoraDeFoco(
         child: Scaffold(
-          appBar: DevocionalAppBar(
+          appBar: TabernaculoAppBar(
             // Com Capítulos, Notas, Ajustes e a voz, um título longo vira
             // reticências na barra: o tooltip dá o nome inteiro, e o corpo
             // repete o livro acima do capítulo.
@@ -301,7 +301,7 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
             actions: [
               // Quem rolou para longe da pílula ainda pausa ou encerra a
               // leitura daqui, como na Bíblia.
-              DevocionalIndicadorDeVozNaBarra(chave: _chaveDaVoz),
+              TabernaculoIndicadorDeVozNaBarra(chave: _chaveDaVoz),
               IconButton(
                 tooltip: 'Capítulos',
                 icon: const FaIcon(FontAwesomeIcons.listUl),
@@ -309,11 +309,11 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
               ),
               // Favoritos e notas da Biblioteca, como na Bíblia e no
               // Devocional: quem lê um livro não precisa voltar à estante.
-              const DevocionalBotaoDeNotas(origem: OrigemDasNotas.biblioteca),
-              DevocionalBotaoDeAjustes(estado: estado),
+              const TabernaculoBotaoDeNotas(origem: OrigemDasNotas.biblioteca),
+              TabernaculoBotaoDeAjustes(estado: estado),
             ],
           ),
-          body: DevocionalLarguraDeLeitura(
+          body: TabernaculoLarguraDeLeitura(
             child: Focus(
               autofocus: true,
               child: Stack(
@@ -347,17 +347,17 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
                             return false;
                           },
                           // Chegou ao fim do capítulo: marca como lido.
-                          child: DevocionalVigiaDoFim(
+                          child: TabernaculoVigiaDoFim(
                             chave: widget.indice,
                             rolagem: _controlador.rolagem,
                             aoChegarAoFim: _marcarLidoAoChegarAoFim,
                             child: SingleChildScrollView(
                               controller: _controlador.rolagem,
                               padding: const EdgeInsets.fromLTRB(
-                                DevocionalEspacamento.sp16,
-                                DevocionalEspacamento.sp8,
-                                DevocionalEspacamento.sp16,
-                                DevocionalEspacamento.sp32,
+                                TabernaculoEspacamento.sp16,
+                                TabernaculoEspacamento.sp8,
+                                TabernaculoEspacamento.sp16,
+                                TabernaculoEspacamento.sp32,
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,7 +384,7 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
                                     ),
                                   ),
                                   const SizedBox(
-                                    height: DevocionalEspacamento.sp4,
+                                    height: TabernaculoEspacamento.sp4,
                                   ),
                                   // Container: sem ele, o leitor de tela
                                   // fundia o título com a pílula de ouvir
@@ -398,22 +398,22 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
                                     ),
                                   ),
                                   const SizedBox(
-                                    height: DevocionalEspacamento.sp14,
+                                    height: TabernaculoEspacamento.sp14,
                                   ),
-                                  const DevocionalFilete(),
+                                  const TabernaculoFilete(),
                                   const SizedBox(
-                                    height: DevocionalEspacamento.sp16,
+                                    height: TabernaculoEspacamento.sp16,
                                   ),
                                   // Só aparece quando o mp3 do capítulo já foi
                                   // publicado: os livros ganham áudio aos
                                   // poucos, livro a livro.
-                                  DevocionalBotaoDeVoz(
+                                  TabernaculoBotaoDeVoz(
                                     chave: _chaveDaVoz,
                                     referencia:
                                         '${widget.obra.titulo}, ${_capitulo.titulo}',
                                   ),
                                   const SizedBox(
-                                    height: DevocionalEspacamento.sp16,
+                                    height: TabernaculoEspacamento.sp16,
                                   ),
                                   KeyedSubtree(
                                     child: Column(
@@ -422,7 +422,7 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
                                       children: [
                                         for (final (n, paragrafo)
                                             in _capitulo.paragrafos.indexed)
-                                          DevocionalParagrafoDeLivro(
+                                          TabernaculoParagrafoDeLivro(
                                             texto: paragrafo,
                                             destaque: destaques[n],
                                             aoTocar: () => _abrirAcoes(n),
@@ -431,11 +431,11 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
                                     ),
                                   ),
                                   const SizedBox(
-                                    height: DevocionalEspacamento.sp16,
+                                    height: TabernaculoEspacamento.sp16,
                                   ),
                                   if (_ehUltimo) ...[
                                     Center(
-                                      child: DevocionalBotaoPrimario.icon(
+                                      child: TabernaculoBotaoPrimario.icon(
                                         onPressed: _terminarLeitura,
                                         icon: const FaIcon(
                                           FontAwesomeIcons.flagCheckered,
@@ -445,11 +445,11 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
                                       ),
                                     ),
                                     const SizedBox(
-                                      height: DevocionalEspacamento.sp8,
+                                      height: TabernaculoEspacamento.sp8,
                                     ),
                                   ],
                                   Center(
-                                    child: DevocionalBotaoTerciario.icon(
+                                    child: TabernaculoBotaoTerciario.icon(
                                       onPressed: () => leitura.alternarLido(
                                         _slug,
                                         widget.indice,
@@ -477,7 +477,7 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
                   ),
                   // A alça é um indício de que dá para deslizar, não um controle.
                   if (!kIsWeb)
-                    DevocionalAlcaDeDeslize(
+                    TabernaculoAlcaDeDeslize(
                       primeiraVez: !estado.swipeTooltipDispensado,
                     ),
                 ],
@@ -487,7 +487,7 @@ class _CapituloAbertoState extends State<DevocionalCapituloAberto> {
           // Como na Bíblia: no celular o deslize já troca de capítulo, e a barra
           // só existe na web, se a opção das setas estiver ligada nos ajustes.
           bottomNavigationBar: kIsWeb && estado.setasDoRodape
-              ? DevocionalBarraDeCapitulo(
+              ? TabernaculoBarraDeCapitulo(
                   podeVoltar: widget.indice > 0,
                   podeAvancar: true,
                   aoVoltar: () => _passar(-1),

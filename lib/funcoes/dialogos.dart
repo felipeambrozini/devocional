@@ -65,11 +65,11 @@ class _DialogoDeTextoState extends State<DialogoDeTexto> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const DevocionalFilete(largura: 64),
-          const SizedBox(height: DevocionalEspacamento.sp12),
+          const TabernaculoFilete(largura: 64),
+          const SizedBox(height: TabernaculoEspacamento.sp12),
           if (descricao != null) ...[
             Text(descricao, style: tema.textTheme.bodySmall),
-            const SizedBox(height: DevocionalEspacamento.sp12),
+            const SizedBox(height: TabernaculoEspacamento.sp12),
           ],
           TextField(
             controller: _controle,
@@ -81,11 +81,11 @@ class _DialogoDeTextoState extends State<DialogoDeTexto> {
         ],
       ),
       actions: [
-        DevocionalBotaoTerciario(
+        TabernaculoBotaoTerciario(
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancelar'),
         ),
-        DevocionalBotaoPrimario(
+        TabernaculoBotaoPrimario(
           onPressed: () => Navigator.pop(context, _controle.text),
           child: Text(widget.rotuloDaAcao),
         ),

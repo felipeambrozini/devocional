@@ -5,8 +5,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 /// `ExpansionTile` colapsado por padrão — mesma técnica de
 /// `_SecaoDeLembretesExpansivel` em `folha_de_ajustes.dart`, para não exigir
 /// rolar por texto estático até chegar em Ajuda e Conta e privacidade.
-class DevocionalSecaoExpansivel extends StatelessWidget {
-  const DevocionalSecaoExpansivel({
+class TabernaculoSecaoExpansivel extends StatelessWidget {
+  const TabernaculoSecaoExpansivel({
     super.key,
     required this.icone,
     required this.titulo,

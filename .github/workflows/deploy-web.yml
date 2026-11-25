@@ -102,7 +102,7 @@ jobs:
       # gstatic. O gstatic é rápido, mas fica fora do nosso controle: um cache
       # offline que depende dele quebra sem rede e some do nosso teste.
       - run: |
-          flutter build web --release --no-tree-shake-icons --base-href /devocional/ \
+          flutter build web --release --no-tree-shake-icons --base-href /tabernaculo/ \
             --web-content-hash --no-web-resources-cdn \
             --dart-define=FIREBASE_API_KEY_WEB=${{ secrets.FIREBASE_API_KEY_WEB }} \
             --dart-define=FIREBASE_API_KEY_ANDROID=${{ secrets.FIREBASE_API_KEY_ANDROID }} \
@@ -125,22 +125,27 @@ jobs:
             --dart-define=WHATSAPP_NUMERO=${{ secrets.WHATSAPP_NUMERO }} \
             --dart-define=RECAPTCHA_V3_SITE_KEY=${{ secrets.RECAPTCHA_V3_SITE_KEY }} \
             --dart-define=FCM_VAPID_KEY=${{ secrets.FCM_VAPID_KEY }}
-      # O Firebase Hosting serve da raiz do domínio; o app mora em /devocional/,
-      # então o build vai para public/devocional (o base-href acima combina). O
+      # O Firebase Hosting serve da raiz do domínio; o app mora em /tabernaculo/,
+      # então o build vai para public/tabernaculo (o base-href acima combina). O
       # 404.html também sobe à raiz do public: é lá que o Hosting procura a
-      # página de erro para rotas fora do rewrite (public/devocional/404.html,
+      # página de erro para rotas fora do rewrite (public/tabernaculo/404.html,
       # que este copy também produz, fica inalcançável — o rewrite cobre tudo).
       # robots.txt, llms.txt e sitemap.xml sobem pelo mesmo motivo: rastreador
       # e ferramenta de IA olham a raiz do domínio, não um subcaminho, e o
       # domínio é hoje dedicado só a este app.
+      # O endereço antigo (/devocional/, até a versão 1.27) sobe à parte, de
+      # legado/devocional: uma página que leva ao mesmo caminho em
+      # /tabernaculo/ e um service worker que desliga o antigo (ver os
+      # comentários de cada arquivo).
       - run: |
-          mkdir -p public/devocional
-          cp -r build/web/* public/devocional/
+          mkdir -p public/tabernaculo public/devocional
+          cp -r build/web/* public/tabernaculo/
+          cp legado/devocional/* public/devocional/
           # O Flutter ainda emite o service worker padrão mesmo com o bootstrap
           # próprio. Ele se auto-desregistra (o index.html também desregistra um
           # que já esteja instalado), mas não deve nem subir: um arquivo a menos
           # no Hosting e nenhuma chance de o navegador registrar os dois.
-          rm -f public/devocional/flutter_service_worker.js
+          rm -f public/tabernaculo/flutter_service_worker.js
           cp build/web/404.html public/404.html
           cp build/web/robots.txt public/robots.txt
           cp build/web/llms.txt public/llms.txt
@@ -155,7 +160,7 @@ jobs:
       # firebase.json não define target, "storage:rules" falhava com
       # "Could not find rules for the following storage targets: rules".
       # functions antes de hosting de propósito: o `firebase.json` tem um
-      # rewrite de /devocional/api/erro para `registrarErro`, e o CLI recusa
+      # rewrite de /tabernaculo/api/erro para `registrarErro`, e o CLI recusa
       # publicar o Hosting se a Function ainda não existe no projeto — na
       # primeira publicação depois desta mudança, ordem inversa quebraria.
       - uses: w9jds/firebase-action@e01972352bce28ca4658ce13d6abefd26053a4e2 # v15.27.0

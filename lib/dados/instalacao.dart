@@ -7,7 +7,7 @@
 /// costuma chegar antes do primeiro quadro). Com o convite em mãos,
 /// [InstalacaoDoApp.pedir] abre a janela de instalação do próprio navegador.
 /// Safari (iPhone e Mac) e Firefox não mandam convite: ali só resta explicar
-/// o caminho pelo menu, o que `DevocionalItemDeInstalar` faz.
+/// o caminho pelo menu, o que `TabernaculoItemDeInstalar` faz.
 ///
 /// Mesma costura condicional de `url_da_pagina.dart`: na web a implementação
 /// de verdade (`instalacao_web.dart`); no Android, no iOS e nos testes,
