@@ -6,6 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../dados/estado.dart';
 import '../dados/leitura_de_livros.dart';
 import '../dados/modelos.dart';
+import '../dados/nuvem.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/abrir_na_biblia.dart';
 import '../funcoes/aviso.dart';
@@ -61,14 +62,22 @@ class TabernaculoCartaoDeLeitura extends StatelessWidget {
   final int diaDeNota;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: Nuvem.instancia,
+    builder: (context, _) => _cartao(context),
+  );
+
+  Widget _cartao(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     final estado = EscopoDoEstado.de(context);
-    final destaque = estado.leituraDeLivros.destaquesDe(
-      slugDeNota,
-      diaDeNota,
-    )[paragrafoDoDevocional];
+    // Sem conta, o que foi favoritado antes não aparece destacado.
+    final destaque = Nuvem.instancia.logado
+        ? estado.leituraDeLivros.destaquesDe(
+            slugDeNota,
+            diaDeNota,
+          )[paragrafoDoDevocional]
+        : null;
     final spans = spansDeCitacao(
       dev,
       estiloCitacao: tema.bodyLarge?.copyWith(
@@ -197,6 +206,7 @@ class TabernaculoCartaoDeLeitura extends StatelessWidget {
   ) async {
     final leitura = estado.leituraDeLivros;
     final temNota = destaque != null && destaque.nota.isNotEmpty;
+    final logado = Nuvem.instancia.logado;
     final cor = Theme.of(context).colorScheme;
     final mensageiro = ScaffoldMessenger.of(context);
 
@@ -226,30 +236,31 @@ class TabernaculoCartaoDeLeitura extends StatelessWidget {
                 title: const Text('Compartilhar'),
                 onTap: () => Navigator.pop(folha, true),
               ),
-              ListTile(
-                leading: FaIcon(
-                  FontAwesomeIcons.penToSquare,
-                  color: cor.primary,
-                ),
-                title: Text(temNota ? 'Editar anotação' : 'Anotar'),
-                onTap: () async {
-                  final nota = await editarNota(
-                    folha,
-                    referencia: titulo,
-                    notaAtual: destaque?.nota ?? '',
-                  );
-                  if (nota != null) {
-                    await leitura.definirNota(
-                      slugDeNota,
-                      diaDeNota,
-                      paragrafoDoDevocional,
-                      nota,
+              if (logado)
+                ListTile(
+                  leading: FaIcon(
+                    FontAwesomeIcons.penToSquare,
+                    color: cor.primary,
+                  ),
+                  title: Text(temNota ? 'Editar anotação' : 'Anotar'),
+                  onTap: () async {
+                    final nota = await editarNota(
+                      folha,
+                      referencia: titulo,
+                      notaAtual: destaque?.nota ?? '',
                     );
-                  }
-                  if (folha.mounted) Navigator.pop(folha);
-                },
-              ),
-              if (!temNota)
+                    if (nota != null) {
+                      await leitura.definirNota(
+                        slugDeNota,
+                        diaDeNota,
+                        paragrafoDoDevocional,
+                        nota,
+                      );
+                    }
+                    if (folha.mounted) Navigator.pop(folha);
+                  },
+                ),
+              if (logado && !temNota)
                 ListTile(
                   leading: FaIcon(
                     destaque == null

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../controladores/notas_controlador.dart';
 import '../dados/estado.dart';
+import '../dados/nuvem.dart';
 import 'folha_de_ajustes.dart';
 
 /// Botões compartilhados entre telas: cada mudança neles (ícone, cor, texto)
@@ -210,9 +211,15 @@ class TabernaculoBotaoDeNotas extends StatelessWidget {
   final OrigemDasNotas origem;
 
   @override
-  Widget build(BuildContext context) => IconButton(
-    tooltip: 'Favoritos e notas: ${origem.rotulo}',
-    icon: const FaIcon(FontAwesomeIcons.bookmark),
-    onPressed: () => context.push('/notas?aba=${origem.name}'),
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: Nuvem.instancia,
+    // Favoritos e notas só existem com conta: sem ela, o ícone some.
+    builder: (context, _) => !Nuvem.instancia.logado
+        ? const SizedBox.shrink()
+        : IconButton(
+            tooltip: 'Favoritos e notas: ${origem.rotulo}',
+            icon: const FaIcon(FontAwesomeIcons.bookmark),
+            onPressed: () => context.push('/notas?aba=${origem.name}'),
+          ),
   );
 }

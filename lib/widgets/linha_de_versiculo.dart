@@ -6,6 +6,7 @@ import '../dados/canon.dart';
 import '../dados/conteudo.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
+import '../dados/nuvem.dart';
 import '../dados/recursos.dart';
 import '../dados/voz.dart';
 import '../estilo/espacamento.dart';
@@ -66,11 +67,20 @@ class TabernaculoLinhaDeVersiculo extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: Nuvem.instancia,
+    builder: (context, _) => _linha(context),
+  );
+
+  Widget _linha(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     final estado = EscopoDoEstado.de(context);
-    final marcacao = estado.marcacaoDe(livro, capituloNumero, numero);
+    // Favoritos e notas são pessoais: sem conta, o que foi marcado antes não
+    // aparece (nem o destaque, nem o ícone, nem a nota).
+    final marcacao = Nuvem.instancia.logado
+        ? estado.marcacaoDe(livro, capituloNumero, numero)
+        : null;
     final temNota = marcacao != null && marcacao.nota.trim().isNotEmpty;
 
     // A marcação era só visual (fundo a 18%): quem usa leitor de tela não
@@ -83,7 +93,10 @@ class TabernaculoLinhaDeVersiculo extends StatelessWidget {
       selected: selecionando ? selecionado : marcacao != null,
       hint: selecionando
           ? 'Toque para marcar ou desmarcar'
-          : 'Toque para favoritar, anotar ou copiar; toque longo para '
+          : Nuvem.instancia.logado
+          ? 'Toque para favoritar, anotar ou copiar; toque longo para '
+                'selecionar vários'
+          : 'Toque para copiar ou compartilhar; toque longo para '
                 'selecionar vários',
       child: InkWell(
         // Toque longo é a entrada do modo de seleção; dentro dele, marcar e
@@ -264,8 +277,11 @@ class _AcoesDoVersiculo {
       const Divider(height: 1),
       _itemCopiar(contextoDaFolha, cor),
       _itemCompartilhar(contextoDaFolha, cor),
-      _itemAnotar(contextoDaFolha),
-      _itemFavoritar(contextoDaFolha, cor),
+      // Favoritar e anotar são pessoais: só com conta.
+      if (Nuvem.instancia.logado) ...[
+        _itemAnotar(contextoDaFolha),
+        _itemFavoritar(contextoDaFolha, cor),
+      ],
     ];
     return SafeArea(
       child: LayoutBuilder(

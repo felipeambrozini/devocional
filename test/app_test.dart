@@ -1239,6 +1239,8 @@ void main() {
   testWidgets('toque longo num versículo inicia a seleção de vários', (
     tester,
   ) async {
+    // Marcar versículos é pessoal: só com conta.
+    Nuvem.instancia.logadoForcado = true;
     // Alta o bastante para os dois primeiros versículos ficarem acima da barra.
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1.0;
@@ -1339,6 +1341,7 @@ void main() {
   testWidgets('favoritar pelo toque no versículo persiste no estado', (
     tester,
   ) async {
+    Nuvem.instancia.logadoForcado = true;
     await aquecerAssets(tester);
     final estado = await estadoLimpo();
     await tester.pumpWidget(

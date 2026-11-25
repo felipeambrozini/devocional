@@ -6,6 +6,7 @@ import 'package:devocional/dados/canon.dart';
 import 'package:devocional/dados/config_admin.dart';
 import 'package:devocional/dados/conteudo.dart';
 import 'package:devocional/dados/estado.dart';
+import 'package:devocional/dados/nuvem.dart';
 import 'package:devocional/dados/recursos.dart';
 import 'package:devocional/dados/voz.dart';
 import 'package:devocional/telas/biblia.dart';
@@ -277,6 +278,8 @@ void main() {
 
     group('folha do versículo', () {
       setUp(() {
+        // Anotar e Favoritar só existem com conta.
+        Nuvem.instancia.logadoForcado = true;
         // O botão de ouvir aparece de verdade, sem rede nem path_provider.
         Recursos.ouvirTextosForcado = true;
         Voz.baseUrlForTest = 'https://test.audio';
@@ -284,6 +287,7 @@ void main() {
         AudioOffline.temOfflineParaTeste = (_) => false;
       });
       tearDown(() {
+        Nuvem.instancia.logadoForcado = null;
         Recursos.ouvirTextosForcado = null;
         Voz.baseUrlForTest = null;
         Voz.disponibilidadeRemotaParaTeste = null;

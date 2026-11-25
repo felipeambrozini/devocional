@@ -2,6 +2,7 @@ import 'package:devocional/dados/conteudo.dart';
 import 'package:devocional/controladores/notas_controlador.dart';
 import 'package:devocional/dados/estado.dart';
 import 'package:devocional/dados/leitura_de_livros.dart';
+import 'package:devocional/dados/nuvem.dart';
 import 'package:devocional/telas/notas.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,7 +13,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// pelo corpo do versículo, que é carregado sob demanda e ficaria fora do
 /// alcance de uma busca em memória sem derrubar o carregamento tardio.
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    // Favoritos e notas só existem com conta.
+    Nuvem.instancia.logadoForcado = true;
+  });
+  tearDown(() => Nuvem.instancia.logadoForcado = null);
 
   Future<void> aquecer(WidgetTester tester) => tester.runAsync(() async {
     final c = Conteudo.instancia;

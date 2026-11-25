@@ -118,8 +118,12 @@ class _CapituloAbertoState extends State<TabernaculoCapituloAberto> {
   /// recomeço. Pede confirmação porque zera o progresso, e um deslize
   /// acidental não pode custar os capítulos marcados.
   Future<void> _terminarLeitura() async {
-    // Sem conta não há progresso a encerrar: o fim do livro não faz nada.
-    if (!Nuvem.instancia.logado) return;
+    // Sem conta não há progresso a encerrar: o fim do livro só devolve ao
+    // sumário, sem gravar nada.
+    if (!Nuvem.instancia.logado) {
+      _voltarAoSumario();
+      return;
+    }
     final roteador = GoRouter.of(context);
     final terminou = await terminarLeituraDoLivro(
       context,
@@ -191,6 +195,8 @@ class _CapituloAbertoState extends State<TabernaculoCapituloAberto> {
     final leitura = EscopoDoEstado.de(context).leituraDeLivros;
     final destaque = leitura.destaquesDe(_slug, widget.indice)[paragrafo];
     final temNota = destaque != null && destaque.nota.isNotEmpty;
+    // Favoritos e notas são pessoais: sem conta a folha tem só o Copiar.
+    final logado = Nuvem.instancia.logado;
     final cor = Theme.of(context).colorScheme;
     final mensageiro = ScaffoldMessenger.of(context);
 
@@ -217,31 +223,32 @@ class _CapituloAbertoState extends State<TabernaculoCapituloAberto> {
                   mostrarAvisoNo(mensageiro, 'Texto copiado');
                 },
               ),
-              ListTile(
-                leading: FaIcon(
-                  FontAwesomeIcons.penToSquare,
-                  color: cor.primary,
-                ),
-                title: Text(temNota ? 'Editar anotação' : 'Anotar'),
-                onTap: () async {
-                  final nota = await editarNota(
-                    folha,
-                    referencia:
-                        '${_capitulo.titulo}, parágrafo ${paragrafo + 1}',
-                    notaAtual: destaque?.nota ?? '',
-                  );
-                  if (nota != null) {
-                    await leitura.definirNota(
-                      _slug,
-                      widget.indice,
-                      paragrafo,
-                      nota,
+              if (logado)
+                ListTile(
+                  leading: FaIcon(
+                    FontAwesomeIcons.penToSquare,
+                    color: cor.primary,
+                  ),
+                  title: Text(temNota ? 'Editar anotação' : 'Anotar'),
+                  onTap: () async {
+                    final nota = await editarNota(
+                      folha,
+                      referencia:
+                          '${_capitulo.titulo}, parágrafo ${paragrafo + 1}',
+                      notaAtual: destaque?.nota ?? '',
                     );
-                  }
-                  if (folha.mounted) Navigator.pop(folha);
-                },
-              ),
-              if (!temNota)
+                    if (nota != null) {
+                      await leitura.definirNota(
+                        _slug,
+                        widget.indice,
+                        paragrafo,
+                        nota,
+                      );
+                    }
+                    if (folha.mounted) Navigator.pop(folha);
+                  },
+                ),
+              if (logado && !temNota)
                 ListTile(
                   // Mesmo nome e ícone da Bíblia e do Devocional: é o mesmo
                   // gesto, e a tela de marcações o lista como favorito.
@@ -419,8 +426,11 @@ class _CapituloAbertoState extends State<TabernaculoCapituloAberto> {
                                   const SizedBox(
                                     height: TabernaculoEspacamento.sp16,
                                   ),
-                                  KeyedSubtree(
-                                    child: Column(
+                                  // Sem conta, o que foi favoritado antes não
+                                  // aparece destacado.
+                                  ListenableBuilder(
+                                    listenable: Nuvem.instancia,
+                                    builder: (context, _) => Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
@@ -428,7 +438,9 @@ class _CapituloAbertoState extends State<TabernaculoCapituloAberto> {
                                             in _capitulo.paragrafos.indexed)
                                           TabernaculoParagrafoDeLivro(
                                             texto: paragrafo,
-                                            destaque: destaques[n],
+                                            destaque: Nuvem.instancia.logado
+                                                ? destaques[n]
+                                                : null,
                                             aoTocar: () => _abrirAcoes(n),
                                           ),
                                       ],

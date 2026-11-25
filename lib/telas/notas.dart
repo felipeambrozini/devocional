@@ -9,6 +9,7 @@ import '../dados/conteudo.dart';
 import '../dados/estado.dart';
 import '../dados/leitura_de_livros.dart';
 import '../dados/modelos.dart';
+import '../dados/nuvem.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/abrir_na_biblia.dart';
 import '../funcoes/aviso.dart';
@@ -39,6 +40,33 @@ class _TelaNotasState extends State<TelaNotas> {
 
   @override
   Widget build(BuildContext context) {
+    // Favoritos e notas são pessoais: sem conta, o convite ocupa o lugar deles
+    // (e a faixa de risco de perda, que fala do que há para perder, some).
+    return ListenableBuilder(
+      listenable: Nuvem.instancia,
+      builder: (context, _) {
+        if (Nuvem.instancia.logado) return _notas(context);
+        return Scaffold(
+          appBar: TabernaculoAppBar(
+            title: Text('Notas: ${widget.origem.rotulo}'),
+            actions: [
+              TabernaculoBotaoDeAjustes(estado: EscopoDoEstado.de(context)),
+            ],
+          ),
+          body: Nuvem.instancia.carregandoConta
+              ? const SizedBox.shrink()
+              : const TabernaculoCartaoDeEntrar(
+                  titulo: 'Entre para ver favoritos e notas',
+                  descricao:
+                      'Seus favoritos e anotações ficam guardados na sua '
+                      'conta.',
+                ),
+        );
+      },
+    );
+  }
+
+  Widget _notas(BuildContext context) {
     return ListenableBuilder(
       listenable: _controller,
       builder: (context, _) {
