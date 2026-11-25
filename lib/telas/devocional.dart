@@ -273,6 +273,8 @@ class _TelaDevocionalState extends State<TelaDevocional> {
                           titulo: dev.titulo.isNotEmpty
                               ? dev.titulo
                               : '${leitura.tituloCompleto}, ${dataLonga(data)}',
+                          nomeDaLeitura: leitura.tituloCompleto,
+                          data: data,
                           dev: dev,
                           texto: dev.texto,
                           capa: leitura.capa,

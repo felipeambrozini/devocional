@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../dados/canon.dart';
 import '../dados/modelos.dart';
 import '../estilo/espacamento.dart';
+import 'datas.dart';
 
 /// Uma linha por versículo-base de um devocional: a citação entre aspas seguida
 /// da referência em caixa alta.
@@ -75,6 +76,24 @@ String textoDeCitacao(Devocional dev) => [
         if (referencia.isNotEmpty) referencia.toUpperCase(),
       ].join(' '),
 ].join('\n');
+
+/// O texto de Copiar e Compartilhar de um devocional, na ordem em que se lê:
+/// o nome da leitura ("Devocional da manhã", "Promessas de Deus"), a data, a
+/// epígrafe ([textoDeCitacao]) e o comentário ([comentario], ou o do [dev]),
+/// com o [link] que reabre a leitura no fim, como o [textoCitado] da Bíblia.
+/// As partes vazias saem, e cada uma fica num parágrafo próprio.
+String textoDoDevocional({
+  required String nomeDaLeitura,
+  required DateTime data,
+  required Devocional dev,
+  String? comentario,
+  String link = '',
+}) => [
+  '$nomeDaLeitura\n${dataLonga(data)}',
+  textoDeCitacao(dev),
+  comentario ?? dev.texto,
+  link,
+].where((parte) => parte.isNotEmpty).join('\n\n');
 
 /// O alvo de toque da referência da epígrafe. Sublinhada para não depender só
 /// da cor (a mesma da citação) para parecer clicável; o padding vertical

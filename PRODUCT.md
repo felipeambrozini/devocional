@@ -134,7 +134,8 @@ vitoriana dele, tratando o leitor por "tu".
 - Avatar da conta (foto do Google ou inicial do nome) na saudação da aba
   Hoje, só exibição, sem upload.
 - Compartilhar gera cartão-imagem (fundo couro, filete dourado) com o texto
-  junto: versículo na Bíblia, citação no Devocional; na web cai para texto.
+  junto: versículo na Bíblia; no Devocional, a citação assinada com a leitura
+  e a data; na web cai para texto.
 - Só em pt_BR; conteúdo vem de JSON locais em `assets/`, carregado sob demanda.
 
 ## Capabilities and Constraints
@@ -166,8 +167,10 @@ vitoriana dele, tratando o leitor por "tu".
   versículos, e Compartilhar vem pelo toque no versículo (a mesma folha de
   Copiar, Anotar, Favoritar). No Devocional (Manhã, Noite e Promessas de
   Deus), tocar no texto abre a folha com Copiar, Compartilhar, Anotar e
-  Favoritar (o Compartilhar saiu do cartão): manda título, citação e
-  comentário do dia com um link que reabre a mesma leitura. Favoritar tem o
+  Favoritar (o Compartilhar saiu do cartão). Copiar e Compartilhar levam o
+  nome da leitura ("Devocional da manhã", "Devocional da noite" ou "Promessas
+  de Deus"), a data, a citação e o comentário do dia, com um link que reabre
+  a mesma leitura. Favoritar tem o
   mesmo nome e ícone na Bíblia, no Devocional e na Biblioteca, e as folhas
   de ações das três seguem a mesma ordem: Copiar, Compartilhar, Anotar,
   Favoritar (a da Biblioteca sem Compartilhar, que vem pela seleção).

@@ -12,6 +12,7 @@ import '../funcoes/aviso.dart';
 import '../funcoes/capa_biblia.dart';
 import '../funcoes/cartao_imagem.dart';
 import '../funcoes/citacao.dart';
+import '../funcoes/datas.dart';
 import '../funcoes/dialogos.dart';
 import '../widgets/widgets.dart';
 
@@ -19,6 +20,8 @@ class TabernaculoCartaoDeLeitura extends StatelessWidget {
   const TabernaculoCartaoDeLeitura({
     super.key,
     required this.titulo,
+    required this.nomeDaLeitura,
+    required this.data,
     required this.dev,
     required this.texto,
     this.capa,
@@ -31,6 +34,12 @@ class TabernaculoCartaoDeLeitura extends StatelessWidget {
 
   final String titulo;
 
+  /// O nome da leitura ("Devocional da manhã", "Promessas de Deus") e o dia
+  /// dela, que abrem o texto de Copiar e Compartilhar. O [titulo] não serve
+  /// para isso: em Promessas é o título do dia, sem leitura nem data.
+  final String nomeDaLeitura;
+  final DateTime data;
+
   /// De onde vêm o(s) versículo(s)-base em destaque.
   final Devocional dev;
   final String texto;
@@ -42,8 +51,8 @@ class TabernaculoCartaoDeLeitura extends StatelessWidget {
   final String vozChave;
   final String vozReferencia;
 
-  /// Link absoluto da leitura, para o fim do texto de Compartilhar — é como
-  /// quem recebe chega direto nela, mesmo fora do app.
+  /// Link absoluto da leitura, para o fim do texto de Copiar e Compartilhar:
+  /// é como quem recebe chega direto nela, mesmo fora do app.
   final String link;
 
   /// Onde o favorito e a nota deste texto são guardados: a leitura
@@ -204,7 +213,7 @@ class TabernaculoCartaoDeLeitura extends StatelessWidget {
                 leading: FaIcon(FontAwesomeIcons.copy, color: cor.primary),
                 title: const Text('Copiar'),
                 onTap: () async {
-                  await Clipboard.setData(ClipboardData(text: texto));
+                  await Clipboard.setData(ClipboardData(text: _textoParaSair));
                   if (folha.mounted) Navigator.pop(folha);
                   mostrarAvisoNo(mensageiro, 'Texto copiado');
                 },
@@ -267,28 +276,30 @@ class TabernaculoCartaoDeLeitura extends StatelessWidget {
     );
     if (compartilhar != true) return;
 
-    // A imagem leva só título e citação (o comentário inteiro viraria um
-    // cartaz ilegível); o comentário viaja no texto que acompanha, com o link
-    // que reabre a leitura.
+    // A imagem leva a citação, assinada com a leitura e a data (o comentário
+    // inteiro viraria um cartaz ilegível); o comentário viaja no texto que
+    // acompanha, com o link que reabre a leitura. A citação já traz as aspas
+    // de `textoDeCitacao`.
     final citacao = textoDeCitacao(dev);
     try {
       await compartilharCartao(
-        texto: citacao.isEmpty ? '"$titulo"' : '"$citacao"',
-        referencia: titulo,
+        texto: citacao.isEmpty ? '"$titulo"' : citacao,
+        referencia: '$nomeDaLeitura, ${dataLonga(data)}',
         link: link,
-        textoParaAcompanhar: _textoParaCompartilhar,
+        textoParaAcompanhar: _textoParaSair,
       );
     } catch (_) {
       mostrarErroNo(mensageiro, 'Não foi possível compartilhar');
     }
   }
 
-  /// Título, citação e comentário do cartão, terminando no link da leitura —
-  /// o mesmo texto que a tela mostra, pronto para sair do app.
-  String get _textoParaCompartilhar => [
-    titulo,
-    textoDeCitacao(dev),
-    texto,
-    link,
-  ].where((parte) => parte.isNotEmpty).join('\n\n');
+  /// O que Copiar e Compartilhar levam: leitura, data, citação e comentário,
+  /// terminando no link da leitura ([textoDoDevocional]).
+  String get _textoParaSair => textoDoDevocional(
+    nomeDaLeitura: nomeDaLeitura,
+    data: data,
+    dev: dev,
+    comentario: texto,
+    link: link,
+  );
 }

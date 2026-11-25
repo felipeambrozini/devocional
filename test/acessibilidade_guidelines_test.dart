@@ -118,6 +118,8 @@ void main() {
               children: [
                 TabernaculoCartaoDeLeitura(
                   titulo: 'Manhã',
+                  nomeDaLeitura: 'Devocional da manhã',
+                  data: DateTime(DateTime.now().year, 1, 1),
                   dev: dev,
                   texto: texto,
                   vozChave: 'devocional:manha:1/1',
@@ -180,7 +182,7 @@ void main() {
       },
     );
 
-    testWidgets('Copiar na folha do texto copia e avisa "Texto copiado"', (
+    testWidgets('Copiar na folha do texto copia a leitura inteira e avisa', (
       tester,
     ) async {
       await montar(tester, Brightness.dark);
@@ -209,7 +211,16 @@ void main() {
       await tester.tap(find.text('Copiar'));
       await tester.pumpAndSettle();
 
-      expect(copiado, texto);
+      // Não só o comentário: leitura, data, citação, comentário e link, na
+      // ordem em que se lê.
+      expect(
+        copiado,
+        'Devocional da manhã\n1 de janeiro\n\n'
+        '"Porque Deus amou o mundo de tal maneira que deu o seu Filho '
+        'unigênito" JOÃO 3:16\n\n'
+        '$texto\n\n'
+        'https://exemplo.test/manha/01-01',
+      );
       expect(find.text('Copiar'), findsNothing, reason: 'a folha fecha');
       expect(find.text('Texto copiado'), findsOneWidget);
       // O aviso arma o próprio timer; deixa fechar.
