@@ -54,9 +54,10 @@ Future<bool> excluirPlano(
 /// fato.
 ///
 /// Mudar livros ou dias apaga o progresso deste aparelho (ver
-/// `Estado.atualizarPlano`); num plano compartilhado, apaga também a própria
-/// entrada de dias lidos na nuvem — a de quem editou, não a dos outros
-/// participantes, que a regra do Firestore não deixa o criador tocar.
+/// `Estado.atualizarPlano`). Num plano compartilhado, grava uma revisão nova
+/// no documento e zera a própria entrada já na revisão nova; a dos outros
+/// participantes a regra do Firestore não deixa o criador tocar, então o app
+/// de cada um zera a própria ao ver a revisão (`PlanosNaNuvem.alinharRevisao`).
 Future<bool> editarPlano(
   BuildContext context,
   Estado estado,
@@ -72,6 +73,11 @@ Future<bool> editarPlano(
         (e) => e.value == plano.livros[e.key],
       );
   if (plano.compartilhado) {
+    // Qualquer número diferente do anterior serve; o relógio evita ler o
+    // documento só para somar 1.
+    final revisao = mudouODiaADia
+        ? DateTime.now().millisecondsSinceEpoch
+        : null;
     try {
       await PlanosNaNuvem.instancia.atualizar(
         plano.id,
@@ -80,9 +86,14 @@ Future<bool> editarPlano(
         dias: edicao.dias,
         incluirDevocionais: edicao.incluirDevocionais,
         devocionalAntes: edicao.devocionalAntes,
+        revisao: revisao,
       );
-      if (mudouODiaADia) {
-        await PlanosNaNuvem.instancia.substituirDias(plano.id, const []);
+      if (revisao != null) {
+        await PlanosNaNuvem.instancia.substituirDias(
+          plano.id,
+          const [],
+          revisao: revisao,
+        );
       }
     } on PlanosNaNuvemExcecao catch (erro) {
       if (context.mounted) mostrarErro(context, erro.mensagem);

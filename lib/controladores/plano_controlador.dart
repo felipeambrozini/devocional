@@ -13,6 +13,7 @@ import '../dados/planos_nuvem.dart';
 import '../dados/registro.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
+import '../funcoes/conclusao_do_plano.dart';
 import '../funcoes/conta_acoes.dart';
 import '../funcoes/planos_acoes.dart' as acoes;
 import '../widgets/botao.dart';
@@ -62,6 +63,11 @@ class PlanoControlador extends ChangeNotifier {
   String? erro;
 
   bool _descartado = false;
+
+  /// Mostra um aviso na tela do plano; a tela liga isto ao abrir. Usado
+  /// quando o criador mudou o plano e o progresso deste participante
+  /// recomeçou.
+  void Function(String texto)? aoAvisar;
 
   /// Só o link entra no plano sozinho; abrir pela lista nunca reentra.
   bool get abertoPorLink => plano == null;
@@ -221,6 +227,23 @@ class PlanoControlador extends ChangeNotifier {
     final atualizado = estado.planoDoUsuario(planoId);
     if (atualizado != null) plano = atualizado;
     unawaited(estado.aplicarPlanoDaNuvem(planoDaNuvem, lidos: lidosDe(dados)));
+    unawaited(_alinharRevisao(dados));
+  }
+
+  /// O criador mudou livros ou dias: zera a própria entrada e avisa, se
+  /// havia dias marcados. A gravação traz um documento novo pelo stream,
+  /// já na revisão certa, então isto não se repete.
+  Future<void> _alinharRevisao(Map<String, dynamic> dados) async {
+    final recomecou = await PlanosNaNuvem.instancia.alinharRevisao(
+      planoId,
+      dados,
+    );
+    // Quem criou acabou de editar e já sabe: o stream pode trazer a revisão
+    // nova antes do carimbo da própria entrada, e o aviso seria para ele.
+    final ehCriador = uid != null && dados['criadoPor'] == uid;
+    if (recomecou && !ehCriador && !_descartado) {
+      aoAvisar?.call('Quem criou mudou o plano, e o seu progresso recomeçou');
+    }
   }
 
   /// Os dias lidos do usuário corrente, segundo a verdade de cada modo.
@@ -229,14 +252,9 @@ class PlanoControlador extends ChangeNotifier {
     if (uidAtual == null) return const {};
     final participantes =
         dados['participantes'] as Map<String, dynamic>? ?? const {};
-    final minha = participantes[uidAtual];
-    if (minha is! Map<String, dynamic> || minha['lidos'] is! List) {
-      return const {};
-    }
-    return {
-      for (final dia in minha['lidos'] as List)
-        if (dia is int) dia,
-    };
+    // Dias de uma revisão anterior não contam, e nenhum passa do total
+    // (ver lidosValidos).
+    return lidosValidos(dados, participantes[uidAtual]);
   }
 
   Set<int> meusLidos() {
@@ -307,8 +325,11 @@ class PlanoControlador extends ChangeNotifier {
     required int lidos,
     required int total,
   }) {
-    if (!marcou || total <= 0 || lidos < total) return;
-    if (context.mounted) mostrarAviso(context, 'Você concluiu este plano.');
+    final planoAtual = plano;
+    if (!marcou || planoAtual == null || total <= 0 || lidos < total) return;
+    if (context.mounted) {
+      mostrarAviso(context, avisoDePlanoConcluido(planoAtual));
+    }
   }
 
   Future<void> compartilhar(BuildContext context) async {
@@ -334,7 +355,7 @@ class PlanoControlador extends ChangeNotifier {
   Future<void> copiarLink(BuildContext context) async {
     final link = linkDoPlano(planoId, titulo: plano?.titulo);
     await Clipboard.setData(ClipboardData(text: link));
-    if (context.mounted) mostrarAviso(context, 'Link copiado.');
+    if (context.mounted) mostrarAviso(context, 'Link copiado');
   }
 
   Future<void> mostrarLink(BuildContext context, String link) async {
@@ -371,7 +392,7 @@ class PlanoControlador extends ChangeNotifier {
       ),
     );
     if (copiou == true && context.mounted) {
-      mostrarAviso(context, 'Link copiado.');
+      mostrarAviso(context, 'Link copiado');
     }
   }
 

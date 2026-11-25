@@ -117,7 +117,7 @@ class NovoPlanoControlador extends ChangeNotifier {
 
   Future<void> criar(BuildContext context) async {
     if (livros.isEmpty) {
-      mostrarAviso(context, 'Escolha pelo menos um livro.');
+      mostrarAviso(context, 'Escolha pelo menos um livro');
       return;
     }
     if (!(form.currentState?.validate() ?? false)) return;

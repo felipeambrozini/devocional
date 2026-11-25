@@ -20,8 +20,11 @@ void alternarLidoComDesfazer(
   // depender do "Desfazer" para fechar.
   mostrarAviso(
     context,
-    estavaLido ? 'Dia desmarcado.' : 'Dia marcado como lido.',
+    estavaLido ? 'Dia desmarcado' : 'Dia marcado como lido',
     rotuloDeAcao: 'Desfazer',
+    // Os 8 s dos avisos automáticos: com 3 s, quem usa leitor de tela não
+    // chega ao "Desfazer" a tempo (WCAG 2.2.1).
+    duracao: duracaoDeAvisoAutomatico,
     aoAgir: () => estado.alternarLido(chave),
   );
 }

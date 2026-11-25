@@ -7,6 +7,7 @@ import '../dados/estado.dart';
 import '../dados/modelos.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/datas.dart';
+import '../funcoes/alternar_lido.dart';
 import '../widgets/widgets.dart';
 
 /// O cronograma anual: a régua de meses e a lista de dias.
@@ -221,9 +222,13 @@ class _TabernaculoAbaDoCronogramaState extends State<TabernaculoAbaDoCronograma>
                       ]),
                       lido: estado.foiLido(chaveDe(dia)),
                       destacar: ehHoje,
-                      aoAlternar: () {
-                        estado.alternarLido(chaveDe(dia));
-                      },
+                      // O mesmo "Desfazer" da Hoje: um toque errado num
+                      // dia lido não pode custar o registro sem aviso.
+                      aoAlternar: () => alternarLidoComDesfazer(
+                        context,
+                        estado,
+                        chaveDe(dia),
+                      ),
                     );
                   },
                 );

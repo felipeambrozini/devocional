@@ -113,29 +113,42 @@ Future<EdicaoDePlano?> mostrarEditorDePlano(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (mudouODiaADia()) ...[
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(TabernaculoEspacamento.sp12),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Theme.of(
-                        dialogContext,
-                      ).colorScheme.outline.withValues(alpha: 0.5),
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const TabernaculoFilete(largura: 48),
-                      const SizedBox(height: TabernaculoEspacamento.sp8),
-                      Text(
-                        'Mudar os livros ou os dias remonta o plano: o '
-                        'progresso já marcado será apagado.',
-                        style: Theme.of(dialogContext).textTheme.bodySmall,
+                // Região viva: o banner aparece enquanto a pessoa mexe nos
+                // livros ou dias, e o leitor de tela anuncia a consequência
+                // antes de ela chegar ao botão de salvar.
+                Semantics(
+                  liveRegion: true,
+                  container: true,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(TabernaculoEspacamento.sp12),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Theme.of(
+                          dialogContext,
+                        ).colorScheme.outline.withValues(alpha: 0.5),
                       ),
-                    ],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const TabernaculoFilete(largura: 48),
+                        const SizedBox(height: TabernaculoEspacamento.sp8),
+                        // bodyMedium, não bodySmall: é a consequência da
+                        // edição, e precisa ser lida antes de salvar.
+                        Text(
+                          plano.compartilhado
+                              ? 'Mudar os livros ou os dias remonta o plano: o '
+                                    'progresso de todos os participantes '
+                                    'recomeça do zero.'
+                              : 'Mudar os livros ou os dias remonta o plano: o '
+                                    'progresso já marcado será apagado.',
+                          style: Theme.of(dialogContext).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: TabernaculoEspacamento.sp16),

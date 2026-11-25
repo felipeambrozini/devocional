@@ -427,7 +427,9 @@ void main() {
       await esperar(tester);
 
       expect(estado.foiLidoNoPlano(plano.id, 1), isTrue);
-      expect(find.text('Dia 1 de Cartas marcado como lido'), findsOneWidget);
+      // O plano tem um dia só: marcá-lo conclui o plano, e o aviso diz isso
+      // em vez do número do dia (ver conclusao_do_plano.dart).
+      expect(find.text('Você concluiu o plano Cartas'), findsOneWidget);
       await tester.pump(const Duration(seconds: 9));
     });
   });

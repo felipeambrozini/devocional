@@ -35,7 +35,16 @@ class PlanosNaNuvemExcecao implements Exception {
 ///   dias          int
 ///   criadoPor     string — uid de quem criou
 ///   criadoEm      timestamp do servidor
-///   participantes mapa uid -> {nome: string, lidos: list de int}
+///   participantes mapa uid -> {nome: string, lidos: list de int,
+///                 revisao: int opcional}
+///   revisao       int opcional — muda quando o criador troca livros ou dias
+///
+/// A revisão existe porque o criador não pode tocar na entrada dos outros (a
+/// regra do Firestore não deixa), e mudar livros ou dias faz o dia 5 virar
+/// outro trecho. Cada participante guarda na própria entrada a revisão que
+/// viu; quando o documento traz uma revisão diferente, o app dele zera os
+/// próprios dias e carimba a revisão nova (ver [PlanosNaNuvem.alinharRevisao]).
+/// Até isso acontecer, os dias dele não contam (ver [lidosValidos]).
 ///
 /// O espelho local (em [Estado]) continua sendo a lista instantânea; este
 /// arquivo é quem leva o plano para a nuvem e traz de volta. A sincronia é
@@ -100,15 +109,10 @@ class PlanosNaNuvem {
         final dados = doc.data();
         final participantes =
             dados['participantes'] as Map<String, dynamic>? ?? const {};
-        final minhaEntrada = participantes[uid];
-        final lidos =
-            minhaEntrada is Map<String, dynamic> &&
-                minhaEntrada['lidos'] is List
-            ? {
-                for (final d in minhaEntrada['lidos'] as List)
-                  if (d is int) d,
-              }
-            : <int>{};
+        // Entrada de uma revisão anterior: zera na nuvem antes de espelhar,
+        // senão os dias antigos voltariam a contar noutro trecho.
+        await alinharRevisao(doc.id, dados);
+        final lidos = lidosValidos(dados, participantes[uid]);
         final criadoEm = dados['criadoEm'] is Timestamp
             ? (dados['criadoEm'] as Timestamp).toDate()
             : DateTime.now();
@@ -175,6 +179,7 @@ class PlanosNaNuvem {
     int? dias,
     bool? incluirDevocionais,
     bool? devocionalAntes,
+    int? revisao,
   }) async {
     try {
       await FirebaseFirestore.instance
@@ -186,6 +191,7 @@ class PlanosNaNuvem {
             'dias': ?dias,
             'incluirDevocionais': ?incluirDevocionais,
             'devocionalAntes': ?devocionalAntes,
+            'revisao': ?revisao,
           });
     } catch (erro, pilha) {
       Registro.erro('PlanosNaNuvem.atualizar', erro, pilha);
@@ -208,14 +214,48 @@ class PlanosNaNuvem {
       );
 
   /// Substitui a lista inteira de dias lidos — só para o reset ao editar o
-  /// plano, que de propósito apaga o progresso de quem editou.
-  Future<void> substituirDias(String planoId, List<int> lidos) =>
-      _atualizarMinhaEntrada(
-        planoId,
-        (uid) => {'participantes.$uid.lidos': lidos},
-        'PlanosNaNuvem.substituirDias',
-        'Não foi possível guardar. Verifique a conexão e tente de novo.',
-      );
+  /// plano, que de propósito apaga o progresso de quem editou. Com
+  /// [revisao], carimba também a revisão que a entrada passa a seguir.
+  Future<void> substituirDias(
+    String planoId,
+    List<int> lidos, {
+    int? revisao,
+  }) => _atualizarMinhaEntrada(
+    planoId,
+    (uid) => {
+      'participantes.$uid.lidos': lidos,
+      'participantes.$uid.revisao': ?revisao,
+    },
+    'PlanosNaNuvem.substituirDias',
+    'Não foi possível guardar. Verifique a conexão e tente de novo.',
+  );
+
+  /// Põe a entrada do usuário na revisão atual do plano, se ela ficou para
+  /// trás: zera os dias e carimba a revisão. Devolve se havia dias marcados
+  /// (o progresso recomeçou e vale avisar); entrada recém-criada pelo link,
+  /// ainda vazia, é só carimbada, em silêncio. Falha de rede não derruba
+  /// nada: a próxima leitura do documento tenta de novo.
+  Future<bool> alinharRevisao(
+    String planoId,
+    Map<String, dynamic> dados,
+  ) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return false;
+    final participantes =
+        dados['participantes'] as Map<String, dynamic>? ?? const {};
+    final entrada = participantes[uid];
+    if (entrada == null || !entradaDesatualizada(dados, entrada)) return false;
+    final tinhaDias =
+        entrada is Map<String, dynamic> &&
+        entrada['lidos'] is List &&
+        (entrada['lidos'] as List).isNotEmpty;
+    try {
+      await substituirDias(planoId, const [], revisao: revisaoDoPlano(dados));
+    } on PlanosNaNuvemExcecao {
+      return false;
+    }
+    return tinhaDias;
+  }
 
   /// Entra num plano pelo link: escreve a própria participação sem tocar nos
   /// dias já lidos, então repetir a chamada (rede instável, outro aparelho)
@@ -341,6 +381,37 @@ class PlanosNaNuvem {
 /// revelam convicção religiosa, como as notas e o progresso).
 bool podePuxarPlanos({required bool logado, required bool consentiu}) =>
     logado && consentiu;
+
+/// A revisão do plano no documento; `null` se o dia a dia nunca mudou.
+int? revisaoDoPlano(Map<String, dynamic> dados) {
+  final revisao = dados['revisao'];
+  return revisao is int ? revisao : null;
+}
+
+/// Se a [entrada] de um participante é de uma revisão anterior do plano.
+/// Documento sem revisão nunca deixa ninguém para trás, o que mantém os
+/// planos de antes deste campo como estavam.
+bool entradaDesatualizada(Map<String, dynamic> dados, Object? entrada) {
+  final revisao = revisaoDoPlano(dados);
+  if (revisao == null) return false;
+  final daEntrada = entrada is Map<String, dynamic> ? entrada['revisao'] : null;
+  return daEntrada != revisao;
+}
+
+/// Os dias lidos que contam para a [entrada]: nenhum se ela é de uma revisão
+/// anterior (os números apontam para outros trechos), e só os que cabem nos
+/// dias do plano, para a contagem nunca passar do total.
+Set<int> lidosValidos(Map<String, dynamic> dados, Object? entrada) {
+  if (entrada is! Map<String, dynamic> || entrada['lidos'] is! List) {
+    return const {};
+  }
+  if (entradaDesatualizada(dados, entrada)) return const {};
+  final dias = dados['dias'];
+  return {
+    for (final dia in entrada['lidos'] as List)
+      if (dia is int && dia >= 1 && (dias is! int || dia <= dias)) dia,
+  };
+}
 
 bool _naoEncontrado(Object erro) =>
     erro is FirebaseException && erro.code == 'not-found';

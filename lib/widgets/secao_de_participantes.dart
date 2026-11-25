@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../dados/planos_nuvem.dart';
 import '../estilo/espacamento.dart';
 import 'linha_de_participante.dart';
 
@@ -38,7 +39,10 @@ class TabernaculoSecaoDeParticipantes extends StatelessWidget {
                 in participantes.entries) ...[
               TabernaculoLinhaDeParticipante(
                 nome: _nomeDe(entrada),
-                lidos: _lidosDe(entrada),
+                // Só os dias que valem na revisão atual e cabem no plano:
+                // quem ainda não abriu o plano depois de uma edição aparece
+                // zerado, e ninguém passa do total.
+                lidos: lidosValidos(dados, entrada),
                 ehVoce: uid == meuUid,
                 ehCriador: uid == criador,
                 totalDeDias: totalDeDias,
@@ -57,15 +61,5 @@ class TabernaculoSecaoDeParticipantes extends StatelessWidget {
       if (nome is String && nome.trim().isNotEmpty) return nome;
     }
     return 'Participante';
-  }
-
-  Set<int> _lidosDe(Object? entrada) {
-    if (entrada is Map<String, dynamic> && entrada['lidos'] is List) {
-      return {
-        for (final dia in entrada['lidos'] as List)
-          if (dia is int) dia,
-      };
-    }
-    return const {};
   }
 }

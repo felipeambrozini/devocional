@@ -767,7 +767,7 @@ void main() {
       // teste veria a tela já sem ele.
       await tester.pump();
       await tester.pump();
-      expect(find.text('Você concluiu este plano.'), findsOneWidget);
+      expect(find.text('Você concluiu o plano João relâmpago'), findsOneWidget);
       // Consome o timer de 3s que esconde o aviso: terminar o teste com
       // ele pendente falha o invariante do framework.
       await tester.pump(const Duration(seconds: 4));

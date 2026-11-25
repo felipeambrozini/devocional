@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:cupertino_ui/cupertino_ui.dart'
     show GlobalCupertinoLocalizations;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/semantics.dart' show SemanticsBinding, SemanticsHandle;
 import 'package:flutter_localizations/flutter_localizations.dart'
     show GlobalWidgetsLocalizations;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -155,6 +156,10 @@ Future<void> main() async {
 void _ouvirConviteDaConta() =>
     ConfigAdmin.instancia.ouvirConvite(Nuvem.instancia.email);
 
+/// Mantém a semântica da web ligada (ver [_iniciar]).
+// ignore: unused_element
+SemanticsHandle? _semanticaDaWeb;
+
 Future<void> _iniciar() async {
   WidgetsFlutterBinding.ensureInitialized();
   FlutterError.onError = (detalhes) {
@@ -173,6 +178,12 @@ Future<void> _iniciar() async {
   // rewrite do Firebase Hosting para o index.html (firebase.json) — por isso
   // nada disto tem efeito fora da web.
   if (kIsWeb) usePathUrlStrategy();
+
+  // O Flutter web só monta a árvore de semântica (o que o leitor de tela lê)
+  // depois que alguém acha o botão invisível "Enable accessibility". A web é
+  // o canal principal do público, então liga desde a abertura; o handle vive
+  // o app inteiro e nunca é descartado.
+  if (kIsWeb) _semanticaDaWeb = SemanticsBinding.instance.ensureSemantics();
 
   final estado = await Estado.abrir();
   Voz.instancia
@@ -736,7 +747,7 @@ class _AppDevocionalState extends State<AppTabernaculo>
       builder: (_) => PopScope(
         canPop: false,
         child: TabernaculoConsentimentoDaNuvem(
-          rotuloDeConcordar: 'Concordo',
+          rotuloDeConcordar: 'Concordar',
           rotuloDeRecusar: 'Sair da conta',
           aoConcordar: () {
             unawaited(widget.estado.registrarConsentimentoDaNuvem());

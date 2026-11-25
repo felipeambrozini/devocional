@@ -5,6 +5,7 @@ import '../dados/estado.dart';
 import '../dados/nuvem.dart';
 import '../dados/planos_nuvem.dart';
 import 'aviso.dart';
+import 'conclusao_do_plano.dart';
 
 /// A pessoa chegou ao fim do capítulo [numero] de [livro], aberto pela
 /// leitura de [dia]: guarda o capítulo como lido no dia e, se era o último que
@@ -69,9 +70,13 @@ Future<void> marcarDiaDaLeituraAoTerminar(
         lido: true,
       );
       if (!marcou || !context.mounted) return;
+      // O último dia que faltava fecha o plano: o aviso diz isso, e não só o
+      // número do dia (ver conclusao_do_plano.dart).
       mostrarAviso(
         context,
-        'Dia $numero de ${plano.titulo} marcado como lido',
+        planoConcluido(estado, plano)
+            ? avisoDePlanoConcluido(plano)
+            : 'Dia $numero de ${plano.titulo} marcado como lido',
         rotuloDeAcao: 'Desfazer',
         duracao: duracaoDeAvisoAutomatico,
         aoAgir: () => _gravarDiaDoPlano(

@@ -20,7 +20,7 @@ import 'aviso.dart';
 /// sai bloqueada.
 ///
 /// Antes do primeiro login neste aparelho, pede o consentimento da LGPD
-/// ([TabernaculoConsentimentoDaNuvem]); o "Concordo e entrar" do diálogo é o
+/// ([TabernaculoConsentimentoDaNuvem]); o "Concordar e entrar" do diálogo é o
 /// gesto que abre a janela de login.
 Future<void> entrarNaConta(BuildContext context, Nuvem nuvem) async {
   final estado = EscopoDoEstado.de(context);
@@ -28,7 +28,7 @@ Future<void> entrarNaConta(BuildContext context, Nuvem nuvem) async {
   await showDialog<void>(
     context: context,
     builder: (_) => TabernaculoConsentimentoDaNuvem(
-      rotuloDeConcordar: 'Concordo e entrar',
+      rotuloDeConcordar: 'Concordar e entrar',
       rotuloDeRecusar: 'Cancelar',
       aoConcordar: () {
         unawaited(_entrar(context, nuvem));
@@ -45,7 +45,7 @@ Future<void> _entrar(BuildContext context, Nuvem nuvem) async {
     // Fechar a janela é decisão do usuário, não falha: aviso quieto.
     if (erro.code == 'popup-closed-by-user' ||
         erro.code == 'cancelled-popup-request') {
-      if (context.mounted) mostrarAviso(context, 'Login cancelado.');
+      if (context.mounted) mostrarAviso(context, 'Login cancelado');
       return;
     }
     Registro.erro('entrarNaConta', erro, pilha);

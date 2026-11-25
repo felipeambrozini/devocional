@@ -210,7 +210,7 @@ class _CapituloAbertoState extends State<TabernaculoCapituloAberto> {
                     ClipboardData(text: _capitulo.paragrafos[paragrafo]),
                   );
                   if (folha.mounted) Navigator.pop(folha);
-                  mostrarAvisoNo(mensageiro, 'Texto copiado.');
+                  mostrarAvisoNo(mensageiro, 'Texto copiado');
                 },
               ),
               ListTile(

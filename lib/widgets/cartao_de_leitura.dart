@@ -108,7 +108,10 @@ class TabernaculoCartaoDeLeitura extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(titulo, style: tema.headlineMedium),
+                      Semantics(
+                        header: true,
+                        child: Text(titulo, style: tema.headlineMedium),
+                      ),
                       // A citação vem alinhada embaixo do título, não embaixo da
                       // capa, e o nome do livro fica ao lado do fim da citação
                       // (não numa linha própria embaixo), como uma epígrafe

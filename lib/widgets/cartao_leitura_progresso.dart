@@ -47,7 +47,12 @@ class TabernaculoCartaoLeituraProgresso extends StatelessWidget {
                   children: [
                     const TabernaculoFilete(),
                     const SizedBox(height: TabernaculoEspacamento.sp12),
-                    Text('Leitura de hoje', style: tema.titleLarge),
+                    // Cabeçalho, como o título de TabernaculoCartao: o leitor
+                    // de tela pula entre as seções da Hoje por eles.
+                    Semantics(
+                      header: true,
+                      child: Text('Leitura de hoje', style: tema.titleLarge),
+                    ),
                   ],
                 ),
               ),

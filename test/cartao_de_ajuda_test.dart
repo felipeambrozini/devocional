@@ -131,7 +131,7 @@ void main() {
     expect(find.text('Começar por João 1'), findsNothing);
   });
 
-  testWidgets('o aviso de dia marcado aparece e some sozinho em 3s', (
+  testWidgets('o aviso de dia marcado aparece e some sozinho em 8s', (
     tester,
   ) async {
     await aquecerAssets(tester);
@@ -184,13 +184,17 @@ void main() {
     }
     await tester.pumpAndSettle();
 
-    expect(find.text('Dia marcado como lido.'), findsOneWidget);
+    expect(find.text('Dia marcado como lido'), findsOneWidget);
 
     // O aviso some sozinho: o "Desfazer" é a saída opcional, não a única.
     // (Regressão do bug do Flutter: o timer do ScaffoldMessenger nunca
     // nasce quando o SnackBar tem ação; o fechamento sai de mostrarAviso.)
+    // 8 s (duracaoDeAvisoAutomatico), não 3: com o "Desfazer" no aviso, quem
+    // usa leitor de tela precisa de tempo para alcançá-lo (WCAG 2.2.1).
     await tester.pump(const Duration(seconds: 3));
+    expect(find.text('Dia marcado como lido'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
     await tester.pumpAndSettle();
-    expect(find.text('Dia marcado como lido.'), findsNothing);
+    expect(find.text('Dia marcado como lido'), findsNothing);
   });
 }

@@ -11,6 +11,7 @@ import '../dados/planos.dart';
 import '../dados/planos_nuvem.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
+import '../funcoes/conclusao_do_plano.dart';
 import 'botao.dart';
 import 'cartao.dart';
 import 'faixa.dart';
@@ -206,8 +207,24 @@ class _CartaoDoPlanoDeHoje extends StatelessWidget {
   /// também grava lá — e desfaz o espelho se a gravação falhar, como em
   /// `PlanoControlador.alternarDia`.
   Future<void> _alternar(BuildContext context, int dia) async {
+    // Capturado antes dos awaits: ao marcar o último dia, o cartão sai da Hoje
+    // (o plano deixa de estar em andamento) e o contexto deixa de existir.
+    final mensageiro = ScaffoldMessenger.of(context);
+    void avisarSeConcluiu(bool marcou) {
+      if (marcou && planoConcluido(estado, plano)) {
+        // O cartão sai da Hoje junto com o foco: mais tempo para o aviso.
+        mostrarAvisoNo(
+          mensageiro,
+          avisoDePlanoConcluido(plano),
+          duracao: duracaoDeAvisoAutomatico,
+        );
+      }
+    }
+
     if (!plano.compartilhado) {
+      final marcou = !estado.foiLidoNoPlano(plano.id, dia);
       await estado.alternarLidoNoPlano(plano.id, dia);
+      avisarSeConcluiu(marcou);
       return;
     }
     final atual = {
@@ -220,9 +237,10 @@ class _CartaoDoPlanoDeHoje extends StatelessWidget {
     await estado.substituirLidosDoPlano(plano.id, novo);
     try {
       await PlanosNaNuvem.instancia.gravarDias(plano.id, dia, marcou);
+      avisarSeConcluiu(marcou);
     } on PlanosNaNuvemExcecao catch (erro) {
       await estado.substituirLidosDoPlano(plano.id, atual);
-      if (context.mounted) mostrarErro(context, erro.mensagem);
+      mostrarErroNo(mensageiro, erro.mensagem);
     }
   }
 }

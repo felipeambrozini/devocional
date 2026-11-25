@@ -7,6 +7,7 @@ import '../dados/dia_da_leitura.dart';
 import '../dados/estado.dart';
 import '../dados/planos.dart';
 import '../estilo/espacamento.dart';
+import '../funcoes/aviso.dart';
 import '../widgets/widgets.dart';
 
 /// A tela de um plano do usuário: o que se lê dia a dia, o progresso
@@ -54,6 +55,18 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
   /// Se a rolagem automática já aconteceu, para não refazê-la a cada
   /// redesenho nem roubar a posição de quem já rolou a lista com a mão.
   bool _jaRolouAteProximoDia = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.aoAvisar = (texto) {
+      // Chega sem gesto da pessoa, com a tela carregando: o tempo dos
+      // avisos automáticos, para dar tempo de ler e de o leitor anunciar.
+      if (mounted) {
+        mostrarAviso(context, texto, duracao: duracaoDeAvisoAutomatico);
+      }
+    };
+  }
 
   @override
   void dispose() {

@@ -117,6 +117,41 @@ await caso('criadora renomeia o plano',
   assertSucceeds(updateDoc(plano(alice, 'p1'), {titulo: 'Gênesis devagar'})));
 await caso('participante não renomeia o plano',
   assertFails(updateDoc(plano(bob, 'p1'), {titulo: 'Outro nome'})));
+// Revisão: o criador troca livros ou dias e grava uma revisão nova; cada
+// participante zera a própria entrada ao vê-la (PlanosNaNuvem.alinharRevisao).
+await caso('criadora muda os dias e grava a revisão',
+  assertSucceeds(updateDoc(plano(alice, 'p1'), {dias: 5, revisao: 1700000000000})));
+await caso('revisão que não é int é recusada',
+  assertFails(updateDoc(plano(alice, 'p1'), {revisao: 'nova'})));
+await caso('participante não grava a revisão do plano',
+  assertFails(updateDoc(plano(bob, 'p1'), {revisao: 1700000000001})));
+await caso('criadora zera a própria entrada na revisão nova',
+  assertSucceeds(updateDoc(plano(alice, 'p1'),
+    {'participantes.alice.lidos': [], 'participantes.alice.revisao': 1700000000000})));
+await caso('bob zera a própria entrada e carimba a revisão',
+  assertSucceeds(updateDoc(plano(bob, 'p1'),
+    {'participantes.bob.lidos': [], 'participantes.bob.revisao': 1700000000000})));
+await caso('revisão da entrada que não é int é recusada',
+  assertFails(updateDoc(plano(bob, 'p1'), {'participantes.bob.revisao': 'x'})));
+await caso('campo extra na entrada é recusado',
+  assertFails(updateDoc(plano(bob, 'p1'), {'participantes.bob.lixo': 'x'})));
+await caso('bob não carimba a revisão na entrada da alice',
+  assertFails(updateDoc(plano(bob, 'p1'), {'participantes.alice.revisao': 1})));
+await caso('entrada inteira com campo extra é recusada',
+  assertFails(updateDoc(plano(bob, 'p1'),
+    {'participantes.bob': {nome: 'Bob', lidos: [], revisao: 1700000000000, lixo: 'x'}})));
+// [1], não []: os dias do bob já estão vazios aqui, e gravar o mesmo valor
+// não muda a entrada, então a regra nem a veria.
+await caso('criadora não mexe na entrada do bob junto com a revisão',
+  assertFails(updateDoc(plano(alice, 'p1'),
+    {revisao: 1700000000002, 'participantes.bob.lidos': [1]})));
+await caso('carol entra pelo link num plano já revisado (arrayUnion, como entrar())',
+  assertSucceeds(updateDoc(plano(carolDoGoogle, 'p1'), {
+    'participantes.carol-google.nome': 'Carol',
+    'participantes.carol-google.lidos': arrayUnion(),
+  })));
+await caso('criação com revisao é recusada',
+  assertFails(setDoc(plano(alice, 'p8'), {...planoValido(), revisao: 1})));
 await caso('bob sai do plano',
   assertSucceeds(updateDoc(plano(bob, 'p1'), {'participantes.bob': deleteField()})));
 await caso('quem não criou não exclui o plano',

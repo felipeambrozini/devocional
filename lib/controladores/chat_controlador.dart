@@ -173,19 +173,37 @@ class ChatControlador extends ChangeNotifier {
   Future<void> limparConversa(BuildContext context) async {
     final id = conversador?.id;
     if (id == null) return;
+    final estado = EscopoDoEstado.de(context);
+    // Capturado antes dos awaits: o aviso aparece depois do pop, na tela de
+    // baixo, quando este contexto já não está montado.
+    final mensageiro = ScaffoldMessenger.of(context);
+    Conversa? apagada;
+    for (final c in estado.conversasDe(persona.id)) {
+      if (c.id == id) apagada = c;
+    }
     final confirmou = await confirmar(
       context,
       titulo: 'Apagar esta conversa?',
       conteudo:
           'Só esta conversa será apagada deste aparelho, e da cópia na nuvem '
-          'se houver. As outras conversas ficam. Essa ação não pode ser '
-          'desfeita.',
+          'se houver. As outras conversas ficam.',
       rotuloDaAcao: 'Apagar',
     );
     if (!confirmou || !context.mounted) return;
-    await EscopoDoEstado.de(context).limparConversa(persona.id, id);
+    await estado.limparConversa(persona.id, id);
     if (!context.mounted) return;
     Navigator.of(context).pop();
+    // Mesmo "Desfazer" do histórico (historico.dart): apagar pelo chat ou
+    // pela lista tem a mesma volta.
+    final restaurar = apagada;
+    mostrarAvisoNo(
+      mensageiro,
+      'Conversa apagada',
+      rotuloDeAcao: restaurar == null ? null : 'Desfazer',
+      aoAgir: restaurar == null
+          ? null
+          : () => estado.restaurarConversa(persona.id, restaurar),
+    );
   }
 
   void rolarParaOFim() {

@@ -702,11 +702,16 @@ motivo novo.
   Num plano compartilhado, a regra do Firestore (`planoEditavelPeloCriador`
   em `firestore.rules`) só deixa o criador tocar `titulo`/`livros`/`dias`/
   `incluirDevocionais`/`devocionalAntes` do documento — nunca a lista de
-  participantes; o progresso de quem edita reinicia também na nuvem
-  (`PlanosNaNuvem.substituirDias(id, [])`, em `lib/funcoes/planos_acoes.dart`),
-  mas o dos outros
-  participantes só reinicia quando cada um marcar de novo, porque as regras
-  não deixam o criador escrever na entrada alheia.
+  participantes, além de `revisao`. Mudar livros ou dias grava uma
+  `revisao` nova (int) no documento e zera a entrada de quem edita já nessa
+  revisão (`PlanosNaNuvem.substituirDias(id, [], revisao: ...)`, em
+  `lib/funcoes/planos_acoes.dart`). As regras não deixam o criador escrever
+  na entrada alheia, então cada participante guarda na própria entrada a
+  `revisao` que viu, e o app dele, ao ler o documento com revisão diferente
+  (na tela do plano ou na sincronia ao entrar na conta), zera os próprios
+  dias e carimba a revisão (`PlanosNaNuvem.alinharRevisao`). Até isso
+  acontecer, `lidosValidos` não conta os dias dele, e nenhuma contagem passa
+  dos dias do plano.
 - **Funcionalidades se ligam/desligam pelo painel admin, sem reimplantar**:
   `lib/dados/recursos.dart` reúne os interruptores — `planoPersonalizado`
   (aba "Meus planos"), `ouvirTextos` (`TabernaculoBotaoDeVoz`, único ponto de

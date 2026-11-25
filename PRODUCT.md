@@ -122,8 +122,15 @@ vitoriana dele, tratando o leitor por "tu".
   nome, livros, ordem de leitura, dias e a inclusão/posição dos devocionais;
   mudar livros (inclusive só a ordem) ou
   dias pede confirmação e reinicia o progresso marcado (o dia 5 de hoje pode
-  virar outro trecho da Bíblia). Só vale para planos do usuário, não para o
-  cronograma anual fixo.
+  virar outro trecho da Bíblia). Num plano compartilhado o reinício vale
+  para todos: a edição grava uma revisão nova no plano, e o app de cada
+  participante zera os próprios dias ao vê-la, com o aviso "Quem criou mudou
+  o plano, e o seu progresso recomeçou"; até lá, os dias antigos dele não
+  contam na lista de participantes. Só vale para planos do usuário, não para
+  o cronograma anual fixo.
+- Fim de plano: marcar o último dia que faltava, pela tela do plano, pelo
+  cartão da Hoje ou chegando ao fim da leitura, mostra "Você concluiu o
+  plano {nome}", sem comemoração nem sequência de dias.
 - Avatar da conta (foto do Google ou inicial do nome) na saudação da aba
   Hoje, só exibição, sem upload.
 - Compartilhar gera cartão-imagem (fundo couro, filete dourado) com o texto
@@ -303,6 +310,10 @@ vitoriana dele, tratando o leitor por "tu".
   todo fundo de versículo, inclusive o selecionado.
 - Suporte à navegação por teclado no desktop (setas trocam capítulo, Ctrl+F
   abre a busca).
+- Leitor de tela na web: a árvore de semântica do Flutter liga na abertura
+  (`SemanticsBinding.instance.ensureSemantics()` em `lib/main.dart`), sem
+  depender do botão escondido "Enable accessibility". A saudação, "Leitura de
+  hoje", o título do devocional e os títulos de cartão são cabeçalhos.
 - Os chevrons de capítulo no rodapé do leitor existem só na web e podem ser
   escondidos na folha de ajustes; ao esconder, o app avisa que setas do
   teclado, Enter ou espaço continuam virando o capítulo.

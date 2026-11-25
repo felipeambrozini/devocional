@@ -3,7 +3,7 @@ description: "Aplicativo devocional pessoal: tradução autoral da King James 16
 
 publish_to: 'none' 
 
-version: 1.28.0+55
+version: 1.28.1+56
 
 environment:
   sdk: ^3.12.0

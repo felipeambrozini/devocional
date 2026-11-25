@@ -61,9 +61,12 @@ class TabernaculoCabecalhoDaHoje extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    nome != null ? '$saudacao, $nome' : saudacao,
-                    style: tema.headlineMedium,
+                  Semantics(
+                    header: true,
+                    child: Text(
+                      nome != null ? '$saudacao, $nome' : saudacao,
+                      style: tema.headlineMedium,
+                    ),
                   ),
                   const SizedBox(height: TabernaculoEspacamento.sp4),
                   Text(dataLonga(data), style: tema.bodySmall),
