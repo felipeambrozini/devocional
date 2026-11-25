@@ -382,6 +382,34 @@ void main() {
     );
   });
 
+  group('sairEmOrdem', () {
+    test('com tudo confirmado, limpa e só então desloga', () async {
+      final passos = <String>[];
+      await sairEmOrdem(
+        garantir: () async => passos.add('garantir'),
+        limpar: () async => passos.add('limpar'),
+        deslogar: () async => passos.add('deslogar'),
+      );
+      expect(passos, ['garantir', 'limpar', 'deslogar']);
+    });
+
+    test('garantir que falha vira SairDaContaFalhou e para tudo', () async {
+      final passos = <String>[];
+      final causa = Exception('sem rede');
+      await expectLater(
+        sairEmOrdem(
+          garantir: () async => throw causa,
+          limpar: () async => passos.add('limpar'),
+          deslogar: () async => passos.add('deslogar'),
+        ),
+        throwsA(
+          isA<SairDaContaFalhou>().having((e) => e.causa, 'causa', causa),
+        ),
+      );
+      expect(passos, isEmpty);
+    });
+  });
+
   group('lembretes vindos da conta', () {
     late _LembretesFalsos lembretes;
     setUp(() {

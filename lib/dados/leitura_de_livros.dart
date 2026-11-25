@@ -137,6 +137,20 @@ class LeituraDeLivros {
     }
   }
 
+  /// Zera posições, lidos, concluídas e destaques, ao sair da conta (ver
+  /// `Estado.limparDadosPessoais`). Não avisa: quem limpa avisa uma vez só.
+  Future<void> limpar() async {
+    _posicoes = {};
+    _lidos = {};
+    _concluidas = {};
+    _destaques = {};
+    _fracaoAvisada.clear();
+    await _prefs.remove(_kPosicoes);
+    await _prefs.remove(_kLidos);
+    await _prefs.remove(_kConcluidas);
+    await _prefs.remove(_kDestaques);
+  }
+
   // --- onde parou ---------------------------------------------------------- //
 
   PosicaoNoLivro? posicaoDe(String slug) => _posicoes[slug];

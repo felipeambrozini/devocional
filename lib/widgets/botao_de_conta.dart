@@ -2,34 +2,9 @@ import 'package:material_ui/material_ui.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../dados/nuvem.dart';
-import '../dados/registro.dart';
-import '../funcoes/aviso.dart';
+import '../funcoes/sair_da_conta.dart';
 import 'botao.dart';
 import 'botao_de_entrar.dart';
-
-/// Confirma e executa o logout. Um toque no "Sair" não pode deslogar sem
-/// pergunta: na web, o espelho na nuvem é a proteção contra o navegador
-/// limpar o armazenamento local, e derrubar a sessão desarma essa proteção.
-Future<void> _sairDaConta(BuildContext context) async {
-  final confirmou = await confirmar(
-    context,
-    titulo: 'Sair da conta?',
-    conteudo:
-        'Favoritos, notas e progresso ficam neste aparelho, mas a cópia na '
-        'nuvem para de se atualizar. Na web, é ela que devolve os dados se o '
-        'navegador limpar o armazenamento.',
-    rotuloDaAcao: 'Sair',
-  );
-  if (!confirmou || !context.mounted) return;
-  final mensageiro = ScaffoldMessenger.of(context);
-  try {
-    await Nuvem.instancia.sair();
-    mostrarAvisoNo(mensageiro, 'Você saiu da conta');
-  } catch (erro, pilha) {
-    Registro.erro('_sairDaConta', erro, pilha);
-    mostrarErroNo(mensageiro, 'Não foi possível sair agora. Tente de novo.');
-  }
-}
 
 /// Entrar, sair ou esperar, no fim do cabeçalho da Hoje. Três estados, nunca
 /// dois ao mesmo tempo: a espera enquanto a sessão pode estar restaurando
@@ -48,7 +23,7 @@ class TabernaculoBotaoDeConta extends StatelessWidget {
       builder: (context, _) {
         if (nuvem.logado) {
           return TabernaculoBotaoTerciario.icon(
-            onPressed: () => _sairDaConta(context),
+            onPressed: () => sairDaConta(context),
             icon: const FaIcon(FontAwesomeIcons.rightFromBracket, size: 18),
             label: const Text('Sair'),
           );

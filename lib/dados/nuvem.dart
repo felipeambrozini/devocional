@@ -176,11 +176,12 @@ class Sincronia {
 
   /// Envia agora o que ainda aguardava o debounce, sem esperar o [atraso].
   ///
-  /// Usado no logout: o signOut a seguir para a sincronia, e uma mudança
-  /// feita segundos antes não pode ficar presa no timer. A espera tem teto —
-  /// sem rede, o Firestore fica com o envio pendente até reconectar, e
-  /// segurar o logout por isso não vale a pena: o dado continua no aparelho
-  /// e a próxima mudança tenta de novo.
+  /// Usado quando o app vai para segundo plano: um app fechado em seguida
+  /// mataria o timer, e uma mudança feita segundos antes ficaria presa nele.
+  /// A espera tem teto e o erro é engolido: sem rede, o Firestore fica com o
+  /// envio pendente até reconectar, o dado continua no aparelho e a próxima
+  /// mudança tenta de novo. O Sair, que precisa da confirmação, usa
+  /// [garantirNaNuvem].
   Future<void> despejar() async {
     final pendente = _pendente;
     if (pendente == null) return;
@@ -195,6 +196,48 @@ class Sincronia {
       Registro.erro('Nuvem.despejar', erro, pilha);
     }
     aoMudarSituacao?.call();
+  }
+
+  /// Garante que a conta tem o estado atual, para o Sair poder limpar o
+  /// aparelho sem perder nada. Ao contrário de [despejar], não depende da fila
+  /// do debounce (um envio anterior que falhou também sobe aqui) e **propaga**
+  /// o erro: falha, prazo estourado ou conta que nunca foi puxada interrompem
+  /// o Sair.
+  ///
+  /// Mesmo caminho do envio normal: sem puxar+fundir feito, puxa antes e lança
+  /// se não conseguir (subir o campo inteiro sem isso apagaria o da conta). O
+  /// que a conta já confirmou ([_ultimaCopia]) não sobe de novo: reenviar só
+  /// arriscaria pisar num envio mais novo de outro aparelho, já que o
+  /// `mergeFields` troca o campo inteiro.
+  ///
+  /// O prazo cobre o puxar e o envio: sem rede, o Firestore segura a escrita
+  /// até reconectar, e o Sair não pode ficar mudo esperando.
+  Future<void> garantirNaNuvem({
+    Duration prazo = const Duration(seconds: 15),
+  }) async {
+    _pendente?.cancel();
+    _pendente = null;
+    _pendenteCopia = null;
+    try {
+      await _garantir().timeout(prazo);
+    } catch (_) {
+      // O Sair parou e a sessão continua: a mudança volta para a fila, como
+      // qualquer outra, em vez de esperar a próxima.
+      _aoMudar();
+      rethrow;
+    } finally {
+      aoMudarSituacao?.call();
+    }
+  }
+
+  Future<void> _garantir() async {
+    if (!_puxou && !await _puxarEFundir()) {
+      throw Exception('A conta não respondeu; nada foi enviado');
+    }
+    final copia = _serializar();
+    if (copia == _ultimaCopia) return;
+    await empurrar(copia);
+    _ultimaCopia = copia;
   }
 
   Future<void> _enviar(String copia) async {
@@ -269,6 +312,37 @@ Future<void> apagarContaEmOrdem({
     religarSincronias();
     rethrow;
   }
+}
+
+/// O Sair parou antes de limpar o aparelho: algo não chegou à conta (sem
+/// rede, prazo estourado, Firestore recusou). A sessão continua e nada foi
+/// apagado. [causa] é o erro de origem, para o registro.
+class SairDaContaFalhou implements Exception {
+  const SairDaContaFalhou(this.causa);
+
+  final Object causa;
+
+  @override
+  String toString() => 'SairDaContaFalhou: $causa';
+}
+
+/// A ordem segura de sair da conta: primeiro [garantir] que a conta tem tudo,
+/// e só com a confirmação [limpar] o pessoal do aparelho e [deslogar]. Se
+/// [garantir] falha, nada mais acontece e o erro vira [SairDaContaFalhou]:
+/// limpar sem a confirmação perderia o que só existe aqui.
+Future<void> sairEmOrdem({
+  required Future<void> Function() garantir,
+  required Future<void> Function() limpar,
+  required Future<void> Function() deslogar,
+}) async {
+  try {
+    await garantir();
+  } catch (erro, pilha) {
+    Registro.erro('Nuvem.sair', erro, pilha);
+    throw SairDaContaFalhou(erro);
+  }
+  await limpar();
+  await deslogar();
 }
 
 /// Funde os lembretes que vieram da conta neste aparelho. O ligar e o desligar
@@ -734,9 +808,10 @@ class Nuvem extends ChangeNotifier {
   }
 
   /// Envia agora o que ainda aguardava o debounce, em todas as sincronias.
-  /// Usado ao sair da conta e quando o app vai para segundo plano: um app
-  /// fechado em seguida mataria o timer de 2 s e a última mudança se perderia.
-  /// Cada [Sincronia.despejar] tem teto de espera, então nada trava.
+  /// Usado quando o app vai para segundo plano: um app fechado em seguida
+  /// mataria o timer de 2 s e a última mudança se perderia. Cada
+  /// [Sincronia.despejar] tem teto de espera, então nada trava. O Sair não usa
+  /// isto: precisa da confirmação de [Sincronia.garantirNaNuvem].
   Future<void> despejarSincronias() async {
     await _sincronia?.despejar();
     await _sincroniaDeConversas?.despejar();
@@ -745,9 +820,53 @@ class Nuvem extends ChangeNotifier {
     await _sincroniaDeLivros?.despejar();
   }
 
+  /// Sai da conta só depois de tudo salvo nela (ver [sairEmOrdem]): garante
+  /// as cinco sincronias na nuvem, para de ouvir, limpa o pessoal do aparelho
+  /// e então desloga. Qualquer falha ao garantir lança [SairDaContaFalhou] e
+  /// deixa tudo como estava, com a sessão aberta.
+  ///
+  /// Sem consentimento neste aparelho (quem recusa o pedido em `main.dart`)
+  /// nada sobe nem foi sincronizado, então nada pode ser garantido: só
+  /// desloga, sem apagar o que existe aqui.
   Future<void> sair() async {
-    await despejarSincronias();
-    await FirebaseAuth.instance.signOut();
+    final estado = _estado;
+    if (estado == null || !estado.consentimentoDaNuvem) {
+      await FirebaseAuth.instance.signOut();
+      return;
+    }
+    await sairEmOrdem(
+      garantir: () async {
+        final sincronias = [
+          _sincronia,
+          _sincroniaDeConversas,
+          _sincroniaDeLembretes,
+          _sincroniaDePlanos,
+          _sincroniaDeLivros,
+        ];
+        if (sincronias.contains(null)) {
+          // Com consentimento e conta aberta, as cinco sempre estão ligadas
+          // (ver `_iniciarSincronias`); faltar uma é não ter como garantir.
+          throw StateError('Sincronias da conta desligadas');
+        }
+        await Future.wait([for (final s in sincronias) s!.garantirNaNuvem()]);
+      },
+      limpar: () async {
+        // Para ANTES de limpar: senão a limpeza notificaria as sincronias e
+        // subiria uma cópia vazia por cima do que acabou de ser garantido.
+        _pararSincronias();
+        // Os horários saem das prefs, mas o que o sistema já agendou fica:
+        // cancela aqui. Falhar no plugin não pode deixar o Sair pela metade.
+        if (estado.lembretesAtivos) {
+          try {
+            await Lembretes.instancia.cancelar();
+          } catch (erro, pilha) {
+            Registro.erro('Nuvem.sair.lembretes', erro, pilha);
+          }
+        }
+        await estado.limparDadosPessoais();
+      },
+      deslogar: FirebaseAuth.instance.signOut,
+    );
   }
 
   /// Apaga o documento da conta e a conta em si. O que está no navegador não

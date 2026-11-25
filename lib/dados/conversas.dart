@@ -318,6 +318,16 @@ class Conversas {
     await _prefs.setString(_chave, serializarConversas());
   }
 
+  /// Esquece o histórico inteiro, lápides incluídas, ao sair da conta (ver
+  /// `Estado.limparDadosPessoais`). Não é [limparTodasDe]: aquele deixa
+  /// lápides, que subiriam para a próxima conta a entrar. Não avisa: quem
+  /// limpa avisa uma vez só.
+  Future<void> limpar() async {
+    _conversas = {};
+    _apagadas = {};
+    await _prefs.remove(_chave);
+  }
+
   /// O que a cópia na nuvem recebe para as conversas, num JSON à parte do
   /// `exportar()`: o histórico não entra na cópia de segurança manual que se
   /// exporta e importa, porque aquela é sobre trabalho do usuário (notas,

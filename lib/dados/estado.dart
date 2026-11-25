@@ -1030,6 +1030,48 @@ class Estado extends ChangeNotifier {
     }
   }
 
+  // --- sair da conta -------------------------------------------------------- //
+
+  /// Apaga do aparelho tudo o que é pessoal, depois que o Sair confirmou que
+  /// a conta tem tudo (ver `Nuvem.sair`): favoritos e notas, dias lidos, onde
+  /// a leitura parou, planos e seus dias, conversas, os horários de lembrete
+  /// sincronizados, a leitura dos livros e o andamento dos dias. Assim a
+  /// próxima conta a entrar não herda nada desta.
+  ///
+  /// Os ajustes do aparelho ficam: escala, voz, tema, consentimento, maior de
+  /// idade, dispensas de ajuda e áudio baixado. Notifica uma vez só.
+  Future<void> limparDadosPessoais() async {
+    _lidos = {};
+    _marcacoes = {};
+    _sujarMarcacoes();
+    _ultimaLeitura = null;
+    _planos = [];
+    _planosLidos = {};
+    _lembretesAtivos = false;
+    _minutosLembreteManha = minutosPadraoManha;
+    _minutosLembretePromessas = minutosPadraoPromessas;
+    _minutosLembreteLeitura = minutosPadraoLeitura;
+    _minutosLembreteNoite = minutosPadraoNoite;
+    for (final chave in const [
+      _kLidos,
+      _kMarcacoes,
+      _kUltima,
+      _kPlanos,
+      _kPlanosLidos,
+      _kLembretesAtivos,
+      _kMinutosLembreteManha,
+      _kMinutosLembretePromessas,
+      _kMinutosLembreteLeitura,
+      _kMinutosLembreteNoite,
+    ]) {
+      await _prefs.remove(chave);
+    }
+    await conversas.limpar();
+    await leituraDeLivros.limpar();
+    await progressoDosDias.limpar();
+    notifyListeners();
+  }
+
   // --- cópia de segurança --------------------------------------------------- //
 
   /// Versão do formato da cópia. Existe para que uma cópia velha ainda possa ser

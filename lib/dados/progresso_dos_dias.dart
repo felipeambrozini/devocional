@@ -67,6 +67,13 @@ class ProgressoDosDias {
     await _gravar();
   }
 
+  /// Esquece o andamento de todos os dias, ao sair da conta (ver
+  /// `Estado.limparDadosPessoais`). Não avisa: quem limpa avisa uma vez só.
+  Future<void> limpar() async {
+    _lidos.clear();
+    await _prefs.remove(_kProgresso);
+  }
+
   /// Esquece o andamento do dia [chave] (depois de marcado como lido).
   Future<void> esquecer(String chave) async {
     if (_lidos.remove(chave) == null) return;
