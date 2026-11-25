@@ -1064,6 +1064,12 @@ class Estado extends ChangeNotifier {
       progressoDosDias.limpar(),
     ];
     notifyListeners();
+    // Tudo esperado junto: um erro de qualquer um volta para quem chamou, em
+    // vez de escapar sem tratamento.
+    await Future.wait([...outros, _removerChavesPessoais()]);
+  }
+
+  Future<void> _removerChavesPessoais() async {
     for (final chave in const [
       _kLidos,
       _kMarcacoes,
@@ -1078,7 +1084,6 @@ class Estado extends ChangeNotifier {
     ]) {
       await _prefs.remove(chave);
     }
-    await Future.wait(outros);
   }
 
   // --- cópia de segurança --------------------------------------------------- //

@@ -613,4 +613,47 @@ void main() {
       expect(Nuvem.instancia.saindo, isFalse);
     });
   });
+
+  group('rodada 3', () {
+    test(
+      'limparDadosPessoais que falha ao gravar devolve o erro, sem erro solto',
+      () async {
+        final real = await SharedPreferences.getInstance();
+        final estado = Estado(_PrefsQueNaoRemovem(real));
+
+        // Os limpar() filhos também falham: sem esperar todos juntos, o erro
+        // deles escaparia sem tratamento e derrubaria o teste.
+        await expectLater(estado.limparDadosPessoais(), throwsException);
+        expect(estado.marcacoes, isEmpty, reason: 'a memória já foi zerada');
+      },
+    );
+  });
+}
+
+/// Prefs de verdade para ler, mas que falham ao apagar uma chave.
+class _PrefsQueNaoRemovem implements SharedPreferences {
+  _PrefsQueNaoRemovem(this._real);
+
+  final SharedPreferences _real;
+
+  @override
+  String? getString(String key) => _real.getString(key);
+
+  @override
+  List<String>? getStringList(String key) => _real.getStringList(key);
+
+  @override
+  bool? getBool(String key) => _real.getBool(key);
+
+  @override
+  int? getInt(String key) => _real.getInt(key);
+
+  @override
+  double? getDouble(String key) => _real.getDouble(key);
+
+  @override
+  Future<bool> remove(String key) async => throw Exception('disco cheio');
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

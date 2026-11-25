@@ -38,9 +38,6 @@ class PlanoControlador extends ChangeNotifier {
     // quando aberta por link no Navigator raiz: sem este listener, marcar um
     // dia gravava mas a tela não redesenhava o contador nem o visto do cartão.
     estado.addListener(_aoMudarEstado);
-    // A conta de quando a tela abriu: o que chegar da nuvem depois de a
-    // conta mudar (ou durante o Sair) não entra no Estado.
-    _uidDaAbertura = Nuvem.instancia.uid;
     Nuvem.instancia.addListener(_aoMudarConta);
     // Único jeito de abrir um plano sem passar por Novo plano — o caso comum
     // de reabrir o próprio ou de entrar por link — então sem isto os
@@ -90,6 +87,10 @@ class PlanoControlador extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// A conta de quando [iniciar] passou a ler da nuvem: o que chegar depois
+  /// de a conta mudar (ou durante o Sair) não entra no Estado. Gravada em
+  /// [iniciar], e não no construtor, porque a tela pode abrir sem conta e
+  /// ganhar uma quando o cartão de entrar chama [iniciar] de novo.
   String? _uidDaAbertura;
 
   bool get _mesmaSessao => mesmaSessaoDoEspelho(
@@ -125,6 +126,7 @@ class PlanoControlador extends ChangeNotifier {
       notifyListeners();
       return;
     }
+    _uidDaAbertura = Nuvem.instancia.uid;
     final leitura = await _lerDocumento();
     if (_descartado) return;
     final acao = decidirAberturaDoPlano(
@@ -262,10 +264,15 @@ class PlanoControlador extends ChangeNotifier {
   /// havia dias marcados. A gravação traz um documento novo pelo stream,
   /// já na revisão certa, então isto não se repete.
   Future<void> _alinharRevisao(Map<String, dynamic> dados) async {
-    final recomecou = await PlanosNaNuvem.instancia.alinharRevisao(
-      planoId,
-      dados,
-    );
+    final bool recomecou;
+    try {
+      recomecou = await PlanosNaNuvem.instancia.alinharRevisao(planoId, dados);
+    } catch (erro, pilha) {
+      // Roda sem await (do espelho): um erro aqui escaparia sem tratamento.
+      // A próxima leitura do documento tenta de novo.
+      Registro.erro('PlanoControlador.alinharRevisao($planoId)', erro, pilha);
+      return;
+    }
     // Quem criou acabou de editar e já sabe: o stream pode trazer a revisão
     // nova antes do carimbo da própria entrada, e o aviso seria para ele.
     final ehCriador = uid != null && dados['criadoPor'] == uid;

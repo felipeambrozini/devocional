@@ -251,8 +251,12 @@ void main() {
       'o espelho não aplica o plano que chega depois de a conta mudar',
       () async {
         final estado = await novoEstado();
+        Nuvem.instancia.logadoForcado = true;
         Nuvem.instancia.uidForcado = 'conta-a';
-        addTearDown(() => Nuvem.instancia.uidForcado = null);
+        addTearDown(() {
+          Nuvem.instancia.uidForcado = null;
+          Nuvem.instancia.logadoForcado = null;
+        });
         final controlador = PlanoControlador(
           estado: estado,
           planoId: 'plano-da-conta-a',
@@ -270,6 +274,37 @@ void main() {
         });
 
         expect(estado.planosDoUsuario, isEmpty);
+      },
+    );
+
+    test(
+      'tela aberta sem conta espelha o plano depois do login',
+      () async {
+        final estado = await novoEstado();
+        addTearDown(() {
+          Nuvem.instancia.uidForcado = null;
+          Nuvem.instancia.logadoForcado = null;
+        });
+        // Convite aberto por link sem conta: a tela mostra o entrar.
+        final controlador = PlanoControlador(
+          estado: estado,
+          planoId: 'plano-do-convite',
+        );
+        addTearDown(controlador.dispose);
+        await pumpEventQueue();
+
+        // Entrou na conta: o cartão de entrar chama iniciar() de novo.
+        Nuvem.instancia.logadoForcado = true;
+        Nuvem.instancia.uidForcado = 'conta-a';
+        await controlador.iniciar();
+        controlador.espelhar({
+          'titulo': 'Plano do convite',
+          'livros': ['joao'],
+          'dias': 3,
+        });
+        await pumpEventQueue();
+
+        expect(estado.planosDoUsuario.map((p) => p.id), ['plano-do-convite']);
       },
     );
 
