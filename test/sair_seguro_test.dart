@@ -457,4 +457,160 @@ void main() {
       },
     );
   });
+
+  group('rodada 2', () {
+    test('o Sair não ressuscita um favorito removido antes da confirmação', () async {
+      final estado = await Estado.abrir();
+      await estado.alternarFavorito('joao', 3, 16);
+      final noServidor = estado.exportar();
+      final enviados = <String>[];
+      final sincronia = Sincronia(
+        estado: estado,
+        puxar: () async => noServidor,
+        puxarDoServidor: () async => noServidor,
+        empurrar: (copia) async => enviados.add(copia),
+        atraso: const Duration(seconds: 30),
+      );
+      await sincronia.comecar();
+
+      // Tira o favorito e sai dentro do debounce: o servidor ainda o tem.
+      await estado.alternarFavorito('joao', 3, 16);
+      expect(estado.marcacoes, isEmpty);
+      await sincronia.garantirNaNuvem();
+
+      expect(estado.marcacoes, isEmpty, reason: 'a fusão não o devolveu');
+      expect(enviados, [estado.exportar()]);
+      expect(enviados.single, isNot(contains('joao')));
+      sincronia.parar();
+    });
+
+    test('o que chegou de outro aparelho ainda é fundido no Sair', () async {
+      final estado = await Estado.abrir();
+      await estado.alternarFavorito('joao', 3, 16);
+      final noCache = estado.exportar();
+      final doServidor = await () async {
+        SharedPreferences.setMockInitialValues({});
+        final outro = await Estado.abrir();
+        await outro.alternarFavorito('joao', 3, 16);
+        await outro.alternarFavorito('romanos', 8, 28);
+        return outro.exportar();
+      }();
+      final sincronia = Sincronia(
+        estado: estado,
+        puxar: () async => noCache,
+        puxarDoServidor: () async => doServidor,
+        empurrar: (_) async {},
+        atraso: const Duration(seconds: 30),
+      );
+      await sincronia.comecar();
+
+      await sincronia.garantirNaNuvem();
+
+      expect(estado.marcacoes, hasLength(2));
+      sincronia.parar();
+    });
+
+    test('_garantir parado durante a fusão não envia', () async {
+      final estado = await Estado.abrir();
+      final doServidor = await () async {
+        SharedPreferences.setMockInitialValues({});
+        final outro = await Estado.abrir();
+        await outro.alternarFavorito('romanos', 8, 28);
+        return outro.exportar();
+      }();
+      var envios = 0;
+      late final Sincronia sincronia;
+      sincronia = Sincronia(
+        estado: estado,
+        puxar: () async => null,
+        puxarDoServidor: () async => doServidor,
+        // O Sair parou esta sincronia enquanto a fusão gravava.
+        fundir: (remota) async => sincronia.parar(),
+        empurrar: (_) async => envios++,
+        atraso: const Duration(seconds: 30),
+      );
+      await sincronia.comecar();
+
+      await expectLater(sincronia.garantirNaNuvem(), throwsStateError);
+      expect(envios, 0);
+    });
+
+    test('entre parar as sincronias e limpar não há espera', () async {
+      final estado = await Estado.abrir();
+      final sincronia = Sincronia(
+        estado: estado,
+        puxar: () async => null,
+        empurrar: (_) async {},
+        atraso: const Duration(seconds: 30),
+      );
+      await sincronia.comecar();
+      final passos = <String>[];
+
+      await sairComSincronias(
+        sincronias: [sincronia],
+        pararSincronias: () {
+          sincronia.parar();
+          passos.add('parar');
+          // Qualquer espera entre parar e limpar deixaria isto rodar antes.
+          scheduleMicrotask(() => passos.add('outra tarefa'));
+        },
+        limparAparelho: () async => passos.add('limpar'),
+        deslogar: () async {},
+      );
+
+      expect(passos, ['parar', 'limpar', 'outra tarefa']);
+    });
+
+    test(
+      'limparAoSair zera a memória antes de qualquer espera e cancela os lembretes depois',
+      () async {
+        final estado = await estadoCheio();
+        var cancelamentos = 0;
+
+        final limpeza = limparAoSair(
+          estado,
+          cancelarLembretes: () async => cancelamentos++,
+        );
+        // Sem await: a memória já está limpa.
+        expect(estado.marcacoes, isEmpty);
+        expect(estado.planosDoUsuario, isEmpty);
+        expect(estado.leituraDeLivros.todosOsDestaques, isEmpty);
+        await limpeza;
+
+        expect(cancelamentos, 1, reason: 'os lembretes estavam ligados');
+        expect((await Estado.abrir()).marcacoes, isEmpty);
+      },
+    );
+
+    test('limparAoSair com lembretes desligados não cancela nada', () async {
+      final estado = await Estado.abrir();
+      await estado.alternarFavorito('joao', 3, 16);
+      var cancelamentos = 0;
+
+      await limparAoSair(estado, cancelarLembretes: () async => cancelamentos++);
+
+      expect(cancelamentos, 0);
+      expect(estado.marcacoes, isEmpty);
+    });
+
+    test('limparAoSair segue limpando se cancelar os lembretes falha', () async {
+      final estado = await estadoCheio();
+
+      await limparAoSair(
+        estado,
+        cancelarLembretes: () async => throw Exception('plugin'),
+      );
+
+      expect((await Estado.abrir()).marcacoes, isEmpty);
+    });
+
+    test('Sair tocado duas vezes devolve o mesmo Sair em andamento', () async {
+      final primeiro = Nuvem.instancia.sair();
+      final segundo = Nuvem.instancia.sair();
+      expect(identical(primeiro, segundo), isTrue);
+      // Sem Firebase nos testes, o signOut falha: só importa que é um só.
+      await expectLater(primeiro, throwsA(anything));
+      expect(Nuvem.instancia.saindo, isFalse);
+    });
+  });
 }

@@ -110,9 +110,11 @@ class PlanosNaNuvem {
         // A consulta e cada alinhamento esperam a rede: se a pessoa saiu da
         // conta (ou trocou de conta) nesse meio tempo, o aparelho já foi
         // limpo, e espelhar agora poria os planos da conta antiga nele.
-        mesmaSessao: () =>
-            FirebaseAuth.instance.currentUser?.uid == uid &&
-            !Nuvem.instancia.saindo,
+        mesmaSessao: () => mesmaSessaoDoEspelho(
+          uidPedido: uid,
+          uidAtual: FirebaseAuth.instance.currentUser?.uid,
+          saindo: Nuvem.instancia.saindo,
+        ),
         // Entrada de uma revisão anterior: zera na nuvem antes de espelhar,
         // senão os dias antigos voltariam a contar noutro trecho.
         alinhar: (doc) => alinharRevisao(doc.id, doc.data()),
@@ -384,6 +386,16 @@ class PlanosNaNuvem {
     'lidos': lidos,
   };
 }
+
+/// Se o que chega da nuvem ainda é da sessão que o pediu: a mesma conta
+/// ([uidPedido], o uid de quando a leitura ou a escuta começou, igual ao
+/// [uidAtual]) e fora do Sair. Entre a limpeza do aparelho e o `signOut` o
+/// uid ainda é o mesmo; por isso o [saindo].
+bool mesmaSessaoDoEspelho({
+  required String? uidPedido,
+  required String? uidAtual,
+  required bool saindo,
+}) => uidPedido != null && uidPedido == uidAtual && !saindo;
 
 /// Alinha e aplica cada documento de plano, um por vez, conferindo antes de
 /// cada passo que a sessão que pediu ainda é a mesma ([mesmaSessao]). Cada

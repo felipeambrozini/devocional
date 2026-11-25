@@ -3,6 +3,7 @@ import 'package:devocional/controladores/plano_controlador.dart';
 import 'package:devocional/dados/conteudo.dart';
 import 'package:devocional/dados/estado.dart';
 import 'package:devocional/dados/modelos.dart';
+import 'package:devocional/dados/nuvem.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -245,6 +246,32 @@ void main() {
         isEmpty,
       );
     });
+
+    test(
+      'o espelho não aplica o plano que chega depois de a conta mudar',
+      () async {
+        final estado = await novoEstado();
+        Nuvem.instancia.uidForcado = 'conta-a';
+        addTearDown(() => Nuvem.instancia.uidForcado = null);
+        final controlador = PlanoControlador(
+          estado: estado,
+          planoId: 'plano-da-conta-a',
+        );
+        addTearDown(controlador.dispose);
+        await pumpEventQueue();
+
+        // O Sair limpou o aparelho e outra conta entrou; um snapshot atrasado
+        // da tela aberta chega agora.
+        Nuvem.instancia.uidForcado = 'conta-b';
+        controlador.espelhar({
+          'titulo': 'Plano da conta A',
+          'livros': ['joao'],
+          'dias': 3,
+        });
+
+        expect(estado.planosDoUsuario, isEmpty);
+      },
+    );
 
     test('tentarDeNovo limpa o erro e volta a carregar', () async {
       final estado = await novoEstado();

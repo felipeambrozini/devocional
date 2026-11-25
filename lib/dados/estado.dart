@@ -1040,6 +1040,10 @@ class Estado extends ChangeNotifier {
   ///
   /// Os ajustes do aparelho ficam: escala, voz, tema, consentimento, maior de
   /// idade, dispensas de ajuda e áudio baixado. Notifica uma vez só.
+  ///
+  /// Toda a memória é zerada antes da primeira espera (as prefs vêm depois):
+  /// o Sair conta com isso para não deixar brecha entre parar as sincronias
+  /// e limpar (ver `limparAoSair` em `nuvem.dart`).
   Future<void> limparDadosPessoais() async {
     _lidos = {};
     _marcacoes = {};
@@ -1052,6 +1056,14 @@ class Estado extends ChangeNotifier {
     _minutosLembretePromessas = minutosPadraoPromessas;
     _minutosLembreteLeitura = minutosPadraoLeitura;
     _minutosLembreteNoite = minutosPadraoNoite;
+    // Chamadas sem await: cada `limpar()` zera a própria memória antes da
+    // primeira espera, e as gravações terminam no fim.
+    final outros = [
+      conversas.limpar(),
+      leituraDeLivros.limpar(),
+      progressoDosDias.limpar(),
+    ];
+    notifyListeners();
     for (final chave in const [
       _kLidos,
       _kMarcacoes,
@@ -1066,10 +1078,7 @@ class Estado extends ChangeNotifier {
     ]) {
       await _prefs.remove(chave);
     }
-    await conversas.limpar();
-    await leituraDeLivros.limpar();
-    await progressoDosDias.limpar();
-    notifyListeners();
+    await Future.wait(outros);
   }
 
   // --- cópia de segurança --------------------------------------------------- //

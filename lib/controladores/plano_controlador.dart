@@ -38,6 +38,10 @@ class PlanoControlador extends ChangeNotifier {
     // quando aberta por link no Navigator raiz: sem este listener, marcar um
     // dia gravava mas a tela não redesenhava o contador nem o visto do cartão.
     estado.addListener(_aoMudarEstado);
+    // A conta de quando a tela abriu: o que chegar da nuvem depois de a
+    // conta mudar (ou durante o Sair) não entra no Estado.
+    _uidDaAbertura = Nuvem.instancia.uid;
+    Nuvem.instancia.addListener(_aoMudarConta);
     // Único jeito de abrir um plano sem passar por Novo plano — o caso comum
     // de reabrir o próprio ou de entrar por link — então sem isto os
     // devocionais nunca aparecem: [Conteudo] é um singleton, e sem essa
@@ -86,10 +90,29 @@ class PlanoControlador extends ChangeNotifier {
     notifyListeners();
   }
 
+  String? _uidDaAbertura;
+
+  bool get _mesmaSessao => mesmaSessaoDoEspelho(
+    uidPedido: _uidDaAbertura,
+    uidAtual: Nuvem.instancia.uid,
+    saindo: Nuvem.instancia.saindo,
+  );
+
+  /// A conta mudou (saiu, ou outra entrou): a escuta do documento é da conta
+  /// antiga e não tem mais o que espelhar.
+  void _aoMudarConta() {
+    if (_uidDaAbertura == null || Nuvem.instancia.uid == _uidDaAbertura) {
+      return;
+    }
+    _assinatura?.cancel();
+    _assinatura = null;
+  }
+
   @override
   void dispose() {
     _descartado = true;
     estado.removeListener(_aoMudarEstado);
+    Nuvem.instancia.removeListener(_aoMudarConta);
     _assinatura?.cancel();
     super.dispose();
   }
@@ -213,9 +236,14 @@ class PlanoControlador extends ChangeNotifier {
 
   /// Espelha no [Estado] o que chegou da nuvem: o plano em si e os dias
   /// lidos, para a lista de Meus Planos não depender da rede.
-  void _aplicarAoEspelho(DocumentSnapshot<Map<String, dynamic>> doc) {
-    final dados = doc.data();
-    if (dados == null) return;
+  void _aplicarAoEspelho(DocumentSnapshot<Map<String, dynamic>> doc) =>
+      espelhar(doc.data());
+
+  /// O corpo de [_aplicarAoEspelho], com os dados do documento. Público só
+  /// para os testes, que não têm um `DocumentSnapshot`.
+  @visibleForTesting
+  void espelhar(Map<String, dynamic>? dados) {
+    if (dados == null || !_mesmaSessao) return;
     final criadoEm = dados['criadoEm'] is Timestamp
         ? (dados['criadoEm'] as Timestamp).toDate()
         : DateTime.now();

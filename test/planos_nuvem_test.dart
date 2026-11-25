@@ -131,4 +131,30 @@ void main() {
       expect(aplicados, ['a', 'b']);
     });
   });
+
+  group('mesmaSessaoDoEspelho', () {
+    test('só a mesma conta, fora do Sair, espelha', () {
+      expect(
+        mesmaSessaoDoEspelho(uidPedido: 'a', uidAtual: 'a', saindo: false),
+        isTrue,
+      );
+      expect(
+        mesmaSessaoDoEspelho(uidPedido: 'a', uidAtual: 'b', saindo: false),
+        isFalse,
+      );
+      expect(
+        mesmaSessaoDoEspelho(uidPedido: 'a', uidAtual: null, saindo: false),
+        isFalse,
+      );
+      expect(
+        mesmaSessaoDoEspelho(uidPedido: null, uidAtual: null, saindo: false),
+        isFalse,
+      );
+      expect(
+        mesmaSessaoDoEspelho(uidPedido: 'a', uidAtual: 'a', saindo: true),
+        isFalse,
+        reason: 'entre a limpeza e o signOut o uid ainda é o mesmo',
+      );
+    });
+  });
 }
