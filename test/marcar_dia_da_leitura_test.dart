@@ -21,6 +21,8 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    // O ramo do cronograma só marca com conta.
+    Nuvem.instancia.logadoForcado = true;
     estado = Estado(await SharedPreferences.getInstance());
   });
   tearDown(() => Nuvem.instancia.logadoForcado = null);

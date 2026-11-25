@@ -2,6 +2,7 @@ import 'package:devocional/dados/biblioteca.dart';
 import 'package:devocional/dados/conteudo.dart';
 import 'package:devocional/dados/dia_da_leitura.dart';
 import 'package:devocional/dados/estado.dart';
+import 'package:devocional/dados/nuvem.dart';
 import 'package:devocional/dados/modelos.dart';
 import 'package:devocional/estilo/tema.dart';
 import 'package:devocional/telas/biblia.dart';
@@ -45,9 +46,12 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    // O ramo do cronograma só marca com conta.
+    Nuvem.instancia.logadoForcado = true;
     TabernaculoVigiaDoFim.esperaSemRolagem = _espera;
   });
   tearDown(() {
+    Nuvem.instancia.logadoForcado = null;
     TabernaculoVigiaDoFim.esperaSemRolagem = const Duration(seconds: 20);
   });
 

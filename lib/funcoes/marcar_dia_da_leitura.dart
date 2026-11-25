@@ -46,6 +46,8 @@ Future<void> marcarDiaDaLeituraAoTerminar(
 ) async {
   switch (dia) {
     case DiaDoCronograma(:final chave):
+      // O cronograma é pessoal: sem conta, não marca nem avisa.
+      if (!Nuvem.instancia.logado) return;
       if (estado.foiLido(chave)) return;
       await estado.alternarLido(chave);
       if (!context.mounted) return;

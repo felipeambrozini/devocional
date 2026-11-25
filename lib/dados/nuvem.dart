@@ -377,7 +377,13 @@ class Nuvem extends ChangeNotifier {
   /// evento do Auth. Antes disso [logado] vale false por falta de resposta,
   /// não por resposta, e o cabeçalho mostra espera em vez de um "Entrar" que
   /// sumiria sozinho (ver `TabernaculoBotaoDeConta` em `lib/widgets/botao_de_conta.dart`).
-  bool get carregandoConta => logadoForcado == null && !_sessaoConhecida;
+  bool get carregandoConta =>
+      carregandoContaForcado ?? (logadoForcado == null && !_sessaoConhecida);
+
+  /// Só para testes de widget: força [carregandoConta], como [logadoForcado]
+  /// faz com [logado]. null (padrão) deixa a resposta de verdade.
+  @visibleForTesting
+  bool? carregandoContaForcado;
   String? get email =>
       _sessaoConhecida ? FirebaseAuth.instance.currentUser?.email : null;
 

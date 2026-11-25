@@ -5,6 +5,7 @@ import '../dados/dia_da_leitura.dart';
 import '../dados/conteudo.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
+import '../dados/nuvem.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/datas.dart';
 import '../funcoes/alternar_lido.dart';
@@ -110,6 +111,25 @@ class _TabernaculoAbaDoCronogramaState extends State<TabernaculoAbaDoCronograma>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    // O cronograma é pessoal: sem conta, o convite ocupa o lugar dele. Durante
+    // a restauração da sessão não mostra nada, para o convite não piscar para
+    // quem já está logado.
+    return ListenableBuilder(
+      listenable: Nuvem.instancia,
+      builder: (context, _) {
+        if (Nuvem.instancia.logado) return _cronograma(context);
+        if (Nuvem.instancia.carregandoConta) return const SizedBox.shrink();
+        return const TabernaculoCartaoDeEntrar(
+          titulo: 'Entre para ver o plano',
+          descricao:
+              'O cronograma anual fica guardado na sua conta, com os dias '
+              'que você já leu.',
+        );
+      },
+    );
+  }
+
+  Widget _cronograma(BuildContext context) {
     final estado = EscopoDoEstado.de(context);
     final hoje = _hoje;
 

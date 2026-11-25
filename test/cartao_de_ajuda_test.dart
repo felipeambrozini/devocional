@@ -97,10 +97,14 @@ void main() {
     await tester.scrollUntilVisible(
       find.text('Entendi'),
       300,
-      scrollable: find.descendant(
-        of: find.byType(ListView),
-        matching: find.byType(Scrollable),
-      ),
+      // `.first`: sem conta, o convite de entrar da leitura do dia traz um
+      // Scrollable próprio dentro da lista.
+      scrollable: find
+          .descendant(
+            of: find.byType(ListView),
+            matching: find.byType(Scrollable),
+          )
+          .first,
     );
     await tester.ensureVisible(find.text('Entendi'));
     await tester.pumpAndSettle();
@@ -134,6 +138,14 @@ void main() {
   testWidgets('o aviso de dia marcado aparece e some sozinho em 8s', (
     tester,
   ) async {
+    // A leitura do dia só existe com conta, e quem entra pela primeira vez
+    // vê os diálogos de boas-vindas e de consentimento da nuvem por cima da
+    // lista: já vistos, eles não abrem.
+    SharedPreferences.setMockInitialValues({
+      'boas_vindas_vistas': true,
+      'consentimento_da_nuvem': true,
+    });
+    Nuvem.instancia.logadoForcado = true;
     await aquecerAssets(tester);
     final estado = Estado(await SharedPreferences.getInstance());
     await tester.pumpWidget(AppTabernaculo(estado: estado));
@@ -160,22 +172,26 @@ void main() {
     final botaoMarcar = find.byTooltip(RegExp(r'^Marcar .+ como lido$'));
     final botaoDesmarcar = find.byTooltip(RegExp(r'^Desmarcar '));
 
+    // No centro da tela: `ensureVisible` deixa o botão rente à borda de cima,
+    // sob o cabeçalho, onde o toque não chega.
+    Future<void> centralizar(Finder botao) async {
+      await Scrollable.ensureVisible(tester.element(botao), alignment: 0.5);
+      await tester.pumpAndSettle();
+    }
+
     if (botaoMarcar.evaluate().isNotEmpty) {
       expect(botaoMarcar, findsOneWidget);
-      await tester.ensureVisible(botaoMarcar);
-      await tester.pumpAndSettle();
+      await centralizar(botaoMarcar);
       await tester.tap(botaoMarcar);
     } else if (botaoDesmarcar.evaluate().isNotEmpty) {
       expect(botaoDesmarcar, findsOneWidget);
-      await tester.ensureVisible(botaoDesmarcar);
-      await tester.pumpAndSettle();
+      await centralizar(botaoDesmarcar);
       await tester.tap(botaoDesmarcar);
       await tester.pumpAndSettle();
 
       final botaoMarcar2 = find.byTooltip(RegExp(r'^Marcar .+ como lido$'));
       expect(botaoMarcar2, findsOneWidget);
-      await tester.ensureVisible(botaoMarcar2);
-      await tester.pumpAndSettle();
+      await centralizar(botaoMarcar2);
       await tester.tap(botaoMarcar2);
     } else {
       fail(

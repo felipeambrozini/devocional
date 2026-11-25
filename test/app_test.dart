@@ -132,6 +132,7 @@ void main() {
     AudioOffline.temOfflineParaTeste = (_) => false;
   });
   tearDown(() {
+    Nuvem.instancia.logadoForcado = null;
     Recursos.conversasForcado = null;
     Voz.baseUrlForTest = null;
     AudioOffline.temOfflineParaTeste = null;
@@ -201,6 +202,8 @@ void main() {
   testWidgets('a tela Plano mostra o dia 29 em fevereiro de ano bissexto', (
     tester,
   ) async {
+    // O cronograma e a leitura do dia só existem com conta.
+    Nuvem.instancia.logadoForcado = true;
     // Guarda a escolha que a TELA faz, não só a do Conteudo: ela chamava plano()
     // sem bissexto e mostrava sempre o cronograma de 365 dias, discordando de Hoje
     // e do Devocional a partir de março de um ano bissexto.
@@ -231,6 +234,8 @@ void main() {
   testWidgets('o Plano abre rolado até o dia de hoje no mês corrente', (
     tester,
   ) async {
+    // O cronograma e a leitura do dia só existem com conta.
+    Nuvem.instancia.logadoForcado = true;
     await tester.runAsync(() => Conteudo.instancia.plano(bissexto: true));
     await tester.pumpWidget(
       MaterialApp(
@@ -253,6 +258,8 @@ void main() {
   });
 
   testWidgets('o Plano não trava no ano em que foi aberto', (tester) async {
+    // O cronograma e a leitura do dia só existem com conta.
+    Nuvem.instancia.logadoForcado = true;
     await tester.runAsync(() async {
       await Conteudo.instancia.plano(bissexto: false);
       await Conteudo.instancia.plano(bissexto: true);
@@ -293,6 +300,8 @@ void main() {
   testWidgets('a moldura abre em Hoje e mostra as cinco seções', (
     tester,
   ) async {
+    // O cronograma e a leitura do dia só existem com conta.
+    Nuvem.instancia.logadoForcado = true;
     await aquecerAssets(tester);
     await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
     await tester.pumpAndSettle();
@@ -408,6 +417,8 @@ void main() {
   testWidgets('a Hoje estreita não estoura a linha do progresso do ano', (
     tester,
   ) async {
+    // O cronograma e a leitura do dia só existem com conta.
+    Nuvem.instancia.logadoForcado = true;
     // Em 360 dp (celular comum) a linha "Progresso do ano ... de 365 dias"
     // estourava 82 px para a direita: o Row com Spacer exigia que rótulo,
     // número e total coubessem lado a lado em qualquer largura ou fonte (ver
@@ -2325,6 +2336,8 @@ void main() {
   testWidgets('o chip do mês escolhido fica à vista na régua do Plano', (
     tester,
   ) async {
+    // O cronograma e a leitura do dia só existem com conta.
+    Nuvem.instancia.logadoForcado = true;
     // Em agosto, o chip de agosto começava fora da tela (a régua abria em
     // janeiro) enquanto a lista já mostrava agosto.
     await tester.runAsync(() => Conteudo.instancia.plano(bissexto: false));

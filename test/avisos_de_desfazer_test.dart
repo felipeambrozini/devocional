@@ -1,5 +1,6 @@
 import 'package:devocional/dados/conteudo.dart';
 import 'package:devocional/dados/estado.dart';
+import 'package:devocional/dados/nuvem.dart';
 import 'package:devocional/dados/modelos.dart';
 import 'package:devocional/dados/personas.dart';
 import 'package:devocional/telas/chat.dart';
@@ -13,7 +14,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   setUpAll(() => TestWidgetsFlutterBinding.ensureInitialized());
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    // O cronograma só existe com conta.
+    Nuvem.instancia.logadoForcado = true;
+  });
+  tearDown(() => Nuvem.instancia.logadoForcado = null);
 
   Future<Estado> abrir() async => Estado(await SharedPreferences.getInstance());
 
