@@ -855,10 +855,14 @@ class Nuvem extends ChangeNotifier {
         // subiria uma cópia vazia por cima do que acabou de ser garantido.
         _pararSincronias();
         // Os horários saem das prefs, mas o que o sistema já agendou fica:
-        // cancela aqui. Falhar no plugin não pode deixar o Sair pela metade.
+        // cancela aqui (só este aparelho: o documento do FID dele). Falhar ou
+        // travar sem rede não pode deixar o Sair pela metade, com as
+        // sincronias paradas e nada limpo.
         if (estado.lembretesAtivos) {
           try {
-            await Lembretes.instancia.cancelar();
+            await Lembretes.instancia.cancelar().timeout(
+              const Duration(seconds: 10),
+            );
           } catch (erro, pilha) {
             Registro.erro('Nuvem.sair.lembretes', erro, pilha);
           }
