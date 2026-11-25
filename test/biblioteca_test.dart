@@ -8,6 +8,7 @@ import 'package:devocional/dados/config_admin.dart';
 import 'package:devocional/dados/estado.dart';
 import 'package:devocional/dados/leitura_de_livros.dart';
 import 'package:devocional/dados/modelos.dart';
+import 'package:devocional/dados/nuvem.dart';
 import 'package:devocional/dados/recursos.dart';
 import 'package:devocional/dados/voz.dart';
 import 'package:devocional/estilo/espacamento.dart';
@@ -58,7 +59,12 @@ void main() {
     capitulos = (await Biblioteca.instancia.capitulos(slug))!;
   });
 
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    // O progresso dos livros só existe com conta.
+    Nuvem.instancia.logadoForcado = true;
+  });
+  tearDown(() => Nuvem.instancia.logadoForcado = null);
 
   Future<Estado> abrirEstado() async =>
       Estado(await SharedPreferences.getInstance());

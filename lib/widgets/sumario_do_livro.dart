@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../dados/audio_offline.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
+import '../dados/nuvem.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/terminar_leitura.dart';
 import 'baixar_livro.dart';
@@ -26,14 +27,25 @@ class TabernaculoSumarioDoLivro extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: Nuvem.instancia,
+      builder: (context, _) => _corpo(context),
+    );
+  }
+
+  Widget _corpo(BuildContext context) {
     final estado = EscopoDoEstado.de(context);
     final leitura = estado.leituraDeLivros;
-    final posicao = leitura.posicaoDe(obra.slug);
+    // O progresso só existe com conta: sem ela, o livro abre sempre no começo
+    // e nada do que ficou gravado antes aparece.
+    final logado = Nuvem.instancia.logado;
+    final posicao = logado ? leitura.posicaoDe(obra.slug) : null;
     final capituloAtual = (posicao?.capitulo ?? 0).clamp(
       0,
       capitulos.length - 1,
     );
-    final emLeitura = posicao != null || leitura.quantosLidos(obra.slug) > 0;
+    final emLeitura =
+        posicao != null || (logado && leitura.quantosLidos(obra.slug) > 0);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
@@ -80,7 +92,7 @@ class TabernaculoSumarioDoLivro extends StatelessWidget {
           TabernaculoLinhaDoCapitulo(
             numero: indice + 1,
             titulo: capitulo.titulo,
-            lido: leitura.foiLido(obra.slug, indice),
+            lido: logado && leitura.foiLido(obra.slug, indice),
             parouAqui: posicao?.capitulo == indice,
             aoAbrir: () =>
                 context.push('/biblioteca/${obra.slug}/${indice + 1}'),

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/widgets.dart';
 
 import '../dados/estado.dart';
+import '../dados/nuvem.dart';
 
 /// A rolagem de um capítulo de livro: devolve o leitor ao ponto em que parou e
 /// guarda o ponto novo quando o dedo para. Um controlador por capítulo aberto.
@@ -31,9 +32,10 @@ class LeitorDeLivroControlador {
 
   /// Chamar depois do primeiro desenho: só então o texto tem altura. Volta ao
   /// ponto em que o capítulo foi deixado, e marca o capítulo como o atual do
-  /// livro (é o que o "continuar" da estante lê).
+  /// livro (é o que o "continuar" da estante lê). Sem conta nada é gravado, e
+  /// o capítulo abre no começo.
   void iniciar() {
-    if (_encerrado) return;
+    if (_encerrado || !Nuvem.instancia.logado) return;
     final posicao = estado.leituraDeLivros.posicaoDe(slug);
     if (posicao?.capitulo == capitulo) {
       _rolarPara(posicao!.fracao);
@@ -44,7 +46,7 @@ class LeitorDeLivroControlador {
 
   /// Guarda quanto do capítulo já foi rolado. Chamar quando a rolagem para.
   void guardarPosicao() {
-    if (_encerrado) return;
+    if (_encerrado || !Nuvem.instancia.logado) return;
     estado.leituraDeLivros.registrarPosicao(slug, capitulo, _fracaoAtual);
   }
 

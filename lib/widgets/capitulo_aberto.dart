@@ -9,6 +9,7 @@ import '../controladores/leitor_de_livro_controlador.dart';
 import '../controladores/notas_controlador.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
+import '../dados/nuvem.dart';
 import '../dados/voz.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
@@ -117,6 +118,8 @@ class _CapituloAbertoState extends State<TabernaculoCapituloAberto> {
   /// recomeço. Pede confirmação porque zera o progresso, e um deslize
   /// acidental não pode custar os capítulos marcados.
   Future<void> _terminarLeitura() async {
+    // Sem conta não há progresso a encerrar: o fim do livro não faz nada.
+    if (!Nuvem.instancia.logado) return;
     final roteador = GoRouter.of(context);
     final terminou = await terminarLeituraDoLivro(
       context,
@@ -131,6 +134,7 @@ class _CapituloAbertoState extends State<TabernaculoCapituloAberto> {
   /// botão logo abaixo vira "Capítulo lido" à vista e desmarca num toque.
   /// `alternarLido` alterna, então só chama se ainda não estiver marcado.
   void _marcarLidoAoChegarAoFim() {
+    if (!Nuvem.instancia.logado) return;
     final leitura = widget.estado.leituraDeLivros;
     if (leitura.foiLido(_slug, widget.indice)) return;
     leitura.alternarLido(_slug, widget.indice);
@@ -433,39 +437,62 @@ class _CapituloAbertoState extends State<TabernaculoCapituloAberto> {
                                   const SizedBox(
                                     height: TabernaculoEspacamento.sp16,
                                   ),
-                                  if (_ehUltimo) ...[
-                                    Center(
-                                      child: TabernaculoBotaoPrimario.icon(
-                                        onPressed: _terminarLeitura,
-                                        icon: const FaIcon(
-                                          FontAwesomeIcons.flagCheckered,
-                                          size: 16,
-                                        ),
-                                        label: const Text('Terminar a leitura'),
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: TabernaculoEspacamento.sp8,
-                                    ),
-                                  ],
-                                  Center(
-                                    child: TabernaculoBotaoTerciario.icon(
-                                      onPressed: () => leitura.alternarLido(
-                                        _slug,
-                                        widget.indice,
-                                      ),
-                                      icon: FaIcon(
-                                        lido
-                                            ? FontAwesomeIcons.circleCheck
-                                            : FontAwesomeIcons.circle,
-                                        size: 14,
-                                      ),
-                                      label: Text(
-                                        lido
-                                            ? 'Capítulo lido'
-                                            : 'Marcar como lido',
-                                      ),
-                                    ),
+                                  // O progresso só existe com conta: sem ela, nem o
+                                  // botão de lido nem o de terminar a leitura.
+                                  ListenableBuilder(
+                                    listenable: Nuvem.instancia,
+                                    builder: (context, _) {
+                                      if (!Nuvem.instancia.logado) {
+                                        return const SizedBox.shrink();
+                                      }
+                                      return Column(
+                                        children: [
+                                          if (_ehUltimo) ...[
+                                            Center(
+                                              child:
+                                                  TabernaculoBotaoPrimario.icon(
+                                                    onPressed: _terminarLeitura,
+                                                    icon: const FaIcon(
+                                                      FontAwesomeIcons
+                                                          .flagCheckered,
+                                                      size: 16,
+                                                    ),
+                                                    label: const Text(
+                                                      'Terminar a leitura',
+                                                    ),
+                                                  ),
+                                            ),
+                                            const SizedBox(
+                                              height:
+                                                  TabernaculoEspacamento.sp8,
+                                            ),
+                                          ],
+                                          Center(
+                                            child:
+                                                TabernaculoBotaoTerciario.icon(
+                                                  onPressed: () =>
+                                                      leitura.alternarLido(
+                                                        _slug,
+                                                        widget.indice,
+                                                      ),
+                                                  icon: FaIcon(
+                                                    lido
+                                                        ? FontAwesomeIcons
+                                                              .circleCheck
+                                                        : FontAwesomeIcons
+                                                              .circle,
+                                                    size: 14,
+                                                  ),
+                                                  label: Text(
+                                                    lido
+                                                        ? 'Capítulo lido'
+                                                        : 'Marcar como lido',
+                                                  ),
+                                                ),
+                                          ),
+                                        ],
+                                      );
+                                    },
                                   ),
                                 ],
                               ),

@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../dados/biblioteca.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
+import '../dados/nuvem.dart';
 import '../estilo/espacamento.dart';
 import 'capa_de_obra.dart';
 import 'carrega_uma_vez.dart';
@@ -68,10 +69,20 @@ class TabernaculoCartaoDaObra extends StatelessWidget {
                       construir: (context, snap) {
                         final total = snap.data?.length ?? 0;
                         if (total == 0) return const SizedBox.shrink();
-                        return _Progresso(
-                          lidos: lidos,
-                          total: total,
-                          comecou: leitura.posicaoDe(obra.slug) != null,
+                        // O progresso só existe com conta: sem ela, o cartão
+                        // fica na contagem de capítulos.
+                        return ListenableBuilder(
+                          listenable: Nuvem.instancia,
+                          builder: (context, _) {
+                            final logado = Nuvem.instancia.logado;
+                            return _Progresso(
+                              lidos: logado ? lidos : 0,
+                              total: total,
+                              comecou:
+                                  logado &&
+                                  leitura.posicaoDe(obra.slug) != null,
+                            );
+                          },
                         );
                       },
                     ),

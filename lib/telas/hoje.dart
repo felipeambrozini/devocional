@@ -25,10 +25,6 @@ class _TelaHojeState extends State<TelaHoje> {
     final agora = DateTime.now();
     final estado = EscopoDoEstado.de(context);
     final periodo = Periodo.pelaHora(agora.hour);
-    final livrosEmLeitura = [
-      for (final slug in estado.leituraDeLivros.livrosEmLeitura)
-        ?obraPorSlug(slug),
-    ];
 
     return Scaffold(
       body: SafeArea(
@@ -53,6 +49,12 @@ class _TelaHojeState extends State<TelaHoje> {
                   : leituraAtiva(Leitura.noite)
                   ? Leitura.noite
                   : null;
+              // O progresso dos livros só existe com conta.
+              final livrosEmLeitura = [
+                if (Nuvem.instancia.logado)
+                  for (final slug in estado.leituraDeLivros.livrosEmLeitura)
+                    ?obraPorSlug(slug),
+              ];
               return ListView(
                 padding: const EdgeInsets.fromLTRB(
                   TabernaculoEspacamento.sp16,
