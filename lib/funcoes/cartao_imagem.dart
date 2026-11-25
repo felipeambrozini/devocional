@@ -10,9 +10,9 @@ import 'package:share_plus/share_plus.dart';
 import '../dados/registro.dart';
 import '../estilo/cores.dart';
 
-/// Cartão-imagem para compartilhar: o versículo em pergaminho escuro com o
-/// filete de metal, na identidade da Estante (couro `#2E1B10`, bege de
-/// leitura, ouro claro). A imagem viaja junto do texto de sempre, que continua
+/// Cartão-imagem para compartilhar: o nome do app no alto e o versículo em
+/// pergaminho escuro com o filete de metal, na identidade da Estante (couro
+/// `#2E1B10`, bege de leitura, ouro claro). A imagem viaja junto do texto de sempre, que continua
 /// sendo o que o link e a cópia usam — a imagem é o que rende no WhatsApp e
 /// no Instagram, onde texto puro morre sem rosto.
 ///
@@ -71,7 +71,7 @@ Future<Uint8List> gerarImagemDoCartao({
   String? rodape,
 }) async {
   final marca = _pintor(
-    'DEVOCIONAL',
+    'TABERNÁCULO',
     tamanho: 34,
     cor: _apoio,
     titulo: true,
@@ -150,7 +150,7 @@ Future<void> compartilharCartao({
     );
     final dir = await getTemporaryDirectory();
     final arquivo = File(
-      '${dir.path}/devocional-${DateTime.now().millisecondsSinceEpoch}.png',
+      '${dir.path}/tabernaculo-${DateTime.now().millisecondsSinceEpoch}.png',
     );
     await arquivo.writeAsBytes(bytes, flush: true);
     await SharePlus.instance.share(

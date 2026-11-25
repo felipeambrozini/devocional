@@ -633,8 +633,9 @@ motivo novo.
   derrubaria o carregamento tardio. Limitação deliberada, documentada em
   `lib/telas/notas.dart`.
 - **Compartilhar gera cartão-imagem** (`lib/funcoes/cartao_imagem.dart`): o
-  versículo (na Bíblia) ou a citação (no Devocional) sai como PNG na identidade
-  do app, com o texto de sempre junto (e o link que reabre a leitura); na web,
+  versículo (na Bíblia) ou a citação (no Devocional, assinada com a leitura e
+  a data) sai como PNG na identidade do app, com "TABERNÁCULO" no alto e o
+  texto de sempre junto (e o link que reabre a leitura); na web,
   cai para texto puro, que é o que o share da web suporta. Copiar continua só
   texto (`_textoDoVersiculo` em `lib/widgets/linha_de_versiculo.dart`). Em
   teste,

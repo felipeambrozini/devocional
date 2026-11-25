@@ -293,8 +293,9 @@ class TabernaculoCartaoDeLeitura extends StatelessWidget {
     }
   }
 
-  /// O que Copiar e Compartilhar levam: leitura, data, citação e comentário,
-  /// terminando no link da leitura ([textoDoDevocional]).
+  /// O que Copiar e Compartilhar levam: leitura, data, título do dia (em
+  /// Promessas), citação e comentário, terminando no link da leitura
+  /// ([textoDoDevocional]).
   String get _textoParaSair => textoDoDevocional(
     nomeDaLeitura: nomeDaLeitura,
     data: data,

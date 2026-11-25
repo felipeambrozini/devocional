@@ -4,9 +4,9 @@ import 'package:devocional/funcoes/datas.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// O texto que Copiar e Compartilhar do Devocional levam: leitura, data,
-/// citação e comentário, nessa ordem, e o link no fim. Antes, Copiar levava
-/// só o comentário, e Compartilhar trocava a leitura e a data pelo título do
-/// cartão (em Promessas, o título do dia).
+/// título do dia (Promessas), citação e comentário, nessa ordem, e o link no
+/// fim. Antes, Copiar levava só o comentário, e Compartilhar trocava a leitura
+/// e a data pelo título do cartão (em Promessas, o título do dia).
 void main() {
   // No ano corrente, a data sai sem ano ("1 de janeiro").
   final anoAtual = DateTime.now().year;
@@ -49,17 +49,24 @@ void main() {
     expect(texto, endsWith(manha.texto));
   });
 
-  test('Promessas: abre com "Promessas de Deus" e a data, não com o título '
-      'do dia', () {
+  test('Promessas: "Promessas de Deus", a data e o título do dia, depois a '
+      'citação', () {
     final texto = textoDoDevocional(
       nomeDaLeitura: 'Promessas de Deus',
       data: DateTime(anoAtual, 1, 1),
       dev: promessas,
       link: 'https://exemplo.test/devocional/promessas',
     );
+    expect(
+      texto,
+      startsWith(
+        'Promessas de Deus\n1 de janeiro\n\nA primeira promessa da Bíblia\n\n',
+      ),
+    );
     final partes = [
       'Promessas de Deus',
       '1 de janeiro',
+      'A primeira promessa da Bíblia',
       '"E porei inimizade entre ti e a mulher." GÊNESIS 3:15',
       'Esta é a primeira promessa ao homem caído.',
       'https://exemplo.test/devocional/promessas',
@@ -67,7 +74,6 @@ void main() {
     final posicoes = [for (final parte in partes) texto.indexOf(parte)];
     expect(posicoes, everyElement(isNonNegative));
     expect(posicoes, orderedEquals([...posicoes]..sort()));
-    expect(texto, isNot(contains('A primeira promessa da Bíblia')));
   });
 
   test('dia com mais de um versículo-base: uma linha por versículo', () {

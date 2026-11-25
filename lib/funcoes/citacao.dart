@@ -78,10 +78,11 @@ String textoDeCitacao(Devocional dev) => [
 ].join('\n');
 
 /// O texto de Copiar e Compartilhar de um devocional, na ordem em que se lê:
-/// o nome da leitura ("Devocional da manhã", "Promessas de Deus"), a data, a
-/// epígrafe ([textoDeCitacao]) e o comentário ([comentario], ou o do [dev]),
-/// com o [link] que reabre a leitura no fim, como o [textoCitado] da Bíblia.
-/// As partes vazias saem, e cada uma fica num parágrafo próprio.
+/// o nome da leitura ("Devocional da manhã", "Promessas de Deus"), a data, o
+/// título do dia (só Promessas tem), a epígrafe ([textoDeCitacao]) e o
+/// comentário ([comentario], ou o do [dev]), com o [link] que reabre a leitura
+/// no fim, como o [textoCitado] da Bíblia. As partes vazias saem, e cada uma
+/// fica num parágrafo próprio.
 String textoDoDevocional({
   required String nomeDaLeitura,
   required DateTime data,
@@ -90,6 +91,7 @@ String textoDoDevocional({
   String link = '',
 }) => [
   '$nomeDaLeitura\n${dataLonga(data)}',
+  dev.titulo,
   textoDeCitacao(dev),
   comentario ?? dev.texto,
   link,

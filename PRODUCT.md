@@ -169,8 +169,8 @@ vitoriana dele, tratando o leitor por "tu".
   Deus), tocar no texto abre a folha com Copiar, Compartilhar, Anotar e
   Favoritar (o Compartilhar saiu do cartão). Copiar e Compartilhar levam o
   nome da leitura ("Devocional da manhã", "Devocional da noite" ou "Promessas
-  de Deus"), a data, a citação e o comentário do dia, com um link que reabre
-  a mesma leitura. Favoritar tem o
+  de Deus"), a data, o título do dia (só Promessas tem), a citação e o
+  comentário, com um link que reabre a mesma leitura. Favoritar tem o
   mesmo nome e ícone na Bíblia, no Devocional e na Biblioteca, e as folhas
   de ações das três seguem a mesma ordem: Copiar, Compartilhar, Anotar,
   Favoritar (a da Biblioteca sem Compartilhar, que vem pela seleção).
