@@ -109,25 +109,60 @@ void main() {
       sincronia.parar();
     });
 
-    test('garantirNaNuvem não reenvia o que a conta já confirmou', () async {
-      final estado = await Estado.abrir();
-      await estado.alternarFavorito('joao', 3, 16);
-      var envios = 0;
-      final sincronia = Sincronia(
-        estado: estado,
-        // Conta em dia: subir de novo só arriscaria pisar num envio mais
-        // novo de outro aparelho.
-        puxar: () async => estado.exportar(),
-        empurrar: (_) async => envios++,
-        atraso: const Duration(seconds: 30),
-      );
-      await sincronia.comecar();
+    test(
+      'garantirNaNuvem puxa do servidor, funde e envia mesmo com o cache em dia',
+      () async {
+        final estado = await Estado.abrir();
+        await estado.alternarFavorito('joao', 3, 16);
+        // O que só o servidor tem (outro aparelho subiu depois): o cache
+        // local do Firestore ainda diz que a conta está em dia.
+        final doServidor = await () async {
+          SharedPreferences.setMockInitialValues({});
+          final outro = await Estado.abrir();
+          await outro.alternarFavorito('joao', 3, 16);
+          await outro.alternarFavorito('romanos', 8, 28);
+          return outro.exportar();
+        }();
+        final enviados = <String>[];
+        final sincronia = Sincronia(
+          estado: estado,
+          puxar: () async => estado.exportar(),
+          puxarDoServidor: () async => doServidor,
+          empurrar: (copia) async => enviados.add(copia),
+          atraso: const Duration(seconds: 30),
+        );
+        await sincronia.comecar();
+        expect(enviados, isEmpty, reason: 'pelo cache, nada a subir');
 
-      await sincronia.garantirNaNuvem();
+        await sincronia.garantirNaNuvem();
 
-      expect(envios, 0);
-      sincronia.parar();
-    });
+        expect(estado.marcacoes, hasLength(2), reason: 'fundiu o do servidor');
+        expect(enviados, [estado.exportar()], reason: 'subiu a união');
+        sincronia.parar();
+      },
+    );
+
+    test(
+      'garantirNaNuvem falha sem servidor, mesmo com o cache em dia',
+      () async {
+        final estado = await Estado.abrir();
+        await estado.alternarFavorito('joao', 3, 16);
+        var envios = 0;
+        final sincronia = Sincronia(
+          estado: estado,
+          // O cache pode refletir uma escrita que o servidor nunca recebeu.
+          puxar: () async => estado.exportar(),
+          puxarDoServidor: () async => throw Exception('sem servidor'),
+          empurrar: (_) async => envios++,
+          atraso: const Duration(seconds: 30),
+        );
+        await sincronia.comecar();
+
+        await expectLater(sincronia.garantirNaNuvem(), throwsException);
+        expect(envios, 0);
+        sincronia.parar();
+      },
+    );
 
     test('garantirNaNuvem propaga a falha do envio', () async {
       final estado = await Estado.abrir();
@@ -268,6 +303,157 @@ void main() {
           estado.serializarLeituraDeLivros(),
           novo.serializarLeituraDeLivros(),
         );
+      },
+    );
+  });
+
+  group('mudança durante a espera do Sair', () {
+    test('a mudança sobe antes de limpar, nunca é apagada sem subir', () async {
+      final estado = await Estado.abrir();
+      await estado.alternarFavorito('joao', 3, 16);
+      final primeiro = Completer<void>();
+      final enviados = <String>[];
+      final sincronia = Sincronia(
+        estado: estado,
+        puxar: () async => null,
+        empurrar: (copia) async {
+          enviados.add(copia);
+          if (enviados.length == 1) await primeiro.future;
+        },
+        atraso: const Duration(seconds: 30),
+      );
+      await sincronia.comecar();
+      var deslogou = false;
+
+      final saida = sairComSincronias(
+        sincronias: [sincronia],
+        pararSincronias: sincronia.parar,
+        limparAparelho: estado.limparDadosPessoais,
+        deslogar: () async => deslogou = true,
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(enviados, hasLength(1));
+      // A pessoa mexe enquanto o primeiro envio espera o servidor.
+      await estado.definirNota('romanos', 8, 28, 'nota tardia');
+      primeiro.complete();
+      await saida;
+
+      expect(enviados.last, contains('nota tardia'));
+      expect(estado.marcacoes, isEmpty);
+      expect(deslogou, isTrue);
+    });
+
+    test('mudança que não para de chegar faz o Sair falhar sem limpar', () async {
+      final estado = await Estado.abrir();
+      var dia = 10;
+      final sincronia = Sincronia(
+        estado: estado,
+        puxar: () async => null,
+        empurrar: (_) async {
+          // Cada envio vem acompanhado de mais uma mudança.
+          await estado.alternarLido('2026-11-${dia++}');
+        },
+        atraso: const Duration(seconds: 30),
+      );
+      await sincronia.comecar();
+      var deslogou = false;
+
+      await expectLater(
+        sairComSincronias(
+          sincronias: [sincronia],
+          pararSincronias: sincronia.parar,
+          limparAparelho: estado.limparDadosPessoais,
+          deslogar: () async => deslogou = true,
+        ),
+        throwsA(isA<SairDaContaFalhou>()),
+      );
+      expect(deslogou, isFalse);
+      expect(estado.diasLidosEmTodosOsAnos, greaterThan(0));
+      sincronia.parar();
+    });
+
+    test('sincronia desligada faz o Sair falhar sem limpar', () async {
+      final estado = await estadoCheio();
+      final copiaAntes = estado.exportar();
+      await expectLater(
+        sairComSincronias(
+          sincronias: [null],
+          pararSincronias: () {},
+          limparAparelho: estado.limparDadosPessoais,
+          deslogar: () async {},
+        ),
+        throwsA(isA<SairDaContaFalhou>()),
+      );
+      expect(estado.exportar(), copiaAntes);
+    });
+  });
+
+  group('parar() cerca as puxadas em andamento', () {
+    test(
+      'parar() durante o primeiro puxar: ao resolver, o Estado não muda e nenhum ouvinte fica',
+      () async {
+        final estado = await Estado.abrir();
+        final remota = await () async {
+          SharedPreferences.setMockInitialValues({});
+          final outro = await Estado.abrir();
+          await outro.alternarFavorito('romanos', 8, 28);
+          return outro.exportar();
+        }();
+        final puxada = Completer<String?>();
+        var envios = 0;
+        final sincronia = Sincronia(
+          estado: estado,
+          puxar: () => puxada.future,
+          empurrar: (_) async => envios++,
+          atraso: Duration.zero,
+        );
+        final comecou = sincronia.comecar();
+        sincronia.parar();
+        puxada.complete(remota);
+        await comecou;
+
+        expect(estado.marcacoes, isEmpty, reason: 'a conta antiga não entra');
+        await estado.alternarFavorito('joao', 3, 16);
+        await Future<void>.delayed(Duration.zero);
+        await Future<void>.delayed(Duration.zero);
+        expect(envios, 0, reason: 'nenhum ouvinte ficou pendurado');
+      },
+    );
+
+    test(
+      'parar() durante a retomada do puxar no envio: nada funde nem sobe',
+      () async {
+        final estado = await Estado.abrir();
+        final remota = await () async {
+          SharedPreferences.setMockInitialValues({});
+          final outro = await Estado.abrir();
+          await outro.alternarFavorito('romanos', 8, 28);
+          return outro.exportar();
+        }();
+        var puxadas = 0;
+        final retomada = Completer<String?>();
+        var envios = 0;
+        final sincronia = Sincronia(
+          estado: estado,
+          puxar: () {
+            if (++puxadas == 1) throw Exception('sem rede');
+            return retomada.future;
+          },
+          empurrar: (_) async => envios++,
+          atraso: Duration.zero,
+        );
+        await sincronia.comecar();
+        await estado.alternarFavorito('joao', 3, 16);
+        await Future<void>.delayed(Duration.zero);
+        expect(puxadas, 2, reason: 'o envio está esperando a retomada');
+
+        sincronia.parar();
+        retomada.complete(remota);
+        await Future<void>.delayed(Duration.zero);
+        await Future<void>.delayed(Duration.zero);
+
+        expect(estado.marcacoes, hasLength(1), reason: 'nada da conta entrou');
+        expect(envios, 0);
       },
     );
   });

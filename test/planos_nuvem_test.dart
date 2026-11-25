@@ -103,4 +103,32 @@ void main() {
       expect(podePuxarPlanos(logado: true, consentiu: true), isTrue);
     });
   });
+
+  group('espelharPlanosDaSessao', () {
+    test('a sessão que acaba no meio não aplica mais nenhum plano', () async {
+      var mesmaSessao = true;
+      final aplicados = <String>[];
+      await espelharPlanosDaSessao(
+        ['a', 'b', 'c'],
+        mesmaSessao: () => mesmaSessao,
+        alinhar: (doc) async {
+          // O Sair limpa o aparelho enquanto o "b" ainda se alinha.
+          if (doc == 'b') mesmaSessao = false;
+        },
+        aplicar: (doc) async => aplicados.add(doc),
+      );
+      expect(aplicados, ['a']);
+    });
+
+    test('na mesma sessão, aplica todos', () async {
+      final aplicados = <String>[];
+      await espelharPlanosDaSessao(
+        ['a', 'b'],
+        mesmaSessao: () => true,
+        alinhar: (_) async {},
+        aplicar: (doc) async => aplicados.add(doc),
+      );
+      expect(aplicados, ['a', 'b']);
+    });
+  });
 }

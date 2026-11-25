@@ -105,22 +105,31 @@ class PlanosNaNuvem {
           .collection(_colecao)
           .where('participantes.$uid', isNotEqualTo: null)
           .get();
-      for (final doc in resultados.docs) {
-        final dados = doc.data();
-        final participantes =
-            dados['participantes'] as Map<String, dynamic>? ?? const {};
+      await espelharPlanosDaSessao(
+        resultados.docs,
+        // A consulta e cada alinhamento esperam a rede: se a pessoa saiu da
+        // conta (ou trocou de conta) nesse meio tempo, o aparelho já foi
+        // limpo, e espelhar agora poria os planos da conta antiga nele.
+        mesmaSessao: () =>
+            FirebaseAuth.instance.currentUser?.uid == uid &&
+            !Nuvem.instancia.saindo,
         // Entrada de uma revisão anterior: zera na nuvem antes de espelhar,
         // senão os dias antigos voltariam a contar noutro trecho.
-        await alinharRevisao(doc.id, dados);
-        final lidos = lidosValidos(dados, participantes[uid]);
-        final criadoEm = dados['criadoEm'] is Timestamp
-            ? (dados['criadoEm'] as Timestamp).toDate()
-            : DateTime.now();
-        await estado.aplicarPlanoDaNuvem(
-          PlanoDoUsuario.doJsonDaNuvem(dados, id: doc.id, criadoEm: criadoEm),
-          lidos: lidos,
-        );
-      }
+        alinhar: (doc) => alinharRevisao(doc.id, doc.data()),
+        aplicar: (doc) {
+          final dados = doc.data();
+          final participantes =
+              dados['participantes'] as Map<String, dynamic>? ?? const {};
+          final lidos = lidosValidos(dados, participantes[uid]);
+          final criadoEm = dados['criadoEm'] is Timestamp
+              ? (dados['criadoEm'] as Timestamp).toDate()
+              : DateTime.now();
+          return estado.aplicarPlanoDaNuvem(
+            PlanoDoUsuario.doJsonDaNuvem(dados, id: doc.id, criadoEm: criadoEm),
+            lidos: lidos,
+          );
+        },
+      );
     } catch (erro, pilha) {
       // Sem rede ou sem permissão: o espelho local continua intacto, e a
       // próxima entrada na conta tenta de novo. Falhar aqui não pode
@@ -374,6 +383,24 @@ class PlanosNaNuvem {
     'nome': nomeDoParticipante(usuario.displayName),
     'lidos': lidos,
   };
+}
+
+/// Alinha e aplica cada documento de plano, um por vez, conferindo antes de
+/// cada passo que a sessão que pediu ainda é a mesma ([mesmaSessao]). Cada
+/// passo espera a rede; sem a conferência, um Sair no meio limparia o
+/// aparelho e os planos da conta antiga voltariam para ele.
+Future<void> espelharPlanosDaSessao<T>(
+  Iterable<T> documentos, {
+  required bool Function() mesmaSessao,
+  required Future<void> Function(T doc) alinhar,
+  required Future<void> Function(T doc) aplicar,
+}) async {
+  for (final doc in documentos) {
+    if (!mesmaSessao()) return;
+    await alinhar(doc);
+    if (!mesmaSessao()) return;
+    await aplicar(doc);
+  }
 }
 
 /// Se os planos da conta podem descer da nuvem para este aparelho: só com

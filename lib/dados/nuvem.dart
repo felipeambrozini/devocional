@@ -57,6 +57,7 @@ class Sincronia {
     required this.estado,
     required this.puxar,
     required this.empurrar,
+    this.puxarDoServidor,
     this.serializar,
     this.fundir,
     this.aoMudarSituacao,
@@ -66,6 +67,12 @@ class Sincronia {
   final Estado estado;
   final Future<String?> Function() puxar;
   final Future<void> Function(String copia) empurrar;
+
+  /// O mesmo que [puxar], mas só do servidor: falha sem rede em vez de
+  /// devolver o cache local do Firestore, que pode refletir uma escrita que o
+  /// servidor nunca recebeu. É o que [garantirNaNuvem] usa. Sem ele (testes),
+  /// vale o [puxar].
+  final Future<String?> Function()? puxarDoServidor;
 
   /// O que sobe para a nuvem. Padrão: a cópia de segurança do [Estado].
   /// Domínios com vida própria, como o histórico de conversas, passam o
@@ -95,6 +102,16 @@ class Sincronia {
   /// `Timer` para que [despejar] saiba o que enviar no logout.
   String? _pendenteCopia;
 
+  /// A última cópia que o servidor confirmou (o `empurrar` resolveu). Ao
+  /// contrário de [_ultimaCopia], nunca vem de uma comparação com o puxar,
+  /// que pode ter lido o cache local do Firestore. É a base de [emDia].
+  String? _confirmada;
+
+  /// Marcado por [parar]. Uma puxada ou um envio que estavam esperando a rede
+  /// conferem isto ao voltar: depois de parada (o Sair limpou o aparelho, a
+  /// conta trocou), a sincronia não funde, não ouve e não envia mais nada.
+  bool _parada = false;
+
   String _serializar() => serializar?.call() ?? estado.exportar();
 
   Future<void> _fundir(String remota) =>
@@ -107,6 +124,7 @@ class Sincronia {
   Future<void> comecar() async {
     _ultimaCopia = _serializar();
     await _puxarEFundir();
+    if (_parada) return;
     estado.addListener(_aoMudar);
     _aoMudar();
   }
@@ -117,6 +135,7 @@ class Sincronia {
   Future<bool> _puxarEFundir() async {
     try {
       final remota = await puxar();
+      if (_parada) return false;
       if (remota != null) await _fundir(remota);
       // A partir daqui a base de comparação é o que a CONTA tem, não o que
       // este aparelho tinha. Sem esta linha, o que só existe aqui só subia
@@ -133,6 +152,7 @@ class Sincronia {
   }
 
   void parar() {
+    _parada = true;
     estado.removeListener(_aoMudar);
     _pendente?.cancel();
     _pendente = null;
@@ -146,6 +166,7 @@ class Sincronia {
   /// também notifica. Sem isto, o `notifyListeners` de dentro do `importar`
   /// viraria um envio, e o envio viraria outro importar.
   void _aoMudar() {
+    if (_parada) return;
     final copia = _serializar();
     if (copia == _ultimaCopia) return;
     _pendente?.cancel();
@@ -166,13 +187,31 @@ class Sincronia {
   /// a conta tinha.
   Future<void> _transmitir(String copia) async {
     final aEnviar = _puxou ? copia : await _copiaDepoisDePuxar();
-    if (aEnviar == null || aEnviar == _ultimaCopia) return;
+    if (_parada || aEnviar == null || aEnviar == _ultimaCopia) return;
     await empurrar(aEnviar);
-    _ultimaCopia = aEnviar;
+    _confirmar(aEnviar);
   }
 
   Future<String?> _copiaDepoisDePuxar() async =>
-      await _puxarEFundir() ? _serializar() : null;
+      await _puxarEFundir() && !_parada ? _serializar() : null;
+
+  /// O servidor confirmou [copia]: vira a base das duas comparações, e um
+  /// pendente com o mesmo conteúdo não precisa mais subir.
+  void _confirmar(String copia) {
+    _ultimaCopia = copia;
+    _confirmada = copia;
+    if (_pendenteCopia == copia) {
+      _pendente?.cancel();
+      _pendente = null;
+      _pendenteCopia = null;
+    }
+  }
+
+  /// Se o servidor confirmou exatamente o que o aparelho tem agora. O Sair
+  /// confere isto logo antes de parar as sincronias: uma mudança feita
+  /// durante a espera do [garantirNaNuvem] deixa a sincronia fora de dia, e
+  /// limpar nesse estado a apagaria sem subir.
+  bool get emDia => _confirmada != null && _serializar() == _confirmada;
 
   /// Envia agora o que ainda aguardava o debounce, sem esperar o [atraso].
   ///
@@ -200,15 +239,15 @@ class Sincronia {
 
   /// Garante que a conta tem o estado atual, para o Sair poder limpar o
   /// aparelho sem perder nada. Ao contrário de [despejar], não depende da fila
-  /// do debounce (um envio anterior que falhou também sobe aqui) e **propaga**
-  /// o erro: falha, prazo estourado ou conta que nunca foi puxada interrompem
-  /// o Sair.
+  /// do debounce e **propaga** o erro: falha ou prazo estourado interrompem o
+  /// Sair.
   ///
-  /// Mesmo caminho do envio normal: sem puxar+fundir feito, puxa antes e lança
-  /// se não conseguir (subir o campo inteiro sem isso apagaria o da conta). O
-  /// que a conta já confirmou ([_ultimaCopia]) não sobe de novo: reenviar só
-  /// arriscaria pisar num envio mais novo de outro aparelho, já que o
-  /// `mergeFields` troca o campo inteiro.
+  /// Sempre puxa do servidor ([puxarDoServidor]), funde e envia a cópia
+  /// resultante, esperando a confirmação, mesmo sem nada na fila. Puxar do
+  /// servidor, e não do cache, é o que garante que a conta tem mesmo o que o
+  /// aparelho tem (o cache pode refletir uma escrita que nunca subiu), e
+  /// fundir antes de enviar evita pisar num envio mais novo de outro
+  /// aparelho, já que o `mergeFields` troca o campo inteiro.
   ///
   /// O prazo cobre o puxar e o envio: sem rede, o Firestore segura a escrita
   /// até reconectar, e o Sair não pode ficar mudo esperando.
@@ -231,13 +270,13 @@ class Sincronia {
   }
 
   Future<void> _garantir() async {
-    if (!_puxou && !await _puxarEFundir()) {
-      throw Exception('A conta não respondeu; nada foi enviado');
-    }
+    final remota = await (puxarDoServidor ?? puxar)();
+    if (_parada) throw StateError('Sincronia parada durante o Sair');
+    if (remota != null) await _fundir(remota);
+    _puxou = true;
     final copia = _serializar();
-    if (copia == _ultimaCopia) return;
     await empurrar(copia);
-    _ultimaCopia = copia;
+    _confirmar(copia);
   }
 
   Future<void> _enviar(String copia) async {
@@ -325,6 +364,50 @@ class SairDaContaFalhou implements Exception {
   @override
   String toString() => 'SairDaContaFalhou: $causa';
 }
+
+/// Garante as [sincronias] na nuvem e confere que ficaram em dia: uma
+/// mudança feita durante a espera é garantida de novo, até duas voltas a mais.
+/// Se ainda assim o aparelho não para de mudar, ou falta uma sincronia,
+/// lança: o Sair não pode limpar o que não subiu.
+Future<void> _garantirTodas(List<Sincronia?> sincronias) async {
+  if (sincronias.contains(null)) {
+    // Com consentimento e conta aberta, as cinco sempre estão ligadas (ver
+    // `Nuvem._iniciarSincronias`); faltar uma é não ter como garantir.
+    throw StateError('Sincronias da conta desligadas');
+  }
+  var aGarantir = sincronias.cast<Sincronia>();
+  for (var volta = 0; volta < 3; volta++) {
+    await Future.wait([for (final s in aGarantir) s.garantirNaNuvem()]);
+    aGarantir = [for (final s in aGarantir) if (!s.emDia) s];
+    if (aGarantir.isEmpty) return;
+  }
+  throw StateError('O aparelho continuou mudando durante o Sair');
+}
+
+/// O Sair com as sincronias de verdade, sem Firebase: [Nuvem.sair] passa as
+/// cinco dela, o `_pararSincronias`, a limpeza do aparelho e o `signOut`.
+///
+/// Logo antes de parar as sincronias, sem nenhum `await` no meio, confere de
+/// novo que todas seguem em dia: se algo mudou depois da última confirmação,
+/// o Sair para ali, antes de apagar qualquer coisa.
+Future<void> sairComSincronias({
+  required List<Sincronia?> sincronias,
+  required void Function() pararSincronias,
+  required Future<void> Function() limparAparelho,
+  required Future<void> Function() deslogar,
+}) => sairEmOrdem(
+  garantir: () => _garantirTodas(sincronias),
+  limpar: () async {
+    if (!sincronias.every((s) => s!.emDia)) {
+      throw SairDaContaFalhou(
+        StateError('O aparelho mudou depois da confirmação'),
+      );
+    }
+    pararSincronias();
+    await limparAparelho();
+  },
+  deslogar: deslogar,
+);
 
 /// A ordem segura de sair da conta: primeiro [garantir] que a conta tem tudo,
 /// e só com a confirmação [limpar] o pessoal do aparelho e [deslogar]. Se
@@ -643,9 +726,15 @@ class Nuvem extends ChangeNotifier {
       };
     }
 
+    // Para o Sair (`Sincronia.garantirNaNuvem`): só o servidor responde. O
+    // cache local pode refletir uma escrita que nunca subiu.
+    Future<String?> Function() doServidor(String campo) =>
+        () => _campo(_lerDocumento(uid, soServidor: true), campo);
+
     final sincronia = Sincronia(
       estado: estado,
       puxar: puxarDe('copia'),
+      puxarDoServidor: doServidor('copia'),
       empurrar: (copia) => _empurrarCampo(uid, 'copia', copia),
       aoMudarSituacao: notifyListeners,
     );
@@ -657,6 +746,7 @@ class Nuvem extends ChangeNotifier {
       serializar: estado.serializarConversas,
       fundir: estado.fundirConversas,
       puxar: puxarDe('conversas'),
+      puxarDoServidor: doServidor('conversas'),
       empurrar: (copia) => _empurrarCampo(uid, 'conversas', copia),
       aoMudarSituacao: notifyListeners,
     );
@@ -668,6 +758,7 @@ class Nuvem extends ChangeNotifier {
       serializar: estado.serializarLembretes,
       fundir: (remota) => fundirLembretesDaConta(estado, remota),
       puxar: puxarDe('lembretes'),
+      puxarDoServidor: doServidor('lembretes'),
       empurrar: (copia) => _empurrarCampo(uid, 'lembretes', copia),
       aoMudarSituacao: notifyListeners,
     );
@@ -679,6 +770,7 @@ class Nuvem extends ChangeNotifier {
       serializar: estado.serializarPlanos,
       fundir: estado.fundirPlanos,
       puxar: puxarDe('planos'),
+      puxarDoServidor: doServidor('planos'),
       empurrar: (copia) => _empurrarCampo(uid, 'planos', copia),
       aoMudarSituacao: notifyListeners,
     );
@@ -690,6 +782,7 @@ class Nuvem extends ChangeNotifier {
       serializar: estado.serializarLeituraDeLivros,
       fundir: estado.fundirLeituraDeLivros,
       puxar: puxarDe('livros'),
+      puxarDoServidor: doServidor('livros'),
       empurrar: (copia) => _empurrarCampo(uid, 'livros', copia),
       aoMudarSituacao: notifyListeners,
     );
@@ -709,11 +802,14 @@ class Nuvem extends ChangeNotifier {
     super.dispose();
   }
 
-  Future<Map<String, dynamic>?> _lerDocumento(String uid) async {
+  Future<Map<String, dynamic>?> _lerDocumento(
+    String uid, {
+    bool soServidor = false,
+  }) async {
     final doc = await FirebaseFirestore.instance
         .collection(_colecao)
         .doc(uid)
-        .get();
+        .get(soServidor ? const GetOptions(source: Source.server) : null);
     return doc.data();
   }
 
@@ -834,44 +930,48 @@ class Nuvem extends ChangeNotifier {
       await FirebaseAuth.instance.signOut();
       return;
     }
-    await sairEmOrdem(
-      garantir: () async {
-        final sincronias = [
+    _saindo = true;
+    try {
+      await sairComSincronias(
+        sincronias: [
           _sincronia,
           _sincroniaDeConversas,
           _sincroniaDeLembretes,
           _sincroniaDePlanos,
           _sincroniaDeLivros,
-        ];
-        if (sincronias.contains(null)) {
-          // Com consentimento e conta aberta, as cinco sempre estão ligadas
-          // (ver `_iniciarSincronias`); faltar uma é não ter como garantir.
-          throw StateError('Sincronias da conta desligadas');
-        }
-        await Future.wait([for (final s in sincronias) s!.garantirNaNuvem()]);
-      },
-      limpar: () async {
+        ],
         // Para ANTES de limpar: senão a limpeza notificaria as sincronias e
         // subiria uma cópia vazia por cima do que acabou de ser garantido.
-        _pararSincronias();
-        // Os horários saem das prefs, mas o que o sistema já agendou fica:
-        // cancela aqui (só este aparelho: o documento do FID dele). Falhar ou
-        // travar sem rede não pode deixar o Sair pela metade, com as
-        // sincronias paradas e nada limpo.
-        if (estado.lembretesAtivos) {
-          try {
-            await Lembretes.instancia.cancelar().timeout(
-              const Duration(seconds: 10),
-            );
-          } catch (erro, pilha) {
-            Registro.erro('Nuvem.sair.lembretes', erro, pilha);
+        pararSincronias: _pararSincronias,
+        limparAparelho: () async {
+          // Os horários saem das prefs, mas o que o sistema já agendou fica:
+          // cancela aqui (só este aparelho: o documento do FID dele). Falhar
+          // ou travar sem rede não pode deixar o Sair pela metade, com as
+          // sincronias paradas e nada limpo.
+          if (estado.lembretesAtivos) {
+            try {
+              await Lembretes.instancia.cancelar().timeout(
+                const Duration(seconds: 10),
+              );
+            } catch (erro, pilha) {
+              Registro.erro('Nuvem.sair.lembretes', erro, pilha);
+            }
           }
-        }
-        await estado.limparDadosPessoais();
-      },
-      deslogar: FirebaseAuth.instance.signOut,
-    );
+          await estado.limparDadosPessoais();
+        },
+        deslogar: FirebaseAuth.instance.signOut,
+      );
+    } finally {
+      _saindo = false;
+    }
   }
+
+  /// Se [sair] está em andamento. Entre a limpeza do aparelho e o `signOut`
+  /// a sessão ainda é a mesma, e quem espelha dados da conta por fora das
+  /// sincronias (`PlanosNaNuvem`) confere isto para não repor o que acabou
+  /// de ser limpo.
+  bool _saindo = false;
+  bool get saindo => _saindo;
 
   /// Apaga o documento da conta e a conta em si. O que está no navegador não
   /// é tocado, só o que subiu para a nuvem.
