@@ -1084,6 +1084,11 @@ class Estado extends ChangeNotifier {
     ]) {
       await _prefs.remove(chave);
     }
+    // As marcas de envio pendente das sincronias (ver `Sincronia`): de outra
+    // conta, nunca devem disparar um reenvio para a próxima.
+    for (final chave in _prefs.getKeys().toList()) {
+      if (chave.startsWith('sincronia_pendente_')) await _prefs.remove(chave);
+    }
   }
 
   // --- cópia de segurança --------------------------------------------------- //

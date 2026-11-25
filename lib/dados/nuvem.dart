@@ -14,6 +14,7 @@ import 'package:flutter/foundation.dart'
         visibleForTesting;
 import 'package:material_ui/material_ui.dart' show TimeOfDay;
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../firebase_options.dart';
 import 'estado.dart';
@@ -57,6 +58,7 @@ class Sincronia {
     required this.estado,
     required this.puxar,
     required this.empurrar,
+    this.nome = 'copia',
     this.puxarDoServidor,
     this.serializar,
     this.fundir,
@@ -65,6 +67,11 @@ class Sincronia {
   });
 
   final Estado estado;
+
+  /// Identifica esta sincronia na marca de envio pendente
+  /// (`sincronia_pendente_<nome>`): `copia`, `conversas`, `lembretes`,
+  /// `planos` ou `livros`. O padrão serve aos testes de uma sincronia só.
+  final String nome;
   final Future<String?> Function() puxar;
   final Future<void> Function(String copia) empurrar;
 
@@ -118,6 +125,48 @@ class Sincronia {
   /// local ainda não confirmada: a fusão soma e nunca apaga.
   String? _ultimaRemota;
 
+  /// Prefixo das marcas de envio pendente, que o Sair apaga todas de uma vez
+  /// (ver `Estado.limparDadosPessoais`).
+  static const prefixoDaMarca = 'sincronia_pendente_';
+
+  String get _chaveDaMarca => '$prefixoDaMarca$nome';
+
+  /// Grava (ou apaga) a marca de que há um estado local que a conta não
+  /// confirmou. Persistente: sobrevive a fechar o app e é o que faz o próximo
+  /// abrir reenviar, em vez de esperar uma mudança que talvez nunca venha (e
+  /// o navegador pode limpar o armazenamento antes disso). Falhar ao gravar a
+  /// marca não derruba nada.
+  Future<void> _marcarPendente(bool pendente) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (pendente) {
+        await prefs.setBool(_chaveDaMarca, true);
+      } else {
+        await prefs.remove(_chaveDaMarca);
+      }
+    } catch (erro, pilha) {
+      Registro.erro('Nuvem.marca', erro, pilha);
+    }
+  }
+
+  Future<bool> _haMarca() async {
+    try {
+      return (await SharedPreferences.getInstance()).containsKey(_chaveDaMarca);
+    } catch (erro, pilha) {
+      Registro.erro('Nuvem.marca', erro, pilha);
+      return false;
+    }
+  }
+
+  /// Reenvia o estado atual se um envio anterior falhou (há marca). Passa pelo
+  /// mesmo caminho de [_enviar]: respeita [_parada] e puxa antes de subir
+  /// quando o puxar+fundir ainda não deu certo. A marca sai quando o servidor
+  /// confirma; falhando, fica para a próxima abertura ou retomada.
+  Future<void> reenviarSePendente() async {
+    if (_parada || !await _haMarca() || _parada) return;
+    await _enviar(_serializar());
+  }
+
   String _serializar() => serializar?.call() ?? estado.exportar();
 
   Future<void> _fundir(String remota) =>
@@ -132,6 +181,8 @@ class Sincronia {
     await _puxarEFundir();
     if (_parada) return;
     estado.addListener(_aoMudar);
+    await reenviarSePendente();
+    if (_parada) return;
     _aoMudar();
   }
 
@@ -196,7 +247,17 @@ class Sincronia {
   /// a conta tinha.
   Future<void> _transmitir(String copia) async {
     final aEnviar = _puxou ? copia : await _copiaDepoisDePuxar();
-    if (_parada || aEnviar == null || aEnviar == _ultimaCopia) return;
+    if (_parada) return;
+    if (aEnviar == null) {
+      // Não deu para puxar, então nada subiu: segue pendente.
+      await _marcarPendente(true);
+      return;
+    }
+    if (aEnviar == _ultimaCopia) {
+      // A conta já tem exatamente isto: nada a reenviar.
+      await _marcarPendente(false);
+      return;
+    }
     await empurrar(aEnviar);
     _confirmar(aEnviar);
   }
@@ -211,6 +272,7 @@ class Sincronia {
   /// O servidor confirmou [copia]: vira a base das duas comparações, e um
   /// pendente com o mesmo conteúdo não precisa mais subir.
   void _confirmar(String copia) {
+    unawaited(_marcarPendente(false));
     _ultimaCopia = copia;
     _confirmada = copia;
     if (_pendenteCopia == copia) {
@@ -306,6 +368,9 @@ class Sincronia {
       // Sem rede, ou regra recusou. O dado continua no aparelho e a próxima
       // mudança tenta de novo; falhar aqui não pode derrubar nada.
       Registro.erro('Nuvem.enviar', erro, pilha);
+      // Parada (Sair, troca de conta): a marca seria de uma conta que já não
+      // é a deste aparelho.
+      if (!_parada) await _marcarPendente(true);
     }
     aoMudarSituacao?.call();
   }
@@ -783,6 +848,7 @@ class Nuvem extends ChangeNotifier {
 
     final sincronia = Sincronia(
       estado: estado,
+      nome: 'copia',
       puxar: puxarDe('copia'),
       puxarDoServidor: doServidor('copia'),
       empurrar: (copia) => _empurrarCampo(uid, 'copia', copia),
@@ -795,6 +861,7 @@ class Nuvem extends ChangeNotifier {
       estado: estado,
       serializar: estado.serializarConversas,
       fundir: estado.fundirConversas,
+      nome: 'conversas',
       puxar: puxarDe('conversas'),
       puxarDoServidor: doServidor('conversas'),
       empurrar: (copia) => _empurrarCampo(uid, 'conversas', copia),
@@ -807,6 +874,7 @@ class Nuvem extends ChangeNotifier {
       estado: estado,
       serializar: estado.serializarLembretes,
       fundir: (remota) => fundirLembretesDaConta(estado, remota),
+      nome: 'lembretes',
       puxar: puxarDe('lembretes'),
       puxarDoServidor: doServidor('lembretes'),
       empurrar: (copia) => _empurrarCampo(uid, 'lembretes', copia),
@@ -819,6 +887,7 @@ class Nuvem extends ChangeNotifier {
       estado: estado,
       serializar: estado.serializarPlanos,
       fundir: estado.fundirPlanos,
+      nome: 'planos',
       puxar: puxarDe('planos'),
       puxarDoServidor: doServidor('planos'),
       empurrar: (copia) => _empurrarCampo(uid, 'planos', copia),
@@ -831,6 +900,7 @@ class Nuvem extends ChangeNotifier {
       estado: estado,
       serializar: estado.serializarLeituraDeLivros,
       fundir: estado.fundirLeituraDeLivros,
+      nome: 'livros',
       puxar: puxarDe('livros'),
       puxarDoServidor: doServidor('livros'),
       empurrar: (copia) => _empurrarCampo(uid, 'livros', copia),
@@ -964,6 +1034,28 @@ class Nuvem extends ChangeNotifier {
     await _sincroniaDeLembretes?.despejar();
     await _sincroniaDePlanos?.despejar();
     await _sincroniaDeLivros?.despejar();
+  }
+
+  /// Reenvia o que ficou pendente em cada sincronia (ver
+  /// [Sincronia.reenviarSePendente]). Na retomada do app, sem esperar. Não faz
+  /// nada durante o [sair] nem sem sincronias rodando; erros só vão ao registro.
+  Future<void> reenviarPendentes() async {
+    if (_saindo) return;
+    final sincronias = [
+      _sincronia,
+      _sincroniaDeConversas,
+      _sincroniaDeLembretes,
+      _sincroniaDePlanos,
+      _sincroniaDeLivros,
+    ];
+    for (final sincronia in sincronias) {
+      if (sincronia == null || _saindo) continue;
+      try {
+        await sincronia.reenviarSePendente();
+      } catch (erro, pilha) {
+        Registro.erro('Nuvem.reenviarPendentes', erro, pilha);
+      }
+    }
   }
 
   /// Sai da conta só depois de tudo salvo nela (ver [sairEmOrdem]): garante

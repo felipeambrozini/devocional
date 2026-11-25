@@ -333,6 +333,165 @@ void main() {
     );
   });
 
+  group('envio pendente', () {
+    Future<bool> haMarca() async =>
+        (await SharedPreferences.getInstance()).containsKey(
+          'sincronia_pendente_copia',
+        );
+
+    test('envio que falha deixa a marca de pendente', () async {
+      final estado = await Estado.abrir();
+      final sincronia = Sincronia(
+        estado: estado,
+        nome: 'copia',
+        puxar: () async => null,
+        empurrar: (_) async => throw Exception('sem rede'),
+        atraso: Duration.zero,
+      );
+      await sincronia.comecar();
+      await assentar();
+
+      expect(await haMarca(), isTrue);
+    });
+
+    test('envio que dá certo apaga a marca', () async {
+      SharedPreferences.setMockInitialValues({
+        'sincronia_pendente_copia': true,
+      });
+      final estado = await Estado.abrir();
+      final sincronia = Sincronia(
+        estado: estado,
+        nome: 'copia',
+        puxar: () async => null,
+        empurrar: (_) async {},
+        atraso: Duration.zero,
+      );
+      await sincronia.comecar();
+      await assentar();
+      await sincronia.despejar();
+
+      expect(await haMarca(), isFalse);
+    });
+
+    test(
+      'reenviarSePendente envia o estado atual e apaga a marca ao conseguir',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          'sincronia_pendente_copia': true,
+        });
+        final estado = await Estado.abrir();
+        await estado.alternarFavorito('joao', 3, 16);
+        final enviados = <String>[];
+        final sincronia = Sincronia(
+          estado: estado,
+          nome: 'copia',
+          puxar: () async => null,
+          empurrar: (copia) async => enviados.add(copia),
+          atraso: const Duration(seconds: 30),
+        );
+
+        await sincronia.reenviarSePendente();
+
+        expect(enviados, [estado.exportar()]);
+        expect(await haMarca(), isFalse);
+      },
+    );
+
+    test('reenviarSePendente que falha mantém a marca', () async {
+      SharedPreferences.setMockInitialValues({
+        'sincronia_pendente_copia': true,
+      });
+      final estado = await Estado.abrir();
+      final sincronia = Sincronia(
+        estado: estado,
+        nome: 'copia',
+        puxar: () async => null,
+        empurrar: (_) async => throw Exception('sem rede'),
+        atraso: const Duration(seconds: 30),
+      );
+
+      await sincronia.reenviarSePendente();
+
+      expect(await haMarca(), isTrue);
+    });
+
+    test('reenviarSePendente sem marca não envia nada', () async {
+      final estado = await Estado.abrir();
+      var envios = 0;
+      final sincronia = Sincronia(
+        estado: estado,
+        nome: 'copia',
+        puxar: () async => null,
+        empurrar: (_) async => envios++,
+        atraso: const Duration(seconds: 30),
+      );
+
+      await sincronia.reenviarSePendente();
+
+      expect(envios, 0);
+    });
+
+    test('comecar reenvia o que ficou pendente numa abertura anterior',
+        () async {
+      SharedPreferences.setMockInitialValues({
+        'sincronia_pendente_copia': true,
+      });
+      final estado = await Estado.abrir();
+      final enviados = <String>[];
+      final sincronia = Sincronia(
+        estado: estado,
+        nome: 'copia',
+        puxar: () async => null,
+        empurrar: (copia) async => enviados.add(copia),
+        atraso: const Duration(seconds: 30),
+      );
+
+      await sincronia.comecar();
+
+      expect(enviados, hasLength(1));
+      expect(await haMarca(), isFalse);
+    });
+
+    test('sincronia parada não reenvia nem marca', () async {
+      SharedPreferences.setMockInitialValues({
+        'sincronia_pendente_copia': true,
+      });
+      final estado = await Estado.abrir();
+      var envios = 0;
+      final sincronia = Sincronia(
+        estado: estado,
+        nome: 'copia',
+        puxar: () async => null,
+        empurrar: (_) async => envios++,
+        atraso: Duration.zero,
+      )..parar();
+
+      await sincronia.reenviarSePendente();
+
+      expect(envios, 0);
+    });
+
+    test('Sair apaga as marcas de todas as sincronias', () async {
+      SharedPreferences.setMockInitialValues({
+        'sincronia_pendente_copia': true,
+        'sincronia_pendente_livros': true,
+      });
+      final estado = await Estado.abrir();
+
+      await estado.limparDadosPessoais();
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(
+        prefs.getKeys().where((k) => k.startsWith('sincronia_pendente_')),
+        isEmpty,
+      );
+    });
+
+    test('reenviarPendentes sem sincronias rodando não faz nada', () async {
+      await Nuvem.instancia.reenviarPendentes();
+    });
+  });
+
   group('App Check na retomada', () {
     tearDown(() => Nuvem.instancia.obterTokenAppCheck = (forcar) async => null);
 

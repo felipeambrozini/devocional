@@ -677,6 +677,8 @@ class _AppDevocionalState extends State<AppTabernaculo>
       // Sem forçar: o SDK só renova o token do App Check se ele expirou.
       case AppLifecycleState.resumed:
         unawaited(Nuvem.instancia.revalidarAppCheck(forcar: false));
+        // O que não subiu numa tentativa anterior sobe agora.
+        unawaited(Nuvem.instancia.reenviarPendentes());
       // O app pode ser fechado em seguida e levar junto o debounce de 2 s.
       case AppLifecycleState.paused || AppLifecycleState.hidden:
         unawaited(Nuvem.instancia.despejarSincronias());
