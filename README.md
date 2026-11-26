@@ -21,7 +21,11 @@ Flutter (Android, iOS e web a partir do mesmo código).
   Biblioteca" abaixo). São 22 livros, na ordem de publicação em inglês: a
   estante abre com *O Santo e o Seu Salvador*.
 - **Cronograma de leitura anual**, 365 dias (366 em ano bissexto), agrupado por
-  mês, com marcação de lido e barra de progresso do ano.
+  mês, com marcação de lido e barra de progresso do ano. Sem conta, o
+  calendário e a leitura de hoje aparecem sem nada pessoal (nenhum dia lido,
+  sem a linha "Progresso do ano"); marcar pede conta, e o toque no círculo
+  abre o convite de `lib/funcoes/convite_para_marcar.dart`, que marca o dia
+  se o login der certo.
 - **Dia marcado ao terminar a leitura**: a Bíblia aberta pela faixa de um dia
   (a leitura de hoje, o cronograma, um plano) recebe o dia e todos os
   capítulos dele na URL
@@ -31,8 +35,10 @@ Flutter (Android, iOS e web a partir do mesmo código).
   regra do "capítulo lido" da Biblioteca) fica guardado no aparelho
   (`ProgressoDosDias`, até 60 dias em andamento), e o dia só é marcado quando
   todos estão lidos, mesmo em momentos diferentes: Gênesis de manhã, Salmos à
-  noite. Marca com aviso e "Desfazer"; plano compartilhado grava na nuvem,
-  como o botão do dia. Ficam de fora: o dia com devocional (a leitura dele não
+  noite. Marca com aviso e "Desfazer" (sem conta, o fim da leitura de um dia
+  do cronograma só avisa "Entre para guardar a leitura do dia", com
+  "Entrar"); plano compartilhado grava na nuvem, como o botão do dia. Ficam
+  de fora: o dia com devocional (a leitura dele não
   passa pela Bíblia), a mesma leitura aberta direto pela aba Bíblia e, na
   prática, o dia com um recorte de versículos (Salmos 119:1 a 56), que só
   conta ao fim do capítulo inteiro.
@@ -126,10 +132,11 @@ Flutter (Android, iOS e web a partir do mesmo código).
   comentário de Charles Spurgeon para aquele versículo, nos 31.102 versículos
   dos 66 livros.
 - **Conta Google (Web, Android e iOS)**: ler é livre (Bíblia, devocionais,
-  Biblioteca, busca, chat dos convidados), mas o que é pessoal exige a conta:
-  o cronograma, os planos, o progresso dos livros, os favoritos e as notas.
-  Sem conta, essas telas mostram o convite de entrar e a folha do versículo
-  só oferece Copiar (e Compartilhar). Favoritos, notas, progresso,
+  Biblioteca, busca, chat dos convidados), mas o que é pessoal exige a conta: os
+  dias lidos do cronograma, os planos, o progresso dos livros, os favoritos e as
+  notas. Sem conta, essas telas mostram o convite de entrar (o cronograma e a
+  leitura de hoje aparecem, e o convite abre ao marcar um dia) e a folha do
+  versículo só oferece Copiar (e Compartilhar). Favoritos, notas, progresso,
   conversas, horários dos lembretes, planos (com a data de conclusão de cada um)
   e a leitura dos livros da Biblioteca sobem sozinhos para a conta de quem
   entrar (depois do consentimento da LGPD neste aparelho), para não perder nada
@@ -141,13 +148,13 @@ Flutter (Android, iOS e web a partir do mesmo código).
   conta" em vez do botão Entrar, que só aparece quando se sabe que não há
   sessão. Se o Firebase não inicia (a web sem rede não baixa o SDK) ou não
   responde em 10 s, a conta resolve pela última sessão que ele confirmou no
-  aparelho (`ultima_sessao_uid`): com ela, as telas pessoais mostram e gravam
-  a cópia local, sem sincronia, e o Sair falha sem apagar nada; sem ela,
-  aparece o convite de entrar. Os dados pessoais do aparelho têm dono
-  (`dono_dos_dados`, o uid da conta que os sincronizou): quando outra conta
-  entra, eles saem do aparelho antes de qualquer fusão, para nada de uma conta
-  subir para outra. Sem dono gravado (a primeira abertura desta versão), a
-  conta que entra o adota sem limpar.
+  aparelho (`ultima_sessao_uid`): com ela, as telas pessoais mostram e gravam a
+  cópia local, sem sincronia, e o Sair falha sem apagar nada; sem ela, aparece o
+  convite de entrar. Os dados pessoais do aparelho têm dono (`dono_dos_dados`, o
+  uid da conta que os sincronizou): quando outra conta entra, eles saem do
+  aparelho antes de qualquer fusão, para nada de uma conta subir para outra. Sem
+  dono gravado (a primeira abertura desta versão), a conta que entra o adota sem
+  limpar.
 - **Perfil** (`/perfil`, `lib/telas/perfil.dart`): tocar na foto da Hoje abre
   uma página com nome e e-mail, o cronograma de anos anteriores (cada ano abre
   em `/perfil/cronograma/AAAA`, só para consulta), os planos concluídos com a
@@ -251,11 +258,11 @@ Flutter (Android, iOS e web a partir do mesmo código).
 
 | Aba | Conteúdo |
 | --- | --- |
-| Hoje | Saudação, cartão de ajuda na primeira visita, leitura do cronograma com o progresso do ano, planos em andamento, prévia da leitura da hora (Manhã ou Noite) e das Promessas, livros em leitura ("Seus livros") |
+| Hoje | Saudação, cartão de ajuda na primeira visita, leitura do cronograma com o progresso do ano (só com conta), planos em andamento, prévia da leitura da hora (Manhã ou Noite) e das Promessas, livros em leitura ("Seus livros") |
 | Bíblia | Leitor por capítulo, os 66 livros, introdução de cada um |
 | Devocional | Manhã, Noite e Promessas de Deus, com calendário |
 | Biblioteca | Os livros de Spurgeon: estante, sumário e leitor por capítulo |
-| Plano | Cronograma anual por mês, com marcação de lido; Meus Planos (personalizados e compartilhados) |
+| Plano | Cronograma anual por mês, com marcação de lido (marcar pede conta); Meus Planos (personalizados e compartilhados) |
 | Conversas | Chat com Spurgeon e Felipe (IA, só para contas convidadas), numa aba própria em todas as plataformas; cada persona abre o histórico de conversas (`lib/telas/historico.dart`) |
 
 Notas não é aba: abre pelo ícone de marcador na barra de cima do Devocional,

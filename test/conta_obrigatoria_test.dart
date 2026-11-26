@@ -1,11 +1,13 @@
 import 'package:devocional/controladores/leitor_de_livro_controlador.dart';
 import 'package:devocional/controladores/notas_controlador.dart';
 import 'package:devocional/dados/biblioteca.dart';
+import 'package:devocional/dados/conteudo.dart';
 import 'package:devocional/dados/dia_da_leitura.dart';
 import 'package:devocional/dados/estado.dart';
 import 'package:devocional/dados/leitura_de_livros.dart';
 import 'package:devocional/dados/modelos.dart';
 import 'package:devocional/dados/nuvem.dart';
+import 'package:devocional/funcoes/convite_para_marcar.dart';
 import 'package:devocional/funcoes/marcar_dia_da_leitura.dart';
 import 'package:devocional/telas/hoje.dart';
 import 'package:devocional/telas/leitor_de_livro.dart';
@@ -18,8 +20,8 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// O cronograma anual e a leitura do dia só existem com conta: sem ela, o
-/// lugar deles é um convite para entrar, e o fim do capítulo não marca nada.
+/// O cronograma anual e a leitura do dia aparecem sem conta, mas nada pessoal
+/// com eles: marcar um dia pede conta, e o fim do capítulo só convida a entrar.
 
 void main() {
   setUpAll(() => TestWidgetsFlutterBinding.ensureInitialized());
@@ -42,30 +44,240 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('sem conta, a aba do cronograma pede login', (tester) async {
+  /// O dia 1º de março de 2026 já marcado como lido no aparelho, de antes de
+  /// a pessoa sair da conta.
+  Future<Estado> abrirComMarcaAntiga() async {
+    final estado = await abrir();
+    await estado.alternarLido('2026-03-01');
+    return estado;
+  }
+
+  /// O cronograma sai de um asset: a leitura de arquivo é real, e o relógio
+  /// falso do teste não a espera.
+  Future<void> carregarPlano(WidgetTester tester) => tester.runAsync(() async {
+    await Conteudo.instancia.plano(bissexto: false);
+    await Conteudo.instancia.diaDoPlano(DateTime(2026, 3, 1));
+  });
+
+  Future<void> montarCom(
+    WidgetTester tester,
+    Estado estado,
+    Widget filho,
+  ) async {
+    await tester.pumpWidget(
+      EscopoDoEstado(
+        estado: estado,
+        child: MaterialApp(home: Scaffold(body: filho)),
+      ),
+    );
+    await tester.pump();
+  }
+
+  testWidgets('sem conta, a aba do cronograma mostra o calendário sem lidos', (
+    tester,
+  ) async {
+    await carregarPlano(tester);
     Nuvem.instancia.logadoForcado = false;
+    final estado = await abrirComMarcaAntiga();
+
+    await montarCom(
+      tester,
+      estado,
+      TabernaculoAbaDoCronograma(hoje: DateTime(2026, 3, 1)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Entre para ver o plano'), findsNothing);
+    expect(find.byType(TabernaculoCartaoDeDia), findsWidgets);
+    expect(find.text('0 de 31 dias concluídos em Março'), findsOneWidget);
+    expect(find.text('Dia lido'), findsNothing);
+  });
+
+  testWidgets('com conta, a aba do cronograma mostra o dia lido', (
+    tester,
+  ) async {
+    await carregarPlano(tester);
+    Nuvem.instancia.logadoForcado = true;
+    final estado = await abrirComMarcaAntiga();
+
+    await montarCom(
+      tester,
+      estado,
+      TabernaculoAbaDoCronograma(hoje: DateTime(2026, 3, 1)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('1 de 31 dias concluídos em Março'), findsOneWidget);
+    expect(find.text('Dia lido'), findsOneWidget);
+  });
+
+  testWidgets('restaurando a conta, a aba do cronograma espera', (
+    tester,
+  ) async {
+    Nuvem.instancia.logadoForcado = false;
+    Nuvem.instancia.carregandoContaForcado = true;
 
     await montar(
       tester,
       TabernaculoAbaDoCronograma(hoje: DateTime(2026, 3, 1)),
     );
 
-    expect(find.text('Entre para ver o plano'), findsOneWidget);
+    expect(find.byType(TabernaculoVerificandoConta), findsOneWidget);
     expect(find.byType(TabernaculoCartaoDeDia), findsNothing);
   });
 
-  testWidgets('sem conta, a Hoje mostra o convite no lugar da leitura do dia', (
+  testWidgets('sem conta, tocar em marcar no cronograma abre o convite', (
+    tester,
+  ) async {
+    await carregarPlano(tester);
+    Nuvem.instancia.logadoForcado = false;
+    final estado = await abrir();
+    await montarCom(
+      tester,
+      estado,
+      TabernaculoAbaDoCronograma(hoje: DateTime(2026, 3, 1)),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Marcar como lido').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Entre para marcar a leitura'), findsOneWidget);
+    expect(
+      find.text('Os dias lidos ficam guardados na sua conta Google.'),
+      findsOneWidget,
+    );
+    expect(find.text('Entrar com Google'), findsOneWidget);
+    expect(estado.diasLidosNoAno(2026), 0);
+  });
+
+  testWidgets('sem conta, a Hoje mostra a leitura, sem o progresso do ano', (
+    tester,
+  ) async {
+    await carregarPlano(tester);
+    Nuvem.instancia.logadoForcado = false;
+    final estado = await abrirComMarcaAntiga();
+
+    await montarCom(
+      tester,
+      estado,
+      TabernaculoLeituraDeHoje(data: DateTime(2026, 3, 1)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TabernaculoCartaoDeEntrar), findsNothing);
+    expect(find.byType(TabernaculoCartaoLeituraProgresso), findsOneWidget);
+    expect(find.text('Leitura de hoje'), findsOneWidget);
+    expect(find.byType(TabernaculoBotaoDeFaixa), findsWidgets);
+    expect(find.text('Progresso do ano'), findsNothing);
+    expect(find.byType(TabernaculoProgressoFino), findsNothing);
+    expect(find.byTooltip(RegExp('^Marcar .* como lido')), findsOneWidget);
+  });
+
+  testWidgets('com conta, a Hoje mantém o progresso do ano', (tester) async {
+    await carregarPlano(tester);
+    Nuvem.instancia.logadoForcado = true;
+
+    await montar(tester, TabernaculoLeituraDeHoje(data: DateTime(2026, 3, 1)));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Progresso do ano'), findsOneWidget);
+  });
+
+  testWidgets('sem conta, tocar no círculo da Hoje abre o convite', (
+    tester,
+  ) async {
+    await carregarPlano(tester);
+    Nuvem.instancia.logadoForcado = false;
+    final estado = await abrir();
+    await montarCom(
+      tester,
+      estado,
+      TabernaculoLeituraDeHoje(data: DateTime(2026, 3, 1)),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(TabernaculoBotaoDeLido));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Entre para marcar a leitura'), findsOneWidget);
+    expect(estado.diasLidosNoAno(2026), 0);
+  });
+
+  testWidgets('restaurando a conta, o círculo não abre o convite', (
     tester,
   ) async {
     Nuvem.instancia.logadoForcado = false;
+    final estado = await abrir();
+    late BuildContext contexto;
+    await montarCom(
+      tester,
+      estado,
+      Builder(
+        builder: (context) {
+          contexto = context;
+          return const SizedBox();
+        },
+      ),
+    );
+    Nuvem.instancia.carregandoContaForcado = true;
 
-    await montar(tester, TabernaculoLeituraDeHoje(data: DateTime(2026, 3, 1)));
+    await alternarLidoOuConvidar(contexto, estado, '2026-03-01');
+    await tester.pumpAndSettle();
 
-    expect(find.byType(TabernaculoCartaoDeEntrar), findsOneWidget);
-    expect(find.byType(TabernaculoCartaoLeituraProgresso), findsNothing);
+    expect(find.text('Entre para marcar a leitura'), findsNothing);
+    expect(estado.foiLido('2026-03-01'), isFalse);
   });
 
-  testWidgets('restaurando a conta, a Hoje não mostra o convite', (
+  testWidgets('login pelo convite fecha a folha e marca o dia', (tester) async {
+    await carregarPlano(tester);
+    Nuvem.instancia.logadoForcado = false;
+    final estado = await abrir();
+    // Sem o diálogo de consentimento no caminho.
+    await estado.registrarConsentimentoDaNuvem();
+    await montarCom(
+      tester,
+      estado,
+      TabernaculoLeituraDeHoje(data: DateTime(2026, 3, 1)),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(TabernaculoBotaoDeLido));
+    await tester.pumpAndSettle();
+
+    // O Firebase não existe no teste: o login falha com aviso, e aqui a conta
+    // chega como se ele tivesse completado.
+    Nuvem.instancia.logadoForcado = true;
+    await tester.tap(find.text('Entrar com Google'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Entre para marcar a leitura'), findsNothing);
+    expect(estado.foiLido('2026-03-01'), isTrue);
+    expect(find.text('Dia marcado como lido'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 9));
+  });
+
+  testWidgets('com conta, o círculo da Hoje marca direto, sem convite', (
+    tester,
+  ) async {
+    await carregarPlano(tester);
+    Nuvem.instancia.logadoForcado = true;
+    final estado = await abrir();
+    await montarCom(
+      tester,
+      estado,
+      TabernaculoLeituraDeHoje(data: DateTime(2026, 3, 1)),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(TabernaculoBotaoDeLido));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Entre para marcar a leitura'), findsNothing);
+    expect(estado.diasLidosNoAno(2026), 1);
+    await tester.pump(const Duration(seconds: 9));
+  });
+
+  testWidgets('restaurando a conta, a Hoje não mostra o cartão', (
     tester,
   ) async {
     Nuvem.instancia.logadoForcado = false;
@@ -73,37 +285,98 @@ void main() {
 
     await montar(tester, TabernaculoLeituraDeHoje(data: DateTime(2026, 3, 1)));
 
+    expect(find.byType(TabernaculoCartaoLeituraProgresso), findsNothing);
     expect(find.byType(TabernaculoCartaoDeEntrar), findsNothing);
   });
 
-  testWidgets('sem conta, chegar ao fim do capítulo não marca o dia', (
-    tester,
-  ) async {
-    Nuvem.instancia.logadoForcado = false;
-    final estado = await abrir();
+  group('fim da leitura do dia do cronograma', () {
+    const chave = '2026-11-24';
     late BuildContext contexto;
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: Builder(
-            builder: (context) {
-              contexto = context;
-              return const SizedBox();
-            },
+
+    Future<Estado> montarFim(WidgetTester tester) async {
+      final estado = await abrir();
+      await tester.pumpWidget(
+        EscopoDoEstado(
+          estado: estado,
+          child: MaterialApp(
+            home: Scaffold(
+              body: Builder(
+                builder: (context) {
+                  contexto = context;
+                  return const SizedBox();
+                },
+              ),
+            ),
           ),
         ),
-      ),
-    );
-    const chave = '2026-11-24';
+      );
+      return estado;
+    }
 
-    await marcarDiaDaLeituraAoTerminar(
-      contexto,
-      estado,
-      const DiaDoCronograma(chave: chave, capitulos: ['joao.3']),
-    );
-    await tester.pump();
+    testWidgets('sem conta, não marca o dia e convida a entrar', (
+      tester,
+    ) async {
+      Nuvem.instancia.logadoForcado = false;
+      final estado = await montarFim(tester);
 
-    expect(estado.foiLido(chave), isFalse);
+      await marcarDiaDaLeituraAoTerminar(
+        contexto,
+        estado,
+        const DiaDoCronograma(chave: chave, capitulos: ['joao.3']),
+      );
+      await tester.pump();
+
+      expect(estado.foiLido(chave), isFalse);
+      expect(find.text('Entre para guardar a leitura do dia'), findsOneWidget);
+      expect(find.text('Entrar'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 9));
+    });
+
+    testWidgets('sem conta, o aviso sai uma vez por leitura terminada', (
+      tester,
+    ) async {
+      Nuvem.instancia.logadoForcado = false;
+      final estado = await montarFim(tester);
+      const dia = DiaDoCronograma(
+        chave: chave,
+        capitulos: ['genesis.1', 'salmos.1'],
+      );
+
+      await registrarCapituloLidoDoDia(contexto, estado, dia, 'genesis', 1);
+      await tester.pump();
+      expect(find.byType(SnackBar), findsNothing);
+
+      await registrarCapituloLidoDoDia(contexto, estado, dia, 'salmos', 1);
+      await tester.pump();
+      expect(find.text('Entre para guardar a leitura do dia'), findsOneWidget);
+      expect(estado.foiLido(chave), isFalse);
+      expect(estado.progressoDosDias.lidosDoDia(dia.chaveDoProgresso), isEmpty);
+      await tester.pump(const Duration(seconds: 9));
+    });
+
+    testWidgets(
+      'sem conta, o Entrar do aviso marca o dia se o login completa',
+      (tester) async {
+        Nuvem.instancia.logadoForcado = false;
+        final estado = await montarFim(tester);
+        await estado.registrarConsentimentoDaNuvem();
+        await marcarDiaDaLeituraAoTerminar(
+          contexto,
+          estado,
+          const DiaDoCronograma(chave: chave, capitulos: ['joao.3']),
+        );
+        await tester.pumpAndSettle();
+
+        // O Firebase não existe no teste: o login falha com aviso, e aqui a
+        // conta chega como se ele tivesse completado.
+        Nuvem.instancia.logadoForcado = true;
+        await tester.tap(find.text('Entrar'));
+        await tester.pumpAndSettle();
+
+        expect(estado.foiLido(chave), isTrue);
+        await tester.pump(const Duration(seconds: 9));
+      },
+    );
   });
 
   group('progresso dos livros', () {

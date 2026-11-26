@@ -5,7 +5,7 @@ import '../dados/conteudo.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
 import '../estilo/espacamento.dart';
-import '../funcoes/alternar_lido.dart';
+import '../funcoes/convite_para_marcar.dart';
 import 'cartao.dart';
 import 'botao.dart';
 import 'faixa.dart';
@@ -18,18 +18,23 @@ class TabernaculoCartaoLeituraProgresso extends StatelessWidget {
     required this.dia,
     required this.estado,
     required this.ano,
+    this.logado = true,
   });
 
   final DiaDoPlano dia;
   final Estado estado;
   final int ano;
 
+  /// Sem conta, o dia nunca aparece como lido, o progresso do ano some e o
+  /// círculo de marcar abre o convite para entrar.
+  final bool logado;
+
   @override
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     final chave = Estado.chaveDeLeitura(ano, dia.data);
-    final lido = estado.foiLido(chave);
+    final lido = logado && estado.foiLido(chave);
     final total = Conteudo.diasDoAno(ano);
     final progresso = estado.progressoDoAno(ano, total);
 
@@ -60,7 +65,7 @@ class TabernaculoCartaoLeituraProgresso extends StatelessWidget {
                 lido: lido,
                 rotulo: dia.rotulo,
                 aoAlternar: () =>
-                    alternarLidoComDesfazer(context, estado, chave),
+                    alternarLidoOuConvidar(context, estado, chave),
               ),
             ],
           ),
@@ -80,40 +85,42 @@ class TabernaculoCartaoLeituraProgresso extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: TabernaculoEspacamento.sp20),
-          const TabernaculoFilete(),
-          const SizedBox(height: TabernaculoEspacamento.sp14),
-          // Progresso do ano. Wrap, não Row com Spacer: em largura curta
-          // (ou fonte grande, ver a escala de leitura) o contador cai para a
-          // linha de baixo em vez de estourar a linha — o Row exigia que
-          // rótulo + número + total coubessem lado a lado sempre.
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: TabernaculoEspacamento.sp8,
-            runSpacing: TabernaculoEspacamento.sp4,
-            children: [
-              Text('Progresso do ano', style: tema.labelMedium),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Text(
-                    '${estado.diasLidosNoAno(ano)}',
-                    style: tema.titleMedium?.copyWith(color: cor.primary),
-                  ),
-                  const SizedBox(width: TabernaculoEspacamento.sp6),
-                  Text('de $total dias', style: tema.bodySmall),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: TabernaculoEspacamento.sp8),
-          // Trilho do tema, fio do metal por cima: o mesmo TabernaculoProgressoFino do
-          // plano e do cronograma. O `outline` que vivia aqui era papel de
-          // borda, não de trilho.
-          TabernaculoProgressoFino(valor: progresso.clamp(0.0, 1.0)),
+          if (logado) ...[
+            const SizedBox(height: TabernaculoEspacamento.sp20),
+            const TabernaculoFilete(),
+            const SizedBox(height: TabernaculoEspacamento.sp14),
+            // Progresso do ano. Wrap, não Row com Spacer: em largura curta
+            // (ou fonte grande, ver a escala de leitura) o contador cai para a
+            // linha de baixo em vez de estourar a linha — o Row exigia que
+            // rótulo + número + total coubessem lado a lado sempre.
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: TabernaculoEspacamento.sp8,
+              runSpacing: TabernaculoEspacamento.sp4,
+              children: [
+                Text('Progresso do ano', style: tema.labelMedium),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      '${estado.diasLidosNoAno(ano)}',
+                      style: tema.titleMedium?.copyWith(color: cor.primary),
+                    ),
+                    const SizedBox(width: TabernaculoEspacamento.sp6),
+                    Text('de $total dias', style: tema.bodySmall),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: TabernaculoEspacamento.sp8),
+            // Trilho do tema, fio do metal por cima: o mesmo TabernaculoProgressoFino do
+            // plano e do cronograma. O `outline` que vivia aqui era papel de
+            // borda, não de trilho.
+            TabernaculoProgressoFino(valor: progresso.clamp(0.0, 1.0)),
+          ],
         ],
       ),
     );

@@ -173,10 +173,9 @@ void main() {
     });
   });
 
-  group('cartão de entrar da Hoje', () {
-    Widget hoje() => ListView(
-      children: [TabernaculoLeituraDeHoje(data: DateTime(2026, 3, 1))],
-    );
+  group('cartão de entrar embutido', () {
+    Widget hoje() =>
+        ListView(children: [const TabernaculoCartaoDeEntrar(embutido: true)]);
 
     testWidgets('embutido não cria rolagem nem margem de página inteira', (
       tester,

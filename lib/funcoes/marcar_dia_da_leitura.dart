@@ -6,6 +6,7 @@ import '../dados/nuvem.dart';
 import '../dados/planos_nuvem.dart';
 import 'aviso.dart';
 import 'conclusao_do_plano.dart';
+import 'conta_acoes.dart';
 
 /// A pessoa chegou ao fim do capítulo [numero] de [livro], aberto pela
 /// leitura de [dia]: guarda o capítulo como lido no dia e, se era o último que
@@ -19,9 +20,16 @@ Future<void> registrarCapituloLidoDoDia(
   String livro,
   int numero,
 ) async {
+  if (!dia.temCapitulo(livro, numero)) return;
   // O andamento do dia é pessoal como o cronograma e os planos: sem conta,
-  // nada é guardado.
-  if (!Nuvem.instancia.logado || !dia.temCapitulo(livro, numero)) return;
+  // nada é guardado. No cronograma, que aparece sem conta, o fim da leitura
+  // convida a entrar para guardá-la.
+  if (!Nuvem.instancia.logado) {
+    if (dia is DiaDoCronograma && !Nuvem.instancia.carregandoConta) {
+      await _terminouSemConta(context, estado, dia, livro, numero);
+    }
+    return;
+  }
   final progresso = estado.progressoDosDias;
   final chave = dia.chaveDoProgresso;
   await progresso.registrar(chave, DiaDaLeitura.capitulo(livro, numero));
@@ -32,6 +40,27 @@ Future<void> registrarCapituloLidoDoDia(
   // Marcado (ou já estava): o andamento não serve mais. Quem desfizer a marca
   // marca de novo à mão, ou relê o dia.
   await progresso.esquecer(chave);
+}
+
+/// Os capítulos lidos até o fim, por dia do cronograma, enquanto não há
+/// conta. Só na memória: sem conta nada é gravado, e o convite sai uma vez
+/// por leitura terminada, não a cada capítulo de um dia com várias leituras.
+final _lidosSemConta = <String, Set<String>>{};
+
+Future<void> _terminouSemConta(
+  BuildContext context,
+  Estado estado,
+  DiaDoCronograma dia,
+  String livro,
+  int numero,
+) async {
+  final chave = dia.chaveDoProgresso;
+  final lidos = _lidosSemConta.putIfAbsent(chave, () => {})
+    ..add(DiaDaLeitura.capitulo(livro, numero));
+  if (!dia.capitulos.every(lidos.contains)) return;
+  _lidosSemConta.remove(chave);
+  if (!context.mounted) return;
+  await marcarDiaDaLeituraAoTerminar(context, estado, dia);
 }
 
 /// Marca [dia] como lido porque a pessoa chegou ao fim de todos os capítulos
@@ -48,8 +77,25 @@ Future<void> marcarDiaDaLeituraAoTerminar(
 ) async {
   switch (dia) {
     case DiaDoCronograma(:final chave):
-      // O cronograma é pessoal: sem conta, não marca nem avisa.
-      if (!Nuvem.instancia.logado) return;
+      if (!Nuvem.instancia.logado) {
+        // Sem conta nada é gravado: o aviso convida a entrar e, se der
+        // certo, marca o dia.
+        if (Nuvem.instancia.carregandoConta) return;
+        mostrarAviso(
+          context,
+          'Entre para guardar a leitura do dia',
+          rotuloDeAcao: 'Entrar',
+          duracao: duracaoDeAvisoAutomatico,
+          aoAgir: () async {
+            // Direto do toque, sem espera antes: a janela do login na web só
+            // abre dentro do gesto.
+            await entrarNaConta(context, Nuvem.instancia);
+            if (!Nuvem.instancia.logado || !context.mounted) return;
+            await marcarDiaDaLeituraAoTerminar(context, estado, dia);
+          },
+        );
+        return;
+      }
       if (estado.foiLido(chave)) return;
       await estado.alternarLido(chave);
       if (!context.mounted) return;

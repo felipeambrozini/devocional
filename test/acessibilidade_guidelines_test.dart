@@ -10,6 +10,7 @@ import 'package:devocional/dados/recursos.dart';
 import 'package:devocional/dados/voz.dart';
 import 'package:devocional/estilo/tema.dart';
 import 'package:devocional/funcoes/aviso.dart';
+import 'package:devocional/funcoes/convite_para_marcar.dart';
 import 'package:devocional/telas/biblia.dart';
 import 'package:devocional/telas/conversas.dart';
 import 'package:devocional/telas/historico.dart';
@@ -1205,6 +1206,43 @@ void _grupoDoCapituloDeLivro() {
         ) async {
           final semantica = tester.ensureSemantics();
           await montar(tester, brilho);
+          await _conferir(tester, diretriz);
+          semantica.dispose();
+        });
+      }
+    }
+  });
+  group('TabernaculoConviteParaMarcar', () {
+    Future<void> abrirFolha(WidgetTester tester, Brightness brilho) async {
+      _telaDeCelular(tester);
+      final estado = Estado(await SharedPreferences.getInstance());
+      await tester.pumpWidget(
+        _app(
+          brilho,
+          estado,
+          Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => convidarParaMarcar(context),
+                child: const Text('Abrir convite'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Abrir convite'));
+      await tester.pumpAndSettle();
+    }
+
+    for (final MapEntry(key: nomeDoTema, value: brilho) in _temas.entries) {
+      for (final MapEntry(key: nomeDaDiretriz, value: diretriz)
+          in _diretrizes.entries) {
+        testWidgets('no tema $nomeDoTema, atende $nomeDaDiretriz', (
+          tester,
+        ) async {
+          final semantica = tester.ensureSemantics();
+          await abrirFolha(tester, brilho);
+          expect(find.text('Entre para marcar a leitura'), findsOneWidget);
           await _conferir(tester, diretriz);
           semantica.dispose();
         });

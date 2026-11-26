@@ -8,7 +8,7 @@ import '../dados/modelos.dart';
 import '../dados/nuvem.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/datas.dart';
-import '../funcoes/alternar_lido.dart';
+import '../funcoes/convite_para_marcar.dart';
 import '../widgets/widgets.dart';
 
 /// O cronograma anual: a régua de meses e a lista de dias.
@@ -130,27 +130,22 @@ class _TabernaculoAbaDoCronogramaState extends State<TabernaculoAbaDoCronograma>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    // O cronograma é pessoal: sem conta, o convite ocupa o lugar dele. Durante
-    // a restauração da sessão não mostra nada, para o convite não piscar para
-    // quem já está logado.
+    // O calendário aparece com ou sem conta; só marcar dias exige conta. Sem
+    // ela nenhum dia aparece como lido, mesmo com marcas antigas no aparelho.
+    // Durante a restauração da sessão não mostra nada, para as marcas não
+    // piscarem para quem já está logado.
     return ListenableBuilder(
       listenable: Nuvem.instancia,
       builder: (context, _) {
-        if (Nuvem.instancia.logado) return _cronograma(context);
         if (Nuvem.instancia.carregandoConta) {
           return const TabernaculoVerificandoConta();
         }
-        return const TabernaculoCartaoDeEntrar(
-          titulo: 'Entre para ver o plano',
-          descricao:
-              'O cronograma anual fica guardado na sua conta, com os dias '
-              'que você já leu.',
-        );
+        return _cronograma(context, logado: Nuvem.instancia.logado);
       },
     );
   }
 
-  Widget _cronograma(BuildContext context) {
+  Widget _cronograma(BuildContext context, {required bool logado}) {
     final estado = EscopoDoEstado.de(context);
     final hoje = _hoje;
     final ano = _ano;
@@ -210,9 +205,9 @@ class _TabernaculoAbaDoCronogramaState extends State<TabernaculoAbaDoCronograma>
                 final dias = snap.data!.where((d) => d.mes == _mes).toList();
                 String chaveDe(DiaDoPlano dia) =>
                     Estado.chaveDeLeitura(ano, dia.data);
-                final lidosNoMes = dias
-                    .where((d) => estado.foiLido(chaveDe(d)))
-                    .length;
+                bool lidoNoDia(DiaDoPlano dia) =>
+                    logado && estado.foiLido(chaveDe(dia));
+                final lidosNoMes = dias.where(lidoNoDia).length;
                 _rolarAteHoje();
 
                 return ListView.separated(
@@ -267,14 +262,14 @@ class _TabernaculoAbaDoCronogramaState extends State<TabernaculoAbaDoCronograma>
                           : DiaDaLeitura.doCronograma(chaveDe(dia), [
                               for (final f in dia.faixas) ItemDeCapitulo(f),
                             ]),
-                      lido: estado.foiLido(chaveDe(dia)),
+                      lido: lidoNoDia(dia),
                       destacar: ehHoje,
                       // O mesmo "Desfazer" da Hoje: um toque errado num
                       // dia lido não pode custar o registro sem aviso.
                       somenteLeitura: widget.somenteLeitura,
                       aoAlternar: widget.somenteLeitura
                           ? () {}
-                          : () => alternarLidoComDesfazer(
+                          : () => alternarLidoOuConvidar(
                               context,
                               estado,
                               chaveDe(dia),

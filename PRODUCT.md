@@ -43,11 +43,16 @@ vitoriana dele, tratando o leitor por "tu".
 - Cronograma anual: 365 dias (366 em bissexto), 455 faixas, os 1.189
   capítulos, agrupado por mês, com marcação de lido e progresso do ano. O
   progresso é do ano (os dias lidos guardam o ano) e recomeça em 1º de janeiro;
-  o histórico dos anos anteriores fica guardado.
+  o histórico dos anos anteriores fica guardado. O calendário e a leitura de
+  hoje aparecem sem conta, sem nenhum dia lido nem progresso do ano; marcar um
+  dia pede conta, e o toque no círculo abre um convite para entrar ("Entre
+  para marcar a leitura"), que marca o dia se o login der certo.
 - Marcação ao terminar de ler: quem abre a Bíblia pela faixa de um dia (do
   cronograma ou de um plano) e chega ao fim de todos os capítulos dele, mesmo
   em momentos diferentes, tem o dia marcado como lido, com aviso e
-  "Desfazer". Na Biblioteca, chegar ao fim de
+  "Desfazer". Sem conta, o fim da leitura de um dia do cronograma não grava
+  nada e avisa "Entre para guardar a leitura do dia", com a ação "Entrar".
+  Na Biblioteca, chegar ao fim de
   um capítulo marca o capítulo. Conta rolar até o fim ou, em capítulo que cabe
   na tela, ficar 20 s com ele aberto.
 - Tema claro ou escuro (padrão segue o aparelho, dá para fixar) e escala do
@@ -57,8 +62,8 @@ vitoriana dele, tratando o leitor por "tu".
   reserva no Android para o caso de o push não chegar.
 - Cópia de segurança de favoritos, notas e progresso por exportar/importar
   (folha de compartilhar); conta Google em todas as plataformas, que guarda
-  o que é pessoal: cronograma, planos, progresso dos livros, favoritos e
-  notas. Ler continua livre, sem conta.
+  o que é pessoal: dias lidos do cronograma, planos, progresso dos livros,
+  favoritos e notas. Ler continua livre, sem conta.
 - Navegação: abas Hoje, Bíblia, Devocional, Biblioteca, Plano e Conversas; Sobre
   (créditos, canais e ajuda), Perguntas frequentes e Política de privacidade
   moram na folha de ajustes; os Termos de serviço abrem de dentro de Sobre. Na
