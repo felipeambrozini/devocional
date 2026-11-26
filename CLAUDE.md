@@ -23,6 +23,8 @@
 - Trabalhe sempre direto na branch `main`. Nunca crie branch nem worktree para
   implementar tarefas deste projeto — nada de isolamento por branch/worktree,
   mesmo quando um skill ou processo sugerir isso por padrão.
+- O skill `anthropic-skills:diletta-fluxo` (GitFlow, Bitbucket, OpenSpec) não
+  vale neste projeto: branch, commit e versão seguem as regras acima.
 - Sempre que uma tela (`lib/telas/`) ou widget de UI (`lib/widgets/`) for criado
   ou alterado, após codificar, rode o agente `ui-reviewer` nos arquivos mudados
   e corrija os achados de gravidade alta antes de dar a tarefa por concluída.
@@ -32,10 +34,12 @@
   `web/manifest.json`), após codificar, aplique o skill `stop-slop` nos textos
   mudados e reescreva o que cair nas regras dele antes de dar a tarefa por
   concluída. Ficam de fora os comentários e introduções de `assets/` e as
-  instruções de sistema das personas. Leia o skill pelo caminho,
-  [.agents/skills/stop-slop/SKILL.md](.agents/skills/stop-slop/SKILL.md): no
-  Windows sem link simbólico, `.claude/skills` vira um arquivo de texto e os
-  skills do projeto não aparecem na lista.
+  instruções de sistema das personas. O skill fica em
+  [.agents/skills/stop-slop/SKILL.md](.agents/skills/stop-slop/SKILL.md). Se
+  ele não aparecer na lista, leia pelo caminho: num clone com
+  `core.symlinks=false`, `.claude/skills` vira um arquivo de texto e os skills
+  do projeto somem. No Windows, isso se resolve com o Modo de Desenvolvedor,
+  `git config core.symlinks true` e um novo checkout de `.claude/skills`.
 - Sempre que uma tela (`lib/telas/`) ou widget de UI (`lib/widgets/`) for criado
   ou alterado, após codificar, aplique o skill `unslop` (plugin
   `unslop@heydamir`; se não aparecer na lista de skills, instale com
@@ -94,13 +98,6 @@ sessão principal faz sozinha, sem delegar: cada repasse perde contexto.
   navegador não enxerga a árvore de widgets. Para conferir uma mudança com o
   app rodando (árvore de widgets, erros em tempo de execução, hot reload), use
   o servidor MCP do Dart (plugin Dart and Flutter).
-- `flutter-reviewer` (plugin Very Good AI): só como segunda opinião de
-  engenharia, nunca no lugar do `ui-reviewer`. O plugin assume BLoC,
-  `very_good_analysis` e arquitetura em camadas; este projeto usa controladores
-  e `flutter_lints`, então descarte sugestões que só sigam esse estilo. Os
-  ganchos dele rodam `dart format` e `dart analyze` sem `fvm`: não conte com
-  eles; a verificação oficial continua sendo
-  `fvm flutter analyze && fvm flutter test`.
 
 ## Plugin EGM (Elephant-Goldfish Model)
 

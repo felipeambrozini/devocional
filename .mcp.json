@@ -5,7 +5,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "@upstash/context7-mcp@latest"
+        "@upstash/context7-mcp@4.8.0"
       ],
       "env": {}
     },
@@ -14,14 +14,10 @@
       "command": "npx",
       "args": [
         "-y",
-        "firebase-tools@latest",
+        "firebase-tools@15.37.0",
         "mcp"
       ],
       "env": {}
-    },
-    "github": {
-      "type": "http",
-      "url": "https://api.githubcopilot.com/mcp/"
     }
   }
 }
