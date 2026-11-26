@@ -259,9 +259,12 @@ class _TabernaculoAbaDoCronogramaState extends State<TabernaculoAbaDoCronograma>
                       numero: dia.dia,
                       rotulo: dia.rotulo,
                       itens: [for (final f in dia.faixas) ItemDeCapitulo(f)],
-                      dia: DiaDaLeitura.doCronograma(chaveDe(dia), [
-                        for (final f in dia.faixas) ItemDeCapitulo(f),
-                      ]),
+                      // Sem o dia, abrir a leitura não registra nem marca nada.
+                      dia: widget.somenteLeitura
+                          ? null
+                          : DiaDaLeitura.doCronograma(chaveDe(dia), [
+                              for (final f in dia.faixas) ItemDeCapitulo(f),
+                            ]),
                       lido: estado.foiLido(chaveDe(dia)),
                       destacar: ehHoje,
                       // O mesmo "Desfazer" da Hoje: um toque errado num

@@ -221,6 +221,15 @@ void main() {
       },
     );
 
+    test('anosAnterioresComLeitura ignora chave malformada', () async {
+      SharedPreferences.setMockInitialValues({
+        'dias_lidos': ['abc-01-01', '2024-03-01'],
+      });
+      final estado = Estado(await SharedPreferences.getInstance());
+
+      expect(estado.anosAnterioresComLeitura(anoAtual: 2026), [2024]);
+    });
+
     Future<Estado> montarAno(
       WidgetTester tester, {
       required Map<String, Object> prefs,
@@ -277,6 +286,18 @@ void main() {
 
       // A variante de 366 dias: fevereiro tem 29 e o dia 29 está lido.
       expect(find.text('1 de 29 dias concluídos em Fevereiro'), findsOneWidget);
+    });
+
+    testWidgets('ano passado não passa o dia às faixas da leitura', (
+      tester,
+    ) async {
+      await montarAno(tester, prefs: {});
+
+      final botoes = tester.widgetList<TabernaculoBotaoDeFaixa>(
+        find.byType(TabernaculoBotaoDeFaixa),
+      );
+      expect(botoes, isNotEmpty);
+      expect(botoes.every((b) => b.dia == null), isTrue);
     });
 
     testWidgets('ano passado não marca nada ao tocar', (tester) async {
