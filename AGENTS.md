@@ -89,9 +89,16 @@ subagente, se a ferramenta tiver, ou na própria sessão:
 - [flutter-test-writer](.claude/agents/flutter-test-writer.md): testes para
   funcionalidade nova ou bug fix, nas convenções de `test/`.
 
+No OpenCode, os três existem como subagentes em `.opencode/agents/`, gerados a
+partir de `.claude/agents/` e com o modelo fixado no campo `model:`. Ao mudar
+um roteiro em `.claude/agents/`, copie o corpo para o arquivo de mesmo nome em
+`.opencode/agents/`. A pasta `.opencode/` fica fora do Git
+(`.git/info/exclude`), então esses arquivos existem só nesta máquina.
+
 A sessão principal planeja, decide o que delegar, junta os resultados e faz a
 revisão final antes do push. Busca, leitura e mudança mecânica podem ir para um
-modelo mais barato; as revisões que barram qualidade (`ui-reviewer`,
+modelo mais rápido (o `explore` usa o Nemotron 3.5 Lightning, definido em
+`.opencode/opencode.json`); as revisões que barram qualidade (`ui-reviewer`,
 `security-rules-reviewer`) não. Tarefa que cabe em poucas chamadas de
 ferramenta a sessão principal faz sozinha, sem delegar: cada repasse perde
 contexto.
