@@ -1329,7 +1329,10 @@ que está funcionando.
   ícones, capas) com `cache: 'reload'`, para não guardar a cópia velha de um
   nome sem hash. O conteúdo (capítulos, devocionais, comentários) entra no cache
   conforme é lido, em stale-while-revalidate; navegação é rede-primeiro com
-  teto de 4 s e cai no `index.html` em cache. `activate` apaga do cache o que
+  teto de 4 s e cai no `index.html` em cache. O `flutter_bootstrap.js`, que
+  não tem hash e aponta o `main.dart.<hash>.js`, também é rede-primeiro (sem o
+  cache HTTP): servido do cache, a primeira abertura depois de um deploy
+  rodava o build antigo. `activate` apaga do cache o que
   não está no manifesto do build atual. O `flutter_service_worker.js` não é
   registrado (o `web/flutter_bootstrap.js` chama `load()` sem
   `serviceWorkerSettings`) e é removido do `public` no deploy; o `index.html`

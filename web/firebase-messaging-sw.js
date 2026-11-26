@@ -296,24 +296,51 @@ self.addEventListener('activate', (evento) => {
   );
 });
 
-async function navegar(requisicao) {
+/// Busca na rede com teto de 4 s e guarda a resposta boa no cache, pela URL.
+/// Lança quando não há rede ou ela não responde a tempo: quem chama cai no
+/// cache. O teto evita ficar preso no "carregando" quando a conexão existe
+/// mas não entrega.
+async function daRedeComPrazo(requisicao, opcoes) {
   const cache = await caches.open(CACHE);
-  // Rede primeiro para pegar o index.html novo; sem rede (ou rede que não
-  // responde), o app shell em cache assume. O teto de 4 s evita ficar preso
-  // no "carregando" quando a conexão existe mas não entrega.
   const controle = new AbortController();
   const relogio = setTimeout(() => controle.abort(), 4000);
   try {
-    const resposta = await fetch(requisicao, {signal: controle.signal});
-    clearTimeout(relogio);
+    const resposta = await fetch(requisicao, {
+      ...opcoes,
+      signal: controle.signal,
+    });
     if (resposta && resposta.ok) {
-      // Chave pela URL, não pelo Request de navegação: o Cache API não aceita
-      // um Request com mode "navigate" como chave.
+      // Chave pela URL, não pelo Request: o Cache API não aceita um Request
+      // com mode "navigate" como chave.
       cache.put(requisicao.url, resposta.clone()).catch(() => {});
     }
     return resposta;
-  } catch (_) {
+  } finally {
     clearTimeout(relogio);
+  }
+}
+
+/// O `flutter_bootstrap.js` não tem hash no nome e é ele que diz qual
+/// `main.dart.<hash>.js` carregar. Servido do cache primeiro, como os outros
+/// arquivos sem hash, a primeira abertura depois de um deploy rodava o build
+/// antigo (o Sobre, que lê o `version.json` da rede, já mostrava a versão
+/// nova). Rede primeiro, sem o cache HTTP do navegador; sem rede, o do cache.
+async function servirBootstrap(requisicao) {
+  try {
+    return await daRedeComPrazo(requisicao, {cache: 'no-cache'});
+  } catch (_) {
+    const cache = await caches.open(CACHE);
+    return (await cache.match(requisicao.url)) || Response.error();
+  }
+}
+
+async function navegar(requisicao) {
+  const cache = await caches.open(CACHE);
+  // Rede primeiro para pegar o index.html novo; sem rede (ou rede que não
+  // responde), o app shell em cache assume.
+  try {
+    return await daRedeComPrazo(requisicao);
+  } catch (_) {
     return (await cache.match(requisicao.url)) ||
       (await cache.match(INDICE)) ||
       new Response(
@@ -439,6 +466,10 @@ self.addEventListener('fetch', (evento) => {
 
   if (requisicao.mode === 'navigate') {
     evento.respondWith(navegar(requisicao));
+    return;
+  }
+  if (url.pathname.endsWith('/flutter_bootstrap.js')) {
+    evento.respondWith(servirBootstrap(requisicao));
     return;
   }
   evento.respondWith(servir(requisicao, evento));

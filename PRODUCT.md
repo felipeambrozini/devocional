@@ -208,8 +208,9 @@ vitoriana dele, tratando o leitor por "tu".
   worker único (`web/firebase-messaging-sw.js`) pré-cacheia o shell (HTML,
   bootstrap, `main.dart` com hash, fontes, CanvasKit, ícones, capas) e guarda o
   conteúdo (capítulos, devocionais, comentários) conforme é lido, com
-  stale-while-revalidate; navegação tenta a rede por 4 s e cai no shell em
-  cache. Nomes de arquivo com hash de conteúdo tornam o cache imutável e
+  stale-while-revalidate; navegação e `flutter_bootstrap.js` tentam a rede por
+  4 s e caem no shell em cache, para a abertura depois de um deploy já rodar
+  o build novo. Nomes de arquivo com hash de conteúdo tornam o cache imutável e
   seguro entre deploys (ver README.md, `--web-content-hash`).
 - Portão de 18 anos no chat: a primeira visita pede uma declaração explícita
   ("Tenho 18 anos ou mais") e guarda a resposta neste aparelho
