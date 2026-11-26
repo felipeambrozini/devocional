@@ -2,6 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:devocional/dados/canon.dart';
+import 'package:devocional/dados/estado.dart';
+import 'package:devocional/dados/nuvem.dart';
+import 'package:devocional/widgets/widgets.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:devocional/dados/conteudo.dart';
 import 'package:devocional/dados/modelos.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -192,6 +198,106 @@ void main() {
 
     test('cobre todos os capitulos do canon, sem lacuna', () {
       conferirCoberturaDoCanon(planoBissexto);
+    });
+  });
+
+  group('anos anteriores', () {
+    test(
+      'anosAnterioresComLeitura ignora o ano atual e anos sem leitura',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          'dias_lidos': [
+            '2024-03-01',
+            '2024-12-31',
+            '2025-01-05',
+            '2026-02-02',
+            '2027-01-01',
+          ],
+        });
+        final estado = Estado(await SharedPreferences.getInstance());
+
+        expect(estado.anosAnterioresComLeitura(anoAtual: 2026), [2025, 2024]);
+        expect(estado.anosAnterioresComLeitura(anoAtual: 2024), isEmpty);
+      },
+    );
+
+    Future<Estado> montarAno(
+      WidgetTester tester, {
+      required Map<String, Object> prefs,
+    }) async {
+      Nuvem.instancia.logadoForcado = true;
+      addTearDown(() => Nuvem.instancia.logadoForcado = null);
+      SharedPreferences.setMockInitialValues(prefs);
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.runAsync(() => Conteudo.instancia.plano(bissexto: true));
+      final estado = Estado(await SharedPreferences.getInstance());
+      await tester.pumpWidget(
+        EscopoDoEstado(
+          estado: estado,
+          child: MaterialApp(
+            home: Scaffold(
+              body: TabernaculoAbaDoCronograma(
+                hoje: DateTime(2026, 11, 25),
+                ano: 2024,
+                somenteLeitura: true,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 200)),
+      );
+      await tester.pump();
+      await tester.pump();
+      return estado;
+    }
+
+    testWidgets('ano passado mostra os dias lidos daquele ano', (tester) async {
+      await montarAno(
+        tester,
+        prefs: {
+          'dias_lidos': [
+            '2024-01-01',
+            '2024-01-02',
+            '2024-02-29',
+            '2026-01-03',
+          ],
+        },
+      );
+
+      expect(find.text('2 de 31 dias concluídos em Janeiro'), findsOneWidget);
+
+      await tester.tap(find.text('Fevereiro'));
+      await tester.pump();
+      await tester.pump();
+
+      // A variante de 366 dias: fevereiro tem 29 e o dia 29 está lido.
+      expect(find.text('1 de 29 dias concluídos em Fevereiro'), findsOneWidget);
+    });
+
+    testWidgets('ano passado não marca nada ao tocar', (tester) async {
+      final estado = await montarAno(
+        tester,
+        prefs: {
+          'dias_lidos': ['2024-01-01'],
+        },
+      );
+
+      expect(find.text('Marcar como lido'), findsNothing);
+      expect(find.text('Desfazer'), findsNothing);
+      final antes = estado.diasLidosNoAno(2024);
+
+      await tester.tap(find.text('Dia lido').first);
+      await tester.pump();
+      await tester.pump();
+
+      expect(estado.diasLidosNoAno(2024), antes);
+      expect(estado.foiLido(Estado.chaveDeLeitura(2024, '01-01')), isTrue);
+      expect(find.text('Dia marcado como lido'), findsNothing);
     });
   });
 }

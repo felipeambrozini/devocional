@@ -17,9 +17,21 @@ import '../widgets/widgets.dart';
 /// aba que sai da tela: sem isto, trocar para Meus Planos e voltar
 /// recomeçaria o mês em janeiro e perderia a rolagem.
 class TabernaculoAbaDoCronograma extends StatefulWidget {
-  const TabernaculoAbaDoCronograma({super.key, required this.hoje});
+  const TabernaculoAbaDoCronograma({
+    super.key,
+    required this.hoje,
+    this.ano,
+    this.somenteLeitura = false,
+  });
 
   final DateTime? hoje;
+
+  /// Ano a exibir; sem ele, o ano corrente. Um ano passado carrega a variante
+  /// pelo bissexto dele e usa as chaves de leitura daquele ano.
+  final int? ano;
+
+  /// Registro de um ano que passou: nenhum toque marca, e não há desfazer.
+  final bool somenteLeitura;
 
   @override
   State<TabernaculoAbaDoCronograma> createState() =>
@@ -36,7 +48,10 @@ class _TabernaculoAbaDoCronogramaState extends State<TabernaculoAbaDoCronograma>
   // travaria "hoje" no dia em que a tela foi aberta, inclusive na virada do
   // ano. Mesmo raciocínio de `_semGestoDeToque` em `lib/telas/biblia.dart`.
   DateTime get _hoje => widget.hoje ?? DateTime.now();
-  late int _mes = _hoje.month;
+  int get _ano => widget.ano ?? _hoje.year;
+
+  /// Um ano passado não tem "hoje": abre em janeiro.
+  late int _mes = widget.ano == null ? _hoje.month : 1;
 
   final _rolagem = ScrollController();
 
@@ -99,7 +114,11 @@ class _TabernaculoAbaDoCronogramaState extends State<TabernaculoAbaDoCronograma>
   /// parada perto do dia 5. Abrir já no dia também é o que a frase acima
   /// promete; rolar do dia 1 ao 29 na frente do leitor era só movimento.
   void _rolarAteHoje() {
-    if (_mes != _hoje.month || _mesJaCentralizado == _mes) return;
+    if (widget.ano != null ||
+        _mes != _hoje.month ||
+        _mesJaCentralizado == _mes) {
+      return;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final alvo = _chaveDeHoje.currentContext;
       if (!mounted || alvo == null) return;
@@ -132,6 +151,7 @@ class _TabernaculoAbaDoCronogramaState extends State<TabernaculoAbaDoCronograma>
   Widget _cronograma(BuildContext context) {
     final estado = EscopoDoEstado.de(context);
     final hoje = _hoje;
+    final ano = _ano;
 
     return Column(
       children: [
@@ -171,10 +191,9 @@ class _TabernaculoAbaDoCronogramaState extends State<TabernaculoAbaDoCronograma>
               //
               // A chave leva o ano porque é ele que escolhe o arquivo; o mês não, porque a
               // filtragem por mês é feita sobre a lista já carregada.
-              chave: 'plano/${hoje.year}/$_tentativa',
-              carregar: () => Conteudo.instancia.plano(
-                bissexto: Conteudo.ehBissexto(hoje.year),
-              ),
+              chave: 'plano/$ano/$_tentativa',
+              carregar: () =>
+                  Conteudo.instancia.plano(bissexto: Conteudo.ehBissexto(ano)),
               construir: (context, snap) {
                 if (snap.hasError) {
                   return TabernaculoAvisoDeErro(aoTentarDeNovo: _tentarDeNovo);
@@ -188,7 +207,7 @@ class _TabernaculoAbaDoCronogramaState extends State<TabernaculoAbaDoCronograma>
                 }
                 final dias = snap.data!.where((d) => d.mes == _mes).toList();
                 String chaveDe(DiaDoPlano dia) =>
-                    Estado.chaveDeLeitura(hoje.year, dia.data);
+                    Estado.chaveDeLeitura(ano, dia.data);
                 final lidosNoMes = dias
                     .where((d) => estado.foiLido(chaveDe(d)))
                     .length;
@@ -231,7 +250,10 @@ class _TabernaculoAbaDoCronogramaState extends State<TabernaculoAbaDoCronograma>
                       );
                     }
                     final dia = dias[i - 1];
-                    final ehHoje = dia.mes == hoje.month && dia.dia == hoje.day;
+                    final ehHoje =
+                        widget.ano == null &&
+                        dia.mes == hoje.month &&
+                        dia.dia == hoje.day;
                     return TabernaculoCartaoDeDia(
                       key: ehHoje ? _chaveDeHoje : null,
                       numero: dia.dia,
@@ -244,11 +266,14 @@ class _TabernaculoAbaDoCronogramaState extends State<TabernaculoAbaDoCronograma>
                       destacar: ehHoje,
                       // O mesmo "Desfazer" da Hoje: um toque errado num
                       // dia lido não pode custar o registro sem aviso.
-                      aoAlternar: () => alternarLidoComDesfazer(
-                        context,
-                        estado,
-                        chaveDe(dia),
-                      ),
+                      somenteLeitura: widget.somenteLeitura,
+                      aoAlternar: widget.somenteLeitura
+                          ? () {}
+                          : () => alternarLidoComDesfazer(
+                              context,
+                              estado,
+                              chaveDe(dia),
+                            ),
                     );
                   },
                 );

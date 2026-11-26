@@ -27,6 +27,7 @@ class TabernaculoCartaoDeDia extends StatelessWidget {
     required this.aoAlternar,
     this.destacar = false,
     this.dia,
+    this.somenteLeitura = false,
   });
 
   final int numero;
@@ -42,6 +43,10 @@ class TabernaculoCartaoDeDia extends StatelessWidget {
   /// O dia a marcar quando a leitura chega ao fim dele, repassado às faixas
   /// (ver [DiaDaLeitura]).
   final DiaDaLeitura? dia;
+
+  /// Registro de um ano que já passou: o botão de marcar some e o estado de
+  /// lido fica só no número e no rótulo. Abrir a leitura continua valendo.
+  final bool somenteLeitura;
 
   @override
   Widget build(BuildContext context) {
@@ -104,25 +109,52 @@ class TabernaculoCartaoDeDia extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: TabernaculoEspacamento.sp4),
-                  Tooltip(
-                    message: lido
-                        ? 'Desmarcar $rotulo'
-                        : 'Marcar $rotulo como lido',
-                    child: TabernaculoBotaoTerciario.icon(
-                      onPressed: aoAlternar,
-                      icon: FaIcon(
-                        lido
-                            ? FontAwesomeIcons.circleCheck
-                            : FontAwesomeIcons.circle,
-                        size: 14,
-                        color: lido ? cor.secondary : null,
-                      ),
-                      label: Text(
-                        lido ? 'Dia lido' : 'Marcar como lido',
-                        style: lido ? TextStyle(color: cor.secondary) : null,
+                  if (somenteLeitura)
+                    if (lido)
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: TabernaculoEspacamento.sp8,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            FaIcon(
+                              FontAwesomeIcons.circleCheck,
+                              size: 14,
+                              color: cor.secondary,
+                            ),
+                            const SizedBox(width: TabernaculoEspacamento.sp8),
+                            Text(
+                              'Dia lido',
+                              style: tema.labelLarge?.copyWith(
+                                color: cor.secondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      const SizedBox(height: TabernaculoEspacamento.sp8)
+                  else
+                    Tooltip(
+                      message: lido
+                          ? 'Desmarcar $rotulo'
+                          : 'Marcar $rotulo como lido',
+                      child: TabernaculoBotaoTerciario.icon(
+                        onPressed: aoAlternar,
+                        icon: FaIcon(
+                          lido
+                              ? FontAwesomeIcons.circleCheck
+                              : FontAwesomeIcons.circle,
+                          size: 14,
+                          color: lido ? cor.secondary : null,
+                        ),
+                        label: Text(
+                          lido ? 'Dia lido' : 'Marcar como lido',
+                          style: lido ? TextStyle(color: cor.secondary) : null,
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),

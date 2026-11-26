@@ -564,6 +564,17 @@ class Estado extends ChangeNotifier {
   int diasLidosNoAno(int ano) =>
       _lidos.where((chave) => chave.startsWith('$ano-')).length;
 
+  /// Anos anteriores a [anoAtual] com ao menos um dia lido, do mais recente ao
+  /// mais antigo. O perfil lista esses anos como registros só de consulta.
+  List<int> anosAnterioresComLeitura({required int anoAtual}) {
+    final anos = <int>{};
+    for (final chave in _lidos) {
+      final ano = int.tryParse(chave.split('-').first);
+      if (ano != null && ano < anoAtual) anos.add(ano);
+    }
+    return anos.toList()..sort((a, b) => b.compareTo(a));
+  }
+
   bool foiLido(String chave) => _lidos.contains(chave);
 
   Future<void> alternarLido(String chave) async {
