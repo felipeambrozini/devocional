@@ -46,6 +46,7 @@ void main() {
       expect(texto, isNot(contains('mesmo jeito')));
       expect(texto, isNot(contains('sem tocar no que está')));
       expect(texto, isNot(contains('Favoritos, anotações, progresso de')));
+      expect(texto, isNot(contains('nem o horário em que lê')));
     });
   }
 }

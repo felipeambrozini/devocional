@@ -164,11 +164,13 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                                 'histórico das conversas do chat com IA. O '
                                 'avatar mostra a foto da conta Google, sem '
                                 'upload próprio. Nunca sobe o texto da Bíblia '
-                                'ou do devocional que você lê, nem o horário '
-                                'em que lê. Com a conta aberta, uma cópia fica '
-                                'também no aparelho. Ao sair, os dados ficam '
-                                'na conta, saem do aparelho e voltam quando '
-                                'você entra de novo.'
+                                'ou do devocional que você lê. Das datas, '
+                                'sobem só as que o app guarda: quando cada '
+                                'nota e cada plano mudaram e quando cada plano '
+                                'foi concluído. Com a conta aberta, uma cópia '
+                                'fica também no aparelho. Ao sair, os dados '
+                                'ficam na conta, saem do aparelho e voltam '
+                                'quando você entra de novo.'
                           : 'Com a conta Google, ficam na nuvem do projeto '
                                 '(Firebase), além do e-mail e do identificador '
                                 'da conta: favoritos, anotações, o cronograma, '
@@ -176,11 +178,13 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                                 'Biblioteca e os horários dos lembretes. O '
                                 'avatar mostra a foto da conta Google, sem '
                                 'upload próprio. Nunca sobe o texto da Bíblia '
-                                'ou do devocional que você lê, nem o horário '
-                                'em que lê. Com a conta aberta, uma cópia fica '
-                                'também no aparelho. Ao sair, os dados ficam '
-                                'na conta, saem do aparelho e voltam quando '
-                                'você entra de novo.',
+                                'ou do devocional que você lê. Das datas, '
+                                'sobem só as que o app guarda: quando cada '
+                                'nota e cada plano mudaram e quando cada plano '
+                                'foi concluído. Com a conta aberta, uma cópia '
+                                'fica também no aparelho. Ao sair, os dados '
+                                'ficam na conta, saem do aparelho e voltam '
+                                'quando você entra de novo.',
                     ),
                     TabernaculoSecaoDeTexto(
                       key: _baseLegal,
