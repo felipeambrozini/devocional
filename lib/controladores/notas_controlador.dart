@@ -4,11 +4,13 @@ import '../dados/conteudo.dart';
 import '../dados/modelos.dart';
 
 /// De qual aba vieram as notas: cada aba mostra só os próprios favoritos e
-/// anotações, para Bíblia, Devocional e Biblioteca não se misturarem.
+/// anotações, para Bíblia, Devocional e Biblioteca não se misturarem. Só o
+/// perfil junta as três, em [todas].
 enum OrigemDasNotas {
   biblia('Bíblia'),
   devocional('Devocional'),
-  biblioteca('Biblioteca');
+  biblioteca('Biblioteca'),
+  todas('Todas');
 
   const OrigemDasNotas(this.rotulo);
 

@@ -7,7 +7,11 @@ import 'datas.dart';
 /// De onde vem um favorito ou nota que não é da Bíblia: o título do cartão e
 /// o texto de trás, para as telas de notas da Biblioteca e do Devocional.
 class OrigemDoDestaque {
-  const OrigemDoDestaque({required this.referencia, required this.rotaDeAbrir});
+  const OrigemDoDestaque({
+    required this.referencia,
+    required this.rotaDeAbrir,
+    required this.rotulo,
+  });
 
   /// "Respigas entre os Feixes, capítulo 3" ou "Manhã, 17 de novembro".
   final String referencia;
@@ -15,24 +19,28 @@ class OrigemDoDestaque {
   /// A rota que reabre o texto.
   final String rotaDeAbrir;
 
+  /// De onde veio: "Devocional" ou o nome do livro da Biblioteca.
+  final String rotulo;
+
   /// Nulo para um slug que o app não conhece (livro tirado do catálogo).
   static OrigemDoDestaque? de(DestaqueDeLivro d) {
     if (ehSlugDeDevocional(d.slug)) {
       final leitura = leituraDoSlug(d.slug);
       final data = dataDoDestaque(d);
-      final rotulo = switch (leitura) {
+      final leituraRotulo = switch (leitura) {
         'manha' => 'Manhã',
         'noite' => 'Noite',
         'promessas' => 'Promessas de Deus',
         _ => null,
       };
-      if (rotulo == null || data == null) return null;
+      if (leituraRotulo == null || data == null) return null;
       return OrigemDoDestaque(
-        referencia: '$rotulo, ${dataLonga(data)}',
+        referencia: '$leituraRotulo, ${dataLonga(data)}',
         rotaDeAbrir:
             '/$leitura?data=${data.year}-'
             '${data.month.toString().padLeft(2, '0')}-'
             '${data.day.toString().padLeft(2, '0')}',
+        rotulo: 'Devocional',
       );
     }
     final obra = obraPorSlug(d.slug);
@@ -40,6 +48,7 @@ class OrigemDoDestaque {
     return OrigemDoDestaque(
       referencia: '${obra.titulo}, capítulo ${d.capitulo + 1}',
       rotaDeAbrir: '/biblioteca/${d.slug}/${d.capitulo + 1}',
+      rotulo: obra.titulo,
     );
   }
 

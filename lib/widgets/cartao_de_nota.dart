@@ -23,6 +23,7 @@ class TabernaculoCartaoDeNota extends StatelessWidget {
     required this.aoRemover,
     this.mensagemDeFalha = 'Não foi possível carregar este texto',
     this.maxLinhas,
+    this.origem,
   });
 
   /// "João 3:16", "Manhã, 17 de novembro" ou "Respigas, capítulo 3".
@@ -54,6 +55,10 @@ class TabernaculoCartaoDeNota extends StatelessWidget {
   /// devocional são longos e param em poucas linhas.
   final int? maxLinhas;
 
+  /// De onde veio o item ("Bíblia", "Devocional", nome do livro); só a visão
+  /// que junta as três origens mostra.
+  final String? origem;
+
   @override
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
@@ -76,9 +81,23 @@ class TabernaculoCartaoDeNota extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      referencia,
-                      style: tema.titleSmall?.copyWith(color: cor.secondary),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (origem != null)
+                          Text(
+                            origem!,
+                            style: tema.labelMedium?.copyWith(
+                              color: cor.onSurfaceVariant,
+                            ),
+                          ),
+                        Text(
+                          referencia,
+                          style: tema.titleSmall?.copyWith(
+                            color: cor.secondary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   IconButton(

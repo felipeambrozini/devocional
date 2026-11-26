@@ -19,7 +19,8 @@ import '../widgets/widgets.dart';
 
 /// Favoritos e anotações de uma aba do app ([origem]), em duas abas, com busca.
 /// Bíblia, Devocional e Biblioteca não se misturam: cada uma mostra só o que
-/// foi marcado nela.
+/// foi marcado nela. Só [OrigemDasNotas.todas], do perfil, junta as três, com o
+/// rótulo da origem em cada cartão.
 class TelaNotas extends StatefulWidget {
   const TelaNotas({super.key, this.origem = OrigemDasNotas.biblia});
 
@@ -48,7 +49,7 @@ class _TelaNotasState extends State<TelaNotas> {
         if (Nuvem.instancia.logado) return _notas(context);
         return Scaffold(
           appBar: TabernaculoAppBar(
-            title: Text('Notas: ${widget.origem.rotulo}'),
+            title: Text(_titulo(widget.origem)),
             actions: [
               TabernaculoBotaoDeAjustes(estado: EscopoDoEstado.de(context)),
             ],
@@ -72,24 +73,29 @@ class _TelaNotasState extends State<TelaNotas> {
       builder: (context, _) {
         final estado = EscopoDoEstado.de(context);
         final origem = widget.origem;
-        final ehBiblia = origem == OrigemDasNotas.biblia;
-        final favoritos = ehBiblia ? _controller.filtrar(estado.marcacoes) : [];
-        final notas = ehBiblia ? _controller.filtrar(estado.comNota) : [];
-        final destaques = ehBiblia
+        final comBiblia =
+            origem == OrigemDasNotas.biblia || origem == OrigemDasNotas.todas;
+        final favoritos = comBiblia
+            ? _controller.filtrar(estado.marcacoes)
+            : const <Marcacao>[];
+        final notas = comBiblia
+            ? _controller.filtrar(estado.comNota)
+            : const <Marcacao>[];
+        final destaques = origem == OrigemDasNotas.biblia
             ? const <DestaqueDeLivro>[]
             : _destaques(estado);
         final destaquesComNota = [
           for (final d in destaques)
             if (d.nota.trim().isNotEmpty) d,
         ];
-        final totalFavoritos = ehBiblia ? favoritos.length : destaques.length;
-        final totalNotas = ehBiblia ? notas.length : destaquesComNota.length;
+        final totalFavoritos = favoritos.length + destaques.length;
+        final totalNotas = notas.length + destaquesComNota.length;
 
         return DefaultTabController(
           length: 2,
           child: Scaffold(
             appBar: TabernaculoAppBar(
-              title: Text('Notas: ${origem.rotulo}'),
+              title: Text(_titulo(origem)),
               actions: [
                 TabernaculoBotaoDeAjustes(estado: estado),
                 PopupMenuButton<void Function()>(
@@ -155,8 +161,7 @@ class _TelaNotasState extends State<TelaNotas> {
                       children: [
                         _lista(
                           estado: estado,
-                          ehBiblia: ehBiblia,
-                          marcacoes: [...favoritos],
+                          marcacoes: favoritos,
                           destaques: destaques,
                           vazio: _vazio(
                             icone: FontAwesomeIcons.bookmark,
@@ -166,8 +171,7 @@ class _TelaNotasState extends State<TelaNotas> {
                         ),
                         _lista(
                           estado: estado,
-                          ehBiblia: ehBiblia,
-                          marcacoes: [...notas],
+                          marcacoes: notas,
                           destaques: destaquesComNota,
                           mostrarNota: true,
                           vazio: _vazio(
@@ -194,22 +198,30 @@ class _TelaNotasState extends State<TelaNotas> {
 /// compartilhado (ver `ehSlugDeDevocional`).
 extension on _TelaNotasState {
   List<DestaqueDeLivro> _destaques(Estado estado) {
+    final todas = widget.origem == OrigemDasNotas.todas;
     final doDevocional = widget.origem == OrigemDasNotas.devocional;
-    final lista = [
+    final todos = [
       for (final d in estado.leituraDeLivros.todosOsDestaques)
-        if (ehSlugDeDevocional(d.slug) == doDevocional)
+        if (todas || ehSlugDeDevocional(d.slug) == doDevocional)
           if (OrigemDoDestaque.de(d) case final origem?)
             if (_controller.combina(origem.referencia, d.nota)) d,
     ];
     // Devocional pelo calendário (a leitura do dia, não da leitura): o que
     // se favoritou em janeiro vem antes do de dezembro.
-    if (doDevocional) {
-      lista.sort((a, b) {
-        final porDia = a.capitulo.compareTo(b.capitulo);
-        return porDia != 0 ? porDia : a.slug.compareTo(b.slug);
-      });
-    }
-    return lista;
+    final devocional =
+        [
+          for (final d in todos)
+            if (ehSlugDeDevocional(d.slug)) d,
+        ]..sort((a, b) {
+          final porDia = a.capitulo.compareTo(b.capitulo);
+          return porDia != 0 ? porDia : a.slug.compareTo(b.slug);
+        });
+    final livros = [
+      for (final d in todos)
+        if (!ehSlugDeDevocional(d.slug)) d,
+    ];
+    // Em todas: Devocional, depois Biblioteca (a Bíblia vem antes, à parte).
+    return [...devocional, ...livros];
   }
 
   Widget _vazio({
@@ -225,45 +237,56 @@ extension on _TelaNotasState {
 
   Widget _lista({
     required Estado estado,
-    required bool ehBiblia,
     required List<Marcacao> marcacoes,
     required List<DestaqueDeLivro> destaques,
     required Widget vazio,
     bool mostrarNota = false,
   }) {
-    if (ehBiblia) {
-      return TabernaculoListaDeNotas(
-        quantidade: marcacoes.length,
-        vazio: vazio,
-        construir: (context, i) =>
-            _cartaoDaMarcacao(context, estado, marcacoes[i], mostrarNota),
-      );
-    }
+    final comOrigem = widget.origem == OrigemDasNotas.todas;
     // Destaque de um livro que saiu do catálogo não tem para onde levar.
     final visiveis = [
       for (final d in destaques)
         if (OrigemDoDestaque.de(d) case final origem?) (d, origem),
     ];
     return TabernaculoListaDeNotas(
-      quantidade: visiveis.length,
+      quantidade: marcacoes.length + visiveis.length,
       vazio: vazio,
-      construir: (context, i) => _cartaoDoDestaque(
-        context,
-        estado.leituraDeLivros,
-        visiveis[i].$1,
-        visiveis[i].$2,
-        mostrarNota,
-      ),
+      construir: (context, i) {
+        if (i < marcacoes.length) {
+          return _cartaoDaMarcacao(
+            context,
+            estado,
+            marcacoes[i],
+            mostrarNota,
+            comOrigem ? OrigemDasNotas.biblia.rotulo : null,
+          );
+        }
+        final (d, origem) = visiveis[i - marcacoes.length];
+        return _cartaoDoDestaque(
+          context,
+          estado.leituraDeLivros,
+          d,
+          origem,
+          mostrarNota,
+          comOrigem ? origem.rotulo : null,
+        );
+      },
     );
   }
 }
+
+String _titulo(OrigemDasNotas origem) => origem == OrigemDasNotas.todas
+    ? 'Favoritos e notas'
+    : 'Notas: ${origem.rotulo}';
 
 Widget _cartaoDaMarcacao(
   BuildContext context,
   Estado estado,
   Marcacao m,
   bool mostrarNota,
+  String? origem,
 ) => TabernaculoCartaoDeNota(
+  origem: origem,
   referencia: m.referencia,
   chaveDoTexto: m.chave,
   carregarTexto: () =>
@@ -288,7 +311,9 @@ Widget _cartaoDoDestaque(
   DestaqueDeLivro d,
   OrigemDoDestaque origem,
   bool mostrarNota,
+  String? rotuloDaOrigem,
 ) => TabernaculoCartaoDeNota(
+  origem: rotuloDaOrigem,
   referencia: origem.referencia,
   chaveDoTexto: d.chave,
   carregarTexto: () => textoDoDestaque(d),
@@ -307,6 +332,8 @@ String _dicaDeFavorito(OrigemDasNotas origem) => switch (origem) {
     'Toque no texto de um devocional para favoritá-lo',
   OrigemDasNotas.biblioteca =>
     'Toque num parágrafo de um livro da Biblioteca para favoritá-lo',
+  OrigemDasNotas.todas =>
+    'Toque num versículo, devocional ou parágrafo de livro para favoritá-lo',
 };
 
 String _dicaDeNota(OrigemDasNotas origem) => switch (origem) {
@@ -314,6 +341,8 @@ String _dicaDeNota(OrigemDasNotas origem) => switch (origem) {
   OrigemDasNotas.devocional => 'Toque no texto de um devocional para anotar',
   OrigemDasNotas.biblioteca =>
     'Toque num parágrafo de um livro da Biblioteca para anotar',
+  OrigemDasNotas.todas =>
+    'Toque num versículo, devocional ou parágrafo de livro para anotar',
 };
 
 /// A cópia sai pela folha de compartilhar, não pela área de transferência.
