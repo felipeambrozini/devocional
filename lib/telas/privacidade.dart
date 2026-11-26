@@ -145,35 +145,42 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                       key: _semConta,
                       titulo: 'Sem conta',
                       texto:
-                          'Favoritos, anotações, progresso de leitura, tema e '
-                          'tamanho do texto ficam só no aparelho ou no navegador '
-                          '(armazenamento local). Nada disso sai daqui.',
+                          'Ler não exige conta. Sem ela, as preferências do '
+                          'aparelho, como o tema e o tamanho do texto, ficam '
+                          'no aparelho ou no navegador (armazenamento local), '
+                          'e nada disso sai daqui. Guardar o cronograma, os '
+                          'planos, o progresso dos livros, os favoritos e as '
+                          'notas exige entrar com conta Google.',
                     ),
                     TabernaculoSecaoDeTexto(
                       key: _comConta,
                       titulo: 'Com conta Google',
                       texto: chat
-                          ? 'Entrar com a conta Google sobe, além do e-mail e '
-                                'do identificador da conta, quatro coisas para '
-                                'a nuvem do projeto (Firebase): favoritos, '
-                                'anotações, dias de leitura marcados e o '
-                                'histórico das conversas do chat com IA. O avatar '
-                                'mostra a foto da conta Google, sem upload '
-                                'próprio. Nunca '
-                                'sobe o texto da Bíblia ou do devocional que '
-                                'você lê, nem o horário em que lê. Quem não '
-                                'entra com conta usa o aplicativo do mesmo '
-                                'jeito, sem nada saindo do aparelho.'
-                          : 'Entrar com a conta Google sobe, além do e-mail e '
-                                'do identificador da conta, três coisas para a '
-                                'nuvem do projeto (Firebase): favoritos, '
-                                'anotações e dias de leitura marcados. O avatar '
-                                'mostra a foto da conta Google, sem upload '
-                                'próprio. Nunca '
-                                'sobe o texto da Bíblia ou do devocional que '
-                                'você lê, nem o horário em que lê. Quem não '
-                                'entra com conta usa o aplicativo do mesmo '
-                                'jeito, sem nada saindo do aparelho.',
+                          ? 'Com a conta Google, ficam na nuvem do projeto '
+                                '(Firebase), além do e-mail e do identificador '
+                                'da conta: favoritos, anotações, o cronograma, '
+                                'os planos, o progresso dos livros da '
+                                'Biblioteca, os horários dos lembretes e o '
+                                'histórico das conversas do chat com IA. O '
+                                'avatar mostra a foto da conta Google, sem '
+                                'upload próprio. Nunca sobe o texto da Bíblia '
+                                'ou do devocional que você lê, nem o horário '
+                                'em que lê. Com a conta aberta, uma cópia fica '
+                                'também no aparelho. Ao sair, os dados ficam '
+                                'na conta, saem do aparelho e voltam quando '
+                                'você entra de novo.'
+                          : 'Com a conta Google, ficam na nuvem do projeto '
+                                '(Firebase), além do e-mail e do identificador '
+                                'da conta: favoritos, anotações, o cronograma, '
+                                'os planos, o progresso dos livros da '
+                                'Biblioteca e os horários dos lembretes. O '
+                                'avatar mostra a foto da conta Google, sem '
+                                'upload próprio. Nunca sobe o texto da Bíblia '
+                                'ou do devocional que você lê, nem o horário '
+                                'em que lê. Com a conta aberta, uma cópia fica '
+                                'também no aparelho. Ao sair, os dados ficam '
+                                'na conta, saem do aparelho e voltam quando '
+                                'você entra de novo.',
                     ),
                     TabernaculoSecaoDeTexto(
                       key: _baseLegal,
@@ -306,21 +313,23 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                       key: _apagar,
                       titulo: 'Apagar seus dados',
                       texto: chat
-                          ? 'Quem tem conta pode apagar a cópia salva na nuvem no '
-                                'perfil, aberto pela foto na Hoje: o botão remove '
-                                'favoritos, anotações, progresso e conversas sincronizados, '
-                                'a participação em planos '
-                                'compartilhados e a própria conta, sem tocar no que está '
-                                'no aparelho ou navegador. Para apagar o que ficou só '
-                                'localmente, basta limpar os dados do aplicativo ou do '
-                                'site pelo próprio sistema ou navegador.'
-                          : 'Quem tem conta pode apagar a cópia salva na nuvem no '
-                                'perfil, aberto pela foto na Hoje: o botão remove '
-                                'favoritos, anotações e progresso sincronizados, '
-                                'a participação em planos compartilhados e a '
-                                'própria conta, sem tocar no que está no aparelho ou '
-                                'navegador. Para apagar o que ficou só localmente, basta '
-                                'limpar os dados do aplicativo ou do site pelo próprio '
+                          ? 'Quem tem conta pode apagá-la no perfil, aberto '
+                                'pela foto na Hoje: o botão apaga favoritos, '
+                                'anotações, progresso, planos e conversas da '
+                                'nuvem e do aparelho ou navegador, tira você '
+                                'dos planos compartilhados e apaga a própria '
+                                'conta. As preferências do aparelho, como o '
+                                'tema, e os áudios baixados ficam até você '
+                                'limpar os dados do aplicativo ou do site pelo '
+                                'próprio sistema ou navegador.'
+                          : 'Quem tem conta pode apagá-la no perfil, aberto '
+                                'pela foto na Hoje: o botão apaga favoritos, '
+                                'anotações, progresso e planos da nuvem e do '
+                                'aparelho ou navegador, tira você dos planos '
+                                'compartilhados e apaga a própria conta. As '
+                                'preferências do aparelho, como o tema, e os '
+                                'áudios baixados ficam até você limpar os '
+                                'dados do aplicativo ou do site pelo próprio '
                                 'sistema ou navegador.',
                     ),
                     TabernaculoSecaoDeTexto(
