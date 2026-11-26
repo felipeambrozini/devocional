@@ -11,6 +11,8 @@
   [lib/dados/recursos.dart](lib/dados/recursos.dart) (conversas, planos
   personalizados, voz, etc.). O painel `/admin` (só web e só o dono) edita sem
   reimplantar. Use esse mecanismo em vez de reimplementar gating na mão.
+- O [AGENTS.md](AGENTS.md) é o espelho deste arquivo para o OpenCode e o
+  Codex. Ao mudar uma regra aqui, mude lá também.
 - O arquivo `.env.json` na raiz precisa existir localmente (chaves
   Firebase/Gemini) para rodar o app; não versionar o conteúdo dele.
 - Versionamento (`version: X.Y.Z+N` em `pubspec.yaml`): o Android só atualiza
