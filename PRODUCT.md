@@ -134,7 +134,10 @@ vitoriana dele, tratando o leitor por "tu".
   que fica é a data de conclusão, que sobe com a conta e some se um dia for
   desmarcado ou se o plano for feito de novo.
 - Avatar da conta (foto do Google ou inicial do nome) na saudação da aba
-  Hoje, só exibição, sem upload.
+  Hoje, sem upload. O toque abre o perfil: nome e e-mail, o cronograma de
+  anos anteriores só para consulta, os planos concluídos com a data e o
+  "Fazer de novo", a contagem de favoritos e notas das três origens (com
+  "Ver todos") e a conta, com Sair e Apagar conta e dados da nuvem.
 - Compartilhar gera cartão-imagem (fundo couro, filete dourado) com o texto
   junto: versículo na Bíblia; no Devocional, a citação assinada com a leitura
   e a data; na web cai para texto.

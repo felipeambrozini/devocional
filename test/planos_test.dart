@@ -1345,6 +1345,40 @@ void _testesDoPlanoDeJesus() {
 
       expect(find.text('Gênesis aberto'), findsOneWidget);
       expect(find.text('João relâmpago'), findsNothing);
+      expect(
+        find.text('Os planos concluídos ficam no seu perfil'),
+        findsNothing,
+      );
+    });
+
+    testWidgets('Meus planos com tudo concluído aponta para o perfil', (
+      tester,
+    ) async {
+      await tester.runAsync(() => Conteudo.instancia.plano(bissexto: false));
+      final estado = Estado(await SharedPreferences.getInstance());
+      Nuvem.instancia.logadoForcado = true;
+      addTearDown(() => Nuvem.instancia.logadoForcado = null);
+      final jesus = estado.planosParaExibir.first;
+      for (final dia in jesus.diasDoPlano) {
+        await estado.alternarLidoNoPlano(jesus.id, dia.numero);
+      }
+      expect(estado.planoEstaConcluido(jesus), isTrue);
+      await tester.pumpWidget(
+        EscopoDoEstado(
+          estado: estado,
+          child: MaterialApp.router(
+            routerConfig: _routerDoPlano(estado, DateTime(2027, 2, 15)),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Meus planos'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Os planos concluídos ficam no seu perfil'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('Fazer de novo devolve o plano a Meus planos sem dias lidos', (

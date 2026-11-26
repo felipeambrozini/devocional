@@ -13,9 +13,25 @@ import '../widgets/widgets.dart';
 /// e o progresso. Tocar abre o plano; excluir e compartilhar vivem na tela
 /// do plano.
 class TabernaculoCartaoDePlano extends StatelessWidget {
-  const TabernaculoCartaoDePlano({super.key, required this.plano});
+  const TabernaculoCartaoDePlano({
+    super.key,
+    required this.plano,
+    this.rodape,
+    this.aoAbrir,
+  });
 
   final PlanoDoUsuario plano;
+
+  /// Uma linha a mais no fim do cartão, abaixo do progresso. O perfil põe
+  /// aqui a data de conclusão e o "Fazer de novo".
+  final Widget? rodape;
+
+  /// O toque no cartão; sem ele, empilha `/plano/:id` por cima da aba. O
+  /// perfil, que mora fora das abas, troca a pilha em vez de empilhar: a
+  /// rota do plano vive dentro da moldura das abas, e empilhá-la por cima de
+  /// uma rota de fora repetiria a moldura (o Navigator acusa chave
+  /// duplicada).
+  final VoidCallback? aoAbrir;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +54,7 @@ class TabernaculoCartaoDePlano extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        onTap: () => context.push('/plano/${plano.id}'),
+        onTap: aoAbrir ?? () => context.push('/plano/${plano.id}'),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
             TabernaculoEspacamento.sp14,
@@ -122,6 +138,10 @@ class TabernaculoCartaoDePlano extends StatelessWidget {
               Text('$lidos de $dias dias lidos', style: tema.labelMedium),
               const SizedBox(height: TabernaculoEspacamento.sp6),
               TabernaculoProgressoFino(valor: dias == 0 ? 0 : lidos / dias),
+              if (rodape != null) ...[
+                const SizedBox(height: TabernaculoEspacamento.sp6),
+                rodape!,
+              ],
             ],
           ),
         ),

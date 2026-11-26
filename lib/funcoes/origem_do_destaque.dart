@@ -1,5 +1,6 @@
 import '../dados/biblioteca.dart';
 import '../dados/conteudo.dart';
+import '../dados/estado.dart';
 import '../dados/leitura_de_livros.dart';
 import '../dados/modelos.dart';
 import 'datas.dart';
@@ -87,4 +88,21 @@ Future<String> textoDoDestaque(DestaqueDeLivro destaque) async {
     return '';
   }
   return capitulos[destaque.capitulo].paragrafos[destaque.paragrafo];
+}
+
+/// Quantos favoritos e notas há nas três origens (Bíblia, Devocional e
+/// Biblioteca), contados como a tela de notas com `?aba=todas` conta as
+/// abas: destaque de slug desconhecido ([OrigemDoDestaque.de] nulo) fica de
+/// fora, e destaque com nota conta também como nota. O perfil mostra esses
+/// números, e o "Ver todos" dele abre essa tela.
+({int favoritos, int notas}) contarFavoritosENotas(Estado estado) {
+  final destaques = [
+    for (final d in estado.leituraDeLivros.todosOsDestaques)
+      if (OrigemDoDestaque.de(d) != null) d,
+  ];
+  final destaquesComNota = destaques.where((d) => d.nota.trim().isNotEmpty);
+  return (
+    favoritos: estado.marcacoes.length + destaques.length,
+    notas: estado.comNota.length + destaquesComNota.length,
+  );
 }

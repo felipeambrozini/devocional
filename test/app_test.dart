@@ -388,6 +388,118 @@ void main() {
     },
   );
 
+  testWidgets('logado, o cabeçalho da Hoje não tem Sair', (tester) async {
+    // O Sair mora no perfil: o cabeçalho fica com foto, saudação e ajustes.
+    Nuvem.instancia.logadoForcado = true;
+    await aquecerAssets(tester);
+    await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sair'), findsNothing);
+    expect(find.text('Entrar'), findsNothing);
+    expect(find.byType(TabernaculoBotaoDeAjustes), findsOneWidget);
+  });
+
+  testWidgets('tocar na foto da Hoje abre o perfil', (tester) async {
+    final semantica = tester.ensureSemantics();
+    // Sem o diálogo de boas-vindas nem o do consentimento por cima da Hoje.
+    SharedPreferences.setMockInitialValues({
+      'maior_de_idade': true,
+      'boas_vindas_vistas': true,
+      'consentimento_da_nuvem': true,
+    });
+    Nuvem.instancia.logadoForcado = true;
+    await aquecerAssets(tester);
+    await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
+    await tester.pumpAndSettle();
+
+    final foto = find.bySemanticsLabel('Abrir perfil');
+    expect(foto, findsOneWidget);
+    expect(
+      tester.getSemantics(foto),
+      isSemantics(isButton: true, hasTapAction: true, label: 'Abrir perfil'),
+    );
+    await tester.tap(foto);
+    await tester.pumpAndSettle();
+
+    final rota = GoRouter.of(tester.element(find.byType(Scaffold).last));
+    expect(rota.state.uri.path, '/perfil');
+    expect(find.text('Perfil'), findsOneWidget);
+
+    // O roteador do app é global: volta para a Hoje, para não abrir o
+    // próximo teste no perfil.
+    rota.go('/hoje');
+    await tester.pumpAndSettle();
+    semantica.dispose();
+  });
+
+  testWidgets('Sobre não tem mais Apagar conta', (tester) async {
+    Nuvem.instancia.logadoForcado = true;
+    await aquecerAssets(tester);
+    await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
+    await tester.pumpAndSettle();
+    final rota = GoRouter.of(tester.element(find.byType(Scaffold).first));
+    unawaited(rota.push('/sobre'));
+    await tester.pumpAndSettle();
+
+    final linha = find.text(
+      'A conta fica no perfil, aberto pela sua foto na Hoje',
+    );
+    await tester.scrollUntilVisible(
+      linha,
+      200,
+      scrollable: find.descendant(
+        of: find.byType(ListView),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    expect(linha, findsOneWidget);
+    expect(find.text('Apagar conta e dados da nuvem'), findsNothing);
+
+    // O roteador do app é global: volta para a Hoje, para não abrir o
+    // próximo teste no Sobre.
+    rota.go('/hoje');
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('o cartão de plano concluído no perfil abre o plano', (
+    tester,
+  ) async {
+    // A rota do plano mora dentro da moldura das abas, e o perfil fora dela:
+    // empilhar uma por cima da outra repetia a moldura e o Navigator
+    // acusava chave duplicada.
+    SharedPreferences.setMockInitialValues({
+      'maior_de_idade': true,
+      'boas_vindas_vistas': true,
+      'consentimento_da_nuvem': true,
+    });
+    Nuvem.instancia.logadoForcado = true;
+    await aquecerAssets(tester);
+    await tester.runAsync(() => Conteudo.instancia.plano(bissexto: false));
+    final estado = await estadoLimpo();
+    final plano = await estado.criarPlano(
+      titulo: 'Cartas de João',
+      livros: ['2joao'],
+      dias: 1,
+    );
+    await estado.alternarLidoNoPlano(plano.id, 1);
+    await tester.pumpWidget(AppTabernaculo(estado: estado));
+    await tester.pumpAndSettle();
+    final rota = GoRouter.of(tester.element(find.byType(Scaffold).first));
+    unawaited(rota.push('/perfil'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Cartas de João'));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(rota.state.uri.path, '/plano/${plano.id}');
+    expect(find.text('Compartilhar'), findsOneWidget);
+
+    rota.go('/hoje');
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('a Hoje esconde o cartão do cronograma com a flag desligada', (
     tester,
   ) async {

@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../dados/estado.dart';
@@ -37,22 +38,35 @@ class TabernaculoCabecalhoDaHoje extends StatelessWidget {
         return Row(
           children: [
             if (nuvem.logado) ...[
-              // Avatar só exibição: a foto do Google quando há, senão a
-              // inicial do nome. Sem toque, sem upload.
-              ExcludeSemantics(
-                child: CircleAvatar(
-                  radius: 30,
-                  backgroundImage: nuvem.fotoUrl != null
-                      ? NetworkImage(nuvem.fotoUrl!)
-                      : null,
-                  child: nuvem.fotoUrl == null
-                      ? Text(
-                          (nome ?? '?').substring(0, 1).toUpperCase(),
-                          style: tema.headlineMedium?.copyWith(
-                            color: cor.primary,
-                          ),
-                        )
-                      : null,
+              // A foto do Google quando há, senão a inicial do nome, sem
+              // upload. O toque abre o perfil, onde moram o Sair e o resto da
+              // conta. Com 60px de diâmetro, já passa dos 48 do alvo mínimo.
+              Semantics(
+                container: true,
+                button: true,
+                label: 'Abrir perfil',
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: () => context.push('/perfil'),
+                    child: ExcludeSemantics(
+                      child: CircleAvatar(
+                        radius: 30,
+                        backgroundImage: nuvem.fotoUrl != null
+                            ? NetworkImage(nuvem.fotoUrl!)
+                            : null,
+                        child: nuvem.fotoUrl == null
+                            ? Text(
+                                (nome ?? '?').substring(0, 1).toUpperCase(),
+                                style: tema.headlineMedium?.copyWith(
+                                  color: cor.primary,
+                                ),
+                              )
+                            : null,
+                      ),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: TabernaculoEspacamento.sp14),
@@ -73,9 +87,9 @@ class TabernaculoCabecalhoDaHoje extends StatelessWidget {
                 ],
               ),
             ),
-            // Entrar ou sair da conta, no fim do cabeçalho: o convite para
-            // entrar mora aqui (e não mais na folha de ajustes), porque o
-            // estado da conta muda a saudação ao lado.
+            // Entrar na conta, no fim do cabeçalho: o convite mora aqui (e
+            // não na folha de ajustes), porque o estado da conta muda a
+            // saudação ao lado. Logado, não mostra nada.
             const TabernaculoBotaoDeConta(),
             // Hoje não tem AppBar onde pendurar a ação, e sem isto os ajustes
             // só seriam alcançáveis de duas das seis abas.

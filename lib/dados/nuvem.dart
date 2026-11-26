@@ -652,7 +652,13 @@ class Nuvem extends ChangeNotifier {
   @visibleForTesting
   bool? carregandoContaForcado;
   String? get email =>
-      _sessaoConhecida ? FirebaseAuth.instance.currentUser?.email : null;
+      emailForcado ??
+      (_sessaoConhecida ? FirebaseAuth.instance.currentUser?.email : null);
+
+  /// Só para testes de widget: força [email], como [logadoForcado] faz com
+  /// [logado].
+  @visibleForTesting
+  String? emailForcado;
 
   /// Se [entrar] está em andamento, para os botões de "Entrar" mostrarem um
   /// spinner e ficarem desabilitados — sem isto o toque parecia não fazer
@@ -676,12 +682,19 @@ class Nuvem extends ChangeNotifier {
 
   /// Primeiro nome de quem entrou, para a saudação de `TabernaculoCabecalhoDaHoje`
   /// (`lib/widgets/cabecalho_da_hoje.dart`). null sem conta, ou se a conta Google não devolveu nome.
-  String? get primeiroNome {
-    final nome = _sessaoConhecida
-        ? FirebaseAuth.instance.currentUser?.displayName
-        : null;
-    return nome?.trim().split(_espacos).firstOrNull;
-  }
+  String? get primeiroNome => nome?.trim().split(_espacos).firstOrNull;
+
+  /// O nome completo da conta Google, para o cabeçalho do perfil. null sem
+  /// conta, ou se a conta não devolveu nome.
+  String? get nome =>
+      nomeForcado ??
+      (_sessaoConhecida
+          ? FirebaseAuth.instance.currentUser?.displayName
+          : null);
+
+  /// Só para testes de widget: força [nome] (e com ele [primeiroNome]).
+  @visibleForTesting
+  String? nomeForcado;
 
   /// Avatar da conta: a foto do Google quando há, senão a inicial do nome
   /// (ver `TabernaculoCabecalhoDaHoje`). Sem upload próprio: o app nunca
@@ -1069,7 +1082,13 @@ class Nuvem extends ChangeNotifier {
   ///
   /// Um segundo toque enquanto o Sair anda devolve o mesmo Sair, em vez de
   /// começar outro por cima.
-  Future<void> sair() => _saida ??= _sair().whenComplete(() => _saida = null);
+  Future<void> sair() =>
+      _saida ??= (sairForcado ?? _sair)().whenComplete(() => _saida = null);
+
+  /// Só para testes de widget: troca o Sair de verdade, que precisa do
+  /// Firebase. O segundo toque continua devolvendo o mesmo Sair.
+  @visibleForTesting
+  Future<void> Function()? sairForcado;
 
   Future<void>? _saida;
 

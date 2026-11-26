@@ -43,7 +43,7 @@ class TabernaculoConsentimentoDaNuvem extends StatelessWidget {
             'nem usado para anúncio. Ao concordar, você consente com esse '
             'uso.\n\n'
             'Você pode retirar o consentimento quando quiser, apagando a cópia '
-            'da nuvem em Sobre, na seção Conta e privacidade.',
+            'da nuvem no seu perfil, aberto pela sua foto na Hoje.',
           ),
           Align(
             alignment: Alignment.centerLeft,

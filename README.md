@@ -136,6 +136,13 @@ Flutter (Android, iOS e web a partir do mesmo código).
   o Firestore precisa. Nesse instante curto o cabeçalho mostra "Verificando
   conta" em vez do botão Entrar, que só aparece quando se sabe que não há
   sessão.
+- **Perfil** (`/perfil`, `lib/telas/perfil.dart`): tocar na foto da Hoje abre
+  uma página com nome e e-mail, o cronograma de anos anteriores (cada ano abre
+  em `/perfil/cronograma/AAAA`, só para consulta), os planos concluídos com a
+  data e o "Fazer de novo", a contagem de favoritos e notas das três origens
+  (com "Ver todos", que abre `/notas?aba=todas`) e a conta: Sair, que espera
+  tudo chegar à conta, e Apagar conta e dados da nuvem. O cabeçalho da Hoje
+  não tem mais o botão Sair, e o Sobre não tem mais o Apagar conta.
 - **Busca** no texto da Bíblia e nos devocionais, em duas abas.
 - **Palavras de Deus em vermelho**: na Bíblia, as falas de Deus Pai, de Jesus
   e do Espírito Santo saem em vermelho (carmim no claro, vermelho claro no
@@ -649,8 +656,8 @@ motivo novo.
   imagem fixa do app** (20/08/2026) — antes era a foto do Felipe embutida no
   app, escondida na web. `Nuvem.fotoUrl` lê
   `FirebaseAuth.currentUser?.photoURL`;
-  sem conta ou sem foto, cai na inicial do nome. Só exibição: sem toque, sem
-  upload, sem Storage.
+  sem conta ou sem foto, cai na inicial do nome. Sem upload, sem Storage. O
+  toque abre o perfil (`/perfil`), onde moram o Sair e o Apagar conta.
 - **Plano que só existia no celular não aparecia na web** (02/09/2026):
   `Sincronia.comecar()` em `lib/dados/nuvem.dart` puxava a cópia da conta,
   fundia com a local e só então passava a ouvir o `Estado` — mas comparando
@@ -1239,7 +1246,8 @@ que está funcionando.
   `lib/telas/privacidade.dart`, com rotas próprias (`/faq`, `/privacidade`) e
   entradas na folha de ajustes, ao lado de Sobre. A política é a versão
   completa e é a fonte da verdade sobre o que sobe para a nuvem; o resumo em
-  Sobre (seção Conta e privacidade) só linka para ela. Escrita para corrigir
+  Sobre (seção Conta e privacidade) só linka para ela; o Apagar conta mora
+  no perfil. Escrita para corrigir
   uma lacuna real: o resumo antigo dizia que só favoritos, anotações e dias
   lidos subiam, mas a `Nuvem` (`_empurrarCampo(uid, 'conversas', …)` em
   `lib/dados/nuvem.dart`) também sincroniza o histórico do chat com IA para

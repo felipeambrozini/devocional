@@ -86,6 +86,15 @@ class _ListaDePlanos extends StatelessWidget {
             ],
           ),
           const SizedBox(height: TabernaculoEspacamento.sp12),
+          // O plano fixo está sempre na lista: vazia, é porque todos foram
+          // concluídos e moram no perfil agora.
+          if (planos.isEmpty)
+            Text(
+              'Os planos concluídos ficam no seu perfil',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
           for (final plano in planos) ...[
             TabernaculoCartaoDePlano(plano: plano),
             const SizedBox(height: TabernaculoEspacamento.sp10),

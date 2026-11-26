@@ -41,6 +41,7 @@ import 'telas/biblia.dart';
 import 'telas/biblioteca.dart';
 import 'telas/chat.dart';
 import 'telas/conversas.dart';
+import 'telas/cronograma_do_ano.dart';
 import 'telas/devocional.dart';
 import 'telas/faq.dart';
 import 'telas/historico.dart';
@@ -50,6 +51,7 @@ import 'telas/livro.dart';
 import 'telas/meu_plano.dart';
 import 'telas/notas.dart';
 import 'telas/novo_plano.dart';
+import 'telas/perfil.dart';
 import 'telas/plano.dart';
 import 'telas/privacidade.dart';
 import 'telas/sobre.dart';
@@ -423,6 +425,25 @@ final _router = GoRouter(
       // widgets/folha_de_ajustes.dart).
       // A URL própria continua valendo para F5 e link compartilhado.
       builder: (context, state) => const TelaSobre(),
+    ),
+    // O perfil também não é aba: abre por cima, pela foto do cabeçalho da
+    // Hoje. Cada ano anterior do cronograma abre só para consulta; ano que
+    // não é número, ou que ainda não passou, volta para o perfil (o ano
+    // corrente vive na aba do cronograma).
+    GoRoute(
+      path: '/perfil',
+      builder: (context, state) => const TelaPerfil(),
+      routes: [
+        GoRoute(
+          path: 'cronograma/:ano',
+          redirect: (context, state) {
+            final ano = int.tryParse(state.pathParameters['ano'] ?? '');
+            return ano == null || ano >= DateTime.now().year ? '/perfil' : null;
+          },
+          builder: (context, state) =>
+              TelaCronogramaDoAno(ano: int.parse(state.pathParameters['ano']!)),
+        ),
+      ],
     ),
     GoRoute(path: '/faq', builder: (context, state) => const TelaFAQ()),
     // Até a versão 1.27 as leituras moravam na raiz (`/manha`, `/noite`,

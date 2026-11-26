@@ -306,16 +306,16 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                       key: _apagar,
                       titulo: 'Apagar seus dados',
                       texto: chat
-                          ? 'Quem tem conta pode apagar a cópia salva na nuvem em '
-                                'Sobre, na seção Conta e privacidade: o botão remove '
+                          ? 'Quem tem conta pode apagar a cópia salva na nuvem no '
+                                'perfil, aberto pela foto na Hoje: o botão remove '
                                 'favoritos, anotações, progresso e conversas sincronizados, '
                                 'a participação em planos '
                                 'compartilhados e a própria conta, sem tocar no que está '
                                 'no aparelho ou navegador. Para apagar o que ficou só '
                                 'localmente, basta limpar os dados do aplicativo ou do '
                                 'site pelo próprio sistema ou navegador.'
-                          : 'Quem tem conta pode apagar a cópia salva na nuvem em '
-                                'Sobre, na seção Conta e privacidade: o botão remove '
+                          : 'Quem tem conta pode apagar a cópia salva na nuvem no '
+                                'perfil, aberto pela foto na Hoje: o botão remove '
                                 'favoritos, anotações e progresso sincronizados, '
                                 'a participação em planos compartilhados e a '
                                 'própria conta, sem tocar no que está no aparelho ou '

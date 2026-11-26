@@ -122,9 +122,9 @@ List<(String, String)> _perguntas(bool chat) => [
     ),
   (
     'Posso apagar meus dados?',
-    'Sim. Quem tem conta pode apagar a conta e a cópia salva na nuvem na '
-        'tela Sobre, em Conta e privacidade, pelo botão Apagar conta e dados '
-        'da nuvem. O que fica só no aparelho ou navegador '
+    'Sim. Quem tem conta pode apagar a conta e a cópia salva na nuvem no '
+        'perfil, aberto pela sua foto na Hoje, pelo botão Apagar conta e '
+        'dados da nuvem. O que fica só no aparelho ou navegador '
         'pode ser apagado limpando os dados do aplicativo ou do site.',
   ),
 ];

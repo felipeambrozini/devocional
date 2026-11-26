@@ -14,7 +14,6 @@ import '../dados/modelos.dart';
 import '../dados/nuvem.dart';
 import '../dados/personas.dart';
 import '../dados/recursos.dart';
-import '../dados/registro.dart';
 import '../dados/voz.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
@@ -84,7 +83,7 @@ class _TelaSobreState extends State<TelaSobre> {
               ),
               const SizedBox(height: TabernaculoEspacamento.sp24),
               // Ajuda e Conta e privacidade vêm primeiro: são a razão mais
-              // comum de abrir Sobre (ajuda, apagar dados). O que é crédito/leitura de referência (fontes,
+              // comum de abrir Sobre (ajuda, privacidade). O que é crédito/leitura de referência (fontes,
               // voz, biografia, canais) vem depois, colapsado.
               Semantics(
                 header: true,
@@ -174,22 +173,21 @@ class _TelaSobreState extends State<TelaSobre> {
                 title: const Text('Termos de serviço'),
                 onTap: () => GoRouter.of(context).push('/termos'),
               ),
-              const SizedBox(height: TabernaculoEspacamento.sp8),
+              // A conta (Sair e Apagar conta) mora no perfil, aberto pela foto
+              // no cabeçalho da Hoje; aqui fica só o caminho até ela.
               ListenableBuilder(
                 listenable: Nuvem.instancia,
                 builder: (context, _) => Nuvem.instancia.logado
-                    ? ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: FaIcon(
-                          FontAwesomeIcons.trash,
-                          color: cor.error,
+                    ? Padding(
+                        padding: const EdgeInsets.only(
+                          top: TabernaculoEspacamento.sp8,
                         ),
-                        title: const Text('Apagar conta e dados da nuvem'),
-                        subtitle: Text(
-                          'Apaga sua conta no app e tudo o que ela guarda. '
-                          'O que está $_ondeFicaACopiaLocal não é tocado.',
+                        child: Text(
+                          'A conta fica no perfil, aberto pela sua foto na Hoje',
+                          style: tema.bodyMedium?.copyWith(
+                            color: cor.onSurfaceVariant,
+                          ),
                         ),
-                        onTap: () => _apagarDaNuvem(context),
                       )
                     : const SizedBox.shrink(),
               ),
@@ -406,38 +404,4 @@ Future<void> _relatarProblema() async {
   // Na web, na mesma aba: o padrão abre uma aba nova, que fica em branco
   // mostrando o próprio mailto: em vez de só chamar o programa de e-mail.
   await launchUrl(uri, webOnlyWindowName: '_self');
-}
-
-/// Onde fica a cópia que o apagar da nuvem não toca: o navegador na web, o
-/// aparelho nas outras plataformas.
-const _ondeFicaACopiaLocal = kIsWeb ? 'neste navegador' : 'neste aparelho';
-
-/// Confirma e apaga a conta. O texto diz tudo o que `Nuvem.apagarDados` faz,
-/// porque é a retirada do consentimento da LGPD: sai de todos os planos
-/// compartilhados, remove o documento no Firestore (cópia, conversas,
-/// leituras da Biblioteca) e a conta em si, o que também encerra a sessão. Com
-/// login antigo, o Firebase exige reautenticar antes, e o Google abre a janela.
-Future<void> _apagarDaNuvem(BuildContext context) async {
-  final confirmou = await confirmar(
-    context,
-    titulo: 'Apagar conta e dados da nuvem?',
-    conteudo:
-        'Sua conta no Tabernáculo será apagada, com tudo o que ela guarda na '
-        'nuvem: favoritos, anotações, progresso, leituras da Biblioteca e '
-        'conversas. Você sai de todos os planos compartilhados e da conta. '
-        'Sua conta do Google não é tocada, e o que está '
-        '$_ondeFicaACopiaLocal continua intacto. O Google pode pedir que você '
-        'entre de novo para confirmar. Essa ação não pode ser desfeita.',
-    rotuloDaAcao: 'Apagar conta',
-  );
-  if (!confirmou || !context.mounted) return;
-
-  final mensageiro = ScaffoldMessenger.of(context);
-  try {
-    await Nuvem.instancia.apagarDados();
-    mostrarAvisoNo(mensageiro, 'Conta e dados apagados da nuvem');
-  } catch (erro, pilha) {
-    Registro.erro('Sobre.apagarDaNuvem', erro, pilha);
-    mostrarErroNo(mensageiro, 'Não foi possível apagar agora. Tente de novo.');
-  }
 }

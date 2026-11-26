@@ -86,3 +86,42 @@ String _motivoDeLogin(FirebaseAuthException erro) {
       return 'Não foi possível entrar agora. Tente de novo.';
   }
 }
+
+/// Onde fica a cópia que o apagar da nuvem não toca: o navegador na web, o
+/// aparelho nas outras plataformas.
+const ondeFicaACopiaLocal = kIsWeb ? 'neste navegador' : 'neste aparelho';
+
+/// Confirma e apaga a conta. Público porque a seção Conta do perfil
+/// (`TelaPerfil`) chama isto. O texto diz tudo o que `Nuvem.apagarDados` faz,
+/// porque é a retirada do consentimento da LGPD: sai de todos os planos
+/// compartilhados, remove o documento no Firestore (cópia, conversas,
+/// leituras da Biblioteca) e a conta em si, o que também encerra a sessão. Com
+/// login antigo, o Firebase exige reautenticar antes, e o Google abre a janela.
+///
+/// Devolve se apagou de fato: `false` se a pessoa desistiu ou se falhou.
+Future<bool> apagarContaDaNuvem(BuildContext context) async {
+  final confirmou = await confirmar(
+    context,
+    titulo: 'Apagar conta e dados da nuvem?',
+    conteudo:
+        'Sua conta no Tabernáculo será apagada, com tudo o que ela guarda na '
+        'nuvem: favoritos, anotações, progresso, leituras da Biblioteca e '
+        'conversas. Você sai de todos os planos compartilhados e da conta. '
+        'Sua conta do Google não é tocada, e o que está '
+        '$ondeFicaACopiaLocal continua intacto. O Google pode pedir que você '
+        'entre de novo para confirmar. Essa ação não pode ser desfeita.',
+    rotuloDaAcao: 'Apagar conta',
+  );
+  if (!confirmou || !context.mounted) return false;
+
+  final mensageiro = ScaffoldMessenger.of(context);
+  try {
+    await Nuvem.instancia.apagarDados();
+    mostrarAvisoNo(mensageiro, 'Conta e dados apagados da nuvem');
+    return true;
+  } catch (erro, pilha) {
+    Registro.erro('apagarContaDaNuvem', erro, pilha);
+    mostrarErroNo(mensageiro, 'Não foi possível apagar agora. Tente de novo');
+    return false;
+  }
+}
