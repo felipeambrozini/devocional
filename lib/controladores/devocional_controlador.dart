@@ -88,8 +88,13 @@ class DevocionalControlador extends ChangeNotifier {
   /// para cada leitura (`/devocional/manha`, `/devocional/noite`,
   /// `/devocional/promessas`): quem abre o link cai direto nela. Vai no texto
   /// de Compartilhar do cartão.
+  ///
+  /// A data vai sempre, mesmo quando é hoje: quem recebe pode abrir o link no
+  /// dia seguinte, e sem ela cairia no devocional do dia em que abriu, não no
+  /// que foi mandado. A navegação ([irPara]) continua omitindo a data de hoje
+  /// para a URL da tela ficar limpa.
   String linkDaLeitura() =>
-      '${enderecoDoSite}devocional/${leitura.name}${_parametroDeData(data)}';
+      '${enderecoDoSite}devocional/${leitura.name}?data=${_formatoDeData(data)}';
 
   /// O ano entra na comparação: a data da URL é completa, e "19 de agosto"
   /// de um ano não é o mesmo dia de outro. Sem ele, escolher no calendário o
