@@ -68,6 +68,7 @@ class TabernaculoBotaoDeLido extends StatelessWidget {
     required this.lido,
     required this.rotulo,
     required this.aoAlternar,
+    this.pedeConta = false,
   });
 
   final bool lido;
@@ -77,11 +78,19 @@ class TabernaculoBotaoDeLido extends StatelessWidget {
   final String rotulo;
   final VoidCallback aoAlternar;
 
+  /// Sem conta, o toque só pede para entrar: o tooltip (e o leitor de tela)
+  /// avisa antes, em vez de prometer marcar.
+  final bool pedeConta;
+
   @override
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme;
     return IconButton(
-      tooltip: lido ? 'Desmarcar $rotulo' : 'Marcar $rotulo como lido',
+      tooltip: rotuloDoBotaoDeLido(
+        lido: lido,
+        rotulo: rotulo,
+        pedeConta: pedeConta,
+      ),
       icon: FaIcon(
         lido ? FontAwesomeIcons.circleCheck : FontAwesomeIcons.circle,
         color: lido ? cor.secondary : cor.onSurfaceVariant,
@@ -89,6 +98,18 @@ class TabernaculoBotaoDeLido extends StatelessWidget {
       onPressed: aoAlternar,
     );
   }
+}
+
+/// O que o botão de marcar um dia anuncia: o mesmo texto no tooltip da Hoje e
+/// no do cronograma.
+String rotuloDoBotaoDeLido({
+  required bool lido,
+  required String rotulo,
+  required bool pedeConta,
+}) {
+  if (lido) return 'Desmarcar $rotulo';
+  if (pedeConta) return 'Entre na conta para marcar $rotulo';
+  return 'Marcar $rotulo como lido';
 }
 
 /// A ação decisiva de um diálogo ou de uma folha — Salvar, Remover, Criar

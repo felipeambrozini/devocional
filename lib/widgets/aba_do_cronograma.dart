@@ -267,6 +267,7 @@ class _TabernaculoAbaDoCronogramaState extends State<TabernaculoAbaDoCronograma>
                       // O mesmo "Desfazer" da Hoje: um toque errado num
                       // dia lido não pode custar o registro sem aviso.
                       somenteLeitura: widget.somenteLeitura,
+                      pedeConta: !logado,
                       aoAlternar: widget.somenteLeitura
                           ? () {}
                           : () => alternarLidoOuConvidar(

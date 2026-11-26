@@ -64,6 +64,7 @@ class TabernaculoCartaoLeituraProgresso extends StatelessWidget {
               TabernaculoBotaoDeLido(
                 lido: lido,
                 rotulo: dia.rotulo,
+                pedeConta: !logado,
                 aoAlternar: () =>
                     alternarLidoOuConvidar(context, estado, chave),
               ),

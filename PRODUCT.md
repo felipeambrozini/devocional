@@ -45,8 +45,9 @@ vitoriana dele, tratando o leitor por "tu".
   progresso é do ano (os dias lidos guardam o ano) e recomeça em 1º de janeiro;
   o histórico dos anos anteriores fica guardado. O calendário e a leitura de
   hoje aparecem sem conta, sem nenhum dia lido nem progresso do ano; marcar um
-  dia pede conta, e o toque no círculo abre um convite para entrar ("Entre
-  para marcar a leitura"), que marca o dia se o login der certo.
+  dia pede conta: o toque no círculo mostra um aviso curto ("Entre para
+  marcar a leitura") com a ação "Entrar", que marca o dia se o login der
+  certo.
 - Marcação ao terminar de ler: quem abre a Bíblia pela faixa de um dia (do
   cronograma ou de um plano) e chega ao fim de todos os capítulos dele, mesmo
   em momentos diferentes, tem o dia marcado como lido, com aviso e

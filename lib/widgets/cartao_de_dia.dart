@@ -28,6 +28,7 @@ class TabernaculoCartaoDeDia extends StatelessWidget {
     this.destacar = false,
     this.dia,
     this.somenteLeitura = false,
+    this.pedeConta = false,
   });
 
   final int numero;
@@ -47,6 +48,9 @@ class TabernaculoCartaoDeDia extends StatelessWidget {
   /// Registro de um ano que já passou: o botão de marcar some e o estado de
   /// lido fica só no número e no rótulo. Abrir a leitura continua valendo.
   final bool somenteLeitura;
+
+  /// Sem conta, marcar só pede para entrar (ver [rotuloDoBotaoDeLido]).
+  final bool pedeConta;
 
   @override
   Widget build(BuildContext context) {
@@ -159,9 +163,11 @@ class TabernaculoCartaoDeDia extends StatelessWidget {
                     )
                   else
                     Tooltip(
-                      message: lido
-                          ? 'Desmarcar $rotulo'
-                          : 'Marcar $rotulo como lido',
+                      message: rotuloDoBotaoDeLido(
+                        lido: lido,
+                        rotulo: rotulo,
+                        pedeConta: pedeConta,
+                      ),
                       child: TabernaculoBotaoTerciario.icon(
                         onPressed: aoAlternar,
                         icon: FaIcon(

@@ -6,7 +6,7 @@ import '../dados/nuvem.dart';
 import '../dados/planos_nuvem.dart';
 import 'aviso.dart';
 import 'conclusao_do_plano.dart';
-import 'conta_acoes.dart';
+import 'convite_para_marcar.dart';
 
 /// A pessoa chegou ao fim do capítulo [numero] de [livro], aberto pela
 /// leitura de [dia]: guarda o capítulo como lido no dia e, se era o último que
@@ -81,18 +81,11 @@ Future<void> marcarDiaDaLeituraAoTerminar(
         // Sem conta nada é gravado: o aviso convida a entrar e, se der
         // certo, marca o dia.
         if (Nuvem.instancia.carregandoConta) return;
-        mostrarAviso(
+        avisarParaEntrar(
           context,
           'Entre para guardar a leitura do dia',
-          rotuloDeAcao: 'Entrar',
-          duracao: duracaoDeAvisoAutomatico,
-          aoAgir: () async {
-            // Direto do toque, sem espera antes: a janela do login na web só
-            // abre dentro do gesto.
-            await entrarNaConta(context, Nuvem.instancia);
-            if (!Nuvem.instancia.logado || !context.mounted) return;
-            await marcarDiaDaLeituraAoTerminar(context, estado, dia);
-          },
+          depoisDeEntrar: (contexto) =>
+              marcarDiaDaLeituraAoTerminar(contexto, estado, dia),
         );
         return;
       }

@@ -126,7 +126,7 @@ void main() {
     expect(find.byType(TabernaculoCartaoDeDia), findsNothing);
   });
 
-  testWidgets('sem conta, tocar em marcar no cronograma abre o convite', (
+  testWidgets('sem conta, tocar em marcar no cronograma pede para entrar', (
     tester,
   ) async {
     await carregarPlano(tester);
@@ -143,12 +143,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Entre para marcar a leitura'), findsOneWidget);
-    expect(
-      find.text('Os dias lidos ficam guardados na sua conta Google.'),
-      findsOneWidget,
-    );
-    expect(find.text('Entrar com Google'), findsOneWidget);
+    expect(find.widgetWithText(SnackBarAction, 'Entrar'), findsOneWidget);
+    expect(find.byType(BottomSheet), findsNothing);
     expect(estado.diasLidosNoAno(2026), 0);
+    await tester.pump(const Duration(seconds: 9));
   });
 
   testWidgets('sem conta, a Hoje mostra a leitura, sem o progresso do ano', (
@@ -171,7 +169,11 @@ void main() {
     expect(find.byType(TabernaculoBotaoDeFaixa), findsWidgets);
     expect(find.text('Progresso do ano'), findsNothing);
     expect(find.byType(TabernaculoProgressoFino), findsNothing);
-    expect(find.byTooltip(RegExp('^Marcar .* como lido')), findsOneWidget);
+    // O leitor de tela sabe, antes do toque, que marcar pede a conta.
+    expect(
+      find.byTooltip(RegExp('^Entre na conta para marcar ')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('com conta, a Hoje mantém o progresso do ano', (tester) async {
@@ -184,7 +186,7 @@ void main() {
     expect(find.text('Progresso do ano'), findsOneWidget);
   });
 
-  testWidgets('sem conta, tocar no círculo da Hoje abre o convite', (
+  testWidgets('sem conta, tocar no círculo da Hoje pede para entrar', (
     tester,
   ) async {
     await carregarPlano(tester);
@@ -202,9 +204,10 @@ void main() {
 
     expect(find.text('Entre para marcar a leitura'), findsOneWidget);
     expect(estado.diasLidosNoAno(2026), 0);
+    await tester.pump(const Duration(seconds: 9));
   });
 
-  testWidgets('restaurando a conta, o círculo não abre o convite', (
+  testWidgets('restaurando a conta, o círculo não pede para entrar', (
     tester,
   ) async {
     Nuvem.instancia.logadoForcado = false;
@@ -222,14 +225,14 @@ void main() {
     );
     Nuvem.instancia.carregandoContaForcado = true;
 
-    await alternarLidoOuConvidar(contexto, estado, '2026-03-01');
+    alternarLidoOuConvidar(contexto, estado, '2026-03-01');
     await tester.pumpAndSettle();
 
     expect(find.text('Entre para marcar a leitura'), findsNothing);
     expect(estado.foiLido('2026-03-01'), isFalse);
   });
 
-  testWidgets('login pelo convite fecha a folha e marca o dia', (tester) async {
+  testWidgets('Entrar no aviso marca o dia depois do login', (tester) async {
     await carregarPlano(tester);
     Nuvem.instancia.logadoForcado = false;
     final estado = await abrir();
@@ -247,13 +250,13 @@ void main() {
     // O Firebase não existe no teste: o login falha com aviso, e aqui a conta
     // chega como se ele tivesse completado.
     Nuvem.instancia.logadoForcado = true;
-    await tester.tap(find.text('Entrar com Google'));
+    await tester.tap(find.widgetWithText(SnackBarAction, 'Entrar'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Entre para marcar a leitura'), findsNothing);
+    // O dia é marcado; o aviso com Desfazer entra na fila, atrás do erro do
+    // login falso do teste.
     expect(estado.foiLido('2026-03-01'), isTrue);
-    expect(find.text('Dia marcado como lido'), findsOneWidget);
-    await tester.pump(const Duration(seconds: 9));
+    await tester.pump(const Duration(seconds: 30));
   });
 
   testWidgets('com conta, o círculo da Hoje marca direto, sem convite', (
@@ -825,6 +828,26 @@ void main() {
 
       expect(find.text('Favoritos (1)'), findsOneWidget);
       expect(find.text('Entre para ver favoritos e notas'), findsNothing);
+    });
+  });
+
+  group('rotuloDoBotaoDeLido', () {
+    test('sem conta, avisa que marcar pede a conta', () {
+      expect(
+        rotuloDoBotaoDeLido(lido: false, rotulo: 'Gênesis 1', pedeConta: true),
+        'Entre na conta para marcar Gênesis 1',
+      );
+    });
+
+    test('com conta, marca e desmarca como sempre', () {
+      expect(
+        rotuloDoBotaoDeLido(lido: false, rotulo: 'Gênesis 1', pedeConta: false),
+        'Marcar Gênesis 1 como lido',
+      );
+      expect(
+        rotuloDoBotaoDeLido(lido: true, rotulo: 'Gênesis 1', pedeConta: false),
+        'Desmarcar Gênesis 1',
+      );
     });
   });
 }
