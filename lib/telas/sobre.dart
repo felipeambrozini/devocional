@@ -142,8 +142,10 @@ class _TelaSobreState extends State<TelaSobre> {
                             'mais o e-mail e o identificador da conta, '
                             'nunca o texto da Bíblia ou do devocional que '
                             'você lê; o tamanho da letra e o tema continuam '
-                            'só no aparelho. Quem não entra usa o app do '
-                            'mesmo jeito de sempre, sem nada saindo daqui.'
+                            'só no aparelho. Sem conta, a leitura é livre e '
+                            'nada sai daqui; guardar o cronograma, os '
+                            'planos, o progresso dos livros, os favoritos e '
+                            'as notas exige a conta.'
                       : 'Quem entra com a conta Google salva favoritos, '
                             'anotações e dias de leitura marcados numa '
                             'conta na nuvem, para não perdê-los se o '
@@ -151,9 +153,10 @@ class _TelaSobreState extends State<TelaSobre> {
                             'esses itens, mais o e-mail e o identificador '
                             'da conta, nunca o texto da Bíblia ou do '
                             'devocional que você lê; o tamanho da letra e o '
-                            'tema continuam só no aparelho. Quem não entra '
-                            'usa o app do mesmo jeito de sempre, sem nada '
-                            'saindo daqui.',
+                            'tema continuam só no aparelho. Sem conta, a '
+                            'leitura é livre e nada sai daqui; guardar o '
+                            'cronograma, os planos, o progresso dos livros, '
+                            'os favoritos e as notas exige a conta.',
                   style: tema.bodyLarge?.copyWith(height: 1.7),
                 ),
               ),

@@ -125,7 +125,11 @@ Flutter (Android, iOS e web a partir do mesmo código).
   versículo (Copiar, Compartilhar, Anotar, Favoritar) mostra também o
   comentário de Charles Spurgeon para aquele versículo, nos 31.102 versículos
   dos 66 livros.
-- **Conta Google (Web, Android e iOS)**: opcional — favoritos, notas, progresso,
+- **Conta Google (Web, Android e iOS)**: ler é livre (Bíblia, devocionais,
+  Biblioteca, busca, chat dos convidados), mas o que é pessoal exige a conta:
+  o cronograma, os planos, o progresso dos livros, os favoritos e as notas.
+  Sem conta, essas telas mostram o convite de entrar e a folha do versículo
+  só oferece Copiar (e Compartilhar). Favoritos, notas, progresso,
   conversas, horários dos lembretes, planos (com a data de conclusão de cada um)
   e a leitura dos livros da Biblioteca sobem sozinhos para a conta de quem
   entrar (depois do consentimento da LGPD neste aparelho), para não perder nada
@@ -140,9 +144,15 @@ Flutter (Android, iOS e web a partir do mesmo código).
   uma página com nome e e-mail, o cronograma de anos anteriores (cada ano abre
   em `/perfil/cronograma/AAAA`, só para consulta), os planos concluídos com a
   data e o "Fazer de novo", a contagem de favoritos e notas das três origens
-  (com "Ver todos", que abre `/notas?aba=todas`) e a conta: Sair, que espera
-  tudo chegar à conta, e Apagar conta e dados da nuvem. O cabeçalho da Hoje
-  não tem mais o botão Sair, e o Sobre não tem mais o Apagar conta.
+  (com "Ver favoritos e notas", que abre `/notas?aba=todas`, a única tela que
+  junta as marcações de todas as origens) e a conta: Sair, que confirma na
+  conta tudo o que ainda não subiu (os envios que falharam são refeitos) e
+  depois limpa os dados pessoais do aparelho, e Apagar conta e dados da
+  nuvem. O cabeçalho da Hoje não tem mais o botão Sair, e o Sobre não tem mais
+  o Apagar conta. Os anos anteriores abrem só para consulta: ver um dia não
+  registra leitura. "Fazer de novo" devolve o plano concluído a Meus Planos
+  sem nenhum dia lido. Na espera da conta, as telas mostram "Verificando sua
+  conta".
 - **Busca** no texto da Bíblia e nos devocionais, em duas abas.
 - **Palavras de Deus em vermelho**: na Bíblia, as falas de Deus Pai, de Jesus
   e do Espírito Santo saem em vermelho (carmim no claro, vermelho claro no

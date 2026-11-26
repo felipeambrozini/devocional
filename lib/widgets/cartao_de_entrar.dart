@@ -15,6 +15,7 @@ class TabernaculoCartaoDeEntrar extends StatelessWidget {
     this.descricao =
         'Entre com sua conta para participar, marcar os dias lidos '
         'e ver o progresso de todos.',
+    this.embutido = false,
   });
 
   /// Roda depois do login. Opcional: quem só depende de `Nuvem` para
@@ -23,8 +24,44 @@ class TabernaculoCartaoDeEntrar extends StatelessWidget {
   final String titulo;
   final String descricao;
 
+  /// Só o cartão, para quem já está dentro de uma lista que rola e dá o
+  /// próprio espaçamento (a Hoje). Sem o centro, a rolagem própria e a
+  /// margem da página inteira.
+  final bool embutido;
+
   @override
   Widget build(BuildContext context) {
+    final cartao = Card(
+      child: Padding(
+        padding: const EdgeInsets.all(TabernaculoEspacamento.sp20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Container: sem ele o cabeçalho engolia a descrição
+            // abaixo, e o leitor de tela lia o parágrafo inteiro
+            // como título.
+            Semantics(
+              container: true,
+              header: true,
+              child: Text(
+                titulo,
+                style: Theme.of(context).textTheme.titleLarge,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: TabernaculoEspacamento.sp8),
+            Text(
+              descricao,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: TabernaculoEspacamento.sp16),
+            TabernaculoBotaoDeEntrar(aoEntrar: onEntrar),
+          ],
+        ),
+      ),
+    );
+    if (embutido) return cartao;
     return TabernaculoLarguraDeLeitura(
       // Center + SingleChildScrollView: sem isto, um título/descrição mais
       // longos (ver o uso em aba_dos_meus_planos.dart) podem estourar a
@@ -33,36 +70,7 @@ class TabernaculoCartaoDeEntrar extends StatelessWidget {
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(TabernaculoEspacamento.sp16),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(TabernaculoEspacamento.sp20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Container: sem ele o cabeçalho engolia a descrição
-                    // abaixo, e o leitor de tela lia o parágrafo inteiro
-                    // como título.
-                    Semantics(
-                      container: true,
-                      header: true,
-                      child: Text(
-                        titulo,
-                        style: Theme.of(context).textTheme.titleLarge,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(height: TabernaculoEspacamento.sp8),
-                    Text(
-                      descricao,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: TabernaculoEspacamento.sp16),
-                    TabernaculoBotaoDeEntrar(aoEntrar: onEntrar),
-                  ],
-                ),
-              ),
-            ),
+            child: cartao,
           ),
         ),
       ),

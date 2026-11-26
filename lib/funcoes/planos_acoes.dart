@@ -158,16 +158,15 @@ Future<bool> fazerPlanoDeNovo(
   final confirmou = await confirmar(
     context,
     titulo: 'Fazer o plano de novo?',
-    conteudo: 'O seu progresso volta a zero.',
+    conteudo: 'Seu progresso volta a zero.',
     rotuloDaAcao: 'Fazer de novo',
   );
   if (!confirmou) return false;
   if (plano.compartilhado) {
     try {
       await (zerarNaNuvem ??
-          (id) => PlanosNaNuvem.instancia.substituirDias(id, const []))(
-        plano.id,
-      );
+          (id) =>
+              PlanosNaNuvem.instancia.substituirDias(id, const []))(plano.id);
     } on PlanosNaNuvemExcecao catch (erro) {
       if (context.mounted) mostrarErro(context, erro.mensagem);
       return false;

@@ -55,12 +55,10 @@ class _TelaNotasState extends State<TelaNotas> {
             ],
           ),
           body: Nuvem.instancia.carregandoConta
-              ? const SizedBox.shrink()
+              ? const TabernaculoVerificandoConta()
               : const TabernaculoCartaoDeEntrar(
                   titulo: 'Entre para ver favoritos e notas',
-                  descricao:
-                      'Seus favoritos e anotações ficam guardados na sua '
-                      'conta.',
+                  descricao: 'Seus favoritos e notas ficam na sua conta.',
                 ),
         );
       },

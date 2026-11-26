@@ -170,6 +170,7 @@ class TabernaculoCartaoDeLeitura extends StatelessWidget {
               texto: texto,
               destaque: destaque,
               outrasAcoes: 'anotar, copiar ou compartilhar',
+              outrasAcoesSemConta: 'copiar ou compartilhar',
               aoTocar: () => _abrirAcoes(context, estado, destaque),
             ),
             const SizedBox(height: TabernaculoEspacamento.sp8),

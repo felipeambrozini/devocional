@@ -30,6 +30,7 @@ class TabernaculoLeituraDeHoje extends StatelessWidget {
         if (Nuvem.instancia.logado) return _leitura(context);
         if (Nuvem.instancia.carregandoConta) return const SizedBox.shrink();
         return const TabernaculoCartaoDeEntrar(
+          embutido: true,
           titulo: 'Entre para ver o plano',
           descricao:
               'A leitura do dia vem do cronograma anual, guardado na sua '

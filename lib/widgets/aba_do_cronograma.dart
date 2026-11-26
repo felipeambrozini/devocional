@@ -137,7 +137,9 @@ class _TabernaculoAbaDoCronogramaState extends State<TabernaculoAbaDoCronograma>
       listenable: Nuvem.instancia,
       builder: (context, _) {
         if (Nuvem.instancia.logado) return _cronograma(context);
-        if (Nuvem.instancia.carregandoConta) return const SizedBox.shrink();
+        if (Nuvem.instancia.carregandoConta) {
+          return const TabernaculoVerificandoConta();
+        }
         return const TabernaculoCartaoDeEntrar(
           titulo: 'Entre para ver o plano',
           descricao:

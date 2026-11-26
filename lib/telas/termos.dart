@@ -154,16 +154,18 @@ class _TelaTermosState extends State<TelaTermos> {
                       key: _conta,
                       titulo: 'Conta e conteúdo do usuário',
                       texto: chat
-                          ? 'Entrar com conta Google é opcional e serve para '
-                                'sincronizar favoritos, anotações, progresso de '
-                                'leitura e conversas na nuvem. Você é '
+                          ? 'Ler não exige conta. Guardar o cronograma, os planos, '
+                                'o progresso dos livros, os favoritos e as '
+                                'notas exige entrar com conta Google, que '
+                                'também sincroniza as conversas na nuvem. Você é '
                                 'responsável pelo conteúdo que escreve em '
                                 'anotações e conversas. Planos de leitura '
                                 'compartilhados expõem o progresso a quem '
                                 'participa do mesmo plano.'
-                          : 'Entrar com conta Google é opcional e serve para '
-                                'sincronizar favoritos, anotações e progresso '
-                                'de leitura na nuvem. Você é responsável pelo '
+                          : 'Ler não exige conta. Guardar o cronograma, os planos, '
+                                'o progresso dos livros, os favoritos e as '
+                                'notas exige entrar com conta Google. Você é '
+                                'responsável pelo '
                                 'conteúdo que escreve em anotações. Planos de '
                                 'leitura compartilhados expõem o progresso a '
                                 'quem participa do mesmo plano.',

@@ -70,12 +70,21 @@ class TabernaculoCartaoDeDia extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 34),
-              child: Text(
-                '$numero',
-                style: tema.headlineSmall?.copyWith(
-                  color: lido ? cor.secondary : cor.primary,
+            // Só leitura: o dia vira um nó só ("Dia 3, 3 de janeiro, lido") em
+            // vez de número, rótulo e "Dia lido" soltos; as faixas, que são
+            // botões, continuam separadas.
+            Semantics(
+              label: somenteLeitura
+                  ? 'Dia $numero, $rotulo, ${lido ? 'lido' : 'não lido'}'
+                  : null,
+              excludeSemantics: somenteLeitura,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 34),
+                child: Text(
+                  '$numero',
+                  style: tema.headlineSmall?.copyWith(
+                    color: lido ? cor.secondary : cor.primary,
+                  ),
                 ),
               ),
             ),
@@ -84,11 +93,14 @@ class TabernaculoCartaoDeDia extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    rotulo,
-                    style: tema.bodyMedium?.copyWith(
-                      decoration: lido ? TextDecoration.lineThrough : null,
-                      color: lido ? cor.onSurfaceVariant : cor.onSurface,
+                  ExcludeSemantics(
+                    excluding: somenteLeitura,
+                    child: Text(
+                      rotulo,
+                      style: tema.bodyMedium?.copyWith(
+                        decoration: lido ? TextDecoration.lineThrough : null,
+                        color: lido ? cor.onSurfaceVariant : cor.onSurface,
+                      ),
                     ),
                   ),
                   const SizedBox(height: TabernaculoEspacamento.sp10),
@@ -110,31 +122,41 @@ class TabernaculoCartaoDeDia extends StatelessWidget {
                   ),
                   const SizedBox(height: TabernaculoEspacamento.sp4),
                   if (somenteLeitura)
-                    if (lido)
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: TabernaculoEspacamento.sp8,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            FaIcon(
-                              FontAwesomeIcons.circleCheck,
-                              size: 14,
-                              color: cor.secondary,
-                            ),
-                            const SizedBox(width: TabernaculoEspacamento.sp8),
-                            Text(
-                              'Dia lido',
-                              style: tema.labelLarge?.copyWith(
-                                color: cor.secondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    else
-                      const SizedBox(height: TabernaculoEspacamento.sp8)
+                    // A mesma altura lido ou não, para a lista do ano não
+                    // ondular conforme os dias lidos.
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        bottom: TabernaculoEspacamento.sp8,
+                      ),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 20),
+                        child: lido
+                            ? ExcludeSemantics(
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ExcludeSemantics(
+                                      child: FaIcon(
+                                        FontAwesomeIcons.circleCheck,
+                                        size: 14,
+                                        color: cor.secondary,
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      width: TabernaculoEspacamento.sp8,
+                                    ),
+                                    Text(
+                                      'Dia lido',
+                                      style: tema.labelLarge?.copyWith(
+                                        color: cor.secondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : null,
+                      ),
+                    )
                   else
                     Tooltip(
                       message: lido

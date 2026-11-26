@@ -251,31 +251,34 @@ void main() {
     expect(find.text('Planos concluídos'), findsNothing);
   });
 
-  testWidgets('perfil soma favoritos e notas das três origens e Ver todos abre '
-      '/notas?aba=todas', (tester) async {
-    telaAlta(tester);
-    final estado = await abrir();
-    await estado.alternarFavorito('joao', 3, 16);
-    await estado.leituraDeLivros.alternarDestaque(
-      slugDoDevocional('manha'),
-      diaDoDevocional(DateTime(2025, 11, 17)),
-      paragrafoDoDevocional,
-    );
-    await estado.leituraDeLivros.definirNota(
-      'respigas_entre_os_feixes',
-      0,
-      0,
-      'ilustração boa',
-    );
-    final router = await montar(tester, estado);
+  testWidgets(
+    'perfil soma favoritos e notas das três origens e Ver favoritos e notas abre '
+    '/notas?aba=todas',
+    (tester) async {
+      telaAlta(tester);
+      final estado = await abrir();
+      await estado.alternarFavorito('joao', 3, 16);
+      await estado.leituraDeLivros.alternarDestaque(
+        slugDoDevocional('manha'),
+        diaDoDevocional(DateTime(2025, 11, 17)),
+        paragrafoDoDevocional,
+      );
+      await estado.leituraDeLivros.definirNota(
+        'respigas_entre_os_feixes',
+        0,
+        0,
+        'ilustração boa',
+      );
+      final router = await montar(tester, estado);
 
-    // Os mesmos números das abas de /notas?aba=todas (notas_todas_test).
-    expect(find.text('Favoritos 3 · Notas 1'), findsOneWidget);
+      // Os mesmos números das abas de /notas?aba=todas (notas_todas_test).
+      expect(find.text('Favoritos 3 · Notas 1'), findsOneWidget);
 
-    await tester.tap(find.text('Ver todos'));
-    await tester.pumpAndSettle();
-    expect(router.state.uri.toString(), '/notas?aba=todas');
-  });
+      await tester.tap(find.text('Ver favoritos e notas'));
+      await tester.pumpAndSettle();
+      expect(router.state.uri.toString(), '/notas?aba=todas');
+    },
+  );
 
   testWidgets('perfil sem marcações mostra o estado vazio', (tester) async {
     telaAlta(tester);
@@ -283,7 +286,7 @@ void main() {
 
     expect(find.text('Favoritos e notas'), findsOneWidget);
     expect(find.text('Nenhum favorito nem nota ainda'), findsOneWidget);
-    expect(find.text('Ver todos'), findsNothing);
+    expect(find.text('Ver favoritos e notas'), findsNothing);
   });
 
   Future<void> tocarEmSair(WidgetTester tester) async {
@@ -354,9 +357,21 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('Salvando na conta antes de sair'), findsOneWidget);
+    // O toque continua ligado (o foco do teclado não cai) e é ignorado; o
+    // leitor de tela ouve o botão como desligado.
     final sair = tester.widget<ListTile>(find.widgetWithText(ListTile, 'Sair'));
-    expect(sair.onTap, isNull);
+    expect(sair.onTap, isNotNull);
+    final semantica = tester.ensureSemantics();
+    final no = tester.getSemantics(find.widgetWithText(ListTile, 'Sair'));
+    expect(no.flagsCollection.isEnabled.name, 'isFalse');
+    expect(no.flagsCollection.isButton, isTrue);
+    expect(no.label, contains('salvando na conta'));
+    semantica.dispose();
     await tester.tap(find.widgetWithText(ListTile, 'Sair'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byType(AlertDialog), findsNothing);
+    // O Apagar também espera: o toque é ignorado enquanto o Sair anda.
+    await tester.tap(find.text('Apagar conta e dados da nuvem'));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.byType(AlertDialog), findsNothing);
     expect(chamadas, 1);

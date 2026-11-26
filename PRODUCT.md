@@ -56,8 +56,9 @@ vitoriana dele, tratando o leitor por "tu".
   ajustáveis: push de uma Cloud Function agendada, mais um alarme local de
   reserva no Android para o caso de o push não chegar.
 - Cópia de segurança de favoritos, notas e progresso por exportar/importar
-  (folha de compartilhar); conta Google em todas as plataformas, para
-  espelhar na nuvem.
+  (folha de compartilhar); conta Google em todas as plataformas, que guarda
+  o que é pessoal: cronograma, planos, progresso dos livros, favoritos e
+  notas. Ler continua livre, sem conta.
 - Navegação: abas Hoje, Bíblia, Devocional, Biblioteca, Plano e Conversas; Sobre
   (créditos, canais e ajuda), Perguntas frequentes e Política de privacidade
   moram na folha de ajustes; os Termos de serviço abrem de dentro de Sobre. Na
@@ -137,7 +138,9 @@ vitoriana dele, tratando o leitor por "tu".
   Hoje, sem upload. O toque abre o perfil: nome e e-mail, o cronograma de
   anos anteriores só para consulta, os planos concluídos com a data e o
   "Fazer de novo", a contagem de favoritos e notas das três origens (com
-  "Ver todos") e a conta, com Sair e Apagar conta e dados da nuvem.
+  "Ver favoritos e notas", a única tela que junta todas) e a conta, com Sair
+  (confirma na conta o que ainda não subiu e limpa o aparelho) e Apagar conta
+  e dados da nuvem.
 - Compartilhar gera cartão-imagem (fundo couro, filete dourado) com o texto
   junto: versículo na Bíblia; no Devocional, a citação assinada com a leitura
   e a data; na web cai para texto.
@@ -293,8 +296,8 @@ vitoriana dele, tratando o leitor por "tu".
 4. Conteúdo verificável: números de versículos, canon e textos devocionais
    são checados contra as fontes; nada de conteúdo inventado ou atribuído.
 5. Os dados são do leitor: favoritos, notas e progresso podem sempre ser
-   exportados e importados; a sincronização em nuvem é opcional, só pela
-   conta Google e com consentimento, igual em todas as plataformas.
+   exportados e importados. Ler é livre; guardar o que é pessoal exige a
+   conta Google, com consentimento, igual em todas as plataformas.
 
 ## Accessibility & Inclusion
 

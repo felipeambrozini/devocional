@@ -1406,7 +1406,7 @@ void _testesDoPlanoDeJesus() {
       await tester.tap(find.text('Fazer de novo'));
       await tester.pumpAndSettle();
       expect(find.text('Fazer o plano de novo?'), findsOneWidget);
-      expect(find.text('O seu progresso volta a zero.'), findsOneWidget);
+      expect(find.text('Seu progresso volta a zero.'), findsOneWidget);
       await tester.tap(find.widgetWithText(FilledButton, 'Fazer de novo'));
       await tester.pumpAndSettle();
 
@@ -1465,33 +1465,34 @@ void _testesDoPlanoDeJesus() {
       },
     );
 
-    testWidgets('em plano compartilhado zera primeiro a nuvem e depois o local', (
-      tester,
-    ) async {
-      final estado = Estado(await SharedPreferences.getInstance());
-      final plano = await planoConcluido(estado);
-      await estado.marcarCompartilhado(plano.id);
-      final resultados = <bool>[];
-      var lidosNaChamada = -1;
+    testWidgets(
+      'em plano compartilhado zera primeiro a nuvem e depois o local',
+      (tester) async {
+        final estado = Estado(await SharedPreferences.getInstance());
+        final plano = await planoConcluido(estado);
+        await estado.marcarCompartilhado(plano.id);
+        final resultados = <bool>[];
+        var lidosNaChamada = -1;
 
-      await tester.pumpWidget(
-        harness(
-          estado,
-          estado.planoDoUsuario(plano.id)!,
-          resultados,
-          zerarNaNuvem: (id) async =>
-              lidosNaChamada = estado.diasLidosDoPlano(id),
-        ),
-      );
-      await tester.tap(find.text('rodar'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(FilledButton, 'Fazer de novo'));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          harness(
+            estado,
+            estado.planoDoUsuario(plano.id)!,
+            resultados,
+            zerarNaNuvem: (id) async =>
+                lidosNaChamada = estado.diasLidosDoPlano(id),
+          ),
+        );
+        await tester.tap(find.text('rodar'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilledButton, 'Fazer de novo'));
+        await tester.pumpAndSettle();
 
-      expect(resultados, [true]);
-      expect(lidosNaChamada, 1);
-      expect(estado.diasLidosDoPlano(plano.id), 0);
-    });
+        expect(resultados, [true]);
+        expect(lidosNaChamada, 1);
+        expect(estado.diasLidosDoPlano(plano.id), 0);
+      },
+    );
 
     testWidgets('cancelar o diálogo não recomeça', (tester) async {
       final estado = Estado(await SharedPreferences.getInstance());

@@ -45,12 +45,11 @@ class TabernaculoCabecalhoDaHoje extends StatelessWidget {
                 container: true,
                 button: true,
                 label: 'Abrir perfil',
-                child: Material(
-                  type: MaterialType.transparency,
-                  child: InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: () => context.push('/perfil'),
-                    child: ExcludeSemantics(
+                // O InkWell fica por cima do avatar, que é opaco: por baixo,
+                // o splash e o foco do teclado ficavam escondidos.
+                child: Stack(
+                  children: [
+                    ExcludeSemantics(
                       child: CircleAvatar(
                         radius: 30,
                         backgroundImage: nuvem.fotoUrl != null
@@ -66,7 +65,16 @@ class TabernaculoCabecalhoDaHoje extends StatelessWidget {
                             : null,
                       ),
                     ),
-                  ),
+                    Positioned.fill(
+                      child: Material(
+                        type: MaterialType.transparency,
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap: () => context.push('/perfil'),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(width: TabernaculoEspacamento.sp14),

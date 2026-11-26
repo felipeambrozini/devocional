@@ -97,9 +97,11 @@ List<(String, String)> _perguntas(bool chat) => [
   ),
   (
     'Preciso de uma conta para usar?',
-    'Não. O aplicativo funciona por completo sem conta. Entrar com a conta '
-        'Google só é necessário para guardar uma cópia de segurança na '
-        'nuvem ou para participar de um plano de leitura compartilhado.',
+    'Para ler, não. A Bíblia, os devocionais e a Biblioteca abrem sem conta. '
+        'Para guardar, sim: o cronograma, os planos, o progresso dos livros, '
+        'os favoritos e as notas exigem a conta Google, que também guarda a '
+        'cópia de segurança na nuvem e permite participar de um plano '
+        'compartilhado.',
   ),
   (
     'O aplicativo tem anúncio ou rastreia meu uso?',

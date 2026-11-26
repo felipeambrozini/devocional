@@ -139,6 +139,9 @@ class Sincronia {
   Future<void> _marcarPendente(bool pendente) async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      // O Sair pode ter parado a sincronia e apagado as marcas durante o
+      // await acima: gravar agora ressuscitaria a marca de outra conta.
+      if (_parada) return;
       if (pendente) {
         await prefs.setBool(_chaveDaMarca, true);
       } else {

@@ -350,6 +350,17 @@ await caso('planos_concluidos como lista é recusado',
 await caso('planos_recomecados como número é recusado',
   assertFails(mesclar(alice, 'alice', {planos: {...planosDoUsuario(),
     planos_recomecados: 1}})));
+const mapaCom = (n) => Object.fromEntries(
+  Array.from({length: n}, (_, i) => [`p${i}`, 1764000000000]));
+await caso('planos_concluidos com 5000 chaves é recusado',
+  assertFails(mesclar(alice, 'alice', {planos: {...planosDoUsuario(),
+    planos_concluidos: mapaCom(5000)}})));
+await caso('planos_recomecados com 5000 chaves é recusado',
+  assertFails(mesclar(alice, 'alice', {planos: {...planosDoUsuario(),
+    planos_recomecados: mapaCom(5000)}})));
+await caso('planos_concluidos abaixo do teto é aceito',
+  assertSucceeds(mesclar(alice, 'alice', {planos: {...planosDoUsuario(),
+    planos_concluidos: mapaCom(4999)}})));
 await caso('não grava os planos do bob',
   assertFails(mesclar(alice, 'bob', {planos: planosDoUsuario()})));
 await caso('grava a própria leitura de livros',

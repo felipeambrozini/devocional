@@ -14,7 +14,8 @@ rules_version = '2';
 //   conversas   mapa — o histórico dos chats, serializado à parte
 //   lembretes   mapa — horários do lembrete, serializado à parte
 //   planos      mapa — planos do usuário (sem precisar compartilhar), com
-//               {planos: list, planos_lidos: map}
+//               {planos: list, planos_lidos: map} e, opcionais,
+//               planos_concluidos: map e planos_recomecados: map
 //   livros      mapa — leitura dos livros da biblioteca, com {versao: int,
 //               livros: map, destaques: list}
 //   atualizadoEm timestamp do servidor, gravado em toda escrita

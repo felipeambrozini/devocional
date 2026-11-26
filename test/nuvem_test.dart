@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:devocional/dados/estado.dart';
@@ -469,6 +470,46 @@ void main() {
       await sincronia.reenviarSePendente();
 
       expect(envios, 0);
+    });
+
+    test('Sair durante a gravação da marca não a ressuscita', () async {
+      // A marca é gravada depois de um await; o Sair pode parar a sincronia e
+      // apagar a marca nesse intervalo. Variando em quantos microtasks a
+      // parada chega, alguma cai entre o await e o setBool.
+      for (var profundidade = 0; profundidade < 16; profundidade++) {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final estado = await Estado.abrir();
+        late final Sincronia sincronia;
+        void sair(int n) {
+          if (n > 0) {
+            scheduleMicrotask(() => sair(n - 1));
+            return;
+          }
+          sincronia.parar();
+          prefs.remove('sincronia_pendente_copia');
+        }
+
+        sincronia = Sincronia(
+          estado: estado,
+          nome: 'copia',
+          puxar: () async => null,
+          empurrar: (_) async {
+            sair(profundidade);
+            throw Exception('sem rede');
+          },
+          atraso: Duration.zero,
+        );
+        await sincronia.comecar();
+        await assentar();
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+
+        expect(
+          prefs.containsKey('sincronia_pendente_copia'),
+          isFalse,
+          reason: 'parada com $profundidade microtasks de atraso',
+        );
+      }
     });
 
     test('Sair apaga as marcas de todas as sincronias', () async {

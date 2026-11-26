@@ -64,13 +64,12 @@ class _TelaPerfilState extends State<TelaPerfil> {
           if (nuvem.logado) return _perfil(context, estado);
           // Durante a restauração da sessão, nada: o convite piscaria para
           // quem já está logado (mesma regra do cronograma).
-          if (nuvem.carregandoConta) return const SizedBox.shrink();
+          if (nuvem.carregandoConta) return const TabernaculoVerificandoConta();
           return const TabernaculoCartaoDeEntrar(
             titulo: 'Entre para ver seu perfil',
             descricao:
-                'O perfil reúne o que fica na sua conta: o cronograma de '
-                'anos anteriores, os planos concluídos, os favoritos e as '
-                'notas.',
+                'Seu cronograma de anos anteriores, os planos concluídos, os '
+                'favoritos e as notas ficam na conta.',
           );
         },
       ),
@@ -134,45 +133,76 @@ class _TelaPerfilState extends State<TelaPerfil> {
               style: tema.bodyMedium?.copyWith(color: cor.onSurfaceVariant),
             )
           else ...[
-            Text('Favoritos $favoritos · Notas $notas', style: tema.bodyLarge),
+            Semantics(
+              label:
+                  '$favoritos ${favoritos == 1 ? 'favorito' : 'favoritos'}, '
+                  '$notas ${notas == 1 ? 'nota' : 'notas'}',
+              excludeSemantics: true,
+              child: Text(
+                'Favoritos $favoritos · Notas $notas',
+                style: tema.bodyLarge,
+              ),
+            ),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Ver todos'),
+              title: const Text('Ver favoritos e notas'),
               trailing: seta,
               onTap: () => context.push('/notas?aba=todas'),
             ),
           ],
           const SizedBox(height: TabernaculoEspacamento.sp32),
           _tituloDeSecao(context, 'Conta'),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: FaIcon(
-              _saindo
-                  ? FontAwesomeIcons.hourglassHalf
-                  : FontAwesomeIcons.rightFromBracket,
-              color: cor.primary,
-            ),
-            title: const Text('Sair'),
-            // O Sair espera tudo chegar à conta, o que pode levar uns
-            // segundos: sem o aviso, o toque parecia ignorado. Sem onTap
-            // enquanto isso, para não pedir outro Sair por cima.
-            subtitle: _saindo
-                ? Semantics(
-                    liveRegion: true,
-                    child: const Text('Salvando na conta antes de sair'),
-                  )
-                : null,
+          // O Sair espera tudo chegar à conta, o que pode levar uns segundos:
+          // sem o aviso, o toque parecia ignorado. O toque fica ligado (e é
+          // ignorado enquanto isso) para o foco do teclado não cair, e não
+          // pedir outro Sair por cima.
+          Semantics(
+            container: true,
+            button: true,
+            enabled: !_saindo,
+            liveRegion: _saindo,
+            label: _saindo ? 'Sair, salvando na conta antes de sair' : 'Sair',
             onTap: _saindo ? null : _sair,
-          ),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: FaIcon(FontAwesomeIcons.trash, color: cor.error),
-            title: const Text('Apagar conta e dados da nuvem'),
-            subtitle: const Text(
-              'Apaga sua conta no app e tudo o que ela guarda. O que está '
-              '$ondeFicaACopiaLocal não é tocado.',
+            excludeSemantics: true,
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: FaIcon(
+                _saindo
+                    ? FontAwesomeIcons.hourglassHalf
+                    : FontAwesomeIcons.rightFromBracket,
+                color: cor.primary,
+              ),
+              title: const Text('Sair'),
+              subtitle: _saindo
+                  ? const Text('Salvando na conta antes de sair')
+                  : null,
+              onTap: () {
+                if (!_saindo) _sair();
+              },
             ),
+          ),
+          Semantics(
+            container: true,
+            button: true,
+            enabled: !_saindo,
+            label:
+                'Apagar conta e dados da nuvem. Apaga sua conta no app e tudo '
+                'o que ela guarda. O que está $ondeFicaACopiaLocal não é '
+                'tocado.',
             onTap: _saindo ? null : _apagar,
+            excludeSemantics: true,
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: FaIcon(FontAwesomeIcons.trash, color: cor.error),
+              title: const Text('Apagar conta e dados da nuvem'),
+              subtitle: const Text(
+                'Apaga sua conta no app e tudo o que ela guarda. O que está '
+                '$ondeFicaACopiaLocal não é tocado.',
+              ),
+              onTap: () {
+                if (!_saindo) _apagar();
+              },
+            ),
           ),
         ],
       ),

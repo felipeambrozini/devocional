@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../dados/modelos.dart';
+import '../dados/nuvem.dart';
 import '../estilo/espacamento.dart';
 import '../estilo/toque.dart';
 
@@ -15,6 +16,7 @@ class TabernaculoParagrafoDeLivro extends StatelessWidget {
     required this.aoTocar,
     this.estilo,
     this.outrasAcoes = 'anotar ou copiar',
+    this.outrasAcoesSemConta = 'copiar',
   });
 
   final String texto;
@@ -28,8 +30,16 @@ class TabernaculoParagrafoDeLivro extends StatelessWidget {
   /// de tela ("anotar ou copiar"; o Devocional acrescenta compartilhar).
   final String outrasAcoes;
 
+  /// O mesmo, sem conta: favoritos e notas são pessoais, e a folha só oferece
+  /// o que não pede conta.
+  final String outrasAcoesSemConta;
+
   @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(listenable: Nuvem.instancia, builder: _construir);
+  }
+
+  Widget _construir(BuildContext context, Widget? _) {
     final cor = Theme.of(context).colorScheme;
     final tema = Theme.of(context).textTheme;
     final grifado = destaque != null;
@@ -37,7 +47,9 @@ class TabernaculoParagrafoDeLivro extends StatelessWidget {
     // A dica acompanha o estado, para não anunciar "Favorito... toque para
     // favoritar": com nota, a folha nem oferece desfavoritar (a nota prende
     // o favorito, ver `LeituraDeLivros.alternarDestaque`).
-    final dica = nota.isNotEmpty
+    final dica = !Nuvem.instancia.logado
+        ? 'Toque para $outrasAcoesSemConta'
+        : nota.isNotEmpty
         ? 'Toque para $outrasAcoes'
         : grifado
         ? 'Toque para remover dos favoritos, $outrasAcoes'
