@@ -500,6 +500,37 @@ void main() {
     await tester.pumpAndSettle();
   });
 
+  testWidgets('o cronograma de um ano passado abre a leitura de um dia', (
+    tester,
+  ) async {
+    // A tela do ano mora fora da moldura das abas, como o perfil: a faixa
+    // abre a Bíblia por /ler, também fora dela, sem repetir a moldura.
+    SharedPreferences.setMockInitialValues({
+      'maior_de_idade': true,
+      'boas_vindas_vistas': true,
+      'consentimento_da_nuvem': true,
+      'dias_lidos': ['2025-01-01'],
+    });
+    Nuvem.instancia.logadoForcado = true;
+    await aquecerAssets(tester, livros: ['marcos']);
+    await tester.runAsync(() => Conteudo.instancia.plano(bissexto: false));
+    await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
+    await tester.pumpAndSettle();
+    final rota = GoRouter.of(tester.element(find.byType(Scaffold).first));
+    unawaited(rota.push('/perfil/cronograma/2025'));
+    await tester.pumpAndSettle();
+    expect(find.text('Cronograma de 2025'), findsOneWidget);
+
+    await tester.tap(find.text('Marcos 1').first);
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(rota.state.uri.path, '/ler/marcos/1');
+
+    rota.go('/hoje');
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('a Hoje esconde o cartão do cronograma com a flag desligada', (
     tester,
   ) async {

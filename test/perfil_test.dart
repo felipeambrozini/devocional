@@ -422,6 +422,31 @@ void main() {
           semantica.dispose();
         });
 
+        testWidgets('cabeçalho da Hoje logado no tema $nomeDoTema atende '
+            '$nomeDaDiretriz', (tester) async {
+          // A foto virou alvo de toque: abre o perfil.
+          final semantica = tester.ensureSemantics();
+          Nuvem.instancia.nomeForcado = 'Maria Clara Souza';
+          final estado = await abrir();
+          await tester.pumpWidget(
+            EscopoDoEstado(
+              estado: estado,
+              child: MaterialApp(
+                theme: construirTema(brilho: brilho),
+                home: Scaffold(
+                  body: TabernaculoCabecalhoDaHoje(
+                    data: DateTime(2026, 11, 25, 9),
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(find.bySemanticsLabel('Abrir perfil'), findsOneWidget);
+          await expectLater(tester, meetsGuideline(diretriz));
+          semantica.dispose();
+        });
+
         testWidgets(
           'cronograma do ano no tema $nomeDoTema atende $nomeDaDiretriz',
           (tester) async {
