@@ -18,7 +18,6 @@ import 'package:material_ui/material_ui.dart';
 
 import 'controladores/devocional_controlador.dart';
 import 'controladores/notas_controlador.dart';
-import 'dados/canon.dart';
 import 'dados/config_admin.dart';
 import 'dados/dia_da_leitura.dart';
 import 'dados/estado.dart';
@@ -36,6 +35,7 @@ import 'dados/voz.dart';
 import 'estilo/tema.dart';
 import 'funcoes/abrir_na_biblia.dart';
 import 'funcoes/lembretes_acoes.dart';
+import 'funcoes/link_do_site.dart';
 import 'funcoes/sair_da_conta.dart';
 import 'telas/admin.dart';
 import 'telas/biblia.dart';
@@ -96,52 +96,6 @@ void _abrirLeituraDoLembrete(String chave) {
   _router.go(
     DevocionalControlador.caminhoDaLeituraPeloParametro(leitura, null),
   );
-}
-
-/// Abre o versículo ou capítulo do parâmetro `ler` da URL (`?ler=joao.3.16`),
-/// para quem chega por um link compartilhado. Fora da web `Uri.base` é o
-/// diretório de trabalho, sem esse parâmetro, então não precisa de `kIsWeb`
-/// para não fazer nada nas outras plataformas.
-///
-/// Independente das rotas de aba abaixo: é uma sobreposição por cima de
-/// qualquer aba, lida direto de `Uri.base`, não do caminho que o GoRouter viu.
-void _abrirLeituraDoLink() {
-  final parametro = Uri.base.queryParameters['ler'];
-  if (parametro == null) return;
-  final alvo = alvoDoLink(parametro);
-  if (alvo == null) return;
-  final (slug, capitulo, versiculo) = alvo;
-  navigatorKey.currentState?.push(
-    MaterialPageRoute(
-      builder: (_) => TelaBiblia(
-        livroInicial: slug,
-        capituloInicial: capitulo,
-        destacar: versiculo == null ? null : (versiculo, versiculo),
-      ),
-    ),
-  );
-  // O push acima é direto no Navigator, não no GoRouter: a barra de
-  // endereço nunca seria atualizada por ele (ver `url_da_pagina_web.dart`),
-  // e ficaria com `?ler=` presa mesmo depois de sair da tela.
-  removerParametroDaUrl('ler');
-}
-
-/// Abre o plano compartilhado do parâmetro `plano` da URL — `?plano=<id>` ou
-/// `?plano=<slug-legível>-<id>`, ver [linkDoPlano] — para quem chega por um
-/// link divulgado por outra pessoa. Como [_abrirLeituraDoLink], é uma
-/// sobreposição por cima de qualquer aba.
-void _abrirPlanoDoLink(Estado estado) {
-  final parametro = Uri.base.queryParameters['plano'];
-  if (parametro == null) return;
-  final planoId = idDoParametroDePlano(parametro);
-  navigatorKey.currentState?.push(
-    MaterialPageRoute(
-      builder: (_) => TelaDeUmPlano(estado: estado, planoId: planoId),
-    ),
-  );
-  // Mesmo motivo de `_abrirLeituraDoLink`: este push não passa pelo
-  // GoRouter, então a barra de endereço ficaria com `?plano=` presa.
-  removerParametroDaUrl('plano');
 }
 
 /// Tudo dentro de uma zona só, para [Registro] pegar também o que escapa de
@@ -253,13 +207,9 @@ Future<void> _iniciar() async {
   } else {
     // `chaveDeAbertura` só cobre o toque na notificação local (Android); o
     // toque na notificação da web chega como parâmetro de URL, então cai
-    // aqui, no mesmo grupo dos outros links. `?plano`, `?ler` e `?lembrete`
-    // não chegam juntos na mesma URL, mas a ordem importa se algum dia
-    // coincidirem: plano primeiro, leitura só quando não há plano.
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _abrirPlanoDoLink(estado),
-    );
-    WidgetsBinding.instance.addPostFrameCallback((_) => _abrirLeituraDoLink());
+    // aqui. Os links compartilhados (`?plano`, `?ler`) não passam por aqui:
+    // o redirect do go_router os traduz em rota ([rotaDoLinkDoSite]), na web
+    // e no App Link do Android.
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _abrirLeituraDoLembreteDoLink(),
     );
@@ -274,9 +224,8 @@ void _abrirLeituraDoLembreteDoLink() {
   final chave = Uri.base.queryParameters['lembrete'];
   if (chave == null) return;
   _abrirLeituraDoLembrete(chave);
-  // Mesmo motivo de `_abrirLeituraDoLink`: [_abrirLeituraDoLembrete] empurra
-  // direto no Navigator, não no GoRouter, e a barra de endereço ficaria com
-  // `?lembrete=` presa — reabrir a mesma notificação de novo (o service
+  // A barra de endereço ficaria com `?lembrete=` presa: o go_router não sabe
+  // que o parâmetro já foi consumido — reabrir a mesma notificação de novo (o service
   // worker reaproveita a aba, `web/firebase-messaging-sw.js`) precisa achar
   // a URL limpa, não um link já consumido.
   removerParametroDaUrl('lembrete');
@@ -371,6 +320,10 @@ final _router = GoRouter(
   // de `authStateChanges` que chega depois não reavaliaria a rota.
   refreshListenable: Listenable.merge([ConfigAdmin.instancia, Nuvem.instancia]),
   redirect: (context, state) {
+    // Link do site (`/tabernaculo/...`, `?ler=`, `?plano=`): vira a rota
+    // interna antes das outras regras, que rodam de novo sobre o resultado.
+    final doSite = rotaDoLinkDoSite(state.uri);
+    if (doSite != null) return doSite;
     if (state.uri.path == '/') return '/hoje';
     // O painel admin é só web e só do dono: link direto fora disso volta
     // para a Hoje em vez de mostrar o motivo (a tela também se defende).

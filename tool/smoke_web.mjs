@@ -245,5 +245,23 @@ await caso('robots.txt e sitemap continuam na raiz', async () => {
   conferir(sitemap.status === 200, `sitemap: status ${sitemap.status}`);
 });
 
+// Sem este arquivo, ou com o que o Hosting gerava sozinho (só o pacote
+// antigo), o Android não verifica o App Link e os links abrem no navegador.
+await caso('assetlinks.json autoriza o app Android', async () => {
+  const resposta = await pedir('/.well-known/assetlinks.json');
+  conferir(resposta.status === 200, `status ${resposta.status}`);
+  conferir(
+    (resposta.headers.get('content-type') || '').includes('application/json'),
+    'content-type não é JSON',
+  );
+  const declaracoes = await resposta.json();
+  conferir(
+    declaracoes.some(
+      (d) => d.target?.package_name === 'com.felipeambrozini.tabernaculo',
+    ),
+    'falta o pacote com.felipeambrozini.tabernaculo',
+  );
+});
+
 console.log(falhas === 0 ? '\nSite publicado ok.' : `\n${falhas} falha(s).`);
 process.exit(falhas === 0 ? 0 : 1);

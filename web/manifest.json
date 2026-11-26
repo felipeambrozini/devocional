@@ -13,6 +13,9 @@
     "orientation": "any",
     "categories": ["books", "education", "lifestyle"],
     "prefer_related_applications": false,
+    "launch_handler": {
+        "client_mode": ["navigate-existing", "auto"]
+    },
     "icons": [
         {
             "src": "icons/Icon-192.png",

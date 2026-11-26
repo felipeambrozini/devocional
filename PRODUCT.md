@@ -66,8 +66,10 @@ vitoriana dele, tratando o leitor por "tu".
   `/sobre`, `/faq`, `/privacidade`, `/termos` e cada conversa também, e links
   diretos no formato
   `?ler=joao.3.16` abrem um versículo (`?plano=<id>` abre um plano
-  compartilhado). A Bíblia aberta por cima de outra aba (epígrafe do
-  devocional, leitura do dia, busca, marcações) tem URL própria,
+  compartilhado). No Android, esses links do site abrem o app instalado na
+  tela do link (App Links verificados, sem loja); sem o app, abrem o site.
+  A Bíblia aberta por cima de outra aba (epígrafe do devocional, leitura do
+  dia, busca, marcações) tem URL própria,
   `/ler/<livro>/<capítulo>`, que o F5 reabre; o "Ler tudo" da prévia na Hoje
   leva à aba Devocional.
 - Consentimento da LGPD antes de subir dados à nuvem: favoritos, anotações,

@@ -24,7 +24,51 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- App Links: um link do site (devocional com ?data=, versículo
+                 ?ler=, convite ?plano=) abre o app instalado em vez do
+                 navegador. O Android só confia no autoVerify se o
+                 /.well-known/assetlinks.json do domínio listar este pacote
+                 com o SHA-256 da chave que assinou o APK (ver
+                 hospedagem/.well-known/assetlinks.json e o README). Quem não
+                 tem o app continua indo para o site. O caminho chega inteiro
+                 ao go_router, e lib/funcoes/link_do_site.dart o traduz.
+                 Um prefixo por rota de topo, e não /tabernaculo inteiro,
+                 para o painel /tabernaculo/admin (só web) seguir no
+                 navegador; test/app_links_test.dart confere que nenhuma
+                 rota nova fique de fora. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https"/>
+                <data android:host="www.felipeambrozini.com.br"/>
+                <data android:path="/tabernaculo"/>
+                <data android:path="/tabernaculo/"/>
+                <data android:pathPrefix="/tabernaculo/hoje"/>
+                <data android:pathPrefix="/tabernaculo/biblia"/>
+                <data android:pathPrefix="/tabernaculo/devocional"/>
+                <data android:pathPrefix="/tabernaculo/biblioteca"/>
+                <data android:pathPrefix="/tabernaculo/plano"/>
+                <data android:pathPrefix="/tabernaculo/conversas"/>
+                <data android:pathPrefix="/tabernaculo/ler"/>
+                <data android:pathPrefix="/tabernaculo/manha"/>
+                <data android:pathPrefix="/tabernaculo/promessas"/>
+                <data android:pathPrefix="/tabernaculo/noite"/>
+                <data android:pathPrefix="/tabernaculo/notas"/>
+                <data android:pathPrefix="/tabernaculo/perfil"/>
+                <data android:pathPrefix="/tabernaculo/sobre"/>
+                <data android:pathPrefix="/tabernaculo/faq"/>
+                <data android:pathPrefix="/tabernaculo/privacidade"/>
+                <data android:pathPrefix="/tabernaculo/termos"/>
+                <data android:pathPrefix="/tabernaculo/charles-spurgeon"/>
+                <data android:pathPrefix="/tabernaculo/felipe-ambrozini"/>
+            </intent-filter>
         </activity>
+        <!-- Explícito, embora seja o padrão do Flutter: é o que entrega o
+             link do intent ao go_router, na abertura e com o app aberto. -->
+        <meta-data
+            android:name="flutter_deeplinking_enabled"
+            android:value="true" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

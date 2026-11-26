@@ -549,8 +549,8 @@ String _slugDoTitulo(String titulo) {
       : slug.substring(0, 50).replaceAll(RegExp(r'-+$'), '');
 }
 
-/// O link de um plano compartilhado, para mandar a alguém. O `?plano=` é
-/// lido em `main.dart`, que abre a tela do plano sobre qualquer aba.
+/// O link de um plano compartilhado, para mandar a alguém. O `?plano=` vira
+/// a rota `/plano/<id>` no redirect do go_router (`rotaDoLinkDoSite`).
 ///
 /// [titulo], quando dado, vira um slug legível na frente do id de verdade
 /// ("genesis-em-30-dias-hlj2pu6uw801b99b") — só estética: quem abre o link

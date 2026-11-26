@@ -297,10 +297,13 @@ aba Devocional (`DevocionalControlador.caminhoDaLeitura`). Cada persona do
 chat também tem URL própria:
 `/charles-spurgeon` (ou `/felipe-ambrozini`) abre o histórico,
 `/<slug>/conversa` uma conversa nova e `/<slug>/conversa/<id>` uma conversa
-salva. Parâmetros na URL: `?ler=joao.3.16` abre esse versículo por cima da
-aba; `?plano=<id>` (ou `?plano=<slug>-<id>`, com o título do plano na frente
-só por estética) abre um plano compartilhado; `?lembrete=<chave>` (o toque na
-notificação na web) abre a leitura do lembrete.
+salva. Parâmetros na URL: `?ler=joao.3.16` vira `/ler/joao/3?versiculos=16`;
+`?plano=<id>` (ou `?plano=<slug>-<id>`, com o título do plano na frente só por
+estética) vira `/plano/<id>`. A tradução é do redirect geral do go_router
+(`rotaDoLinkDoSite` em `lib/funcoes/link_do_site.dart`), que também tira o
+prefixo `/tabernaculo` dos links abertos no app Android (ver "Links do site
+abrem o app"). `?lembrete=<chave>` (o toque na notificação na web) abre a
+leitura do lembrete.
 
 ## Stack
 
@@ -1457,6 +1460,84 @@ A **tela de abertura** acompanha o tema do aparelho em Android e na web. O
 porque lê um arquivo só e não tem variante.
 No Android, lançadores guardam o ícone em cache: para ver a mudança é preciso
 desinstalar antes de instalar de novo.
+
+## Links do site abrem o app
+
+No Android, um link do site (`https://www.felipeambrozini.com.br/tabernaculo/...`:
+devocional com `?data=`, versículo com `?ler=`, convite de plano com `?plano=`)
+abre o app instalado, na tela do link, em vez do navegador. Quem não tem o app
+continua indo para o site. São Android App Links, que não dependem de loja e
+funcionam com o APK do Firebase App Distribution. Três peças:
+
+1. **Manifest** (`android/app/src/main/AndroidManifest.xml`): um
+   `intent-filter` com `android:autoVerify="true"` para o host
+   `www.felipeambrozini.com.br`, com um `pathPrefix` por rota de topo do app.
+   O painel `/tabernaculo/admin` fica de fora de propósito: é só web e continua
+   no navegador. Rota de topo nova precisa entrar na lista;
+   `test/app_links_test.dart` falha se faltar alguma.
+2. **`assetlinks.json`** (`hospedagem/.well-known/assetlinks.json`): o
+   `deploy-web.yml` copia para `public/.well-known/`, servido em
+   `https://www.felipeambrozini.com.br/.well-known/assetlinks.json`. Lista o
+   pacote `com.felipeambrozini.tabernaculo` com o SHA-256 da chave que assina o
+   APK distribuído e o da chave debug da máquina de desenvolvimento (para
+   `flutter run` também abrir os links). No `firebase.json`, o
+   `appAssociation: "NONE"` desliga o arquivo que o Hosting gerava sozinho a
+   partir dos apps do projeto (listava só o pacote antigo
+   `com.felipeambrozini.devocional`). O `ignore` não tem mais `**/.*`, que
+   descartaria a pasta `.well-known` no deploy. O `tool/smoke_web.mjs` confere
+   o arquivo publicado. Um `firebase deploy --only hosting` feito à mão, da
+   pasta `public/` local, tira o arquivo do ar se ela não tiver o
+   `.well-known`: publique pelo workflow ou copie o arquivo antes.
+3. **Rotas**: o deep linking nativo do Flutter
+   (`flutter_deeplinking_enabled`) entrega o caminho inteiro ao go_router, na
+   abertura e com o app já aberto (a Activity é `singleTop`), e
+   `rotaDoLinkDoSite` o traduz (ver "Telas").
+
+Continuam no navegador: o endereço antigo `/devocional/...` (a página de
+`legado/devocional/` leva ao novo por JavaScript, e o navegador não devolve
+esse salto ao Android) e o domínio sem `www`, que nenhum link gerado usa.
+
+**A chave de assinatura.** O APK distribuído é assinado pela
+`android/app/upload-keystore.jks` (alias `upload`), que o
+`distribute-android.yml` recria a cada build a partir do secret
+`KEYSTORE_BASE64`. A chave é a mesma em todo build enquanto o secret não mudar.
+Trocar a keystore quebra os App Links (e a atualização por cima do app
+instalado) até o SHA-256 novo entrar no `assetlinks.json`. Para ler o SHA-256:
+
+```bash
+keytool -list -v -keystore android/app/upload-keystore.jks -alias upload
+```
+
+**Conferir no aparelho** (com o app instalado e o `assetlinks.json` no ar):
+
+```bash
+adb shell pm verify-app-links --re-verify com.felipeambrozini.tabernaculo
+adb shell pm get-app-links com.felipeambrozini.tabernaculo
+adb shell am start -a android.intent.action.VIEW -d "https://www.felipeambrozini.com.br/tabernaculo/devocional/manha?data=2026-11-26"
+```
+
+O `get-app-links` deve mostrar `www.felipeambrozini.com.br: verified`. O
+Android verifica na instalação; um app instalado antes de o arquivo estar no
+ar precisa do `--re-verify`, ou de ser reinstalado.
+
+**Se um dia for para a Play Store.** O Play assina o app com a chave de
+assinatura dele (Play App Signing); a `upload-keystore.jks` passa a servir só
+para enviar o build. O SHA-256 dessa chave do Play (Play Console, Integridade
+do app) entra no `assetlinks.json` ao lado do atual. O APK do App Distribution
+e o do Play não instalam um por cima do outro, por terem assinaturas
+diferentes.
+
+**PWA.** No Android, o PWA instalado pelo Chrome já recebe os links de
+`/tabernaculo/` sem configuração. Com o app nativo também instalado, o App
+Link verificado tem a preferência. No computador, o `launch_handler`
+(`navigate-existing`) do `web/manifest.json` faz o link abrir na janela do PWA
+que já está aberta, em vez de uma nova. O Chrome só manda o link para o PWA se
+a pessoa ligar "Abrir links compatíveis" nas configurações do app instalado.
+
+**iOS** fica de fora por enquanto: Universal Links precisam do entitlement
+Associated Domains no perfil de provisionamento e de um
+`apple-app-site-association` de verdade, que o `appAssociation: "NONE"` deixou
+de gerar (o que o Hosting gerava estava vazio).
 
 ## Publicação na web
 

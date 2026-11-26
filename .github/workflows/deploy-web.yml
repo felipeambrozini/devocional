@@ -150,6 +150,13 @@ jobs:
           cp build/web/robots.txt public/robots.txt
           cp build/web/llms.txt public/llms.txt
           cp build/web/sitemap.xml public/sitemap.xml
+          # App Links do Android: o assetlinks.json mora na raiz do domínio
+          # (/.well-known/), fora do /tabernaculo/ do build, por isso vem de
+          # hospedagem/ e não de web/. O firebase.json desliga o arquivo que
+          # o Hosting geraria sozinho (appAssociation NONE) e não ignora mais
+          # pastas com ponto, ou este .well-known nem subiria.
+          mkdir -p public/.well-known
+          cp hospedagem/.well-known/assetlinks.json public/.well-known/
       # firestore:rules e storage junto com hosting: sem isto, uma
       # mudança em firestore.rules ou storage.rules no repositório não
       # publicava nada — as regras ficavam divergentes do repo até alguém

@@ -10,6 +10,7 @@ on:
       - "**.md"
       - "web/**"
       - "public/**"
+      - "hospedagem/**"
       - "firestore.rules"
       - "storage.rules"
       - "firebase.json"
