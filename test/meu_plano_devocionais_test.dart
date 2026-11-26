@@ -1,5 +1,6 @@
 import 'package:devocional/dados/conteudo.dart';
 import 'package:devocional/dados/estado.dart';
+import 'package:devocional/dados/nuvem.dart';
 import 'package:devocional/telas/meu_plano.dart';
 import 'package:devocional/widgets/faixa.dart';
 import 'package:material_ui/material_ui.dart';
@@ -19,6 +20,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// arquivo, nada além de [TelaDeUmPlano] chama `aquecerIndiceDeDevocionais`.
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+  // Os planos são da conta: sem ela, a tela mostra o convite de entrar.
+  setUp(() => Nuvem.instancia.logadoForcado = true);
+  tearDown(() => Nuvem.instancia.logadoForcado = null);
 
   testWidgets(
     'abrir um plano existente aquece o índice e os devocionais aparecem',

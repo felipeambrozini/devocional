@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../controladores/plano_controlador.dart';
 import '../dados/dia_da_leitura.dart';
 import '../dados/estado.dart';
+import '../dados/nuvem.dart';
 import '../dados/planos.dart';
 import '../estilo/espacamento.dart';
 import '../funcoes/aviso.dart';
@@ -22,7 +23,9 @@ import '../widgets/widgets.dart';
 ///
 /// Aberta por link (sem [plano]), a tela primeiro entra no plano — escreve a
 /// própria participação — e só então lê o documento. Sem conta, mostra o
-/// caminho para entrar.
+/// caminho para entrar, em qualquer plano: os planos são da conta, e a tela
+/// também abre pela barra de endereço, por favorito ou pelo Voltar depois do
+/// Sair.
 class TelaDeUmPlano extends StatefulWidget {
   const TelaDeUmPlano({
     super.key,
@@ -96,6 +99,32 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
 
   @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: Nuvem.instancia,
+      builder: (context, _) {
+        if (Nuvem.instancia.logado) return _tela(context);
+        // Plano compartilhado (ou aberto por link) mantém o convite de
+        // participar; o local e A Vida de Jesus dizem onde os planos ficam.
+        final local = widget.plano != null && !widget.plano!.compartilhado;
+        return Scaffold(
+          appBar: TabernaculoAppBar(
+            title: Text(widget.plano?.titulo ?? 'Plano'),
+          ),
+          body: Nuvem.instancia.carregandoConta
+              ? const TabernaculoVerificandoConta()
+              : local
+              ? const TabernaculoCartaoDeEntrar(
+                  titulo: 'Entre para ver seus planos',
+                  descricao:
+                      'Os planos de leitura ficam guardados na sua conta.',
+                )
+              : const TabernaculoCartaoDeEntrar(),
+        );
+      },
+    );
+  }
+
+  Widget _tela(BuildContext context) {
     return ListenableBuilder(
       listenable: _controller,
       builder: (context, _) {

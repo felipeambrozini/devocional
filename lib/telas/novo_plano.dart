@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../controladores/novo_plano_controlador.dart';
 import '../dados/estado.dart';
+import '../dados/nuvem.dart';
 import '../dados/planos.dart';
 import '../estilo/espacamento.dart';
 import '../widgets/widgets.dart';
@@ -31,6 +32,27 @@ class _TelaNovoPlanoState extends State<TelaNovoPlano> {
 
   @override
   Widget build(BuildContext context) {
+    // Os planos são da conta: sem ela, o convite ocupa o lugar do formulário
+    // (a rota também abre pela barra de endereço ou por favorito).
+    return ListenableBuilder(
+      listenable: Nuvem.instancia,
+      builder: (context, _) {
+        if (Nuvem.instancia.logado) return _formulario(context);
+        return Scaffold(
+          appBar: TabernaculoAppBar(title: const Text('Novo plano de leitura')),
+          body: Nuvem.instancia.carregandoConta
+              ? const TabernaculoVerificandoConta()
+              : const TabernaculoCartaoDeEntrar(
+                  titulo: 'Entre para criar seus planos',
+                  descricao:
+                      'Os planos de leitura ficam guardados na sua conta.',
+                ),
+        );
+      },
+    );
+  }
+
+  Widget _formulario(BuildContext context) {
     final tema = Theme.of(context).textTheme;
 
     return ListenableBuilder(

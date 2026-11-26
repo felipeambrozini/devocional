@@ -7,6 +7,7 @@ import '../dados/dia_da_leitura.dart';
 import '../dados/conteudo.dart';
 import '../dados/estado.dart';
 import '../dados/modelos.dart';
+import '../dados/nuvem.dart';
 import '../dados/planos.dart';
 import '../dados/planos_nuvem.dart';
 import '../estilo/espacamento.dart';
@@ -207,6 +208,8 @@ class _CartaoDoPlanoDeHoje extends StatelessWidget {
   /// também grava lá — e desfaz o espelho se a gravação falhar, como em
   /// `PlanoControlador.alternarDia`.
   Future<void> _alternar(BuildContext context, int dia) async {
+    // Os planos são da conta: sem ela, nada grava (a Hoje nem mostra isto).
+    if (!Nuvem.instancia.logado) return;
     // Capturado antes dos awaits: ao marcar o último dia, o cartão sai da Hoje
     // (o plano deixa de estar em andamento) e o contexto deixa de existir.
     final mensageiro = ScaffoldMessenger.of(context);

@@ -30,12 +30,27 @@ class LeitorDeLivroControlador {
   /// escrever.
   void encerrar() => _encerrado = true;
 
+  /// Se [iniciar] espera a conta chegar (ver [_aoMudarConta]).
+  bool _esperandoConta = false;
+
   /// Chamar depois do primeiro desenho: só então o texto tem altura. Volta ao
   /// ponto em que o capítulo foi deixado, e marca o capítulo como o atual do
   /// livro (é o que o "continuar" da estante lê). Sem conta nada é gravado, e
   /// o capítulo abre no começo.
+  ///
+  /// Aberto com a sessão ainda restaurando (o link direto para um capítulo),
+  /// a conta chega depois do primeiro desenho: [iniciar] roda de novo nessa
+  /// hora, em vez de deixar o capítulo sem posição até a próxima abertura.
   void iniciar() {
-    if (_encerrado || !Nuvem.instancia.logado) return;
+    if (_encerrado) return;
+    if (!Nuvem.instancia.logado) {
+      if (!_esperandoConta) {
+        _esperandoConta = true;
+        Nuvem.instancia.addListener(_aoMudarConta);
+      }
+      return;
+    }
+    _pararDeEsperar();
     final posicao = estado.leituraDeLivros.posicaoDe(slug);
     if (posicao?.capitulo == capitulo) {
       _rolarPara(posicao!.fracao);
@@ -62,5 +77,18 @@ class LeitorDeLivroControlador {
     rolagem.jumpTo(math.min(fracao * fim, fim));
   }
 
-  void dispose() => rolagem.dispose();
+  void _aoMudarConta() {
+    if (Nuvem.instancia.logado) iniciar();
+  }
+
+  void _pararDeEsperar() {
+    if (!_esperandoConta) return;
+    _esperandoConta = false;
+    Nuvem.instancia.removeListener(_aoMudarConta);
+  }
+
+  void dispose() {
+    _pararDeEsperar();
+    rolagem.dispose();
+  }
 }

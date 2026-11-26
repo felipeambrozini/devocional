@@ -995,6 +995,8 @@ void main() {
     testWidgets(
       'o seletor oferece os testamentos e marca o Novo inteiro de uma vez',
       (tester) async {
+        Nuvem.instancia.logadoForcado = true;
+        addTearDown(() => Nuvem.instancia.logadoForcado = null);
         final estado = Estado(await SharedPreferences.getInstance());
         await tester.pumpWidget(
           MaterialApp(
@@ -1034,6 +1036,8 @@ void main() {
     testWidgets('com 2+ livros dá para alterar a ordem de leitura', (
       tester,
     ) async {
+      Nuvem.instancia.logadoForcado = true;
+      addTearDown(() => Nuvem.instancia.logadoForcado = null);
       // Viewport alta: o formulário é um ListView, que só monta o que cabe
       // na tela — com 2 livros a prévia cai para fora dos 600px padrão e o
       // finder não a acharia sem rolagem.
@@ -1101,6 +1105,10 @@ void main() {
   });
 
   group('editar plano', () {
+    // Os planos são da conta: a tela de um plano só mostra os dias com ela.
+    setUp(() => Nuvem.instancia.logadoForcado = true);
+    tearDown(() => Nuvem.instancia.logadoForcado = null);
+
     testWidgets('menu de opções renomeia o plano local', (tester) async {
       final estado = Estado(await SharedPreferences.getInstance());
       final plano = await estado.criarPlano(

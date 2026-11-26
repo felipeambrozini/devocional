@@ -19,7 +19,9 @@ Future<void> registrarCapituloLidoDoDia(
   String livro,
   int numero,
 ) async {
-  if (!dia.temCapitulo(livro, numero)) return;
+  // O andamento do dia é pessoal como o cronograma e os planos: sem conta,
+  // nada é guardado.
+  if (!Nuvem.instancia.logado || !dia.temCapitulo(livro, numero)) return;
   final progresso = estado.progressoDosDias;
   final chave = dia.chaveDoProgresso;
   await progresso.registrar(chave, DiaDaLeitura.capitulo(livro, numero));
@@ -61,6 +63,9 @@ Future<void> marcarDiaDaLeituraAoTerminar(
         },
       );
     case DiaDePlano(:final planoId, :final numero):
+      // Os planos, locais ou compartilhados, são da conta: sem ela, não
+      // marca nem avisa.
+      if (!Nuvem.instancia.logado) return;
       final plano = estado.planoDoUsuario(planoId);
       if (plano == null || estado.foiLidoNoPlano(planoId, numero)) return;
       final marcou = await _gravarDiaDoPlano(

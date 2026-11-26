@@ -101,13 +101,31 @@ class PlanoControlador extends ChangeNotifier {
 
   /// A conta mudou (saiu, ou outra entrou): a escuta do documento é da conta
   /// antiga e não tem mais o que espelhar.
+  ///
+  /// Um plano compartilhado aberto antes de a conta ser conhecida (a sessão
+  /// ainda restaurando, ou o login pelo cartão de entrar) ainda não leu o
+  /// documento: lê assim que a conta chega.
   void _aoMudarConta() {
+    if (_descartado) return;
+    if (!_abriu) {
+      if (compartilhado && Nuvem.instancia.logado) {
+        carregando = true;
+        erro = null;
+        notifyListeners();
+        iniciar();
+      }
+      return;
+    }
     if (_uidDaAbertura == null || Nuvem.instancia.uid == _uidDaAbertura) {
       return;
     }
     _assinatura?.cancel();
     _assinatura = null;
   }
+
+  /// Se [iniciar] já passou a ler o documento com a conta: o login pelo
+  /// cartão de entrar e o aviso da conta chegam juntos, e só um deles lê.
+  bool _abriu = false;
 
   @override
   void dispose() {
@@ -126,6 +144,8 @@ class PlanoControlador extends ChangeNotifier {
       notifyListeners();
       return;
     }
+    if (_abriu) return;
+    _abriu = true;
     _uidDaAbertura = Nuvem.instancia.uid;
     final leitura = await _lerDocumento();
     if (_descartado) return;
@@ -304,13 +324,15 @@ class PlanoControlador extends ChangeNotifier {
   }
 
   Future<void> alternarDia(BuildContext context, int dia) async {
-    if (compartilhado) {
-      if (!Nuvem.instancia.logado) {
-        if (context.mounted) {
-          mostrarAviso(context, 'Entre na sua conta para marcar dias.');
-        }
-        return;
+    // Os planos, locais ou compartilhados, são da conta: sem ela, nada grava
+    // (a tela mostra o convite de entrar no lugar dos dias).
+    if (!Nuvem.instancia.logado) {
+      if (context.mounted) {
+        mostrarAviso(context, 'Entre na sua conta para marcar dias.');
       }
+      return;
+    }
+    if (compartilhado) {
       // O espelho local parte do que o documento diz; a gravação na nuvem só
       // move este dia, então nada marcado noutro aparelho se perde.
       final atual = {...meusLidos()};
@@ -426,7 +448,7 @@ class PlanoControlador extends ChangeNotifier {
   /// A tela segue aberta, já sem os dias lidos.
   Future<void> fazerDeNovo(BuildContext context) async {
     final planoAtual = plano;
-    if (planoAtual == null) return;
+    if (planoAtual == null || !Nuvem.instancia.logado) return;
     final refez = await acoes.fazerPlanoDeNovo(context, estado, planoAtual);
     if (refez && !_descartado) notifyListeners();
   }
@@ -453,6 +475,12 @@ class PlanoControlador extends ChangeNotifier {
     erro = null;
     carregando = true;
     notifyListeners();
+    // Uma leitura nova, do zero: a escuta antiga (se o erro veio dela) sai,
+    // e [iniciar] não confunde isto com uma segunda abertura.
+    _assinatura?.cancel();
+    _assinatura = null;
+    _uidDaAbertura = null;
+    _abriu = false;
     iniciar();
   }
 }

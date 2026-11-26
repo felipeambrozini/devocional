@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../dados/canon.dart';
 import '../dados/conteudo.dart';
 import '../dados/estado.dart';
+import '../dados/nuvem.dart';
 import '../dados/planos.dart';
 import '../funcoes/aviso.dart';
 import '../telas/novo_plano.dart';
@@ -116,6 +117,9 @@ class NovoPlanoControlador extends ChangeNotifier {
   }
 
   Future<void> criar(BuildContext context) async {
+    // Os planos são da conta: sem ela, nada é criado (a tela mostra o convite
+    // de entrar no lugar do formulário).
+    if (!Nuvem.instancia.logado) return;
     if (livros.isEmpty) {
       mostrarAviso(context, 'Escolha pelo menos um livro');
       return;
