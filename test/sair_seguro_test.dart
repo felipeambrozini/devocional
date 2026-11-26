@@ -343,34 +343,37 @@ void main() {
       expect(deslogou, isTrue);
     });
 
-    test('mudança que não para de chegar faz o Sair falhar sem limpar', () async {
-      final estado = await Estado.abrir();
-      var dia = 10;
-      final sincronia = Sincronia(
-        estado: estado,
-        puxar: () async => null,
-        empurrar: (_) async {
-          // Cada envio vem acompanhado de mais uma mudança.
-          await estado.alternarLido('2026-11-${dia++}');
-        },
-        atraso: const Duration(seconds: 30),
-      );
-      await sincronia.comecar();
-      var deslogou = false;
+    test(
+      'mudança que não para de chegar faz o Sair falhar sem limpar',
+      () async {
+        final estado = await Estado.abrir();
+        var dia = 10;
+        final sincronia = Sincronia(
+          estado: estado,
+          puxar: () async => null,
+          empurrar: (_) async {
+            // Cada envio vem acompanhado de mais uma mudança.
+            await estado.alternarLido('2026-11-${dia++}');
+          },
+          atraso: const Duration(seconds: 30),
+        );
+        await sincronia.comecar();
+        var deslogou = false;
 
-      await expectLater(
-        sairComSincronias(
-          sincronias: [sincronia],
-          pararSincronias: sincronia.parar,
-          limparAparelho: estado.limparDadosPessoais,
-          deslogar: () async => deslogou = true,
-        ),
-        throwsA(isA<SairDaContaFalhou>()),
-      );
-      expect(deslogou, isFalse);
-      expect(estado.diasLidosEmTodosOsAnos, greaterThan(0));
-      sincronia.parar();
-    });
+        await expectLater(
+          sairComSincronias(
+            sincronias: [sincronia],
+            pararSincronias: sincronia.parar,
+            limparAparelho: estado.limparDadosPessoais,
+            deslogar: () async => deslogou = true,
+          ),
+          throwsA(isA<SairDaContaFalhou>()),
+        );
+        expect(deslogou, isFalse);
+        expect(estado.diasLidosEmTodosOsAnos, greaterThan(0));
+        sincronia.parar();
+      },
+    );
 
     test('sincronia desligada faz o Sair falhar sem limpar', () async {
       final estado = await estadoCheio();
@@ -459,30 +462,33 @@ void main() {
   });
 
   group('rodada 2', () {
-    test('o Sair não ressuscita um favorito removido antes da confirmação', () async {
-      final estado = await Estado.abrir();
-      await estado.alternarFavorito('joao', 3, 16);
-      final noServidor = estado.exportar();
-      final enviados = <String>[];
-      final sincronia = Sincronia(
-        estado: estado,
-        puxar: () async => noServidor,
-        puxarDoServidor: () async => noServidor,
-        empurrar: (copia) async => enviados.add(copia),
-        atraso: const Duration(seconds: 30),
-      );
-      await sincronia.comecar();
+    test(
+      'o Sair não ressuscita um favorito removido antes da confirmação',
+      () async {
+        final estado = await Estado.abrir();
+        await estado.alternarFavorito('joao', 3, 16);
+        final noServidor = estado.exportar();
+        final enviados = <String>[];
+        final sincronia = Sincronia(
+          estado: estado,
+          puxar: () async => noServidor,
+          puxarDoServidor: () async => noServidor,
+          empurrar: (copia) async => enviados.add(copia),
+          atraso: const Duration(seconds: 30),
+        );
+        await sincronia.comecar();
 
-      // Tira o favorito e sai dentro do debounce: o servidor ainda o tem.
-      await estado.alternarFavorito('joao', 3, 16);
-      expect(estado.marcacoes, isEmpty);
-      await sincronia.garantirNaNuvem();
+        // Tira o favorito e sai dentro do debounce: o servidor ainda o tem.
+        await estado.alternarFavorito('joao', 3, 16);
+        expect(estado.marcacoes, isEmpty);
+        await sincronia.garantirNaNuvem();
 
-      expect(estado.marcacoes, isEmpty, reason: 'a fusão não o devolveu');
-      expect(enviados, [estado.exportar()]);
-      expect(enviados.single, isNot(contains('joao')));
-      sincronia.parar();
-    });
+        expect(estado.marcacoes, isEmpty, reason: 'a fusão não o devolveu');
+        expect(enviados, [estado.exportar()]);
+        expect(enviados.single, isNot(contains('joao')));
+        sincronia.parar();
+      },
+    );
 
     test('o que chegou de outro aparelho ainda é fundido no Sair', () async {
       final estado = await Estado.abrir();
@@ -587,22 +593,28 @@ void main() {
       await estado.alternarFavorito('joao', 3, 16);
       var cancelamentos = 0;
 
-      await limparAoSair(estado, cancelarLembretes: () async => cancelamentos++);
+      await limparAoSair(
+        estado,
+        cancelarLembretes: () async => cancelamentos++,
+      );
 
       expect(cancelamentos, 0);
       expect(estado.marcacoes, isEmpty);
     });
 
-    test('limparAoSair segue limpando se cancelar os lembretes falha', () async {
-      final estado = await estadoCheio();
+    test(
+      'limparAoSair segue limpando se cancelar os lembretes falha',
+      () async {
+        final estado = await estadoCheio();
 
-      await limparAoSair(
-        estado,
-        cancelarLembretes: () async => throw Exception('plugin'),
-      );
+        await limparAoSair(
+          estado,
+          cancelarLembretes: () async => throw Exception('plugin'),
+        );
 
-      expect((await Estado.abrir()).marcacoes, isEmpty);
-    });
+        expect((await Estado.abrir()).marcacoes, isEmpty);
+      },
+    );
 
     test('Sair tocado duas vezes devolve o mesmo Sair em andamento', () async {
       final primeiro = Nuvem.instancia.sair();

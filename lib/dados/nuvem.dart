@@ -463,7 +463,10 @@ Future<void> _garantirTodas(List<Sincronia?> sincronias) async {
   var aGarantir = sincronias.cast<Sincronia>();
   for (var volta = 0; volta < 3; volta++) {
     await Future.wait([for (final s in aGarantir) s.garantirNaNuvem()]);
-    aGarantir = [for (final s in aGarantir) if (!s.emDia) s];
+    aGarantir = [
+      for (final s in aGarantir)
+        if (!s.emDia) s,
+    ];
     if (aGarantir.isEmpty) return;
   }
   throw StateError('O aparelho continuou mudando durante o Sair');

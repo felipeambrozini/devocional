@@ -277,36 +277,33 @@ void main() {
       },
     );
 
-    test(
-      'tela aberta sem conta espelha o plano depois do login',
-      () async {
-        final estado = await novoEstado();
-        addTearDown(() {
-          Nuvem.instancia.uidForcado = null;
-          Nuvem.instancia.logadoForcado = null;
-        });
-        // Convite aberto por link sem conta: a tela mostra o entrar.
-        final controlador = PlanoControlador(
-          estado: estado,
-          planoId: 'plano-do-convite',
-        );
-        addTearDown(controlador.dispose);
-        await pumpEventQueue();
+    test('tela aberta sem conta espelha o plano depois do login', () async {
+      final estado = await novoEstado();
+      addTearDown(() {
+        Nuvem.instancia.uidForcado = null;
+        Nuvem.instancia.logadoForcado = null;
+      });
+      // Convite aberto por link sem conta: a tela mostra o entrar.
+      final controlador = PlanoControlador(
+        estado: estado,
+        planoId: 'plano-do-convite',
+      );
+      addTearDown(controlador.dispose);
+      await pumpEventQueue();
 
-        // Entrou na conta: o cartão de entrar chama iniciar() de novo.
-        Nuvem.instancia.logadoForcado = true;
-        Nuvem.instancia.uidForcado = 'conta-a';
-        await controlador.iniciar();
-        controlador.espelhar({
-          'titulo': 'Plano do convite',
-          'livros': ['joao'],
-          'dias': 3,
-        });
-        await pumpEventQueue();
+      // Entrou na conta: o cartão de entrar chama iniciar() de novo.
+      Nuvem.instancia.logadoForcado = true;
+      Nuvem.instancia.uidForcado = 'conta-a';
+      await controlador.iniciar();
+      controlador.espelhar({
+        'titulo': 'Plano do convite',
+        'livros': ['joao'],
+        'dias': 3,
+      });
+      await pumpEventQueue();
 
-        expect(estado.planosDoUsuario.map((p) => p.id), ['plano-do-convite']);
-      },
-    );
+      expect(estado.planosDoUsuario.map((p) => p.id), ['plano-do-convite']);
+    });
 
     test('tentarDeNovo limpa o erro e volta a carregar', () async {
       final estado = await novoEstado();

@@ -334,10 +334,8 @@ void main() {
   });
 
   group('envio pendente', () {
-    Future<bool> haMarca() async =>
-        (await SharedPreferences.getInstance()).containsKey(
-          'sincronia_pendente_copia',
-        );
+    Future<bool> haMarca() async => (await SharedPreferences.getInstance())
+        .containsKey('sincronia_pendente_copia');
 
     test('envio que falha deixa a marca de pendente', () async {
       final estado = await Estado.abrir();
@@ -431,26 +429,28 @@ void main() {
       expect(envios, 0);
     });
 
-    test('comecar reenvia o que ficou pendente numa abertura anterior',
-        () async {
-      SharedPreferences.setMockInitialValues({
-        'sincronia_pendente_copia': true,
-      });
-      final estado = await Estado.abrir();
-      final enviados = <String>[];
-      final sincronia = Sincronia(
-        estado: estado,
-        nome: 'copia',
-        puxar: () async => null,
-        empurrar: (copia) async => enviados.add(copia),
-        atraso: const Duration(seconds: 30),
-      );
+    test(
+      'comecar reenvia o que ficou pendente numa abertura anterior',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          'sincronia_pendente_copia': true,
+        });
+        final estado = await Estado.abrir();
+        final enviados = <String>[];
+        final sincronia = Sincronia(
+          estado: estado,
+          nome: 'copia',
+          puxar: () async => null,
+          empurrar: (copia) async => enviados.add(copia),
+          atraso: const Duration(seconds: 30),
+        );
 
-      await sincronia.comecar();
+        await sincronia.comecar();
 
-      expect(enviados, hasLength(1));
-      expect(await haMarca(), isFalse);
-    });
+        expect(enviados, hasLength(1));
+        expect(await haMarca(), isFalse);
+      },
+    );
 
     test('sincronia parada não reenvia nem marca', () async {
       SharedPreferences.setMockInitialValues({
