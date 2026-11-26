@@ -102,7 +102,7 @@ const ondeFicaACopiaLocal = kIsWeb ? 'neste navegador' : 'neste aparelho';
 Future<bool> apagarContaDaNuvem(BuildContext context) async {
   final confirmou = await confirmar(
     context,
-    titulo: 'Apagar conta e dados da nuvem?',
+    titulo: 'Apagar conta e dados?',
     conteudo:
         'Sua conta no Tabernáculo será apagada, com tudo o que ela guarda na '
         'nuvem e $ondeFicaACopiaLocal: favoritos, anotações, progresso, '
@@ -117,7 +117,7 @@ Future<bool> apagarContaDaNuvem(BuildContext context) async {
   final mensageiro = ScaffoldMessenger.of(context);
   try {
     await Nuvem.instancia.apagarDados();
-    mostrarAvisoNo(mensageiro, 'Conta e dados apagados da nuvem');
+    mostrarAvisoNo(mensageiro, 'Conta e dados apagados');
     return true;
   } catch (erro, pilha) {
     Registro.erro('apagarContaDaNuvem', erro, pilha);

@@ -29,9 +29,23 @@ Future<bool> sairDaConta(
   if (!confirmou || !context.mounted) return false;
   final mensageiro = ScaffoldMessenger.of(context);
   aoConfirmar?.call();
+  return _sairMostrandoErro(mensageiro);
+}
+
+/// Quem recusa o consentimento pedido em `main.dart` sai da conta sem
+/// confirmar de novo. Sem Firebase (a reserva de `Nuvem.emReserva`) o Sair
+/// falha, e a falha vira o aviso de sempre em vez de um erro solto.
+Future<bool> sairAoRecusarConsentimento(ScaffoldMessengerState mensageiro) =>
+    _sairMostrandoErro(mensageiro, avisarSaida: false);
+
+/// Roda `Nuvem.sair` e transforma a falha no aviso de erro. Devolve se saiu.
+Future<bool> _sairMostrandoErro(
+  ScaffoldMessengerState mensageiro, {
+  bool avisarSaida = true,
+}) async {
   try {
     await Nuvem.instancia.sair();
-    mostrarAvisoNo(mensageiro, 'Você saiu da conta');
+    if (avisarSaida) mostrarAvisoNo(mensageiro, 'Você saiu da conta');
     return true;
   } on SairDaContaFalhou {
     // `sairEmOrdem` já registrou a causa.

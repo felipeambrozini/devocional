@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 
 import 'canon.dart';
 import 'estado.dart';
@@ -157,7 +158,9 @@ class PlanosNaNuvem {
   /// compartilha. Devolve o link para divulgar. Falha com
   /// [PlanosNaNuvemExcecao] sem conta ou sem rede.
   Future<String> compartilhar(PlanoDoUsuario plano) async {
-    final usuario = FirebaseAuth.instance.currentUser;
+    const falha =
+        'Não foi possível compartilhar agora. Verifique a conexão e tente de novo.';
+    final usuario = _usuarioParaEscrever('PlanosNaNuvem.compartilhar', falha);
     if (usuario == null) {
       throw const PlanosNaNuvemExcecao(
         'Entre na sua conta para compartilhar o plano.',
@@ -176,9 +179,7 @@ class PlanosNaNuvem {
       });
     } catch (erro, pilha) {
       Registro.erro('PlanosNaNuvem.compartilhar', erro, pilha);
-      throw const PlanosNaNuvemExcecao(
-        'Não foi possível compartilhar agora. Verifique a conexão e tente de novo.',
-      );
+      throw const PlanosNaNuvemExcecao(falha);
     }
     return linkDoPlano(plano.id, titulo: plano.titulo);
   }
@@ -277,7 +278,9 @@ class PlanosNaNuvem {
   /// nunca zera o progresso. Falha com [PlanosNaNuvemExcecao] se o documento
   /// não existe (link errado) ou se a regra recusar.
   Future<void> entrar(String planoId) async {
-    final usuario = FirebaseAuth.instance.currentUser;
+    const falha =
+        'Plano não encontrado, ou sem conexão. Verifique o link e tente de novo.';
+    final usuario = _usuarioParaEscrever('PlanosNaNuvem.entrar', falha);
     if (usuario == null) {
       throw const PlanosNaNuvemExcecao(
         'Entre na sua conta para participar do plano.',
@@ -290,9 +293,7 @@ class PlanosNaNuvem {
           .update(atualizacaoDeEntrada(usuario.uid, usuario.displayName));
     } catch (erro, pilha) {
       Registro.erro('PlanosNaNuvem.entrar', erro, pilha);
-      throw const PlanosNaNuvemExcecao(
-        'Plano não encontrado, ou sem conexão. Verifique o link e tente de novo.',
-      );
+      throw const PlanosNaNuvemExcecao(falha);
     }
   }
 
@@ -300,7 +301,9 @@ class PlanosNaNuvem {
   /// os outros; só o criador pode apagar o plano inteiro. Plano que já não
   /// existe conta como sucesso: o objetivo (não participar mais) está cumprido.
   Future<void> sair(String planoId) async {
-    final usuario = FirebaseAuth.instance.currentUser;
+    const falha =
+        'Não foi possível sair agora. Verifique a conexão e tente de novo.';
+    final usuario = _usuarioParaEscrever('PlanosNaNuvem.sair', falha);
     if (usuario == null) return;
     try {
       await FirebaseFirestore.instance.collection(_colecao).doc(planoId).update(
@@ -309,9 +312,7 @@ class PlanosNaNuvem {
     } catch (erro, pilha) {
       if (_naoEncontrado(erro)) return;
       Registro.erro('PlanosNaNuvem.sair', erro, pilha);
-      throw const PlanosNaNuvemExcecao(
-        'Não foi possível sair agora. Verifique a conexão e tente de novo.',
-      );
+      throw const PlanosNaNuvemExcecao(falha);
     }
   }
 
@@ -368,15 +369,7 @@ class PlanosNaNuvem {
     String origem,
     String mensagemDeErro,
   ) async {
-    final User? usuario;
-    try {
-      usuario = FirebaseAuth.instance.currentUser;
-    } catch (erro, pilha) {
-      // O Firebase não iniciou (abertura sem rede, ver `Nuvem.prazoDaSessao`):
-      // a conta vale pela última sessão, mas o documento não tem como mudar.
-      Registro.erro(origem, erro, pilha);
-      throw PlanosNaNuvemExcecao(mensagemDeErro);
-    }
+    final usuario = _usuarioParaEscrever(origem, mensagemDeErro);
     if (usuario == null) {
       throw const PlanosNaNuvemExcecao(
         'Entre na sua conta para marcar dias no plano.',
@@ -391,6 +384,22 @@ class PlanosNaNuvem {
       Registro.erro(origem, erro, pilha);
       throw PlanosNaNuvemExcecao(mensagemDeErro);
     }
+  }
+
+  /// O usuário do Firebase, se ele pode escrever na conta agora: o do
+  /// Firebase tem de ser o mesmo da [Nuvem] e a [Nuvem] não pode estar na
+  /// reserva (ver [usuarioParaEscrever]). null sem sessão.
+  User? _usuarioParaEscrever(String origem, String mensagemDeErro) {
+    final User? usuario;
+    try {
+      usuario = FirebaseAuth.instance.currentUser;
+    } catch (erro, pilha) {
+      // O Firebase não iniciou (abertura sem rede, ver `Nuvem.prazoDaSessao`):
+      // a conta vale pela última sessão, mas o documento não tem como mudar.
+      Registro.erro(origem, erro, pilha);
+      throw PlanosNaNuvemExcecao(mensagemDeErro);
+    }
+    return usuarioParaEscrever(usuario, mensagemDeErro);
   }
 
   Map<String, dynamic> _entradaDoUsuario(User usuario, List<int> lidos) => {
@@ -559,3 +568,19 @@ String linkDoPlano(String planoId, {String? titulo}) {
 /// hífen (vem de [novoIdDePlano], puro base 36), então o último trecho
 /// depois do último hífen sempre é ele, com ou sem slug na frente.
 String idDoParametroDePlano(String parametro) => parametro.split('-').last;
+
+/// Confere se [usuario] (o do Firebase) pode escrever em planos agora: a conta
+/// da [Nuvem] tem de ser a mesma e a [Nuvem] não pode estar na reserva (o
+/// Firebase fora do ar, com a conta valendo pela última sessão, ver
+/// `Nuvem.emReserva`). Sem isso, uma conta que o Firebase já trocou, ou uma
+/// sessão que a reserva só supõe, escreveria no documento de outra pessoa.
+/// Devolve null sem sessão; lança [PlanosNaNuvemExcecao] com [mensagemDeErro]
+/// se a escrita não é segura.
+@visibleForTesting
+User? usuarioParaEscrever(User? usuario, String mensagemDeErro) {
+  if (usuario == null) return null;
+  if (Nuvem.instancia.emReserva || Nuvem.instancia.uid != usuario.uid) {
+    throw PlanosNaNuvemExcecao(mensagemDeErro);
+  }
+  return usuario;
+}

@@ -806,6 +806,11 @@ class Nuvem extends ChangeNotifier {
   bool _reservaResolvida = false;
   String? _uidDaReserva;
   bool get _naReserva => _reservaResolvida && !_sessaoConhecida;
+
+  /// Se a conta vale só pela última sessão conhecida, sem o Firebase ter
+  /// confirmado (ver [_reservaResolvida]): dá para mostrar a cópia local, mas
+  /// não para escrever na nuvem.
+  bool get emReserva => _naReserva;
   Timer? _prazoDaReserva;
 
   /// Quanto esperar o Firebase dizer se há sessão antes de cair na
@@ -896,8 +901,20 @@ class Nuvem extends ChangeNotifier {
   /// Uma inicialização só por processo, mesmo com quem chama desistindo de
   /// esperar (o `main.dart` põe prazo): uma segunda chamada com a primeira
   /// ainda pendente pediria o `initializeApp` de novo.
-  Future<void> iniciarFirebase() =>
-      _inicioDoFirebase ??= (iniciarFirebaseForcado ?? _iniciarFirebase)();
+  Future<void> iniciarFirebase() {
+    // O prazo da reserva corre desde o primeiro pedido, que é o que o
+    // `main.dart` espera com o mesmo [prazoDaSessao]: armar outro em
+    // [iniciar] dobraria a espera sem rede.
+    _armarPrazoDaReserva();
+    return _inicioDoFirebase ??= (iniciarFirebaseForcado ?? _iniciarFirebase)();
+  }
+
+  void _armarPrazoDaReserva() {
+    _prazoDaReserva ??= Timer(
+      prazoDaSessao,
+      () => unawaited(_resolverPelaUltimaSessao()),
+    );
+  }
 
   Future<void>? _inicioDoFirebase;
 
@@ -1023,10 +1040,7 @@ class Nuvem extends ChangeNotifier {
     // Sem resposta do Firebase no prazo (o SDK que não baixa, sem rede), a
     // conta resolve pela última sessão conhecida. Se ele responder depois, o
     // primeiro evento do Auth vence.
-    _prazoDaReserva = Timer(
-      prazoDaSessao,
-      () => unawaited(_resolverPelaUltimaSessao()),
-    );
+    _armarPrazoDaReserva();
     try {
       await iniciarFirebase();
     } catch (erro, pilha) {

@@ -1,6 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:devocional/dados/estado.dart';
+import 'package:devocional/dados/nuvem.dart';
 import 'package:devocional/dados/planos_nuvem.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   group('linkDoPlano', () {
@@ -157,4 +161,69 @@ void main() {
       );
     });
   });
+
+  group('usuarioParaEscrever', () {
+    const falha =
+        'Não foi possível guardar. Verifique a conexão e tente de novo.';
+    final usuario = _UsuarioFalso('conta-a');
+
+    tearDown(() {
+      Nuvem.instancia.uidForcado = null;
+      Nuvem.instancia.redefinirParaTestes();
+    });
+
+    test('sem sessão no Firebase, devolve null', () {
+      expect(usuarioParaEscrever(null, falha), isNull);
+    });
+
+    test('a Nuvem e o Firebase na mesma conta: pode escrever', () {
+      Nuvem.instancia.uidForcado = 'conta-a';
+      expect(usuarioParaEscrever(usuario, falha), same(usuario));
+    });
+
+    test('a Nuvem em outra conta: não escreve', () {
+      Nuvem.instancia.uidForcado = 'conta-b';
+      expect(
+        () => usuarioParaEscrever(usuario, falha),
+        throwsA(
+          isA<PlanosNaNuvemExcecao>().having(
+            (e) => e.mensagem,
+            'mensagem',
+            falha,
+          ),
+        ),
+      );
+    });
+
+    test('a Nuvem sem conta resolvida: não escreve', () {
+      expect(
+        () => usuarioParaEscrever(usuario, falha),
+        throwsA(isA<PlanosNaNuvemExcecao>()),
+      );
+    });
+
+    test('na reserva (Firebase fora do ar), mesmo uid não escreve', () async {
+      SharedPreferences.setMockInitialValues({
+        Nuvem.chaveDaUltimaSessao: 'conta-a',
+      });
+      final estado = await Estado.abrir();
+      Nuvem.instancia.iniciarFirebaseForcado = () =>
+          Future.error(Exception('SDK do Firebase não baixou'));
+      await Nuvem.instancia.iniciar(estado);
+
+      expect(Nuvem.instancia.emReserva, isTrue);
+      expect(Nuvem.instancia.uid, 'conta-a');
+      expect(
+        () => usuarioParaEscrever(usuario, falha),
+        throwsA(isA<PlanosNaNuvemExcecao>()),
+      );
+    });
+  });
+}
+
+class _UsuarioFalso extends Fake implements User {
+  _UsuarioFalso(this.uid);
+
+  @override
+  final String uid;
 }

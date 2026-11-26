@@ -161,7 +161,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
             button: true,
             enabled: !_saindo,
             liveRegion: _saindo,
-            label: _saindo ? 'Sair, salvando na conta antes de sair' : 'Sair',
+            label: _saindo ? 'Sair, salvando na conta' : 'Sair',
             onTap: _saindo ? null : _sair,
             excludeSemantics: true,
             child: ListTile(
@@ -186,14 +186,14 @@ class _TelaPerfilState extends State<TelaPerfil> {
             button: true,
             enabled: !_saindo,
             label:
-                'Apagar conta e dados da nuvem. Apaga sua conta no app e tudo '
+                'Apagar conta e dados. Apaga sua conta no app e tudo '
                 'o que ela guarda, na nuvem e $ondeFicaACopiaLocal.',
             onTap: _saindo ? null : _apagar,
             excludeSemantics: true,
             child: ListTile(
               contentPadding: EdgeInsets.zero,
               leading: FaIcon(FontAwesomeIcons.trash, color: cor.error),
-              title: const Text('Apagar conta e dados da nuvem'),
+              title: const Text('Apagar conta e dados'),
               subtitle: const Text(
                 'Apaga sua conta no app e tudo o que ela guarda, na nuvem e '
                 '$ondeFicaACopiaLocal.',

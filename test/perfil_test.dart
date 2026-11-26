@@ -371,7 +371,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.byType(AlertDialog), findsNothing);
     // O Apagar também espera: o toque é ignorado enquanto o Sair anda.
-    await tester.tap(find.text('Apagar conta e dados da nuvem'));
+    await tester.tap(find.text('Apagar conta e dados'));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.byType(AlertDialog), findsNothing);
     expect(chamadas, 1);
@@ -388,7 +388,8 @@ void main() {
     await montar(tester, await abrir());
 
     expect(find.text('Conta'), findsOneWidget);
-    expect(find.text('Apagar conta e dados da nuvem'), findsOneWidget);
+    expect(find.text('Apagar conta e dados'), findsOneWidget);
+    expect(find.text('Apagar conta e dados da nuvem'), findsNothing);
   });
 
   testWidgets('Apagar conta avisa que a cópia do aparelho também sai', (
@@ -405,7 +406,7 @@ void main() {
       ),
       findsOneWidget,
     );
-    await tester.tap(find.text('Apagar conta e dados da nuvem'));
+    await tester.tap(find.text('Apagar conta e dados'));
     await tester.pumpAndSettle();
     final dialogo = find.byType(AlertDialog);
     expect(

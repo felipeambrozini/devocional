@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:devocional/dados/estado.dart';
 import 'package:devocional/dados/nuvem.dart';
+import 'package:devocional/funcoes/sair_da_conta.dart';
 import 'package:devocional/telas/notas.dart';
 import 'package:devocional/widgets/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -112,5 +113,61 @@ void main() {
     unawaited(Nuvem.instancia.iniciarFirebase());
 
     expect(chamadas, 1);
+  });
+
+  testWidgets('o prazo da reserva corre uma vez só, desde o primeiro pedido', (
+    tester,
+  ) async {
+    final estado = await abrirCom({Nuvem.chaveDaUltimaSessao: 'conta-a'});
+    final nunca = Completer<void>();
+    Nuvem.instancia.iniciarFirebaseForcado = () => nunca.future;
+
+    // Como o main.dart: pede o Firebase, desiste no prazo e só então inicia.
+    unawaited(Nuvem.instancia.iniciarFirebase());
+    await tester.pump(Nuvem.prazoDaSessao - const Duration(seconds: 1));
+    unawaited(Nuvem.instancia.iniciar(estado));
+    expect(Nuvem.instancia.carregandoConta, isTrue);
+
+    await tester.pump(const Duration(seconds: 1));
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+
+    expect(Nuvem.instancia.carregandoConta, isFalse);
+    expect(Nuvem.instancia.emReserva, isTrue);
+  });
+
+  testWidgets('recusar o consentimento sem Firebase mostra o aviso de erro', (
+    tester,
+  ) async {
+    final estado = await abrirCom({Nuvem.chaveDaUltimaSessao: 'conta-a'});
+    firebaseQueFalha();
+    await tester.runAsync(() => Nuvem.instancia.iniciar(estado));
+
+    late ScaffoldMessengerState mensageiro;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (contexto) {
+              mensageiro = ScaffoldMessenger.of(contexto);
+              return const SizedBox();
+            },
+          ),
+        ),
+      ),
+    );
+
+    final saiu = await tester.runAsync(
+      () => sairAoRecusarConsentimento(mensageiro),
+    );
+    await tester.pump();
+
+    expect(saiu, isFalse);
+    expect(
+      find.text(
+        'Não foi possível guardar tudo na sua conta. Verifique a conexão e '
+        'tente de novo',
+      ),
+      findsOneWidget,
+    );
   });
 }

@@ -454,7 +454,7 @@ void main() {
       ),
     );
     expect(linha, findsOneWidget);
-    expect(find.text('Apagar conta e dados da nuvem'), findsNothing);
+    expect(find.text('Apagar conta e dados'), findsNothing);
 
     // O roteador do app é global: volta para a Hoje, para não abrir o
     // próximo teste no Sobre.

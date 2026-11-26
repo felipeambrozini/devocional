@@ -36,6 +36,7 @@ import 'dados/voz.dart';
 import 'estilo/tema.dart';
 import 'funcoes/abrir_na_biblia.dart';
 import 'funcoes/lembretes_acoes.dart';
+import 'funcoes/sair_da_conta.dart';
 import 'telas/admin.dart';
 import 'telas/biblia.dart';
 import 'telas/biblioteca.dart';
@@ -783,7 +784,14 @@ class _AppDevocionalState extends State<AppTabernaculo>
             Nuvem.instancia.aoConsentir();
             _conferirBoasVindas();
           },
-          aoRecusar: () => unawaited(Nuvem.instancia.sair()),
+          aoRecusar: () {
+            final mensageiro = ScaffoldMessenger.maybeOf(contexto);
+            if (mensageiro == null) {
+              unawaited(Nuvem.instancia.sair().catchError((_) {}));
+              return;
+            }
+            unawaited(sairAoRecusarConsentimento(mensageiro));
+          },
         ),
       ),
     ).whenComplete(() => _pedindoConsentimento = false);

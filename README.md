@@ -155,8 +155,8 @@ Flutter (Android, iOS e web a partir do mesmo código).
   (com "Ver favoritos e notas", que abre `/notas?aba=todas`, a única tela que
   junta as marcações de todas as origens) e a conta: Sair, que confirma na
   conta tudo o que ainda não subiu (os envios que falharam são refeitos) e
-  depois limpa os dados pessoais do aparelho, e Apagar conta e dados da
-  nuvem, que também limpa o aparelho. Sair sem o consentimento da nuvem só
+  depois limpa os dados pessoais do aparelho, e Apagar conta e dados,
+  que também limpa o aparelho. Sair sem o consentimento da nuvem só
   desloga e limpa, já que nada foi sincronizado. O cabeçalho da Hoje não
   tem mais o botão Sair, e o Sobre não tem mais o Apagar conta. Os anos
   anteriores abrem só para consulta: ver um dia não registra leitura. "Fazer
