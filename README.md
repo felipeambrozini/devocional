@@ -66,8 +66,8 @@ Flutter (Android, iOS e web a partir do mesmo código).
   livro que já tem áudio), numa voz que remete ao tom de
   Charles Spurgeon (não é clone da voz do Felipe), em MP3 pré-gerado
   (hospedado em `AUDIO_BASE_URL`). No app, na web e no PWA dá para baixar
-  o áudio e ouvir offline: nos Ajustes ("Áudio offline"), por categoria (Bíblia,
-  introduções, Manhã e Noite e Promessas) ou livro a livro da Bíblia
+  o áudio e ouvir offline: nos Ajustes ("Áudio offline"), por categoria
+  (Bíblia, introduções, Manhã e Noite e Promessas) ou livro a livro da Bíblia
   ("Escolher livros da Bíblia"). Também dá para baixar um livro na página
   dele: na Bíblia, no seletor de capítulos (a folha que abre pelo nome do
   livro); na Biblioteca, no sumário ("Baixar o áudio"). Os três lugares usam
@@ -126,16 +126,16 @@ Flutter (Android, iOS e web a partir do mesmo código).
   comentário de Charles Spurgeon para aquele versículo, nos 31.102 versículos
   dos 66 livros.
 - **Conta Google (Web, Android e iOS)**: opcional — favoritos, notas, progresso,
-  conversas, horários dos lembretes, planos (com a data de conclusão de cada
-  um) e a leitura dos livros da Biblioteca sobem sozinhos para a conta de quem entrar (depois do
-  consentimento da LGPD neste aparelho), para não perder nada se o
-  navegador limpar o armazenamento e para o mesmo plano aparecer no celular e
-  na web. Quem entra vê o próprio avatar (foto da conta Google, ou a inicial do
-  nome sem foto) na saudação da aba Hoje. Ao abrir, nome e foto voltam assim que
-  o Firebase Auth
-  restaura a sessão salva — sem esperar o App Check, que só o Firestore
-  precisa. Nesse instante curto o cabeçalho mostra "Verificando conta" em vez
-  do botão Entrar, que só aparece quando se sabe que não há sessão.
+  conversas, horários dos lembretes, planos (com a data de conclusão de cada um)
+  e a leitura dos livros da Biblioteca sobem sozinhos para a conta de quem
+  entrar (depois do consentimento da LGPD neste aparelho), para não perder nada
+  se o navegador limpar o armazenamento e para o mesmo plano aparecer no celular
+  e na web. Quem entra vê o próprio avatar (foto da conta Google, ou a inicial
+  do nome sem foto) na saudação da aba Hoje. Ao abrir, nome e foto voltam assim
+  que o Firebase Auth restaura a sessão salva — sem esperar o App Check, que só
+  o Firestore precisa. Nesse instante curto o cabeçalho mostra "Verificando
+  conta" em vez do botão Entrar, que só aparece quando se sabe que não há
+  sessão.
 - **Busca** no texto da Bíblia e nos devocionais, em duas abas.
 - **Palavras de Deus em vermelho**: na Bíblia, as falas de Deus Pai, de Jesus
   e do Espírito Santo saem em vermelho (carmim no claro, vermelho claro no
