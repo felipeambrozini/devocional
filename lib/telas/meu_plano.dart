@@ -268,6 +268,17 @@ class _TelaDeUmPlanoState extends State<TelaDeUmPlano> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (diaCount > 0 && lidos == diaCount) ...[
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TabernaculoBotaoSecundario.icon(
+                      icon: const FaIcon(FontAwesomeIcons.arrowRotateLeft),
+                      label: const Text('Fazer de novo'),
+                      onPressed: () => _controller.fazerDeNovo(context),
+                    ),
+                  ),
+                  const SizedBox(height: TabernaculoEspacamento.sp10),
+                ],
                 TabernaculoCabecalhoDoPlano(
                   plano: planoLocal,
                   lidos: lidos,

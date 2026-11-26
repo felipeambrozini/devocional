@@ -422,6 +422,15 @@ class PlanoControlador extends ChangeNotifier {
     }
   }
 
+  /// "Fazer de novo" num plano concluído: zera só o progresso de quem pede.
+  /// A tela segue aberta, já sem os dias lidos.
+  Future<void> fazerDeNovo(BuildContext context) async {
+    final planoAtual = plano;
+    if (planoAtual == null) return;
+    final refez = await acoes.fazerPlanoDeNovo(context, estado, planoAtual);
+    if (refez && !_descartado) notifyListeners();
+  }
+
   Future<void> sair(BuildContext context) async {
     final saiu = await acoes.sairDoPlano(context, estado, planoId);
     if (saiu && context.mounted) Navigator.pop(context);

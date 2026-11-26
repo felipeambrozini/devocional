@@ -54,7 +54,12 @@ class _ListaDePlanos extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final planos = estado.planosParaExibir;
+    // Plano concluído sai daqui e vai para o perfil; "Fazer de novo" o traz
+    // de volta como não iniciado.
+    final planos = [
+      for (final plano in estado.planosParaExibir)
+        if (!estado.planoEstaConcluido(plano)) plano,
+    ];
 
     return TabernaculoLarguraDeLeitura(
       child: ListView(

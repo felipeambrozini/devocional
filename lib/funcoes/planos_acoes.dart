@@ -138,3 +138,41 @@ Future<bool> sairDoPlano(
   await estado.removerPlano(planoId);
   return true;
 }
+
+/// Confirma e refaz um plano concluído: o progresso da própria pessoa e a
+/// data de conclusão voltam a zero, e o plano volta a Meus planos como não
+/// iniciado. Num plano compartilhado só a entrada dela no documento zera; a
+/// dos outros participantes fica como está.
+///
+/// Num plano compartilhado, a nuvem vem antes: o documento é a verdade e
+/// devolveria os dias pelo espelho se o local zerasse primeiro. Se a nuvem
+/// falhar, mostra o erro e devolve `false` sem tocar no local.
+///
+/// [zerarNaNuvem] existe para os testes trocarem a chamada ao Firestore.
+Future<bool> fazerPlanoDeNovo(
+  BuildContext context,
+  Estado estado,
+  PlanoDoUsuario plano, {
+  Future<void> Function(String planoId)? zerarNaNuvem,
+}) async {
+  final confirmou = await confirmar(
+    context,
+    titulo: 'Fazer o plano de novo?',
+    conteudo: 'O seu progresso volta a zero.',
+    rotuloDaAcao: 'Fazer de novo',
+  );
+  if (!confirmou) return false;
+  if (plano.compartilhado) {
+    try {
+      await (zerarNaNuvem ??
+          (id) => PlanosNaNuvem.instancia.substituirDias(id, const []))(
+        plano.id,
+      );
+    } on PlanosNaNuvemExcecao catch (erro) {
+      if (context.mounted) mostrarErro(context, erro.mensagem);
+      return false;
+    }
+  }
+  await estado.recomecarPlano(plano.id);
+  return true;
+}

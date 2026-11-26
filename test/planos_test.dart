@@ -3,6 +3,8 @@ import 'package:devocional/dados/estado.dart';
 import 'package:devocional/dados/modelos.dart';
 import 'package:devocional/dados/nuvem.dart';
 import 'package:devocional/dados/planos.dart';
+import 'package:devocional/dados/planos_nuvem.dart';
+import 'package:devocional/funcoes/planos_acoes.dart';
 import 'package:devocional/telas/meu_plano.dart';
 import 'package:devocional/telas/novo_plano.dart';
 import 'package:devocional/telas/plano.dart';
@@ -1282,6 +1284,207 @@ void main() {
 }
 
 void _testesDoPlanoDeJesus() {
+  group('fazer de novo', () {
+    /// Um botão que chama a ação com o estado dado, para exercitá-la sem a tela.
+    Widget harness(
+      Estado estado,
+      PlanoDoUsuario plano,
+      List<bool> resultados, {
+      Future<void> Function(String id)? zerarNaNuvem,
+    }) => MaterialApp(
+      home: Scaffold(
+        body: Builder(
+          builder: (context) => TextButton(
+            onPressed: () async => resultados.add(
+              await fazerPlanoDeNovo(
+                context,
+                estado,
+                plano,
+                zerarNaNuvem: zerarNaNuvem,
+              ),
+            ),
+            child: const Text('rodar'),
+          ),
+        ),
+      ),
+    );
+
+    Future<PlanoDoUsuario> planoConcluido(Estado estado) async {
+      final plano = await estado.criarPlano(
+        titulo: 'João relâmpago',
+        livros: ['joao'],
+        dias: 1,
+      );
+      await estado.alternarLidoNoPlano(plano.id, 1);
+      expect(estado.planoEstaConcluido(plano), isTrue);
+      return plano;
+    }
+
+    testWidgets('Meus planos não lista plano concluído', (tester) async {
+      await tester.runAsync(() => Conteudo.instancia.plano(bissexto: false));
+      final estado = Estado(await SharedPreferences.getInstance());
+      Nuvem.instancia.logadoForcado = true;
+      addTearDown(() => Nuvem.instancia.logadoForcado = null);
+      await planoConcluido(estado);
+      await estado.criarPlano(
+        titulo: 'Gênesis aberto',
+        livros: ['genesis'],
+        dias: 30,
+      );
+      await tester.pumpWidget(
+        EscopoDoEstado(
+          estado: estado,
+          child: MaterialApp.router(
+            routerConfig: _routerDoPlano(estado, DateTime(2027, 2, 15)),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Meus planos'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Gênesis aberto'), findsOneWidget);
+      expect(find.text('João relâmpago'), findsNothing);
+    });
+
+    testWidgets('Fazer de novo devolve o plano a Meus planos sem dias lidos', (
+      tester,
+    ) async {
+      await tester.runAsync(() => Conteudo.instancia.plano(bissexto: false));
+      final estado = Estado(await SharedPreferences.getInstance());
+      Nuvem.instancia.logadoForcado = true;
+      addTearDown(() => Nuvem.instancia.logadoForcado = null);
+      final plano = await planoConcluido(estado);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EscopoDoEstado(
+            estado: estado,
+            child: TelaDeUmPlano(
+              estado: estado,
+              planoId: plano.id,
+              plano: plano,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Fazer de novo'));
+      await tester.pumpAndSettle();
+      expect(find.text('Fazer o plano de novo?'), findsOneWidget);
+      expect(find.text('O seu progresso volta a zero.'), findsOneWidget);
+      await tester.tap(find.widgetWithText(FilledButton, 'Fazer de novo'));
+      await tester.pumpAndSettle();
+
+      expect(estado.diasLidosDoPlano(plano.id), 0);
+      expect(estado.concluidoEm(plano.id), isNull);
+      expect(estado.planoEstaConcluido(plano), isFalse);
+      expect(find.text('Fazer de novo'), findsNothing);
+
+      await tester.pumpWidget(
+        EscopoDoEstado(
+          estado: estado,
+          child: MaterialApp.router(
+            routerConfig: _routerDoPlano(estado, DateTime(2027, 2, 15)),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Meus planos'));
+      await tester.pumpAndSettle();
+      expect(find.text('João relâmpago'), findsOneWidget);
+    });
+
+    testWidgets(
+      'Fazer de novo em plano compartilhado com falha de rede não mexe no '
+      'progresso',
+      (tester) async {
+        final estado = Estado(await SharedPreferences.getInstance());
+        final plano = await planoConcluido(estado);
+        await estado.marcarCompartilhado(plano.id);
+        final compartilhado = estado.planoDoUsuario(plano.id)!;
+        final resultados = <bool>[];
+        final chamadas = <String>[];
+
+        await tester.pumpWidget(
+          harness(
+            estado,
+            compartilhado,
+            resultados,
+            zerarNaNuvem: (id) async {
+              chamadas.add(id);
+              throw const PlanosNaNuvemExcecao('Sem rede');
+            },
+          ),
+        );
+        await tester.tap(find.text('rodar'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilledButton, 'Fazer de novo'));
+        await tester.pumpAndSettle();
+
+        expect(resultados, [false]);
+        expect(chamadas, [plano.id]);
+        expect(find.text('Sem rede'), findsOneWidget);
+        expect(estado.diasLidosDoPlano(plano.id), 1);
+        expect(estado.concluidoEm(plano.id), isNotNull);
+        await tester.pump(const Duration(seconds: 10));
+      },
+    );
+
+    testWidgets('em plano compartilhado zera primeiro a nuvem e depois o local', (
+      tester,
+    ) async {
+      final estado = Estado(await SharedPreferences.getInstance());
+      final plano = await planoConcluido(estado);
+      await estado.marcarCompartilhado(plano.id);
+      final resultados = <bool>[];
+      var lidosNaChamada = -1;
+
+      await tester.pumpWidget(
+        harness(
+          estado,
+          estado.planoDoUsuario(plano.id)!,
+          resultados,
+          zerarNaNuvem: (id) async =>
+              lidosNaChamada = estado.diasLidosDoPlano(id),
+        ),
+      );
+      await tester.tap(find.text('rodar'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Fazer de novo'));
+      await tester.pumpAndSettle();
+
+      expect(resultados, [true]);
+      expect(lidosNaChamada, 1);
+      expect(estado.diasLidosDoPlano(plano.id), 0);
+    });
+
+    testWidgets('cancelar o diálogo não recomeça', (tester) async {
+      final estado = Estado(await SharedPreferences.getInstance());
+      final plano = await planoConcluido(estado);
+      final resultados = <bool>[];
+      var chamou = false;
+
+      await tester.pumpWidget(
+        harness(
+          estado,
+          plano,
+          resultados,
+          zerarNaNuvem: (_) async => chamou = true,
+        ),
+      );
+      await tester.tap(find.text('rodar'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancelar'));
+      await tester.pumpAndSettle();
+
+      expect(resultados, [false]);
+      expect(chamou, isFalse);
+      expect(estado.diasLidosDoPlano(plano.id), 1);
+      expect(estado.concluidoEm(plano.id), isNotNull);
+    });
+  });
+
   group('plano fixo de Jesus', () {
     test('tem 30 dias, é fixo e o dia 1 abre em João 1:1-18', () {
       expect(planoDeJesus.fixo, isTrue);
