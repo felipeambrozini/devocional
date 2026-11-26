@@ -140,7 +140,7 @@ vitoriana dele, tratando o leitor por "tu".
   "Fazer de novo", a contagem de favoritos e notas das três origens (com
   "Ver favoritos e notas", a única tela que junta todas) e a conta, com Sair
   (confirma na conta o que ainda não subiu e limpa o aparelho) e Apagar conta
-  e dados da nuvem.
+  e dados da nuvem (apaga também a cópia do aparelho).
 - Compartilhar gera cartão-imagem (fundo couro, filete dourado) com o texto
   junto: versículo na Bíblia; no Devocional, a citação assinada com a leitura
   e a data; na web cai para texto.

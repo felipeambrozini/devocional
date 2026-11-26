@@ -424,12 +424,18 @@ bool _mesmoValor(dynamic a, dynamic b) {
 /// de apagar, quando o login é antigo, para que um popup cancelado ou falho
 /// não deixe o documento apagado e a conta de pé. Se algo falha, as sincronias
 /// voltam: o usuário segue logado e o app segue sincronizando.
+///
+/// Com a conta apagada, [limparAparelho] tira os dados pessoais do aparelho:
+/// eles eram da conta que acabou, e o próximo login, de qualquer conta, os
+/// fundiria e subiria. Fica fora do `try`: a conta já não existe, então uma
+/// falha aqui só vai ao registro e não religa nada.
 Future<void> apagarContaEmOrdem({
   required void Function() pararSincronias,
   required void Function() religarSincronias,
   required bool precisaReautenticar,
   required Future<void> Function() reautenticar,
   required Future<void> Function() apagar,
+  required Future<void> Function() limparAparelho,
 }) async {
   pararSincronias();
   try {
@@ -439,6 +445,151 @@ Future<void> apagarContaEmOrdem({
     religarSincronias();
     rethrow;
   }
+  try {
+    await limparAparelho();
+  } catch (erro, pilha) {
+    Registro.erro('Nuvem.apagar.limpar', erro, pilha);
+  }
+}
+
+/// A pref com o uid da conta dona dos dados pessoais deste aparelho. Gravada
+/// quando a conta abre ([assegurarDonoDosDados]) e apagada quando o aparelho
+/// é limpo (Sair, Apagar conta). Não começa com `sincronia_pendente_`, que o
+/// `Estado.limparDadosPessoais` apaga por prefixo.
+const chaveDoDonoDosDados = 'dono_dos_dados';
+
+/// Confere, antes de qualquer puxar ou fundir, de quem são os dados pessoais
+/// do aparelho. Se são de outra conta (o dono gravado existe e é outro uid),
+/// [limpar] os tira antes que a conta [uid] os funda e suba: uma sessão que
+/// acabou sem Sair (token revogado, conta apagada noutro aparelho) deixa o
+/// aparelho com os dados dela. Mesmo uid: nada muda.
+///
+/// Sem dono gravado, adota [uid] sem limpar. É o caso da primeira abertura
+/// desta versão, em que a sessão restaurada é do único usuário real até
+/// aqui, e limpar perderia o que só existe no aparelho dele. A troca de conta
+/// só é detectada a partir daí.
+Future<void> assegurarDonoDosDados(
+  String uid, {
+  required Future<void> Function() limpar,
+}) async {
+  final prefs = await SharedPreferences.getInstance();
+  final dono = prefs.getString(chaveDoDonoDosDados);
+  if (dono != null && dono != uid) await limpar();
+  await prefs.setString(chaveDoDonoDosDados, uid);
+}
+
+/// Tira os dados pessoais do aparelho (ver [limparAoSair], que zera a
+/// memória antes da primeira espera) e esquece o dono deles
+/// ([chaveDoDonoDosDados]): o próximo login, de qualquer conta, encontra o
+/// aparelho limpo e o adota. É a limpeza do Sair, do Sair sem consentimento
+/// e do Apagar conta.
+Future<void> limparAparelhoDaConta(
+  Estado estado, {
+  required Future<void> Function() cancelarLembretes,
+}) async {
+  await limparAoSair(estado, cancelarLembretes: cancelarLembretes);
+  await (await SharedPreferences.getInstance()).remove(chaveDoDonoDosDados);
+}
+
+/// Sair sem consentimento: nada foi sincronizado, então não há o que
+/// garantir na conta, mas o que ficou no aparelho é da conta que sai. Desloga
+/// antes de limpar: um `signOut` que falha deixa tudo como estava.
+Future<void> sairSemConsentimento({
+  required Future<void> Function() deslogar,
+  required Future<void> Function() limparAparelho,
+}) async {
+  await deslogar();
+  await limparAparelho();
+}
+
+/// As cinco sincronias de uma conta, na ordem cópia, conversas, lembretes,
+/// planos e livros, sem Firebase: [Nuvem] passa a leitura e a escrita do
+/// documento `usuarios/{uid}`, e os testes passam closures.
+///
+/// Toda puxada espera [conferirDono] antes de ler (ver
+/// [assegurarDonoDosDados]): os dados de outra conta saem do aparelho antes
+/// de qualquer fusão. Nada sobe sem uma puxada antes (`Sincronia._puxou`),
+/// então nada sobe antes da conferência também.
+///
+/// Uma leitura só do documento para as cinco na primeira tentativa: cada uma
+/// pega o próprio campo dela, em vez de cinco idas ao Firestore por login.
+/// Quem precisa tentar de novo (o puxar falhou) lê o documento outra vez, sem
+/// herdar o erro da leitura compartilhada. O Sair
+/// (`Sincronia.garantirNaNuvem`) lê só do servidor ([lerDocumento] com
+/// `soServidor`): o cache local pode refletir uma escrita que nunca subiu.
+List<Sincronia> sincroniasDaConta({
+  required Estado estado,
+  required Future<void> Function() conferirDono,
+  required Future<Map<String, dynamic>?> Function({bool soServidor})
+  lerDocumento,
+  required Future<void> Function(String campo, String copia) empurrarCampo,
+  void Function()? aoMudarSituacao,
+}) {
+  Future<Map<String, dynamic>?>? documento;
+  Future<String?> Function() puxarDe(String campo) {
+    var primeiraLeitura = true;
+    return () async {
+      await conferirDono();
+      if (!primeiraLeitura) return _campoDe(lerDocumento(), campo);
+      primeiraLeitura = false;
+      return _campoDe(documento ??= lerDocumento(), campo);
+    };
+  }
+
+  Future<String?> Function() doServidor(String campo) => () async {
+    await conferirDono();
+    return _campoDe(lerDocumento(soServidor: true), campo);
+  };
+
+  Sincronia criar(
+    String campo, {
+    String Function()? serializar,
+    Future<void> Function(String remota)? fundir,
+  }) => Sincronia(
+    estado: estado,
+    nome: campo,
+    serializar: serializar,
+    fundir: fundir,
+    puxar: puxarDe(campo),
+    puxarDoServidor: doServidor(campo),
+    empurrar: (copia) => empurrarCampo(campo, copia),
+    aoMudarSituacao: aoMudarSituacao,
+  );
+
+  return [
+    criar('copia'),
+    criar(
+      'conversas',
+      serializar: estado.serializarConversas,
+      fundir: estado.fundirConversas,
+    ),
+    criar(
+      'lembretes',
+      serializar: estado.serializarLembretes,
+      fundir: (remota) => fundirLembretesDaConta(estado, remota),
+    ),
+    criar(
+      'planos',
+      serializar: estado.serializarPlanos,
+      fundir: estado.fundirPlanos,
+    ),
+    criar(
+      'livros',
+      serializar: estado.serializarLeituraDeLivros,
+      fundir: estado.fundirLeituraDeLivros,
+    ),
+  ];
+}
+
+/// O [campo] do documento como JSON, ou null se a conta ainda não o tem.
+/// Guardado como mapa no Firestore, não como string: assim a cópia se lê
+/// no console do Firebase quando alguém disser "sumiu uma nota".
+Future<String?> _campoDe(
+  Future<Map<String, dynamic>?> documento,
+  String campo,
+) async {
+  final valor = (await documento)?[campo];
+  return valor == null ? null : json.encode(valor);
 }
 
 /// O Sair parou antes de limpar o aparelho: algo não chegou à conta (sem
@@ -640,7 +791,30 @@ class Nuvem extends ChangeNotifier {
 
   bool get logado =>
       logadoForcado ??
-      (_sessaoConhecida && FirebaseAuth.instance.currentUser != null);
+      (_naReserva
+          ? _uidDaReserva != null
+          : _sessaoConhecida && FirebaseAuth.instance.currentUser != null);
+
+  /// O Firebase não iniciou (sem rede na abertura da web, que baixa o SDK do
+  /// gstatic) ou não disse se há sessão dentro de [prazoDaSessao]: a conta
+  /// resolve pela última sessão que ele confirmou neste aparelho
+  /// ([chaveDaUltimaSessao]), em vez de ficar em "Verificando sua conta" para
+  /// sempre. Com ela, as telas pessoais mostram e gravam a cópia local, sem
+  /// sincronias; sem ela, o convite de entrar. O primeiro evento de verdade
+  /// do Auth sempre vence, e na próxima abertura com o Firebase de pé a
+  /// sincronia normal puxa, funde e envia.
+  bool _reservaResolvida = false;
+  String? _uidDaReserva;
+  bool get _naReserva => _reservaResolvida && !_sessaoConhecida;
+  Timer? _prazoDaReserva;
+
+  /// Quanto esperar o Firebase dizer se há sessão antes de cair na
+  /// [chaveDaUltimaSessao].
+  static const prazoDaSessao = Duration(seconds: 10);
+
+  /// A pref com o uid da última sessão que o Firebase confirmou neste
+  /// aparelho; ausente se a última resposta foi "sem sessão".
+  static const chaveDaUltimaSessao = 'ultima_sessao_uid';
 
   /// Se [iniciar] já terminou (Firebase + App Check prontos) — o que libera
   /// o Firestore, não a identidade (ver [_sessaoConhecida]).
@@ -651,7 +825,8 @@ class Nuvem extends ChangeNotifier {
   /// não por resposta, e o cabeçalho mostra espera em vez de um "Entrar" que
   /// sumiria sozinho (ver `TabernaculoBotaoDeConta` em `lib/widgets/botao_de_conta.dart`).
   bool get carregandoConta =>
-      carregandoContaForcado ?? (logadoForcado == null && !_sessaoConhecida);
+      carregandoContaForcado ??
+      (logadoForcado == null && !_sessaoConhecida && !_reservaResolvida);
 
   /// Só para testes de widget: força [carregandoConta], como [logadoForcado]
   /// faz com [logado]. null (padrão) deixa a resposta de verdade.
@@ -680,7 +855,11 @@ class Nuvem extends ChangeNotifier {
   /// `lib/funcoes/planos_acoes.dart`). null sem conta, ou antes de [iniciar].
   String? get uid =>
       uidForcado ??
-      (_sessaoConhecida ? FirebaseAuth.instance.currentUser?.uid : null);
+      (_sessaoConhecida
+          ? FirebaseAuth.instance.currentUser?.uid
+          : _naReserva
+          ? _uidDaReserva
+          : null);
 
   /// Só para testes: força [uid], como [logadoForcado] faz com [logado].
   @visibleForTesting
@@ -713,17 +892,71 @@ class Nuvem extends ChangeNotifier {
   /// continuar (Auth e Firestore lançam sem isto). Idempotente:
   /// `Firebase.apps` vazio é o sinal de que ainda não rodou; chamar de novo
   /// depois lançaria "app duplicado".
-  Future<void> iniciarFirebase() async {
+  ///
+  /// Uma inicialização só por processo, mesmo com quem chama desistindo de
+  /// esperar (o `main.dart` põe prazo): uma segunda chamada com a primeira
+  /// ainda pendente pediria o `initializeApp` de novo.
+  Future<void> iniciarFirebase() =>
+      _inicioDoFirebase ??= (iniciarFirebaseForcado ?? _iniciarFirebase)();
+
+  Future<void>? _inicioDoFirebase;
+
+  /// Só para testes: troca o `Firebase.initializeApp` e a escuta da sessão,
+  /// para simular a abertura sem rede.
+  @visibleForTesting
+  Future<void> Function()? iniciarFirebaseForcado;
+
+  Future<void> _iniciarFirebase() async {
     if (Firebase.apps.isNotEmpty) return;
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
     // Só identidade, sem Firestore: pode ouvir antes do App Check. Qualquer
     // mudança de conta (a sessão que volta, entrar, sair) redesenha a UI.
-    _assinaturaDaSessao = FirebaseAuth.instance.authStateChanges().listen((_) {
+    _assinaturaDaSessao = FirebaseAuth.instance.authStateChanges().listen((
+      usuario,
+    ) {
       _sessaoConhecida = true;
+      _prazoDaReserva?.cancel();
+      // Uma conta que sai ou troca precisa de outra conferência de dono na
+      // próxima entrada, mesmo que volte a mesma.
+      if (usuario?.uid != _uidDoDono) _esquecerConferencia();
+      unawaited(_lembrarSessao(usuario?.uid));
       notifyListeners();
     });
+  }
+
+  /// Guarda a sessão que o Firebase acabou de confirmar, para a próxima
+  /// abertura sem Firebase (ver [_naReserva]). Falhar aqui não derruba nada.
+  Future<void> _lembrarSessao(String? uid) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (uid == null) {
+        await prefs.remove(chaveDaUltimaSessao);
+      } else {
+        await prefs.setString(chaveDaUltimaSessao, uid);
+      }
+    } catch (erro, pilha) {
+      Registro.erro('Nuvem.lembrarSessao', erro, pilha);
+    }
+  }
+
+  /// Resolve a conta pela última sessão conhecida, se o Firebase ainda não
+  /// disse nada (ver [_naReserva]).
+  Future<void> _resolverPelaUltimaSessao() async {
+    if (_sessaoConhecida || _reservaResolvida) return;
+    String? uid;
+    try {
+      uid = (await SharedPreferences.getInstance()).getString(
+        chaveDaUltimaSessao,
+      );
+    } catch (erro, pilha) {
+      Registro.erro('Nuvem.ultimaSessao', erro, pilha);
+    }
+    if (_sessaoConhecida || _reservaResolvida) return;
+    _uidDaReserva = uid;
+    _reservaResolvida = true;
+    notifyListeners();
   }
 
   /// Prepara o Firebase e liga a sincronização ao estado de login. Chamar uma
@@ -786,10 +1019,20 @@ class Nuvem extends ChangeNotifier {
       FirebaseAppCheck.instance.getToken(forcar);
 
   Future<void> iniciar(Estado estado) async {
+    _estado = estado;
+    // Sem resposta do Firebase no prazo (o SDK que não baixa, sem rede), a
+    // conta resolve pela última sessão conhecida. Se ele responder depois, o
+    // primeiro evento do Auth vence.
+    _prazoDaReserva = Timer(
+      prazoDaSessao,
+      () => unawaited(_resolverPelaUltimaSessao()),
+    );
     try {
       await iniciarFirebase();
     } catch (erro, pilha) {
       Registro.erro('Nuvem.iniciar', erro, pilha);
+      _prazoDaReserva?.cancel();
+      await _resolverPelaUltimaSessao();
       return;
     }
 
@@ -810,7 +1053,6 @@ class Nuvem extends ChangeNotifier {
     // verdade) a UI saberia tarde que pode mostrar o "Entrar".
     notifyListeners();
 
-    _estado = estado;
     _assinatura = FirebaseAuth.instance.authStateChanges().listen((usuario) {
       _pararSincronias();
       notifyListeners();
@@ -826,8 +1068,10 @@ class Nuvem extends ChangeNotifier {
   /// Liga as sincronias da conta já aberta assim que o consentimento chega.
   void aoConsentir() {
     final estado = _estado;
+    // Sem Firebase (ver [_naReserva]) não há sincronia para ligar.
+    if (estado == null || !_pronta) return;
     final usuario = FirebaseAuth.instance.currentUser;
-    if (estado == null || usuario == null || _sincronia != null) return;
+    if (usuario == null || _sincronia != null) return;
     _iniciarSincronias(estado, usuario.uid);
     PlanosNaNuvem.instancia.aoConsentir();
   }
@@ -846,91 +1090,108 @@ class Nuvem extends ChangeNotifier {
   }
 
   void _iniciarSincronias(Estado estado, String uid) {
-    // Uma leitura só do documento para as cinco sincronias na primeira
-    // tentativa: cada uma pega o próprio campo dela, em vez de cinco idas ao
-    // Firestore por login. Quem precisa tentar de novo (o puxar falhou) lê o
-    // documento outra vez, sem herdar o erro da leitura compartilhada.
-    final documento = _lerDocumento(uid);
-    Future<String?> Function() puxarDe(String campo) {
-      var primeiraLeitura = true;
-      return () {
-        if (!primeiraLeitura) return _campo(_lerDocumento(uid), campo);
-        primeiraLeitura = false;
-        return _campo(documento, campo);
-      };
+    final sincronias = sincroniasDaConta(
+      estado: estado,
+      conferirDono: () => conferirDono(estado, uid),
+      lerDocumento: ({soServidor = false}) =>
+          _lerDocumento(uid, soServidor: soServidor),
+      empurrarCampo: (campo, copia) => _empurrarCampo(uid, campo, copia),
+      aoMudarSituacao: notifyListeners,
+    );
+    _sincronia = sincronias[0];
+    _sincroniaDeConversas = sincronias[1];
+    _sincroniaDeLembretes = sincronias[2];
+    _sincroniaDePlanos = sincronias[3];
+    _sincroniaDeLivros = sincronias[4];
+    for (final sincronia in sincronias) {
+      unawaited(sincronia.comecar());
     }
+  }
 
-    // Para o Sair (`Sincronia.garantirNaNuvem`): só o servidor responde. O
-    // cache local pode refletir uma escrita que nunca subiu.
-    Future<String?> Function() doServidor(String campo) =>
-        () => _campo(_lerDocumento(uid, soServidor: true), campo);
+  /// O uid da conferência de dono em [_conferenciaDoDono], que as cinco
+  /// sincronias e `PlanosNaNuvem` dividem.
+  String? _uidDoDono;
+  Future<void>? _conferenciaDoDono;
 
-    final sincronia = Sincronia(
-      estado: estado,
-      nome: 'copia',
-      puxar: puxarDe('copia'),
-      puxarDoServidor: doServidor('copia'),
-      empurrar: (copia) => _empurrarCampo(uid, 'copia', copia),
-      aoMudarSituacao: notifyListeners,
+  /// A última conferência pedida, para a próxima esperar por ela: duas
+  /// contas em sequência rápida não podem ler e gravar o dono ao mesmo tempo.
+  Future<void> _ultimaConferencia = Future.value();
+
+  /// Confere de quem são os dados pessoais do aparelho antes de a conta
+  /// [uid] puxar qualquer coisa (ver [assegurarDonoDosDados]). Uma vez por
+  /// entrada na conta: as cinco sincronias e `PlanosNaNuvem` esperam a mesma
+  /// conferência, e nenhuma funde antes de ela terminar. Se falha (a
+  /// preferência não abriu), lança, nada é fundido, e a próxima puxada
+  /// confere de novo.
+  Future<void> conferirDono(Estado estado, String uid) {
+    final atual = _conferenciaDoDono;
+    if (atual != null && _uidDoDono == uid) return atual;
+    _uidDoDono = uid;
+    late final Future<void> conferencia;
+    conferencia = _ultimaConferencia
+        .catchError((_) {})
+        .then(
+          (_) => assegurarDonoDosDados(
+            uid,
+            limpar: () => limparAoSair(
+              estado,
+              cancelarLembretes: _cancelarLembretesDoAparelho,
+            ),
+          ),
+        )
+        .catchError((Object erro, StackTrace pilha) {
+          Registro.erro('Nuvem.conferirDono', erro, pilha);
+          if (identical(_conferenciaDoDono, conferencia)) {
+            _esquecerConferencia();
+          }
+          Error.throwWithStackTrace(erro, pilha);
+        });
+    _ultimaConferencia = conferencia;
+    return _conferenciaDoDono = conferencia;
+  }
+
+  void _esquecerConferencia() {
+    _conferenciaDoDono = null;
+    _uidDoDono = null;
+  }
+
+  /// Os lembretes que o sistema já agendou neste aparelho: cancela (só o
+  /// documento do FID dele), com prazo, porque espera a rede.
+  Future<void> _cancelarLembretesDoAparelho() =>
+      Lembretes.instancia.cancelar().timeout(const Duration(seconds: 10));
+
+  /// Ver [limparAparelhoDaConta]. A conferência de dono também é esquecida:
+  /// a próxima entrada, mesmo da mesma conta, grava o dono de novo.
+  Future<void> _limparAparelho(Estado estado) {
+    _esquecerConferencia();
+    return limparAparelhoDaConta(
+      estado,
+      cancelarLembretes: _cancelarLembretesDoAparelho,
     );
-    _sincronia = sincronia;
-    unawaited(sincronia.comecar());
+  }
 
-    final sincroniaDeConversas = Sincronia(
-      estado: estado,
-      serializar: estado.serializarConversas,
-      fundir: estado.fundirConversas,
-      nome: 'conversas',
-      puxar: puxarDe('conversas'),
-      puxarDoServidor: doServidor('conversas'),
-      empurrar: (copia) => _empurrarCampo(uid, 'conversas', copia),
-      aoMudarSituacao: notifyListeners,
-    );
-    _sincroniaDeConversas = sincroniaDeConversas;
-    unawaited(sincroniaDeConversas.comecar());
+  /// Só para testes: avisa os ouvintes depois de trocar um `...Forcado`.
+  @visibleForTesting
+  void avisarOuvintes() => notifyListeners();
 
-    final sincroniaDeLembretes = Sincronia(
-      estado: estado,
-      serializar: estado.serializarLembretes,
-      fundir: (remota) => fundirLembretesDaConta(estado, remota),
-      nome: 'lembretes',
-      puxar: puxarDe('lembretes'),
-      puxarDoServidor: doServidor('lembretes'),
-      empurrar: (copia) => _empurrarCampo(uid, 'lembretes', copia),
-      aoMudarSituacao: notifyListeners,
-    );
-    _sincroniaDeLembretes = sincroniaDeLembretes;
-    unawaited(sincroniaDeLembretes.comecar());
-
-    final sincroniaDePlanos = Sincronia(
-      estado: estado,
-      serializar: estado.serializarPlanos,
-      fundir: estado.fundirPlanos,
-      nome: 'planos',
-      puxar: puxarDe('planos'),
-      puxarDoServidor: doServidor('planos'),
-      empurrar: (copia) => _empurrarCampo(uid, 'planos', copia),
-      aoMudarSituacao: notifyListeners,
-    );
-    _sincroniaDePlanos = sincroniaDePlanos;
-    unawaited(sincroniaDePlanos.comecar());
-
-    final sincroniaDeLivros = Sincronia(
-      estado: estado,
-      serializar: estado.serializarLeituraDeLivros,
-      fundir: estado.fundirLeituraDeLivros,
-      nome: 'livros',
-      puxar: puxarDe('livros'),
-      puxarDoServidor: doServidor('livros'),
-      empurrar: (copia) => _empurrarCampo(uid, 'livros', copia),
-      aoMudarSituacao: notifyListeners,
-    );
-    _sincroniaDeLivros = sincroniaDeLivros;
-    unawaited(sincroniaDeLivros.comecar());
+  /// Só para testes: volta a reserva da sessão, a inicialização e a
+  /// conferência de dono ao estado de antes de [iniciar].
+  @visibleForTesting
+  void redefinirParaTestes() {
+    _prazoDaReserva?.cancel();
+    _prazoDaReserva = null;
+    _reservaResolvida = false;
+    _uidDaReserva = null;
+    _inicioDoFirebase = null;
+    iniciarFirebaseForcado = null;
+    _estado = null;
+    _esquecerConferencia();
+    _ultimaConferencia = Future.value();
   }
 
   @override
   void dispose() {
+    _prazoDaReserva?.cancel();
     _assinatura?.cancel();
     _assinaturaDaSessao?.cancel();
     _sincronia?.parar();
@@ -950,17 +1211,6 @@ class Nuvem extends ChangeNotifier {
         .doc(uid)
         .get(soServidor ? const GetOptions(source: Source.server) : null);
     return doc.data();
-  }
-
-  /// O [campo] do documento como JSON, ou null se a conta ainda não o tem.
-  /// Guardado como mapa no Firestore, não como string: assim a cópia se lê
-  /// no console do Firebase quando alguém disser "sumiu uma nota".
-  Future<String?> _campo(
-    Future<Map<String, dynamic>?> documento,
-    String campo,
-  ) async {
-    final valor = (await documento)?[campo];
-    return valor == null ? null : json.encode(valor);
   }
 
   Future<void> _empurrarCampo(String uid, String campo, String copiaJson) =>
@@ -1099,9 +1349,21 @@ class Nuvem extends ChangeNotifier {
   Future<void>? _saida;
 
   Future<void> _sair() async {
+    // Sem Firebase não há como confirmar nada na conta: o Sair falha como
+    // qualquer outro que não conseguiu guardar, e nada sai do aparelho.
+    if (_naReserva) {
+      throw SairDaContaFalhou(StateError('Firebase indisponível'));
+    }
     final estado = _estado;
-    if (estado == null || !estado.consentimentoDaNuvem) {
+    if (estado == null) {
       await FirebaseAuth.instance.signOut();
+      return;
+    }
+    if (!estado.consentimentoDaNuvem) {
+      await sairSemConsentimento(
+        deslogar: FirebaseAuth.instance.signOut,
+        limparAparelho: () => _limparAparelho(estado),
+      );
       return;
     }
     _saindo = true;
@@ -1117,15 +1379,9 @@ class Nuvem extends ChangeNotifier {
         // Para ANTES de limpar: senão a limpeza notificaria as sincronias e
         // subiria uma cópia vazia por cima do que acabou de ser garantido.
         pararSincronias: _pararSincronias,
-        limparAparelho: () => limparAoSair(
-          estado,
-          // Os horários saem das prefs, mas o que o sistema já agendou fica:
-          // cancela (só este aparelho: o documento do FID dele), com prazo,
-          // porque espera a rede.
-          cancelarLembretes: () => Lembretes.instancia.cancelar().timeout(
-            const Duration(seconds: 10),
-          ),
-        ),
+        // Os horários saem das prefs, mas o que o sistema já agendou fica:
+        // `_limparAparelho` cancela (ver `_cancelarLembretesDoAparelho`).
+        limparAparelho: () => _limparAparelho(estado),
         deslogar: FirebaseAuth.instance.signOut,
       );
     } finally {
@@ -1140,13 +1396,14 @@ class Nuvem extends ChangeNotifier {
   bool _saindo = false;
   bool get saindo => _saindo;
 
-  /// Apaga o documento da conta e a conta em si. O que está no navegador não
-  /// é tocado, só o que subiu para a nuvem.
+  /// Apaga o documento da conta e a conta em si e, com a conta apagada, os
+  /// dados pessoais do aparelho (ver [apagarContaEmOrdem]).
   ///
   /// Antes do documento e da conta, limpa a participação em planos
   /// compartilhados (nome e progresso ficariam visíveis aos outros
   /// participantes, sem chance de limpeza depois de a conta sumir).
   Future<void> apagarDados() async {
+    if (_naReserva) throw StateError('Firebase indisponível');
     final usuario = FirebaseAuth.instance.currentUser;
     if (usuario == null) return;
     final estado = _estado;
@@ -1158,6 +1415,9 @@ class Nuvem extends ChangeNotifier {
       precisaReautenticar: _loginAntigo(usuario),
       reautenticar: () => _reautenticar(usuario),
       apagar: () => _apagarDocumentoEConta(usuario),
+      limparAparelho: () async {
+        if (estado != null) await _limparAparelho(estado);
+      },
     );
   }
 

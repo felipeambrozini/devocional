@@ -187,8 +187,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
             enabled: !_saindo,
             label:
                 'Apagar conta e dados da nuvem. Apaga sua conta no app e tudo '
-                'o que ela guarda. O que está $ondeFicaACopiaLocal não é '
-                'tocado.',
+                'o que ela guarda, na nuvem e $ondeFicaACopiaLocal.',
             onTap: _saindo ? null : _apagar,
             excludeSemantics: true,
             child: ListTile(
@@ -196,8 +195,8 @@ class _TelaPerfilState extends State<TelaPerfil> {
               leading: FaIcon(FontAwesomeIcons.trash, color: cor.error),
               title: const Text('Apagar conta e dados da nuvem'),
               subtitle: const Text(
-                'Apaga sua conta no app e tudo o que ela guarda. O que está '
-                '$ondeFicaACopiaLocal não é tocado.',
+                'Apaga sua conta no app e tudo o que ela guarda, na nuvem e '
+                '$ondeFicaACopiaLocal.',
               ),
               onTap: () {
                 if (!_saindo) _apagar();

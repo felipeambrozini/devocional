@@ -560,10 +560,40 @@ void main() {
           precisaReautenticar: true,
           reautenticar: () async => throw Exception('popup fechado'),
           apagar: () async => passos.add('apagar'),
+          limparAparelho: () async => passos.add('limpar'),
         ),
         throwsException,
       );
       expect(passos, ['parar', 'religar']);
+    });
+
+    test('apagar que falha não limpa o aparelho', () async {
+      final passos = <String>[];
+      await expectLater(
+        apagarContaEmOrdem(
+          pararSincronias: () => passos.add('parar'),
+          religarSincronias: () => passos.add('religar'),
+          precisaReautenticar: false,
+          reautenticar: () async {},
+          apagar: () async => throw Exception('sem rede'),
+          limparAparelho: () async => passos.add('limpar'),
+        ),
+        throwsException,
+      );
+      expect(passos, ['parar', 'religar']);
+    });
+
+    test('limpeza que falha depois de apagar não religa nem lança', () async {
+      final passos = <String>[];
+      await apagarContaEmOrdem(
+        pararSincronias: () => passos.add('parar'),
+        religarSincronias: () => passos.add('religar'),
+        precisaReautenticar: false,
+        reautenticar: () async {},
+        apagar: () async => passos.add('apagar'),
+        limparAparelho: () async => throw Exception('prefs'),
+      );
+      expect(passos, ['parar', 'apagar']);
     });
 
     test(
@@ -576,8 +606,9 @@ void main() {
           precisaReautenticar: false,
           reautenticar: () async => passos.add('reautenticar'),
           apagar: () async => passos.add('apagar'),
+          limparAparelho: () async => passos.add('limpar'),
         );
-        expect(passos, ['parar', 'apagar']);
+        expect(passos, ['parar', 'apagar', 'limpar']);
       },
     );
   });

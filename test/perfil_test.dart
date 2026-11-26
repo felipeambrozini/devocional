@@ -391,6 +391,38 @@ void main() {
     expect(find.text('Apagar conta e dados da nuvem'), findsOneWidget);
   });
 
+  testWidgets('Apagar conta avisa que a cópia do aparelho também sai', (
+    tester,
+  ) async {
+    telaAlta(tester);
+    await montar(tester, await abrir());
+
+    expect(find.textContaining('não é tocado'), findsNothing);
+    expect(
+      find.text(
+        'Apaga sua conta no app e tudo o que ela guarda, na nuvem e '
+        'neste aparelho.',
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Apagar conta e dados da nuvem'));
+    await tester.pumpAndSettle();
+    final dialogo = find.byType(AlertDialog);
+    expect(
+      find.descendant(of: dialogo, matching: find.textContaining('intacto')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(
+        of: dialogo,
+        matching: find.textContaining('na nuvem e neste aparelho'),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('sem conta, /perfil pede login', (tester) async {
     Nuvem.instancia.logadoForcado = false;
     await montar(tester, await abrir());

@@ -139,7 +139,15 @@ Flutter (Android, iOS e web a partir do mesmo código).
   que o Firebase Auth restaura a sessão salva — sem esperar o App Check, que só
   o Firestore precisa. Nesse instante curto o cabeçalho mostra "Verificando
   conta" em vez do botão Entrar, que só aparece quando se sabe que não há
-  sessão.
+  sessão. Se o Firebase não inicia (a web sem rede não baixa o SDK) ou não
+  responde em 10 s, a conta resolve pela última sessão que ele confirmou no
+  aparelho (`ultima_sessao_uid`): com ela, as telas pessoais mostram e gravam
+  a cópia local, sem sincronia, e o Sair falha sem apagar nada; sem ela,
+  aparece o convite de entrar. Os dados pessoais do aparelho têm dono
+  (`dono_dos_dados`, o uid da conta que os sincronizou): quando outra conta
+  entra, eles saem do aparelho antes de qualquer fusão, para nada de uma conta
+  subir para outra. Sem dono gravado (a primeira abertura desta versão), a
+  conta que entra o adota sem limpar.
 - **Perfil** (`/perfil`, `lib/telas/perfil.dart`): tocar na foto da Hoje abre
   uma página com nome e e-mail, o cronograma de anos anteriores (cada ano abre
   em `/perfil/cronograma/AAAA`, só para consulta), os planos concluídos com a
@@ -148,11 +156,12 @@ Flutter (Android, iOS e web a partir do mesmo código).
   junta as marcações de todas as origens) e a conta: Sair, que confirma na
   conta tudo o que ainda não subiu (os envios que falharam são refeitos) e
   depois limpa os dados pessoais do aparelho, e Apagar conta e dados da
-  nuvem. O cabeçalho da Hoje não tem mais o botão Sair, e o Sobre não tem mais
-  o Apagar conta. Os anos anteriores abrem só para consulta: ver um dia não
-  registra leitura. "Fazer de novo" devolve o plano concluído a Meus Planos
-  sem nenhum dia lido. Na espera da conta, as telas mostram "Verificando sua
-  conta".
+  nuvem, que também limpa o aparelho. Sair sem o consentimento da nuvem só
+  desloga e limpa, já que nada foi sincronizado. O cabeçalho da Hoje não
+  tem mais o botão Sair, e o Sobre não tem mais o Apagar conta. Os anos
+  anteriores abrem só para consulta: ver um dia não registra leitura. "Fazer
+  de novo" devolve o plano concluído a Meus Planos sem nenhum dia lido. Na
+  espera da conta, as telas mostram "Verificando sua conta".
 - **Busca** no texto da Bíblia e nos devocionais, em duas abas.
 - **Palavras de Deus em vermelho**: na Bíblia, as falas de Deus Pai, de Jesus
   e do Espírito Santo saem em vermelho (carmim no claro, vermelho claro no

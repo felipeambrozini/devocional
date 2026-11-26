@@ -87,8 +87,8 @@ String _motivoDeLogin(FirebaseAuthException erro) {
   }
 }
 
-/// Onde fica a cópia que o apagar da nuvem não toca: o navegador na web, o
-/// aparelho nas outras plataformas.
+/// Onde fica a cópia local, que o Apagar conta também apaga: o navegador na
+/// web, o aparelho nas outras plataformas.
 const ondeFicaACopiaLocal = kIsWeb ? 'neste navegador' : 'neste aparelho';
 
 /// Confirma e apaga a conta. Público porque a seção Conta do perfil
@@ -105,11 +105,11 @@ Future<bool> apagarContaDaNuvem(BuildContext context) async {
     titulo: 'Apagar conta e dados da nuvem?',
     conteudo:
         'Sua conta no Tabernáculo será apagada, com tudo o que ela guarda na '
-        'nuvem: favoritos, anotações, progresso, leituras da Biblioteca e '
-        'conversas. Você sai de todos os planos compartilhados e da conta. '
-        'Sua conta do Google não é tocada, e o que está '
-        '$ondeFicaACopiaLocal continua intacto. O Google pode pedir que você '
-        'entre de novo para confirmar. Essa ação não pode ser desfeita.',
+        'nuvem e $ondeFicaACopiaLocal: favoritos, anotações, progresso, '
+        'leituras da Biblioteca e conversas. Você sai de todos os planos '
+        'compartilhados e da conta. Sua conta do Google não é tocada. O '
+        'Google pode pedir que você entre de novo para confirmar. Essa ação '
+        'não pode ser desfeita.',
     rotuloDaAcao: 'Apagar conta',
   );
   if (!confirmou || !context.mounted) return false;

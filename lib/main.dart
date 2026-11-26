@@ -197,8 +197,13 @@ Future<void> _iniciar() async {
   // isto, a sincronia quebra com "FirebaseException" toda vez — não uma
   // corrida ocasional, já que ela roda sempre antes do unawaited abaixo
   // terminar.
+  //
+  // Com prazo: sem rede, a web pode não conseguir baixar o SDK do Firebase,
+  // e o app não pode deixar de abrir por isso. Quem desiste aqui não pede a
+  // inicialização de novo (ver `Nuvem.iniciarFirebase`), e a conta resolve
+  // pela última sessão conhecida (ver `Nuvem.prazoDaSessao`).
   try {
-    await Nuvem.instancia.iniciarFirebase();
+    await Nuvem.instancia.iniciarFirebase().timeout(Nuvem.prazoDaSessao);
   } catch (erro, pilha) {
     Registro.erro('Nuvem.iniciar', erro, pilha);
   }
@@ -757,8 +762,9 @@ class _AppDevocionalState extends State<AppTabernaculo>
 
   /// Conta aberta sem consentimento registrado neste aparelho: quem entrou
   /// antes de o pedido existir, ou num aparelho onde a sessão já estava
-  /// aberta. Quem recusa sai da conta, e a cópia na nuvem continua apagável
-  /// em Sobre.
+  /// aberta. Quem recusa sai da conta, os dados pessoais saem do aparelho
+  /// (ver `sairSemConsentimento`), e a cópia na nuvem continua apagável no
+  /// perfil.
   void _pedirConsentimento(BuildContext contexto) {
     if (_pedindoConsentimento) return;
     _pedindoConsentimento = true;

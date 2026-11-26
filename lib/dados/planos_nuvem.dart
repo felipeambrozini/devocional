@@ -101,6 +101,10 @@ class PlanosNaNuvem {
       return;
     }
     try {
+      // Os dados de outra conta saem do aparelho antes de qualquer plano
+      // desta descer (ver `assegurarDonoDosDados`): a mesma conferência que
+      // as sincronias da Nuvem esperam.
+      await Nuvem.instancia.conferirDono(estado, uid);
       final resultados = await FirebaseFirestore.instance
           .collection(_colecao)
           .where('participantes.$uid', isNotEqualTo: null)
@@ -364,7 +368,15 @@ class PlanosNaNuvem {
     String origem,
     String mensagemDeErro,
   ) async {
-    final usuario = FirebaseAuth.instance.currentUser;
+    final User? usuario;
+    try {
+      usuario = FirebaseAuth.instance.currentUser;
+    } catch (erro, pilha) {
+      // O Firebase não iniciou (abertura sem rede, ver `Nuvem.prazoDaSessao`):
+      // a conta vale pela última sessão, mas o documento não tem como mudar.
+      Registro.erro(origem, erro, pilha);
+      throw PlanosNaNuvemExcecao(mensagemDeErro);
+    }
     if (usuario == null) {
       throw const PlanosNaNuvemExcecao(
         'Entre na sua conta para marcar dias no plano.',
