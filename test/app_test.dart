@@ -462,6 +462,24 @@ void main() {
     await tester.pumpAndSettle();
   });
 
+  testWidgets('/licencas abre a página de licenças no roteador do app', (
+    tester,
+  ) async {
+    await aquecerAssets(tester);
+    await tester.pumpWidget(AppTabernaculo(estado: await estadoLimpo()));
+    await tester.pumpAndSettle();
+    final rota = GoRouter.of(tester.element(find.byType(Scaffold).first));
+    unawaited(rota.push('/licencas'));
+    // Sem pumpAndSettle: a página gira um indicador enquanto junta as
+    // licenças num isolate de verdade.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byType(LicensePage), findsOneWidget);
+
+    rota.go('/hoje');
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('o cartão de plano concluído no perfil abre o plano', (
     tester,
   ) async {

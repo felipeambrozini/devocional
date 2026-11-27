@@ -53,6 +53,7 @@ import conteudoJson from "./assets/conteudo-lembretes.json";
 import {
   chaveDoCliente,
   chaveDoErro,
+  expiracaoDoErro,
   LimitadorDeTaxa,
   normalizarErro,
 } from "./erro";
@@ -496,6 +497,8 @@ export const registrarErro = onRequest(
             ...dados,
             ocorrencias: FieldValue.increment(1),
             ultimaEm: FieldValue.serverTimestamp(),
+            // Campo da política de TTL da coleção (ver expiracaoDoErro).
+            expiraEm: Timestamp.fromDate(expiracaoDoErro(new Date())),
           },
           {merge: true},
       );

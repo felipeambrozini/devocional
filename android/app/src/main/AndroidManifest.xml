@@ -60,6 +60,7 @@
                 <data android:pathPrefix="/tabernaculo/faq"/>
                 <data android:pathPrefix="/tabernaculo/privacidade"/>
                 <data android:pathPrefix="/tabernaculo/termos"/>
+                <data android:pathPrefix="/tabernaculo/licencas"/>
                 <data android:pathPrefix="/tabernaculo/charles-spurgeon"/>
                 <data android:pathPrefix="/tabernaculo/felipe-ambrozini"/>
             </intent-filter>

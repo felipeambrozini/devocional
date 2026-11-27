@@ -3,6 +3,8 @@ import {test} from "node:test";
 import {
   chaveDoCliente,
   chaveDoErro,
+  DIAS_DE_RETENCAO,
+  expiracaoDoErro,
   LimitadorDeTaxa,
   normalizarErro,
 } from "../lib/erro.js";
@@ -115,4 +117,11 @@ test("LimitadorDeTaxa libera até o limite e reabre na janela seguinte", () => {
   assert.equal(limitador.permitir("a", 60_000), true);
   assert.equal(limitador.permitir("a", 60_001), true);
   assert.equal(limitador.permitir("a", 60_002), false);
+});
+
+test("expiracaoDoErro marca a saída 90 dias depois da ocorrência", () => {
+  const agora = new Date("2026-11-27T12:00:00Z");
+  assert.equal(DIAS_DE_RETENCAO, 90);
+  assert.equal(
+      expiracaoDoErro(agora).toISOString(), "2027-02-25T12:00:00.000Z");
 });

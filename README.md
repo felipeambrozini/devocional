@@ -273,8 +273,13 @@ livro), com URL própria (`/notas`).
 
 Sobre (créditos, fonte da tradução, canais e ajuda), Perguntas frequentes e
 Política de privacidade não são abas: moram no fim da folha de ajustes (seção
-"Sobre e ajuda"), com URL própria cada uma. Termos de serviço abre de dentro de
-Sobre. Na mesma seção, só na web e só para a conta do dono, aparece
+"Sobre e ajuda"), com URL própria cada uma. Termos de serviço e Licenças de
+código aberto abrem de dentro de Sobre. A de licenças (`/licencas`) é a
+`LicensePage` padrão: os pacotes do pub entram sozinhos (o crédito CC BY
+dos ícones do Font Awesome vem no LICENSE do pacote), e as fontes Cinzel e
+Montserrat, que não vêm do pub, entram com a OFL de `assets/licencas/OFL.txt`
+por `registrarLicencasDasFontes` (`lib/dados/licencas.dart`). Na mesma
+seção, só na web e só para a conta do dono, aparece
 "Administração": o painel `/admin` (`lib/telas/admin.dart`), que liga e
 desliga recursos e cuida dos convites do chat.
 
@@ -1321,7 +1326,9 @@ que está funcionando.
   (`lib/dados/monitoramento.dart`), que faz um POST para a Function
   `registrarErro` (máximo de 5 por sessão, um por mensagem distinta, sem query
   string, sem texto digitado, sem e-mail e sem uid); o beacon do `index.html`
-  cobre falhas antes do primeiro frame. "Relatar um problema" (Sobre) continua
+  cobre falhas antes do primeiro frame. Cada relatório sai sozinho 90 dias
+  depois da última ocorrência (campo `expiraEm` e TTL do Firestore, ver
+  SECURITY.md 2.4). "Relatar um problema" (Sobre) continua
   abrindo e-mail com a versão já preenchida.
 - **Instalar como app (PWA)** (14/11/2026): o site já era instalável
   (manifesto com `display: standalone`, ícones maskable, meta tags da Apple);

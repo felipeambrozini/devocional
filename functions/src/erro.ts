@@ -112,6 +112,20 @@ export function chaveDoErro(dados: ErroNormalizado): string {
       .slice(0, 32);
 }
 
+/** Por quantos dias um relatório fica depois da última ocorrência. */
+export const DIAS_DE_RETENCAO = 90;
+
+/**
+ * Quando o relatório sai sozinho: a política de TTL do Firestore na coleção
+ * `erros` apaga o documento depois de `expiraEm`. Cada ocorrência nova empurra
+ * a data, então uma falha que continua acontecendo não some do console; a que
+ * parou sai 90 dias depois da última vez. É o que a política de privacidade
+ * promete ("Onde os dados ficam e por quanto tempo").
+ */
+export function expiracaoDoErro(agora: Date): Date {
+  return new Date(agora.getTime() + DIAS_DE_RETENCAO * 24 * 60 * 60 * 1000);
+}
+
 /**
  * Chave do cliente para o limite de taxa. O IP em si nunca é gravado: o hash
  * com sal aleatório por instância só existe na memória do processo e não

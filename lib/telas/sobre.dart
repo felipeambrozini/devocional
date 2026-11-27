@@ -176,6 +176,19 @@ class _TelaSobreState extends State<TelaSobre> {
                 title: const Text('Termos de serviço'),
                 onTap: () => GoRouter.of(context).push('/termos'),
               ),
+              // As licenças das fontes e dos pacotes usados: a OFL das fontes
+              // e o CC BY dos ícones pedem o aviso junto do app (ver
+              // lib/dados/licencas.dart). Rota própria, como Termos.
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: FaIcon(
+                  FontAwesomeIcons.scaleBalanced,
+                  color: cor.primary,
+                ),
+                title: const Text('Licenças de código aberto'),
+                subtitle: const Text('Fontes, ícones e bibliotecas do app'),
+                onTap: () => GoRouter.of(context).push('/licencas'),
+              ),
               // A conta (Sair e Apagar conta) mora no perfil, aberto pela foto
               // no cabeçalho da Hoje; aqui fica só o caminho até ela.
               ListenableBuilder(

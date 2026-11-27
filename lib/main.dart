@@ -23,6 +23,7 @@ import 'dados/dia_da_leitura.dart';
 import 'dados/estado.dart';
 import 'dados/espelho_do_tema.dart';
 import 'dados/lembretes.dart';
+import 'dados/licencas.dart';
 import 'dados/modelos.dart';
 import 'dados/nuvem.dart';
 import 'dados/personas.dart';
@@ -128,6 +129,7 @@ Future<void> _iniciar() async {
     return true;
   };
   await Registro.inicializar();
+  registrarLicencasDasFontes();
 
   // Sem isto a web usa "/#/biblia" (estratégia padrão do Flutter): o # nunca
   // vai ao servidor, então nunca dá 404, mas também não é o link limpo que se
@@ -432,6 +434,14 @@ final _router = GoRouter(
       builder: (context, state) => const TelaPrivacidade(),
     ),
     GoRoute(path: '/termos', builder: (context, state) => const TelaTermos()),
+    // Rota, e não o showLicensePage (push avulso fora do go_router): na web a
+    // página ganha URL e o voltar do navegador fecha as licenças, em vez de
+    // sair de Sobre (ver lib/dados/licencas.dart).
+    GoRoute(
+      path: '/licencas',
+      builder: (context, state) =>
+          const LicensePage(applicationName: 'Tabernáculo'),
+    ),
     // A Bíblia aberta por cima de qualquer aba (epígrafe do devocional, faixa
     // da leitura do dia, busca, marcações), com voltar para onde se estava.
     // Rota, e não um Navigator.push avulso, para a URL dizer o capítulo e o F5

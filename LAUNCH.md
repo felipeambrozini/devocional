@@ -31,9 +31,13 @@ A última seção lista o roteiro de virada.
   resposta, motivo e detalhe opcional, sem e-mail nem nome no texto.
 - **Monitoramento de erros.** Beacon no `index.html` e
   `lib/dados/monitoramento.dart` enviam falha técnica para a Function
-  `registrarErro` via `/tabernaculo/api/erro`; agregação por hash em `erros`,
+  `registrarErro` via `/tabernaculo/api/erro`; agregação por hash em `erros`;
   limite no cliente e no servidor, sem PII, sem query string e sem texto
-  digitado. Sem Sentry e sem Analytics.
+  digitado. Sem Sentry e sem Analytics. O TTL do Firestore (campo `expiraEm`,
+  ligado no console) apaga cada relatório 90 dias depois da última
+  ocorrência.
+- **Licenças.** Sobre → "Licenças de código aberto" abre a página de licenças
+  com os pacotes do pub e a OFL das fontes Cinzel e Montserrat.
 - **Cache e cabeçalhos.** Shell e entrypoints sem cache; arquivo com hash
   imutável por um ano; `canvaskit/**` por uma hora; segurança
   (`nosniff`, CSP de frame-ancestors, HSTS, Referrer-Policy,

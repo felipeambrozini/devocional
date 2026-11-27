@@ -143,6 +143,13 @@ canal próprio, só para falha técnica e só na web de release:
   por instância e recusa corpo acima de 32 KB. Falhar no envio não afeta o app.
 - **Leitura:** só o dono, pelo console/Admin SDK; o cliente não tem acesso à
   coleção.
+- **Retenção:** cada gravação põe `expiraEm` 90 dias depois da ocorrência
+  (`expiracaoDoErro` em `functions/src/erro.ts`), e a política de TTL do
+  Firestore no campo `expiraEm` do grupo `erros` apaga o documento depois
+  dessa data. Falha que continua acontecendo empurra a data; a que parou sai
+  90 dias depois da última vez, como a política de privacidade promete. A
+  política de TTL mora no console (ligada em 27/11/2026), não no repositório.
+  As denúncias não têm TTL: o dono apaga cada uma depois de revisar.
 
 O registro local (`lib/dados/registro.dart`) continua no console e, fora da
 web, em arquivo no aparelho.

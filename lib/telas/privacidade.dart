@@ -311,9 +311,11 @@ class _TelaPrivacidadeState extends State<TelaPrivacidade> {
                           'quando você apaga a cópia da nuvem. Ninguém além de você '
                           'tem acesso a eles, a não ser o progresso que você mesmo '
                           'compartilha num plano. Os relatórios de erro e as '
-                          'denúncias ficam no mesmo projeto, são lidos só pelo '
-                          'mantenedor para corrigir falhas e conteúdo, e são '
-                          'apagados quando já cumpriram essa função.',
+                          'denúncias ficam no mesmo projeto e são lidos só pelo '
+                          'mantenedor, para corrigir falhas e conteúdo. Cada '
+                          'relatório de erro é apagado automaticamente 90 dias '
+                          'depois da última vez que a falha aconteceu; a '
+                          'denúncia é apagada depois de revisada.',
                     ),
                     TabernaculoSecaoDeTexto(
                       key: _apagar,
