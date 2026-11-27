@@ -90,6 +90,6 @@ jobs:
         with:
           # Numa linha só: num escalar YAML simples as quebras de linha viram
           # espaço, mas a `\` de continuação ficava literal no meio do comando.
-          args: appdistribution:distribute build/ios/ipa/*.ipa --app 1:169480227109:ios:8f722638a506e0d83c72cc --groups testadores --release-notes "Build ${{ github.sha }} (${{ github.ref_name }})"
+          args: appdistribution:distribute build/ios/ipa/*.ipa --app 1:169480227109:ios:8983182afaad0de23c72cc --groups testadores --release-notes "Build ${{ github.sha }} (${{ github.ref_name }})"
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

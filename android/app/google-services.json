@@ -47,10 +47,10 @@
               "client_type": 3
             },
             {
-              "client_id": "169480227109-acd4hhe5rte2p0ljc2gos2orgh0mk7cg.apps.googleusercontent.com",
+              "client_id": "169480227109-hp6pfvscfh4j156dv9jdlcm7ta87hejg.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.felipeambrozini.devocional"
+                "bundle_id": "com.felipeambrozini.tabernaculo"
               }
             }
           ]

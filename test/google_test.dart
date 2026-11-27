@@ -40,19 +40,11 @@ void main() {
   });
 
   test('no iOS prova a identidade com o Bundle ID', () async {
-    // O iOS manteve o Bundle ID de antes do nome Tabernáculo.
-    PackageInfo.setMockInitialValues(
-      appName: 'Tabernáculo',
-      packageName: 'com.felipeambrozini.devocional',
-      version: '1.0.0',
-      buildNumber: '1',
-      buildSignature: '',
-    );
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
 
     expect(await cabecalhosGoogle(), {
       'Content-Type': 'application/json',
-      'X-Ios-Bundle-Identifier': 'com.felipeambrozini.devocional',
+      'X-Ios-Bundle-Identifier': 'com.felipeambrozini.tabernaculo',
     });
   });
 

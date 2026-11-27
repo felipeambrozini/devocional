@@ -17,7 +17,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 ///   [cabecalhosGoogle]) — então debug e release funcionam sem trocar nada,
 ///   desde que os dois SHA-1 estejam registrados na chave.
 /// * chaveIos: criada no Google Cloud Console, restrita ao app iOS
-///   (`com.felipeambrozini.devocional` Bundle ID) e às APIs que o app usa.
+///   (`com.felipeambrozini.tabernaculo` Bundle ID) e às APIs que o app usa.
 ///
 /// Não é segredo de servidor: a Google desenha este caminho para apps
 /// client-side, com CORS aberto (conferido em OPTIONS) e limite por projeto.

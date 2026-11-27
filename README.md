@@ -1243,17 +1243,20 @@ que está funcionando.
   As chaves são públicas por desenho: quem protege os dados são as regras do
   Firestore (`firestore.rules`, publicado pelo CI a cada push) e a lista de
   domínios autorizados.
-- **Nome do pacote** trocado para `com.felipeambrozini.devocional` (09/08/2026)
-  e depois para `com.felipeambrozini.tabernaculo` (25/11/2026, com o nome
-  novo), refletido no `applicationId` e no `namespace` do
-  `android/app/build.gradle.kts` e no pacote do `MainActivity.kt`. Um pacote
-  novo é outro app para o Android (não atualiza por cima do antigo) e para o
-  Firebase (outro app Android no projeto, outro `google-services.json`, outro
-  `FIREBASE_APP_ID_ANDROID`). As SHA-1 de debug e de release precisam estar no
+- **Nome do pacote**: `com.felipeambrozini.tabernaculo` (25/11/2026, com o
+  nome novo; o iOS passou a usar o mesmo Bundle ID em 27/11/2026), refletido
+  no `applicationId` e no `namespace` do `android/app/build.gradle.kts`, no
+  pacote do `MainActivity.kt` e no `PRODUCT_BUNDLE_IDENTIFIER` do projeto
+  Xcode. Um pacote novo é outro app para o sistema (não atualiza por cima do
+  antigo) e para o Firebase (outro app no projeto, outro
+  `google-services.json`/`GoogleService-Info.plist`, outro
+  `FIREBASE_APP_ID_ANDROID`/`FIREBASE_APP_ID_IOS`). As SHA-1 de debug e de
+  release precisam estar no
   app novo do Firebase (login com Google) e na restrição da chave
   `GEMINI_API_KEY_ANDROID` no Google Cloud (o chat manda o pacote no
-  `X-Android-Package`, ver `lib/dados/google.dart`). O iOS manteve o Bundle ID
-  `com.felipeambrozini.devocional`.
+  `X-Android-Package`, ver `lib/dados/google.dart`). No iOS, o Bundle ID
+  entra na restrição de app iOS da `GEMINI_API_KEY_IOS`, e a distribuição
+  precisa de App ID e perfil de provisionamento com ele no Apple Developer.
 - **Android em Kotlin embutido do AGP 9** (05/11/2026):
   `android.builtInKotlin=true`
   em `android/gradle.properties` e nada de `kotlin-android` no
@@ -1494,8 +1497,8 @@ funcionam com o APK do Firebase App Distribution. Três peças:
    APK distribuído e o da chave debug da máquina de desenvolvimento (para
    `flutter run` também abrir os links). No `firebase.json`, o
    `appAssociation: "NONE"` desliga o arquivo que o Hosting gerava sozinho a
-   partir dos apps do projeto (listava só o pacote antigo
-   `com.felipeambrozini.devocional`). O `ignore` não tem mais `**/.*`, que
+   partir dos apps do projeto (listava só o pacote antigo). O `ignore` não
+   tem mais `**/.*`, que
    descartaria a pasta `.well-known` no deploy. O `tool/smoke_web.mjs` confere
    o arquivo publicado. Um `firebase deploy --only hosting` feito à mão, da
    pasta `public/` local, tira o arquivo do ar se ela não tiver o

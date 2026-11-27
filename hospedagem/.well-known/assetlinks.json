@@ -1,22 +1,14 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "com.felipeambrozini.tabernaculo",
       "sha256_cert_fingerprints": [
         "47:A8:4C:D6:03:D6:07:E1:77:AE:BB:17:A0:8F:33:2A:41:C6:66:D5:1E:F7:A9:B9:70:F4:F9:37:53:BA:D7:FB",
         "9B:B4:6B:4A:A9:9D:24:DA:9A:30:B6:E2:AD:7D:3E:5D:01:68:5A:C8:ED:ED:AB:F2:84:DE:43:44:10:09:AC:4E"
-      ]
-    }
-  },
-  {
-    "relation": ["delegate_permission/common.handle_all_urls"],
-    "target": {
-      "namespace": "android_app",
-      "package_name": "com.felipeambrozini.devocional",
-      "sha256_cert_fingerprints": [
-        "FD:25:B7:C9:83:AB:87:B5:5D:D1:1D:BE:48:5E:59:22:CA:BA:1D:62:58:7A:7A:52:1A:32:8F:CD:D2:DB:62:D0"
       ]
     }
   }
