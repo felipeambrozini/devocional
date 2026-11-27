@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_app_installations/firebase_app_installations.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform, kIsWeb;
+    show TargetPlatform, defaultTargetPlatform, kIsWeb, visibleForTesting;
 import 'package:material_ui/material_ui.dart' show Brightness, Color, TimeOfDay;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -333,6 +333,33 @@ Future<bool> cadastroPrecisaSerGravado(
   }
 }
 
+/// Cadastra o aparelho no FCM com um ouvinte de `onRegistered` já ligado e
+/// devolve esse ouvinte, para quem chama guardá-lo e repassá-lo na próxima
+/// vez (um só pela vida do app).
+///
+/// Na web, o firebase_messaging 17 recusa `register()` sem esse ouvinte
+/// ("invalid-on-registered-handler: Implement onRegistered() before
+/// register()"), e só ler o `onRegistered` já liga o ouvinte do lado do
+/// JavaScript. Sem isso, nenhum navegador conseguia ligar os lembretes, da
+/// versão 1.22 à 1.31. O FID continua vindo das Instalações do Firebase
+/// (`_fidOuNulo`): o evento é o mesmo ID, então o ouvinte não faz nada.
+@visibleForTesting
+Future<StreamSubscription<String>> registrarNoFcm({
+  required StreamSubscription<String>? ouvinte,
+  required Stream<String> Function() aoRegistrar,
+  required Future<void> Function() registrar,
+}) async {
+  final ligado =
+      ouvinte ??
+      aoRegistrar().listen(
+        (_) {},
+        onError: (Object erro, StackTrace pilha) =>
+            Registro.erro('Lembretes.onRegistered', erro, pilha),
+      );
+  await registrar();
+  return ligado;
+}
+
 /// Agenda o lembrete diário no servidor e navega quando a notificação é
 /// tocada.
 ///
@@ -416,6 +443,10 @@ class LembretesReais implements Lembretes {
   TimeOfDay? _ultimaNoite;
   String? _ultimoFid;
   String _ultimoFuso = '';
+
+  /// Ouvinte de `onRegistered`, ligado no primeiro cadastro e mantido pela
+  /// vida do app (ver [registrarNoFcm]).
+  StreamSubscription<String>? _ouvinteDoRegistro;
 
   String? _vapidKeyOuNulo() =>
       kIsWeb && _vapidKey.isNotEmpty ? _vapidKey : null;
@@ -780,9 +811,13 @@ class LembretesReais implements Lembretes {
   /// do Firebase, que é a mesma instalação usada pelo FCM.
   Future<String?> _fidRegistradoOuNulo() async {
     try {
-      await _mensageria.register(
-        vapidKey: _vapidKeyOuNulo(),
-        serviceWorkerScriptPath: _servicoWebOuNulo(),
+      _ouvinteDoRegistro = await registrarNoFcm(
+        ouvinte: _ouvinteDoRegistro,
+        aoRegistrar: () => _mensageria.onRegistered,
+        registrar: () => _mensageria.register(
+          vapidKey: _vapidKeyOuNulo(),
+          serviceWorkerScriptPath: _servicoWebOuNulo(),
+        ),
       );
     } catch (erro, pilha) {
       Registro.erro('Lembretes.registrar', erro, pilha);

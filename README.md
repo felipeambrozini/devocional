@@ -1113,6 +1113,15 @@ que está funcionando.
   `notificationclick` responder com o app fechado); mesmo caminho e mesmo
   escopo, então o navegador reaproveita aquele registro em vez de criar um
   segundo.
+- **Na web, `register` exige um ouvinte de `onRegistered` antes** (27/11/2026):
+  sem ele, o firebase_messaging 17 lança `invalid-on-registered-handler` e o
+  navegador não é cadastrado. `registrarNoFcm` (em
+  `lib/dados/lembretes.dart`) liga esse ouvinte uma vez e só então chama
+  `register`. O erro aparecia na coleção `erros` com contexto
+  `Lembretes.registrar` da versão 1.22 à 1.31: nesse intervalo, nenhum
+  navegador conseguiu ligar os lembretes. A chave `FIREBASE_API_KEY_WEB`
+  também precisa permitir a Firebase Cloud Messaging API
+  (`fcmregistrations.googleapis.com`), que o cadastro da web chama.
 - **O service worker exibe o push mesmo com o app aberto na tela**: ele tem
   um listener próprio de `push`, e não `onBackgroundMessage` — o SDK só chama
   esse handler quando nenhuma aba do app está visível; com o app aberto ele

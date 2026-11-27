@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:devocional/dados/estado.dart';
 import 'package:devocional/dados/lembretes.dart';
 import 'package:devocional/funcoes/aviso.dart';
@@ -355,6 +357,66 @@ void main() {
         cadastro,
       );
       expect(precisaGravar, isTrue);
+    });
+  });
+
+  group('registrarNoFcm', () {
+    test('liga o ouvinte de onRegistered antes de chamar register()', () async {
+      // Na web, o firebase_messaging 17 recusa register() sem esse ouvinte.
+      final ordem = <String>[];
+      final controlador = StreamController<String>.broadcast();
+      addTearDown(controlador.close);
+
+      final ouvinte = await registrarNoFcm(
+        ouvinte: null,
+        aoRegistrar: () {
+          ordem.add('onRegistered');
+          return controlador.stream;
+        },
+        registrar: () async => ordem.add('register'),
+      );
+      addTearDown(ouvinte.cancel);
+
+      expect(ordem, ['onRegistered', 'register']);
+    });
+
+    test('reaproveita o ouvinte nas chamadas seguintes', () async {
+      final controlador = StreamController<String>.broadcast();
+      addTearDown(controlador.close);
+      var leituras = 0;
+      Stream<String> aoRegistrar() {
+        leituras++;
+        return controlador.stream;
+      }
+
+      final primeiro = await registrarNoFcm(
+        ouvinte: null,
+        aoRegistrar: aoRegistrar,
+        registrar: () async {},
+      );
+      addTearDown(primeiro.cancel);
+      final segundo = await registrarNoFcm(
+        ouvinte: primeiro,
+        aoRegistrar: aoRegistrar,
+        registrar: () async {},
+      );
+
+      expect(leituras, 1);
+      expect(identical(primeiro, segundo), isTrue);
+    });
+
+    test('a falha do register() chega a quem chamou', () async {
+      final controlador = StreamController<String>.broadcast();
+      addTearDown(controlador.close);
+
+      expect(
+        registrarNoFcm(
+          ouvinte: null,
+          aoRegistrar: () => controlador.stream,
+          registrar: () async => throw StateError('sem permissão'),
+        ),
+        throwsStateError,
+      );
     });
   });
 }
