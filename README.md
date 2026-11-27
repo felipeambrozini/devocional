@@ -56,7 +56,9 @@ Flutter (Android, iOS e web a partir do mesmo código).
   ordem de leitura ("Alterar ordem de leitura"). Dá para compartilhar por link;
   cada participante
   entra com a própria conta Google e o progresso de todos aparece junto (Meus
-  Planos). Quem criou pode excluir o plano (some para todos os participantes,
+  Planos). O cartão do plano em Meus Planos ganha o ícone de grupo quando mais
+  alguém, além de quem criou, entrou nele. Quem criou pode excluir o plano
+  (some para todos os participantes,
   com o progresso de cada um); quem só participa pode sair, e some só o
    próprio progresso. Quem criou também edita o plano depois — nome, livros,
   ordem de leitura, dias e a inclusão/posição dos devocionais — pelo menu de

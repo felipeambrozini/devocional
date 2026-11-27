@@ -1096,6 +1096,9 @@ class Estado extends ChangeNotifier {
             criadoEm: local.criadoEm,
             compartilhado: local.compartilhado || plano.compartilhado,
             criadoPor: local.criadoPor ?? plano.criadoPor,
+            // A contagem local veio direto do documento do plano; a cópia da
+            // conta pode ser de antes de alguém entrar ou sair.
+            outrosParticipantes: local.outrosParticipantes,
           );
           final conteudoMudou =
               remotoMaisNovo &&

@@ -89,6 +89,7 @@ class PlanoDoUsuario {
     this.criadoPor,
     this.incluirDevocionais = false,
     this.devocionalAntes = true,
+    this.outrosParticipantes = 0,
   }) : atualizadoEm = atualizadoEm ?? criadoEm;
 
   factory PlanoDoUsuario.doJson(Map<String, dynamic> json) => PlanoDoUsuario(
@@ -112,6 +113,7 @@ class PlanoDoUsuario {
     criadoPor: json['criadoPor'] as String?,
     incluirDevocionais: json['incluirDevocionais'] as bool? ?? false,
     devocionalAntes: json['devocionalAntes'] as bool? ?? true,
+    outrosParticipantes: json['outrosParticipantes'] as int? ?? 0,
   );
 
   /// De um documento `planos/{id}` do Firestore, cujo esquema é outro (ver
@@ -134,6 +136,10 @@ class PlanoDoUsuario {
     criadoPor: json['criadoPor'] as String?,
     incluirDevocionais: json['incluirDevocionais'] as bool? ?? false,
     devocionalAntes: json['devocionalAntes'] as bool? ?? true,
+    outrosParticipantes: contarOutrosParticipantes(
+      json['participantes'],
+      criadoPor: json['criadoPor'] as String?,
+    ),
   );
 
   /// Identidade estável do plano, e o id do documento na nuvem quando
@@ -174,6 +180,13 @@ class PlanoDoUsuario {
   /// aparece antes ou depois dele no dia.
   final bool devocionalAntes;
 
+  /// Quantas pessoas, além de quem criou, participam do plano compartilhado.
+  /// Vem do mapa `participantes` do documento (ver [contarOutrosParticipantes])
+  /// e só se atualiza quando o documento desce: ao entrar na conta ou com o
+  /// plano aberto. O cartão de Meus Planos mostra o selo de grupo só com
+  /// alguém aqui; plano local, ou compartilhado sem ninguém ter entrado, fica 0.
+  final int outrosParticipantes;
+
   /// Plano embutido no app (ver [planoDeJesus]): imutável para o usuário.
   bool get fixo => id == idDoPlanoDeJesus;
 
@@ -212,6 +225,7 @@ class PlanoDoUsuario {
     String? criadoPor,
     bool? incluirDevocionais,
     bool? devocionalAntes,
+    int? outrosParticipantes,
   }) => PlanoDoUsuario(
     id: id,
     titulo: titulo ?? this.titulo,
@@ -223,6 +237,7 @@ class PlanoDoUsuario {
     criadoPor: criadoPor ?? this.criadoPor,
     incluirDevocionais: incluirDevocionais ?? this.incluirDevocionais,
     devocionalAntes: devocionalAntes ?? this.devocionalAntes,
+    outrosParticipantes: outrosParticipantes ?? this.outrosParticipantes,
   );
 
   /// Virar compartilhado não é uma edição de conteúdo: o [atualizadoEm]
@@ -241,7 +256,19 @@ class PlanoDoUsuario {
     if (criadoPor != null) 'criadoPor': criadoPor,
     'incluirDevocionais': incluirDevocionais,
     'devocionalAntes': devocionalAntes,
+    if (outrosParticipantes > 0) 'outrosParticipantes': outrosParticipantes,
   };
+}
+
+/// Quantas entradas do mapa `participantes` de um documento `planos/{id}`
+/// não são de [criadoPor]. Sem [criadoPor] (documento antigo), desconta uma
+/// entrada, a de quem criou.
+int contarOutrosParticipantes(Object? participantes, {String? criadoPor}) {
+  if (participantes is! Map) return 0;
+  if (criadoPor == null) {
+    return participantes.isEmpty ? 0 : participantes.length - 1;
+  }
+  return participantes.keys.where((uid) => uid != criadoPor).length;
 }
 
 /// Gerador criptográfico: o id de um plano compartilhado é o único controle

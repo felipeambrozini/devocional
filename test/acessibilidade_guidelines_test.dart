@@ -1020,6 +1020,8 @@ void main() {
         dias: 30,
         criadoEm: DateTime(2026, 1, 1),
         compartilhado: compartilhado,
+        // Com alguém além do criador, para o selo de grupo aparecer.
+        outrosParticipantes: compartilhado ? 1 : 0,
       );
       await tester.pumpWidget(
         _app(

@@ -322,6 +322,65 @@ void main() {
       },
     );
 
+    test('doJsonDaNuvem conta os participantes além de quem criou', () {
+      PlanoDoUsuario daNuvem(Map<String, dynamic> extra) =>
+          PlanoDoUsuario.doJsonDaNuvem(
+            {'titulo': 'N', 'livros': ['exodo'], 'dias': 40, ...extra},
+            id: 'doc-1',
+            criadoEm: DateTime(2027, 5, 1),
+          );
+
+      expect(daNuvem(const {}).outrosParticipantes, 0);
+      expect(
+        daNuvem({
+          'criadoPor': 'dono',
+          'participantes': {'dono': {}},
+        }).outrosParticipantes,
+        0,
+      );
+      expect(
+        daNuvem({
+          'criadoPor': 'dono',
+          'participantes': {'dono': {}, 'ana': {}, 'bia': {}},
+        }).outrosParticipantes,
+        2,
+      );
+      // Quem criou já saiu (conta apagada): todos os que ficaram contam.
+      expect(
+        daNuvem({
+          'criadoPor': 'dono',
+          'participantes': {'ana': {}},
+        }).outrosParticipantes,
+        1,
+      );
+      // Documento sem criadoPor: desconta uma entrada, a de quem criou.
+      expect(
+        daNuvem({
+          'participantes': {'dono': {}, 'ana': {}},
+        }).outrosParticipantes,
+        1,
+      );
+    });
+
+    test('paraJson e doJson guardam os outros participantes', () {
+      final plano = PlanoDoUsuario(
+        id: 'abc',
+        titulo: 'Meu plano',
+        livros: ['genesis'],
+        dias: 5,
+        criadoEm: DateTime(2027, 5, 1),
+        compartilhado: true,
+        outrosParticipantes: 3,
+      );
+      expect(PlanoDoUsuario.doJson(plano.paraJson()).outrosParticipantes, 3);
+      expect(
+        PlanoDoUsuario.doJson(
+          plano.copyWith(outrosParticipantes: 0).paraJson(),
+        ).outrosParticipantes,
+        0,
+      );
+    });
+
     test('totalDeCapitulos soma os capítulos dos livros', () {
       final plano = PlanoDoUsuario(
         id: 'a',
@@ -882,9 +941,8 @@ void main() {
       },
     );
 
-    testWidgets('o cartão de um plano compartilhado mostra o selo', (
-      tester,
-    ) async {
+    testWidgets('o cartão de um plano compartilhado só pelo criador não '
+        'mostra o selo', (tester) async {
       await tester.runAsync(() => Conteudo.instancia.plano(bissexto: false));
       final estado = Estado(await SharedPreferences.getInstance());
       final plano = await estado.criarPlano(
@@ -910,6 +968,44 @@ void main() {
 
       expect(find.text('Gênesis em 5 dias'), findsOneWidget);
       expect(find.text('5 dias · 50 capítulos'), findsOneWidget);
+      expect(find.byIcon(FontAwesomeIcons.userGroup.data), findsNothing);
+    });
+
+    testWidgets('o cartão mostra o selo quando mais alguém entrou no plano', (
+      tester,
+    ) async {
+      await tester.runAsync(() => Conteudo.instancia.plano(bissexto: false));
+      final estado = Estado(await SharedPreferences.getInstance());
+      await estado.aplicarPlanoDaNuvem(
+        PlanoDoUsuario.doJsonDaNuvem(
+          {
+            'titulo': 'Gênesis em 5 dias',
+            'livros': ['genesis'],
+            'dias': 5,
+            'criadoPor': 'dono',
+            'participantes': {'dono': {}, 'ana': {}},
+          },
+          id: 'doc-1',
+          criadoEm: DateTime(2027, 2, 1),
+        ),
+        lidos: const {},
+      );
+      Nuvem.instancia.logadoForcado = true;
+      addTearDown(() => Nuvem.instancia.logadoForcado = null);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EscopoDoEstado(
+            estado: estado,
+            child: TelaPlano(hoje: DateTime(2027, 2, 15)),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Meus planos'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Gênesis em 5 dias'), findsOneWidget);
       expect(find.byIcon(FontAwesomeIcons.userGroup.data), findsOneWidget);
     });
 

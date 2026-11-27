@@ -69,13 +69,17 @@ class TabernaculoCartaoDePlano extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(child: Text(plano.titulo, style: tema.titleLarge)),
-                  if (plano.compartilhado)
+                  // O selo de grupo só aparece quando mais alguém, além de
+                  // quem criou, entrou no plano: compartilhar o link sozinho
+                  // não põe ninguém no plano.
+                  if (plano.compartilhado && plano.outrosParticipantes > 0)
                     Padding(
                       padding: const EdgeInsets.only(
+                        left: TabernaculoEspacamento.sp8,
                         top: TabernaculoEspacamento.sp2,
                       ),
                       child: Tooltip(
-                        message: 'Plano compartilhado por link',
+                        message: 'Plano com outros participantes',
                         child: FaIcon(
                           FontAwesomeIcons.userGroup,
                           size: 18,
