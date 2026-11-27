@@ -55,8 +55,10 @@ depois da virada:
    redirecionar para `www` no Firebase Hosting.
 2. **OAuth consent screen.** Publicar o app (sair de "Testing") para que
    contas fora da lista de testadores possam entrar com Google.
-3. **Firestore: PITR e backup.** Ligar point-in-time recovery e a exportação
-   agendada no console; nenhum dos dois tem configuração no repositório.
+3. **Firestore: PITR, backup e proteção contra exclusão.** Feito (conferido em
+   27/11/2026): point-in-time recovery ligado (7 dias), backup diário com
+   retenção de 7 dias e `deleteProtectionState` ligado. Nada disso tem
+   configuração no repositório.
 4. **Permissão do service account do deploy.** Já concedido neste projeto
    (19/11/2026): **Cloud Functions Admin**
    (`roles/cloudfunctions.admin`) na conta de serviço de
@@ -64,10 +66,23 @@ depois da virada:
    (`registrarErro`, `invoker: public`) exige
    `cloudfunctions.functions.setIamPolicy`, que o papel usado para Hosting e
    Firestore não dá. Num projeto novo, conceder antes do primeiro deploy.
-5. **Orçamento e cotas.** Alertas de orçamento no Cloud Billing e limite de
-   cota para a Gemini API e para a Function pública de erro.
-6. **Restrições da chave Gemini.** Restringir a chave web por referenciador e
-   a Android/iOS por pacote/assinatura no Console do Google Cloud.
+5. **Orçamento e cotas.** Alertas de orçamento no Cloud Billing (alerta só
+   avisa, não corta o gasto) e teto de cota para a Gemini API. A chave web
+   do Gemini está no JavaScript público e o referenciador é forjável, então
+   o convite do chat não impede o uso direto da chave: o teto é o limite real.
+   No console, Gemini API → Cotas e limites do sistema → "Generate content
+   requests per model", por dia e por minuto, no modelo
+   `gemini-3.5-flash-lite`. Teto aplicado em 27/11/2026 nos três níveis
+   pagos: 2.000 pedidos por dia, 60 por minuto e 300 mil tokens de entrada
+   por minuto (a variante "prio", que o app não usa, com 100/dia, 10/min e
+   100 mil tokens/min). Trocar de modelo exige repetir o teto no novo. A
+   Function de erro já tem `maxInstances: 10` e limite por cliente. Falta o
+   alerta de orçamento.
+6. **Restrições das chaves.** Feito (conferido em 27/11/2026): Gemini e
+   Firebase web por referenciador (`www`, apex, domínios do Firebase e
+   `localhost`), Android por pacote e SHA-1, cada chave só com as APIs que
+   usa. As chaves iOS ainda aceitam só `com.felipeambrozini.devocional`; se
+   houver testador no iPhone, incluir `com.felipeambrozini.tabernaculo`.
 7. **Teste em aparelho real.** iPhone (Safari, instalar na tela de início e
    push) e Android (Chrome e APK de testador) com rede instável e offline.
    O comportamento do service worker e do CanvasKit varia por motor.
